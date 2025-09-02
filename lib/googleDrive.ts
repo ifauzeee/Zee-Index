@@ -129,7 +129,6 @@ async function fetchAllFilesRecursively(accessToken: string, folderId: string): 
     let allFiles: any[] = [];
     let pageToken: string | null = null;
     const GOOGLE_DRIVE_API_URL = 'https://www.googleapis.com/drive/v3/files';
-
     do {
         const params = new URLSearchParams({
             q: `'${folderId}' in parents and trashed=false`,
@@ -165,7 +164,6 @@ async function fetchAllFilesRecursively(accessToken: string, folderId: string): 
 // --- PERUBAHAN 2: Ganti fungsi ini dengan versi yang lebih lengkap ---
 export async function getStorageDetails() {
   const accessToken = await getAccessToken();
-
   const aboutResponse = await fetch('https://www.googleapis.com/drive/v3/about?fields=storageQuota', {
     headers: { 'Authorization': `Bearer ${accessToken}` },
     cache: 'no-store',
@@ -176,16 +174,15 @@ export async function getStorageDetails() {
   const aboutData = await aboutResponse.json();
   const usage = parseInt(aboutData.storageQuota.usage, 10);
   const limit = parseInt(aboutData.storageQuota.limit, 10);
-
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
   const allFiles = await fetchAllFilesRecursively(accessToken, rootFolderId);
-
   // Cari 10 file terbesar
   const largestFiles = allFiles
     .filter(file => file.mimeType !== 'application/vnd.google-apps.folder' && file.size)
     .sort((a, b) => parseInt(b.size, 10) - parseInt(a.size, 10))
     .slice(0, 10)
-    .map(file => ({...file, isFolder: false})); // Tambahkan properti isFolder
+    .map(file => ({...file, isFolder: false}));
+  // Tambahkan properti isFolder
 
   const breakdown = allFiles.reduce((acc, file) => {
     if (file.mimeType !== 'application/vnd.google-apps.folder' && file.size) {
@@ -205,11 +202,9 @@ export async function getStorageDetails() {
     }
     return acc;
   }, {} as Record<string, { count: number, size: number }>);
-
   const formattedBreakdown = Object.entries(breakdown)
     .map(([type, data]) => ({ type, ...data }))
     .sort((a, b) => b.size - a.size);
-
   return {
     usage,
     limit,
