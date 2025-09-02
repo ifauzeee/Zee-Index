@@ -12,13 +12,13 @@ import Search from '@/components/Search';
 import Toast from '@/components/Toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { JWTPayload } from 'jose';
+import { Analytics } from '@vercel/analytics/next'; // <-- TAMBAHKAN IMPORT INI
 
 import './globals.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import 'plyr/dist/plyr.css';
 
 const inter = Inter({ subsets: ['latin'] });
-
 const jwtDecode = (token: string): JWTPayload | null => {
   try {
     const base64Url = token.split('.')[1];
@@ -32,7 +32,6 @@ const jwtDecode = (token: string): JWTPayload | null => {
     return null;
   }
 };
-
 function SearchParamsHandler() {
     const searchParams = useSearchParams();
     const { setShareToken, addToast } = useAppStore();
@@ -98,13 +97,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     }
     return () => window.removeEventListener('resize', handleResize);
   }, [setTheme]);
-
   useEffect(() => { 
     document.documentElement.className = theme; 
     document.documentElement.style.colorScheme = theme; 
     localStorage.setItem('theme', theme); 
   }, [theme]);
-  
   useEffect(() => { 
     const fetchDataUsage = async () => { 
         const valueSpan = document.getElementById('data-usage-value'); 
@@ -127,12 +124,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     }; 
     fetchDataUsage(); 
   }, [refreshKey, shareToken]);
-
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
     if (isSearchVisible) setIsSearchVisible(false);
   };
-
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -140,11 +135,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       document.body.style.overflow = 'unset';
     }
   }, [isMobileMenuOpen]);
-  
   const handleItemClick = () => {
       setIsMobileMenuOpen(false);
   };
-
   const menuItems = [
       { href: '/storage', icon: HardDrive, label: 'Penyimpanan' },
       { onClick: toggleTheme, icon: theme === 'light' ? Moon : Sun, label: `Ganti Tema` },
@@ -152,7 +145,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       { href: 'https://t.me/RyzeeenUniverse', target: '_blank', rel: 'noopener noreferrer', icon: Send, label: 'Join Grup' },
       { href: 'https://ifauzeee.vercel.app/donate', target: '_blank', rel: 'noopener noreferrer', icon: Coffee, label: 'Donasi' },
   ];
-
   return (
     <html lang="id" className={theme} style={{ colorScheme: theme }}>
       <body>
@@ -231,7 +223,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   className="fixed inset-0 z-50 h-screen bg-background flex flex-col items-center justify-center p-4 sm:hidden"
                 >
                   <button onClick={toggleMobileMenu} className="absolute top-4 right-4 p-2 rounded-full hover:bg-accent" aria-label="Tutup menu">
-                      <X size={24} />
+                    <X size={24} />
                   </button>
                   <ul className="flex flex-col gap-6 text-xl text-center w-full max-w-sm">
                     {menuItems.map((item, index) => {
@@ -279,6 +271,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </footer>
         </div>
         <BulkActionBar />
+        <Analytics /> {/* <-- TAMBAHKAN KOMPONEN INI */}
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
         <script dangerouslySetInnerHTML={{ __html: ` if (typeof pdfjsLib !== 'undefined') { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js'; } `}} />
       </body>
