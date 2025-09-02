@@ -36,9 +36,9 @@ export interface FolderPathItem {
     name: string;
 }
 
-
 // Fungsi untuk mendapatkan token akses OAuth 2.0
-async function getAccessToken() {
+// PERBAIKAN 1: Menambahkan 'export' agar bisa digunakan di file lain
+export async function getAccessToken() {
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
@@ -60,7 +60,7 @@ async function getAccessToken() {
   }
 }
 
-// FUNGSI BARU: Untuk mendapatkan jalur folder (breadcrumb)
+// Fungsi untuk mendapatkan jalur folder (breadcrumb)
 export async function getFolderPath(folderId: string): Promise<FolderPathItem[]> {
     let path: FolderPathItem[] = [];
     let currentId = folderId;
@@ -81,7 +81,6 @@ export async function getFolderPath(folderId: string): Promise<FolderPathItem[]>
             });
 
             if (!response.ok) {
-                 // Jika folder tidak ditemukan atau error lain, hentikan loop
                  console.error(`Could not fetch details for folder ${currentId}`);
                  break;
             }
@@ -89,16 +88,13 @@ export async function getFolderPath(folderId: string): Promise<FolderPathItem[]>
             const file = await response.json();
             path.unshift({ id: file.id, name: file.name });
 
-            // Pindah ke folder induk
             if (file.parents && file.parents.length > 0) {
                 currentId = file.parents[0];
             } else {
-                // Tidak ada induk, hentikan loop
                 break;
             }
         }
 
-        // Tambahkan folder root secara manual di awal
         path.unshift({ id: rootFolderId!, name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || 'Beranda' });
 
         return path;
@@ -189,7 +185,8 @@ export async function listFilesFromDrive(
 }
 
 // Fungsi untuk mendapatkan detail file berdasarkan ID
-export async function getFileDetails(fileId: string): Promise<DriveFile> {
+// PERBAIKAN 2: Mengganti nama fungsi agar sesuai dengan yang diimpor
+export async function getFileDetailsFromDrive(fileId: string): Promise<DriveFile> {
   try {
     const accessToken = await getAccessToken();
     const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}`;
