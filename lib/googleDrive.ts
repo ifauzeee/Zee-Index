@@ -1,273 +1,220 @@
-// C:/Users/Ibnu/zee/Project/zee-index-nextjs/lib/googleDrive.ts
-
-import { google } from 'googleapis';
-import { revalidateTag } from 'next/cache';
-
-// Definisikan tipe untuk file Drive agar lebih mudah dikelola
+// lib/googleDrive.ts
 export interface DriveFile {
   id: string;
   name: string;
   mimeType: string;
   size?: string;
-  modifiedTime?: string;
-  webViewLink?: string;
+  modifiedTime: string;
+  createdTime: string;
+  webViewLink: string;
   thumbnailLink?: string;
-  hasThumbnail?: boolean;
+  hasThumbnail: boolean;
   isFolder: boolean;
+  isProtected?: boolean;
+  parents?: string[];
+  owners?: { displayName: string; emailAddress: string }[];
+  lastModifyingUser?: { displayName: string };
+  md5Checksum?: string;
+  imageMediaMetadata?: { width: number; height: number };
+  videoMediaMetadata?: { width: number; height: number; durationMillis: string };
 }
 
-// Interface untuk mendefinisikan bentuk respons dari Google Drive API
-interface GDriveFilesListResponse {
-  files: any[];
-  nextPageToken?: string;
+// Interface baru untuk breakdown penyimpanan
+interface StorageBreakdown {
+  type: string;
+  count: number;
+  size: number;
 }
 
-// Interface untuk data penggunaan penyimpanan
-export interface StorageDetails {
-    limit: string;
-    usage: string;
-    usageInDrive: string;
-    usageInDriveTrash: string;
-}
-
-// Interface untuk item dalam folder path (breadcrumb)
-export interface FolderPathItem {
-    id: string;
-    name: string;
-}
-
-// Fungsi untuk mendapatkan token akses OAuth 2.0
-// PERBAIKAN 1: Menambahkan 'export' agar bisa digunakan di file lain
-export async function getAccessToken() {
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-  );
-
-  oauth2Client.setCredentials({
-    refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+// Dideklarasikan di level atas agar dapat diakses
+export async function getAccessToken(): Promise<string> {
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: process.env.GOOGLE_CLIENT_ID!,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+      refresh_token: process.env.GOOGLE_REFRESH_TOKEN!,
+      grant_type: 'refresh_token',
+    }),
+    cache: 'no-store',
   });
-
-  try {
-    const { token } = await oauth2Client.getAccessToken();
-    if (!token) {
-      throw new Error('Failed to retrieve access token.');
-    }
-    return token;
-  } catch (error: any) {
-    console.error('Error getting access token:', error.message);
-    throw new Error('Could not get access token.');
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("Gagal mendapatkan Access Token:", errorData);
+    throw new Error(`Otentikasi Gagal: ${errorData.error_description || 'Periksa konfigurasi .env.local Anda.'}`);
   }
+
+  const tokenData: { access_token: string } = await response.json();
+  return tokenData.access_token;
 }
 
-// Fungsi untuk mendapatkan jalur folder (breadcrumb)
-export async function getFolderPath(folderId: string): Promise<FolderPathItem[]> {
-    let path: FolderPathItem[] = [];
-    let currentId = folderId;
-    const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
-
-    try {
-        const accessToken = await getAccessToken();
-
-        while (currentId && currentId !== rootFolderId) {
-            const driveUrl = `https://www.googleapis.com/drive/v3/files/${currentId}`;
-            const params = new URLSearchParams({
-                fields: 'id,name,parents',
-            });
-
-            const response = await fetch(`${driveUrl}?${params.toString()}`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
-                next: { revalidate: 3600, tags: [`folder-path-${currentId}`] }
-            });
-
-            if (!response.ok) {
-                 console.error(`Could not fetch details for folder ${currentId}`);
-                 break;
-            }
-
-            const file = await response.json();
-            path.unshift({ id: file.id, name: file.name });
-
-            if (file.parents && file.parents.length > 0) {
-                currentId = file.parents[0];
-            } else {
-                break;
-            }
-        }
-
-        path.unshift({ id: rootFolderId!, name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || 'Beranda' });
-
-        return path;
-
-    } catch (error: any) {
-        console.error('Failed to get folder path:', error.message);
-        throw new Error('Could not get folder path from Google Drive.');
-    }
-}
-
-
-// Fungsi untuk mendapatkan detail penggunaan penyimpanan
-export async function getStorageDetails(): Promise<StorageDetails> {
-    try {
-        const accessToken = await getAccessToken();
-        const aboutUrl = 'https://www.googleapis.com/drive/v3/about';
-
-        const params = new URLSearchParams({
-            fields: 'storageQuota'
-        });
-
-        const response = await fetch(`${aboutUrl}?${params.toString()}`, {
-            headers: { 'Authorization': `Bearer ${accessToken}` },
-            next: { revalidate: 3600, tags: ['storage'] }
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Google Drive API Error: ${(errorData as { error: { message: string } }).error.message}`);
-        }
-
-        const data = await response.json();
-        return data.storageQuota;
-
-    } catch (error: any) {
-        console.error('Failed to get storage details:', error.message);
-        throw new Error('Could not get storage details from Google Drive.');
-    }
-}
-
-
-// Fungsi untuk mengambil daftar file dari folder tertentu di Google Drive
-export async function listFilesFromDrive(
-  folderId: string,
-  pageToken?: string | null
-): Promise<{ files: DriveFile[]; nextPageToken: string | null }> {
-  try {
-    const accessToken = await getAccessToken();
-    const driveUrl = 'https://www.googleapis.com/drive/v3/files';
-
+// Dideklarasikan di level atas agar dapat diakses
+async function fetchAllFilesRecursively(accessToken: string, folderId: string): Promise<any[]> {
+  let allFiles: any[] = [];
+  let pageToken: string | null = null;
+  const GOOGLE_DRIVE_API_URL = 'https://www.googleapis.com/drive/v3/files';
+  do {
     const params = new URLSearchParams({
       q: `'${folderId}' in parents and trashed=false`,
-      fields:
-        'nextPageToken, files(id, name, mimeType, size, modifiedTime, webViewLink, thumbnailLink, hasThumbnail)',
-      pageSize: '100',
-      orderBy: 'folder,name',
+      fields: 'nextPageToken, files(id, name, mimeType, size, parents)',
+      pageSize: '1000',
     });
+    if (pageToken) params.set('pageToken', pageToken);
 
-    if (pageToken) {
-      params.append('pageToken', pageToken);
+    const response = await fetch(`${GOOGLE_DRIVE_API_URL}?${params.toString()}`, {
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+      cache: 'no-store',
+    });
+    if (!response.ok) {
+      console.error(`Gagal mengambil file dari folder ${folderId}`);
+      break;
     }
+    const data: { files?: any[], nextPageToken?: string | null } = await response.json();
+    if (data.files) allFiles = allFiles.concat(data.files);
+    pageToken = data.nextPageToken ?? null;
+  } while (pageToken);
 
+  const subFolderPromises = allFiles
+    .filter((file: any) => file.mimeType === 'application/vnd.google-apps.folder')
+    .map((folder: any) => fetchAllFilesRecursively(accessToken, folder.id));
+
+  const subFolderFilesArrays = await Promise.all(subFolderPromises);
+  for (const subFolderFiles of subFolderFilesArrays) {
+    allFiles = allFiles.concat(subFolderFiles);
+  }
+  return allFiles;
+}
+
+export async function listFilesFromDrive(folderId: string, pageToken?: string | null) {
+  const accessToken = await getAccessToken();
+  const GOOGLE_DRIVE_API_URL = 'https://www.googleapis.com/drive/v3/files';
+  const params = new URLSearchParams({
+    q: `'${folderId}' in parents and trashed=false`,
+    fields: 'nextPageToken, files(id, name, mimeType, size, modifiedTime, webViewLink, thumbnailLink, hasThumbnail, parents)',
+    orderBy: 'folder, name',
+    pageSize: '1000',
+  });
+  if (pageToken) {
+    params.append('pageToken', pageToken);
+  }
+
+  const response = await fetch(`${GOOGLE_DRIVE_API_URL}?${params.toString()}`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("Google Drive API Error:", errorData);
+    throw new Error(`Google Drive API Error: ${errorData.error?.message || 'Pastikan folder ID benar dan dapat diakses.'}`);
+  }
+
+  const data: { files: any[], nextPageToken?: string | null } = await response.json();
+  const processedFiles: DriveFile[] = (data.files || []).map((file: any) => ({
+    ...file,
+    isFolder: file.mimeType === 'application/vnd.google-apps.folder',
+  }));
+
+  return {
+    files: processedFiles,
+    nextPageToken: data.nextPageToken || null,
+  };
+}
+
+export async function getFileDetailsFromDrive(fileId: string): Promise<DriveFile | null> {
+  const accessToken = await getAccessToken();
+  const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}`;
+  const params = new URLSearchParams({
+    fields: 'id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents, owners(displayName, emailAddress), lastModifyingUser(displayName), md5Checksum, imageMediaMetadata(width, height), videoMediaMetadata(width, height, durationMillis)'
+  });
+  const response = await fetch(`${driveUrl}?${params.toString()}`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+    next: { revalidate: 3600 },
+  });
+  if (!response.ok) {
+    console.error(`Gagal mengambil detail untuk file ID: ${fileId}`);
+    return null;
+  }
+
+  const data: any = await response.json();
+  return {
+    ...data,
+    isFolder: data.mimeType === 'application/vnd.google-apps.folder',
+  };
+}
+
+export async function getFolderPath(folderId: string): Promise<{ id: string; name: string }[]> {
+  const accessToken = await getAccessToken();
+  const path = [];
+  let currentId = folderId;
+  const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
+  while (currentId && currentId !== rootId) {
+    const driveUrl = `https://www.googleapis.com/drive/v3/files/${currentId}`;
+    const params = new URLSearchParams({ fields: 'id, name, parents' });
     const response = await fetch(`${driveUrl}?${params.toString()}`, {
       headers: { 'Authorization': `Bearer ${accessToken}` },
-      next: { revalidate: 3600, tags: ['files'] },
+      cache: 'no-store'
     });
-
     if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Google Drive API Error: ${(errorData as { error: { message: string } }).error.message}`);
+      console.error(`Gagal mengambil detail untuk folder ID: ${currentId}`);
+      break;
     }
-
-    const data: GDriveFilesListResponse = await response.json();
-
-    const files: DriveFile[] = (data.files || []).map((file: any) => ({
-      ...file,
-      isFolder: file.mimeType === 'application/vnd.google-apps.folder',
-    }));
-
-    return {
-      files,
-      nextPageToken: data.nextPageToken || null,
-    };
-  } catch (error: any) {
-    console.error('Failed to list files from Drive:', error.message);
-    throw new Error('Could not list files from Google Drive.');
+    const data: { id: string, name: string, parents?: string[] } = await response.json();
+    path.unshift({ id: data.id, name: data.name });
+    if (data.parents && data.parents.length > 0) {
+      currentId = data.parents[0];
+    } else {
+      break;
+    }
   }
+  return path;
 }
 
-// Fungsi untuk mendapatkan detail file berdasarkan ID
-// PERBAIKAN 2: Mengganti nama fungsi agar sesuai dengan yang diimpor
-export async function getFileDetailsFromDrive(fileId: string): Promise<DriveFile> {
-  try {
-    const accessToken = await getAccessToken();
-    const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}`;
-    
-    const params = new URLSearchParams({
-        fields: 'id, name, mimeType, size, modifiedTime, webViewLink, thumbnailLink, hasThumbnail',
-    });
-
-    const response = await fetch(`${driveUrl}?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` },
-        next: { revalidate: 3600, tags: [`file-${fileId}`] }
-    });
-    
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Google Drive API Error: ${(errorData as { error: { message: string } }).error.message}`);
-    }
-
-    const fileData = await response.json();
-    return {
-        ...fileData,
-        isFolder: fileData.mimeType === 'application/vnd.google-apps.folder',
-    };
-  } catch (error: any) {
-      console.error(`Failed to get file details for ${fileId}:`, error.message);
-      throw new Error('Could not get file details from Google Drive.');
+export async function getStorageDetails() {
+  const accessToken = await getAccessToken();
+  const aboutResponse = await fetch('https://www.googleapis.com/drive/v3/about?fields=storageQuota', {
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+    cache: 'no-store',
+  });
+  if (!aboutResponse.ok) {
+    throw new Error('Gagal mengambil data kuota Google Drive.');
   }
-}
+  const aboutData: { storageQuota: { usage: string, limit: string } } = await aboutResponse.json();
+  const usage = parseInt(aboutData.storageQuota.usage, 10);
+  const limit = parseInt(aboutData.storageQuota.limit, 10);
+  const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
+  const allFiles = await fetchAllFilesRecursively(accessToken, rootFolderId);
+  const largestFiles = allFiles
+    .filter((file: DriveFile) => file.mimeType !== 'application/vnd.google-apps.folder' && file.size)
+    .sort((a: DriveFile, b: DriveFile) => parseInt(b.size!, 10) - parseInt(a.size!, 10))
+    .slice(0, 10)
+    .map((file: DriveFile) => ({...file, isFolder: false}));
+  const breakdown = allFiles.reduce((acc: Record<string, { count: number, size: number }>, file: DriveFile) => {
+    if (file.mimeType !== 'application/vnd.google-apps.folder' && file.size) {
+      const size = parseInt(file.size, 10);
+      let type = 'Lainnya';
+      if (file.mimeType.startsWith('image/')) type = 'Gambar';
+      else if (file.mimeType.startsWith('video/')) type = 'Video';
+      else if (file.mimeType.startsWith('audio/')) type = 'Audio';
+      else if (file.mimeType === 'application/pdf') type = 'Dokumen';
+      else if (file.mimeType.startsWith('application/vnd.google-apps')) type = 'Google Docs';
 
-// Fungsi untuk mendapatkan konten file
-export async function getFileContent(fileId: string): Promise<Response> {
-    try {
-        const accessToken = await getAccessToken();
-        const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}`;
-        
-        const params = new URLSearchParams({ alt: 'media' });
-
-        const response = await fetch(`${driveUrl}?${params.toString()}`, {
-            headers: { 'Authorization': `Bearer ${accessToken}` },
-            next: { revalidate: 3600, tags: [`file-content-${fileId}`] }
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Google Drive API Error: ${(errorData as { error: { message: string } }).error.message}`);
-        }
-        
-        return response;
-    } catch (error: any) {
-        console.error(`Failed to download file ${fileId}:`, error.message);
-        throw new Error('Could not download file from Google Drive.');
+      if (!acc[type]) {
+        acc[type] = { count: 0, size: 0 };
+      }
+      acc[type].count += 1;
+      acc[type].size += size;
     }
-}
-
-// Fungsi untuk revalidasi tag Next.js cache
-export async function revalidateFiles() {
-  revalidateTag('files');
-}
-
-// Helper untuk menentukan tipe file
-export function getFileType(file: DriveFile): string {
-  if (file.isFolder) return 'folder';
-  const mime = file.mimeType;
-  if (mime.startsWith('video/')) return 'video';
-  if (mime.startsWith('image/')) return 'image';
-  if (mime.startsWith('audio/')) return 'audio';
-  if (mime === 'application/pdf') return 'pdf';
-  const codeMimes = ['text/plain', 'text/html', 'text/css', 'text/javascript', 'application/json', 'text/markdown'];
-  if (codeMimes.includes(mime) || (file.name && file.name.match(/\.(js|ts|json|py|css|html|md|txt)$/))) return 'code';
-  return 'other';
-}
-
-// Helper untuk mendapatkan ikon berdasarkan tipe file
-export function getIcon(file: DriveFile): string {
-  if (file.isFolder) return 'fa-folder text-[color:var(--icon-folder-color)]';
-  const mime = file.mimeType;
-  if (mime.startsWith('image/')) return 'fa-file-image text-[color:var(--icon-image-color)]';
-  if (mime.startsWith('video/')) return 'fa-file-video text-[color:var(--icon-video-color)]';
-  if (mime.startsWith('audio/')) return 'fa-file-audio text-[color:var(--icon-audio-color)]';
-  if (mime === 'application/pdf') return 'fa-file-pdf text-[color:var(--icon-pdf-color)]';
-  if (getFileType(file) === 'code') return 'fa-file-code text-[color:var(--icon-code-color)]';
-  if (mime.startsWith('application/vnd.google-apps')) return 'fa-google-drive text-[color:var(--icon-drive-color)]';
-  return 'fa-file text-[color:var(--icon-other-color)]';
+    return acc;
+  }, {} as Record<string, { count: number, size: number }>);
+  const formattedBreakdown: StorageBreakdown[] = Object.entries(breakdown)
+    .map(([type, data]) => ({ type, count: data.count, size: data.size }))
+    .sort((a: StorageBreakdown, b: StorageBreakdown) => b.size - a.size);
+  return {
+    usage,
+    limit,
+    breakdown: formattedBreakdown,
+    largestFiles,
+  };
 }
