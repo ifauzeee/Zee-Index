@@ -209,7 +209,7 @@ export async function getStorageDetails() {
     return acc;
   }, {} as Record<string, { count: number, size: number }>);
   const formattedBreakdown: StorageBreakdown[] = Object.entries(breakdown)
-    .map(([type, data]) => ({ type, count: data.count, size: data.size }))
+    .map(([type, data]: [string, { count: number, size: number }]) => ({ type, count: data.count, size: data.size }))
     .sort((a: StorageBreakdown, b: StorageBreakdown) => b.size - a.size);
   return {
     usage,
