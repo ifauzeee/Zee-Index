@@ -1,13 +1,13 @@
 // app/login/page.tsx
 "use client";
-
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { User, KeyRound, LogIn } from 'lucide-react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
-export default function LoginPage() {
+// Component that uses the hooks
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [id, setId] = useState('');
@@ -20,14 +20,12 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, password }),
       });
-
       if (response.ok) {
         const redirectUrl = searchParams.get('redirect_url') || '/';
         router.push(redirectUrl);
@@ -51,7 +49,6 @@ export default function LoginPage() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, type: 'spring', stiffness: 100 }}
         >
-          {/* Gambar telah dihapus dan diganti dengan ikon besar ini */}
           <i className="fab fa-google-drive text-primary/10 text-[15rem]"></i>
         </motion.div>
       </div>
@@ -126,5 +123,14 @@ export default function LoginPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+// The page now wraps the component in Suspense
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }
