@@ -10,7 +10,7 @@ import { useAppStore } from '@/lib/store';
 function SearchResults() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { shareToken } = useAppStore(); // Ambil shareToken dari store
+  const { shareToken } = useAppStore();
   const query = searchParams.get('q');
   
   const [results, setResults] = useState<DriveFile[]>([]);
@@ -51,12 +51,10 @@ function SearchResults() {
   
   const handleItemClick = (file: DriveFile) => {
     if (file.isFolder) {
-      // JIKA FOLDER: Arahkan ke halaman folder
       const folderUrl = `/folder/${file.id}`;
       const urlWithToken = shareToken ? `${folderUrl}?share_token=${shareToken}` : folderUrl;
       router.push(urlWithToken);
     } else {
-      // JIKA FILE: Arahkan ke halaman detail file
       const parentFolder = file.parents && file.parents.length > 0 
         ? file.parents[0] 
         : process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
@@ -77,7 +75,8 @@ function SearchResults() {
         Hasil Pencarian untuk: <span className="text-primary">{query}</span>
       </h2>
       {results.length > 0 ? (
-        <FileList files={results} onItemClick={handleItemClick} />
+        // PERBAIKAN: Menambahkan prop onItemContextMenu yang wajib
+        <FileList files={results} onItemClick={handleItemClick} onItemContextMenu={() => {}} />
       ) : (
         <div className="text-center py-20 text-muted-foreground col-span-full">
           <i className="fas fa-search text-6xl"></i>

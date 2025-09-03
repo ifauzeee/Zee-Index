@@ -1,4 +1,17 @@
 // lib/auth.ts
+import { jwtVerify } from 'jose';
+
+// --- LOGIKA FOLDER PRIVAT ---
+const privateFolderIds = (process.env.PRIVATE_FOLDER_IDS || '')
+  .split(',')
+  .map(id => id.trim())
+  .filter(id => id);
+
+export function isPrivateFolder(folderId: string): boolean {
+  return privateFolderIds.includes(folderId);
+}
+
+// --- LOGIKA FOLDER TERKUNCI (DITAMBAHKAN KEMBALI) ---
 export function isProtected(folderId: string): boolean {
   const protectedFoldersConfig = process.env.PROTECTED_FOLDERS_JSON;
   if (!protectedFoldersConfig) return false;
@@ -11,36 +24,15 @@ export function isProtected(folderId: string): boolean {
   }
 }
 
-export function validateCredentials(folderId: string, token: string): boolean {
-  // --- PERINGATAN KEAMANAN ---
-  // Metode otentikasi saat ini sangat TIDAK AMAN dan hanya boleh digunakan untuk
-  // tujuan demonstrasi atau dalam lingkungan yang sangat terkontrol.
-  //
-  // Risiko:
-  // 1. Kredensial (ID dan Kata Sandi) dikirim sebagai teks biasa yang di-encode Base64,
-  //    yang dapat dengan mudah di-decode oleh siapa pun yang mencegat permintaan.
-  // 2. Kata sandi disimpan sebagai teks biasa di variabel lingkungan,
-  //    yang merupakan praktik keamanan yang buruk.
-  //
-  // Rekomendasi:
-  // - Ganti mekanisme ini dengan sistem otentikasi yang tepat seperti OAuth2,
-  //   JWT (JSON Web Tokens), atau otentikasi berbasis sesi.
-  // - Selalu HASH dan SALT kata sandi sebelum menyimpannya, jangan pernah menyimpannya sebagai teks biasa.
-  // --- AKHIR PERINGATAN ---
-
-  const protectedFoldersConfig = process.env.PROTECTED_FOLDERS_JSON;
-  if (!protectedFoldersConfig) return false;
+export async function verifyFolderToken(token: string, requestedFolderId: string): Promise<boolean> {
+  if (!token) return false;
   try {
-    const protectedFolders = JSON.parse(protectedFoldersConfig);
-    const folderConfig = protectedFolders[folderId];
-    if (!folderConfig) return false;
-    
-    // Logika dekode Base64 yang tidak aman
-    const decoded = Buffer.from(token, 'base64').toString('utf-8');
-    const [id, password] = decoded.split(':');
-    
-    return id === folderConfig.id && password === folderConfig.password;
-  } catch (e) {
+    const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
+    const { payload } = await jwtVerify(token, secret);
+    // Pastikan token ini untuk folder yang diminta
+    return payload.folderId === requestedFolderId;
+  } catch (error) {
+    console.error("Verifikasi token folder gagal:", error);
     return false;
   }
 }

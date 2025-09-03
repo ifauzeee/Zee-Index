@@ -7,6 +7,7 @@ export interface DriveFile {
   modifiedTime: string;
   createdTime: string;
   webViewLink: string;
+  webContentLink?: string;
   thumbnailLink?: string;
   hasThumbnail: boolean;
   isFolder: boolean;
@@ -15,18 +16,20 @@ export interface DriveFile {
   owners?: { displayName: string; emailAddress: string }[];
   lastModifyingUser?: { displayName: string };
   md5Checksum?: string;
+  // PERBAIKAN: Tambahkan properti yang hilang
+  viewCount?: number;
+  durationMillis?: number;
   imageMediaMetadata?: { width: number; height: number };
   videoMediaMetadata?: { width: number; height: number; durationMillis: string };
 }
 
-// Interface baru untuk breakdown penyimpanan
+
 interface StorageBreakdown {
   type: string;
   count: number;
   size: number;
 }
 
-// Dideklarasikan di level atas agar dapat diakses
 export async function getAccessToken(): Promise<string> {
   const response = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
@@ -39,6 +42,7 @@ export async function getAccessToken(): Promise<string> {
     }),
     cache: 'no-store',
   });
+
   if (!response.ok) {
     const errorData = await response.json();
     console.error("Gagal mendapatkan Access Token:", errorData);
@@ -49,40 +53,42 @@ export async function getAccessToken(): Promise<string> {
   return tokenData.access_token;
 }
 
-// Dideklarasikan di level atas agar dapat diakses
-async function fetchAllFilesRecursively(accessToken: string, folderId: string): Promise<any[]> {
+async function fetchAllFilesRecursively(accessToken: string, rootFolderId: string): Promise<any[]> {
   let allFiles: any[] = [];
-  let pageToken: string | null = null;
+  const queue: string[] = [rootFolderId];
   const GOOGLE_DRIVE_API_URL = 'https://www.googleapis.com/drive/v3/files';
-  do {
-    const params = new URLSearchParams({
-      q: `'${folderId}' in parents and trashed=false`,
-      fields: 'nextPageToken, files(id, name, mimeType, size, parents)',
-      pageSize: '1000',
-    });
-    if (pageToken) params.set('pageToken', pageToken);
 
-    const response = await fetch(`${GOOGLE_DRIVE_API_URL}?${params.toString()}`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` },
-      cache: 'no-store',
-    });
-    if (!response.ok) {
-      console.error(`Gagal mengambil file dari folder ${folderId}`);
-      break;
-    }
-    const data: { files?: any[], nextPageToken?: string | null } = await response.json();
-    if (data.files) allFiles = allFiles.concat(data.files);
-    pageToken = data.nextPageToken ?? null;
-  } while (pageToken);
+  while (queue.length > 0) {
+    const folderId = queue.shift()!;
+    let pageToken: string | null = null;
 
-  const subFolderPromises = allFiles
-    .filter((file: any) => file.mimeType === 'application/vnd.google-apps.folder')
-    .map((folder: any) => fetchAllFilesRecursively(accessToken, folder.id));
+    do {
+      const params = new URLSearchParams({
+         q: `'${folderId}' in parents and trashed=false`,
+        fields: 'nextPageToken, files(id, name, mimeType, size, parents)',
+        pageSize: '1000',
+      });
+      if (pageToken) params.set('pageToken', pageToken);
 
-  const subFolderFilesArrays = await Promise.all(subFolderPromises);
-  for (const subFolderFiles of subFolderFilesArrays) {
-    allFiles = allFiles.concat(subFolderFiles);
+      const response = await fetch(`${GOOGLE_DRIVE_API_URL}?${params.toString()}`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+        cache: 'no-store',
+      });
+
+      if (!response.ok) {
+        console.error(`Gagal mengambil file dari folder ${folderId}`);
+        break;
+      }
+      const data: { files?: any[], nextPageToken?: string | null } = await response.json();
+      if (data.files) {
+        allFiles = allFiles.concat(data.files);
+        const subFolders = data.files.filter((file: any) => file.mimeType === 'application/vnd.google-apps.folder');
+        queue.push(...subFolders.map((folder: any) => folder.id));
+      }
+      pageToken = data.nextPageToken ?? null;
+    } while (pageToken);
   }
+
   return allFiles;
 }
 
@@ -90,18 +96,19 @@ export async function listFilesFromDrive(folderId: string, pageToken?: string | 
   const accessToken = await getAccessToken();
   const GOOGLE_DRIVE_API_URL = 'https://www.googleapis.com/drive/v3/files';
   const params = new URLSearchParams({
-    q: `'${folderId}' in parents and trashed=false`,
-    fields: 'nextPageToken, files(id, name, mimeType, size, modifiedTime, webViewLink, thumbnailLink, hasThumbnail, parents)',
+     q: `'${folderId}' in parents and trashed=false`,
+    fields: 'nextPageToken, files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents)',
     orderBy: 'folder, name',
     pageSize: '1000',
   });
+
   if (pageToken) {
     params.append('pageToken', pageToken);
   }
 
-  const response = await fetch(`${GOOGLE_DRIVE_API_URL}?${params.toString()}`, {
+   const response = await fetch(`${GOOGLE_DRIVE_API_URL}?${params.toString()}`, {
     headers: { 'Authorization': `Bearer ${accessToken}` },
-    cache: 'no-store',
+    next: { revalidate: 3600 } // Cache data for 1 hour
   });
 
   if (!response.ok) {
@@ -112,7 +119,7 @@ export async function listFilesFromDrive(folderId: string, pageToken?: string | 
 
   const data: { files: any[], nextPageToken?: string | null } = await response.json();
   const processedFiles: DriveFile[] = (data.files || []).map((file: any) => ({
-    ...file,
+     ...file,
     isFolder: file.mimeType === 'application/vnd.google-apps.folder',
   }));
 
@@ -126,12 +133,14 @@ export async function getFileDetailsFromDrive(fileId: string): Promise<DriveFile
   const accessToken = await getAccessToken();
   const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}`;
   const params = new URLSearchParams({
-    fields: 'id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents, owners(displayName, emailAddress), lastModifyingUser(displayName), md5Checksum, imageMediaMetadata(width, height), videoMediaMetadata(width, height, durationMillis)'
+    fields: 'id, name, mimeType, size, modifiedTime, createdTime, webViewLink, webContentLink, thumbnailLink, hasThumbnail, parents, owners(displayName, emailAddress), lastModifyingUser(displayName), md5Checksum, imageMediaMetadata(width, height), videoMediaMetadata(width, height, durationMillis)' // Added webContentLink
   });
+  
   const response = await fetch(`${driveUrl}?${params.toString()}`, {
     headers: { 'Authorization': `Bearer ${accessToken}` },
     next: { revalidate: 3600 },
   });
+
   if (!response.ok) {
     console.error(`Gagal mengambil detail untuk file ID: ${fileId}`);
     return null;
@@ -140,7 +149,7 @@ export async function getFileDetailsFromDrive(fileId: string): Promise<DriveFile
   const data: any = await response.json();
   return {
     ...data,
-    isFolder: data.mimeType === 'application/vnd.google-apps.folder',
+     isFolder: data.mimeType === 'application/vnd.google-apps.folder',
   };
 }
 
@@ -149,9 +158,11 @@ export async function getFolderPath(folderId: string): Promise<{ id: string; nam
   const path = [];
   let currentId = folderId;
   const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
+  
   while (currentId && currentId !== rootId) {
-    const driveUrl = `https://www.googleapis.com/drive/v3/files/${currentId}`;
+     const driveUrl = `https://www.googleapis.com/drive/v3/files/${currentId}`;
     const params = new URLSearchParams({ fields: 'id, name, parents' });
+    
     const response = await fetch(`${driveUrl}?${params.toString()}`, {
       headers: { 'Authorization': `Bearer ${accessToken}` },
       cache: 'no-store'
@@ -177,19 +188,23 @@ export async function getStorageDetails() {
     headers: { 'Authorization': `Bearer ${accessToken}` },
     cache: 'no-store',
   });
+  
   if (!aboutResponse.ok) {
     throw new Error('Gagal mengambil data kuota Google Drive.');
   }
   const aboutData: { storageQuota: { usage: string, limit: string } } = await aboutResponse.json();
+  
   const usage = parseInt(aboutData.storageQuota.usage, 10);
   const limit = parseInt(aboutData.storageQuota.limit, 10);
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
   const allFiles = await fetchAllFilesRecursively(accessToken, rootFolderId);
+  
   const largestFiles = allFiles
     .filter((file: DriveFile) => file.mimeType !== 'application/vnd.google-apps.folder' && file.size)
     .sort((a: DriveFile, b: DriveFile) => parseInt(b.size!, 10) - parseInt(a.size!, 10))
-    .slice(0, 10)
+     .slice(0, 10)
     .map((file: DriveFile) => ({...file, isFolder: false}));
+    
   const breakdown = allFiles.reduce((acc: Record<string, { count: number, size: number }>, file: DriveFile) => {
     if (file.mimeType !== 'application/vnd.google-apps.folder' && file.size) {
       const size = parseInt(file.size, 10);
@@ -197,7 +212,7 @@ export async function getStorageDetails() {
       if (file.mimeType.startsWith('image/')) type = 'Gambar';
       else if (file.mimeType.startsWith('video/')) type = 'Video';
       else if (file.mimeType.startsWith('audio/')) type = 'Audio';
-      else if (file.mimeType === 'application/pdf') type = 'Dokumen';
+       else if (file.mimeType === 'application/pdf') type = 'Dokumen';
       else if (file.mimeType.startsWith('application/vnd.google-apps')) type = 'Google Docs';
 
       if (!acc[type]) {
@@ -208,15 +223,13 @@ export async function getStorageDetails() {
     }
     return acc;
   }, {} as Record<string, { count: number, size: number }>);
-
-  // FIX: Cast the result of Object.entries and remove the type from the .map() callback
   const formattedBreakdown: StorageBreakdown[] = (Object.entries(breakdown) as [string, { count: number; size: number }][])
     .map(([type, data]) => ({ type, count: data.count, size: data.size }))
     .sort((a: StorageBreakdown, b: StorageBreakdown) => b.size - a.size);
-    
+
   return {
     usage,
-    limit,
+     limit,
     breakdown: formattedBreakdown,
     largestFiles,
   };

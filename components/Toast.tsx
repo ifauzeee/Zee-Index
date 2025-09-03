@@ -1,44 +1,57 @@
-// components/Toast.tsx
-"use client";
+// Lokasi: components/Toast.tsx
+'use client';
 
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, XCircle, Info, X } from 'lucide-react';
-import { Toast as ToastType } from '@/lib/store';
+import { Toast } from '@/lib/store';
+import { CheckCircle2, XCircle, Info, X } from 'lucide-react';
 
+// PERBAIKAN: Tipe props disesuaikan agar cocok dengan store
 interface ToastProps {
-  toast: ToastType;
+  toast: Toast; // Menggunakan toast object langsung
   onRemove: (id: string) => void;
 }
 
-const icons = {
-  success: <CheckCircle className="text-green-500" />,
-  error: <XCircle className="text-red-500" />,
-  info: <Info className="text-blue-500" />,
-};
+const ToastComponent = ({ toast, onRemove }: ToastProps) => {
+  const { id, message, type } = toast;
 
-export default function Toast({ toast, onRemove }: ToastProps) {
-  const Icon = icons[toast.type];
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onRemove(id);
+    }, 5000); // Auto-dismiss after 5 seconds
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [id, onRemove]);
+  
+  const icons = {
+    success: <CheckCircle2 className="text-green-500" />,
+    error: <XCircle className="text-red-500" />,
+    info: <Info className="text-blue-500" />,
+  };
+
+  const bgColors = {
+    success: 'bg-green-100 dark:bg-green-900 border-green-400',
+    error: 'bg-red-100 dark:bg-red-900 border-red-400',
+    info: 'bg-blue-100 dark:bg-blue-900 border-blue-400',
+  }
 
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 50, scale: 0.3 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 20, scale: 0.5 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-      className="flex items-center w-full max-w-sm p-4 text-foreground bg-card border shadow-lg rounded-lg pointer-events-auto"
+      exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
+      className={`relative flex items-center p-4 rounded-lg shadow-lg border-l-4 w-80 text-gray-800 dark:text-gray-200 ${bgColors[type]}`}
     >
-      <div className="inline-flex items-center justify-center flex-shrink-0 w-8 h-8">
-        {Icon}
-      </div>
-      <div className="ms-3 text-sm font-normal">{toast.message}</div>
-      <button
-        onClick={() => onRemove(toast.id)}
-        className="ms-auto -mx-1.5 -my-1.5 bg-card text-muted-foreground hover:text-foreground rounded-lg focus:ring-2 focus:ring-ring p-1.5 hover:bg-accent inline-flex items-center justify-center h-8 w-8"
-        aria-label="Close"
-      >
-        <X className="w-4 h-4" />
+      <div className="flex-shrink-0 mr-3">{icons[type]}</div>
+      <div className="flex-1">{message}</div>
+      <button onClick={() => onRemove(id)} className="ml-4 flex-shrink-0 text-gray-500 hover:text-gray-800 dark:hover:text-white">
+        <X size={18} />
       </button>
     </motion.div>
   );
-}
+};
+
+export default ToastComponent;

@@ -1,5 +1,4 @@
-// app/(main)/folder/[folderId]/file/[fileId]/[slug]/page.tsx
-
+// app/(main)/folder/[folderid]/file/[fileid]/[slug]/page.tsx
 import { getFileDetailsFromDrive } from "@/lib/googleDrive";
 import dynamic from 'next/dynamic';
 import Loading from '@/components/Loading';
@@ -10,6 +9,9 @@ const FileDetail = dynamic(() => import('@/components/FileDetail'), {
 });
 
 export default async function FilePage({ params }: { params: { fileId: string } }) {
+  // PENGAMBILAN DATA DI SERVER: Kode ini sudah benar dan efisien.
+  // Data file diambil di server saat halaman pertama kali di-render,
+  // lalu diteruskan ke komponen klien <FileDetail />.
   const file = await getFileDetailsFromDrive(params.fileId);
 
   if (!file) {
@@ -21,7 +23,6 @@ export default async function FilePage({ params }: { params: { fileId: string } 
     );
   }
 
-  // Kirim HANYA 'file' sebagai props. 'shareToken' sekarang diambil dari store global.
   return (
     <FileDetail file={file} />
   );

@@ -3,14 +3,16 @@ import { motion } from 'framer-motion';
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from '@/lib/store';
 import FileItem from "./FileItem";
+import React from 'react';
 
 interface FileListProps {
   files: DriveFile[];
   onItemClick: (file: DriveFile) => void;
+  // Tambahkan props baru untuk context menu
+  onItemContextMenu: (event: React.MouseEvent<HTMLDivElement>, file: DriveFile) => void;
 }
 
-export default function FileList({ files, onItemClick }: FileListProps) {
-  // Ambil kembali state bulk mode
+export default function FileList({ files, onItemClick, onItemContextMenu }: FileListProps) {
   const { view, selectedFiles, isBulkMode } = useAppStore();
 
   if (files.length === 0) {
@@ -45,8 +47,9 @@ export default function FileList({ files, onItemClick }: FileListProps) {
         <FileItem 
           key={file.id} 
           file={file} 
-          onClick={() => onItemClick(file)} 
-          // Kirim prop isSelected dan isBulkMode
+          onClick={() => onItemClick(file)}
+          // Beri tipe data yang benar pada event handler
+          onContextMenu={(event: React.MouseEvent<HTMLDivElement>) => onItemContextMenu(event, file)}
           isSelected={selectedFiles.includes(file.id)}
           isBulkMode={isBulkMode}
         />

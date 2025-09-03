@@ -1,124 +1,77 @@
-// app/login/page.tsx
 "use client";
-import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { User, KeyRound, LogIn } from 'lucide-react';
+import { signIn } from 'next-auth/react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
-// Component that uses the hooks
-function LoginForm() {
-  const router = useRouter();
+function CustomLoginPage() {
   const searchParams = useSearchParams();
-  const [id, setId] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const currentYear = new Date().getFullYear();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, password }),
-      });
-      if (response.ok) {
-        const redirectUrl = searchParams.get('redirect_url') || '/';
-        router.push(redirectUrl);
-        router.refresh();
-      } else {
-        setError('ID atau Kata Sandi salah. Coba lagi.');
-      }
-    } catch (err) {
-      setError('Terjadi kesalahan pada jaringan. Coba lagi nanti.');
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    const shareError = searchParams.get('error');
+    if (shareError === 'InvalidOrExpiredShareLink') {
+      setError('Tautan berbagi yang Anda gunakan tidak valid atau telah kedaluwarsa.');
     }
+  }, [searchParams]);
+
+  const handleGoogleSignIn = () => {
+    const callbackUrl = searchParams.get('callbackUrl') || '/';
+    signIn('google', { callbackUrl });
   };
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
-      {/* Kolom Kiri (Ikon Besar) - hanya tampil di layar besar */}
-      <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-muted/40 p-12">
+      <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-muted/40 p-12 overflow-hidden">
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, type: 'spring', stiffness: 100 }}
+          transition={{ duration: 0.8, type: 'spring', stiffness: 80, delay: 0.2 }}
         >
-          <i className="fab fa-google-drive text-primary/10 text-[15rem]"></i>
+          <i className="fab fa-google-drive text-primary/10 text-[18rem]"></i>
         </motion.div>
       </div>
-
-      {/* Kolom Kanan (Form Login) */}
       <div className="flex w-full lg:w-1/2 items-center justify-center p-8">
-        <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="w-full max-w-sm"
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="w-full max-w-sm"
         >
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div className="text-center lg:text-left">
               <h1 className="text-3xl font-bold flex items-center justify-center lg:justify-start">
                 <i className="fab fa-google-drive text-blue-500 mr-3 text-4xl"></i>
                 <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
-                    Zee Index
+                  Zee Index
                 </span>
               </h1>
-              <p className="text-muted-foreground mt-2">Selamat datang! Silakan login untuk melanjutkan.</p>
+              <p className="text-muted-foreground mt-2">Akses file Anda dengan aman dan cepat.</p>
             </div>
             
-            <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <input
-                  type="text"
-                  value={id}
-                  placeholder="ID Pengguna"
-                  onChange={(e) => setId(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border bg-background focus:ring-2 focus:ring-ring focus:outline-none"
-                  required
-                />
+            {error && (
+              <div className="bg-destructive/10 border-l-4 border-destructive text-destructive-foreground p-4 rounded-md" role="alert">
+                <p className="font-bold">Akses Gagal</p>
+                <p className="text-sm">{error}</p>
               </div>
-              <div className="relative">
-                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <input
-                  type="password"
-                  value={password}
-                  placeholder="Kata Sandi"
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border bg-background focus:ring-2 focus:ring-ring focus:outline-none"
-                  required
-                />
-              </div>
-
-              {error && <p className="text-sm text-red-500 text-center pt-2">{error}</p>}
-
+            )}
+            
+            <div className="pt-4">
               <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold disabled:bg-primary/50"
+                onClick={handleGoogleSignIn}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-card border rounded-lg hover:bg-accent transition-colors font-semibold"
               >
-                {isLoading ? (
-                  <>
-                    <span className="animate-spin h-5 w-5 border-b-2 border-white rounded-full"></span>
-                    Memproses...
-                  </>
-                ) : (
-                  <>
-                    <LogIn size={20} />
-                    Masuk
-                  </>
-                )}
+                <i className="fab fa-google text-lg"></i>
+                Lanjutkan dengan Google
               </button>
-            </form>
-             <p className="text-center text-xs text-muted-foreground pt-8">
-                © {currentYear} - Dibuat oleh Muhammad Ibnu Fauzi
-             </p>
+            </div>
+
+            <p className="text-center text-xs text-muted-foreground pt-12">
+              © {new Date().getFullYear()} - Dibuat oleh <a href="https://ifauzeee.vercel.app/" target="_blank" rel="noopener noreferrer" className="font-medium text-foreground hover:text-primary">Muhammad Ibnu Fauzi</a>
+            </p>
           </div>
         </motion.div>
       </div>
@@ -126,11 +79,10 @@ function LoginForm() {
   );
 }
 
-// The page now wraps the component in Suspense
 export default function LoginPage() {
   return (
     <Suspense>
-      <LoginForm />
+      <CustomLoginPage />
     </Suspense>
   );
 }
