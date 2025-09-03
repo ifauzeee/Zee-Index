@@ -8,7 +8,6 @@ import Toast from '@/components/Toast';
 import Header from '@/components/Header';
 import { AnimatePresence } from 'framer-motion';
 import { Analytics } from '@vercel/analytics/next';
-import Script from 'next/script';
 import './globals.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import 'plyr/dist/plyr.css';
@@ -20,12 +19,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   } = useAppStore();
   const currentYear = new Date().getFullYear();
 
-  // Efek untuk mengambil data pengguna (role, email) saat aplikasi dimuat
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
 
-  // Efek untuk tema agar persisten
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
     if (savedTheme) {
@@ -39,7 +36,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Efek untuk memperbarui data usage
   useEffect(() => {
     const fetchDataUsage = async () => {
         const valueSpan = document.getElementById('data-usage-value');
@@ -64,8 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="id" className={theme} style={{ colorScheme: theme }}>
       <body>
         <Providers>
-          <Script src="https://mozilla.github.io/pdf.js/build/pdf.mjs" type="module" />
-
+          {/* Baris <Script> untuk pdf.js telah dihapus dari sini */}
           <div id="app-container" className={`bg-background text-foreground min-h-screen flex flex-col`}>
             <div className="container mx-auto px-4 max-w-7xl flex-grow">
               <Header />
@@ -97,7 +92,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   );
 }
 
-// Fungsi helper untuk format ukuran file
 function formatBytes(bytes: number, decimals = 2): string {
   if (!+bytes) return '0 Bytes'
   const k = 1024
