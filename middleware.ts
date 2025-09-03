@@ -13,7 +13,8 @@ async function handleShareToken(req: NextRequest): Promise<{ allowed: boolean; r
     const { payload } = await jwtVerify(shareToken, secret);
     
     if (payload.loginRequired) {
-      const sessionToken = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+      // --- PERBAIKAN: Gunakan AUTH_SECRET ---
+      const sessionToken = await getToken({ req, secret: process.env.AUTH_SECRET });
       if (!sessionToken) {
         const loginUrl = new URL('/login', req.url);
         loginUrl.searchParams.set('callbackUrl', req.nextUrl.href);
@@ -29,7 +30,8 @@ async function handleShareToken(req: NextRequest): Promise<{ allowed: boolean; r
 }
 
 export async function middleware(req: NextRequest) {
-  const sessionToken = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  // --- PERBAIKAN: Gunakan AUTH_SECRET ---
+  const sessionToken = await getToken({ req, secret: process.env.AUTH_SECRET });
   const shareTokenResult = await handleShareToken(req);
 
   if (sessionToken || shareTokenResult.allowed) {

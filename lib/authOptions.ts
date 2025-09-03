@@ -1,8 +1,6 @@
-// lib/authOptions.ts
 import { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
-// Ambil daftar email admin dari environment variable
 const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
 
 export const authOptions: AuthOptions = {
@@ -36,5 +34,6 @@ export const authOptions: AuthOptions = {
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  // --- PERBAIKAN: Gunakan AUTH_SECRET ---
+  secret: process.env.AUTH_SECRET,
 };
