@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { jwtDecode } from 'jwt-decode';
-import { kv } from '@/lib/kv'; // <-- PERBAIKAN: Tambahkan baris ini
+// HAPUS BARIS INI KARENA TIDAK AMAN: import { kv } from '@/lib/kv';
 
 export interface Toast {
   id: string;
@@ -62,8 +62,6 @@ interface AppState {
   addShareLink: (link: ShareLink) => void;
   removeShareLink: (id: string) => Promise<void>;
 }
-
-const SHARE_LINKS_KEY = 'zee-index:share-links';
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -151,6 +149,7 @@ export const useAppStore = create<AppState>()(
       },
       addShareLink: (link) => set(state => ({ shareLinks: [...state.shareLinks, link] })),
       
+      // --- PERBAIKAN LOGIKA FUNGSI INI ---
       removeShareLink: async (id: string) => {
         const { addToast } = get();
         const linkToRemove = get().shareLinks.find(link => link.id === id);
@@ -158,21 +157,26 @@ export const useAppStore = create<AppState>()(
         if (!linkToRemove) return;
 
         try {
-          const revokeResponse = await fetch('/api/share/revoke', {
+          // Hanya panggil API untuk menghapus, semua logika ada di server
+          const response = await fetch('/api/share/delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-               jti: linkToRemove.jti,
+              id: linkToRemove.id,
+              jti: linkToRemove.jti,
               expiresAt: linkToRemove.expiresAt,
             }),
           });
-          if (!revokeResponse.ok) throw new Error('Gagal membatalkan tautan di server.');
 
-          const currentLinks = get().shareLinks;
-          const updatedLinks = currentLinks.filter(link => link.id !== id);
-          await kv.set(SHARE_LINKS_KEY, updatedLinks);
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Gagal menghapus tautan di server.');
+          }
 
-          set({ shareLinks: updatedLinks });
+          // Jika berhasil, perbarui state lokal
+          set(state => ({
+             shareLinks: state.shareLinks.filter(link => link.id !== id)
+          }));
           addToast({ message: 'Tautan berhasil dibatalkan dan dihapus.', type: 'success' });
 
         } catch (error: any) {
