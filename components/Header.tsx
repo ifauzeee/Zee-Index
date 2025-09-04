@@ -23,7 +23,7 @@ function AuthButton() {
         );
     }
     return (
-        <button onClick={() => signIn('google')} title="Login dengan Google" className="p-2 rounded-lg hover:bg-accent flex items-center gap-2">
+        <button onClick={() => signIn('google')} title="Login with Google" className="p-2 rounded-lg hover:bg-accent flex items-center gap-2">
             <LogIn size={20} />
             <span className="hidden sm:inline text-sm font-medium">Login</span>
         </button>
@@ -44,7 +44,6 @@ export default function Header() {
         { id: 'donate', href: 'https://ifauzeee.vercel.app/donate', target: '_blank', rel: 'noopener noreferrer', icon: Coffee, label: 'Donasi' },
     ];
     
-    // Perbaikan: Hapus kondisi `if (shareToken)`
     const handleLogoClick = () => {
         router.push('/');
     };
@@ -127,7 +126,35 @@ export default function Header() {
                         exit={{ opacity: 0, x: "-100%" }}
                         className="fixed inset-0 z-50 h-screen bg-background flex flex-col items-center justify-center p-4 sm:hidden"
                     >
-                       {/* Mobile menu content would be here */}
+                        {/* Konten menu mobile yang sudah diperbaiki */}
+                        <div className="flex flex-col gap-4 text-lg">
+                            {menuItems
+                                .filter(item => {
+                                    if (shareToken) {
+                                        return item.id === 'theme';
+                                    }
+                                    return true;
+                                })
+                                .map((item) => {
+                                    const Icon = item.icon;
+                                    const commonClasses = "flex items-center gap-4 hover:text-primary transition-colors";
+                                    return 'href' in item && item.href ? (
+                                        <a key={item.id} href={item.href} target={item.target} rel={item.rel} onClick={() => setIsMobileMenuOpen(false)} className={commonClasses}>
+                                            <Icon size={24} />
+                                            <span>{item.label}</span>
+                                        </a>
+                                    ) : (
+                                        'onClick' in item && typeof item.onClick === 'function' && 
+                                        <button key={item.id} onClick={() => { item.onClick(); setIsMobileMenuOpen(false); }} className={commonClasses}>
+                                            <Icon size={24} />
+                                            <span>{item.label}</span>
+                                        </button>
+                                    );
+                                })}
+                            <div className="pt-4 border-t border-muted">
+                                <AuthButton />
+                            </div>
+                        </div>
                     </motion.nav>
                 )}
             </AnimatePresence>
