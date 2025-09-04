@@ -166,14 +166,8 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   const durationMillis = file.videoMediaMetadata?.durationMillis ? parseInt(file.videoMediaMetadata.durationMillis, 10) : undefined;
   const showShareButton = !searchParams.get('share_token') && user?.role === 'ADMIN';
 
-  // PERBAIKAN: Logika baru untuk tombol kembali
   const handleBack = () => {
-    const shareToken = searchParams.get('share_token');
-    if (shareToken && file.parents && file.parents.length > 0) {
-      router.push(`/folder/${file.parents[0]}?share_token=${shareToken}`);
-    } else {
-      router.back();
-    }
+    router.back();
   };
 
   return (
@@ -181,9 +175,12 @@ export default function FileDetail({ file }: { file: DriveFile }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-12 flex-1 overflow-hidden">
         <div className="lg:col-span-2 flex flex-col flex-1 min-h-0">
           <header className="flex items-center justify-between gap-4 mb-4">
-            <button onClick={handleBack} className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors shrink-0">
-              <ArrowLeft size={20} /> Kembali
-            </button>
+            {/* PERBAIKAN DI SINI: Tombol Kembali hanya ditampilkan jika tidak ada shareToken */}
+            {!searchParams.get('share_token') && (
+              <button onClick={handleBack} className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors shrink-0">
+                <ArrowLeft size={20} /> Kembali
+              </button>
+            )}
             {showShareButton && <ShareButton path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`} itemName={file.name} />}
           </header>
           
