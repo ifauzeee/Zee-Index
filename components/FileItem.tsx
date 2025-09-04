@@ -28,8 +28,8 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
       transition: { duration: 0.3, ease: [0.2, 0, 0.2, 1] }
     },
     hover: { 
-       scale: 1.02, 
-       transition: { duration: 0.2 } 
+      scale: 1.02, 
+      transition: { duration: 0.2 } 
     },
   };
 
@@ -44,7 +44,7 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
         isSelected && "bg-accent/80 ring-2 ring-primary",
         view === "list"
           ? "flex items-center p-3 bg-card border border-border shadow-sm hover:shadow-md hover:bg-accent/50"
-          : "flex flex-col items-center text-center p-4 bg-card border border-border shadow-sm hover:shadow-md w-full max-w-[160px] sm:max-w-[200px]"
+          : "flex flex-col items-center justify-center text-center p-4 bg-card border border-border shadow-sm hover:shadow-md w-full max-w-[160px] sm:max-w-[200px]"
       )}
       onClick={onClick}
       onContextMenu={onContextMenu}
@@ -52,12 +52,14 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
       <div
         className={cn(
           "flex w-full",
-          view === "list" ? "items-center gap-4" : "flex-col items-center gap-2"
+          view === "list" 
+            ? "items-center gap-4" 
+            : "flex-col items-center justify-center gap-2"
         )}
       >
         <div className="relative">
           {view === "grid" && file.thumbnailLink && !file.isFolder ? (
-            <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-md overflow-hidden">
+            <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-md overflow-hidden flex items-center justify-center">
               <Image
                 src={file.thumbnailLink}
                 alt={file.name}
@@ -68,7 +70,7 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
               />
             </div>
           ) : (
-            <div className={cn("text-3xl text-primary shrink-0", view === "grid" && "text-4xl mb-2")}>
+            <div className={cn("text-3xl text-primary shrink-0 flex items-center justify-center", view === "grid" && "text-4xl mb-2")}>
               {React.createElement(Icon, { size: view === "grid" ? 48 : 28 })}
             </div>
           )}
@@ -84,7 +86,7 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
         <div
           className={cn(
             "flex-1 min-w-0",
-            view === "grid" && "mt-2 max-w-[140px] sm:max-w-[180px]"
+            view === "grid" && "mt-2 max-w-[140px] sm:max-w-[180px] text-center"
           )}
         >
           <p
@@ -95,21 +97,21 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
             title={file.name}
           >
             {view === 'list' && file.isProtected && <Lock size={12} className="text-muted-foreground shrink-0" />}
-            <span>{file.name}</span>
+            <span className="truncate max-w-[120px] sm:max-w-[160px]">{file.name}</span>
           </p>
           
           {view === "list" && !file.isFolder && (
             <p className="text-xs text-muted-foreground mt-1 text-left">
-              {file.size ? formatBytes(parseInt(file.size)) : "-"} â€¢{" "}
+              {file.size ? formatBytes(parseInt(file.size)) : "-"} •{" "}
               {new Date(file.modifiedTime).toLocaleDateString("id-ID", {
-                 day: "numeric",
+                day: "numeric",
                 month: "short",
                 year: "numeric",
               })}
             </p>
           )}
           {view === "grid" && !file.isFolder && (
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1 text-center">
               {file.size ? formatBytes(parseInt(file.size)) : "-"}
             </p>
           )}

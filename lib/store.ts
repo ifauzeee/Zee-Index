@@ -42,7 +42,6 @@ interface AppState {
   removeToast: (id: string) => void;
   user: UserProfile | null;
   fetchUser: () => Promise<void>;
-  // --- PERBAIKAN --- Tambahkan state untuk folder ID saat ini
   currentFolderId: string | null;
   setCurrentFolderId: (id: string | null) => void;
 }
@@ -105,16 +104,16 @@ export const useAppStore = create<AppState>()(
         try {
           const response = await fetch('/api/auth/me');
           if (response.ok) {
-           const data = await response.json();
+            const data = await response.json();
             set({ user: data.user });
           } else {
             set({ user: null });
           }
         } catch (error) {
-           set({ user: null });
+          set({ user: null });
         }
       },
-      // --- PERBAIKAN --- Tambahkan implementasi state baru
+      // State dan fungsi baru untuk folder ID saat ini
       currentFolderId: null,
       setCurrentFolderId: (id) => set({ currentFolderId: id }),
     }),

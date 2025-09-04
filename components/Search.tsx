@@ -15,6 +15,11 @@ export default function Search({ onSearchClose }: { onSearchClose?: () => void }
   
   const { shareToken, currentFolderId } = useAppStore();
 
+  // PERBAIKAN: Gunakan useEffect untuk menyinkronkan state lokal dengan URL
+  useEffect(() => {
+      setInputValue(currentUrlQuery || '');
+  }, [currentUrlQuery]);
+
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (inputValue && inputValue !== currentUrlQuery) {
@@ -31,7 +36,6 @@ export default function Search({ onSearchClose }: { onSearchClose?: () => void }
     if (!inputValue) return;
     let searchUrl = `/search?q=${encodeURIComponent(inputValue)}`;
 
-    // Mengirim ID folder saat ini ke API
     if (currentFolderId) {
         searchUrl += `&folderId=${currentFolderId}`;
     }

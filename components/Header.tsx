@@ -30,7 +30,6 @@ function AuthButton() {
     );
 }
 
-
 export default function Header() {
     const router = useRouter();
     const { theme, toggleTheme, triggerRefresh, shareToken } = useAppStore();
@@ -45,10 +44,8 @@ export default function Header() {
         { id: 'donate', href: 'https://ifauzeee.vercel.app/donate', target: '_blank', rel: 'noopener noreferrer', icon: Coffee, label: 'Donasi' },
     ];
     
+    // Perbaikan: Hapus kondisi `if (shareToken)`
     const handleLogoClick = () => {
-        if (shareToken) {
-            return;
-        }
         router.push('/');
     };
 
@@ -72,8 +69,8 @@ export default function Header() {
             <header className="sticky top-0 z-40 bg-background flex justify-between items-center py-4 border-b gap-4">
                 <h1 
                     onClick={handleLogoClick} 
-                    className={`text-2xl font-bold flex items-center shrink-0 ${shareToken ? 'cursor-default' : 'cursor-pointer'}`} 
-                    title={shareToken ? 'Zee Index' : 'Kembali ke Beranda'}
+                    className={`text-2xl font-bold flex items-center shrink-0 cursor-pointer`} 
+                    title={'Kembali ke Beranda'}
                 >
                     <i className="fab fa-google-drive text-blue-500 mr-3"></i>Zee Index
                 </h1>
@@ -85,14 +82,11 @@ export default function Header() {
                 </div>
                 
                 <div className="hidden sm:flex items-center gap-2">
-                    {/* --- PERBAIKAN DI SINI --- */}
                     {menuItems
                         .filter(item => {
-                            // Jika ada shareToken, hanya tampilkan item dengan id 'theme'
                             if (shareToken) {
                                 return item.id === 'theme';
                             }
-                            // Jika tidak ada shareToken, tampilkan semua
                             return true;
                         })
                         .map((item) => {

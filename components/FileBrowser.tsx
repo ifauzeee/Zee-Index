@@ -1,4 +1,5 @@
 // File: components/FileBrowser.tsx
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -73,6 +74,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
 
   const currentFolderId = history.length > 0 ? history[history.length - 1]?.id : initialFolderId || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
 
+  // Perbaikan: useEffect ini akan memastikan currentFolderId di store selalu up-to-date
   useEffect(() => {
     setCurrentFolderId(currentFolderId);
   }, [currentFolderId, setCurrentFolderId]);
@@ -108,14 +110,15 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         if (shareToken) {
            url.searchParams.append('share_token', shareToken);
         }
-        
+    
         const headers = new Headers();
         const folderAuthToken = folderTokens[folderId];
         if (folderAuthToken) {
-            headers.append('Authorization', `Bearer ${folderAuthToken}`);
+           headers.append('Authorization', `Bearer ${folderAuthToken}`);
         }
         
         const response = await fetch(url.toString(), { headers });
+      
         if (!response.ok) {
            await handleFetchError(response, 'Gagal mengambil data file.', folderId, folderName);
            return;
@@ -170,7 +173,6 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         
         const targetFolderId = authModal.folderId;
         setAuthModal({ isOpen: false, folderId: '', folderName: '' });
-        
         router.push(`/folder/${targetFolderId}`);
 
     } catch (err: any) {
@@ -210,7 +212,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
       }
 
       if (!initialFolderId || initialFolderId === rootFolder.id) {
-        if(history.length > 1 || history[0]?.id !== rootFolder.id) setHistory([rootFolder]);
+         if(history.length > 1 || history[0]?.id !== rootFolder.id) setHistory([rootFolder]);
       } else {
         const currentHistoryId = history[history.length - 1]?.id;
         if (currentHistoryId !== initialFolderId) {
@@ -220,6 +222,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
             url.searchParams.set('folderId', initialFolderId);
             
             const response = await fetch(url.toString());
+        
             if (!response.ok) {
               addToast({ message: "Gagal memuat path, kembali ke Beranda.", type: 'error' });
               router.push('/');

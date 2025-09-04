@@ -1,4 +1,5 @@
 // File: components/SearchResultsList.tsx
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -29,7 +30,6 @@ export default function SearchResultsList() {
         if (file.isFolder) {
             destinationUrl = `/folder/${file.id}`;
         } else {
-            // Asumsi file hasil pencarian selalu punya parent
             destinationUrl = `/folder/${file.parents?.[0]}/file/${file.id}/${createSlug(file.name)}`;
         }
     
@@ -41,8 +41,7 @@ export default function SearchResultsList() {
     }, [router, shareToken]);
 
     const handleItemContextMenu = (event: React.MouseEvent<HTMLDivElement>, file: DriveFile) => {
-        // Implementasi context menu jika diperlukan di hasil pencarian.
-        // Untuk saat ini, kita biarkan kosong.
+        // Implementasi context menu jika diperlukan
     };
 
     const fetchSearchResults = useCallback(async () => {
@@ -70,6 +69,7 @@ export default function SearchResultsList() {
             const data = await response.json();
 
             if (!response.ok) {
+                 // Perbaikan: Menangani error dari API dengan lebih baik
                 throw new Error(data.error || 'Gagal mencari file.');
             }
 
@@ -91,7 +91,8 @@ export default function SearchResultsList() {
     }
 
     if (error) {
-        return <div className="text-center py-20 text-red-500">{error}</div>;
+        // Perbaikan: Tampilkan pesan error dengan jelas
+        return <div className="text-center py-20 text-red-500">Error: {error}</div>;
     }
 
     return (
