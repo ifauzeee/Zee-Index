@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { jwtVerify } from 'jose';
 
-export const dynamic = 'force-dynamic'; // <-- TAMBAHAN
+; // <-- TAMBAHAN
 
 // Helper to check if the request is authorized via a share token header
 async function isShareTokenAuthorized(request: Request): Promise<boolean> {

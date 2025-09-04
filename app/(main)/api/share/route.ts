@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
 
-export const dynamic = 'force-dynamic'; // Ditambahkan
+; // Ditambahkan
 
 interface ShareRequestBody {
   path: string;

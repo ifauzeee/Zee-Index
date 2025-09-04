@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { SignJWT } from 'jose';
 
-export const dynamic = 'force-dynamic'; // Ditambahkan
+; // Ditambahkan
 
 function safeParseJson(jsonString: string | null) {
     if (!jsonString) return null;

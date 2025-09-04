@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { getAccessToken } from '@/lib/googleDrive';
 
-export const dynamic = 'force-dynamic'; // Ditambahkan
+; // Ditambahkan
 
 export async function POST(request: NextRequest) {
   const userRole = request.headers.get('x-user-role');

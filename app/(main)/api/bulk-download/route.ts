@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getAccessToken } from '@/lib/googleDrive';
 import JSZip from 'jszip';
 
-export const dynamic = 'force-dynamic'; // Ditambahkan
+; // Ditambahkan
 
 export async function POST(request: Request) {
   try {

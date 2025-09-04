@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getAccessToken, DriveFile } from '@/lib/googleDrive';
 import { isProtected } from '@/lib/auth';
 
-export const dynamic = 'force-dynamic'; // Ditambahkan
+; // Ditambahkan
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
