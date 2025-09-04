@@ -1,4 +1,3 @@
-// app/(main)/layout.tsx
 "use client";
 
 import { useEffect } from 'react';
@@ -12,16 +11,21 @@ import './globals.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import 'plyr/dist/plyr.css';
 import { Providers } from '../providers';
+import { useSession } from 'next-auth/react'; // <-- Impor useSession
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const { 
     theme, setTheme, refreshKey, toasts, removeToast, fetchUser
   } = useAppStore();
+  const { data: session, status } = useSession(); // <-- Gunakan useSession
   const currentYear = new Date().getFullYear();
 
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+    // Hanya ambil data pengguna jika status sesi sudah terotentikasi
+    if (status === 'authenticated') {
+      fetchUser();
+    }
+  }, [status, fetchUser]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
@@ -40,27 +44,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     const fetchDataUsage = async () => {
         const valueSpan = document.getElementById('data-usage-value');
         if (valueSpan) {
-            try {
-                valueSpan.textContent = 'Menghitung...';
-                const url = new URL('/api/datausage', window.location.origin);
-                const response = await fetch(url.toString());
-                if (!response.ok) throw new Error('Gagal mengambil data');
-                const data = await response.json();
-                valueSpan.textContent = formatBytes(data.totalUsage);
-            } catch (error) {
-                console.error('Gagal mengambil penggunaan data:', error);
-                valueSpan.textContent = 'Gagal memuat';
+            // Hanya ambil data penggunaan jika ada sesi (bukan share link)
+            if (status === 'authenticated') {
+                try {
+                    valueSpan.textContent = 'Menghitung...';
+                    const url = new URL('/api/datausage', window.location.origin);
+                    const response = await fetch(url.toString());
+                    if (!response.ok) throw new Error('Gagal mengambil data');
+                    const data = await response.json();
+                    valueSpan.textContent = formatBytes(data.totalUsage);
+                } catch (error) {
+                    console.error('Gagal mengambil penggunaan data:', error);
+                    valueSpan.textContent = 'Gagal memuat';
+                }
+            } else if (status === 'unauthenticated') {
+                valueSpan.textContent = '-'; // Tampilkan strip jika tidak login
             }
         }
     };
     fetchDataUsage();
-  }, [refreshKey]);
+  }, [refreshKey, status]);
 
   return (
     <html lang="id" className={theme} style={{ colorScheme: theme }}>
       <body>
         <Providers>
-          {/* Baris <Script> untuk pdf.js telah dihapus dari sini */}
           <div id="app-container" className={`bg-background text-foreground min-h-screen flex flex-col`}>
             <div className="container mx-auto px-4 max-w-7xl flex-grow">
               <Header />

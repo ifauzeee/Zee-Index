@@ -15,14 +15,13 @@ async function validateShareToken(request: Request): Promise<boolean> {
     const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
     const { payload } = await jwtVerify(shareToken, secret);
 
-    // Jika token memerlukan login, kita harus memvalidasi sesi juga
     if (payload.loginRequired) {
       const session = await getServerSession(authOptions);
-      return !!session; // return true hanya jika ada sesi
+      return !!session;
     }
-    return true; // Token tidak memerlukan login dan valid
+    return true;
   } catch (error) {
-    return false; // Token tidak valid atau kedaluwarsa
+    return false;
   }
 }
 
@@ -31,7 +30,6 @@ export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
     const isShareAuth = await validateShareToken(request);
 
-    // Jika tidak ada sesi DAN tidak ada share token yang valid, tolak akses
     if (!session && !isShareAuth) {
       return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
     }
@@ -47,7 +45,6 @@ export async function GET(request: Request) {
     
     const canSeeAll = userRole === 'ADMIN';
 
-    // Jika BUKAN admin DAN folder terkunci, periksa token folder
     if (!canSeeAll && isProtected(folderId)) {
       const authHeader = request.headers.get('Authorization');
       const token = authHeader?.split(' ')[1];
