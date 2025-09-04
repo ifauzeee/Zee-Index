@@ -1,4 +1,7 @@
-// FINAL VERSION: API utama untuk mengambil daftar file, menangani semua otorisasi.
+// File: app/(main)/api/files/route.ts
+
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { listFilesFromDrive } from '@/lib/googleDrive';
 import { isPrivateFolder, isProtected, verifyFolderToken } from '@/lib/auth';

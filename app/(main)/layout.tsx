@@ -1,3 +1,5 @@
+// File: app/(main)/layout.tsx
+
 "use client";
 
 import { useEffect } from 'react';
@@ -7,16 +9,11 @@ import BulkActionBar from '@/components/BulkActionBar';
 import Toast from '@/components/Toast';
 import { AnimatePresence } from 'framer-motion';
 import { Analytics } from '@vercel/analytics/next';
-import './globals.css';
-import '@fortawesome/fontawesome-free/css/all.min.css';
-import 'plyr/dist/plyr.css';
-import { Providers } from '../providers';
 import { useSession } from 'next-auth/react';
 
-// Muat Header secara dinamis hanya di sisi klien untuk mencegah error build
 const Header = dynamic(() => import('@/components/Header'), { ssr: false });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function MainLayout({ children }: { children: React.ReactNode }) {
   const { 
     theme, setTheme, refreshKey, toasts, removeToast, fetchUser
   } = useAppStore();
@@ -24,7 +21,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const currentYear = new Date().getFullYear();
 
   useEffect(() => {
-    // Hanya ambil data pengguna jika status sesi sudah terotentikasi
     if (status === 'authenticated') {
       fetchUser();
     }
@@ -47,7 +43,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     const fetchDataUsage = async () => {
         const valueSpan = document.getElementById('data-usage-value');
         if (valueSpan) {
-            // Hanya ambil data penggunaan jika ada sesi
             if (status === 'authenticated') {
                 try {
                     valueSpan.textContent = 'Menghitung...';
@@ -68,37 +63,33 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   }, [refreshKey, status]);
 
   return (
-    <html lang="id" className={theme} style={{ colorScheme: theme }}>
-      <body>
-        <Providers>
-          <div id="app-container" className={`bg-background text-foreground min-h-screen flex flex-col`}>
-            <div className="container mx-auto px-4 max-w-7xl flex-grow">
-              <Header />
-              <main className="min-h-[50vh] mb-12">
-                {children}
-              </main>
-            </div>
-            
-            <div id="toast-container" className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3">
-              <AnimatePresence>
-                {toasts.map((toast) => (
-                  <Toast key={toast.id} toast={toast} onRemove={removeToast} />
-                ))}
-              </AnimatePresence>
-            </div>
+    <>
+      <div id="app-container" className={`bg-background text-foreground min-h-screen flex flex-col`}>
+        <div className="container mx-auto px-4 max-w-7xl flex-grow">
+          <Header />
+          <main className="min-h-[50vh] mb-12">
+            {children}
+          </main>
+        </div>
+        
+        <div id="toast-container" className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3">
+          <AnimatePresence>
+            {toasts.map((toast) => (
+              <Toast key={toast.id} toast={toast} onRemove={removeToast} />
+            ))}
+          </AnimatePresence>
+        </div>
 
-            <footer className="text-center py-6 text-sm text-muted-foreground border-t bg-background">
-              <p id="data-usage-container" className="mb-2">
-                <i className="fas fa-server mr-2"></i>Total Penggunaan Data: <span id="data-usage-value">Memuat...</span>
-              </p>
-              <p>&copy; {currentYear} All rights reserved - <a href="https://ifauzeee.vercel.app/" target="_blank" rel="noopener noreferrer" className="font-medium text-foreground hover:text-primary">Muhammad Ibnu Fauzi</a></p>
-            </footer>
-          </div>
-          <BulkActionBar />
-          <Analytics />
-        </Providers>
-      </body>
-    </html>
+        <footer className="text-center py-6 text-sm text-muted-foreground border-t bg-background">
+          <p id="data-usage-container" className="mb-2">
+            <i className="fas fa-server mr-2"></i>Total Penggunaan Data: <span id="data-usage-value">Memuat...</span>
+          </p>
+          <p>&copy; {currentYear} All rights reserved - <a href="https://ifauzeee.vercel.app/" target="_blank" rel="noopener noreferrer" className="font-medium text-foreground hover:text-primary">Muhammad Ibnu Fauzi</a></p>
+        </footer>
+      </div>
+      <BulkActionBar />
+      <Analytics />
+    </>
   );
 }
 
