@@ -15,7 +15,7 @@ import { default as Plyr } from 'plyr';
 import Prism from 'prismjs';
 import 'prismjs/plugins/line-numbers/prism-line-numbers.min.js';
 import { getFileType, formatBytes, formatDuration, getIcon, cn } from '@/lib/utils';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react'; // Tambahkan Loader2
 import { renderToString } from 'react-dom/server';
 
 declare const pdfjsLib: any;
@@ -68,7 +68,9 @@ export default function FileDetail({ file }: { file: DriveFile }) {
         playerRef.current.destroy();
         playerRef.current = null;
       }
-      previewRef.current.innerHTML = '<div class="flex items-center justify-center h-full text-primary"><i class="fas fa-spinner fa-spin text-4xl"></i></div>';
+      // Perbaikan: Ganti ikon loading dengan LucideIcon Loader2
+      const loadingIconHtml = renderToString(<Loader2 size={64} className="text-primary animate-spin" />);
+      previewRef.current.innerHTML = `<div class="flex items-center justify-center h-full">${loadingIconHtml}</div>`;
       
       try {
         if (fileType === 'video' || fileType === 'audio') {
@@ -165,7 +167,6 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   const metadata = file.imageMediaMetadata || file.videoMediaMetadata;
   const durationMillis = file.videoMediaMetadata?.durationMillis ? parseInt(file.videoMediaMetadata.durationMillis, 10) : undefined;
   const showShareButton = !searchParams.get('share_token') && user?.role === 'ADMIN';
-
   const handleBack = () => {
     router.back();
   };
@@ -175,7 +176,6 @@ export default function FileDetail({ file }: { file: DriveFile }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-12 flex-1 overflow-hidden">
         <div className="lg:col-span-2 flex flex-col flex-1 min-h-0">
           <header className="flex items-center justify-between gap-4 mb-4">
-            {/* PERBAIKAN DI SINI: Tombol Kembali hanya ditampilkan jika tidak ada shareToken */}
             {!searchParams.get('share_token') && (
               <button onClick={handleBack} className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors shrink-0">
                 <ArrowLeft size={20} /> Kembali
@@ -185,7 +185,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
           </header>
           
           <div className="w-full flex-1 flex items-center justify-center overflow-hidden"> 
-             <div ref={previewRef} className="w-full h-full flex items-center justify-center"></div>
+            <div ref={previewRef} className="w-full h-full flex items-center justify-center"></div>
           </div>
         </div>
 
@@ -211,7 +211,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
                 <ListItem label="Diubah oleh" value={file.lastModifyingUser.displayName} />
               )}
               {file.md5Checksum && (
-                 <li className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-border">
+                <li className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-border">
                   <span className="font-medium text-muted-foreground shrink-0">MD5</span>
                   <span className="font-mono text-xs break-all text-left sm:text-right">{file.md5Checksum}</span>
                 </li>
@@ -227,7 +227,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
             )}
           </div>
         </div>
-      </div>
+    </div>
     </div>
   );
 }
@@ -238,7 +238,6 @@ const ListItem = ({ label, value }: { label: string, value: string }) => (
     <span className="text-right break-all">{value}</span>
   </li>
 );
-
 function getLanguageFromFilename(name: string): string {
     const ext = name.split('.').pop()?.toLowerCase() || '';
     const langMap: Record<string, string> = { 

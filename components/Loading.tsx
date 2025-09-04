@@ -1,10 +1,11 @@
-// components/Loading.tsx
+// File: components/Loading.tsx
+import { Loader2 } from 'lucide-react';
+
 export default function Loading() {
   return (
-    // PERBAIKAN: Gunakan flexbox untuk menengahkan konten secara vertikal dan horizontal
-    // dan berikan tinggi minimal agar mengisi sebagian besar layar.
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-muted-foreground col-span-full">
-      <i className="fas fa-spinner fa-spin text-5xl"></i>
+      {/* Perbaikan: Ganti ikon Font Awesome dengan Lucide React */}
+      <Loader2 className="h-12 w-12 text-primary animate-spin" />
       <p className="mt-4 text-sm">Memuat...</p>
     </div>
   );

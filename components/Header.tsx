@@ -5,7 +5,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, signIn, signOut } from "next-auth/react";
-import { Sun, Moon, RefreshCw, Send, Coffee, HardDrive, Search as SearchIcon, Menu, X, LogIn, LogOut } from 'lucide-react';
+import { Sun, Moon, RefreshCw, Send, Coffee, HardDrive, Search as SearchIcon, Menu, X, LogIn, LogOut, ArrowLeft } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import Search from '@/components/Search';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -99,26 +99,27 @@ export default function Header() {
                         })
                     ) : (
                         <>
-                        {menuItems.map((item) => {
-                            const Icon = item.icon;
-                            return 'href' in item && item.href ? (
-                                <a key={item.id} href={item.href} target={item.target} rel={item.rel} title={item.label} className="p-2 rounded-lg hover:bg-accent">
-                                    <Icon size={20} />
-                                </a>
-                            ) : (
-                                'onClick' in item && <button key={item.id} onClick={item.onClick} title={item.label} className="p-2 rounded-lg hover:bg-accent">
-                                    <Icon size={20} />
-                                </button>
-                            );
-                        })}
-                        {authButton}
+                            {menuItems.map((item) => {
+                                const Icon = item.icon;
+                                return 'href' in item && item.href ? (
+                                    <a key={item.id} href={item.href} target={item.target} rel={item.rel} title={item.label} className="p-2 rounded-lg hover:bg-accent">
+                                        <Icon size={20} />
+                                    </a>
+                                ) : (
+                                    'onClick' in item && <button key={item.id} onClick={item.onClick} title={item.label} className="p-2 rounded-lg hover:bg-accent">
+                                        <Icon size={20} />
+                                    </button>
+                                );
+                            })}
+                            {authButton}
                         </>
                     )}
                 </div>
 
                 <div className="flex items-center gap-2 sm:hidden">
                     <button onClick={() => setIsSearchVisible(!isSearchVisible)} title="Cari" className="p-2 rounded-lg hover:bg-accent">
-                        {isSearchVisible ? <X size={20} /> : <SearchIcon size={20} />}
+                        {/* Perbaikan: Menggunakan ikon yang berbeda untuk tombol pencarian di mobile */}
+                        {isSearchVisible ? <ArrowLeft size={20} /> : <SearchIcon size={20} />}
                     </button>
                     <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} title="Menu" className="p-2 rounded-lg hover:bg-accent">
                         {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
