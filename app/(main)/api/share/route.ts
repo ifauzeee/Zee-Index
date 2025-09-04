@@ -1,7 +1,8 @@
+// FINAL VERSION: Membuat share link, hanya untuk admin.
 import { NextRequest, NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
-
-; // Ditambahkan
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/authOptions';
 
 interface ShareRequestBody {
   path: string;
@@ -12,6 +13,11 @@ interface ShareRequestBody {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (session?.user?.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Akses ditolak. Izin admin diperlukan.' }, { status: 403 });
+    }
+    
     const { path, type, expiresIn, loginRequired }: ShareRequestBody = await req.json();
     
     if (!path || !type || !expiresIn) {

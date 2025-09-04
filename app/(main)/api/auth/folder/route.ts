@@ -1,8 +1,7 @@
+// FINAL VERSION: Memvalidasi kredensial untuk folder yang terkunci.
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { SignJWT } from 'jose';
-
-; // Ditambahkan
 
 function safeParseJson(jsonString: string | null) {
     if (!jsonString) return null;

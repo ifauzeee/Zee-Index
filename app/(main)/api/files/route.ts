@@ -1,3 +1,4 @@
+// FINAL VERSION: API utama untuk mengambil daftar file, menangani semua otorisasi.
 import { NextResponse } from 'next/server';
 import { listFilesFromDrive } from '@/lib/googleDrive';
 import { isPrivateFolder, isProtected, verifyFolderToken } from '@/lib/auth';
@@ -5,35 +6,36 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { jwtVerify } from 'jose';
 
-; // <-- TAMBAHAN
-
-// Helper to check if the request is authorized via a share token header
-async function isShareTokenAuthorized(request: Request): Promise<boolean> {
-  const shareToken = request.headers.get('x-share-token');
+// Helper untuk memvalidasi share token langsung dari request
+async function validateShareToken(request: Request): Promise<boolean> {
+  const { searchParams } = new URL(request.url);
+  const shareToken = searchParams.get('share_token');
   if (!shareToken) return false;
+
   try {
     const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
-    await jwtVerify(shareToken, secret);
-    return true; // Token is valid
-  } catch {
-    return false; // Token is invalid or expired
+    const { payload } = await jwtVerify(shareToken, secret);
+
+    if (payload.loginRequired) {
+      const session = await getServerSession(authOptions);
+      return !!session;
+    }
+    return true;
+  } catch (error) {
+    return false;
   }
 }
 
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const isShareAuth = await isShareTokenAuthorized(request);
+    const isShareAuth = await validateShareToken(request);
 
-    // If there's no session AND no valid share token auth, deny access
     if (!session && !isShareAuth) {
       return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
     }
 
-    // Determine user role from session, or treat as a non-admin if using a share link
     const userRole = session?.user?.role;
-    const canSeeAll = userRole === 'ADMIN';
-
     const { searchParams } = new URL(request.url);
     const folderId = searchParams.get('folderId') || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
     const pageToken = searchParams.get('pageToken');
@@ -42,7 +44,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Folder ID tidak ditemukan.' }, { status: 400 });
     }
     
-    // Password check for protected folders (only for non-admins)
+    const canSeeAll = userRole === 'ADMIN';
+
     if (!canSeeAll && isProtected(folderId)) {
       const authHeader = request.headers.get('Authorization');
       const token = authHeader?.split(' ')[1];

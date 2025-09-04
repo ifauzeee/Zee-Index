@@ -1,3 +1,4 @@
+// FINAL VERSION: Menjalankan NextAuth menggunakan konfigurasi terpusat.
 import NextAuth from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 

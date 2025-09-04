@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect } from 'react';
-// PERBAIKAN: Ubah nama 'dynamic' yang diimpor menjadi 'dynamicImport' untuk menghindari konflik
-import dynamicImport from 'next/dynamic';
+import dynamic from 'next/dynamic';
 import { useAppStore } from '@/lib/store';
 import BulkActionBar from '@/components/BulkActionBar';
 import Toast from '@/components/Toast';
@@ -14,11 +13,8 @@ import 'plyr/dist/plyr.css';
 import { Providers } from '../providers';
 import { useSession } from 'next-auth/react';
 
-// PERBAIKAN: Gunakan nama baru 'dynamicImport' untuk memuat komponen
-const Header = dynamicImport(() => import('@/components/Header'), { ssr: false });
-
-// Konfigurasi ini harus tetap bernama 'dynamic' dan diekspor
-export const dynamic = 'force-dynamic';
+// Muat Header secara dinamis hanya di sisi klien untuk mencegah error build
+const Header = dynamic(() => import('@/components/Header'), { ssr: false });
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const { 
@@ -28,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const currentYear = new Date().getFullYear();
 
   useEffect(() => {
+    // Hanya ambil data pengguna jika status sesi sudah terotentikasi
     if (status === 'authenticated') {
       fetchUser();
     }
@@ -50,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     const fetchDataUsage = async () => {
         const valueSpan = document.getElementById('data-usage-value');
         if (valueSpan) {
+            // Hanya ambil data penggunaan jika ada sesi
             if (status === 'authenticated') {
                 try {
                     valueSpan.textContent = 'Menghitung...';
