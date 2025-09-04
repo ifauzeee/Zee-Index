@@ -51,8 +51,18 @@ export async function middleware(req: NextRequest) {
   return NextResponse.redirect(loginUrl);
 }
 
+// --- PERBAIKAN UTAMA ADA DI MATCHER INI ---
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|login|register).*)",
+    /*
+     * Cocokkan semua path KECUALI:
+     * - Yang dimulai dengan /api/ (semua rute API)
+     * - Yang dimulai dengan /_next/static
+     * - Yang dimulai dengan /_next/image
+     * - File persis bernama favicon.ico
+     * - Halaman /login atau /register
+     * Ini memastikan middleware HANYA berjalan pada halaman yang dilihat pengguna.
+     */
+    '/((?!api/|_next/static|_next/image|favicon.ico|login|register).*)',
   ],
 };
