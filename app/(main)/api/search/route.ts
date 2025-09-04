@@ -1,12 +1,13 @@
+// File: app/(main)/api/search/route.ts
 import { NextResponse } from 'next/server';
 import { getAccessToken, DriveFile } from '@/lib/googleDrive';
 import { isProtected } from '@/lib/auth';
 
-; // Ditambahkan
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const searchTerm = searchParams.get('q');
+  // --- PERBAIKAN --- Ambil folderId dari parameter
+  const folderId = searchParams.get('folderId');
 
   if (!searchTerm) {
     return NextResponse.json({ error: 'Search term is required.' }, { status: 400 });
@@ -16,8 +17,16 @@ export async function GET(request: Request) {
     const accessToken = await getAccessToken();
     const driveUrl = 'https://www.googleapis.com/drive/v3/files';
 
+    // --- PERBAIKAN --- Bangun query secara dinamis
+    let driveQuery = `name contains '${searchTerm}' and trashed=false`;
+    if (folderId) {
+      // Jika ada folderId, tambahkan kondisi 'in parents'
+      // Ini akan mencari file/folder di dalam folderId yang ditentukan
+      driveQuery += ` and '${folderId}' in parents`;
+    }
+
     const params = new URLSearchParams({
-      q: `name contains '${searchTerm}' and trashed=false`,
+      q: driveQuery,
       fields: 'files(id, name, mimeType, size, modifiedTime, webViewLink, thumbnailLink, hasThumbnail, parents)',
       pageSize: '100'
     });
