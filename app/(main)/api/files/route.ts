@@ -3,17 +3,40 @@ import { listFilesFromDrive } from '@/lib/googleDrive';
 import { isPrivateFolder, isProtected, verifyFolderToken } from '@/lib/auth';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
+import { jwtVerify } from 'jose';
+
+// Helper untuk memvalidasi share token
+async function validateShareToken(request: Request): Promise<boolean> {
+  const { searchParams } = new URL(request.url);
+  const shareToken = searchParams.get('share_token');
+  if (!shareToken) return false;
+
+  try {
+    const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
+    const { payload } = await jwtVerify(shareToken, secret);
+
+    // Jika token memerlukan login, kita harus memvalidasi sesi juga
+    if (payload.loginRequired) {
+      const session = await getServerSession(authOptions);
+      return !!session; // return true hanya jika ada sesi
+    }
+    return true; // Token tidak memerlukan login dan valid
+  } catch (error) {
+    return false; // Token tidak valid atau kedaluwarsa
+  }
+}
 
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
-    // Jika tidak ada sesi sama sekali, langsung tolak akses.
-    if (!session || !session.user) {
+    const isShareAuth = await validateShareToken(request);
+
+    // Jika tidak ada sesi DAN tidak ada share token yang valid, tolak akses
+    if (!session && !isShareAuth) {
       return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
     }
 
-    const userRole = session.user.role;
+    const userRole = session?.user?.role;
     const { searchParams } = new URL(request.url);
     const folderId = searchParams.get('folderId') || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
     const pageToken = searchParams.get('pageToken');
@@ -21,7 +44,8 @@ export async function GET(request: Request) {
     if (!folderId) {
       return NextResponse.json({ error: 'Folder ID tidak ditemukan.' }, { status: 400 });
     }
-
+    
+    // Jika BUKAN admin DAN folder terkunci, periksa token folder
     if (userRole !== 'ADMIN' && isProtected(folderId)) {
       const authHeader = request.headers.get('Authorization');
       const token = authHeader?.split(' ')[1];
@@ -34,16 +58,20 @@ export async function GET(request: Request) {
 
     const driveResponse = await listFilesFromDrive(folderId, pageToken);
     
+    // Jika pengguna adalah admin (punya sesi), mereka bisa lihat semua.
+    // Jika tidak, filter folder privat.
+    const canSeeAll = userRole === 'ADMIN';
+
     const processedFiles = driveResponse.files
       .filter((file) => {
-        if (userRole === 'ADMIN') return true;
+        if (canSeeAll) return true;
         const isFolder = file.mimeType === 'application/vnd.google-apps.folder';
         return isFolder ? !isPrivateFolder(file.id) : true;
       })
       .map((file) => ({
         ...file,
         isFolder: file.mimeType === 'application/vnd.google-apps.folder',
-        isProtected: userRole !== 'ADMIN' && isProtected(file.id),
+        isProtected: !canSeeAll && isProtected(file.id),
       }));
 
     return NextResponse.json({
