@@ -19,7 +19,6 @@ function AuthButton() {
         return (
             <button onClick={() => signOut({ callbackUrl: '/login' })} title="Logout" className="p-2 rounded-lg hover:bg-accent flex items-center gap-2">
                 <LogOut size={20} />
-                {/* Perbaikan: Tambahkan span untuk teks 'Logout' tanpa kelas hidden */}
                 <span className="text-sm font-medium">Logout</span>
             </button>
         );
@@ -34,7 +33,7 @@ function AuthButton() {
 
 export default function Header() {
     const router = useRouter();
-    const { theme, toggleTheme, triggerRefresh, shareToken } = useAppStore();
+    const { theme, toggleTheme, triggerRefresh, shareToken, user } = useAppStore();
     const [isSearchVisible, setIsSearchVisible] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -79,7 +78,7 @@ export default function Header() {
                 >
                     <i className="fab fa-google-drive text-blue-500 mr-3"></i>Zee Index
                 </h1>
-                
+            
                 <div className="w-full max-w-md hidden sm:block">
                     <Suspense fallback={<div className="w-full h-10 bg-muted rounded-lg animate-pulse" />}>
                         <Search />
@@ -132,16 +131,18 @@ export default function Header() {
                         exit={{ opacity: 0, x: "-100%" }}
                         className="fixed inset-0 z-50 h-screen bg-background flex flex-col items-center justify-center p-4 sm:hidden"
                     >
-                        {/* Tombol Close di dalam menu mobile */}
                         <button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-4 right-4 p-2 rounded-lg hover:bg-accent text-foreground">
                             <X size={24} />
                         </button>
-                        {/* Konten menu mobile yang sudah diperbaiki */}
                         <div className="flex flex-col gap-4 text-lg">
                             {menuItems
                                 .filter(item => {
                                     if (shareToken) {
                                         return item.id === 'theme';
+                                    }
+                                    // PERBAIKAN DI SINI: Menyaring item 'storage' untuk non-admin
+                                    if (user?.role !== 'ADMIN' && item.id === 'storage') {
+                                        return false;
                                     }
                                     return true;
                                 })
