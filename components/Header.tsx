@@ -86,14 +86,20 @@ export default function Header() {
                 </div>
                 
                 <div className="hidden sm:flex items-center gap-2">
-                    {menuItems
-                        .filter(item => {
-                            if (shareToken) {
-                                return item.id === 'theme';
-                            }
-                            return true;
+                    {shareToken ? (
+                        menuItems
+                        .filter(item => item.id === 'theme')
+                        .map(item => {
+                            const Icon = item.icon;
+                            return (
+                                <button key={item.id} onClick={item.onClick} title={item.label} className="p-2 rounded-lg hover:bg-accent">
+                                    <Icon size={20} />
+                                </button>
+                            );
                         })
-                        .map((item) => {
+                    ) : (
+                        <>
+                        {menuItems.map((item) => {
                             const Icon = item.icon;
                             return 'href' in item && item.href ? (
                                 <a key={item.id} href={item.href} target={item.target} rel={item.rel} title={item.label} className="p-2 rounded-lg hover:bg-accent">
@@ -105,7 +111,9 @@ export default function Header() {
                                 </button>
                             );
                         })}
-                    <AuthButton />
+                        <AuthButton />
+                        </>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-2 sm:hidden">
@@ -140,7 +148,6 @@ export default function Header() {
                                     if (shareToken) {
                                         return item.id === 'theme';
                                     }
-                                    // PERBAIKAN DI SINI: Menyaring item 'storage' untuk non-admin
                                     if (user?.role !== 'ADMIN' && item.id === 'storage') {
                                         return false;
                                     }
@@ -162,12 +169,10 @@ export default function Header() {
                                         </button>
                                     );
                                 })}
+                            
+                            {/* BARIS PERBAIKAN: Tombol AuthButton sekarang selalu ditampilkan */}
                             <div className="pt-4 border-t border-muted">
-                                {/* BARIS PERBAIKAN: Tombol logout di menu mobile */}
-                                <button onClick={() => signOut({ callbackUrl: '/login' })} title="Logout" className="flex items-center gap-4 hover:text-primary transition-colors w-full">
-                                    <LogOut size={24} />
-                                    <span>Logout</span>
-                                </button>
+                                <AuthButton />
                             </div>
                         </div>
                     </motion.nav>
