@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     
-    // Penanganan eksplisit jika sesi tidak ada
+    // Jika tidak ada sesi sama sekali, langsung tolak akses.
     if (!session || !session.user) {
       return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
     }
@@ -52,7 +52,6 @@ export async function GET(request: Request) {
     });
 
   } catch (error: any) {
-    // Blok catch-all untuk menangani error tak terduga
     console.error('[API /api/files ERROR]:', error);
     return NextResponse.json(
       { error: 'Terjadi kesalahan internal pada server.', details: error.message },
