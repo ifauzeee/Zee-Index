@@ -1,3 +1,5 @@
+/* File: app/(main)/globals.css */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -75,6 +77,11 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+  
+  /* BARIS BARU: Kelas untuk mengunci scrolling */
+  body.mobile-menu-open {
+    overflow: hidden !important;
+  }
 }
 
 body.bulk-action-bar-visible {
@@ -106,7 +113,6 @@ body.bulk-action-bar-visible {
 ::-webkit-scrollbar-thumb:hover {
   background-color: hsl(var(--muted-foreground));
 }
-
 
 /* Custom styles for the Plyr video player */
 @layer base {

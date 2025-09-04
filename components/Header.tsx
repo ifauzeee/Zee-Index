@@ -1,4 +1,5 @@
 // File: components/Header.tsx
+
 "use client";
 
 import { useState, useEffect, Suspense } from 'react';
@@ -18,7 +19,8 @@ function AuthButton() {
         return (
             <button onClick={() => signOut({ callbackUrl: '/login' })} title="Logout" className="p-2 rounded-lg hover:bg-accent flex items-center gap-2">
                 <LogOut size={20} />
-                <span className="hidden sm:inline text-sm font-medium">Logout</span>
+                {/* Perbaikan: Tambahkan span untuk teks 'Logout' tanpa kelas hidden */}
+                <span className="text-sm font-medium">Logout</span>
             </button>
         );
     }
@@ -58,11 +60,15 @@ export default function Header() {
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
-
-    useEffect(() => {
-        document.body.style.overflow = isMobileMenuOpen ? 'hidden' : 'unset';
-    }, [isMobileMenuOpen]);
     
+    useEffect(() => {
+        if (isMobileMenuOpen) {
+            document.body.classList.add('mobile-menu-open');
+        } else {
+            document.body.classList.remove('mobile-menu-open');
+        }
+    }, [isMobileMenuOpen]);
+
     return (
         <>
             <header className="sticky top-0 z-40 bg-background flex justify-between items-center py-4 border-b gap-4">
@@ -126,6 +132,10 @@ export default function Header() {
                         exit={{ opacity: 0, x: "-100%" }}
                         className="fixed inset-0 z-50 h-screen bg-background flex flex-col items-center justify-center p-4 sm:hidden"
                     >
+                        {/* Tombol Close di dalam menu mobile */}
+                        <button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-4 right-4 p-2 rounded-lg hover:bg-accent text-foreground">
+                            <X size={24} />
+                        </button>
                         {/* Konten menu mobile yang sudah diperbaiki */}
                         <div className="flex flex-col gap-4 text-lg">
                             {menuItems
@@ -152,7 +162,11 @@ export default function Header() {
                                     );
                                 })}
                             <div className="pt-4 border-t border-muted">
-                                <AuthButton />
+                                {/* BARIS PERBAIKAN: Tombol logout di menu mobile */}
+                                <button onClick={() => signOut({ callbackUrl: '/login' })} title="Logout" className="flex items-center gap-4 hover:text-primary transition-colors w-full">
+                                    <LogOut size={24} />
+                                    <span>Logout</span>
+                                </button>
                             </div>
                         </div>
                     </motion.nav>

@@ -76,7 +76,6 @@ export default function FileDetail({ file }: { file: DriveFile }) {
           mediaElement.id = 'player';
           mediaElement.setAttribute('playsinline', '');
           mediaElement.setAttribute('controls', '');
-          // Pastikan mediaElement mengisi 100% dari kontainer induknya
           mediaElement.style.width = '100%'; 
           mediaElement.style.height = '100%';
           if (posterUrl) mediaElement.setAttribute('data-poster', posterUrl);
@@ -103,7 +102,6 @@ export default function FileDetail({ file }: { file: DriveFile }) {
           }
           const container = document.createElement('div');
           container.id = 'pdf-viewer-container';
-          // Menghapus bg-gray-200/dark:bg-gray-800 jika Anda ingin latar belakang transparan
           container.className = 'w-full h-full overflow-auto p-4'; 
           previewRef.current.innerHTML = '';
           previewRef.current.appendChild(container);
@@ -170,14 +168,10 @@ export default function FileDetail({ file }: { file: DriveFile }) {
     <div className="container mx-auto px-4 py-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-12">
         <div className="lg:col-span-2 flex flex-col">
-          <button onClick={handleBack} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4 self-start">
+          <button onClick={handleBack} className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors mb-4 self-start">
             <ArrowLeft size={18} /> Kembali
           </button>
           
-          {/* PERBAIKAN: Hapus kelas kartu dari pembungkus pratinjau utama */}
-          {/* Untuk video, kita tidak lagi membungkusnya dalam div w-full aspect-video di sini,
-              karena Plyr akan menangani rasio aspeknya sendiri jika kita memberikan 100% lebar/tinggi.
-              Kita hanya akan menggunakan kontainer ini sebagai area penempatan. */}
           <div className="w-full h-[70vh] flex items-center justify-center overflow-hidden"> 
              <div ref={previewRef} className="w-full h-full flex items-center justify-center"></div>
           </div>
