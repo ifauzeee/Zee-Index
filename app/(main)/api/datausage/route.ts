@@ -1,15 +1,20 @@
-// app/(main)/api/datausage/route.ts
 import { NextResponse } from 'next/server';
-import { getStorageDetails } from '@/lib/googleDrive'; // <-- Use the new function
+import { getStorageDetails } from '@/lib/googleDrive';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/authOptions";
 
 export const revalidate = 14400; // Cache this for 4 hours
 
 export async function GET() {
   try {
-    // Call the new function that gets all storage details
+    const session = await getServerSession(authOptions);
+    // Hanya pengguna yang login yang bisa melihat penggunaan data
+    if (!session) {
+        return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+    }
+
     const storageDetails = await getStorageDetails();
     
-    // Return only the totalUsage part, as before
     return NextResponse.json({
       totalUsage: storageDetails.usage 
     });
