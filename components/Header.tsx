@@ -10,7 +10,7 @@ import { useAppStore } from '@/lib/store';
 import Search from '@/components/Search';
 import { AnimatePresence, motion } from 'framer-motion';
 
-// --- A. KODE ANIMASI BARU UNTUK BOTTOM SHEET MENU ---
+// --- A. KODE ANIMASI BARU UNTUK MOBILE NAV ---
 
 // Varian untuk overlay latar belakang
 const overlayVariants = {
@@ -18,44 +18,34 @@ const overlayVariants = {
   closed: { opacity: 0 },
 };
 
-// Varian untuk panel yang meluncur dari bawah
-const sheetVariants = {
-  open: {
-    y: 0,
-    transition: { type: "spring", stiffness: 300, damping: 30 }
-  },
-  closed: {
-    y: "100%",
-    transition: { type: "spring", stiffness: 300, damping: 30 }
-  }
-};
-
 // Varian untuk container item menu (untuk stagger)
 const navContainerVariants = {
-    open: {
-        transition: { staggerChildren: 0.07, delayChildren: 0.2 }
-    },
-    closed: {
-        transition: { staggerChildren: 0.05, staggerDirection: -1 }
-    }
+  open: {
+    transition: { staggerChildren: 0.07, delayChildren: 0.2 }
+  },
+  closed: {
+    transition: { staggerChildren: 0.05, staggerDirection: -1 }
+  }
 };
 
 // Varian untuk setiap item menu
 const navItemVariants = {
-    open: {
-        y: 0,
-        opacity: 1,
-        transition: {
-            y: { stiffness: 1000, velocity: -100 }
-        }
-    },
-    closed: {
-        y: 50,
-        opacity: 0,
-        transition: {
-            y: { stiffness: 1000 }
-        }
+  open: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 260,
+      damping: 20
     }
+  },
+  closed: {
+    y: 20,
+    opacity: 0,
+    transition: {
+      duration: 0.2
+    }
+  }
 };
 
 interface MobileNavProps {
@@ -68,7 +58,7 @@ interface MobileNavProps {
   createLink: (href: string) => string;
 }
 
-// --- B. KOMPONEN BARU UNTUK MOBILE NAV GAYA BOTTOM SHEET ---
+// --- B. KOMPONEN BARU UNTUK MOBILE NAV ---
 const MobileNav: FC<MobileNavProps> = ({ menuItems, publicShareLinkItems, authButton, shareToken, user, onClose, createLink }) => {
   return (
     <motion.div
@@ -79,19 +69,16 @@ const MobileNav: FC<MobileNavProps> = ({ menuItems, publicShareLinkItems, authBu
       exit="closed"
       onClick={onClose}
     >
-      <motion.div
-        className="fixed bottom-0 left-0 right-0 h-fit max-h-[80vh] bg-background rounded-t-2xl shadow-2xl flex flex-col p-6"
-        variants={sheetVariants}
-        initial="closed"
-        animate="open"
-        exit="closed"
+      <motion.nav
+        className="fixed inset-y-0 left-0 w-full max-w-xs bg-background flex flex-col justify-center p-8"
+        initial={{ x: "-100%" }}
+        animate={{ x: "0%" }}
+        exit={{ x: "-100%" }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle / Grabber */}
-        <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted mb-6" />
-        
         <motion.div
-          className="flex flex-col gap-5 text-lg overflow-y-auto"
+          className="flex flex-col gap-5 text-lg"
           variants={navContainerVariants}
           initial="closed"
           animate="open"
@@ -117,7 +104,7 @@ const MobileNav: FC<MobileNavProps> = ({ menuItems, publicShareLinkItems, authBu
                       <span>{item.label}</span>
                     </a>
                   ) : (
-                    'onClick' in item && typeof item.onClick === 'function' && 
+                    'onClick' in item && typeof item.onClick === 'function' &&
                     <button onClick={() => { item.onClick(); onClose(); }} className={commonClasses}>
                       <Icon size={22} />
                       <span>{item.label}</span>
@@ -131,10 +118,11 @@ const MobileNav: FC<MobileNavProps> = ({ menuItems, publicShareLinkItems, authBu
             {authButton}
           </motion.div>
         </motion.div>
-      </motion.div>
+      </motion.nav>
     </motion.div>
   );
 };
+
 
 export default function Header() {
     const router = useRouter();
@@ -249,13 +237,12 @@ export default function Header() {
                          </>
                      )}
                 </div>
-
-                {/* Mobile Menu Toggler */}
+                
                 <div className="flex items-center gap-2 sm:hidden">
                     <button onClick={() => setIsSearchVisible(!isSearchVisible)} title="Cari" className="p-2 rounded-lg hover:bg-accent z-50">
                         {isSearchVisible ? <ArrowLeft size={20} /> : <SearchIcon size={20} />}
                     </button>
-                    <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 rounded-lg hover:bg-accent" title="Menu">
+                    <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 rounded-lg hover:bg-accent z-50" title="Menu">
                         <Menu size={20} />
                     </button>
                 </div>
