@@ -12,52 +12,27 @@ export default function Search({ onSearchClose }: { onSearchClose?: () => void }
   const currentUrlQuery = searchParams.get('q');
   const [inputValue, setInputValue] = useState(currentUrlQuery || '');
   
-  // Ambil shareToken dan addToast dari store
-  const { shareToken, currentFolderId, addToast } = useAppStore();
+  const { shareToken, currentFolderId } = useAppStore();
 
   useEffect(() => {
     if (currentUrlQuery !== inputValue) {
       setInputValue(currentUrlQuery || '');
     }
-  }, [currentUrlQuery, inputValue]);
+  }, [currentUrlQuery]);
 
-  // Perbaikan utama: Menggunakan fungsi terpisah untuk menangani logika pencarian.
-  const handleSearch = () => {
-    // Jika ada shareToken dan input tidak kosong, tampilkan notifikasi.
-    if (shareToken) {
-      addToast({ 
-        message: 'Akses dibatasi. Tidak bisa menggunakan fitur pencarian.', 
-        type: 'info' 
-      });
-      return; // Berhenti di sini, tidak melanjutkan pencarian.
+  const performSearch = () => {
+    if (!inputValue) return; // Mencegah pencarian kosong
+    let searchUrl = `/search?q=${encodeURIComponent(inputValue)}`;
+    if (shareToken && currentFolderId) {
+      searchUrl += `&folderId=${currentFolderId}`;
     }
-
-    // Jika tidak ada shareToken, lanjutkan dengan pencarian normal.
-    if (inputValue) {
-      let searchUrl = `/search?q=${encodeURIComponent(inputValue)}`;
-      if (currentFolderId) {
-        searchUrl += `&folderId=${currentFolderId}`;
-      }
-      router.push(searchUrl);
-    }
+    router.push(searchUrl);
   };
   
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      if (inputValue && inputValue !== currentUrlQuery) {
-        handleSearch();
-      }
-    }, 500);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [inputValue, currentUrlQuery, handleSearch]);
-
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleSearch(); // Panggil fungsi handleSearch saat menekan 'Enter'
+      performSearch();
     }
   };
   
@@ -77,6 +52,7 @@ export default function Search({ onSearchClose }: { onSearchClose?: () => void }
 
   return (
     <div className="relative w-full max-w-md">
+      {/* Ikon pencarian di sebelah kiri input, selalu terlihat */}
       <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
       <input
         type="text"
@@ -85,13 +61,13 @@ export default function Search({ onSearchClose }: { onSearchClose?: () => void }
         onKeyDown={handleKeyDown}
         placeholder="Cari di folder ini..."
         className="w-full pl-10 pr-10 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-ring focus:outline-none"
-        disabled={!!shareToken} // Menonaktifkan input jika ada token berbagi
       />
+      {/* Tombol hapus di sebelah kanan, hanya muncul saat input terisi */}
       {inputValue && (
         <button
           onClick={clearSearch}
           className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground hover:text-foreground"
-          aria-label="Clear search"
+          aria-label="Hapus pencarian"
         >
           <X size={20} />
         </button>
