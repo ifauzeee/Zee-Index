@@ -1,8 +1,8 @@
 // File: app/layout.tsx
 
 import type { Metadata } from 'next';
-import { Providers } from './providers'; // Import the client-side provider
-import './(main)/globals.css'; // Import global styles here
+import { Providers } from './providers'; 
+import './(main)/globals.css'; 
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import 'plyr/dist/plyr.css';
 

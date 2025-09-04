@@ -1,4 +1,4 @@
-// File: app/(main)/api/search/route.ts
+// File: app/(main)/search/route.ts
 import { NextResponse } from 'next/server';
 import { getAccessToken, DriveFile } from '@/lib/googleDrive';
 import { isProtected } from '@/lib/auth';

@@ -73,7 +73,6 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
 
   const currentFolderId = history.length > 0 ? history[history.length - 1]?.id : initialFolderId || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
 
-  // Tambahkan useEffect baru untuk mengupdate currentFolderId di global store
   useEffect(() => {
     setCurrentFolderId(currentFolderId);
   }, [currentFolderId, setCurrentFolderId]);
@@ -107,7 +106,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         if (pageToken) url.searchParams.append('pageToken', pageToken);
         
         if (shareToken) {
-          url.searchParams.append('share_token', shareToken);
+           url.searchParams.append('share_token', shareToken);
         }
         
         const headers = new Headers();
@@ -119,7 +118,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         const response = await fetch(url.toString(), { headers });
         if (!response.ok) {
            await handleFetchError(response, 'Gagal mengambil data file.', folderId, folderName);
-          return;
+           return;
         }
         const data = await response.json();
         if (data.files) allFiles = [...allFiles, ...data.files];
@@ -246,7 +245,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   
   const handleShare = (file: DriveFile | null) => {
     if (user?.role !== 'ADMIN') {
-      addToast({ message: 'Fitur berbagi hanya untuk Admin.', type: 'error' });
+       addToast({ message: 'Fitur berbagi hanya untuk Admin.', type: 'error' });
       return;
     }
     setActionState({ type: 'share', file });
@@ -254,7 +253,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   
   const handleRename = async (newName: string) => {
     if (!actionState.file || newName === actionState.file.name) {
-        setActionState({ type: null, file: null }); return;
+       setActionState({ type: null, file: null }); return;
     }
     try {
         const response = await fetch('/api/files/rename', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-user-role': user?.role || 'USER' }, body: JSON.stringify({ fileId: actionState.file.id, newName }) });

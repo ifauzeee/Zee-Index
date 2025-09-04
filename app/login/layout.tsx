@@ -1,4 +1,5 @@
-import '../(main)/globals.css'; // Memuat CSS global agar tampilan konsisten
+// File: app/login/layout.tsx
+import '../(main)/globals.css'; 
 
 export const metadata = {
   title: 'Login - Zee Index',
@@ -11,7 +12,6 @@ export default function LoginLayout({
   children: React.ReactNode
 }) {
   return (
-    // Paksakan tema gelap dengan menambahkan className="dark"
     <html lang="id" className="dark" style={{ colorScheme: 'dark' }}>
       <body>
         {children}

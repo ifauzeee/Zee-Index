@@ -15,7 +15,6 @@ function CustomLoginPage() {
   useEffect(() => {
     const errorType = searchParams.get('error');
     if (errorType) {
-        // --- PERBAIKAN --- Tambahkan logika untuk berbagai jenis error
         switch (errorType) {
             case 'InvalidOrExpiredShareLink':
                 setError('Tautan berbagi yang Anda gunakan tidak valid atau telah kedaluwarsa.');

@@ -73,7 +73,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
         
         <div id="toast-container" className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3">
-          <AnimatePresence>
+            <AnimatePresence>
             {toasts.map((toast) => (
               <Toast key={toast.id} toast={toast} onRemove={removeToast} />
             ))}
