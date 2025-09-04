@@ -5,9 +5,9 @@ import { authOptions } from "@/lib/authOptions";
 export async function GET() {
   const session = await getServerSession(authOptions);
 
+  // This endpoint is ONLY for users with a session, not for share links.
   if (!session || !session.user) {
-    // Kembalikan null jika tidak ada sesi, bukan error 401
-    return NextResponse.json({ user: null });
+    return NextResponse.json({ error: 'Tidak terautentikasi' }, { status: 401 });
   }
 
   return NextResponse.json({ user: session.user });

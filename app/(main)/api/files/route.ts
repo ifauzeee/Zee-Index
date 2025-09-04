@@ -5,38 +5,33 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { jwtVerify } from 'jose';
 
-// Helper untuk memvalidasi share token
-async function validateShareToken(request: Request): Promise<boolean> {
-  const { searchParams } = new URL(request.url);
-  const shareToken = searchParams.get('share_token');
+// Helper to check if the request is authorized via a share token header
+async function isShareTokenAuthorized(request: Request): Promise<boolean> {
+  const shareToken = request.headers.get('x-share-token');
   if (!shareToken) return false;
-
   try {
     const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
-    const { payload } = await jwtVerify(shareToken, secret);
-
-    // Jika token memerlukan login, kita harus memvalidasi sesi juga
-    if (payload.loginRequired) {
-      const session = await getServerSession(authOptions);
-      return !!session; // return true hanya jika ada sesi
-    }
-    return true; // Token tidak memerlukan login dan valid
-  } catch (error) {
-    return false; // Token tidak valid atau kedaluwarsa
+    await jwtVerify(shareToken, secret);
+    return true; // Token is valid
+  } catch {
+    return false; // Token is invalid or expired
   }
 }
 
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const isShareAuth = await validateShareToken(request);
+    const isShareAuth = await isShareTokenAuthorized(request);
 
-    // Jika tidak ada sesi DAN tidak ada share token yang valid, tolak akses
+    // If there's no session AND no valid share token auth, deny access
     if (!session && !isShareAuth) {
       return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
     }
 
+    // Determine user role from session, or treat as a non-admin if using a share link
     const userRole = session?.user?.role;
+    const canSeeAll = userRole === 'ADMIN';
+
     const { searchParams } = new URL(request.url);
     const folderId = searchParams.get('folderId') || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
     const pageToken = searchParams.get('pageToken');
@@ -45,8 +40,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Folder ID tidak ditemukan.' }, { status: 400 });
     }
     
-    // Jika BUKAN admin DAN folder terkunci, periksa token folder
-    if (userRole !== 'ADMIN' && isProtected(folderId)) {
+    // Password check for protected folders (only for non-admins)
+    if (!canSeeAll && isProtected(folderId)) {
       const authHeader = request.headers.get('Authorization');
       const token = authHeader?.split(' ')[1];
       const isTokenValid = await verifyFolderToken(token || '', folderId);
@@ -58,10 +53,6 @@ export async function GET(request: Request) {
 
     const driveResponse = await listFilesFromDrive(folderId, pageToken);
     
-    // Jika pengguna adalah admin (punya sesi), mereka bisa lihat semua.
-    // Jika tidak, filter folder privat.
-    const canSeeAll = userRole === 'ADMIN';
-
     const processedFiles = driveResponse.files
       .filter((file) => {
         if (canSeeAll) return true;
