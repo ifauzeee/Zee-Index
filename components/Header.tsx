@@ -10,29 +10,9 @@ import { useAppStore } from '@/lib/store';
 import Search from '@/components/Search';
 import { AnimatePresence, motion } from 'framer-motion';
 
-function AuthButton() {
-    const { data: session, status } = useSession();
-    if (status === "loading") {
-        return <div className="w-24 h-9 bg-muted rounded-lg animate-pulse" />;
-    }
-    if (session) {
-        return (
-            <button onClick={() => signOut({ callbackUrl: '/login' })} title="Logout" className="p-2 rounded-lg hover:bg-accent flex items-center gap-2">
-                <LogOut size={20} />
-                <span className="text-sm font-medium">Logout</span>
-            </button>
-        );
-    }
-    return (
-        <button onClick={() => signIn('google')} title="Login with Google" className="p-2 rounded-lg hover:bg-accent flex items-center gap-2">
-            <LogIn size={20} />
-            <span className="hidden sm:inline text-sm font-medium">Login</span>
-        </button>
-    );
-}
-
 export default function Header() {
     const router = useRouter();
+    const { data: session, status } = useSession(); // Ambil sesi di sini
     const { theme, toggleTheme, triggerRefresh, shareToken, user } = useAppStore();
     const [isSearchVisible, setIsSearchVisible] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -47,6 +27,10 @@ export default function Header() {
     
     const handleLogoClick = () => {
         router.push('/');
+    };
+
+    const handleLoginClick = () => {
+        router.push('/login');
     };
 
     useEffect(() => {
@@ -67,6 +51,23 @@ export default function Header() {
             document.body.classList.remove('mobile-menu-open');
         }
     }, [isMobileMenuOpen]);
+
+    const authButton = (
+        status === "loading" ? (
+            <div className="w-24 h-9 bg-muted rounded-lg animate-pulse" />
+        ) : session ? (
+            <button onClick={() => signOut({ callbackUrl: '/login' })} title="Logout" className="p-2 rounded-lg hover:bg-accent flex items-center gap-2">
+                <LogOut size={20} />
+                <span className="text-sm font-medium hidden sm:inline">Logout</span>
+            </button>
+        ) : (
+            // PERUBAHAN DI SINI: Mengarahkan ke halaman /login terlebih dahulu
+            <button onClick={handleLoginClick} title="Login" className="p-2 rounded-lg hover:bg-accent flex items-center gap-2">
+                <LogIn size={20} />
+                <span className="text-sm font-medium hidden sm:inline">Login</span>
+            </button>
+        )
+    );
 
     return (
         <>
@@ -111,7 +112,7 @@ export default function Header() {
                                 </button>
                             );
                         })}
-                        <AuthButton />
+                        {authButton}
                         </>
                     )}
                 </div>
@@ -170,9 +171,8 @@ export default function Header() {
                                     );
                                 })}
                             
-                            {/* BARIS PERBAIKAN: Tombol AuthButton sekarang selalu ditampilkan */}
                             <div className="pt-4 border-t border-muted">
-                                <AuthButton />
+                                {authButton}
                             </div>
                         </div>
                     </motion.nav>
