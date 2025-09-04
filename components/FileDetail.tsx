@@ -1,6 +1,7 @@
+// File: components/FileDetail.tsx
 "use client";
 
-import { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
 import type { DriveFile } from '@/lib/googleDrive';
@@ -14,6 +15,7 @@ import Prism from 'prismjs';
 import 'prismjs/plugins/line-numbers/prism-line-numbers.min.js';
 import { getFileType, formatBytes, formatDuration, getIcon } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
+import { renderToString } from 'react-dom/server';
 
 declare const pdfjsLib: any;
 
@@ -26,20 +28,17 @@ export default function FileDetail({ file }: { file: DriveFile }) {
 
   useEffect(() => {
     const shareToken = searchParams.get('share_token');
-
     if (shareToken) {
       try {
         const decodedToken: { exp: number } = jwtDecode(shareToken);
         const expirationTime = decodedToken.exp * 1000;
         const currentTime = Date.now();
         const timeUntilExpiration = expirationTime - currentTime;
-
         if (timeUntilExpiration > 0) {
           const timer = setTimeout(() => {
             addToast({ message: 'Sesi berbagi Anda telah berakhir.', type: 'info' });
             router.push('/login?error=InvalidOrExpiredShareLink');
           }, timeUntilExpiration);
-
           return () => clearTimeout(timer);
         }
       } catch (error) {
@@ -62,85 +61,99 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   
   useEffect(() => {
     const renderPreview = async () => {
-        if (!previewRef.current) return;
-        if (playerRef.current) {
-            playerRef.current.destroy();
-            playerRef.current = null;
-        }
-        previewRef.current.innerHTML = '<div class="flex items-center justify-center h-full text-muted-foreground"><i class="fas fa-spinner fa-spin text-4xl"></i></div>';
-        try {
-          if (fileType === 'video' || fileType === 'audio') {
-              const mediaTag = fileType === 'video' ? 'video' : 'audio';
-              const posterUrl = file.thumbnailLink ? file.thumbnailLink.replace(/=s\d+/, '=s1280') : '';
-              const mediaElement = document.createElement(mediaTag);
-              mediaElement.id = 'player';
-              mediaElement.setAttribute('playsinline', '');
-              mediaElement.setAttribute('controls', '');
-              mediaElement.style.width = '100%';
-              mediaElement.style.height = '100%';
-              if (posterUrl) mediaElement.setAttribute('data-poster', posterUrl);
-              const sourceElement = document.createElement('source');
-              sourceElement.src = directLink;
-              sourceElement.type = file.mimeType;
-              mediaElement.appendChild(sourceElement);
-              previewRef.current.innerHTML = '';
-              previewRef.current.appendChild(mediaElement);
-              playerRef.current = new Plyr(mediaElement);
-          } else if (fileType === 'image') {
-              const img = document.createElement('img');
-              img.src = directLink;
-              img.className = "w-full h-full object-contain mx-auto";
-              previewRef.current.innerHTML = '';
-              previewRef.current.appendChild(img);
-          } else if (fileType === 'pdf') {
-            if (typeof pdfjsLib === 'undefined' || !pdfjsLib.GlobalWorkerOptions.workerSrc) {
-                 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://mozilla.github.io/pdf.js/build/pdf.worker.mjs`;
-             }
-            const container = document.createElement('div');
-             container.id = 'pdf-viewer-container';
-             container.className = 'w-full h-full overflow-auto p-4 bg-gray-200 dark:bg-gray-800';
-             previewRef.current.innerHTML = '';
-             previewRef.current.appendChild(container);
-             const loadingTask = pdfjsLib.getDocument(directLink);
-             const pdfDoc = await loadingTask.promise;
-             for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-                 const page = await pdfDoc.getPage(pageNum);
-                 const viewport = page.getViewport({ scale: 1.5 });
-                 const canvas = document.createElement('canvas');
-                 canvas.className = 'mb-4 mx-auto shadow-lg';
-                 const context = canvas.getContext('2d');
-                 canvas.height = viewport.height;
-                 canvas.width = viewport.width;
-                 container.appendChild(canvas);
-                 const renderContext = { canvasContext: context, viewport: viewport };
-                 await page.render(renderContext).promise;
-             }
-          } else if (fileType === 'code') {
-              const pre = document.createElement('pre');
-              pre.className = 'line-numbers h-full w-full overflow-auto text-sm';
-              const code = document.createElement('code');
-              code.className = `language-${getLanguageFromFilename(file.name)}`;
-              code.textContent = 'Memuat konten...';
-              pre.appendChild(code);
-              previewRef.current.innerHTML = '';
-              previewRef.current.appendChild(pre);
-              const response = await fetch(directLink);
-              if (!response.ok) throw new Error('Gagal mengambil konten file');
-              const textContent = await response.text();
-              code.textContent = textContent;
-              Prism.highlightAllUnder(previewRef.current);
-          } else {
-              const iconClass = getIcon(file.mimeType);
-              const iconHTML = `<i class="fas ${iconClass} text-9xl opacity-20"></i>`;
-              previewRef.current.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">${iconHTML}<p>Pratinjau tidak tersedia.</p></div>`;
+      if (!previewRef.current) return;
+      if (playerRef.current) {
+        playerRef.current.destroy();
+        playerRef.current = null;
+      }
+      previewRef.current.innerHTML = '<div class="flex items-center justify-center h-full text-primary"><i class="fas fa-spinner fa-spin text-4xl"></i></div>';
+      
+      try {
+        if (fileType === 'video' || fileType === 'audio') {
+          const mediaTag = fileType === 'video' ? 'video' : 'audio';
+          const posterUrl = file.thumbnailLink ? file.thumbnailLink.replace(/=s\d+/, '=s1280') : '';
+          const mediaElement = document.createElement(mediaTag);
+          mediaElement.id = 'player';
+          mediaElement.setAttribute('playsinline', '');
+          mediaElement.setAttribute('controls', '');
+          // Pastikan mediaElement mengisi 100% dari kontainer induknya
+          mediaElement.style.width = '100%'; 
+          mediaElement.style.height = '100%';
+          if (posterUrl) mediaElement.setAttribute('data-poster', posterUrl);
+          
+          const mimeType = file.mimeType === 'application/octet-stream' && file.name.endsWith('.mkv') ? 'video/x-matroska' : file.mimeType;
+
+          const sourceElement = document.createElement('source');
+          sourceElement.src = directLink;
+          sourceElement.type = mimeType;
+          mediaElement.appendChild(sourceElement);
+          
+          previewRef.current.innerHTML = '';
+          previewRef.current.appendChild(mediaElement);
+          playerRef.current = new Plyr(mediaElement);
+        } else if (fileType === 'image') {
+          const img = document.createElement('img');
+          img.src = directLink;
+          img.className = "w-full h-full object-contain mx-auto";
+          previewRef.current.innerHTML = '';
+          previewRef.current.appendChild(img);
+        } else if (fileType === 'pdf') {
+          if (typeof pdfjsLib === 'undefined' || !pdfjsLib.GlobalWorkerOptions.workerSrc) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://mozilla.github.io/pdf.js/build/pdf.worker.mjs`;
           }
-        } catch (error) {
-           console.error("Preview Error:", error);
-           previewRef.current.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-4 text-red-500"><i class="fas fa-exclamation-triangle text-6xl"></i><p>Gagal memuat pratinjau.</p></div>`;
+          const container = document.createElement('div');
+          container.id = 'pdf-viewer-container';
+          // Menghapus bg-gray-200/dark:bg-gray-800 jika Anda ingin latar belakang transparan
+          container.className = 'w-full h-full overflow-auto p-4'; 
+          previewRef.current.innerHTML = '';
+          previewRef.current.appendChild(container);
+          const loadingTask = pdfjsLib.getDocument(directLink);
+          const pdfDoc = await loadingTask.promise;
+          for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+            const page = await pdfDoc.getPage(pageNum);
+            const viewport = page.getViewport({ scale: 1.5 });
+            const canvas = document.createElement('canvas');
+            canvas.className = 'mb-4 mx-auto shadow-lg';
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            container.appendChild(canvas);
+            const renderContext = { canvasContext: context, viewport: viewport };
+            await page.render(renderContext).promise;
+          }
+        } else if (fileType === 'code') {
+          const pre = document.createElement('pre');
+          pre.className = 'line-numbers h-full w-full overflow-auto text-sm';
+          const code = document.createElement('code');
+          code.className = `language-${getLanguageFromFilename(file.name)}`;
+          code.textContent = 'Memuat konten...';
+          pre.appendChild(code);
+          previewRef.current.innerHTML = '';
+          previewRef.current.appendChild(pre);
+          const response = await fetch(directLink);
+          if (!response.ok) throw new Error('Gagal mengambil konten file');
+          const textContent = await response.text();
+          code.textContent = textContent;
+          Prism.highlightAllUnder(previewRef.current);
+        } else {
+          const IconComponent = getIcon(file.mimeType);
+          const iconString = renderToString(<IconComponent size={96} className="text-primary" />);
+          const iconHTML = `
+            <div class="flex flex-col items-center justify-center h-full gap-4">
+              <div class="text-9xl">
+                ${iconString}
+              </div>
+            </div>
+          `;
+          previewRef.current.innerHTML = iconHTML;
         }
+      } catch (error) {
+        console.error("Preview Error:", error);
+        previewRef.current.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-4 text-red-500"><i class="fas fa-exclamation-triangle text-6xl"></i><p>Gagal memuat pratinjau.</p></div>`;
+      }
     };
     if (typeof window !== 'undefined') {
-        renderPreview();
+      renderPreview();
     }
     return () => {
       if (playerRef.current) {
@@ -160,9 +173,15 @@ export default function FileDetail({ file }: { file: DriveFile }) {
           <button onClick={handleBack} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4 self-start">
             <ArrowLeft size={18} /> Kembali
           </button>
-          <div className="w-full bg-card rounded-xl border border-border shadow-lg flex-grow flex items-center justify-center overflow-hidden min-h-[70vh]">
-            <div ref={previewRef} className="w-full h-full flex items-center justify-center"></div>
+          
+          {/* PERBAIKAN: Hapus kelas kartu dari pembungkus pratinjau utama */}
+          {/* Untuk video, kita tidak lagi membungkusnya dalam div w-full aspect-video di sini,
+              karena Plyr akan menangani rasio aspeknya sendiri jika kita memberikan 100% lebar/tinggi.
+              Kita hanya akan menggunakan kontainer ini sebagai area penempatan. */}
+          <div className="w-full h-[70vh] flex items-center justify-center overflow-hidden"> 
+             <div ref={previewRef} className="w-full h-full flex items-center justify-center"></div>
           </div>
+          
         </div>
         <div className="lg:col-span-1 mt-8 lg:mt-[52px]">
           <div className="sticky top-24">
@@ -188,8 +207,8 @@ export default function FileDetail({ file }: { file: DriveFile }) {
                 )}
                 {file.md5Checksum && (
                   <li className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-border">
-                      <span className="font-medium text-muted-foreground shrink-0">MD5</span>
-                      <span className="font-mono text-xs break-all text-left sm:text-right">{file.md5Checksum}</span>
+                    <span className="font-medium text-muted-foreground shrink-0">MD5</span>
+                    <span className="font-mono text-xs break-all text-left sm:text-right">{file.md5Checksum}</span>
                   </li>
                 )}
               </ul>
@@ -199,10 +218,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
                 <i className="fas fa-download mr-3"></i>Unduh File
               </a>
               {!searchParams.get('share_token') && (
-                <ShareButton 
-                    path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`} 
-                    itemName={file.name} 
-                />
+                <ShareButton path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`} itemName={file.name} />
               )}
             </div>
           </div>

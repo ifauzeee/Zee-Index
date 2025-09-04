@@ -1,4 +1,5 @@
 // File: components/Search.tsx
+
 "use client";
 
 import { useState, useEffect, KeyboardEvent } from 'react';
@@ -15,24 +16,36 @@ export default function Search({ onSearchClose }: { onSearchClose?: () => void }
   const { shareToken, currentFolderId } = useAppStore();
 
   useEffect(() => {
-    if (currentUrlQuery !== inputValue) {
-      setInputValue(currentUrlQuery || '');
-    }
-  }, [currentUrlQuery]);
+    const delayDebounceFn = setTimeout(() => {
+      if (inputValue && inputValue !== currentUrlQuery) {
+        performSearch();
+      } else if (!inputValue && currentUrlQuery) {
+        clearSearch();
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [inputValue, currentUrlQuery]);
 
   const performSearch = () => {
-    if (!inputValue) return; // Mencegah pencarian kosong
+    if (!inputValue) return;
     let searchUrl = `/search?q=${encodeURIComponent(inputValue)}`;
-    if (shareToken && currentFolderId) {
-      searchUrl += `&folderId=${currentFolderId}`;
+
+    // Mengirim ID folder saat ini ke API
+    if (currentFolderId) {
+        searchUrl += `&folderId=${currentFolderId}`;
     }
+
+    if (shareToken) {
+      searchUrl += `&share_token=${shareToken}`;
+    }
+
     router.push(searchUrl);
   };
   
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      performSearch();
     }
   };
   
@@ -52,7 +65,6 @@ export default function Search({ onSearchClose }: { onSearchClose?: () => void }
 
   return (
     <div className="relative w-full max-w-md">
-      {/* Ikon pencarian di sebelah kiri input, selalu terlihat */}
       <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
       <input
         type="text"
@@ -62,7 +74,6 @@ export default function Search({ onSearchClose }: { onSearchClose?: () => void }
         placeholder="Cari di folder ini..."
         className="w-full pl-10 pr-10 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-ring focus:outline-none"
       />
-      {/* Tombol hapus di sebelah kanan, hanya muncul saat input terisi */}
       {inputValue && (
         <button
           onClick={clearSearch}
