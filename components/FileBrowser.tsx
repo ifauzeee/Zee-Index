@@ -1,5 +1,4 @@
 // File: components/FileBrowser.tsx
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -41,14 +40,18 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   const {
     sort, isBulkMode, setBulkMode, toggleSelection,
     view, setView, refreshKey, addToast,
-    folderTokens, setFolderToken, user
+    folderTokens, setFolderToken, user,
+    shareToken, setShareToken // --- PERBAIKAN --- Ambil shareToken dan setternya dari store
   } = useAppStore();
 
   useEffect(() => {
-    const shareToken = searchParams.get('share_token');
-    if (shareToken) {
+    const currentShareToken = searchParams.get('share_token');
+
+    if (currentShareToken) {
+      // --- PERBAIKAN --- Simpan token ke global store agar bisa diakses di mana saja
+      setShareToken(currentShareToken);
       try {
-        const decodedToken: { exp: number } = jwtDecode(shareToken);
+        const decodedToken: { exp: number } = jwtDecode(currentShareToken);
         const expirationTime = decodedToken.exp * 1000;
         const currentTime = Date.now();
         const timeUntilExpiration = expirationTime - currentTime;
@@ -56,28 +59,27 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         if (timeUntilExpiration > 0) {
           const timer = setTimeout(() => {
             addToast({ message: 'Sesi berbagi Anda telah berakhir.', type: 'info' });
+            setShareToken(null); // Hapus token dari store
             router.push('/login?error=InvalidOrExpiredShareLink');
           }, timeUntilExpiration);
+
           return () => clearTimeout(timer);
         }
       } catch (error) {
         console.error("Token tidak valid:", error);
       }
     }
-  }, [searchParams, router, addToast]);
+  }, [searchParams, router, addToast, setShareToken]);
 
   const currentFolderId = history.length > 0 ? history[history.length - 1]?.id : initialFolderId || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
   const createSlug = (name: string) => encodeURIComponent(name.replace(/\s+/g, '-').toLowerCase());
 
-  // --- PERBAIKAN DI FUNGSI INI ---
   const handleFetchError = useCallback(async (response: Response, defaultMessage: string, folderId: string, folderName: string) => {
     const errorData = await response.json();
     if (response.status === 401) {
         if (errorData.protected) {
-            // Ini untuk folder yang dilindungi kata sandi
             setAuthModal({ isOpen: true, folderId, folderName });
         } else {
-            // Ini untuk sesi yang kedaluwarsa
             addToast({ message: 'Sesi Anda telah berakhir. Silakan login kembali.', type: 'error' });
             router.push('/login');
         }
@@ -97,6 +99,11 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         const url = new URL(window.location.origin + '/api/files');
         url.searchParams.append('folderId', folderId);
         if (pageToken) url.searchParams.append('pageToken', pageToken);
+        
+        // --- PERBAIKAN --- Tambahkan share_token ke request API jika ada
+        if (shareToken) {
+          url.searchParams.append('share_token', shareToken);
+        }
         
         const headers = new Headers();
         const folderAuthToken = folderTokens[folderId];
@@ -119,7 +126,8 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     } finally {
       setIsLoading(false);
     }
-  }, [folderTokens, handleFetchError, addToast]);
+    // --- PERBAIKAN --- Tambahkan shareToken sebagai dependency
+  }, [folderTokens, handleFetchError, addToast, shareToken]);
 
   const handleItemClick = (file: DriveFile) => {
     if (isBulkMode) {
@@ -132,9 +140,14 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
       return;
     }
 
-    const destinationUrl = file.isFolder
+    let destinationUrl = file.isFolder
       ? `/folder/${file.id}`
       : `/folder/${currentFolderId}/file/${file.id}/${createSlug(file.name)}`;
+
+    // --- PERBAIKAN --- Pastikan share_token tetap ada di URL saat navigasi
+    if (shareToken) {
+      destinationUrl += `?share_token=${shareToken}`;
+    }
 
     router.push(destinationUrl);
   };
@@ -166,7 +179,11 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   };
 
   const handleBreadcrumbClick = (folderId: string) => {
-    const folderUrl = folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID ? '/' : `/folder/${folderId}`;
+    let folderUrl = folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID ? '/' : `/folder/${folderId}`;
+    // --- PERBAIKAN --- Pastikan share_token tetap ada di URL saat navigasi
+    if (shareToken) {
+        folderUrl += `?share_token=${shareToken}`;
+    }
     router.push(folderUrl);
   };
 
@@ -211,9 +228,9 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   
   const handleContextMenu = useCallback((event: React.MouseEvent, file: DriveFile) => {
     event.preventDefault();
-    if (isBulkMode) return;
+    if (isBulkMode || shareToken) return; // --- PERBAIKAN --- Nonaktifkan context menu jika dalam mode share
     setContextMenu({ x: event.clientX, y: event.clientY, file });
-  }, [isBulkMode]);
+  }, [isBulkMode, shareToken]);
   
   const handleShare = (file: DriveFile | null) => {
     if (user?.role !== 'ADMIN') {
@@ -228,7 +245,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         setActionState({ type: null, file: null }); return;
     }
     try {
-        const response = await fetch('/api/files/rename', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileId: actionState.file.id, newName }) });
+        const response = await fetch('/api/files/rename', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-user-role': user?.role || 'USER' }, body: JSON.stringify({ fileId: actionState.file.id, newName }) });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Gagal mengubah nama');
         setFiles(prevFiles => prevFiles.map(f => f.id === data.file.id ? { ...f, name: data.file.name } : f));
@@ -240,7 +257,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   const handleDelete = async () => {
     if (!actionState.file) return;
     try {
-        const response = await fetch('/api/files/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileId: actionState.file.id }) });
+        const response = await fetch('/api/files/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-user-role': user?.role || 'USER' }, body: JSON.stringify({ fileId: actionState.file.id }) });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Gagal menghapus file');
         setFiles(prevFiles => prevFiles.filter(f => f.id !== actionState.file?.id));
@@ -292,13 +309,17 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
           ))}
         </nav>
         <div className="flex items-center gap-2 shrink-0">
-            <button 
-              onClick={() => handleShare({ id: currentFolderId, name: history[history.length - 1]?.name || 'Folder', isFolder: true, mimeType: '', modifiedTime: '', createdTime: '', hasThumbnail: false, webViewLink: '' })} 
-              className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground" 
-              title="Bagikan Folder Ini">
-              <Share2 size={18} />
-            </button>
-            <button onClick={() => setBulkMode(!isBulkMode)} className={`p-2 rounded-lg transition-colors flex items-center justify-center text-sm ${isBulkMode ? 'bg-blue-600 text-white' : 'bg-transparent hover:bg-accent text-foreground'}`} title="Pilih Beberapa File"><CheckSquare size={18} /><span className="sr-only">Pilih</span></button>
+            {!shareToken && user?.role === 'ADMIN' && (
+              <>
+                <button 
+                  onClick={() => handleShare({ id: currentFolderId, name: history[history.length - 1]?.name || 'Folder', isFolder: true, mimeType: '', modifiedTime: '', createdTime: '', hasThumbnail: false, webViewLink: '' })} 
+                  className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground" 
+                  title="Bagikan Folder Ini">
+                  <Share2 size={18} />
+                </button>
+                <button onClick={() => setBulkMode(!isBulkMode)} className={`p-2 rounded-lg transition-colors flex items-center justify-center text-sm ${isBulkMode ? 'bg-blue-600 text-white' : 'bg-transparent hover:bg-accent text-foreground'}`} title="Pilih Beberapa File"><CheckSquare size={18} /><span className="sr-only">Pilih</span></button>
+              </>
+            )}
             <div className="flex items-center border border-border rounded-lg p-0.5">
               <button onClick={() => setView('list')} className={`p-1.5 rounded-md transition-colors ${view === 'list' ? 'bg-background text-primary shadow-sm' : 'hover:bg-accent/50 text-muted-foreground'}`} title="Tampilan Daftar"><List size={18} /></button>
               <button onClick={() => setView('grid')} className={`p-1.5 rounded-md transition-colors ${view === 'grid' ? 'bg-background text-primary shadow-sm' : 'hover:bg-accent/50 text-muted-foreground'}`} title="Tampilan Grid"><Grid size={18} /></button>
