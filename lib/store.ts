@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { jwtDecode } from 'jwt-decode';
+import { kv } from '@/lib/kv'; // <-- PERBAIKAN: Tambahkan baris ini
 
 export interface Toast {
   id: string;
@@ -14,7 +15,7 @@ export interface ShareLink {
     id: string;
     path: string;
     token: string;
-    jti: string; // Diperlukan untuk revoke
+    jti: string;
     expiresAt: string;
     loginRequired: boolean;
     itemName: string;
@@ -57,9 +58,12 @@ interface AppState {
   currentFolderId: string | null;
   setCurrentFolderId: (id: string | null) => void;
   shareLinks: ShareLink[];
+  fetchShareLinks: () => Promise<void>;
   addShareLink: (link: ShareLink) => void;
   removeShareLink: (id: string) => Promise<void>;
 }
+
+const SHARE_LINKS_KEY = 'zee-index:share-links';
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -72,16 +76,16 @@ export const useAppStore = create<AppState>()(
       sort: { key: 'name', order: 'asc' },
       setSort: (key) => {
         const currentSort = get().sort;
-        const order = currentSort.key === key && currentSort.order === 'asc' ? 'desc' : 'asc';
+         const order = currentSort.key === key && currentSort.order === 'asc' ? 'desc' : 'asc';
         set({ sort: { key, order } });
       },
       refreshKey: 0,
-      triggerRefresh: () => set((state) => ({ refreshKey: state.refreshKey + 1 })),
+       triggerRefresh: () => set((state) => ({ refreshKey: state.refreshKey + 1 })),
       isBulkMode: false,
       selectedFiles: [],
       setBulkMode: (isActive) => {
         if (!isActive) {
-          set({ isBulkMode: false, selectedFiles: [] });
+           set({ isBulkMode: false, selectedFiles: [] });
         } else {
           set({ isBulkMode: true });
         }
@@ -100,40 +104,51 @@ export const useAppStore = create<AppState>()(
       folderTokens: {},
       setFolderToken: (folderId, token) => set((state) => ({
         folderTokens: {
-          ...state.folderTokens,
+           ...state.folderTokens,
           [folderId]: token,
         },
       })),
       toasts: [],
       addToast: (toastDetails) => {
-         const id = new Date().toISOString() + Math.random();
+          const id = new Date().toISOString() + Math.random();
         const newToast = { ...toastDetails, id };
         set((state) => ({ toasts: [...state.toasts, newToast] }));
         setTimeout(() => {
           get().removeToast(id);
         }, 5000);
       },
-      removeToast: (id) => {
+       removeToast: (id) => {
         set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) }));
       },
       user: null,
       fetchUser: async () => {
-        try {
+         try {
           const response = await fetch('/api/auth/me');
           if (response.ok) {
             const data = await response.json();
             set({ user: data.user });
           } else {
-            set({ user: null });
+             set({ user: null });
           }
         } catch (error) {
           set({ user: null });
         }
       },
-      currentFolderId: null,
+       currentFolderId: null,
       setCurrentFolderId: (id) => set({ currentFolderId: id }),
       
       shareLinks: [],
+      fetchShareLinks: async () => {
+        try {
+            const response = await fetch('/api/share/list');
+            if (!response.ok) throw new Error("Gagal mengambil daftar tautan");
+            const links = await response.json();
+            set({ shareLinks: links });
+        } catch (error) {
+            console.error(error);
+            get().addToast({ message: 'Gagal sinkronisasi daftar tautan.', type: 'error' });
+        }
+      },
       addShareLink: (link) => set(state => ({ shareLinks: [...state.shareLinks, link] })),
       
       removeShareLink: async (id: string) => {
@@ -143,27 +158,25 @@ export const useAppStore = create<AppState>()(
         if (!linkToRemove) return;
 
         try {
-          const response = await fetch('/api/share/revoke', {
+          const revokeResponse = await fetch('/api/share/revoke', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              jti: linkToRemove.jti,
+               jti: linkToRemove.jti,
               expiresAt: linkToRemove.expiresAt,
             }),
           });
+          if (!revokeResponse.ok) throw new Error('Gagal membatalkan tautan di server.');
 
-          const data = await response.json();
-          if (!response.ok) {
-            throw new Error(data.error || 'Gagal membatalkan tautan di server.');
-          }
+          const currentLinks = get().shareLinks;
+          const updatedLinks = currentLinks.filter(link => link.id !== id);
+          await kv.set(SHARE_LINKS_KEY, updatedLinks);
 
-          set(state => ({
-            shareLinks: state.shareLinks.filter(link => link.id !== id)
-          }));
+          set({ shareLinks: updatedLinks });
           addToast({ message: 'Tautan berhasil dibatalkan dan dihapus.', type: 'success' });
 
         } catch (error: any) {
-          console.error("Gagal membatalkan tautan:", error);
+          console.error("Gagal menghapus tautan:", error);
           addToast({ message: error.message, type: 'error' });
         }
       },
@@ -174,7 +187,6 @@ export const useAppStore = create<AppState>()(
         theme: state.theme, 
         view: state.view, 
         sort: state.sort,
-        shareLinks: state.shareLinks,
       }),
     }
   )

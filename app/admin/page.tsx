@@ -7,13 +7,13 @@ import { useAppStore, ShareLink } from "@/lib/store";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, AlertCircle, Copy, Link as LinkIcon, Clock, ShieldCheck, Hourglass } from "lucide-react";
+import { Trash2, AlertCircle, Copy, Link as LinkIcon, Clock, ShieldCheck, ArrowLeft, Hourglass } from "lucide-react";
 import Loading from '@/components/Loading';
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-// Komponen Modal Konfirmasi Hapus (Tetap sama)
+// Komponen Modal Konfirmasi Hapus
 const DeleteConfirmationModal = ({ onConfirm, onCancel }: { onConfirm: () => void, onCancel: () => void }) => (
     <motion.div
         initial={{ opacity: 0 }}
@@ -50,16 +50,20 @@ const DeleteConfirmationModal = ({ onConfirm, onCancel }: { onConfirm: () => voi
 
 
 export default function AdminPage() {
-    const { user, shareLinks, removeShareLink, addToast, fetchUser } = useAppStore();
+    const { user, shareLinks, removeShareLink, addToast, fetchUser, fetchShareLinks } = useAppStore();
     const { status } = useSession();
     const router = useRouter();
     const [linkToDelete, setLinkToDelete] = useState<ShareLink | null>(null);
 
     useEffect(() => {
-        if (status === 'authenticated' && !user) {
-            fetchUser();
+        if (status === 'authenticated') {
+            if (!user) {
+                fetchUser();
+            }
+            // Panggil fungsi untuk mengambil/menyinkronkan data dari server
+            fetchShareLinks();
         }
-    }, [status, user, fetchUser]);
+    }, [status, user, fetchUser, fetchShareLinks]);
 
     const { activeLinks, expiredLinks } = useMemo(() => {
         const now = new Date();
@@ -111,38 +115,37 @@ export default function AdminPage() {
                 initial={{ opacity: 0, y: 10 }} 
                  animate={{ opacity: 1, y: 0 }} 
                 transition={{ duration: 0.5 }}
+                className="container mx-auto py-8"
             >
-                {/* Judul Halaman */}
-                <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+                <div className="flex items-center gap-4 mb-8">
+                     <button onClick={() => router.back()} className="p-2 rounded-full hover:bg-accent transition-colors">
+                        <ArrowLeft size={24} />
+                     </button>
+                    <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+                 </div>
 
                 {/* Kartu Statistik */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    {/* Card Total Links */}
-                    <div className="relative overflow-hidden rounded-lg border bg-card p-6">
-                        <div className="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-primary/5"></div>
-                        <LinkIcon className="absolute right-4 top-4 text-primary/20" size={48} />
-                        <div className="relative">
-                            <p className="text-sm text-muted-foreground">Total Tautan</p>
-                            <p className="text-4xl font-bold">{shareLinks.length}</p>
-                        </div>
+                     <div className="bg-card border rounded-lg p-6 flex items-center gap-4">
+                        <div className="p-3 bg-primary/10 rounded-lg text-primary"><LinkIcon size={28} /></div>
+                        <div>
+                             <p className="text-sm text-muted-foreground">Total Tautan</p>
+                            <p className="text-2xl font-bold">{shareLinks.length}</p>
+                         </div>
                     </div>
-                    {/* Card Active Links */}
-                    <div className="relative overflow-hidden rounded-lg border bg-card p-6">
-                         <div className="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-green-500/5"></div>
-                        <Clock className="absolute right-4 top-4 text-green-500/20" size={48} />
-                        <div className="relative">
-                            <p className="text-sm text-muted-foreground">Tautan Aktif</p>
-                            <p className="text-4xl font-bold">{activeLinks.length}</p>
-                        </div>
+                     <div className="bg-card border rounded-lg p-6 flex items-center gap-4">
+                        <div className="p-3 bg-green-500/10 rounded-lg text-green-500"><Clock size={28} /></div>
+                        <div>
+                         <p className="text-sm text-muted-foreground">Tautan Aktif</p>
+                            <p className="text-2xl font-bold">{activeLinks.length}</p>
+                         </div>
                     </div>
-                     {/* Card Expired Links */}
-                     <div className="relative overflow-hidden rounded-lg border bg-card p-6">
-                        <div className="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-red-500/5"></div>
-                        <Hourglass className="absolute right-4 top-4 text-red-500/20" size={48} />
-                        <div className="relative">
-                            <p className="text-sm text-muted-foreground">Tautan Kedaluwarsa</p>
-                            <p className="text-4xl font-bold">{expiredLinks.length}</p>
-                        </div>
+                 <div className="bg-card border rounded-lg p-6 flex items-center gap-4">
+                        <div className="p-3 bg-red-500/10 rounded-lg text-red-500"><Hourglass size={28} /></div>
+                         <div>
+                             <p className="text-sm text-muted-foreground">Tautan Kedaluwarsa</p>
+                            <p className="text-2xl font-bold">{expiredLinks.length}</p>
+                         </div>
                     </div>
                 </div>
 
@@ -167,13 +170,13 @@ export default function AdminPage() {
                                          animate={{ opacity: 1, y: 0, scale: 1 }}
                                          exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
                                          className={cn(
-                                             "bg-card border rounded-lg p-4 transition-all duration-300",
-                                             isExpired && "opacity-60 hover:opacity-100"
+                                             "bg-card border rounded-lg p-4 transition-colors",
+                                             isExpired && "bg-muted/50 border-dashed"
                                          )}
                                      >
                                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                                              <div className="flex-1 min-w-0">
-                                                 <p className="text-sm text-muted-foreground truncate" title={link.itemName}>{link.itemName}</p>
+                                                 <p className="text-sm text-muted-foreground">{link.itemName}</p>
                                                  <a 
                                                      href={`${window.location.origin}${link.path}?share_token=${link.token}`} 
                                                      target="_blank" 
@@ -193,16 +196,22 @@ export default function AdminPage() {
                                                      <ShieldCheck size={14}/>
                                                      {link.loginRequired ? 'Login' : 'Publik'}
                                                  </span>
+                                                 <span className={cn(
+                                                     "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
+                                                     isExpired 
+                                                         ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' 
+                                                         : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                                 )}>
+                                                     <Clock size={14}/>
+                                                     {isExpired ? 'Kedaluwarsa' : 'Aktif'}
+                                                 </span>
                                              </div>
                                          </div>
                                          <div className="border-t my-4"></div>
                                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                                             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2 sm:mb-0">
-                                                <span className={cn("h-2 w-2 rounded-full", isExpired ? "bg-red-500" : "bg-green-500")}></span>
-                                                 <span>
-                                                     {isExpired ? 'Kedaluwarsa' : 'Aktif'} • Kedaluwarsa pada: {format(new Date(link.expiresAt), 'dd MMM yyyy, HH:mm', { locale: id })}
-                                                 </span>
-                                             </div>
+                                             <p className="text-xs text-muted-foreground mb-2 sm:mb-0">
+                                                 Kedaluwarsa pada: {format(new Date(link.expiresAt), 'dd MMMM yyyy, HH:mm', { locale: id })}
+                                             </p>
                                              <div className="flex items-center gap-2">
                                                  <button onClick={() => handleCopy(`${window.location.origin}${link.path}?share_token=${link.token}`)} className="p-2 rounded-md hover:bg-accent" title="Salin Tautan">
                                                      <Copy size={16} />
