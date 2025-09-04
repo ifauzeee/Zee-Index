@@ -47,7 +47,6 @@ export default function StoragePage() {
   const [hoveredSegment, setHoveredSegment] = useState<BreakdownItem | null>(null);
   const router = useRouter();
   
-  // PERBAIKAN: Baca shareToken langsung dari URL agar lebih andal
   const searchParams = useSearchParams();
   const shareToken = searchParams.get('share_token');
   
@@ -79,6 +78,7 @@ export default function StoragePage() {
 
   const usagePercentage = (data.usage / data.limit) * 100;
   const totalBreakdownSize = data.breakdown.reduce((acc, item) => acc + item.size, 0);
+
   const radius = 100;
   const circumference = 2 * Math.PI * radius;
   let accumulatedOffset = 0;
