@@ -2,6 +2,7 @@ import { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
 const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
+console.log("Admin Emails:", adminEmails); // Baris ini ditambahkan
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -17,6 +18,7 @@ export const authOptions: AuthOptions = {
   callbacks: {
     async jwt({ token, profile }) {
       if (profile?.email) {
+        console.log("Logged in user email:", profile.email); // Baris ini ditambahkan
         if (adminEmails.includes(profile.email)) {
           token.role = "ADMIN";
         } else {

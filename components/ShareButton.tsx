@@ -2,10 +2,11 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Share2, X, Clock, Zap, Copy, ShieldCheck } from 'lucide-react'; // Tambah ikon ShieldCheck
-import { useAppStore } from '@/lib/store';
+import { Share2, X, Clock, Zap, Copy, ShieldCheck } from 'lucide-react';
+import { useAppStore, ShareLink } from '@/lib/store';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils'; // Impor cn untuk styling kondisional
+import { cn } from '@/lib/utils';
+import { jwtDecode } from 'jwt-decode';
 
 interface ShareButtonProps {
   path: string;
@@ -14,7 +15,7 @@ interface ShareButtonProps {
   onClose?: () => void;
 }
 
-type TimeUnit = 's' | 'm' | 'h' | 'd'; 
+type TimeUnit = 's' | 'm' | 'h' | 'd';
 
 const modalVariants = {
     hidden: { opacity: 0, scale: 0.95 },
@@ -30,11 +31,10 @@ const overlayVariants = {
 
 export default function ShareButton({ path, itemName, isOpen: controlledIsOpen, onClose }: ShareButtonProps) {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
-  const { addToast, user } = useAppStore();
+  const { addToast, user, addShareLink } = useAppStore(); // Tambahkan addShareLink
 
   const [customDuration, setCustomDuration] = useState<number>(10);
   const [customUnit, setCustomUnit] = useState<TimeUnit>('m');
-  // State baru untuk opsi wajib login
   const [loginRequired, setLoginRequired] = useState(false);
   
   const isOpen = controlledIsOpen ?? internalIsOpen;
@@ -69,7 +69,6 @@ export default function ShareButton({ path, itemName, isOpen: controlledIsOpen, 
       const response = await fetch('/api/share', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // Kirim state loginRequired ke API
         body: JSON.stringify({ path, type, expiresIn, loginRequired }),
       });
 
@@ -78,7 +77,20 @@ export default function ShareButton({ path, itemName, isOpen: controlledIsOpen, 
         throw new Error(errorData.error || 'Gagal membuat tautan.');
       }
 
-      const { shareableUrl } = await response.json();
+      const { shareableUrl, token } = await response.json();
+
+      // BARU: Simpan tautan yang baru dibuat ke dalam Zustand store
+      const decodedToken: any = jwtDecode(token);
+      const newShareLink: ShareLink = {
+        id: new Date().toISOString() + Math.random(), // Gunakan ID sementara
+        path,
+        token,
+        expiresAt: new Date(decodedToken.exp * 1000).toISOString(),
+        loginRequired,
+        itemName,
+      };
+      addShareLink(newShareLink);
+
       await navigator.clipboard.writeText(shareableUrl);
       addToast({ message: 'Tautan berbagi telah disalin!', type: 'success' });
       handleClose();
@@ -109,10 +121,10 @@ export default function ShareButton({ path, itemName, isOpen: controlledIsOpen, 
               </button> 
               <h3 className="text-lg font-semibold mb-1 whitespace-normal break-words">Bagikan: {itemName}</h3> 
               <p className="text-sm text-muted-foreground mb-6">Pilih jenis tautan berbagi.</p>
-              
-              {/* --- KONTEN MODAL BARU --- */}
+           
               <div className="space-y-4">
-                <div className="p-4 rounded-lg border"> 
+                  {/* --- KONTEN MODAL BARU --- */}
+                  <div className="p-4 rounded-lg border"> 
                     <div className="flex items-center gap-3 mb-3"> 
                        <Clock className="text-primary"/> 
                        <h4 className="font-semibold">Tautan Berwaktu</h4> 
@@ -127,7 +139,7 @@ export default function ShareButton({ path, itemName, isOpen: controlledIsOpen, 
                         <option value="d">Hari</option>
                       </select> 
                     </div> 
-                </div>
+                  </div>
 
                 <div className="p-4 rounded-lg border"> 
                     <div className="flex items-center gap-3 mb-3"> 
@@ -164,7 +176,7 @@ export default function ShareButton({ path, itemName, isOpen: controlledIsOpen, 
                        <Copy size={16} /> Salin Tautan Berwaktu
                     </button>
                     <button onClick={() => generateLink('session')} className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"> 
-                       <Copy size={16} /> Salin Tautan Sesi
+                        <Copy size={16} /> Salin Tautan Sesi
                     </button>
                 </div>
               </div>

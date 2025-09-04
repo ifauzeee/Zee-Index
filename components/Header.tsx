@@ -4,8 +4,8 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession, signIn, signOut } from "next-auth/react";
-import { Sun, Moon, RefreshCw, Send, Coffee, HardDrive, Search as SearchIcon, Menu, X, LogIn, LogOut, ArrowLeft } from 'lucide-react';
+import { useSession, signOut } from "next-auth/react";
+import { Sun, Moon, RefreshCw, Send, Coffee, HardDrive, Search as SearchIcon, Menu, X, LogIn, LogOut, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import Search from '@/components/Search';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -17,7 +17,9 @@ export default function Header() {
     const [isSearchVisible, setIsSearchVisible] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+    // Menambahkan item menu admin secara kondisional
     const menuItems = [
+        ...(user?.role === 'ADMIN' ? [{ id: 'admin', href: '/admin', icon: ShieldCheck, label: 'Admin' }] : []),
         { id: 'storage', href: '/storage', icon: HardDrive, label: 'Penyimpanan' },
         { id: 'theme', onClick: toggleTheme, icon: theme === 'light' ? Moon : Sun, label: `Ganti Tema` },
         { id: 'refresh', onClick: triggerRefresh, icon: RefreshCw, label: 'Segarkan Halaman' },
@@ -118,7 +120,6 @@ export default function Header() {
 
                 <div className="flex items-center gap-2 sm:hidden">
                     <button onClick={() => setIsSearchVisible(!isSearchVisible)} title="Cari" className="p-2 rounded-lg hover:bg-accent">
-                        {/* Perbaikan: Menggunakan ikon yang berbeda untuk tombol pencarian di mobile */}
                         {isSearchVisible ? <ArrowLeft size={20} /> : <SearchIcon size={20} />}
                     </button>
                     <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} title="Menu" className="p-2 rounded-lg hover:bg-accent">

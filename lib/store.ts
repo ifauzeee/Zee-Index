@@ -1,4 +1,5 @@
 // File: lib/store.ts
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -6,6 +7,15 @@ export interface Toast {
   id: string;
   message: string;
   type: 'success' | 'error' | 'info';
+}
+
+export interface ShareLink {
+    id: string;
+    path: string;
+    token: string;
+    expiresAt: string;
+    loginRequired: boolean;
+    itemName: string;
 }
 
 interface UserProfile {
@@ -44,6 +54,11 @@ interface AppState {
   fetchUser: () => Promise<void>;
   currentFolderId: string | null;
   setCurrentFolderId: (id: string | null) => void;
+  
+  // BARU: State untuk menyimpan daftar tautan berbagi
+  shareLinks: ShareLink[];
+  addShareLink: (link: ShareLink) => void;
+  removeShareLink: (id: string) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -66,7 +81,7 @@ export const useAppStore = create<AppState>()(
       selectedFiles: [],
       setBulkMode: (isActive) => {
         if (!isActive) {
-           set({ isBulkMode: false, selectedFiles: [] });
+          set({ isBulkMode: false, selectedFiles: [] });
         } else {
           set({ isBulkMode: true });
         }
@@ -84,7 +99,7 @@ export const useAppStore = create<AppState>()(
       setFolderToken: (folderId, token) => set((state) => ({
         folderTokens: {
           ...state.folderTokens,
-           [folderId]: token,
+          [folderId]: token,
         },
       })),
       toasts: [],
@@ -113,13 +128,22 @@ export const useAppStore = create<AppState>()(
           set({ user: null });
         }
       },
-      // State dan fungsi baru untuk folder ID saat ini
       currentFolderId: null,
       setCurrentFolderId: (id) => set({ currentFolderId: id }),
+
+      // BARU: Implementasi state dan fungsi share links
+      shareLinks: [],
+      addShareLink: (link) => set(state => ({ shareLinks: [...state.shareLinks, link] })),
+      removeShareLink: (id) => set(state => ({ shareLinks: state.shareLinks.filter(link => link.id !== id) })),
     }),
     {
       name: 'app-storage',
-      partialize: (state) => ({ theme: state.theme, view: state.view, sort: state.sort }),
+      partialize: (state) => ({ 
+        theme: state.theme, 
+        view: state.view, 
+        sort: state.sort,
+        shareLinks: state.shareLinks,
+      }),
     }
   )
 );
