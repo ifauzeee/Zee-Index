@@ -1,3 +1,5 @@
+// File: components/FileBrowser.tsx
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -44,11 +46,10 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
 
   useEffect(() => {
     const shareToken = searchParams.get('share_token');
-
     if (shareToken) {
       try {
         const decodedToken: { exp: number } = jwtDecode(shareToken);
-        const expirationTime = decodedToken.exp * 1000; // Ubah ke milidetik
+        const expirationTime = decodedToken.exp * 1000;
         const currentTime = Date.now();
         const timeUntilExpiration = expirationTime - currentTime;
 
@@ -57,7 +58,6 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
             addToast({ message: 'Sesi berbagi Anda telah berakhir.', type: 'info' });
             router.push('/login?error=InvalidOrExpiredShareLink');
           }, timeUntilExpiration);
-
           return () => clearTimeout(timer);
         }
       } catch (error) {
@@ -69,15 +69,23 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   const currentFolderId = history.length > 0 ? history[history.length - 1]?.id : initialFolderId || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
   const createSlug = (name: string) => encodeURIComponent(name.replace(/\s+/g, '-').toLowerCase());
 
+  // --- PERBAIKAN DI FUNGSI INI ---
   const handleFetchError = useCallback(async (response: Response, defaultMessage: string, folderId: string, folderName: string) => {
     const errorData = await response.json();
-    if (response.status === 401 && errorData.protected) {
-      setAuthModal({ isOpen: true, folderId, folderName });
+    if (response.status === 401) {
+        if (errorData.protected) {
+            // Ini untuk folder yang dilindungi kata sandi
+            setAuthModal({ isOpen: true, folderId, folderName });
+        } else {
+            // Ini untuk sesi yang kedaluwarsa
+            addToast({ message: 'Sesi Anda telah berakhir. Silakan login kembali.', type: 'error' });
+            router.push('/login');
+        }
     } else {
       addToast({ message: errorData.error || defaultMessage, type: 'error' });
     }
     setIsLoading(false);
-  }, [addToast]);
+  }, [addToast, router]);
 
   const fetchFiles = useCallback(async (folderId: string, folderName: string) => {
     setIsLoading(true);

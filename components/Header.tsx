@@ -1,4 +1,4 @@
-// components/Header.tsx
+// File: components/Header.tsx
 "use client";
 
 import { useState, useEffect, Suspense } from 'react';
@@ -10,14 +10,14 @@ import Search from '@/components/Search';
 import { AnimatePresence, motion } from 'framer-motion';
 
 function AuthButton() {
-    // ... (kode AuthButton tetap sama)
     const { data: session, status } = useSession();
     if (status === "loading") {
         return <div className="w-24 h-9 bg-muted rounded-lg animate-pulse" />;
     }
     if (session) {
         return (
-            <button onClick={() => signOut()} title="Logout" className="p-2 rounded-lg hover:bg-accent flex items-center gap-2">
+            // --- PERBAIKAN DI SINI ---
+            <button onClick={() => signOut({ callbackUrl: '/login' })} title="Logout" className="p-2 rounded-lg hover:bg-accent flex items-center gap-2">
                 <LogOut size={20} />
                 <span className="hidden sm:inline text-sm font-medium">Logout</span>
             </button>
@@ -63,7 +63,6 @@ export default function Header() {
     
     return (
         <>
-            {/* --- PERBAIKAN: Hapus bg-background/80 dan backdrop-blur-lg --- */}
             <header className="sticky top-0 z-40 bg-background flex justify-between items-center py-4 border-b gap-4">
                 <h1 onClick={() => router.push('/')} className="text-2xl font-bold flex items-center cursor-pointer shrink-0" title="Kembali ke Beranda">
                     <i className="fab fa-google-drive text-blue-500 mr-3"></i>Zee Index
@@ -98,7 +97,6 @@ export default function Header() {
                 </div>
             </header>
             
-            {/* Sisa kode tetap sama */}
             {isSearchVisible && (
                 <div className="mt-4 sm:hidden">
                     <Suspense fallback={null}><Search onSearchClose={() => setIsSearchVisible(false)} /></Suspense>
@@ -112,7 +110,7 @@ export default function Header() {
                         exit={{ opacity: 0, x: "-100%" }}
                         className="fixed inset-0 z-50 h-screen bg-background flex flex-col items-center justify-center p-4 sm:hidden"
                     >
-                        {/* ... isi menu mobile ... */}
+                        {/* Mobile menu content would be here */}
                     </motion.nav>
                 )}
             </AnimatePresence>
