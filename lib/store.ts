@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { jwtDecode } from 'jwt-decode';
 
 export interface Toast {
   id: string;
@@ -13,6 +14,7 @@ export interface ShareLink {
     id: string;
     path: string;
     token: string;
+    jti: string; // Diperlukan untuk revoke
     expiresAt: string;
     loginRequired: boolean;
     itemName: string;
@@ -54,11 +56,9 @@ interface AppState {
   fetchUser: () => Promise<void>;
   currentFolderId: string | null;
   setCurrentFolderId: (id: string | null) => void;
-  
-  // BARU: State untuk menyimpan daftar tautan berbagi
   shareLinks: ShareLink[];
   addShareLink: (link: ShareLink) => void;
-  removeShareLink: (id: string) => void;
+  removeShareLink: (id: string) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()(
@@ -94,7 +94,9 @@ export const useAppStore = create<AppState>()(
       }),
       clearSelection: () => set({ selectedFiles: [], isBulkMode: false }),
       shareToken: null,
-      setShareToken: (token) => set({ shareToken: token }),
+      setShareToken: (token) => {
+        set({ shareToken: typeof token === 'string' && token.length > 0 ? token : null });
+      },
       folderTokens: {},
       setFolderToken: (folderId, token) => set((state) => ({
         folderTokens: {
@@ -130,11 +132,41 @@ export const useAppStore = create<AppState>()(
       },
       currentFolderId: null,
       setCurrentFolderId: (id) => set({ currentFolderId: id }),
-
-      // BARU: Implementasi state dan fungsi share links
+      
       shareLinks: [],
       addShareLink: (link) => set(state => ({ shareLinks: [...state.shareLinks, link] })),
-      removeShareLink: (id) => set(state => ({ shareLinks: state.shareLinks.filter(link => link.id !== id) })),
+      
+      removeShareLink: async (id: string) => {
+        const { addToast } = get();
+        const linkToRemove = get().shareLinks.find(link => link.id === id);
+
+        if (!linkToRemove) return;
+
+        try {
+          const response = await fetch('/api/share/revoke', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jti: linkToRemove.jti,
+              expiresAt: linkToRemove.expiresAt,
+            }),
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || 'Gagal membatalkan tautan di server.');
+          }
+
+          set(state => ({
+            shareLinks: state.shareLinks.filter(link => link.id !== id)
+          }));
+          addToast({ message: 'Tautan berhasil dibatalkan dan dihapus.', type: 'success' });
+
+        } catch (error: any) {
+          console.error("Gagal membatalkan tautan:", error);
+          addToast({ message: error.message, type: 'error' });
+        }
+      },
     }),
     {
       name: 'app-storage',

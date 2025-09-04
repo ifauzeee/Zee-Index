@@ -31,7 +31,7 @@ const overlayVariants = {
 
 export default function ShareButton({ path, itemName, isOpen: controlledIsOpen, onClose }: ShareButtonProps) {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
-  const { addToast, user, addShareLink } = useAppStore(); // Tambahkan addShareLink
+  const { addToast, user, addShareLink } = useAppStore();
 
   const [customDuration, setCustomDuration] = useState<number>(10);
   const [customUnit, setCustomUnit] = useState<TimeUnit>('m');
@@ -77,14 +77,14 @@ export default function ShareButton({ path, itemName, isOpen: controlledIsOpen, 
         throw new Error(errorData.error || 'Gagal membuat tautan.');
       }
 
-      const { shareableUrl, token } = await response.json();
+      const { shareableUrl, token, jti } = await response.json();
 
-      // BARU: Simpan tautan yang baru dibuat ke dalam Zustand store
       const decodedToken: any = jwtDecode(token);
       const newShareLink: ShareLink = {
-        id: new Date().toISOString() + Math.random(), // Gunakan ID sementara
+        id: new Date().toISOString() + Math.random(),
         path,
         token,
+        jti,
         expiresAt: new Date(decodedToken.exp * 1000).toISOString(),
         loginRequired,
         itemName,
@@ -116,14 +116,13 @@ export default function ShareButton({ path, itemName, isOpen: controlledIsOpen, 
               variants={modalVariants}
               onClick={(e) => e.stopPropagation()}
             >
-              <button onClick={handleClose} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground"> 
+               <button onClick={handleClose} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground"> 
                 <X size={20} /> 
-              </button> 
+               </button> 
               <h3 className="text-lg font-semibold mb-1 whitespace-normal break-words">Bagikan: {itemName}</h3> 
               <p className="text-sm text-muted-foreground mb-6">Pilih jenis tautan berbagi.</p>
            
               <div className="space-y-4">
-                  {/* --- KONTEN MODAL BARU --- */}
                   <div className="p-4 rounded-lg border"> 
                     <div className="flex items-center gap-3 mb-3"> 
                        <Clock className="text-primary"/> 
@@ -131,25 +130,24 @@ export default function ShareButton({ path, itemName, isOpen: controlledIsOpen, 
                     </div> 
                     <p className="text-xs text-muted-foreground mb-3">Tautan akan kedaluwarsa setelah durasi yang Anda tentukan.</p> 
                     <div className="flex gap-2">
-                      <input type="number" value={customDuration} onChange={(e) => setCustomDuration(Math.max(1, parseInt(e.target.value, 10) || 1))} className="w-1/3 px-3 py-2 rounded-md border bg-background focus:ring-2 focus:ring-ring focus:outline-none text-sm" min="1"/>
-                      <select value={customUnit} onChange={(e) => setCustomUnit(e.target.value as TimeUnit)} className="w-2/3 px-3 py-2 rounded-md border bg-background focus:ring-2 focus:ring-ring focus:outline-none text-sm"> 
+                       <input type="number" value={customDuration} onChange={(e) => setCustomDuration(Math.max(1, parseInt(e.target.value, 10) || 1))} className="w-1/3 px-3 py-2 rounded-md border bg-background focus:ring-2 focus:ring-ring focus:outline-none text-sm" min="1"/>
+                       <select value={customUnit} onChange={(e) => setCustomUnit(e.target.value as TimeUnit)} className="w-2/3 px-3 py-2 rounded-md border bg-background focus:ring-2 focus:ring-ring focus:outline-none text-sm"> 
                         <option value="s">Detik</option>
                         <option value="m">Menit</option> 
                         <option value="h">Jam</option> 
                         <option value="d">Hari</option>
-                      </select> 
+                       </select> 
                     </div> 
                   </div>
 
-                <div className="p-4 rounded-lg border"> 
+                 <div className="p-4 rounded-lg border"> 
                     <div className="flex items-center gap-3 mb-3"> 
-                       <Zap className="text-amber-500"/> 
+                        <Zap className="text-amber-500"/> 
                        <h4 className="font-semibold">Tautan Sesi</h4> 
                     </div> 
                     <p className="text-xs text-muted-foreground mb-3">Tautan berlaku sangat lama (1 tahun), ideal untuk penggunaan pribadi.</p>
                 </div>
 
-                {/* Opsi Wajibkan Login */}
                 <label 
                   htmlFor="loginRequired" 
                   className={cn(
@@ -157,27 +155,27 @@ export default function ShareButton({ path, itemName, isOpen: controlledIsOpen, 
                     loginRequired ? "bg-primary/10 border-primary" : "hover:bg-accent"
                   )}
                 >
-                  <ShieldCheck className={cn("transition-colors", loginRequired ? "text-primary" : "text-muted-foreground")} />
+                   <ShieldCheck className={cn("transition-colors", loginRequired ? "text-primary" : "text-muted-foreground")} />
                   <div>
-                    <h4 className="font-semibold">Wajibkan Login</h4>
+                     <h4 className="font-semibold">Wajibkan Login</h4>
                     <p className="text-xs text-muted-foreground">Pengguna harus login dengan akun Google untuk mengakses tautan ini.</p>
-                  </div>
+                   </div>
                   <input
                     id="loginRequired"
                     type="checkbox"
                     checked={loginRequired}
                     onChange={(e) => setLoginRequired(e.target.checked)}
                     className="ml-auto h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
+                   />
                 </label>
                 
                 <div className="flex gap-2 pt-2">
                     <button onClick={() => generateLink('timed')} className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"> 
                        <Copy size={16} /> Salin Tautan Berwaktu
-                    </button>
+                     </button>
                     <button onClick={() => generateLink('session')} className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"> 
-                        <Copy size={16} /> Salin Tautan Sesi
-                    </button>
+                       <Copy size={16} /> Salin Tautan Sesi
+                     </button>
                 </div>
               </div>
             </motion.div>

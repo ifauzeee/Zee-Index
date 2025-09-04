@@ -8,6 +8,7 @@ import { isPrivateFolder, isProtected, verifyFolderToken } from '@/lib/auth';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { jwtVerify } from 'jose';
+import { kv } from '@/lib/kv'; // Impor KV client
 
 // Helper untuk memvalidasi share token langsung dari request
 async function validateShareToken(request: Request): Promise<boolean> {
@@ -18,6 +19,17 @@ async function validateShareToken(request: Request): Promise<boolean> {
   try {
     const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
     const { payload } = await jwtVerify(shareToken, secret);
+
+    // Verifikasi blocklist di Vercel KV
+    if (typeof payload.jti !== 'string') {
+        console.error("Token tidak memiliki JTI.");
+        return false;
+    }
+    const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);
+    if (isBlocked) {
+        console.warn(`Akses ditolak untuk token yang diblokir: ${payload.jti}`);
+        return false;
+    }
 
     if (payload.loginRequired) {
       const session = await getServerSession(authOptions);

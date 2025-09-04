@@ -1,8 +1,9 @@
+// File: app/(main)/api/download/route.ts
+
 import { NextResponse, type NextRequest } from 'next/server';
 import { getAccessToken, getFileDetailsFromDrive } from '@/lib/googleDrive';
 import { jwtVerify } from 'jose';
-
-; // Ditambahkan
+import { kv } from '@/lib/kv'; // Impor KV Client
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -16,10 +17,20 @@ export async function GET(request: NextRequest) {
   if (shareToken) {
     try {
       const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
-      await jwtVerify(shareToken, secret);
+      const { payload } = await jwtVerify(shareToken, secret);
+
+      // Verifikasi blocklist di Vercel KV
+      if (typeof payload.jti !== 'string') {
+        throw new Error('Token tidak memiliki JTI.');
+      }
+      const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);
+      if (isBlocked) {
+        throw new Error('Tautan ini telah dibatalkan.');
+      }
+
     } catch (error) {
       console.error("Verifikasi share token gagal:", error);
-      return NextResponse.json({ error: 'Tautan berbagi tidak valid atau kedaluwarsa.' }, { status: 401 });
+      return NextResponse.json({ error: 'Tautan berbagi tidak valid atau telah dibatalkan.' }, { status: 401 });
     }
   }
 

@@ -8,12 +8,29 @@ const FileDetail = dynamic(() => import('@/components/FileDetail'), {
   loading: () => <Loading />,
 });
 
-export default async function FilePage({ params }: { params: { fileId: string } }) {
-  // PENGAMBILAN DATA DI SERVER: Kode ini sudah benar dan efisien.
-  // Data file diambil di server saat halaman pertama kali di-render,
-  // lalu diteruskan ke komponen klien <FileDetail />.
-  const file = await getFileDetailsFromDrive(params.fileId);
+// Helper component untuk menampilkan error
+const FileError = ({ message }: { message: string }) => (
+  <div className="text-center py-20 text-muted-foreground">
+    <h1 className="text-4xl font-bold">Gagal Memuat</h1>
+    <p className="mt-4">{message}</p>
+  </div>
+);
 
+export default async function FilePage({ params }: { params: { fileId: string } }) {
+  let file = null;
+  let error = null;
+
+  try {
+    file = await getFileDetailsFromDrive(params.fileId);
+  } catch (err) {
+    console.error("Fetch file details error:", err);
+    error = "Terjadi masalah saat mengambil detail file. Periksa koneksi jaringan Anda atau coba lagi nanti.";
+  }
+
+  if (error) {
+    return <FileError message={error} />;
+  }
+  
   if (!file) {
     return (
       <div className="text-center py-20 text-muted-foreground">

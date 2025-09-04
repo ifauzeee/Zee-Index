@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
 import type { DriveFile } from '@/lib/googleDrive';
@@ -11,11 +11,11 @@ import ShareButton from './ShareButton';
 import 'plyr/dist/plyr.css';
 import 'prismjs/themes/prism-tomorrow.min.css';
 import 'prismjs/plugins/line-numbers/prism-line-numbers.css';
-import { default as Plyr } from 'plyr';
+import Plyr from 'plyr';
 import Prism from 'prismjs';
 import 'prismjs/plugins/line-numbers/prism-line-numbers.min.js';
 import { getFileType, formatBytes, formatDuration, getIcon, cn } from '@/lib/utils';
-import { ArrowLeft, Loader2 } from 'lucide-react'; // Tambahkan Loader2
+import { ArrowLeft } from 'lucide-react';
 import { renderToString } from 'react-dom/server';
 
 declare const pdfjsLib: any;
@@ -26,37 +26,49 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToast, user } = useAppStore();
+  const [showBackButton, setShowBackButton] = useState(true);
+
+  const shareToken = useMemo(() => searchParams.get('share_token'), [searchParams]);
 
   useEffect(() => {
-    const shareToken = searchParams.get('share_token');
     if (shareToken) {
       try {
-        const decodedToken: { exp: number } = jwtDecode(shareToken);
+        // Logika untuk memeriksa apakah tombol kembali harus ditampilkan
+        const decodedToken: { path: string, exp: number } = jwtDecode(shareToken);
+        const currentPath = window.location.pathname;
+
+        // Jika path yang dibagikan sama persis dengan path file saat ini,
+        // artinya ini adalah direct share, jadi sembunyikan tombol kembali.
+        if (decodedToken.path === currentPath) {
+          setShowBackButton(false);
+        }
+
+        // Logika untuk sesi kedaluwarsa
         const expirationTime = decodedToken.exp * 1000;
         const currentTime = Date.now();
         const timeUntilExpiration = expirationTime - currentTime;
 
         if (timeUntilExpiration > 0) {
-          const timer = setTimeout(() => {
+           const timer = setTimeout(() => {
             addToast({ message: 'Sesi berbagi Anda telah berakhir.', type: 'info' });
             router.push('/login?error=InvalidOrExpiredShareLink');
-          }, timeUntilExpiration);
+           }, timeUntilExpiration);
           return () => clearTimeout(timer);
         }
       } catch (error) {
         console.error("Token tidak valid:", error);
-      }
+       }
     }
-  }, [searchParams, router, addToast]);
+  }, [shareToken, router, addToast]);
 
+  const handleBack = () => router.back();
   const directLink = useMemo(() => {
-    const shareToken = searchParams.get('share_token');
     let url = `/api/download?fileId=${file.id}`;
     if (shareToken) {
       url += `&share_token=${shareToken}`;
     }
     return url;
-  }, [file.id, searchParams]);
+  }, [file.id, shareToken]);
   
   const fileType = getFileType(file);
   const Icon = getIcon(file.mimeType);
@@ -64,25 +76,23 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   useEffect(() => {
     const renderPreview = async () => {
       if (!previewRef.current) return;
-      if (playerRef.current) {
+       if (playerRef.current) {
         playerRef.current.destroy();
         playerRef.current = null;
       }
-      // Perbaikan: Ganti ikon loading dengan LucideIcon Loader2
-      const loadingIconHtml = renderToString(<Loader2 size={64} className="text-primary animate-spin" />);
-      previewRef.current.innerHTML = `<div class="flex items-center justify-center h-full">${loadingIconHtml}</div>`;
-      
+      previewRef.current.innerHTML = '<div class="flex items-center justify-center h-full text-primary"><i class="fas fa-spinner fa-spin text-4xl"></i></div>';
+       
       try {
         if (fileType === 'video' || fileType === 'audio') {
           const mediaTag = fileType === 'video' ? 'video' : 'audio';
-          const posterUrl = file.thumbnailLink ? file.thumbnailLink.replace(/=s\d+/, '=s1280') : '';
+           const posterUrl = file.thumbnailLink ? file.thumbnailLink.replace(/=s\d+/, '=s1280') : '';
           const mediaElement = document.createElement(mediaTag);
           mediaElement.id = 'player';
-          mediaElement.setAttribute('playsinline', '');
+           mediaElement.setAttribute('playsinline', '');
           mediaElement.setAttribute('controls', '');
           mediaElement.style.width = '100%'; 
           mediaElement.style.height = '100%';
-          if (posterUrl) mediaElement.setAttribute('data-poster', posterUrl);
+           if (posterUrl) mediaElement.setAttribute('data-poster', posterUrl);
           
           const mimeType = file.mimeType === 'application/octet-stream' && file.name.endsWith('.mkv') ? 'video/x-matroska' : file.mimeType;
 
@@ -95,14 +105,14 @@ export default function FileDetail({ file }: { file: DriveFile }) {
           previewRef.current.appendChild(mediaElement);
           playerRef.current = new Plyr(mediaElement);
         } else if (fileType === 'image') {
-          const img = document.createElement('img');
+           const img = document.createElement('img');
           img.src = directLink;
           img.className = "w-full h-full object-contain mx-auto";
           previewRef.current.innerHTML = '';
           previewRef.current.appendChild(img);
         } else if (fileType === 'pdf') {
           if (typeof pdfjsLib === 'undefined' || !pdfjsLib.GlobalWorkerOptions.workerSrc) {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://mozilla.github.io/pdf.js/build/pdf.worker.mjs`;
+             pdfjsLib.GlobalWorkerOptions.workerSrc = `https://mozilla.github.io/pdf.js/build/pdf.worker.mjs`;
           }
           const container = document.createElement('div');
           container.id = 'pdf-viewer-container';
@@ -138,15 +148,15 @@ export default function FileDetail({ file }: { file: DriveFile }) {
           code.textContent = textContent;
           Prism.highlightAllUnder(previewRef.current);
         } else {
-          const IconComponent = getIcon(file.mimeType);
+           const IconComponent = getIcon(file.mimeType);
           const iconString = renderToString(<IconComponent size={96} className="text-primary" />);
           previewRef.current.innerHTML = `
             <div class="flex flex-col items-center justify-center h-full gap-4">
-              <div class="text-9xl">
+               <div class="text-9xl">
                 ${iconString}
               </div>
             </div>
-          `;
+           `;
         }
       } catch (error) {
         console.error("Preview Error:", error);
@@ -167,68 +177,68 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   const metadata = file.imageMediaMetadata || file.videoMediaMetadata;
   const durationMillis = file.videoMediaMetadata?.durationMillis ? parseInt(file.videoMediaMetadata.durationMillis, 10) : undefined;
   const showShareButton = !searchParams.get('share_token') && user?.role === 'ADMIN';
-  const handleBack = () => {
-    router.back();
-  };
 
   return (
     <div className="container mx-auto px-4 py-6 flex flex-col min-h-screen">
       <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-12 flex-1 overflow-hidden">
         <div className="lg:col-span-2 flex flex-col flex-1 min-h-0">
           <header className="flex items-center justify-between gap-4 mb-4">
-            {!searchParams.get('share_token') && (
+            {showBackButton && (
               <button onClick={handleBack} className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors shrink-0">
                 <ArrowLeft size={20} /> Kembali
               </button>
             )}
+            {/* Spacer to keep share button on the right if back button is hidden */}
+            {!showBackButton && <div />} 
+            
             {showShareButton && <ShareButton path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`} itemName={file.name} />}
-          </header>
+           </header>
           
           <div className="w-full flex-1 flex items-center justify-center overflow-hidden"> 
-            <div ref={previewRef} className="w-full h-full flex items-center justify-center"></div>
+             <div ref={previewRef} className="w-full h-full flex items-center justify-center"></div>
           </div>
         </div>
 
         <div className="lg:col-span-1 mt-8 lg:mt-[52px] overflow-y-auto">
           <div className="mb-6">
-            <h1 className="text-2xl lg:text-3xl font-bold break-words mb-6">{file.name}</h1>
+             <h1 className="text-2xl lg:text-3xl font-bold break-words mb-6">{file.name}</h1>
             <h3 className="text-lg font-semibold mb-4 border-b pb-2">Informasi File</h3>
             <ul className="space-y-3 text-sm text-foreground">
               <ListItem label="Ukuran" value={file.size ? formatBytes(Number(file.size)) : '-'} />
               <ListItem label="Tipe" value={file.mimeType} />
-              {metadata?.width && metadata?.height && (
+               {metadata?.width && metadata?.height && (
                 <ListItem label="Dimensi" value={`${metadata.width} x ${metadata.height} px`} />
               )}
-              {durationMillis && (
+               {durationMillis && (
                 <ListItem label="Durasi" value={formatDuration(durationMillis / 1000)} />
-              )}
+               )}
               <ListItem label="Diubah" value={new Date(file.modifiedTime).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} />
               <ListItem label="Dibuat" value={new Date(file.createdTime).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} />
               {file.owners && file.owners.length > 0 && (
                 <ListItem label="Pemilik" value={file.owners[0].displayName} />
-              )}
+               )}
               {file.lastModifyingUser && (
                 <ListItem label="Diubah oleh" value={file.lastModifyingUser.displayName} />
-              )}
+               )}
               {file.md5Checksum && (
-                <li className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-border">
+                 <li className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-border">
                   <span className="font-medium text-muted-foreground shrink-0">MD5</span>
                   <span className="font-mono text-xs break-all text-left sm:text-right">{file.md5Checksum}</span>
-                </li>
+                 </li>
               )}
             </ul>
-          </div>
+           </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <a href={directLink} download className="flex-1 flex items-center justify-center px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold text-lg">
-              <i className="fas fa-download mr-3"></i>Unduh File
+               <i className="fas fa-download mr-3"></i>Unduh File
             </a>
             {showShareButton && (
-              <ShareButton path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`} itemName={file.name} />
+               <ShareButton path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`} itemName={file.name} />
             )}
           </div>
         </div>
-    </div>
-    </div>
+      </div>
+     </div>
   );
 }
 
@@ -238,12 +248,13 @@ const ListItem = ({ label, value }: { label: string, value: string }) => (
     <span className="text-right break-all">{value}</span>
   </li>
 );
+
 function getLanguageFromFilename(name: string): string {
     const ext = name.split('.').pop()?.toLowerCase() || '';
     const langMap: Record<string, string> = { 
         js: 'javascript', ts: 'typescript', jsx: 'jsx', tsx: 'tsx',
         json: 'json', py: 'python', css: 'css', html: 'html', 
-        md: 'markdown', txt: 'text', sh: 'bash', java: 'java',
+         md: 'markdown', txt: 'text', sh: 'bash', java: 'java',
         c: 'c', cpp: 'cpp', cs: 'csharp', go: 'go', rb: 'ruby',
         php: 'php', swift: 'swift', kt: 'kotlin', rs: 'rust'
     };

@@ -71,10 +71,36 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
       }
     }
   }, [searchParams, router, addToast, setShareToken]);
+  
+  useEffect(() => {
+    if (!shareToken) return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await fetch('/api/share/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ shareToken }),
+        });
+
+        const data = await response.json();
+
+        if (!data.valid) {
+          clearInterval(intervalId);
+          addToast({ message: 'Akses untuk tautan ini telah dicabut.', type: 'error' });
+          router.push('/login?error=ShareLinkRevoked');
+        }
+      } catch (error) {
+        console.error("Gagal memeriksa status token:", error);
+        clearInterval(intervalId);
+      }
+    }, 7000); // Check every 7 seconds
+
+    return () => clearInterval(intervalId);
+  }, [shareToken, router, addToast]);
 
   const currentFolderId = history.length > 0 ? history[history.length - 1]?.id : initialFolderId || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
 
-  // Perbaikan: useEffect ini akan memastikan currentFolderId di store selalu up-to-date
   useEffect(() => {
     setCurrentFolderId(currentFolderId);
   }, [currentFolderId, setCurrentFolderId]);
@@ -162,7 +188,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     try {
         const response = await fetch('/api/auth/folder', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ folderId: authModal.folderId, id, password })
         });
         const data = await response.json();
@@ -178,7 +204,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     } catch (err: any) {
         addToast({ message: err.message, type: 'error' });
     } finally {
-        setIsAuthLoading(false);
+         setIsAuthLoading(false);
     }
   };
 
@@ -206,24 +232,24 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     const rootFolder = { id: process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!, name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || 'Beranda' };
     
     const initializeHistory = async () => {
-      if (shareToken && (!initialFolderId || initialFolderId === rootFolder.id)) {
+       if (shareToken && (!initialFolderId || initialFolderId === rootFolder.id)) {
         router.push('/login?error=RootAccessDenied');
         return;
       }
 
       if (!initialFolderId || initialFolderId === rootFolder.id) {
-         if(history.length > 1 || history[0]?.id !== rootFolder.id) setHistory([rootFolder]);
+          if(history.length > 1 || history[0]?.id !== rootFolder.id) setHistory([rootFolder]);
       } else {
         const currentHistoryId = history[history.length - 1]?.id;
         if (currentHistoryId !== initialFolderId) {
           try {
             setIsLoading(true);
             const url = new URL(`/api/folderpath`, window.location.origin);
-            url.searchParams.set('folderId', initialFolderId);
+             url.searchParams.set('folderId', initialFolderId);
             
             const response = await fetch(url.toString());
         
-            if (!response.ok) {
+             if (!response.ok) {
               addToast({ message: "Gagal memuat path, kembali ke Beranda.", type: 'error' });
               router.push('/');
               return;
@@ -299,45 +325,45 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <AnimatePresence>
-        {authModal.isOpen && (<AuthModal folderName={authModal.folderName} isLoading={isAuthLoading} onClose={() => setAuthModal({ isOpen: false, folderId: '', folderName: '' })} onSubmit={handleAuthSubmit}/>)}
+         {authModal.isOpen && (<AuthModal folderName={authModal.folderName} isLoading={isAuthLoading} onClose={() => setAuthModal({ isOpen: false, folderId: '', folderName: '' })} onSubmit={handleAuthSubmit}/>)}
         {contextMenu && (
           <ContextMenu 
-            x={contextMenu.x} y={contextMenu.y} 
+             x={contextMenu.x} y={contextMenu.y} 
             onClose={() => setContextMenu(null)} 
             onRename={() => { setActionState({ type: 'rename', file: contextMenu.file }); setContextMenu(null); }} 
-            onDelete={() => { setActionState({ type: 'delete', file: contextMenu.file }); setContextMenu(null); }} 
+             onDelete={() => { setActionState({ type: 'delete', file: contextMenu.file }); setContextMenu(null); }} 
             onShare={() => { handleShare(contextMenu.file); setContextMenu(null); }}
           />
-        )}
+         )}
         {actionState.type === 'rename' && actionState.file && (<RenameModal currentName={actionState.file.name} onClose={() => setActionState({ type: null, file: null })} onRename={handleRename}/>)}
         {actionState.type === 'delete' && actionState.file && (<DeleteConfirm itemName={actionState.file.name} onClose={() => setActionState({ type: null, file: null })} onConfirm={handleDelete}/>)}
         {actionState.type === 'share' && actionState.file && (<ShareButton path={getSharePath(actionState.file)} itemName={actionState.file.name} isOpen={true} onClose={() => setActionState({ type: null, file: null })}/>)}
       </AnimatePresence>
       <div className="flex justify-between items-center py-4 overflow-x-hidden">
-        <nav className="flex items-center space-x-2 text-sm text-muted-foreground overflow-x-auto whitespace-nowrap">
+         <nav className="flex items-center space-x-2 text-sm text-muted-foreground overflow-x-auto whitespace-nowrap">
           {history.map((folder, index) => (
             <span key={folder.id} className="flex items-center">
-              <button 
+               <button 
                 onClick={() => handleBreadcrumbClick(folder.id)} 
                 className={`transition-colors ${shareToken && index === 0 ? 'cursor-default text-muted-foreground' : 'hover:text-primary'}`}
               >
                 {folder.name}
-              </button>
+               </button>
               {index < history.length - 1 && <span className="mx-2">/</span>}
             </span>
           ))}
-        </nav>
+         </nav>
         <div className="flex items-center gap-2 shrink-0">
             {!shareToken && user?.role === 'ADMIN' && (
               <>
-                <button 
+                 <button 
                   onClick={() => handleShare({ id: currentFolderId, name: history[history.length - 1]?.name || 'Folder', isFolder: true, mimeType: '', modifiedTime: '', createdTime: '', hasThumbnail: false, webViewLink: '' })} 
                   className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground" 
                   title="Bagikan Folder Ini">
                   <Share2 size={18} />
                 </button>
-                <button onClick={() => setBulkMode(!isBulkMode)} className={`p-2 rounded-lg transition-colors flex items-center justify-center text-sm ${isBulkMode ? 'bg-blue-600 text-white' : 'bg-transparent hover:bg-accent text-foreground'}`} title="Pilih Beberapa File"><CheckSquare size={18} /><span className="sr-only">Pilih</span></button>
-              </>
+                 <button onClick={() => setBulkMode(!isBulkMode)} className={`p-2 rounded-lg transition-colors flex items-center justify-center text-sm ${isBulkMode ? 'bg-blue-600 text-white' : 'bg-transparent hover:bg-accent text-foreground'}`} title="Pilih Beberapa File"><CheckSquare size={18} /><span className="sr-only">Pilih</span></button>
+             </>
             )}
             <div className="flex items-center border border-border rounded-lg p-0.5">
               <button onClick={() => setView('list')} className={`p-1.5 rounded-md transition-colors ${view === 'list' ? 'bg-background text-primary shadow-sm' : 'hover:bg-accent/50 text-muted-foreground'}`} title="Tampilan Daftar"><List size={18} /></button>

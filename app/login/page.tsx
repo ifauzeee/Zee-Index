@@ -20,15 +20,18 @@ function CustomLoginPage() {
                 setError('Tautan berbagi yang Anda gunakan tidak valid atau telah kedaluwarsa.');
                 break;
             case 'SessionExpired':
-                setError('Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.');
+                 setError('Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.');
                 break;
             case 'RootAccessDenied':
-                setError('Anda tidak dapat mengakses halaman utama melalui tautan berbagi. Silakan gunakan tautan asli yang Anda terima.');
+                 setError('Anda tidak dapat mengakses halaman utama melalui tautan berbagi. Silakan gunakan tautan asli yang Anda terima.');
                 break;
-            default:
+            case 'ShareLinkRevoked':
+                setError('Akses untuk tautan ini telah dicabut oleh administrator.');
+                break;
+             default:
                 setError('Terjadi kesalahan. Silakan coba lagi.');
                 break;
-        }
+         }
     }
   }, [searchParams]);
 
@@ -43,11 +46,11 @@ function CustomLoginPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, type: 'spring', stiffness: 80, delay: 0.2 }}
+           transition={{ duration: 0.8, type: 'spring', stiffness: 80, delay: 0.2 }}
         >
           <i className="fab fa-google-drive text-primary/10 text-[18rem]"></i>
         </motion.div>
-      </div>
+       </div>
       <div className="flex w-full lg:w-1/2 items-center justify-center p-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -58,34 +61,34 @@ function CustomLoginPage() {
           <div className="space-y-8">
             <div className="text-center lg:text-left">
               <h1 className="text-3xl font-bold flex items-center justify-center lg:justify-start">
-                <i className="fab fa-google-drive text-blue-500 mr-3 text-4xl"></i>
+                 <i className="fab fa-google-drive text-blue-500 mr-3 text-4xl"></i>
                 <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
                   Zee Index
-                </span>
+                 </span>
               </h1>
               <p className="text-muted-foreground mt-2">Akses file Anda dengan aman dan cepat.</p>
             </div>
             
             {error && (
-              <div className="bg-destructive/10 border-l-4 border-destructive text-destructive-foreground p-4 rounded-md" role="alert">
+               <div className="bg-destructive/10 border-l-4 border-destructive text-destructive-foreground p-4 rounded-md" role="alert">
                 <p className="font-bold">Akses Gagal</p>
-                <p className="text-sm">{error}</p>
+                 <p className="text-sm">{error}</p>
               </div>
             )}
             
-            <div className="pt-4">
+             <div className="pt-4">
               <button
                 onClick={handleGoogleSignIn}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-card border rounded-lg hover:bg-accent transition-colors font-semibold"
+                 className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-card border rounded-lg hover:bg-accent transition-colors font-semibold"
               >
                 <i className="fab fa-google text-lg"></i>
-                Lanjutkan dengan Google
+                 Lanjutkan dengan Google
               </button>
             </div>
 
-            <p className="text-center text-xs text-muted-foreground pt-12">
-              © {new Date().getFullYear()} - Dibuat oleh <a href="https://ifauzeee.vercel.app/" target="_blank" rel="noopener noreferrer" className="font-medium text-foreground hover:text-primary">Muhammad Ibnu Fauzi</a>
-            </p>
+             <p className="text-center text-xs text-muted-foreground pt-12">
+              Â© {new Date().getFullYear()} - Dibuat oleh <a href="https://ifauzeee.vercel.app/" target="_blank" rel="noopener noreferrer" className="font-medium text-foreground hover:text-primary">Muhammad Ibnu Fauzi</a>
+             </p>
           </div>
         </motion.div>
       </div>
@@ -96,7 +99,7 @@ function CustomLoginPage() {
 export default function LoginPage() {
   return (
     <Suspense>
-      <CustomLoginPage />
+       <CustomLoginPage />
     </Suspense>
   );
 }
