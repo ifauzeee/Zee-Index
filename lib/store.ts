@@ -1,4 +1,4 @@
-// lib/store.ts
+// File: lib/store.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -42,6 +42,9 @@ interface AppState {
   removeToast: (id: string) => void;
   user: UserProfile | null;
   fetchUser: () => Promise<void>;
+  // --- PERBAIKAN --- Tambahkan state untuk folder ID saat ini
+  currentFolderId: string | null;
+  setCurrentFolderId: (id: string | null) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -64,7 +67,7 @@ export const useAppStore = create<AppState>()(
       selectedFiles: [],
       setBulkMode: (isActive) => {
         if (!isActive) {
-          set({ isBulkMode: false, selectedFiles: [] });
+           set({ isBulkMode: false, selectedFiles: [] });
         } else {
           set({ isBulkMode: true });
         }
@@ -82,12 +85,12 @@ export const useAppStore = create<AppState>()(
       setFolderToken: (folderId, token) => set((state) => ({
         folderTokens: {
           ...state.folderTokens,
-          [folderId]: token,
+           [folderId]: token,
         },
       })),
       toasts: [],
       addToast: (toastDetails) => {
-        const id = new Date().toISOString() + Math.random();
+         const id = new Date().toISOString() + Math.random();
         const newToast = { ...toastDetails, id };
         set((state) => ({ toasts: [...state.toasts, newToast] }));
         setTimeout(() => {
@@ -102,19 +105,22 @@ export const useAppStore = create<AppState>()(
         try {
           const response = await fetch('/api/auth/me');
           if (response.ok) {
-            const data = await response.json();
+           const data = await response.json();
             set({ user: data.user });
           } else {
             set({ user: null });
           }
         } catch (error) {
-          set({ user: null });
+           set({ user: null });
         }
       },
+      // --- PERBAIKAN --- Tambahkan implementasi state baru
+      currentFolderId: null,
+      setCurrentFolderId: (id) => set({ currentFolderId: id }),
     }),
     {
-      name: 'app-storage', // Key di localStorage
-      partialize: (state) => ({ theme: state.theme, view: state.view, sort: state.sort }), // Hanya persist yang diperlukan
+      name: 'app-storage',
+      partialize: (state) => ({ theme: state.theme, view: state.view, sort: state.sort }),
     }
   )
 );

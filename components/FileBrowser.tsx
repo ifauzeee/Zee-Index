@@ -41,7 +41,8 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     sort, isBulkMode, setBulkMode, toggleSelection,
     view, setView, refreshKey, addToast,
     folderTokens, setFolderToken, user,
-    shareToken, setShareToken
+    shareToken, setShareToken,
+    setCurrentFolderId
   } = useAppStore();
 
   useEffect(() => {
@@ -71,18 +72,23 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   }, [searchParams, router, addToast, setShareToken]);
 
   const currentFolderId = history.length > 0 ? history[history.length - 1]?.id : initialFolderId || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
+
+  // Tambahkan useEffect baru untuk mengupdate currentFolderId di global store
+  useEffect(() => {
+    setCurrentFolderId(currentFolderId);
+  }, [currentFolderId, setCurrentFolderId]);
+
   const createSlug = (name: string) => encodeURIComponent(name.replace(/\s+/g, '-').toLowerCase());
 
   const handleFetchError = useCallback(async (response: Response, defaultMessage: string, folderId: string, folderName: string) => {
     const errorData = await response.json();
     if (response.status === 401) {
-        if (errorData.protected) {
-            setAuthModal({ isOpen: true, folderId, folderName });
-        } else {
-            // --- PERBAIKAN --- Kirim kode error spesifik saat sesi habis
-            addToast({ message: 'Sesi Anda telah berakhir.', type: 'error' });
-            router.push('/login?error=SessionExpired');
-        }
+      if (errorData.protected) {
+        setAuthModal({ isOpen: true, folderId, folderName });
+      } else {
+        addToast({ message: 'Sesi Anda telah berakhir. Silakan login kembali.', type: 'error' });
+        router.push('/login?error=SessionExpired');
+      }
     } else {
       addToast({ message: errorData.error || defaultMessage, type: 'error' });
     }
@@ -176,7 +182,6 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   };
 
   const handleBreadcrumbClick = (folderId: string) => {
-    // --- PERBAIKAN --- Cegah klik breadcrumb ke root jika ada shareToken
     if (shareToken && folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
         addToast({ message: 'Akses dibatasi hanya untuk folder yang dibagikan.', type: 'info' });
         return;
@@ -200,7 +205,6 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     const rootFolder = { id: process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!, name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || 'Beranda' };
     
     const initializeHistory = async () => {
-      // --- PERBAIKAN --- Cek akses root folder jika menggunakan share token
       if (shareToken && (!initialFolderId || initialFolderId === rootFolder.id)) {
         router.push('/login?error=RootAccessDenied');
         return;
@@ -313,7 +317,6 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
             <span key={folder.id} className="flex items-center">
               <button 
                 onClick={() => handleBreadcrumbClick(folder.id)} 
-                // --- PERBAIKAN --- Beri style berbeda jika link nonaktif
                 className={`transition-colors ${shareToken && index === 0 ? 'cursor-default text-muted-foreground' : 'hover:text-primary'}`}
               >
                 {folder.name}
