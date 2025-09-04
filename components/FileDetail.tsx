@@ -1,4 +1,5 @@
 // File: components/FileDetail.tsx
+
 "use client";
 
 import React, { useEffect, useMemo, useRef } from 'react';
@@ -13,7 +14,7 @@ import 'prismjs/plugins/line-numbers/prism-line-numbers.css';
 import Plyr from 'plyr';
 import Prism from 'prismjs';
 import 'prismjs/plugins/line-numbers/prism-line-numbers.min.js';
-import { getFileType, formatBytes, formatDuration, getIcon } from '@/lib/utils';
+import { getFileType, formatBytes, formatDuration, getIcon, cn } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
 import { renderToString } from 'react-dom/server';
 
@@ -24,7 +25,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   const playerRef = useRef<Plyr | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { addToast } = useAppStore();
+  const { addToast, user } = useAppStore();
 
   useEffect(() => {
     const shareToken = searchParams.get('share_token');
@@ -34,6 +35,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
         const expirationTime = decodedToken.exp * 1000;
         const currentTime = Date.now();
         const timeUntilExpiration = expirationTime - currentTime;
+
         if (timeUntilExpiration > 0) {
           const timer = setTimeout(() => {
             addToast({ message: 'Sesi berbagi Anda telah berakhir.', type: 'info' });
@@ -58,7 +60,8 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   }, [file.id, searchParams]);
   
   const fileType = getFileType(file);
-  
+  const Icon = getIcon(file.mimeType);
+
   useEffect(() => {
     const renderPreview = async () => {
       if (!previewRef.current) return;
@@ -136,14 +139,13 @@ export default function FileDetail({ file }: { file: DriveFile }) {
         } else {
           const IconComponent = getIcon(file.mimeType);
           const iconString = renderToString(<IconComponent size={96} className="text-primary" />);
-          const iconHTML = `
+          previewRef.current.innerHTML = `
             <div class="flex flex-col items-center justify-center h-full gap-4">
               <div class="text-9xl">
                 ${iconString}
               </div>
             </div>
           `;
-          previewRef.current.innerHTML = iconHTML;
         }
       } catch (error) {
         console.error("Preview Error:", error);
@@ -163,58 +165,60 @@ export default function FileDetail({ file }: { file: DriveFile }) {
 
   const metadata = file.imageMediaMetadata || file.videoMediaMetadata;
   const durationMillis = file.videoMediaMetadata?.durationMillis ? parseInt(file.videoMediaMetadata.durationMillis, 10) : undefined;
+  const showShareButton = !searchParams.get('share_token') && user?.role === 'ADMIN';
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-12">
-        <div className="lg:col-span-2 flex flex-col">
-          <button onClick={handleBack} className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors mb-4 self-start">
-            <ArrowLeft size={18} /> Kembali
-          </button>
+    <div className="container mx-auto px-4 py-6 flex flex-col min-h-screen">
+      <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-12 flex-1 overflow-hidden">
+        <div className="lg:col-span-2 flex flex-col flex-1 min-h-0">
+          <header className="flex items-center justify-between gap-4 mb-4">
+            <button onClick={handleBack} className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors shrink-0">
+              <ArrowLeft size={20} /> Kembali
+            </button>
+            {showShareButton && <ShareButton path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`} itemName={file.name} />}
+          </header>
           
-          <div className="w-full h-[70vh] flex items-center justify-center overflow-hidden"> 
+          <div className="w-full flex-1 flex items-center justify-center overflow-hidden"> 
              <div ref={previewRef} className="w-full h-full flex items-center justify-center"></div>
           </div>
-          
         </div>
-        <div className="lg:col-span-1 mt-8 lg:mt-[52px]">
-          <div className="sticky top-24">
+
+        <div className="lg:col-span-1 mt-8 lg:mt-[52px] overflow-y-auto">
+          <div className="mb-6">
             <h1 className="text-2xl lg:text-3xl font-bold break-words mb-6">{file.name}</h1>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-4 border-b pb-2">Informasi File</h3>
-              <ul className="space-y-3 text-sm text-foreground">
-                <ListItem label="Ukuran" value={file.size ? formatBytes(Number(file.size)) : '-'} />
-                <ListItem label="Tipe" value={file.mimeType} />
-                {metadata?.width && metadata?.height && (
-                  <ListItem label="Dimensi" value={`${metadata.width} x ${metadata.height} px`} />
-                )}
-                {durationMillis && (
-                  <ListItem label="Durasi" value={formatDuration(durationMillis / 1000)} />
-                )}
-                <ListItem label="Diubah" value={new Date(file.modifiedTime).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} />
-                <ListItem label="Dibuat" value={new Date(file.createdTime).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} />
-                {file.owners && file.owners.length > 0 && (
-                  <ListItem label="Pemilik" value={file.owners[0].displayName} />
-                )}
-                {file.lastModifyingUser && (
-                  <ListItem label="Diubah oleh" value={file.lastModifyingUser.displayName} />
-                )}
-                {file.md5Checksum && (
-                  <li className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-border">
-                    <span className="font-medium text-muted-foreground shrink-0">MD5</span>
-                    <span className="font-mono text-xs break-all text-left sm:text-right">{file.md5Checksum}</span>
-                  </li>
-                )}
-              </ul>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <a href={directLink} download className="flex-1 flex items-center justify-center px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold text-lg">
-                <i className="fas fa-download mr-3"></i>Unduh File
-              </a>
-              {!searchParams.get('share_token') && (
-                <ShareButton path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`} itemName={file.name} />
+            <h3 className="text-lg font-semibold mb-4 border-b pb-2">Informasi File</h3>
+            <ul className="space-y-3 text-sm text-foreground">
+              <ListItem label="Ukuran" value={file.size ? formatBytes(Number(file.size)) : '-'} />
+              <ListItem label="Tipe" value={file.mimeType} />
+              {metadata?.width && metadata?.height && (
+                <ListItem label="Dimensi" value={`${metadata.width} x ${metadata.height} px`} />
               )}
-            </div>
+              {durationMillis && (
+                <ListItem label="Durasi" value={formatDuration(durationMillis / 1000)} />
+              )}
+              <ListItem label="Diubah" value={new Date(file.modifiedTime).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} />
+              <ListItem label="Dibuat" value={new Date(file.createdTime).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} />
+              {file.owners && file.owners.length > 0 && (
+                <ListItem label="Pemilik" value={file.owners[0].displayName} />
+              )}
+              {file.lastModifyingUser && (
+                <ListItem label="Diubah oleh" value={file.lastModifyingUser.displayName} />
+              )}
+              {file.md5Checksum && (
+                 <li className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-border">
+                  <span className="font-medium text-muted-foreground shrink-0">MD5</span>
+                  <span className="font-mono text-xs break-all text-left sm:text-right">{file.md5Checksum}</span>
+                </li>
+              )}
+            </ul>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <a href={directLink} download className="flex-1 flex items-center justify-center px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold text-lg">
+              <i className="fas fa-download mr-3"></i>Unduh File
+            </a>
+            {showShareButton && (
+              <ShareButton path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`} itemName={file.name} />
+            )}
           </div>
         </div>
       </div>
