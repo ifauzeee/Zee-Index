@@ -12,7 +12,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 export default function Header() {
     const router = useRouter();
-    const { data: session, status } = useSession(); // Ambil sesi di sini
+    const { data: session, status } = useSession();
     const { theme, toggleTheme, triggerRefresh, shareToken, user } = useAppStore();
     const [isSearchVisible, setIsSearchVisible] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -56,15 +56,14 @@ export default function Header() {
         status === "loading" ? (
             <div className="w-24 h-9 bg-muted rounded-lg animate-pulse" />
         ) : session ? (
-            <button onClick={() => signOut({ callbackUrl: '/login' })} title="Logout" className="p-2 rounded-lg hover:bg-accent flex items-center gap-2">
-                <LogOut size={20} />
-                <span className="text-sm font-medium hidden sm:inline">Logout</span>
+            <button onClick={() => signOut({ callbackUrl: '/login' })} title="Logout" className="flex items-center gap-4 hover:text-primary transition-colors">
+                <LogOut size={24} />
+                <span>Logout</span>
             </button>
         ) : (
-            // PERUBAHAN DI SINI: Mengarahkan ke halaman /login terlebih dahulu
-            <button onClick={handleLoginClick} title="Login" className="p-2 rounded-lg hover:bg-accent flex items-center gap-2">
-                <LogIn size={20} />
-                <span className="text-sm font-medium hidden sm:inline">Login</span>
+            <button onClick={handleLoginClick} title="Login" className="flex items-center gap-4 hover:text-primary transition-colors">
+                <LogIn size={24} />
+                <span>Login</span>
             </button>
         )
     );
