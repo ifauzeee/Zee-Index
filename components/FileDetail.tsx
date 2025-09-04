@@ -11,7 +11,7 @@ import ShareButton from './ShareButton';
 import 'plyr/dist/plyr.css';
 import 'prismjs/themes/prism-tomorrow.min.css';
 import 'prismjs/plugins/line-numbers/prism-line-numbers.css';
-import Plyr from 'plyr';
+import { default as Plyr } from 'plyr';
 import Prism from 'prismjs';
 import 'prismjs/plugins/line-numbers/prism-line-numbers.min.js';
 import { getFileType, formatBytes, formatDuration, getIcon, cn } from '@/lib/utils';
@@ -49,7 +49,6 @@ export default function FileDetail({ file }: { file: DriveFile }) {
     }
   }, [searchParams, router, addToast]);
 
-  const handleBack = () => router.back();
   const directLink = useMemo(() => {
     const shareToken = searchParams.get('share_token');
     let url = `/api/download?fileId=${file.id}`;
@@ -166,6 +165,16 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   const metadata = file.imageMediaMetadata || file.videoMediaMetadata;
   const durationMillis = file.videoMediaMetadata?.durationMillis ? parseInt(file.videoMediaMetadata.durationMillis, 10) : undefined;
   const showShareButton = !searchParams.get('share_token') && user?.role === 'ADMIN';
+
+  // PERBAIKAN: Logika baru untuk tombol kembali
+  const handleBack = () => {
+    const shareToken = searchParams.get('share_token');
+    if (shareToken && file.parents && file.parents.length > 0) {
+      router.push(`/folder/${file.parents[0]}?share_token=${shareToken}`);
+    } else {
+      router.back();
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-6 flex flex-col min-h-screen">
