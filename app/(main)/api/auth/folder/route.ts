@@ -1,9 +1,9 @@
-// app/(main)/api/auth/folder/route.ts
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { SignJWT } from 'jose';
 
-// Helper untuk parse JSON dengan aman
+export const dynamic = 'force-dynamic'; // Ditambahkan
+
 function safeParseJson(jsonString: string | null) {
     if (!jsonString) return null;
     try {
@@ -31,17 +31,15 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'This folder is not configured for protection.' }, { status: 404 });
         }
 
-        // Perbandingan aman untuk mencegah timing attacks
         const isIdValid = crypto.timingSafeEqual(Buffer.from(id), Buffer.from(folderConfig.id));
         const isPasswordValid = crypto.timingSafeEqual(Buffer.from(password), Buffer.from(folderConfig.password));
 
         if (isIdValid && isPasswordValid) {
-            // Jika valid, buat JWT khusus folder
             const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
             const token = await new SignJWT({ folderId: folderId })
                 .setProtectedHeader({ alg: 'HS256' })
                 .setIssuedAt()
-                .setExpirationTime('1h') // Token berlaku selama 1 jam
+                .setExpirationTime('1h')
                 .sign(secret);
             return NextResponse.json({ success: true, token }, { status: 200 });
         } else {

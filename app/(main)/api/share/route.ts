@@ -1,13 +1,13 @@
-// app/(main)/api/share/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
 
-// Perbarui tipe untuk request body
+export const dynamic = 'force-dynamic'; // Ditambahkan
+
 interface ShareRequestBody {
   path: string;
   type: 'timed' | 'session';
   expiresIn: string;
-  loginRequired?: boolean; // Tambahkan properti opsional
+  loginRequired?: boolean;
 }
 
 export async function POST(req: NextRequest) {
@@ -20,7 +20,6 @@ export async function POST(req: NextRequest) {
     
     const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
     
-    // Simpan informasi loginRequired di dalam token
     const token = await new SignJWT({ path, loginRequired: loginRequired ?? false })
        .setProtectedHeader({ alg: 'HS256' })
        .setIssuedAt()

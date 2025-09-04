@@ -1,6 +1,7 @@
-// app/api/filedetails/route.ts
 import { NextResponse } from 'next/server';
 import { getFileDetailsFromDrive } from '@/lib/googleDrive';
+
+export const dynamic = 'force-dynamic'; // Ditambahkan
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

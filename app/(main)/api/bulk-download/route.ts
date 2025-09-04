@@ -1,7 +1,8 @@
-// app/api/bulk-download/route.ts
 import { NextResponse } from 'next/server';
 import { getAccessToken } from '@/lib/googleDrive';
 import JSZip from 'jszip';
+
+export const dynamic = 'force-dynamic'; // Ditambahkan
 
 export async function POST(request: Request) {
   try {
@@ -35,14 +36,11 @@ export async function POST(request: Request) {
       }
     }
 
-    // PERBAIKAN: Ubah tipe output dari 'nodebuffer' menjadi 'blob'
     const zipBlob = await zip.generateAsync({ type: 'blob' });
-
     const headers = new Headers();
     headers.set('Content-Type', 'application/zip');
     headers.set('Content-Disposition', 'attachment; filename="download.zip"');
 
-    // Kirim zip sebagai Blob
     return new NextResponse(zipBlob, { status: 200, headers });
 
   } catch (error: any) {

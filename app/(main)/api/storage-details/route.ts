@@ -1,9 +1,7 @@
-// app/(main)/api/storage-details/route.ts
 import { NextResponse } from 'next/server';
 import { getStorageDetails } from '@/lib/googleDrive';
 
-// Cache data ini selama 4 jam (14400 detik)
-// Panggilan pertama akan lambat, selanjutnya akan cepat.
+export const dynamic = 'force-dynamic'; // Ditambahkan
 export const revalidate = 14400;
 
 export async function GET() {

@@ -1,7 +1,8 @@
-// app/api/download/route.ts
 import { NextResponse, type NextRequest } from 'next/server';
 import { getAccessToken, getFileDetailsFromDrive } from '@/lib/googleDrive';
 import { jwtVerify } from 'jose';
+
+export const dynamic = 'force-dynamic'; // Ditambahkan
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -15,8 +16,7 @@ export async function GET(request: NextRequest) {
   if (shareToken) {
     try {
       const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
-      const { payload } = await jwtVerify(shareToken, secret);
-      // Anda mungkin ingin memeriksa `payload.path` untuk memastikan token ini untuk file yang benar
+      await jwtVerify(shareToken, secret);
     } catch (error) {
       console.error("Verifikasi share token gagal:", error);
       return NextResponse.json({ error: 'Tautan berbagi tidak valid atau kedaluwarsa.' }, { status: 401 });
@@ -42,12 +42,12 @@ export async function GET(request: NextRequest) {
     if (range) {
       headers.set('Range', range);
       const driveResponse = await fetch(driveUrl, { headers });
-      const partialBody = await driveResponse.body;
+      const partialBody = driveResponse.body;
       const contentRange = driveResponse.headers.get('Content-Range');
 
       const responseHeaders = new Headers();
       if (contentRange) {
-        responseHeaders.set('Content-Range', contentRange);
+         responseHeaders.set('Content-Range', contentRange);
       }
       responseHeaders.set('Accept-Ranges', 'bytes');
       responseHeaders.set('Content-Length', driveResponse.headers.get('Content-Length') || '');
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       return new NextResponse(partialBody, { status: 206, headers: responseHeaders });
     } else {
       const driveResponse = await fetch(driveUrl, { headers });
-      const body = await driveResponse.body;
+      const body = driveResponse.body;
       
       const responseHeaders = new Headers();
       const fileName = fileDetails.name || 'download';

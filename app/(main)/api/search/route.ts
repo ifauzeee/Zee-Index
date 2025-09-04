@@ -1,7 +1,8 @@
-// app/api/search/route.ts
 import { NextResponse } from 'next/server';
 import { getAccessToken, DriveFile } from '@/lib/googleDrive';
 import { isProtected } from '@/lib/auth';
+
+export const dynamic = 'force-dynamic'; // Ditambahkan
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -35,7 +36,6 @@ export async function GET(request: Request) {
 
     const data = await response.json();
     
-    // BAGIAN PENTING: Memastikan `isFolder` ditambahkan ke setiap hasil
     const processedFiles = (data.files || []).map((file: DriveFile) => ({
       ...file,
       isFolder: file.mimeType === 'application/vnd.google-apps.folder',

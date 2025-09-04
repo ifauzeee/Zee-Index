@@ -1,23 +1,26 @@
 "use client";
 
 import { useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useAppStore } from '@/lib/store';
 import BulkActionBar from '@/components/BulkActionBar';
 import Toast from '@/components/Toast';
-import Header from '@/components/Header';
 import { AnimatePresence } from 'framer-motion';
 import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import 'plyr/dist/plyr.css';
 import { Providers } from '../providers';
-import { useSession } from 'next-auth/react'; // <-- Impor useSession
+import { useSession } from 'next-auth/react';
+
+// Muat Header secara dinamis hanya di sisi klien untuk mencegah error build
+const Header = dynamic(() => import('@/components/Header'), { ssr: false });
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const { 
     theme, setTheme, refreshKey, toasts, removeToast, fetchUser
   } = useAppStore();
-  const { data: session, status } = useSession(); // <-- Gunakan useSession
+  const { status } = useSession();
   const currentYear = new Date().getFullYear();
 
   useEffect(() => {
@@ -44,12 +47,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     const fetchDataUsage = async () => {
         const valueSpan = document.getElementById('data-usage-value');
         if (valueSpan) {
-            // Hanya ambil data penggunaan jika ada sesi (bukan share link)
+            // Hanya ambil data penggunaan jika ada sesi
             if (status === 'authenticated') {
                 try {
                     valueSpan.textContent = 'Menghitung...';
-                    const url = new URL('/api/datausage', window.location.origin);
-                    const response = await fetch(url.toString());
+                    const response = await fetch('/api/datausage');
                     if (!response.ok) throw new Error('Gagal mengambil data');
                     const data = await response.json();
                     valueSpan.textContent = formatBytes(data.totalUsage);
@@ -58,7 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     valueSpan.textContent = 'Gagal memuat';
                 }
             } else if (status === 'unauthenticated') {
-                valueSpan.textContent = '-'; // Tampilkan strip jika tidak login
+                valueSpan.textContent = '-';
             }
         }
     };

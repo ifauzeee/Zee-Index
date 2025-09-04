@@ -1,12 +1,11 @@
-// app/(main)/api/files/rename/route.ts
 import { NextResponse, NextRequest } from 'next/server';
 import { getAccessToken } from '@/lib/googleDrive';
 
+export const dynamic = 'force-dynamic'; // Ditambahkan
+
 export async function POST(request: NextRequest) {
-  // Ambil peran pengguna dari header permintaan
   const userRole = request.headers.get('x-user-role');
   
-  // Periksa apakah peran pengguna adalah ADMIN
   if (userRole !== 'ADMIN') {
     return NextResponse.json({ error: 'Akses ditolak. Izin admin diperlukan.' }, { status: 403 });
   }
@@ -20,7 +19,6 @@ export async function POST(request: NextRequest) {
     const accessToken = await getAccessToken();
     const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}`;
     
-    // Lakukan permintaan PATCH untuk mengubah nama file
     const response = await fetch(driveUrl, {
       method: 'PATCH',
       headers: {
