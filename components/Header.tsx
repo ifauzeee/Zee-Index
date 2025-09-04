@@ -16,7 +16,6 @@ function AuthButton() {
     }
     if (session) {
         return (
-            // --- PERBAIKAN DI SINI ---
             <button onClick={() => signOut({ callbackUrl: '/login' })} title="Logout" className="p-2 rounded-lg hover:bg-accent flex items-center gap-2">
                 <LogOut size={20} />
                 <span className="hidden sm:inline text-sm font-medium">Logout</span>
@@ -34,17 +33,24 @@ function AuthButton() {
 
 export default function Header() {
     const router = useRouter();
-    const { theme, toggleTheme, triggerRefresh } = useAppStore();
+    const { theme, toggleTheme, triggerRefresh, shareToken } = useAppStore();
     const [isSearchVisible, setIsSearchVisible] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const menuItems = [
-        { href: '/storage', icon: HardDrive, label: 'Penyimpanan' },
-        { onClick: toggleTheme, icon: theme === 'light' ? Moon : Sun, label: `Ganti Tema` },
-        { onClick: triggerRefresh, icon: RefreshCw, label: 'Segarkan Halaman' },
-        { href: 'https://t.me/RyzeeenUniverse', target: '_blank', rel: 'noopener noreferrer', icon: Send, label: 'Join Grup' },
-        { href: 'https://ifauzeee.vercel.app/donate', target: '_blank', rel: 'noopener noreferrer', icon: Coffee, label: 'Donasi' },
+        { id: 'storage', href: '/storage', icon: HardDrive, label: 'Penyimpanan' },
+        { id: 'theme', onClick: toggleTheme, icon: theme === 'light' ? Moon : Sun, label: `Ganti Tema` },
+        { id: 'refresh', onClick: triggerRefresh, icon: RefreshCw, label: 'Segarkan Halaman' },
+        { id: 'telegram', href: 'https://t.me/RyzeeenUniverse', target: '_blank', rel: 'noopener noreferrer', icon: Send, label: 'Join Grup' },
+        { id: 'donate', href: 'https://ifauzeee.vercel.app/donate', target: '_blank', rel: 'noopener noreferrer', icon: Coffee, label: 'Donasi' },
     ];
+    
+    const handleLogoClick = () => {
+        if (shareToken) {
+            return;
+        }
+        router.push('/');
+    };
 
     useEffect(() => {
         const handleResize = () => {
@@ -64,29 +70,46 @@ export default function Header() {
     return (
         <>
             <header className="sticky top-0 z-40 bg-background flex justify-between items-center py-4 border-b gap-4">
-                <h1 onClick={() => router.push('/')} className="text-2xl font-bold flex items-center cursor-pointer shrink-0" title="Kembali ke Beranda">
+                <h1 
+                    onClick={handleLogoClick} 
+                    className={`text-2xl font-bold flex items-center shrink-0 ${shareToken ? 'cursor-default' : 'cursor-pointer'}`} 
+                    title={shareToken ? 'Zee Index' : 'Kembali ke Beranda'}
+                >
                     <i className="fab fa-google-drive text-blue-500 mr-3"></i>Zee Index
                 </h1>
+                
                 <div className="w-full max-w-md hidden sm:block">
                     <Suspense fallback={<div className="w-full h-10 bg-muted rounded-lg animate-pulse" />}>
                         <Search />
                     </Suspense>
                 </div>
+                
                 <div className="hidden sm:flex items-center gap-2">
-                    {menuItems.map((item, index) => {
-                        const Icon = item.icon;
-                        return item.href ? (
-                            <a key={index} href={item.href} target={item.target} rel={item.rel} title={item.label} className="p-2 rounded-lg hover:bg-accent">
-                                <Icon size={20} />
-                            </a>
-                        ) : (
-                            <button key={index} onClick={item.onClick} title={item.label} className="p-2 rounded-lg hover:bg-accent">
-                                <Icon size={20} />
-                            </button>
-                        );
-                    })}
+                    {/* --- PERBAIKAN DI SINI --- */}
+                    {menuItems
+                        .filter(item => {
+                            // Jika ada shareToken, hanya tampilkan item dengan id 'theme'
+                            if (shareToken) {
+                                return item.id === 'theme';
+                            }
+                            // Jika tidak ada shareToken, tampilkan semua
+                            return true;
+                        })
+                        .map((item) => {
+                            const Icon = item.icon;
+                            return 'href' in item && item.href ? (
+                                <a key={item.id} href={item.href} target={item.target} rel={item.rel} title={item.label} className="p-2 rounded-lg hover:bg-accent">
+                                    <Icon size={20} />
+                                </a>
+                            ) : (
+                                'onClick' in item && <button key={item.id} onClick={item.onClick} title={item.label} className="p-2 rounded-lg hover:bg-accent">
+                                    <Icon size={20} />
+                                </button>
+                            );
+                        })}
                     <AuthButton />
                 </div>
+
                 <div className="flex items-center gap-2 sm:hidden">
                     <button onClick={() => setIsSearchVisible(!isSearchVisible)} title="Cari" className="p-2 rounded-lg hover:bg-accent">
                         {isSearchVisible ? <X size={20} /> : <SearchIcon size={20} />}
@@ -110,7 +133,7 @@ export default function Header() {
                         exit={{ opacity: 0, x: "-100%" }}
                         className="fixed inset-0 z-50 h-screen bg-background flex flex-col items-center justify-center p-4 sm:hidden"
                     >
-                        {/* Mobile menu content would be here */}
+                       {/* Mobile menu content would be here */}
                     </motion.nav>
                 )}
             </AnimatePresence>

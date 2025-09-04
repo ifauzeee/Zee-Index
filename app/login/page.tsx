@@ -1,3 +1,4 @@
+// File: app/login/page.tsx
 "use client";
 
 import { useState, useEffect, Suspense } from 'react';
@@ -12,9 +13,23 @@ function CustomLoginPage() {
   const currentYear = new Date().getFullYear();
 
   useEffect(() => {
-    const shareError = searchParams.get('error');
-    if (shareError === 'InvalidOrExpiredShareLink') {
-      setError('Tautan berbagi yang Anda gunakan tidak valid atau telah kedaluwarsa.');
+    const errorType = searchParams.get('error');
+    if (errorType) {
+        // --- PERBAIKAN --- Tambahkan logika untuk berbagai jenis error
+        switch (errorType) {
+            case 'InvalidOrExpiredShareLink':
+                setError('Tautan berbagi yang Anda gunakan tidak valid atau telah kedaluwarsa.');
+                break;
+            case 'SessionExpired':
+                setError('Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.');
+                break;
+            case 'RootAccessDenied':
+                setError('Anda tidak dapat mengakses halaman utama melalui tautan berbagi. Silakan gunakan tautan asli yang Anda terima.');
+                break;
+            default:
+                setError('Terjadi kesalahan. Silakan coba lagi.');
+                break;
+        }
     }
   }, [searchParams]);
 

@@ -41,14 +41,13 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     sort, isBulkMode, setBulkMode, toggleSelection,
     view, setView, refreshKey, addToast,
     folderTokens, setFolderToken, user,
-    shareToken, setShareToken // --- PERBAIKAN --- Ambil shareToken dan setternya dari store
+    shareToken, setShareToken
   } = useAppStore();
 
   useEffect(() => {
     const currentShareToken = searchParams.get('share_token');
 
     if (currentShareToken) {
-      // --- PERBAIKAN --- Simpan token ke global store agar bisa diakses di mana saja
       setShareToken(currentShareToken);
       try {
         const decodedToken: { exp: number } = jwtDecode(currentShareToken);
@@ -59,7 +58,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         if (timeUntilExpiration > 0) {
           const timer = setTimeout(() => {
             addToast({ message: 'Sesi berbagi Anda telah berakhir.', type: 'info' });
-            setShareToken(null); // Hapus token dari store
+            setShareToken(null);
             router.push('/login?error=InvalidOrExpiredShareLink');
           }, timeUntilExpiration);
 
@@ -80,8 +79,9 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         if (errorData.protected) {
             setAuthModal({ isOpen: true, folderId, folderName });
         } else {
-            addToast({ message: 'Sesi Anda telah berakhir. Silakan login kembali.', type: 'error' });
-            router.push('/login');
+            // --- PERBAIKAN --- Kirim kode error spesifik saat sesi habis
+            addToast({ message: 'Sesi Anda telah berakhir.', type: 'error' });
+            router.push('/login?error=SessionExpired');
         }
     } else {
       addToast({ message: errorData.error || defaultMessage, type: 'error' });
@@ -100,7 +100,6 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         url.searchParams.append('folderId', folderId);
         if (pageToken) url.searchParams.append('pageToken', pageToken);
         
-        // --- PERBAIKAN --- Tambahkan share_token ke request API jika ada
         if (shareToken) {
           url.searchParams.append('share_token', shareToken);
         }
@@ -126,7 +125,6 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     } finally {
       setIsLoading(false);
     }
-    // --- PERBAIKAN --- Tambahkan shareToken sebagai dependency
   }, [folderTokens, handleFetchError, addToast, shareToken]);
 
   const handleItemClick = (file: DriveFile) => {
@@ -144,7 +142,6 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
       ? `/folder/${file.id}`
       : `/folder/${currentFolderId}/file/${file.id}/${createSlug(file.name)}`;
 
-    // --- PERBAIKAN --- Pastikan share_token tetap ada di URL saat navigasi
     if (shareToken) {
       destinationUrl += `?share_token=${shareToken}`;
     }
@@ -179,8 +176,13 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   };
 
   const handleBreadcrumbClick = (folderId: string) => {
+    // --- PERBAIKAN --- Cegah klik breadcrumb ke root jika ada shareToken
+    if (shareToken && folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
+        addToast({ message: 'Akses dibatasi hanya untuk folder yang dibagikan.', type: 'info' });
+        return;
+    }
+
     let folderUrl = folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID ? '/' : `/folder/${folderId}`;
-    // --- PERBAIKAN --- Pastikan share_token tetap ada di URL saat navigasi
     if (shareToken) {
         folderUrl += `?share_token=${shareToken}`;
     }
@@ -198,6 +200,12 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     const rootFolder = { id: process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!, name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || 'Beranda' };
     
     const initializeHistory = async () => {
+      // --- PERBAIKAN --- Cek akses root folder jika menggunakan share token
+      if (shareToken && (!initialFolderId || initialFolderId === rootFolder.id)) {
+        router.push('/login?error=RootAccessDenied');
+        return;
+      }
+
       if (!initialFolderId || initialFolderId === rootFolder.id) {
         if(history.length > 1 || history[0]?.id !== rootFolder.id) setHistory([rootFolder]);
       } else {
@@ -224,11 +232,11 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
       }
     };
     initializeHistory();
-  }, [initialFolderId, addToast, router, history]);
+  }, [initialFolderId, addToast, router, history, shareToken]);
   
   const handleContextMenu = useCallback((event: React.MouseEvent, file: DriveFile) => {
     event.preventDefault();
-    if (isBulkMode || shareToken) return; // --- PERBAIKAN --- Nonaktifkan context menu jika dalam mode share
+    if (isBulkMode || shareToken) return;
     setContextMenu({ x: event.clientX, y: event.clientY, file });
   }, [isBulkMode, shareToken]);
   
@@ -303,7 +311,13 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         <nav className="flex items-center space-x-2 text-sm text-muted-foreground overflow-x-auto whitespace-nowrap">
           {history.map((folder, index) => (
             <span key={folder.id} className="flex items-center">
-              <button onClick={() => handleBreadcrumbClick(folder.id)} className="hover:text-primary transition-colors">{folder.name}</button>
+              <button 
+                onClick={() => handleBreadcrumbClick(folder.id)} 
+                // --- PERBAIKAN --- Beri style berbeda jika link nonaktif
+                className={`transition-colors ${shareToken && index === 0 ? 'cursor-default text-muted-foreground' : 'hover:text-primary'}`}
+              >
+                {folder.name}
+              </button>
               {index < history.length - 1 && <span className="mx-2">/</span>}
             </span>
           ))}
