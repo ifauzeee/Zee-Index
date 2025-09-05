@@ -105,7 +105,7 @@ export async function listFilesFromDrive(folderId: string, pageToken?: string | 
 
   const response = await fetch(`${GOOGLE_DRIVE_API_URL}?${params.toString()}`, {
     headers: { 'Authorization': `Bearer ${accessToken}` },
-    next: { revalidate: 3600 }
+    next: { tags: [`files-in-folder-${folderId}`] }
   });
 
   if (!response.ok) {

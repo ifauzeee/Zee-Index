@@ -3,6 +3,13 @@ import { NextResponse, NextRequest } from 'next/server';
 import { getAccessToken } from '@/lib/googleDrive';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
+import { revalidateTag } from 'next/cache';
+import { z } from 'zod';
+
+const createFolderSchema = z.object({
+  folderName: z.string().min(1, { message: "Nama folder tidak boleh kosong." }),
+  parentId: z.string().min(1, { message: "Folder induk diperlukan." }),
+});
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -11,10 +18,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { folderName, parentId } = await request.json();
-    if (!folderName || !parentId) {
-      return NextResponse.json({ error: 'Nama folder dan ID induk diperlukan.' }, { status: 400 });
+    const body = await request.json();
+    const validation = createFolderSchema.safeParse(body);
+
+    if (!validation.success) {
+      // PERBAIKAN: Gunakan 'issues' bukan 'errors'
+      return NextResponse.json({ error: 'Input tidak valid', details: validation.error.issues }, { status: 400 });
     }
+    
+    const { folderName, parentId } = validation.data;
 
     const accessToken = await getAccessToken();
     const fileMetadata = {
@@ -36,6 +48,8 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
         throw new Error(data.error?.message || 'Gagal membuat folder di Google Drive.');
     }
+
+    revalidateTag(`files-in-folder-${parentId}`);
 
     return NextResponse.json(data, { status: 200 });
   } catch (error: any) {

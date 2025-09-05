@@ -3,6 +3,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import { getAccessToken } from '@/lib/googleDrive';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
+import { revalidateTag } from 'next/cache';
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -25,19 +26,31 @@ export async function POST(request: NextRequest) {
       parents: [parentId],
     };
 
+    const body = new Blob([
+      `--boundary\r\n`,
+      `Content-Type: application/json; charset=UTF-8\r\n\r\n`,
+      `${JSON.stringify(metadata)}\r\n\r\n`,
+      `--boundary\r\n`,
+      `Content-Type: ${file.type}\r\n\r\n`,
+      await file.arrayBuffer(),
+      `\r\n--boundary--`
+    ]);
+
     const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': `multipart/related; boundary=boundary`,
       },
-      body: `--boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n\r\n--boundary\r\nContent-Type: ${file.type}\r\n\r\n${await file.text()}\r\n--boundary--`,
+      body,
     });
 
     const data = await response.json();
     if (!response.ok) {
         throw new Error(data.error?.message || 'Gagal mengunggah file ke Google Drive.');
     }
+
+    revalidateTag(`files-in-folder-${parentId}`);
 
     return NextResponse.json(data, { status: 200 });
 
