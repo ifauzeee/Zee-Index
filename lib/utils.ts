@@ -1,11 +1,7 @@
+// File: lib/utils.ts
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { File as FileIcon, Video, Image, Music, Archive, LucideIcon, Folder } from "lucide-react";
-
-export interface DriveFile {
-  mimeType: string;
-  name: string;
-}
+import { File as FileIcon, Video, Image, Music, Archive, LucideIcon, Folder, FileText } from "lucide-react";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -27,6 +23,8 @@ export function getIcon(mimeType: string): LucideIcon {
   if (mimeType.startsWith("video/")) return Video;
   if (mimeType.startsWith("audio/")) return Music;
   if (mimeType.startsWith("application/zip") || mimeType.startsWith("application/x-rar-compressed")) return Archive;
+  // BARU: Ikon spesifik untuk file teks/markdown
+  if (mimeType.startsWith("text/plain") || mimeType.startsWith("text/markdown")) return FileText;
   return FileIcon;
 }
 
@@ -48,15 +46,17 @@ export const formatDuration = (seconds: number | string): string => {
    return `${formattedMinutes}:${formattedSeconds}`;
 };
 
-export function getFileType(file: DriveFile): string {
+export function getFileType(file: { mimeType: string; name: string }): string {
   const mimeType = file.mimeType || '';
 
   if (mimeType.startsWith('video/')) return 'video';
   if (mimeType.startsWith('audio/')) return 'audio';
   if (mimeType.startsWith('image/')) return 'image';
   if (mimeType === 'application/pdf') return 'pdf';
+  // BARU: Deteksi file markdown
+  if (mimeType === 'text/markdown' || file.name.endsWith('.md')) return 'markdown';
 
-  const codeExtensions = ['js', 'ts', 'jsx', 'tsx', 'json', 'py', 'css', 'html', 'md', 'sh', 'java', 'c', 'cpp', 'cs', 'go', 'rb', 'php', 'swift', 'kt', 'rs', 'txt'];
+  const codeExtensions = ['js', 'ts', 'jsx', 'tsx', 'json', 'py', 'css', 'html', 'sh', 'java', 'c', 'cpp', 'cs', 'go', 'rb', 'php', 'swift', 'kt', 'rs', 'txt'];
   const fileExtension = file.name.split('.').pop()?.toLowerCase();
   if (fileExtension && codeExtensions.includes(fileExtension)) {
     return 'code';

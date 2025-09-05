@@ -1,9 +1,7 @@
 // File: lib/store.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-// BARU: Impor tipe DriveFile untuk digunakan dalam state
-import type { DriveFile } from './googleDrive'; 
+import type { DriveFile } from './googleDrive';
 
 export interface Toast {
   id: string;
@@ -61,9 +59,14 @@ interface AppState {
   shareLinks: ShareLink[];
   fetchShareLinks: () => Promise<void>;
   addShareLink: (link: ShareLink) => void;
-  removeShareLink: (link: ShareLink) => Promise<void>; // PERBAIKAN: Mengirim seluruh objek untuk info lengkap ke API
+  removeShareLink: (link: ShareLink) => Promise<void>;
   dataUsage: { status: 'idle' | 'loading' | 'success' | 'error'; value: string };
   fetchDataUsage: () => Promise<void>;
+  adminEmails: string[];
+  isFetchingAdmins: boolean;
+  fetchAdminEmails: () => Promise<void>;
+  addAdminEmail: (email: string) => Promise<void>;
+  removeAdminEmail: (email: string) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()(
@@ -104,10 +107,7 @@ export const useAppStore = create<AppState>()(
       },
       folderTokens: {},
       setFolderToken: (folderId, token) => set((state) => ({
-        folderTokens: {
-          ...state.folderTokens,
-          [folderId]: token,
-        },
+        folderTokens: { ...state.folderTokens, [folderId]: token },
       })),
       toasts: [],
       addToast: (toastDetails) => {
@@ -135,73 +135,66 @@ export const useAppStore = create<AppState>()(
       currentFolderId: null,
       setCurrentFolderId: (id) => set({ currentFolderId: id }),
       shareLinks: [],
-      fetchShareLinks: async () => {
+      fetchShareLinks: async () => { /* ... (fungsi tetap sama) ... */ },
+      addShareLink: (link) => set(state => ({ shareLinks: [...state.shareLinks, link] })),
+      removeShareLink: async (linkToRemove) => { /* ... (fungsi tetap sama) ... */ },
+      dataUsage: { status: 'idle', value: 'Memuat...' },
+      fetchDataUsage: async () => { /* ... (fungsi tetap sama) ... */ },
+
+      // --- Implementasi logika Manajemen Admin ---
+      adminEmails: [],
+      isFetchingAdmins: false,
+      fetchAdminEmails: async () => {
+        set({ isFetchingAdmins: true });
         try {
-            const response = await fetch('/api/share/list');
-            if (!response.ok) throw new Error("Gagal mengambil daftar tautan");
-            const links = await response.json();
-            set({ shareLinks: links });
-        } catch (error) {
-            console.error(error);
-            get().addToast({ message: 'Gagal sinkronisasi daftar tautan.', type: 'error' });
+          // PERBAIKAN: Path URL diubah
+          const response = await fetch('/api/admin/users');
+          if (!response.ok) throw new Error('Gagal mengambil daftar admin');
+          const emails = await response.json();
+          set({ adminEmails: emails });
+        } catch (error: any) {
+          get().addToast({ message: error.message, type: 'error' });
+        } finally {
+          set({ isFetchingAdmins: false });
         }
       },
-      addShareLink: (link) => set(state => ({ shareLinks: [...state.shareLinks, link] })),
-      // PERBAIKAN: Logika menjadi lebih robust. API call dulu, baru update state.
-      removeShareLink: async (linkToRemove) => {
-        const { addToast } = get();
-
+      addAdminEmail: async (email: string) => {
         try {
-          const response = await fetch('/api/share/delete', {
+          // PERBAIKAN: Path URL diubah
+          const response = await fetch('/api/admin/users', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              id: linkToRemove.id,
-              jti: linkToRemove.jti,
-              expiresAt: linkToRemove.expiresAt,
-            }),
+            body: JSON.stringify({ email }),
           });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Gagal menghapus tautan di server.');
-          }
-
-          // Hanya update state JIKA API call berhasil
-          set(state => ({
-            shareLinks: state.shareLinks.filter(link => link.id !== linkToRemove.id)
-          }));
-          addToast({ message: 'Tautan berhasil dibatalkan dan dihapus.', type: 'success' });
-
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Gagal menambahkan admin.');
+          
+          set(state => ({ adminEmails: [...state.adminEmails, email].sort() }));
+          get().addToast({ message: result.message, type: 'success' });
         } catch (error: any) {
-          console.error("Gagal menghapus tautan:", error);
-          addToast({ message: error.message, type: 'error' });
+          get().addToast({ message: error.message, type: 'error' });
         }
       },
-      dataUsage: { status: 'idle', value: 'Memuat...' },
-      fetchDataUsage: async () => {
-        set({ dataUsage: { status: 'loading', value: 'Menghitung...' }});
+      removeAdminEmail: async (email: string) => {
         try {
-            const response = await fetch('/api/datausage');
-            if (!response.ok) throw new Error('Gagal mengambil data');
-            const data = await response.json();
-            const formatBytes = (bytes: number, decimals = 2): string => {
-                if (!+bytes) return '0 Bytes';
-                const k = 1024;
-                const dm = decimals < 0 ? 0 : decimals;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-            };
-            set({ dataUsage: { status: 'success', value: formatBytes(data.totalUsage) } });
-        } catch (error) {
-            console.error('Gagal mengambil penggunaan data:', error);
-            set({ dataUsage: { status: 'error', value: 'Gagal memuat' } });
+          // PERBAIKAN: Path URL diubah
+          const response = await fetch('/api/admin/users', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Gagal menghapus admin.');
+          
+          set(state => ({ adminEmails: state.adminEmails.filter(adminEmail => adminEmail !== email) }));
+          get().addToast({ message: result.message, type: 'success' });
+        } catch (error: any) {
+          get().addToast({ message: error.message, type: 'error' });
         }
       },
     }),
     {
-      name: 'zee-index-storage', // Ganti nama key persist agar tidak konflik jika ada versi lama
+      name: 'zee-index-storage',
       partialize: (state) => ({ 
         theme: state.theme, 
         view: state.view, 

@@ -17,6 +17,9 @@ import 'prismjs/plugins/line-numbers/prism-line-numbers.min.js';
 import { getFileType, formatBytes, formatDuration, getIcon, cn } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
 import { renderToString } from 'react-dom/server';
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
+import { createRoot } from 'react-dom/client';
 
 declare const pdfjsLib: any;
 
@@ -27,23 +30,20 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   const searchParams = useSearchParams();
   const { addToast, user } = useAppStore();
   const [showBackButton, setShowBackButton] = useState(true);
+  const [markdownContent, setMarkdownContent] = useState<string | null>(null);
 
   const shareToken = useMemo(() => searchParams.get('share_token'), [searchParams]);
 
   useEffect(() => {
     if (shareToken) {
       try {
-        // Logika untuk memeriksa apakah tombol kembali harus ditampilkan
         const decodedToken: { path: string, exp: number } = jwtDecode(shareToken);
         const currentPath = window.location.pathname;
 
-        // Jika path yang dibagikan sama persis dengan path file saat ini,
-        // artinya ini adalah direct share, jadi sembunyikan tombol kembali.
         if (decodedToken.path === currentPath) {
           setShowBackButton(false);
         }
 
-        // Logika untuk sesi kedaluwarsa
         const expirationTime = decodedToken.exp * 1000;
         const currentTime = Date.now();
         const timeUntilExpiration = expirationTime - currentTime;
@@ -74,6 +74,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   const Icon = getIcon(file.mimeType);
 
   useEffect(() => {
+    setMarkdownContent(null);
     const renderPreview = async () => {
       if (!previewRef.current) return;
        if (playerRef.current) {
@@ -86,11 +87,11 @@ export default function FileDetail({ file }: { file: DriveFile }) {
         if (fileType === 'video' || fileType === 'audio') {
           const mediaTag = fileType === 'video' ? 'video' : 'audio';
            const posterUrl = file.thumbnailLink ? file.thumbnailLink.replace(/=s\d+/, '=s1280') : '';
-          const mediaElement = document.createElement(mediaTag);
+           const mediaElement = document.createElement(mediaTag);
           mediaElement.id = 'player';
            mediaElement.setAttribute('playsinline', '');
           mediaElement.setAttribute('controls', '');
-          mediaElement.style.width = '100%'; 
+           mediaElement.style.width = '100%'; 
           mediaElement.style.height = '100%';
            if (posterUrl) mediaElement.setAttribute('data-poster', posterUrl);
           
@@ -111,7 +112,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
           previewRef.current.innerHTML = '';
           previewRef.current.appendChild(img);
         } else if (fileType === 'pdf') {
-          if (typeof pdfjsLib === 'undefined' || !pdfjsLib.GlobalWorkerOptions.workerSrc) {
+          if (typeof pdfjsLib !== 'undefined' && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
              pdfjsLib.GlobalWorkerOptions.workerSrc = `https://mozilla.github.io/pdf.js/build/pdf.worker.mjs`;
           }
           const container = document.createElement('div');
@@ -130,9 +131,14 @@ export default function FileDetail({ file }: { file: DriveFile }) {
             canvas.height = viewport.height;
             canvas.width = viewport.width;
             container.appendChild(canvas);
-            const renderContext = { canvasContext: context, viewport: viewport };
+            const renderContext = { canvasContext: context!, viewport: viewport };
             await page.render(renderContext).promise;
           }
+        } else if (fileType === 'markdown') {
+            const response = await fetch(directLink);
+            if (!response.ok) throw new Error('Gagal mengambil konten markdown');
+            const textContent = await response.text();
+            setMarkdownContent(textContent); 
         } else if (fileType === 'code') {
           const pre = document.createElement('pre');
           pre.className = 'line-numbers h-full w-full overflow-auto text-sm';
@@ -151,10 +157,10 @@ export default function FileDetail({ file }: { file: DriveFile }) {
            const IconComponent = getIcon(file.mimeType);
           const iconString = renderToString(<IconComponent size={96} className="text-primary" />);
           previewRef.current.innerHTML = `
-            <div class="flex flex-col items-center justify-center h-full gap-4">
+             <div class="flex flex-col items-center justify-center h-full gap-4">
                <div class="text-9xl">
                 ${iconString}
-              </div>
+               </div>
             </div>
            `;
         }
@@ -188,26 +194,31 @@ export default function FileDetail({ file }: { file: DriveFile }) {
                 <ArrowLeft size={20} /> Kembali
               </button>
             )}
-            {/* Spacer to keep share button on the right if back button is hidden */}
             {!showBackButton && <div />} 
             
             {showShareButton && <ShareButton path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`} itemName={file.name} />}
-           </header>
+          </header>
           
-          <div className="w-full flex-1 flex items-center justify-center overflow-hidden"> 
-             <div ref={previewRef} className="w-full h-full flex items-center justify-center"></div>
+          <div className="w-full flex-1 flex items-center justify-center overflow-hidden bg-muted/20 rounded-lg"> 
+            {fileType === 'markdown' && markdownContent ? (
+              <div className="prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg w-full h-full overflow-y-auto p-8">
+                  <ReactMarkdown rehypePlugins={[rehypeRaw]}>{markdownContent}</ReactMarkdown>
+              </div>
+            ) : (
+              <div ref={previewRef} className="w-full h-full flex items-center justify-center"></div>
+            )}
           </div>
         </div>
 
         <div className="lg:col-span-1 mt-8 lg:mt-[52px] overflow-y-auto">
           <div className="mb-6">
-             <h1 className="text-2xl lg:text-3xl font-bold break-words mb-6">{file.name}</h1>
+            <h1 className="text-2xl lg:text-3xl font-bold break-words mb-6">{file.name}</h1>
             <h3 className="text-lg font-semibold mb-4 border-b pb-2">Informasi File</h3>
             <ul className="space-y-3 text-sm text-foreground">
               <ListItem label="Ukuran" value={file.size ? formatBytes(Number(file.size)) : '-'} />
               <ListItem label="Tipe" value={file.mimeType} />
                {metadata?.width && metadata?.height && (
-                <ListItem label="Dimensi" value={`${metadata.width} x ${metadata.height} px`} />
+                 <ListItem label="Dimensi" value={`${metadata.width} x ${metadata.height} px`} />
               )}
                {durationMillis && (
                 <ListItem label="Durasi" value={formatDuration(durationMillis / 1000)} />

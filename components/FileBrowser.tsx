@@ -11,11 +11,13 @@ import { useAppStore } from '@/lib/store';
 import Loading from '@/components/Loading';
 import FileList from '@/components/FileList';
 import AuthModal from './AuthModal';
-import { List, Grid, CheckSquare, Share2 } from 'lucide-react';
-import ShareButton from './ShareButton';
+import { List, Grid, CheckSquare, Share2, Upload } from 'lucide-react';
 import ContextMenu from './ContextMenu';
 import RenameModal from './RenameModal';
 import DeleteConfirm from './DeleteConfirm';
+import UploadModal from './UploadModal';
+import MoveModal from './MoveModal';
+import ShareButton from './ShareButton';
 
 interface HistoryItem {
   id: string;
@@ -23,7 +25,7 @@ interface HistoryItem {
 }
 
 type ActionState = {
-  type: 'rename' | 'delete' | 'share' | null;
+  type: 'rename' | 'delete' | 'share' | 'move' | null;
   file: DriveFile | null;
 };
 
@@ -37,6 +39,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, file: DriveFile } | null>(null);
   const [actionState, setActionState] = useState<ActionState>({ type: null, file: null });
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const {
     sort, isBulkMode, setBulkMode, toggleSelection,
@@ -146,7 +149,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         const response = await fetch(url.toString(), { headers });
       
         if (!response.ok) {
-           await handleFetchError(response, 'Gagal mengambil data file.', folderId, folderName);
+            await handleFetchError(response, 'Gagal mengambil data file.', folderId, folderName);
            return;
         }
         const data = await response.json();
@@ -173,7 +176,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     }
 
     let destinationUrl = file.isFolder
-      ? `/folder/${file.id}`
+       ? `/folder/${file.id}`
       : `/folder/${currentFolderId}/file/${file.id}/${createSlug(file.name)}`;
 
     if (shareToken) {
@@ -235,7 +238,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
        if (shareToken && (!initialFolderId || initialFolderId === rootFolder.id)) {
         router.push('/login?error=RootAccessDenied');
         return;
-      }
+       }
 
       if (!initialFolderId || initialFolderId === rootFolder.id) {
           if(history.length > 1 || history[0]?.id !== rootFolder.id) setHistory([rootFolder]);
@@ -248,7 +251,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
              url.searchParams.set('folderId', initialFolderId);
             
             const response = await fetch(url.toString());
-        
+             
              if (!response.ok) {
               addToast({ message: "Gagal memuat path, kembali ke Beranda.", type: 'error' });
               router.push('/');
@@ -268,9 +271,9 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   
   const handleContextMenu = useCallback((event: React.MouseEvent, file: DriveFile) => {
     event.preventDefault();
-    if (isBulkMode || shareToken) return;
+    if (isBulkMode || shareToken || user?.role !== 'ADMIN') return;
     setContextMenu({ x: event.clientX, y: event.clientY, file });
-  }, [isBulkMode, shareToken]);
+  }, [isBulkMode, shareToken, user]);
   
   const handleShare = (file: DriveFile | null) => {
     if (user?.role !== 'ADMIN') {
@@ -285,7 +288,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
        setActionState({ type: null, file: null }); return;
     }
     try {
-        const response = await fetch('/api/files/rename', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-user-role': user?.role || 'USER' }, body: JSON.stringify({ fileId: actionState.file.id, newName }) });
+        const response = await fetch('/api/files/rename', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileId: actionState.file.id, newName }) });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Gagal mengubah nama');
         setFiles(prevFiles => prevFiles.map(f => f.id === data.file.id ? { ...f, name: data.file.name } : f));
@@ -297,13 +300,36 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   const handleDelete = async () => {
     if (!actionState.file) return;
     try {
-        const response = await fetch('/api/files/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-user-role': user?.role || 'USER' }, body: JSON.stringify({ fileId: actionState.file.id }) });
+        const response = await fetch('/api/files/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileId: actionState.file.id }) });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Gagal menghapus file');
         setFiles(prevFiles => prevFiles.filter(f => f.id !== actionState.file?.id));
         addToast({ message: 'File berhasil dihapus!', type: 'success' });
         setActionState({ type: null, file: null });
     } catch(err: any) { addToast({ message: err.message, type: 'error' }); }
+  };
+
+  const handleMove = async (newParentId: string) => {
+    if (!actionState.file || !actionState.file.parents) {
+      setActionState({ type: null, file: null });
+      return;
+    }
+    const currentParentId = actionState.file.parents[0];
+    try {
+      const response = await fetch('/api/files/move', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileId: actionState.file.id, currentParentId, newParentId })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Gagal memindahkan file');
+      
+      setFiles(prevFiles => prevFiles.filter(f => f.id !== actionState.file?.id));
+      addToast({ message: 'File berhasil dipindahkan!', type: 'success' });
+      setActionState({ type: null, file: null });
+    } catch (err: any) {
+      addToast({ message: err.message, type: 'error' });
+    }
   };
 
   const sortedFiles = [...files].sort((a, b) => {
@@ -325,19 +351,22 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <AnimatePresence>
-         {authModal.isOpen && (<AuthModal folderName={authModal.folderName} isLoading={isAuthLoading} onClose={() => setAuthModal({ isOpen: false, folderId: '', folderName: '' })} onSubmit={handleAuthSubmit}/>)}
+        {authModal.isOpen && (<AuthModal folderName={authModal.folderName} isLoading={isAuthLoading} onClose={() => setAuthModal({ isOpen: false, folderId: '', folderName: '' })} onSubmit={handleAuthSubmit}/>)}
         {contextMenu && (
           <ContextMenu 
-             x={contextMenu.x} y={contextMenu.y} 
+            x={contextMenu.x} y={contextMenu.y} 
             onClose={() => setContextMenu(null)} 
             onRename={() => { setActionState({ type: 'rename', file: contextMenu.file }); setContextMenu(null); }} 
-             onDelete={() => { setActionState({ type: 'delete', file: contextMenu.file }); setContextMenu(null); }} 
+            onDelete={() => { setActionState({ type: 'delete', file: contextMenu.file }); setContextMenu(null); }} 
             onShare={() => { handleShare(contextMenu.file); setContextMenu(null); }}
+            onMove={() => { setActionState({ type: 'move', file: contextMenu.file }); setContextMenu(null); }}
           />
-         )}
+        )}
         {actionState.type === 'rename' && actionState.file && (<RenameModal currentName={actionState.file.name} onClose={() => setActionState({ type: null, file: null })} onRename={handleRename}/>)}
         {actionState.type === 'delete' && actionState.file && (<DeleteConfirm itemName={actionState.file.name} onClose={() => setActionState({ type: null, file: null })} onConfirm={handleDelete}/>)}
         {actionState.type === 'share' && actionState.file && (<ShareButton path={getSharePath(actionState.file)} itemName={actionState.file.name} isOpen={true} onClose={() => setActionState({ type: null, file: null })}/>)}
+        {actionState.type === 'move' && actionState.file && (<MoveModal fileToMove={actionState.file} onClose={() => setActionState({ type: null, file: null })} onConfirmMove={handleMove}/>)}
+        {isUploadModalOpen && <UploadModal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} />}
       </AnimatePresence>
       <div className="flex justify-between items-center py-4 overflow-x-hidden">
          <nav className="flex items-center space-x-2 text-sm text-muted-foreground overflow-x-auto whitespace-nowrap">
@@ -354,16 +383,22 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
           ))}
          </nav>
         <div className="flex items-center gap-2 shrink-0">
-            {!shareToken && user?.role === 'ADMIN' && (
+          {!shareToken && user?.role === 'ADMIN' && (
               <>
-                 <button 
-                  onClick={() => handleShare({ id: currentFolderId, name: history[history.length - 1]?.name || 'Folder', isFolder: true, mimeType: '', modifiedTime: '', createdTime: '', hasThumbnail: false, webViewLink: '' })} 
-                  className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground" 
-                  title="Bagikan Folder Ini">
+                <button 
+                    onClick={() => setIsUploadModalOpen(true)}
+                    className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground" 
+                    title="Upload atau Buat Folder">
+                    <Upload size={18} />
+                </button>
+                <button 
+                    onClick={() => handleShare({ id: currentFolderId, name: history[history.length - 1]?.name || 'Folder', isFolder: true, mimeType: '', modifiedTime: '', createdTime: '', hasThumbnail: false, webViewLink: '' })} 
+                    className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground" 
+                    title="Bagikan Folder Ini">
                   <Share2 size={18} />
                 </button>
-                 <button onClick={() => setBulkMode(!isBulkMode)} className={`p-2 rounded-lg transition-colors flex items-center justify-center text-sm ${isBulkMode ? 'bg-blue-600 text-white' : 'bg-transparent hover:bg-accent text-foreground'}`} title="Pilih Beberapa File"><CheckSquare size={18} /><span className="sr-only">Pilih</span></button>
-             </>
+                <button onClick={() => setBulkMode(!isBulkMode)} className={`p-2 rounded-lg transition-colors flex items-center justify-center text-sm ${isBulkMode ? 'bg-blue-600 text-white' : 'bg-transparent hover:bg-accent text-foreground'}`} title="Pilih Beberapa File"><CheckSquare size={18} /><span className="sr-only">Pilih</span></button>
+              </>
             )}
             <div className="flex items-center border border-border rounded-lg p-0.5">
               <button onClick={() => setView('list')} className={`p-1.5 rounded-md transition-colors ${view === 'list' ? 'bg-background text-primary shadow-sm' : 'hover:bg-accent/50 text-muted-foreground'}`} title="Tampilan Daftar"><List size={18} /></button>
