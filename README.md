@@ -63,8 +63,8 @@ Follow these steps to run this project locally.
 ### 1. Clone the Repository
 
 ```bash
-git clone [https://github.com/USERNAME/zee-index-nextjs.git](https://github.com/USERNAME/zee-index-nextjs.git)
-cd zee-index-nextjs
+git clone https://github.com/ifauzeee/Zee-Index
+cd Zee-Index
 ````
 
 ### 2. Install Dependencies
