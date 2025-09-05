@@ -56,8 +56,10 @@ export default function SearchResultsList() {
         try {
             const url = new URL('/api/search', window.location.origin);
             url.searchParams.append('q', searchTerm);
-            if (folderId) {
-                url.searchParams.append('folderId', folderId);
+            // PERBAIKAN: Gunakan folderId dari URL atau fallback ke currentFolderId dari store
+            const searchFolderId = folderId || currentFolderId;
+            if (searchFolderId) {
+                url.searchParams.append('folderId', searchFolderId);
             }
             if (shareToken) {
                 url.searchParams.append('share_token', shareToken);
@@ -77,7 +79,7 @@ export default function SearchResultsList() {
         } finally {
             setIsLoading(false);
         }
-    }, [searchTerm, folderId, addToast, shareToken]);
+    }, [searchTerm, folderId, currentFolderId, addToast, shareToken]);
 
     useEffect(() => {
         fetchSearchResults();
@@ -98,8 +100,9 @@ export default function SearchResultsList() {
                 <FileList 
                     files={results} 
                     onItemClick={handleItemClick} 
-                    // PERBAIKAN: Tambahkan prop yang hilang dengan fungsi kosong
-                    onItemContextMenu={() => {}} 
+                    // PERBAIKAN: Tambahkan prop onItemContextMenu yang wajib ada di FileList
+                    // Jika tidak ada aksi context menu di halaman search, kita berikan fungsi kosong.
+                    onItemContextMenu={(e) => e.preventDefault()}
                 />
             ) : (
                 <div className="text-center py-20 text-muted-foreground">

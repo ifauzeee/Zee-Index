@@ -29,12 +29,12 @@ const DeleteConfirmationModal = ({ onConfirm, onCancel }: { onConfirm: () => voi
             onClick={(e) => e.stopPropagation()}
         >
             <div className="text-center">
-                 <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
+                <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
                 <h3 className="mt-4 text-lg font-semibold text-foreground">Hapus Tautan?</h3>
-                 <p className="mt-2 text-sm text-muted-foreground">
+                <p className="mt-2 text-sm text-muted-foreground">
                     Tindakan ini akan membatalkan tautan secara permanen dan tidak dapat diurungkan. Anda yakin?
                 </p>
-             </div>
+            </div>
             <div className="mt-6 flex justify-center gap-4">
                 <button onClick={onCancel} className="px-4 py-2 text-sm font-medium rounded-md hover:bg-accent">
                      Batal
@@ -42,7 +42,7 @@ const DeleteConfirmationModal = ({ onConfirm, onCancel }: { onConfirm: () => voi
                 <button onClick={onConfirm} className="px-4 py-2 text-sm font-medium rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90">
                     Ya, Hapus
                 </button>
-             </div>
+            </div>
         </motion.div>
     </motion.div>
 );
@@ -86,10 +86,10 @@ export default function AdminPage() {
         setLinkToDelete(link);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (linkToDelete) {
-            // PERBAIKAN: Kirim ID-nya saja, bukan seluruh objek
-            removeShareLink(linkToDelete.id);
+            // PERBAIKAN: Kirim seluruh objek link agar store memiliki semua info yang dibutuhkan
+            await removeShareLink(linkToDelete); 
             setLinkToDelete(null);
         }
     };
@@ -103,7 +103,7 @@ export default function AdminPage() {
             <div className="text-center py-20 text-red-500">
                 <AlertCircle className="h-16 w-16 mx-auto mb-4" />
                 <h1 className="text-2xl font-bold">Akses Ditolak</h1>
-                 <p className="mt-2 text-muted-foreground">Anda tidak memiliki izin untuk melihat halaman ini.</p>
+                <p className="mt-2 text-muted-foreground">Anda tidak memiliki izin untuk melihat halaman ini.</p>
             </div>
         );
     }
@@ -121,90 +121,90 @@ export default function AdminPage() {
                         <ArrowLeft size={24} />
                     </button>
                     <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-                 </div>
+                </div>
 
-                 {/* Kartu Statistik */}
+                {/* Kartu Statistik */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                     <div className="bg-card border rounded-lg p-6 flex items-center gap-4">
                         <div className="p-3 bg-primary/10 rounded-lg text-primary"><LinkIcon size={28} /></div>
                         <div>
-                             <p className="text-sm text-muted-foreground">Total Tautan</p>
+                            <p className="text-sm text-muted-foreground">Total Tautan</p>
                             <p className="text-2xl font-bold">{shareLinks.length}</p>
                         </div>
                     </div>
-                     <div className="bg-card border rounded-lg p-6 flex items-center gap-4">
+                    <div className="bg-card border rounded-lg p-6 flex items-center gap-4">
                         <div className="p-3 bg-green-500/10 rounded-lg text-green-500"><Clock size={28} /></div>
-                         <div>
-                             <p className="text-sm text-muted-foreground">Tautan Aktif</p>
-                             <p className="text-2xl font-bold">{activeLinks.length}</p>
-                         </div>
-                     </div>
-                 <div className="bg-card border rounded-lg p-6 flex items-center gap-4">
-                     <div className="p-3 bg-red-500/10 rounded-lg text-red-500"><Hourglass size={28} /></div>
-                         <div>
-                             <p className="text-sm text-muted-foreground">Tautan Kedaluwarsa</p>
-                             <p className="text-2xl font-bold">{expiredLinks.length}</p>
-                         </div>
+                        <div>
+                            <p className="text-sm text-muted-foreground">Tautan Aktif</p>
+                            <p className="text-2xl font-bold">{activeLinks.length}</p>
+                        </div>
                     </div>
-                 </div>
+                    <div className="bg-card border rounded-lg p-6 flex items-center gap-4">
+                        <div className="p-3 bg-red-500/10 rounded-lg text-red-500"><Hourglass size={28} /></div>
+                        <div>
+                            <p className="text-sm text-muted-foreground">Tautan Kedaluwarsa</p>
+                            <p className="text-2xl font-bold">{expiredLinks.length}</p>
+                        </div>
+                    </div>
+                </div>
 
-                 {/* Daftar Tautan */}
+                {/* Daftar Tautan */}
                 <h2 className="text-2xl font-semibold mb-6">Manajemen Tautan Berbagi</h2>
-                 
+                
                 {shareLinks.length === 0 ? (
-                     <div className="text-center py-20 text-muted-foreground bg-card border rounded-lg">
+                    <div className="text-center py-20 text-muted-foreground bg-card border rounded-lg">
                         <AlertCircle className="h-16 w-16 mx-auto mb-4" />
-                          <p>Tidak ada tautan berbagi yang pernah dibuat.</p>
-                      </div>
-                 ) : (
+                        <p>Tidak ada tautan berbagi yang pernah dibuat.</p>
+                    </div>
+                ) : (
                     <div className="space-y-4">
                         <AnimatePresence>
                             {shareLinks.map((link) => {
                                 const isExpired = new Date(link.expiresAt) < new Date();
-                                  return (
-                                     <motion.div
-                                         key={link.id}
-                                         layout
-                                         initial={{ opacity: 0, y: 20, scale: 0.98 }}
-                                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                                         exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-                                         className={cn(
-                                             "bg-card border rounded-lg p-4 transition-colors",
-                                             isExpired && "bg-muted/50 border-dashed"
-                                         )}
-                                     >
+                                return (
+                                    <motion.div
+                                        key={link.id}
+                                        layout
+                                        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                                        className={cn(
+                                            "bg-card border rounded-lg p-4 transition-colors",
+                                            isExpired && "bg-muted/50 border-dashed"
+                                        )}
+                                    >
                                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                                             <div className="flex-1 min-w-0">
-                                                 <p className="text-sm text-muted-foreground">{link.itemName}</p>
-                                                 <a 
-                                                     href={`${window.location.origin}${link.path}?share_token=${link.token}`} 
-                                                     target="_blank" 
-                                                     rel="noopener noreferrer"
-                                                     className="text-base font-semibold text-primary truncate block hover:underline"
-                                                 >
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm text-muted-foreground">{link.itemName}</p>
+                                                <a 
+                                                    href={`${window.location.origin}${link.path}?share_token=${link.token}`} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-base font-semibold text-primary truncate block hover:underline"
+                                                >
                                                     {link.path}
-                                                 </a>
-                                             </div>
-                                             <div className="flex items-center gap-4 mt-3 sm:mt-0">
-                                                 <span className={cn(
-                                                     "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
-                                                       link.loginRequired 
-                                                       ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300' 
-                                                       : 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300'
-                                                  )}>
-                                                     <ShieldCheck size={14}/>
-                                                       {link.loginRequired ? 'Login' : 'Publik'}
-                                                 </span>
-                                                 <span className={cn(
-                                                     "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
-                                                       isExpired 
-                                                       ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' 
-                                                       : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                                                  )}>
-                                                     <Clock size={14}/>
-                                                     {isExpired ? 'Kedaluwarsa' : 'Aktif'}
-                                                 </span>
-                                             </div>
+                                                </a>
+                                            </div>
+                                            <div className="flex items-center gap-4 mt-3 sm:mt-0">
+                                                <span className={cn(
+                                                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
+                                                    link.loginRequired 
+                                                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300' 
+                                                        : 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300'
+                                                )}>
+                                                    <ShieldCheck size={14}/>
+                                                    {link.loginRequired ? 'Login' : 'Publik'}
+                                                </span>
+                                                <span className={cn(
+                                                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
+                                                    isExpired 
+                                                        ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' 
+                                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                                )}>
+                                                    <Clock size={14}/>
+                                                    {isExpired ? 'Kedaluwarsa' : 'Aktif'}
+                                                </span>
+                                            </div>
                                         </div>
                                         <div className="border-t my-4"></div>
                                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -213,29 +213,29 @@ export default function AdminPage() {
                                             </p>
                                             <div className="flex items-center gap-2">
                                                 <button onClick={() => handleCopy(`${window.location.origin}${link.path}?share_token=${link.token}`)} className="p-2 rounded-md hover:bg-accent" title="Salin Tautan">
-                                                   <Copy size={16} />
+                                                    <Copy size={16} />
                                                 </button>
                                                 <button onClick={() => handleDeleteClick(link)} className="p-2 rounded-md hover:bg-accent text-red-500" title="Hapus & Batalkan Tautan">
                                                     <Trash2 size={16} />
                                                 </button>
-                                             </div>
+                                            </div>
                                         </div>
-                                     </motion.div>
-                                  );
+                                    </motion.div>
+                                );
                             })}
                         </AnimatePresence>
                     </div>
                 )}
             </motion.div>
 
-             <AnimatePresence>
-                 {linkToDelete && (
+            <AnimatePresence>
+                {linkToDelete && (
                     <DeleteConfirmationModal 
                         onCancel={() => setLinkToDelete(null)}
                         onConfirm={confirmDelete}
                     />
                 )}
             </AnimatePresence>
-         </>
+        </>
     );
 }

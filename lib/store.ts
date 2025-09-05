@@ -1,7 +1,9 @@
 // File: lib/store.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { jwtDecode } from 'jwt-decode';
+
+// BARU: Impor tipe DriveFile untuk digunakan dalam state
+import type { DriveFile } from './googleDrive'; 
 
 export interface Toast {
   id: string;
@@ -20,8 +22,9 @@ export interface ShareLink {
 }
 
 interface UserProfile {
-  id: string;
-  email: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
   role: 'USER' | 'ADMIN';
 }
 
@@ -58,8 +61,7 @@ interface AppState {
   shareLinks: ShareLink[];
   fetchShareLinks: () => Promise<void>;
   addShareLink: (link: ShareLink) => void;
-  removeShareLink: (id: string) => Promise<void>;
-  // --- BARU: State dan action untuk data usage ---
+  removeShareLink: (link: ShareLink) => Promise<void>; // PERBAIKAN: Mengirim seluruh objek untuk info lengkap ke API
   dataUsage: { status: 'idle' | 'loading' | 'success' | 'error'; value: string };
   fetchDataUsage: () => Promise<void>;
 }
@@ -109,12 +111,9 @@ export const useAppStore = create<AppState>()(
       })),
       toasts: [],
       addToast: (toastDetails) => {
-          const id = new Date().toISOString() + Math.random();
+        const id = new Date().toISOString() + Math.random();
         const newToast = { ...toastDetails, id };
         set((state) => ({ toasts: [...state.toasts, newToast] }));
-        setTimeout(() => {
-          get().removeToast(id);
-        }, 5000);
       },
       removeToast: (id) => {
         set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) }));
@@ -148,11 +147,9 @@ export const useAppStore = create<AppState>()(
         }
       },
       addShareLink: (link) => set(state => ({ shareLinks: [...state.shareLinks, link] })),
-      removeShareLink: async (id: string) => {
+      // PERBAIKAN: Logika menjadi lebih robust. API call dulu, baru update state.
+      removeShareLink: async (linkToRemove) => {
         const { addToast } = get();
-        const linkToRemove = get().shareLinks.find(link => link.id === id);
-
-        if (!linkToRemove) return;
 
         try {
           const response = await fetch('/api/share/delete', {
@@ -170,8 +167,9 @@ export const useAppStore = create<AppState>()(
             throw new Error(errorData.error || 'Gagal menghapus tautan di server.');
           }
 
+          // Hanya update state JIKA API call berhasil
           set(state => ({
-            shareLinks: state.shareLinks.filter(link => link.id !== id)
+            shareLinks: state.shareLinks.filter(link => link.id !== linkToRemove.id)
           }));
           addToast({ message: 'Tautan berhasil dibatalkan dan dihapus.', type: 'success' });
 
@@ -180,7 +178,6 @@ export const useAppStore = create<AppState>()(
           addToast({ message: error.message, type: 'error' });
         }
       },
-      // --- BARU: State dan action untuk data usage ---
       dataUsage: { status: 'idle', value: 'Memuat...' },
       fetchDataUsage: async () => {
         set({ dataUsage: { status: 'loading', value: 'Menghitung...' }});
@@ -204,7 +201,7 @@ export const useAppStore = create<AppState>()(
       },
     }),
     {
-      name: 'app-storage',
+      name: 'zee-index-storage', // Ganti nama key persist agar tidak konflik jika ada versi lama
       partialize: (state) => ({ 
         theme: state.theme, 
         view: state.view, 

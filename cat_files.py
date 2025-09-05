@@ -1,3 +1,5 @@
+# C:\Users\Ibnu\zee\Project\zee-index-nextjs\cat_files.py
+
 import os
 from datetime import datetime
 
@@ -36,13 +38,13 @@ def cat_files_to_single_file(folder_path, output_file, exclude_folders):
 
             # Iterasi semua file di folder dan subfolder
             for root, dirs, files in os.walk(folder_path):
-                # Abaikan folder yang ada di exclude_folders
+                # PERBAIKAN: Abaikan folder yang ada di exclude_folders
                 dirs[:] = [d for d in dirs if d.lower() not in exclude_folders]
                 
                 for file_name in files:
                     file_path = os.path.join(root, file_name)
                     
-                    # Cek apakah file adalah file teks/coding
+                    # PERBAIKAN: Blok if/else ini sekarang memiliki indentasi yang benar
                     if is_text_file(file_path):
                         processed_files.append(file_path)
                         out_file.write(f"\n=== Isi file: {file_path} ===\n")
@@ -52,7 +54,8 @@ def cat_files_to_single_file(folder_path, output_file, exclude_folders):
                                 out_file.write(content + "\n")
                         except Exception as e:
                             out_file.write(f"Error saat membaca '{file_path}': {str(e)}\n")
-                        out_file.write("=" * 50 + "\n")
+                        # PERBAIKAN: Indentasi untuk baris pemisah ini sudah benar
+                        out_file.write("=" * 50 + "\n") 
                         print(f"Menambahkan {file_path} ke {output_file}")
                     else:
                         skipped_files.append(file_path)
