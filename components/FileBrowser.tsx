@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { jwtDecode } from 'jwt-decode';
@@ -11,7 +11,7 @@ import { useAppStore } from '@/lib/store';
 import Loading from '@/components/Loading';
 import FileList from '@/components/FileList';
 import AuthModal from './AuthModal';
-import { List, Grid, CheckSquare, Share2, Upload } from 'lucide-react';
+import { List, Grid, CheckSquare, Share2, Upload, Loader2 } from 'lucide-react';
 import ContextMenu from './ContextMenu';
 import RenameModal from './RenameModal';
 import DeleteConfirm from './DeleteConfirm';
@@ -40,6 +40,9 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, file: DriveFile } | null>(null);
   const [actionState, setActionState] = useState<ActionState>({ type: null, file: null });
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+  const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   const {
     sort, isBulkMode, setBulkMode, toggleSelection,
@@ -97,7 +100,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         console.error("Gagal memeriksa status token:", error);
         clearInterval(intervalId);
       }
-    }, 7000); // Check every 7 seconds
+    }, 7000);
 
     return () => clearInterval(intervalId);
   }, [shareToken, router, addToast]);
@@ -128,41 +131,77 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   const fetchFiles = useCallback(async (folderId: string, folderName: string) => {
     setIsLoading(true);
     setFiles([]);
-    let allFiles: DriveFile[] = [];
-    let pageToken: string | null = null;
+    setNextPageToken(null);
     try {
-      do {
-        const url = new URL(window.location.origin + '/api/files');
-        url.searchParams.append('folderId', folderId);
-        if (pageToken) url.searchParams.append('pageToken', pageToken);
-        
-        if (shareToken) {
-           url.searchParams.append('share_token', shareToken);
-        }
-    
-        const headers = new Headers();
-        const folderAuthToken = folderTokens[folderId];
-        if (folderAuthToken) {
-           headers.append('Authorization', `Bearer ${folderAuthToken}`);
-        }
-        
-        const response = await fetch(url.toString(), { headers });
+      const url = new URL(window.location.origin + '/api/files');
+      url.searchParams.append('folderId', folderId);
+      if (shareToken) {
+         url.searchParams.append('share_token', shareToken);
+      }
+      const headers = new Headers();
+      const folderAuthToken = folderTokens[folderId];
+      if (folderAuthToken) {
+         headers.append('Authorization', `Bearer ${folderAuthToken}`);
+      }
       
-        if (!response.ok) {
-            await handleFetchError(response, 'Gagal mengambil data file.', folderId, folderName);
-           return;
-        }
-        const data = await response.json();
-        if (data.files) allFiles = [...allFiles, ...data.files];
-        pageToken = data.nextPageToken || null;
-      } while (pageToken);
-      setFiles(allFiles);
+      const response = await fetch(url.toString(), { headers });
+      if (!response.ok) {
+          await handleFetchError(response, 'Gagal mengambil data file.', folderId, folderName);
+         return;
+      }
+      const data = await response.json();
+      setFiles(data.files || []);
+      setNextPageToken(data.nextPageToken || null);
     } catch (error) {
       addToast({ message: 'Terjadi kesalahan jaringan.', type: 'error' });
     } finally {
       setIsLoading(false);
     }
   }, [folderTokens, handleFetchError, addToast, shareToken]);
+
+  const fetchNextPage = useCallback(async () => {
+    if (isFetchingNextPage || !nextPageToken || !currentFolderId) return;
+
+    setIsFetchingNextPage(true);
+    try {
+      const url = new URL(window.location.origin + '/api/files');
+      url.searchParams.append('folderId', currentFolderId);
+      url.searchParams.append('pageToken', nextPageToken);
+      if (shareToken) {
+         url.searchParams.append('share_token', shareToken);
+      }
+      const headers = new Headers();
+      const folderAuthToken = folderTokens[currentFolderId];
+      if (folderAuthToken) {
+         headers.append('Authorization', `Bearer ${folderAuthToken}`);
+      }
+      
+      const response = await fetch(url.toString(), { headers });
+      if (!response.ok) {
+        throw new Error('Gagal memuat halaman berikutnya.');
+      }
+      const data = await response.json();
+      setFiles(prevFiles => [...prevFiles, ...(data.files || [])]);
+      setNextPageToken(data.nextPageToken || null);
+    } catch (error: any) {
+      addToast({ message: error.message, type: 'error' });
+    } finally {
+      setIsFetchingNextPage(false);
+    }
+  }, [isFetchingNextPage, nextPageToken, currentFolderId, folderTokens, shareToken, addToast]);
+  
+  const loaderRef = useCallback((node: HTMLDivElement | null) => {
+    if (isLoading) return;
+    if (observerRef.current) observerRef.current.disconnect();
+
+    observerRef.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && nextPageToken) {
+        fetchNextPage();
+      }
+    });
+
+    if (node) observerRef.current.observe(node);
+  }, [isLoading, nextPageToken, fetchNextPage]);
 
   const handleItemClick = (file: DriveFile) => {
     if (isBulkMode) {
@@ -176,7 +215,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     }
 
     let destinationUrl = file.isFolder
-       ? `/folder/${file.id}`
+      ? `/folder/${file.id}`
       : `/folder/${currentFolderId}/file/${file.id}/${createSlug(file.name)}`;
 
     if (shareToken) {
@@ -191,7 +230,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     try {
         const response = await fetch('/api/auth/folder', {
             method: 'POST',
-             headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ folderId: authModal.folderId, id, password })
         });
         const data = await response.json();
@@ -248,15 +287,15 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
           try {
             setIsLoading(true);
             const url = new URL(`/api/folderpath`, window.location.origin);
-             url.searchParams.set('folderId', initialFolderId);
+              url.searchParams.set('folderId', initialFolderId);
             
             const response = await fetch(url.toString());
-             
-             if (!response.ok) {
-              addToast({ message: "Gagal memuat path, kembali ke Beranda.", type: 'error' });
-              router.push('/');
-              return;
-            }
+              
+              if (!response.ok) {
+               addToast({ message: "Gagal memuat path, kembali ke Beranda.", type: 'error' });
+               router.push('/');
+               return;
+              }
             const path = await response.json();
             setHistory([rootFolder, ...path]);
           } catch (error) {
@@ -332,16 +371,18 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     }
   };
 
-  const sortedFiles = [...files].sort((a, b) => {
-      const isAsc = sort.order === 'asc' ? 1 : -1;
-      if (a.isFolder !== b.isFolder) return a.isFolder ? -1 : 1;
-      switch (sort.key) {
-          case 'name': return a.name.localeCompare(b.name, 'id', { numeric: true }) * isAsc;
-          case 'size': return (Number(a.size || 0) - Number(b.size || 0)) * isAsc;
-          case 'modifiedTime': return (new Date(a.modifiedTime).getTime() - new Date(b.modifiedTime).getTime()) * isAsc;
-          default: return 0;
-      }
-  });
+  const sortedFiles = useMemo(() => {
+    return [...files].sort((a, b) => {
+        const isAsc = sort.order === 'asc' ? 1 : -1;
+        if (a.isFolder !== b.isFolder) return a.isFolder ? -1 : 1;
+        switch (sort.key) {
+            case 'name': return a.name.localeCompare(b.name, 'id', { numeric: true }) * isAsc;
+            case 'size': return (Number(a.size || 0) - Number(b.size || 0)) * isAsc;
+            case 'modifiedTime': return (new Date(a.modifiedTime).getTime() - new Date(b.modifiedTime).getTime()) * isAsc;
+            default: return 0;
+        }
+    });
+  }, [files, sort]);
 
   const getSharePath = (file: DriveFile) => {
     if (file.isFolder) return `/folder/${file.id}`;
@@ -369,9 +410,9 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         {isUploadModalOpen && <UploadModal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} />}
       </AnimatePresence>
       <div className="flex justify-between items-center py-4 overflow-x-hidden">
-         <nav className="flex items-center space-x-2 text-sm text-muted-foreground overflow-x-auto whitespace-nowrap">
-          {history.map((folder, index) => (
-            <span key={folder.id} className="flex items-center">
+          <nav className="flex items-center space-x-2 text-sm text-muted-foreground overflow-x-auto whitespace-nowrap">
+           {history.map((folder, index) => (
+             <span key={folder.id} className="flex items-center">
                <button 
                 onClick={() => handleBreadcrumbClick(folder.id)} 
                 className={`transition-colors ${shareToken && index === 0 ? 'cursor-default text-muted-foreground' : 'hover:text-primary'}`}
@@ -379,9 +420,9 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
                 {folder.name}
                </button>
               {index < history.length - 1 && <span className="mx-2">/</span>}
-            </span>
-          ))}
-         </nav>
+             </span>
+           ))}
+          </nav>
         <div className="flex items-center gap-2 shrink-0">
           {!shareToken && user?.role === 'ADMIN' && (
               <>
@@ -407,7 +448,18 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         </div>
       </div>
       <main className="min-h-[50vh] mb-12">
-        {isLoading ? <Loading /> : <FileList files={sortedFiles} onItemClick={handleItemClick} onItemContextMenu={handleContextMenu} />}
+        {isLoading ? (
+          <Loading />
+        ) : (
+          <>
+            <FileList files={sortedFiles} onItemClick={handleItemClick} onItemContextMenu={handleContextMenu} />
+            
+            <div ref={loaderRef} className="flex justify-center items-center p-4 h-20">
+              {isFetchingNextPage && <Loader2 className="animate-spin text-primary" />}
+              {!nextPageToken && files.length > 0 && <span className="text-sm text-muted-foreground">Akhir dari daftar</span>}
+            </div>
+          </>
+        )}
       </main>
     </motion.div>
   );

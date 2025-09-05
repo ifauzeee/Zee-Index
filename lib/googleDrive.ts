@@ -1,6 +1,5 @@
 // File: lib/googleDrive.ts
 
-// --- PERBAIKAN: Interface DriveFile yang lebih lengkap ---
 export interface DriveFile {
   id: string;
   name: string;
@@ -21,7 +20,6 @@ export interface DriveFile {
   imageMediaMetadata?: { width: number; height: number };
   videoMediaMetadata?: { width: number; height: number; durationMillis: string };
 }
-
 
 interface StorageBreakdown {
   type: string;
@@ -91,14 +89,14 @@ async function fetchAllFilesRecursively(accessToken: string, rootFolderId: strin
   return allFiles;
 }
 
-export async function listFilesFromDrive(folderId: string, pageToken?: string | null) {
+export async function listFilesFromDrive(folderId: string, pageToken?: string | null, pageSize: number = 50) {
   const accessToken = await getAccessToken();
   const GOOGLE_DRIVE_API_URL = 'https://www.googleapis.com/drive/v3/files';
   const params = new URLSearchParams({
     q: `'${folderId}' in parents and trashed=false`,
     fields: 'nextPageToken, files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents)',
     orderBy: 'folder, name',
-    pageSize: '1000',
+    pageSize: String(pageSize),
   });
 
   if (pageToken) {
@@ -107,7 +105,7 @@ export async function listFilesFromDrive(folderId: string, pageToken?: string | 
 
   const response = await fetch(`${GOOGLE_DRIVE_API_URL}?${params.toString()}`, {
     headers: { 'Authorization': `Bearer ${accessToken}` },
-    next: { revalidate: 3600 } // Cache data for 1 hour
+    next: { revalidate: 3600 }
   });
 
   if (!response.ok) {
