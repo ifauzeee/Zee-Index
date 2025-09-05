@@ -8,6 +8,7 @@ import Loading from '@/components/Loading';
 import FileList from '@/components/FileList';
 import type { DriveFile } from '@/lib/googleDrive';
 import { motion } from 'framer-motion';
+import React from 'react';
 
 export default function SearchResultsList() {
     const router = useRouter();
@@ -56,7 +57,6 @@ export default function SearchResultsList() {
         try {
             const url = new URL('/api/search', window.location.origin);
             url.searchParams.append('q', searchTerm);
-            // PERBAIKAN: Gunakan folderId dari URL atau fallback ke currentFolderId dari store
             const searchFolderId = folderId || currentFolderId;
             if (searchFolderId) {
                 url.searchParams.append('folderId', searchFolderId);
@@ -99,9 +99,7 @@ export default function SearchResultsList() {
             {results.length > 0 ? (
                 <FileList 
                     files={results} 
-                    onItemClick={handleItemClick} 
-                    // PERBAIKAN: Tambahkan prop onItemContextMenu yang wajib ada di FileList
-                    // Jika tidak ada aksi context menu di halaman search, kita berikan fungsi kosong.
+                    onItemClick={handleItemClick}
                     onItemContextMenu={(e) => e.preventDefault()}
                 />
             ) : (
