@@ -1,12 +1,13 @@
+// File: app/(main)/api/files/rename/route.ts
 import { NextResponse, NextRequest } from 'next/server';
 import { getAccessToken } from '@/lib/googleDrive';
-
-; // Ditambahkan
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/authOptions';
 
 export async function POST(request: NextRequest) {
-  const userRole = request.headers.get('x-user-role');
-  
-  if (userRole !== 'ADMIN') {
+  // Validasi sesi dan peran pengguna di server
+  const session = await getServerSession(authOptions);
+  if (session?.user?.role !== 'ADMIN') {
     return NextResponse.json({ error: 'Akses ditolak. Izin admin diperlukan.' }, { status: 403 });
   }
 
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     const accessToken = await getAccessToken();
     const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}`;
-    
+
     const response = await fetch(driveUrl, {
       method: 'PATCH',
       headers: {

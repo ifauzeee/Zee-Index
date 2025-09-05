@@ -1,5 +1,3 @@
-// File: components/SearchResultsList.tsx
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -15,22 +13,25 @@ export default function SearchResultsList() {
     const searchParams = useSearchParams();
     const searchTerm = searchParams.get('q');
     const folderId = searchParams.get('folderId');
-    const shareToken = useAppStore(state => state.shareToken);
+    const { shareToken, addToast, currentFolderId } = useAppStore();
 
     const [results, setResults] = useState<DriveFile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const { addToast } = useAppStore();
-
     const createSlug = (name: string) => encodeURIComponent(name.replace(/\s+/g, '-').toLowerCase());
 
     const handleItemClick = useCallback((file: DriveFile) => {
         let destinationUrl = '';
+        const parentFolder = file.parents?.[0] || currentFolderId;
+
         if (file.isFolder) {
             destinationUrl = `/folder/${file.id}`;
+        } else if (parentFolder) {
+            destinationUrl = `/folder/${parentFolder}/file/${file.id}/${createSlug(file.name)}`;
         } else {
-            destinationUrl = `/folder/${file.parents?.[0]}/file/${file.id}/${createSlug(file.name)}`;
+            addToast({ message: 'Tidak dapat menentukan lokasi file.', type: 'error' });
+            return;
         }
     
         if (shareToken) {
@@ -38,10 +39,10 @@ export default function SearchResultsList() {
         }
     
         router.push(destinationUrl);
-    }, [router, shareToken]);
+    }, [router, shareToken, addToast, currentFolderId]);
 
     const handleItemContextMenu = (event: React.MouseEvent<HTMLDivElement>, file: DriveFile) => {
-        // Implementasi context menu jika diperlukan
+        // Context menu untuk hasil pencarian bisa diimplementasikan di sini jika perlu
     };
 
     const fetchSearchResults = useCallback(async () => {
@@ -69,7 +70,6 @@ export default function SearchResultsList() {
             const data = await response.json();
 
             if (!response.ok) {
-                 // Perbaikan: Menangani error dari API dengan lebih baik
                 throw new Error(data.error || 'Gagal mencari file.');
             }
 
@@ -91,7 +91,6 @@ export default function SearchResultsList() {
     }
 
     if (error) {
-        // Perbaikan: Tampilkan pesan error dengan jelas
         return <div className="text-center py-20 text-red-500">Error: {error}</div>;
     }
 

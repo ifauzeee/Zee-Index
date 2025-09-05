@@ -1,9 +1,7 @@
 // File: lib/store.ts
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { jwtDecode } from 'jwt-decode';
-// HAPUS BARIS INI KARENA TIDAK AMAN: import { kv } from '@/lib/kv';
 
 export interface Toast {
   id: string;
@@ -61,6 +59,9 @@ interface AppState {
   fetchShareLinks: () => Promise<void>;
   addShareLink: (link: ShareLink) => void;
   removeShareLink: (id: string) => Promise<void>;
+  // --- BARU: State dan action untuk data usage ---
+  dataUsage: { status: 'idle' | 'loading' | 'success' | 'error'; value: string };
+  fetchDataUsage: () => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()(
@@ -74,16 +75,16 @@ export const useAppStore = create<AppState>()(
       sort: { key: 'name', order: 'asc' },
       setSort: (key) => {
         const currentSort = get().sort;
-         const order = currentSort.key === key && currentSort.order === 'asc' ? 'desc' : 'asc';
+        const order = currentSort.key === key && currentSort.order === 'asc' ? 'desc' : 'asc';
         set({ sort: { key, order } });
       },
       refreshKey: 0,
-       triggerRefresh: () => set((state) => ({ refreshKey: state.refreshKey + 1 })),
+      triggerRefresh: () => set((state) => ({ refreshKey: state.refreshKey + 1 })),
       isBulkMode: false,
       selectedFiles: [],
       setBulkMode: (isActive) => {
         if (!isActive) {
-           set({ isBulkMode: false, selectedFiles: [] });
+          set({ isBulkMode: false, selectedFiles: [] });
         } else {
           set({ isBulkMode: true });
         }
@@ -102,7 +103,7 @@ export const useAppStore = create<AppState>()(
       folderTokens: {},
       setFolderToken: (folderId, token) => set((state) => ({
         folderTokens: {
-           ...state.folderTokens,
+          ...state.folderTokens,
           [folderId]: token,
         },
       })),
@@ -115,26 +116,25 @@ export const useAppStore = create<AppState>()(
           get().removeToast(id);
         }, 5000);
       },
-       removeToast: (id) => {
+      removeToast: (id) => {
         set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) }));
       },
       user: null,
       fetchUser: async () => {
-         try {
+        try {
           const response = await fetch('/api/auth/me');
           if (response.ok) {
             const data = await response.json();
             set({ user: data.user });
           } else {
-             set({ user: null });
+            set({ user: null });
           }
         } catch (error) {
           set({ user: null });
         }
       },
-       currentFolderId: null,
+      currentFolderId: null,
       setCurrentFolderId: (id) => set({ currentFolderId: id }),
-      
       shareLinks: [],
       fetchShareLinks: async () => {
         try {
@@ -148,8 +148,6 @@ export const useAppStore = create<AppState>()(
         }
       },
       addShareLink: (link) => set(state => ({ shareLinks: [...state.shareLinks, link] })),
-      
-      // --- PERBAIKAN LOGIKA FUNGSI INI ---
       removeShareLink: async (id: string) => {
         const { addToast } = get();
         const linkToRemove = get().shareLinks.find(link => link.id === id);
@@ -157,7 +155,6 @@ export const useAppStore = create<AppState>()(
         if (!linkToRemove) return;
 
         try {
-          // Hanya panggil API untuk menghapus, semua logika ada di server
           const response = await fetch('/api/share/delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -173,15 +170,36 @@ export const useAppStore = create<AppState>()(
             throw new Error(errorData.error || 'Gagal menghapus tautan di server.');
           }
 
-          // Jika berhasil, perbarui state lokal
           set(state => ({
-             shareLinks: state.shareLinks.filter(link => link.id !== id)
+            shareLinks: state.shareLinks.filter(link => link.id !== id)
           }));
           addToast({ message: 'Tautan berhasil dibatalkan dan dihapus.', type: 'success' });
 
         } catch (error: any) {
           console.error("Gagal menghapus tautan:", error);
           addToast({ message: error.message, type: 'error' });
+        }
+      },
+      // --- BARU: State dan action untuk data usage ---
+      dataUsage: { status: 'idle', value: 'Memuat...' },
+      fetchDataUsage: async () => {
+        set({ dataUsage: { status: 'loading', value: 'Menghitung...' }});
+        try {
+            const response = await fetch('/api/datausage');
+            if (!response.ok) throw new Error('Gagal mengambil data');
+            const data = await response.json();
+            const formatBytes = (bytes: number, decimals = 2): string => {
+                if (!+bytes) return '0 Bytes';
+                const k = 1024;
+                const dm = decimals < 0 ? 0 : decimals;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+            };
+            set({ dataUsage: { status: 'success', value: formatBytes(data.totalUsage) } });
+        } catch (error) {
+            console.error('Gagal mengambil penggunaan data:', error);
+            set({ dataUsage: { status: 'error', value: 'Gagal memuat' } });
         }
       },
     }),
@@ -191,6 +209,7 @@ export const useAppStore = create<AppState>()(
         theme: state.theme, 
         view: state.view, 
         sort: state.sort,
+        folderTokens: state.folderTokens,
       }),
     }
   )

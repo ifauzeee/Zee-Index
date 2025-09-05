@@ -1,4 +1,3 @@
-// lib/auth.ts
 import { jwtVerify } from 'jose';
 
 // --- LOGIKA FOLDER PRIVAT ---
@@ -11,12 +10,17 @@ export function isPrivateFolder(folderId: string): boolean {
   return privateFolderIds.includes(folderId);
 }
 
-// --- LOGIKA FOLDER TERKUNCI (DITAMBAHKAN KEMBALI) ---
+// --- LOGIKA FOLDER TERKUNCI ---
 export function isProtected(folderId: string): boolean {
   const protectedFoldersConfig = process.env.PROTECTED_FOLDERS_JSON;
   if (!protectedFoldersConfig) return false;
   try {
-    const protectedFolders = JSON.parse(protectedFoldersConfig);
+    // Ganti placeholder env sebelum parsing untuk keamanan
+    const configString = protectedFoldersConfig
+      .replace('${USER1_ID}', process.env.USER1_ID || '')
+      .replace('${USER1_PASS}', process.env.USER1_PASS || '');
+      
+    const protectedFolders = JSON.parse(configString);
     return !!protectedFolders[folderId];
   } catch (e) {
     console.error("Gagal mem-parsing PROTECTED_FOLDERS_JSON:", e);

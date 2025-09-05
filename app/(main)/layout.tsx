@@ -1,5 +1,4 @@
 // File: app/(main)/layout.tsx
-
 "use client";
 
 import { useEffect } from 'react';
@@ -13,18 +12,40 @@ import { useSession } from 'next-auth/react';
 
 const Header = dynamic(() => import('@/components/Header'), { ssr: false });
 
+// --- BARU: Komponen Footer yang terpisah ---
+const AppFooter = () => {
+  const { dataUsage } = useAppStore();
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <footer className="text-center py-6 text-sm text-muted-foreground border-t bg-background">
+      <p className="mb-2">
+        <i className="fas fa-server mr-2"></i>Total Penggunaan Data: <span id="data-usage-value">{dataUsage.value}</span>
+      </p>
+      <p>&copy; {currentYear} All rights reserved - <a href="https://ifauzeee.vercel.app/" target="_blank" rel="noopener noreferrer" className="font-medium text-foreground hover:text-primary">Muhammad Ibnu Fauzi</a></p>
+    </footer>
+  );
+};
+
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const { 
-    theme, setTheme, refreshKey, toasts, removeToast, fetchUser
+    theme, setTheme, refreshKey, toasts, removeToast, fetchUser, fetchDataUsage
   } = useAppStore();
   const { status } = useSession();
-  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     if (status === 'authenticated') {
       fetchUser();
+      fetchDataUsage(); // Panggil fetch data usage saat user terotentikasi
     }
-  }, [status, fetchUser]);
+  }, [status, fetchUser, fetchDataUsage]);
+
+  // --- BARU: Panggil fetchDataUsage saat refreshKey berubah ---
+  useEffect(() => {
+    if(status === 'authenticated') {
+        fetchDataUsage();
+    }
+  }, [refreshKey, status, fetchDataUsage]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
@@ -39,29 +60,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  useEffect(() => {
-    const fetchDataUsage = async () => {
-        const valueSpan = document.getElementById('data-usage-value');
-        if (valueSpan) {
-            if (status === 'authenticated') {
-                try {
-                    valueSpan.textContent = 'Menghitung...';
-                    const response = await fetch('/api/datausage');
-                    if (!response.ok) throw new Error('Gagal mengambil data');
-                    const data = await response.json();
-                    valueSpan.textContent = formatBytes(data.totalUsage);
-                } catch (error) {
-                    console.error('Gagal mengambil penggunaan data:', error);
-                    valueSpan.textContent = 'Gagal memuat';
-                }
-            } else if (status === 'unauthenticated') {
-                valueSpan.textContent = '-';
-            }
-        }
-    };
-    fetchDataUsage();
-  }, [refreshKey, status]);
-
   return (
     <>
       <div id="app-container" className={`bg-background text-foreground min-h-screen flex flex-col`}>
@@ -71,7 +69,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             {children}
           </main>
         </div>
-        
+
         <div id="toast-container" className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3">
             <AnimatePresence>
             {toasts.map((toast) => (
@@ -80,24 +78,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           </AnimatePresence>
         </div>
 
-        <footer className="text-center py-6 text-sm text-muted-foreground border-t bg-background">
-          <p id="data-usage-container" className="mb-2">
-            <i className="fas fa-server mr-2"></i>Total Penggunaan Data: <span id="data-usage-value">Memuat...</span>
-          </p>
-          <p>&copy; {currentYear} All rights reserved - <a href="https://ifauzeee.vercel.app/" target="_blank" rel="noopener noreferrer" className="font-medium text-foreground hover:text-primary">Muhammad Ibnu Fauzi</a></p>
-        </footer>
+        <AppFooter />
       </div>
       <BulkActionBar />
       <Analytics />
     </>
   );
-}
-
-function formatBytes(bytes: number, decimals = 2): string {
-  if (!+bytes) return '0 Bytes'
-  const k = 1024
-  const dm = decimals < 0 ? 0 : decimals
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }

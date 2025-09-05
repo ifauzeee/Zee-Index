@@ -1,7 +1,6 @@
 // File: app/(main)/api/share/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
-import { SignJWT } from 'jose';
+import { SignJWT, decodeJwt } from 'jose'; // --- PERBAIKAN: Impor decodeJwt ---
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 import crypto from 'crypto';
@@ -24,28 +23,33 @@ export async function POST(req: NextRequest) {
     if (session?.user?.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Akses ditolak. Izin admin diperlukan.' }, { status: 403 });
     }
-    
+
     const { path, itemName, type, expiresIn, loginRequired }: ShareRequestBody = await req.json();
-    
+
     if (!path || !type || !expiresIn || !itemName) {
-       return NextResponse.json({ error: 'Path, itemName, type, dan expiresIn diperlukan.' }, { status: 400 });
+      return NextResponse.json({ error: 'Path, itemName, type, dan expiresIn diperlukan.' }, { status: 400 });
     }
-    
+
     const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
     const jti = crypto.randomUUID();
 
     const token = await new SignJWT({ path, loginRequired: loginRequired ?? false })
-       .setProtectedHeader({ alg: 'HS256' })
-       .setIssuedAt()
-       .setExpirationTime(expiresIn)
-       .setJti(jti)
-       .sign(secret);
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime(expiresIn)
+      .setJti(jti)
+      .sign(secret);
 
     const shareableUrl = `${req.nextUrl.origin}${path}?share_token=${token}`;
 
-    const decodedToken: any = jwtDecode(token);
+    // --- PERBAIKAN: Gunakan decodeJwt dari 'jose' yang lebih aman ---
+    const decodedToken = decodeJwt(token);
+    if (!decodedToken.exp) {
+        throw new Error("Token tidak memiliki waktu kedaluwarsa.");
+    }
+
     const newShareLink: ShareLink = {
-      id: jti, // Gunakan JTI sebagai ID unik
+      id: jti,
       path,
       token,
       jti,
@@ -54,7 +58,6 @@ export async function POST(req: NextRequest) {
       itemName,
     };
 
-    // Ambil daftar yang ada, tambahkan yang baru, lalu simpan kembali
     const existingLinks: ShareLink[] = (await kv.get(SHARE_LINKS_KEY)) || [];
     const updatedLinks = [...existingLinks, newShareLink];
     await kv.set(SHARE_LINKS_KEY, updatedLinks);
@@ -65,15 +68,4 @@ export async function POST(req: NextRequest) {
     console.error('Error generating share link:', error);
     return NextResponse.json({ error: 'Gagal membuat tautan berbagi.' }, { status: 500 });
   }
-}
-
-// Fungsi untuk decode token (diperlukan di sini karena `jose` tidak menyediakan decode tanpa verifikasi)
-function jwtDecode(token: string) {
-    try {
-        const payload = token.split('.')[1];
-        const decoded = Buffer.from(payload, 'base64').toString('utf8');
-        return JSON.parse(decoded);
-    } catch (e) {
-        return null;
-    }
 }
