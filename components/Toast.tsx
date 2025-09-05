@@ -1,4 +1,4 @@
-// Lokasi: components/Toast.tsx
+// components/Toast.tsx
 'use client';
 
 import { useEffect } from 'react';
@@ -6,9 +6,9 @@ import { motion } from 'framer-motion';
 import { Toast } from '@/lib/store';
 import { CheckCircle2, XCircle, Info, X } from 'lucide-react';
 
-// PERBAIKAN: Tipe props disesuaikan agar cocok dengan store
 interface ToastProps {
-  toast: Toast; // Menggunakan toast object langsung
+  toast: Toast;
+  // PERBAIKAN: Tipe ID diubah dari number menjadi string
   onRemove: (id: string) => void;
 }
 

@@ -1,3 +1,4 @@
+// components/SearchResultsList.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -40,10 +41,6 @@ export default function SearchResultsList() {
     
         router.push(destinationUrl);
     }, [router, shareToken, addToast, currentFolderId]);
-
-    const handleItemContextMenu = (event: React.MouseEvent<HTMLDivElement>, file: DriveFile) => {
-        // Context menu untuk hasil pencarian bisa diimplementasikan di sini jika perlu
-    };
 
     const fetchSearchResults = useCallback(async () => {
         if (!searchTerm) {
@@ -101,7 +98,8 @@ export default function SearchResultsList() {
                 <FileList 
                     files={results} 
                     onItemClick={handleItemClick} 
-                    onItemContextMenu={handleItemContextMenu} 
+                    // PERBAIKAN: Tambahkan prop yang hilang dengan fungsi kosong
+                    onItemContextMenu={() => {}} 
                 />
             ) : (
                 <div className="text-center py-20 text-muted-foreground">

@@ -1,5 +1,4 @@
 // File: app/admin/page.tsx
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -60,7 +59,6 @@ export default function AdminPage() {
             if (!user) {
                 fetchUser();
             }
-            // Panggil fungsi untuk mengambil/menyinkronkan data dari server
             fetchShareLinks();
         }
     }, [status, user, fetchUser, fetchShareLinks]);
@@ -72,7 +70,7 @@ export default function AdminPage() {
         shareLinks.forEach(link => {
             if (new Date(link.expiresAt) > now) {
                 active.push(link);
-             } else {
+            } else {
                 expired.push(link);
             }
         });
@@ -90,6 +88,7 @@ export default function AdminPage() {
 
     const confirmDelete = () => {
         if (linkToDelete) {
+            // PERBAIKAN: Kirim ID-nya saja, bukan seluruh objek
             removeShareLink(linkToDelete.id);
             setLinkToDelete(null);
         }
@@ -101,10 +100,10 @@ export default function AdminPage() {
 
     if (user?.role !== 'ADMIN' || status === 'unauthenticated') {
         return (
-             <div className="text-center py-20 text-red-500">
+            <div className="text-center py-20 text-red-500">
                 <AlertCircle className="h-16 w-16 mx-auto mb-4" />
                 <h1 className="text-2xl font-bold">Akses Ditolak</h1>
-                <p className="mt-2 text-muted-foreground">Anda tidak memiliki izin untuk melihat halaman ini.</p>
+                 <p className="mt-2 text-muted-foreground">Anda tidak memiliki izin untuk melihat halaman ini.</p>
             </div>
         );
     }
@@ -113,41 +112,41 @@ export default function AdminPage() {
         <>
             <motion.div 
                 initial={{ opacity: 0, y: 10 }} 
-                 animate={{ opacity: 1, y: 0 }} 
+                animate={{ opacity: 1, y: 0 }} 
                 transition={{ duration: 0.5 }}
                 className="container mx-auto py-8"
             >
                 <div className="flex items-center gap-4 mb-8">
-                     <button onClick={() => router.back()} className="p-2 rounded-full hover:bg-accent transition-colors">
+                    <button onClick={() => router.back()} className="p-2 rounded-full hover:bg-accent transition-colors">
                         <ArrowLeft size={24} />
-                     </button>
+                    </button>
                     <h1 className="text-3xl font-bold">Admin Dashboard</h1>
                  </div>
 
-                {/* Kartu Statistik */}
+                 {/* Kartu Statistik */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                     <div className="bg-card border rounded-lg p-6 flex items-center gap-4">
+                    <div className="bg-card border rounded-lg p-6 flex items-center gap-4">
                         <div className="p-3 bg-primary/10 rounded-lg text-primary"><LinkIcon size={28} /></div>
                         <div>
                              <p className="text-sm text-muted-foreground">Total Tautan</p>
                             <p className="text-2xl font-bold">{shareLinks.length}</p>
-                         </div>
+                        </div>
                     </div>
                      <div className="bg-card border rounded-lg p-6 flex items-center gap-4">
                         <div className="p-3 bg-green-500/10 rounded-lg text-green-500"><Clock size={28} /></div>
-                        <div>
-                         <p className="text-sm text-muted-foreground">Tautan Aktif</p>
-                            <p className="text-2xl font-bold">{activeLinks.length}</p>
+                         <div>
+                             <p className="text-sm text-muted-foreground">Tautan Aktif</p>
+                             <p className="text-2xl font-bold">{activeLinks.length}</p>
                          </div>
-                    </div>
+                     </div>
                  <div className="bg-card border rounded-lg p-6 flex items-center gap-4">
-                        <div className="p-3 bg-red-500/10 rounded-lg text-red-500"><Hourglass size={28} /></div>
+                     <div className="p-3 bg-red-500/10 rounded-lg text-red-500"><Hourglass size={28} /></div>
                          <div>
                              <p className="text-sm text-muted-foreground">Tautan Kedaluwarsa</p>
-                            <p className="text-2xl font-bold">{expiredLinks.length}</p>
+                             <p className="text-2xl font-bold">{expiredLinks.length}</p>
                          </div>
                     </div>
-                </div>
+                 </div>
 
                  {/* Daftar Tautan */}
                 <h2 className="text-2xl font-semibold mb-6">Manajemen Tautan Berbagi</h2>
@@ -155,15 +154,15 @@ export default function AdminPage() {
                 {shareLinks.length === 0 ? (
                      <div className="text-center py-20 text-muted-foreground bg-card border rounded-lg">
                         <AlertCircle className="h-16 w-16 mx-auto mb-4" />
-                         <p>Tidak ada tautan berbagi yang pernah dibuat.</p>
-                     </div>
+                          <p>Tidak ada tautan berbagi yang pernah dibuat.</p>
+                      </div>
                  ) : (
                     <div className="space-y-4">
-                         <AnimatePresence>
+                        <AnimatePresence>
                             {shareLinks.map((link) => {
-                                 const isExpired = new Date(link.expiresAt) < new Date();
-                                 return (
-                                    <motion.div
+                                const isExpired = new Date(link.expiresAt) < new Date();
+                                  return (
+                                     <motion.div
                                          key={link.id}
                                          layout
                                          initial={{ opacity: 0, y: 20, scale: 0.98 }}
@@ -183,58 +182,58 @@ export default function AdminPage() {
                                                      rel="noopener noreferrer"
                                                      className="text-base font-semibold text-primary truncate block hover:underline"
                                                  >
-                                                     {link.path}
+                                                    {link.path}
                                                  </a>
                                              </div>
                                              <div className="flex items-center gap-4 mt-3 sm:mt-0">
                                                  <span className={cn(
                                                      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
-                                                     link.loginRequired 
-                                                         ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300' 
-                                                         : 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300'
-                                                 )}>
+                                                       link.loginRequired 
+                                                       ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300' 
+                                                       : 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300'
+                                                  )}>
                                                      <ShieldCheck size={14}/>
-                                                     {link.loginRequired ? 'Login' : 'Publik'}
+                                                       {link.loginRequired ? 'Login' : 'Publik'}
                                                  </span>
                                                  <span className={cn(
                                                      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
-                                                     isExpired 
-                                                         ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' 
-                                                         : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                                                 )}>
+                                                       isExpired 
+                                                       ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' 
+                                                       : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                                  )}>
                                                      <Clock size={14}/>
                                                      {isExpired ? 'Kedaluwarsa' : 'Aktif'}
                                                  </span>
                                              </div>
-                                         </div>
-                                         <div className="border-t my-4"></div>
-                                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                                             <p className="text-xs text-muted-foreground mb-2 sm:mb-0">
-                                                 Kedaluwarsa pada: {format(new Date(link.expiresAt), 'dd MMMM yyyy, HH:mm', { locale: id })}
-                                             </p>
-                                             <div className="flex items-center gap-2">
-                                                 <button onClick={() => handleCopy(`${window.location.origin}${link.path}?share_token=${link.token}`)} className="p-2 rounded-md hover:bg-accent" title="Salin Tautan">
-                                                     <Copy size={16} />
-                                                 </button>
-                                                 <button onClick={() => handleDeleteClick(link)} className="p-2 rounded-md hover:bg-accent text-red-500" title="Hapus & Batalkan Tautan">
-                                                     <Trash2 size={16} />
-                                                 </button>
+                                        </div>
+                                        <div className="border-t my-4"></div>
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                                            <p className="text-xs text-muted-foreground mb-2 sm:mb-0">
+                                                Kedaluwarsa pada: {format(new Date(link.expiresAt), 'dd MMMM yyyy, HH:mm', { locale: id })}
+                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                <button onClick={() => handleCopy(`${window.location.origin}${link.path}?share_token=${link.token}`)} className="p-2 rounded-md hover:bg-accent" title="Salin Tautan">
+                                                   <Copy size={16} />
+                                                </button>
+                                                <button onClick={() => handleDeleteClick(link)} className="p-2 rounded-md hover:bg-accent text-red-500" title="Hapus & Batalkan Tautan">
+                                                    <Trash2 size={16} />
+                                                </button>
                                              </div>
                                         </div>
                                      </motion.div>
-                                 );
+                                  );
                             })}
                         </AnimatePresence>
-                     </div>
+                    </div>
                 )}
             </motion.div>
 
              <AnimatePresence>
-                {linkToDelete && (
+                 {linkToDelete && (
                     <DeleteConfirmationModal 
-                         onCancel={() => setLinkToDelete(null)}
+                        onCancel={() => setLinkToDelete(null)}
                         onConfirm={confirmDelete}
-                     />
+                    />
                 )}
             </AnimatePresence>
          </>
