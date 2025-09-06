@@ -1,6 +1,6 @@
 // components/ContextMenu.tsx
 import { motion } from 'framer-motion';
-import { Pencil, Trash2, Share2, Move, Star } from 'lucide-react';
+import { Pencil, Trash2, Share2, Move, Star, Copy } from 'lucide-react';
 
 interface ContextMenuProps {
   x: number;
@@ -12,9 +12,10 @@ interface ContextMenuProps {
   onMove: () => void;
   onToggleFavorite: () => void;
   isFavorite: boolean;
+  onCopy: () => void;
 }
 
-export default function ContextMenu({ x, y, onClose, onRename, onDelete, onShare, onMove, onToggleFavorite, isFavorite }: ContextMenuProps) {
+export default function ContextMenu({ x, y, onClose, onRename, onDelete, onShare, onMove, onToggleFavorite, isFavorite, onCopy }: ContextMenuProps) {
   return (
     <div className="fixed inset-0 z-50" onClick={onClose}>
       <motion.div
@@ -40,6 +41,14 @@ export default function ContextMenu({ x, y, onClose, onRename, onDelete, onShare
               className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent flex items-center gap-2"
             >
               <Share2 size={16} /> Bagikan
+            </button>
+          </li>
+          <li>
+            <button
+              onClick={onCopy}
+              className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent flex items-center gap-2"
+            >
+              <Copy size={16} /> Buat Salinan
             </button>
           </li>
           <li>

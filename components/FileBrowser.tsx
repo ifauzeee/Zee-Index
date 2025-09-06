@@ -25,7 +25,7 @@ interface HistoryItem {
 }
 
 type ActionState = {
-  type: 'rename' | 'delete' | 'share' | 'move' | null;
+  type: 'rename' | 'delete' | 'share' | 'move' | 'copy' | null;
   file: DriveFile | null;
 };
 
@@ -46,14 +46,13 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
 
   const {
     sort, isBulkMode, setBulkMode, toggleSelection,
-    view, setView, refreshKey, addToast,
+    view, setView, refreshKey, addToast, triggerRefresh,
     folderTokens, setFolderToken, user,
     shareToken, setShareToken,
     setCurrentFolderId,
     favorites, fetchFavorites, toggleFavorite
   } = useAppStore();
 
-  // BARU: Efek untuk mengambil data favorit saat pengguna ada
   useEffect(() => {
     if (user) {
         fetchFavorites();
@@ -318,8 +317,8 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   
   const handleContextMenu = useCallback((event: React.MouseEvent, file: DriveFile) => {
     event.preventDefault();
-    if (isBulkMode || shareToken) return; // Non-admin juga bisa favorit
-    if (!user) return; // Harus login untuk favorit
+    if (isBulkMode || shareToken) return;
+    if (!user) return;
     setContextMenu({ x: event.clientX, y: event.clientY, file });
   }, [isBulkMode, shareToken, user]);
   
@@ -331,13 +330,37 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     setActionState({ type: 'share', file });
   };
   
-  // BARU: Handler untuk toggle favorit
   const handleToggleFavorite = () => {
     if (!contextMenu?.file) return;
     const { file } = contextMenu;
     const isCurrentlyFavorite = favorites.includes(file.id);
     toggleFavorite(file.id, isCurrentlyFavorite);
     setContextMenu(null);
+  };
+
+  const handleCopy = async () => {
+    if (!contextMenu?.file) {
+      setContextMenu(null);
+      return;
+    }
+    const fileToCopy = contextMenu.file;
+    setContextMenu(null); // Tutup menu segera
+    addToast({ message: `Menyalin "${fileToCopy.name}"...`, type: 'info' });
+
+    try {
+      const response = await fetch('/api/files/copy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileId: fileToCopy.id }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Gagal membuat salinan.');
+
+      addToast({ message: 'File berhasil disalin!', type: 'success' });
+      triggerRefresh(); // Memuat ulang daftar file
+    } catch (err: any) {
+      addToast({ message: err.message, type: 'error' });
+    }
   };
   
   const handleRename = async (newName: string) => {
@@ -389,7 +412,6 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     }
   };
 
-  // DIPERBARUI: Tambahkan isFavorite ke setiap file dan 'favorites' ke dependency array
   const sortedFiles = useMemo(() => {
     return [...files]
       .map(file => ({ ...file, isFavorite: favorites.includes(file.id) }))
@@ -415,7 +437,6 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
       <AnimatePresence>
         {authModal.isOpen && (<AuthModal folderName={authModal.folderName} isLoading={isAuthLoading} onClose={() => setAuthModal({ isOpen: false, folderId: '', folderName: '' })} onSubmit={handleAuthSubmit}/>)}
         
-        {/* DIPERBARUI: Tambahkan props onToggleFavorite dan isFavorite */}
         {contextMenu && (
           <ContextMenu 
             x={contextMenu.x} y={contextMenu.y} 
@@ -426,6 +447,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
             onMove={() => { setActionState({ type: 'move', file: contextMenu.file }); setContextMenu(null); }}
             isFavorite={favorites.includes(contextMenu.file.id)}
             onToggleFavorite={handleToggleFavorite}
+            onCopy={handleCopy}
           />
         )}
         
