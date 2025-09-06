@@ -200,4 +200,4 @@ Any public use, modification, distribution, or deployment of this software must 
 © 2025 All rights reserved - Muhammad Ibnu Fauzi
 ```
 
-See the [LICENSE](https://www.google.com/search?q=./LICENSE) file for details.
+See the [LICENSE](https://github.com/ifauzeee/Zee-Index/blob/main/LICENSE) file for details.
