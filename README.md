@@ -1,8 +1,3 @@
-Berikut adalah file `README.md` yang sangat lengkap, profesional, dan menarik secara tampilan, menggunakan bahasa Inggris, dengan format Markdown yang rapi, serta menyertakan ikon Google Drive yang Anda minta.
-
----
-
-```markdown
 <!-- README.md -->
 <!-- Project: Zee Index - Google Drive Indexer -->
 <!-- Author: Muhammad Ibnu Fauzi -->
