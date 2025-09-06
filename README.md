@@ -18,6 +18,16 @@
 
 ---
 
+## 🌐 Live Demo
+
+**[➡️ Click here to visit the live site!](https://zee-index.vercel.app/)**
+
+<p align="center">
+  <img src="https://i.postimg.cc/fRx0hM58/image.png" alt="Zee-Index Preview" width="600"/>
+</p>
+
+---
+
 ## 🤔 Why Zee-Index?
 
 While the native Google Drive interface is functional, it lacks customization, public-sharing performance, and advanced access control. Zee-Index addresses these limitations by providing:
@@ -88,15 +98,19 @@ pnpm install
 
 ### Step 3: Google Cloud & API Setup
 
-1. Create Google Cloud Project.
-2. Enable **Google Drive API**.
-3. Configure OAuth Consent Screen (External, add `drive.readonly` scope).
-4. Create OAuth Client ID (Web Application) and set redirect URI:
+1.  Create Google Cloud Project.
 
-   ```
-   http://localhost:3000/api/auth/callback/google
-   ```
-5. Obtain **Refresh Token** via [OAuth 2.0 Playground](https://developers.google.com/oauthplayground).
+2.  Enable **Google Drive API**.
+
+3.  Configure OAuth Consent Screen (External, add `drive.readonly` scope).
+
+4.  Create OAuth Client ID (Web Application) and set redirect URI:
+
+    ```
+    http://localhost:3000/api/auth/callback/google
+    ```
+
+5.  Obtain **Refresh Token** via [OAuth 2.0 Playground](https://developers.google.com/oauthplayground).
 
 ### Step 4: Configure Environment Variables
 
@@ -114,57 +128,57 @@ pnpm dev
 
 Open `http://localhost:3000`.
 
----
+-----
 
 ## 🔑 Environment Variables
 
 | Variable                       | Required | Description                          |
 | :----------------------------- | :------: | :----------------------------------- |
-| `GOOGLE_CLIENT_ID`             |     ✅    | Google OAuth Client ID               |
-| `GOOGLE_CLIENT_SECRET`         |     ✅    | Google OAuth Client Secret           |
-| `GOOGLE_REFRESH_TOKEN`         |     ✅    | Refresh token for Drive API          |
-| `NEXT_PUBLIC_ROOT_FOLDER_ID`   |     ✅    | Main folder ID                       |
-| `NEXT_PUBLIC_ROOT_FOLDER_NAME` |     ✅    | Display name for root folder         |
-| `NEXTAUTH_SECRET`              |     ✅    | Random string for session encryption |
-| `NEXTAUTH_URL`                 |     ✅    | App URL (`http://localhost:3000`)    |
+| `GOOGLE_CLIENT_ID`             |    ✅    | Google OAuth Client ID               |
+| `GOOGLE_CLIENT_SECRET`         |    ✅    | Google OAuth Client Secret           |
+| `GOOGLE_REFRESH_TOKEN`         |    ✅    | Refresh token for Drive API          |
+| `NEXT_PUBLIC_ROOT_FOLDER_ID`   |    ✅    | Main folder ID                       |
+| `NEXT_PUBLIC_ROOT_FOLDER_NAME` |    ✅    | Display name for root folder         |
+| `NEXTAUTH_SECRET`              |    ✅    | Random string for session encryption |
+| `NEXTAUTH_URL`                 |    ✅    | App URL (`http://localhost:3000`)    |
 | `ADMIN_EMAILS`                 | Optional | Comma-separated admin emails         |
 | `PRIVATE_FOLDER_IDS`           | Optional | Comma-separated hidden folder IDs    |
-| `SHARE_SECRET_KEY`             |     ✅    | Secret key to sign share links       |
+| `SHARE_SECRET_KEY`             |    ✅    | Secret key to sign share links       |
 | `PROTECTED_FOLDERS_JSON`       | Optional | JSON for folder password protection  |
 | `KV_URL` / `REDIS_URL`         | Optional | Caching backend URL                  |
 | `CRON_SECRET`                  | Optional | Secret for cron jobs                 |
 
----
+-----
 
 ## ☁️ Deployment
 
 Optimized for [Vercel](https://vercel.com/):
 
-1. Push to GitHub.
-2. Import repository into Vercel.
-3. Set environment variables.
-4. Update `NEXTAUTH_URL` to production URL and add OAuth redirect URI.
-5. Deploy & enjoy!
+1.  Push to GitHub.
+2.  Import repository into Vercel.
+3.  Set environment variables.
+4.  Update `NEXTAUTH_URL` to production URL and add OAuth redirect URI.
+5.  Deploy & enjoy\!
 
----
+-----
 
 ## 🚨 Troubleshooting
 
-* **403 Forbidden / permission\_denied**: Check Drive API enabled & correct scope.
-* **redirect\_uri\_mismatch**: Ensure `NEXTAUTH_URL` matches Google Cloud redirect URIs.
-* **Root folder not displaying**: Verify `NEXT_PUBLIC_ROOT_FOLDER_ID` and sharing settings.
+  * **403 Forbidden / permission\_denied**: Check Drive API enabled & correct scope.
+  * **redirect\_uri\_mismatch**: Ensure `NEXTAUTH_URL` matches Google Cloud redirect URIs.
+  * **Root folder not displaying**: Verify `NEXT_PUBLIC_ROOT_FOLDER_ID` and sharing settings.
 
----
+-----
 
 ## 🙌 How to Contribute
 
-1. Fork the repository.
-2. Create feature branch: `git checkout -b feature/MyNewFeature`
-3. Commit changes: `git commit -m 'Add some AmazingFeature'`
-4. Push branch: `git push origin feature/MyNewFeature`
-5. Open Pull Request.
+1.  Fork the repository.
+2.  Create feature branch: `git checkout -b feature/MyNewFeature`
+3.  Commit changes: `git commit -m 'Add some AmazingFeature'`
+4.  Push branch: `git push origin feature/MyNewFeature`
+5.  Open Pull Request.
 
----
+-----
 
 ## 📜 License
 
@@ -176,4 +190,4 @@ Any public use, modification, distribution, or deployment of this software must 
 © 2025 All rights reserved - Muhammad Ibnu Fauzi
 ```
 
-See the [LICENSE](./LICENSE) file for details.
+See the [LICENSE](https://www.google.com/search?q=./LICENSE) file for details.
