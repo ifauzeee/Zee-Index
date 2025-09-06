@@ -79,7 +79,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   useEffect(() => {
     setMarkdownContent(null);
     const renderPreview = async () => {
-      if (!previewRef.current) return;
+       if (!previewRef.current) return;
        if (playerRef.current) {
         playerRef.current.destroy();
         playerRef.current = null;
@@ -91,7 +91,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
           const mediaTag = fileType === 'video' ? 'video' : 'audio';
            const posterUrl = file.thumbnailLink ? file.thumbnailLink.replace(/=s\d+/, '=s1280') : '';
            const mediaElement = document.createElement(mediaTag);
-          mediaElement.id = 'player';
+           mediaElement.id = 'player';
            mediaElement.setAttribute('playsinline', '');
           mediaElement.setAttribute('controls', '');
           mediaElement.style.width = '100%'; 
@@ -169,7 +169,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
                </div>
               `;
         }
-      } catch (error) {
+       } catch (error) {
          console.error("Preview Error:", error);
         previewRef.current.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-4 text-red-500"><i class="fas fa-exclamation-triangle text-6xl"></i><p>Gagal memuat pratinjau.</p></div>`;
       }
@@ -247,7 +247,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
                 </div>
             )}
           
-          <div className="w-full flex-1 flex items-center justify-center overflow-hidden border rounded-lg"> 
+          <div className="w-full flex-1 flex items-start justify-center overflow-hidden"> 
             {isEditing && isEditable ? (
                 <textarea
                     value={editableContent || ''}
@@ -266,42 +266,42 @@ export default function FileDetail({ file }: { file: DriveFile }) {
           </div>
         </div>
 
-        <div className="lg:col-span-1 mt-8 lg:mt-0 overflow-y-auto">
-          <div className="mb-6">
-             <h1 className="text-2xl lg:text-3xl font-bold break-words mb-6">{file.name}</h1>
+        {/* --- KODE YANG DIPERBARUI (TANPA KARTU) --- */}
+        <div className="lg:col-span-1 mt-8 lg:mt-0">
+            <h1 className="text-2xl lg:text-3xl font-bold break-words mb-6">{file.name}</h1>
             <h3 className="text-lg font-semibold mb-4 border-b pb-2">Informasi File</h3>
             <ul className="space-y-3 text-sm text-foreground">
-              <ListItem label="Ukuran" value={file.size ? formatBytes(Number(file.size)) : '-'} />
-              <ListItem label="Tipe" value={file.mimeType} />
-               {metadata?.width && metadata?.height && (
-                 <ListItem label="Dimensi" value={`${metadata.width} x ${metadata.height} px`} />
-              )}
-               {durationMillis && (
-                <ListItem label="Durasi" value={formatDuration(durationMillis / 1000)} />
-               )}
-              <ListItem label="Diubah" value={new Date(file.modifiedTime).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} />
-              <ListItem label="Dibuat" value={new Date(file.createdTime).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} />
-               {file.owners && file.owners.length > 0 && (
-                <ListItem label="Pemilik" value={file.owners[0].displayName} />
-               )}
-               {file.lastModifyingUser && (
-                <ListItem label="Diubah oleh" value={file.lastModifyingUser.displayName} />
-               )}
-              {file.md5Checksum && (
-                 <li className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-border">
-                  <span className="font-medium text-muted-foreground shrink-0">MD5</span>
-                  <span className="font-mono text-xs break-all text-left sm:text-right">{file.md5Checksum}</span>
-                 </li>
-              )}
+                <ListItem label="Ukuran" value={file.size ? formatBytes(Number(file.size)) : '-'} />
+                <ListItem label="Tipe" value={file.mimeType} />
+                {metadata?.width && metadata?.height && (
+                    <ListItem label="Dimensi" value={`${metadata.width} x ${metadata.height} px`} />
+                )}
+                {durationMillis && (
+                    <ListItem label="Durasi" value={formatDuration(durationMillis / 1000)} />
+                )}
+                <ListItem label="Diubah" value={new Date(file.modifiedTime).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} />
+                <ListItem label="Dibuat" value={new Date(file.createdTime).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} />
+                {file.owners && file.owners.length > 0 && (
+                    <ListItem label="Pemilik" value={file.owners[0].displayName} />
+                )}
+                {file.lastModifyingUser && (
+                    <ListItem label="Diubah oleh" value={file.lastModifyingUser.displayName} />
+                )}
+                {file.md5Checksum && (
+                    <li className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-border">
+                    <span className="font-medium text-muted-foreground shrink-0">MD5</span>
+                    <span className="font-mono text-xs break-all text-left sm:text-right">{file.md5Checksum}</span>
+                    </li>
+                )}
             </ul>
+            <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                <a href={directLink} download className="flex-1 flex items-center justify-center px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold text-lg">
+                    <i className="fas fa-download mr-3"></i>Unduh File
+                </a>
             </div>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <a href={directLink} download className="flex-1 flex items-center justify-center px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold text-lg">
-                <i className="fas fa-download mr-3"></i>Unduh File
-            </a>
-            {/* Tombol Share ini duplikat, bisa dihapus jika tidak diperlukan di bawah */}
-          </div>
         </div>
+        {/* --- AKHIR DARI KODE YANG DIPERBARUI --- */}
+
       </div>
      </div>
   );
