@@ -76,7 +76,7 @@ While the native Google Drive interface is functional, it lacks customization, p
 
 ### Step 1: Clone the Repository
 ```bash
-git clone https://github.com/your-ifauzeee/Zee-Index.git
+git clone https://github.com/ifauzeee/Zee-Index.git
 cd Zee-Index
 ````
 
