@@ -135,11 +135,57 @@ export const useAppStore = create<AppState>()(
       currentFolderId: null,
       setCurrentFolderId: (id) => set({ currentFolderId: id }),
       shareLinks: [],
-      fetchShareLinks: async () => { /* ... (fungsi tetap sama) ... */ },
-      addShareLink: (link) => set(state => ({ shareLinks: [...state.shareLinks, link] })),
-      removeShareLink: async (linkToRemove) => { /* ... (fungsi tetap sama) ... */ },
+      fetchShareLinks: async () => {
+        try {
+          const response = await fetch('/api/share/list');
+          if (!response.ok) {
+            throw new Error('Gagal mengambil daftar tautan berbagi.');
+          }
+          const links: ShareLink[] = await response.json();
+          // Urutkan berdasarkan tanggal kedaluwarsa terbaru di atas
+          links.sort((a, b) => new Date(b.expiresAt).getTime() - new Date(a.expiresAt).getTime());
+          set({ shareLinks: links });
+        } catch (error: any) {
+          get().addToast({ message: error.message, type: 'error' });
+        }
+      },
+      addShareLink: (link) => set(state => {
+        const updatedLinks = [...state.shareLinks, link];
+        updatedLinks.sort((a, b) => new Date(b.expiresAt).getTime() - new Date(a.expiresAt).getTime());
+        return { shareLinks: updatedLinks };
+      }),
+      removeShareLink: async (linkToRemove) => {
+        try {
+          const response = await fetch('/api/share/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(linkToRemove),
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Gagal menghapus tautan.');
+          
+          set(state => ({
+            shareLinks: state.shareLinks.filter(link => link.id !== linkToRemove.id),
+          }));
+          get().addToast({ message: 'Tautan berhasil dihapus.', type: 'success' });
+        } catch (error: any) {
+          get().addToast({ message: error.message, type: 'error' });
+        }
+      },
       dataUsage: { status: 'idle', value: 'Memuat...' },
-      fetchDataUsage: async () => { /* ... (fungsi tetap sama) ... */ },
+      fetchDataUsage: async () => {
+        set(state => ({ dataUsage: { ...state.dataUsage, status: 'loading' } }));
+        try {
+          const response = await fetch('/api/datausage');
+          if (!response.ok) throw new Error('Gagal mengambil data penggunaan.');
+          const data = await response.json();
+          const formattedUsage = `${(data.totalUsage / 1024 / 1024 / 1024).toFixed(2)} GB`;
+          set({ dataUsage: { status: 'success', value: formattedUsage } });
+        } catch (error: any) {
+          set({ dataUsage: { status: 'error', value: 'Gagal memuat' } });
+          get().addToast({ message: error.message, type: 'error' });
+        }
+      },
 
       // --- Implementasi logika Manajemen Admin ---
       adminEmails: [],
@@ -147,7 +193,6 @@ export const useAppStore = create<AppState>()(
       fetchAdminEmails: async () => {
         set({ isFetchingAdmins: true });
         try {
-          // PERBAIKAN: Path URL diubah
           const response = await fetch('/api/admin/users');
           if (!response.ok) throw new Error('Gagal mengambil daftar admin');
           const emails = await response.json();
@@ -160,7 +205,6 @@ export const useAppStore = create<AppState>()(
       },
       addAdminEmail: async (email: string) => {
         try {
-          // PERBAIKAN: Path URL diubah
           const response = await fetch('/api/admin/users', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -177,7 +221,6 @@ export const useAppStore = create<AppState>()(
       },
       removeAdminEmail: async (email: string) => {
         try {
-          // PERBAIKAN: Path URL diubah
           const response = await fetch('/api/admin/users', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
