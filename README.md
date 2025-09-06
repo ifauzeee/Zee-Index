@@ -212,7 +212,3 @@ This project is licensed under the **MIT License** – see the [LICENSE](LICENSE
 🐙 [GitHub @ibnufauzi13](https://github.com/ifauzeee)
 
 ---
-
-> ✨ **Zee Index** – *Simplify your Google Drive experience.*  
-> © 2025 Muhammad Ibnu Fauzi. All rights reserved.
-```
