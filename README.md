@@ -78,7 +78,7 @@ This comprehensive guide will walk you through setting up Zee-Index on your loca
 ### Step 1: Clone the Repository
 
 ```bash
-git clone [https://github.com/your-ifauzeee/Zee-Index.git
+git clone https://github.com/your-ifauzeee/Zee-Index.git
 cd Zee-Index
 ````
 
@@ -200,5 +200,3 @@ Contributions are welcome and appreciated\!
 ## 📜 License
 
 This project is distributed under the MIT License. See the `LICENSE` file for more information.
-
-```
