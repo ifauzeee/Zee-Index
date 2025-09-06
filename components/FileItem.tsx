@@ -89,6 +89,7 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
             view === "grid" && "mt-2 max-w-[140px] sm:max-w-[180px] text-center"
           )}
         >
+          {/* KODE YANG DIPERBARUI */}
           <p
             className={cn(
               "font-medium truncate flex items-center gap-1.5",
@@ -97,7 +98,7 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
             title={file.name}
           >
             {view === 'list' && file.isProtected && <Lock size={12} className="text-muted-foreground shrink-0" />}
-            <span className="truncate max-w-[120px] sm:max-w-[160px]">{file.name}</span>
+            <span className="truncate">{file.name}</span>
           </p>
           
           {view === "list" && !file.isFolder && (
