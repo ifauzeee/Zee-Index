@@ -21,6 +21,10 @@
 ## 🌐 Live Demo
 
 <p align="center">
+  <img src="https://i.postimg.cc/fRx0hM58/image.png" alt="Zee-Index Preview" width="600"/>
+</p>
+
+<p align="center">
   <a href="https://zee-index.vercel.app/" target="_blank">
     <img src="https://img.shields.io/badge/Explore_Live_Demo-🚀-007BFF?style=for-the-badge&logo=vercel&logoColor=white" alt="Visit Live Demo">
   </a>
@@ -30,10 +34,6 @@
 </p>
 <p align="center">
   <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://zee-index.vercel.app/" alt="Live Demo QR Code">
-</p>
-
-<p align="center">
-  <img src="https://i.postimg.cc/fRx0hM58/image.png" alt="Zee-Index Preview" width="600"/>
 </p>
 
 ---
