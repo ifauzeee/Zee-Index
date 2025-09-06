@@ -6,6 +6,7 @@ import { jwtVerify } from 'jose';
 import { kv } from '@/lib/kv';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
+import { logActivity } from '@/lib/activityLogger';
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -42,6 +43,14 @@ export async function GET(request: NextRequest) {
     if (!fileDetails || !fileDetails.size) {
         return NextResponse.json({ error: 'File tidak ditemukan atau ukurannya tidak diketahui.' }, { status: 404 });
     }
+
+    // --- Catat aktivitas download ---
+    await logActivity('DOWNLOAD', {
+        itemName: fileDetails.name,
+        itemSize: fileDetails.size,
+        userEmail: session?.user?.email, // Akan null jika diakses via share token tanpa login
+    });
+    // --- Akhir dari blok logging ---
 
     const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
     const fileSize = parseInt(fileDetails.size, 10);

@@ -8,7 +8,7 @@ import { isPrivateFolder, isProtected, verifyFolderToken } from '@/lib/auth';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { jwtVerify } from 'jose';
-import { kv } from '@/lib/kv'; // Impor KV client
+import { kv } from '@/lib/kv';
 
 // Helper untuk memvalidasi share token langsung dari request
 async function validateShareToken(request: Request): Promise<boolean> {
@@ -43,7 +43,7 @@ async function validateShareToken(request: Request): Promise<boolean> {
 
 export async function GET(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+   const session = await getServerSession(authOptions);
     const isShareAuth = await validateShareToken(request);
 
     if (!session && !isShareAuth) {
@@ -67,7 +67,7 @@ export async function GET(request: Request) {
       const isTokenValid = await verifyFolderToken(token || '', folderId);
       
       if (!isTokenValid) {
-        return NextResponse.json({ error: 'Authentication required for this folder.', protected: true }, { status: 401 });
+         return NextResponse.json({ error: 'Authentication required for this folder.', protected: true }, { status: 401 });
       }
     }
 
