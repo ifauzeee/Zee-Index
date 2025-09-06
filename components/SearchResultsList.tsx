@@ -1,4 +1,4 @@
-// components/SearchResultsList.tsx
+// File: components/SearchResultsList.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -14,7 +14,7 @@ export default function SearchResultsList() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const searchTerm = searchParams.get('q');
-    const folderId = searchParams.get('folderId');
+    const folderId = searchParams.get('folderId'); // Akan null jika pencarian global
     const { shareToken, addToast, currentFolderId } = useAppStore();
 
     const [results, setResults] = useState<DriveFile[]>([]);
@@ -55,14 +55,20 @@ export default function SearchResultsList() {
         setResults([]);
 
         try {
-            const url = new URL('/api/search', window.location.origin);
+            // Tentukan endpoint API berdasarkan ada atau tidaknya 'folderId' di URL
+            const isGlobalSearch = !folderId;
+            const apiPath = isGlobalSearch ? '/api/search/global' : '/api/search';
+            
+            const url = new URL(apiPath, window.location.origin);
             url.searchParams.append('q', searchTerm);
-            const searchFolderId = folderId || currentFolderId;
-            if (searchFolderId) {
-                url.searchParams.append('folderId', searchFolderId);
+            
+            // Hanya tambahkan folderId untuk pencarian lokal (bukan global)
+            if (!isGlobalSearch && folderId) {
+                url.searchParams.append('folderId', folderId);
             }
+
             if (shareToken) {
-                url.searchParams.append('share_token', shareToken);
+                 url.searchParams.append('share_token', shareToken);
             }
             
             const response = await fetch(url.toString());
@@ -79,7 +85,7 @@ export default function SearchResultsList() {
         } finally {
             setIsLoading(false);
         }
-    }, [searchTerm, folderId, currentFolderId, addToast, shareToken]);
+    }, [searchTerm, folderId, addToast, shareToken]);
 
     useEffect(() => {
         fetchSearchResults();
@@ -98,7 +104,7 @@ export default function SearchResultsList() {
             <h1 className="text-xl font-bold mb-4">Hasil Pencarian untuk "{searchTerm}"</h1>
             {results.length > 0 ? (
                 <FileList 
-                    files={results} 
+                     files={results} 
                     onItemClick={handleItemClick}
                     onItemContextMenu={(e) => e.preventDefault()}
                 />

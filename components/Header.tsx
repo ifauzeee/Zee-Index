@@ -5,12 +5,10 @@
 import { useState, useEffect, Suspense, FC } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut, signIn } from "next-auth/react";
-import { Sun, Moon, RefreshCw, Send, Coffee, HardDrive, Search as SearchIcon, Menu, X, LogIn, LogOut, ArrowLeft, ShieldCheck, Star } from 'lucide-react';
+import { Sun, Moon, RefreshCw, Send, Coffee, HardDrive, Search as SearchIcon, Menu, LogIn, LogOut, ArrowLeft, ShieldCheck, Star } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import Search from '@/components/Search';
 import { AnimatePresence, motion } from 'framer-motion';
-
-// --- A. KODE ANIMASI BARU UNTUK MOBILE NAV ---
 
 // Varian untuk overlay latar belakang
 const overlayVariants = {
@@ -58,7 +56,6 @@ interface MobileNavProps {
   createLink: (href: string) => string;
 }
 
-// --- B. KOMPONEN BARU UNTUK MOBILE NAV ---
 const MobileNav: FC<MobileNavProps> = ({ menuItems, publicShareLinkItems, authButton, shareToken, user, onClose, createLink }) => {
   return (
     <motion.div
@@ -186,7 +183,8 @@ export default function Header() {
 
     return (
         <>
-            <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md flex justify-between items-center py-4 border-b gap-4">
+            {/* --- PERUBAHAN DI BARIS INI --- */}
+            <header className="sticky top-0 z-30 bg-background flex justify-between items-center py-4 border-b gap-4">
                 <h1 
                     onClick={handleLogoClick} 
                     className={`text-2xl font-bold flex items-center shrink-0 ${!shareToken ? 'cursor-pointer' : 'cursor-default'}`} 
