@@ -44,7 +44,7 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
         isSelected && "bg-accent/80 ring-2 ring-primary",
         view === "list"
           ? "flex items-center p-3 bg-card border border-border shadow-sm hover:shadow-md hover:bg-accent/50"
-          : "flex flex-col items-center justify-center text-center p-4 bg-card border border-border shadow-sm hover:shadow-md w-full max-w-[160px] sm:max-w-[200px]"
+          : "flex flex-col items-center justify-center text-center p-2 sm:p-4 bg-card border border-border shadow-sm hover:shadow-md w-full"
       )}
       onClick={onClick}
       onContextMenu={onContextMenu}
@@ -59,13 +59,13 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
       >
         <div className="relative">
           {view === "grid" && file.thumbnailLink && !file.isFolder ? (
-            <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-md overflow-hidden flex items-center justify-center">
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-md overflow-hidden flex items-center justify-center">
               <Image
                 src={file.thumbnailLink}
                 alt={file.name}
                 fill
                 className="object-cover"
-                sizes="(max-width: 640px) 96px, 128px"
+                sizes="(max-width: 640px) 80px, 96px"
                 priority={false}
               />
             </div>
@@ -75,7 +75,6 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
             </div>
           )}
 
-          {/* --- IKON GEMBOK BARU UNTUK TAMPILAN GRID --- */}
           {view === 'grid' && file.isProtected && (
             <div className="absolute -bottom-1 -right-1 flex items-center justify-center p-1.5 bg-background/60 backdrop-blur-sm rounded-full ring-2 ring-background/20">
               <Lock size={12} className="text-primary" />
@@ -86,10 +85,9 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
         <div
           className={cn(
             "flex-1 min-w-0",
-            view === "grid" && "mt-2 max-w-[140px] sm:max-w-[180px] text-center"
+            view === "grid" && "mt-2 w-full text-center" // Dihapus max-w agar truncate bekerja
           )}
         >
-          {/* KODE YANG DIPERBARUI */}
           <p
             className={cn(
               "font-medium truncate flex items-center gap-1.5",

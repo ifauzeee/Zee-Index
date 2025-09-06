@@ -8,7 +8,6 @@ import React from 'react';
 interface FileListProps {
   files: DriveFile[];
   onItemClick: (file: DriveFile) => void;
-  // Tambahkan props baru untuk context menu
   onItemContextMenu: (event: React.MouseEvent<HTMLDivElement>, file: DriveFile) => void;
 }
 
@@ -34,7 +33,7 @@ export default function FileList({ files, onItemClick, onItemContextMenu }: File
 
   const containerClass = view === 'list' 
     ? 'flex flex-col gap-2' 
-    : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4';
+    : 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4';
 
   return (
     <motion.div
@@ -48,7 +47,6 @@ export default function FileList({ files, onItemClick, onItemContextMenu }: File
           key={file.id} 
           file={file} 
           onClick={() => onItemClick(file)}
-          // Beri tipe data yang benar pada event handler
           onContextMenu={(event: React.MouseEvent<HTMLDivElement>) => onItemContextMenu(event, file)}
           isSelected={selectedFiles.includes(file.id)}
           isBulkMode={isBulkMode}
