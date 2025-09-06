@@ -1,6 +1,6 @@
 // components/ContextMenu.tsx
 import { motion } from 'framer-motion';
-import { Pencil, Trash2, Share2, Move } from 'lucide-react'; // BARU: Impor ikon Move
+import { Pencil, Trash2, Share2, Move, Star } from 'lucide-react';
 
 interface ContextMenuProps {
   x: number;
@@ -9,10 +9,12 @@ interface ContextMenuProps {
   onRename: () => void;
   onDelete: () => void;
   onShare: () => void;
-  onMove: () => void; // BARU: Tambahkan handler untuk Move
+  onMove: () => void;
+  onToggleFavorite: () => void;
+  isFavorite: boolean;
 }
 
-export default function ContextMenu({ x, y, onClose, onRename, onDelete, onShare, onMove }: ContextMenuProps) {
+export default function ContextMenu({ x, y, onClose, onRename, onDelete, onShare, onMove, onToggleFavorite, isFavorite }: ContextMenuProps) {
   return (
     <div className="fixed inset-0 z-50" onClick={onClose}>
       <motion.div
@@ -25,13 +27,21 @@ export default function ContextMenu({ x, y, onClose, onRename, onDelete, onShare
         <ul>
           <li>
             <button
+              onClick={onToggleFavorite}
+              className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent flex items-center gap-2"
+            >
+              <Star size={16} className={isFavorite ? 'text-yellow-500 fill-yellow-500' : ''} /> 
+              {isFavorite ? 'Hapus dari Favorit' : 'Tambah ke Favorit'}
+            </button>
+          </li>
+          <li>
+            <button
               onClick={onShare}
               className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent flex items-center gap-2"
             >
               <Share2 size={16} /> Bagikan
             </button>
           </li>
-          {/* BARU: Item menu untuk Pindahkan */}
           <li>
             <button
               onClick={onMove}

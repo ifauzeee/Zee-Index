@@ -49,8 +49,16 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     view, setView, refreshKey, addToast,
     folderTokens, setFolderToken, user,
     shareToken, setShareToken,
-    setCurrentFolderId
+    setCurrentFolderId,
+    favorites, fetchFavorites, toggleFavorite
   } = useAppStore();
+
+  // BARU: Efek untuk mengambil data favorit saat pengguna ada
+  useEffect(() => {
+    if (user) {
+        fetchFavorites();
+    }
+  }, [user, fetchFavorites]);
 
   useEffect(() => {
     const currentShareToken = searchParams.get('share_token');
@@ -292,9 +300,9 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
             const response = await fetch(url.toString());
               
               if (!response.ok) {
-               addToast({ message: "Gagal memuat path, kembali ke Beranda.", type: 'error' });
-               router.push('/');
-               return;
+                 addToast({ message: "Gagal memuat path, kembali ke Beranda.", type: 'error' });
+                 router.push('/');
+                 return;
               }
             const path = await response.json();
             setHistory([rootFolder, ...path]);
@@ -310,7 +318,8 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   
   const handleContextMenu = useCallback((event: React.MouseEvent, file: DriveFile) => {
     event.preventDefault();
-    if (isBulkMode || shareToken || user?.role !== 'ADMIN') return;
+    if (isBulkMode || shareToken) return; // Non-admin juga bisa favorit
+    if (!user) return; // Harus login untuk favorit
     setContextMenu({ x: event.clientX, y: event.clientY, file });
   }, [isBulkMode, shareToken, user]);
   
@@ -320,6 +329,15 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
       return;
     }
     setActionState({ type: 'share', file });
+  };
+  
+  // BARU: Handler untuk toggle favorit
+  const handleToggleFavorite = () => {
+    if (!contextMenu?.file) return;
+    const { file } = contextMenu;
+    const isCurrentlyFavorite = favorites.includes(file.id);
+    toggleFavorite(file.id, isCurrentlyFavorite);
+    setContextMenu(null);
   };
   
   const handleRename = async (newName: string) => {
@@ -371,8 +389,11 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     }
   };
 
+  // DIPERBARUI: Tambahkan isFavorite ke setiap file dan 'favorites' ke dependency array
   const sortedFiles = useMemo(() => {
-    return [...files].sort((a, b) => {
+    return [...files]
+      .map(file => ({ ...file, isFavorite: favorites.includes(file.id) }))
+      .sort((a, b) => {
         const isAsc = sort.order === 'asc' ? 1 : -1;
         if (a.isFolder !== b.isFolder) return a.isFolder ? -1 : 1;
         switch (sort.key) {
@@ -382,7 +403,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
             default: return 0;
         }
     });
-  }, [files, sort]);
+  }, [files, sort, favorites]);
 
   const getSharePath = (file: DriveFile) => {
     if (file.isFolder) return `/folder/${file.id}`;
@@ -393,6 +414,8 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <AnimatePresence>
         {authModal.isOpen && (<AuthModal folderName={authModal.folderName} isLoading={isAuthLoading} onClose={() => setAuthModal({ isOpen: false, folderId: '', folderName: '' })} onSubmit={handleAuthSubmit}/>)}
+        
+        {/* DIPERBARUI: Tambahkan props onToggleFavorite dan isFavorite */}
         {contextMenu && (
           <ContextMenu 
             x={contextMenu.x} y={contextMenu.y} 
@@ -401,8 +424,11 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
             onDelete={() => { setActionState({ type: 'delete', file: contextMenu.file }); setContextMenu(null); }} 
             onShare={() => { handleShare(contextMenu.file); setContextMenu(null); }}
             onMove={() => { setActionState({ type: 'move', file: contextMenu.file }); setContextMenu(null); }}
+            isFavorite={favorites.includes(contextMenu.file.id)}
+            onToggleFavorite={handleToggleFavorite}
           />
         )}
+        
         {actionState.type === 'rename' && actionState.file && (<RenameModal currentName={actionState.file.name} onClose={() => setActionState({ type: null, file: null })} onRename={handleRename}/>)}
         {actionState.type === 'delete' && actionState.file && (<DeleteConfirm itemName={actionState.file.name} onClose={() => setActionState({ type: null, file: null })} onConfirm={handleDelete}/>)}
         {actionState.type === 'share' && actionState.file && (<ShareButton path={getSharePath(actionState.file)} itemName={actionState.file.name} isOpen={true} onClose={() => setActionState({ type: null, file: null })}/>)}
@@ -416,7 +442,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
                <button 
                 onClick={() => handleBreadcrumbClick(folder.id)} 
                 className={`transition-colors ${shareToken && index === 0 ? 'cursor-default text-muted-foreground' : 'hover:text-primary'}`}
-              >
+               >
                 {folder.name}
                </button>
               {index < history.length - 1 && <span className="mx-2">/</span>}

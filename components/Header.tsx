@@ -5,7 +5,7 @@
 import { useState, useEffect, Suspense, FC } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut, signIn } from "next-auth/react";
-import { Sun, Moon, RefreshCw, Send, Coffee, HardDrive, Search as SearchIcon, Menu, X, LogIn, LogOut, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { Sun, Moon, RefreshCw, Send, Coffee, HardDrive, Search as SearchIcon, Menu, X, LogIn, LogOut, ArrowLeft, ShieldCheck, Star } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import Search from '@/components/Search';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -132,6 +132,7 @@ export default function Header() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const menuItems = [
+        { id: 'favorites', href: '/favorites', icon: Star, label: 'Favorit' },
         ...(user?.role === 'ADMIN' ? [{ id: 'admin', href: '/admin', icon: ShieldCheck, label: 'Admin' }] : []),
         { id: 'storage', href: '/storage', icon: HardDrive, label: 'Penyimpanan' },
         { id: 'theme', onClick: toggleTheme, icon: theme === 'light' ? Moon : Sun, label: `Ganti Tema` },
@@ -198,27 +199,27 @@ export default function Header() {
                      <Suspense fallback={<div className="w-full h-10 bg-muted rounded-lg animate-pulse" />}>
                        <Search />
                     </Suspense>
-                 </div>
-                 
+                  </div>
+                  
                 <div className="hidden sm:flex items-center gap-2">
                      {shareToken ? (
                          <>
-                            {menuItems
-                                .filter(item => publicShareLinkItems.includes(item.id))
-                                .map(item => {
-                                    const Icon = item.icon;
-                                    return 'href' in item && item.href ? (
-                                        <a key={item.id} href={item.target ? item.href : createLink(item.href)} target={item.target} rel={item.rel} title={item.label} className="p-2 rounded-lg hover:bg-accent">
-                                            <Icon size={20} />
-                                        </a>
-                                    ) : (
-                                        'onClick' in item && <button key={item.id} onClick={item.onClick} title={item.label} className="p-2 rounded-lg hover:bg-accent">
-                                            <Icon size={20} />
-                                        </button>
-                                    );
-                                })}
-                            {authButton}
-                         </>
+                             {menuItems
+                                 .filter(item => publicShareLinkItems.includes(item.id))
+                                 .map(item => {
+                                     const Icon = item.icon;
+                                     return 'href' in item && item.href ? (
+                                         <a key={item.id} href={item.target ? item.href : createLink(item.href)} target={item.target} rel={item.rel} title={item.label} className="p-2 rounded-lg hover:bg-accent">
+                                             <Icon size={20} />
+                                         </a>
+                                     ) : (
+                                         'onClick' in item && <button key={item.id} onClick={item.onClick} title={item.label} className="p-2 rounded-lg hover:bg-accent">
+                                             <Icon size={20} />
+                                         </button>
+                                     );
+                                 })}
+                             {authButton}
+                           </>
                      ) : (
                          <>
                              {menuItems.map((item) => {
@@ -234,7 +235,7 @@ export default function Header() {
                                  );
                              })}
                              {authButton}
-                         </>
+                           </>
                      )}
                 </div>
                 
@@ -251,7 +252,7 @@ export default function Header() {
             {isSearchVisible && (
                  <div className="mt-4 sm:hidden">
                      <Suspense fallback={null}><Search onSearchClose={() => setIsSearchVisible(false)} /></Suspense>
-                 </div>
+                   </div>
              )}
 
             <AnimatePresence>
@@ -267,6 +268,6 @@ export default function Header() {
                     />
                 )}
             </AnimatePresence>
-         </>
+       </>
     );
 }

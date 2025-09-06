@@ -1,4 +1,3 @@
-// File: lib/store.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { DriveFile } from './googleDrive';
@@ -67,6 +66,9 @@ interface AppState {
   fetchAdminEmails: () => Promise<void>;
   addAdminEmail: (email: string) => Promise<void>;
   removeAdminEmail: (email: string) => Promise<void>;
+  favorites: string[];
+  fetchFavorites: () => Promise<void>;
+  toggleFavorite: (fileId: string, isCurrentlyFavorite: boolean) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()(
@@ -135,7 +137,6 @@ export const useAppStore = create<AppState>()(
       currentFolderId: null,
       setCurrentFolderId: (id) => set({ currentFolderId: id }),
       
-      // --- KODE PERBAIKAN DIMULAI DI SINI ---
       shareLinks: [],
       fetchShareLinks: async () => {
         try {
@@ -144,7 +145,6 @@ export const useAppStore = create<AppState>()(
             throw new Error('Gagal mengambil daftar tautan berbagi.');
           }
           const links: ShareLink[] = await response.json();
-          // Urutkan berdasarkan tanggal kedaluwarsa terbaru di atas
           links.sort((a, b) => new Date(b.expiresAt).getTime() - new Date(a.expiresAt).getTime());
           set({ shareLinks: links });
         } catch (error: any) {
@@ -188,8 +188,6 @@ export const useAppStore = create<AppState>()(
           get().addToast({ message: error.message, type: 'error' });
         }
       },
-      // --- KODE PERBAIKAN BERAKHIR DI SINI ---
-
       adminEmails: [],
       isFetchingAdmins: false,
       fetchAdminEmails: async () => {
@@ -235,6 +233,45 @@ export const useAppStore = create<AppState>()(
           get().addToast({ message: result.message, type: 'success' });
         } catch (error: any) {
           get().addToast({ message: error.message, type: 'error' });
+        }
+      },
+      favorites: [],
+      fetchFavorites: async () => {
+        try {
+          const response = await fetch('/api/favorites');
+          if (!response.ok) return;
+          const files: DriveFile[] = await response.json();
+          // Simpan hanya ID-nya untuk pengecekan cepat
+          set({ favorites: files.map(f => f.id) });
+        } catch (error) {
+          console.error("Gagal mengambil data favorit:", error);
+        }
+      },
+      toggleFavorite: async (fileId, isCurrentlyFavorite) => {
+        const originalFavorites = get().favorites;
+        const apiPath = isCurrentlyFavorite ? '/api/favorites/remove' : '/api/favorites/add';
+
+        // Optimistic Update
+        const newFavorites = isCurrentlyFavorite
+          ? originalFavorites.filter(id => id !== fileId)
+          : [...originalFavorites, fileId];
+        set({ favorites: newFavorites });
+
+        try {
+          const response = await fetch(apiPath, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fileId }),
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            throw new Error(result.error || 'Gagal memperbarui favorit.');
+          }
+          get().addToast({ message: result.message, type: 'success' });
+        } catch (error: any) {
+          get().addToast({ message: error.message, type: 'error' });
+          // Rollback jika gagal
+          set({ favorites: originalFavorites });
         }
       },
     }),

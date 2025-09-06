@@ -15,7 +15,7 @@ import Plyr from 'plyr';
 import Prism from 'prismjs';
 import 'prismjs/plugins/line-numbers/prism-line-numbers.min.js';
 import { getFileType, formatBytes, formatDuration, getIcon } from '@/lib/utils';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import { renderToString } from 'react-dom/server';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
@@ -27,9 +27,14 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   const playerRef = useRef<Plyr | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { addToast, user } = useAppStore();
+  const { addToast, user, triggerRefresh } = useAppStore();
   const [showBackButton, setShowBackButton] = useState(true);
   const [markdownContent, setMarkdownContent] = useState<string | null>(null);
+
+  // State untuk editor
+  const [editableContent, setEditableContent] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const shareToken = useMemo(() => searchParams.get('share_token'), [searchParams]);
 
@@ -70,7 +75,6 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   }, [file.id, shareToken]);
   
   const fileType = getFileType(file);
-  const Icon = getIcon(file.mimeType);
 
   useEffect(() => {
     setMarkdownContent(null);
@@ -112,7 +116,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
           previewRef.current.appendChild(img);
         } else if (fileType === 'pdf') {
           if (typeof pdfjsLib !== 'undefined' && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
-             pdfjsLib.GlobalWorkerOptions.workerSrc = `https://mozilla.github.io/pdf.js/build/pdf.worker.mjs`;
+               pdfjsLib.GlobalWorkerOptions.workerSrc = `https://mozilla.github.io/pdf.js/build/pdf.worker.mjs`;
           }
           const container = document.createElement('div');
           container.id = 'pdf-viewer-container';
@@ -133,35 +137,37 @@ export default function FileDetail({ file }: { file: DriveFile }) {
             const renderContext = { canvasContext: context!, viewport: viewport };
             await page.render(renderContext).promise;
           }
-        } else if (fileType === 'markdown') {
+        } else if (fileType === 'markdown' || fileType === 'code') {
             const response = await fetch(directLink);
-            if (!response.ok) throw new Error('Gagal mengambil konten markdown');
+            if (!response.ok) throw new Error('Gagal mengambil konten file');
             const textContent = await response.text();
-            setMarkdownContent(textContent); 
-        } else if (fileType === 'code') {
-          const pre = document.createElement('pre');
-          pre.className = 'line-numbers h-full w-full overflow-auto text-sm';
-          const code = document.createElement('code');
-          code.className = `language-${getLanguageFromFilename(file.name)}`;
-          code.textContent = 'Memuat konten...';
-          pre.appendChild(code);
-          previewRef.current.innerHTML = '';
-          previewRef.current.appendChild(pre);
-          const response = await fetch(directLink);
-          if (!response.ok) throw new Error('Gagal mengambil konten file');
-          const textContent = await response.text();
-          code.textContent = textContent;
-          Prism.highlightAllUnder(previewRef.current);
+            
+            // Simpan konten untuk editor
+            setEditableContent(textContent);
+
+            if (fileType === 'markdown') {
+                setMarkdownContent(textContent);
+            } else { // ini adalah 'code'
+                const pre = document.createElement('pre');
+                pre.className = 'line-numbers h-full w-full overflow-auto text-sm';
+                const code = document.createElement('code');
+                code.className = `language-${getLanguageFromFilename(file.name)}`;
+                pre.appendChild(code);
+                previewRef.current.innerHTML = '';
+                previewRef.current.appendChild(pre);
+                code.textContent = textContent;
+                Prism.highlightAllUnder(previewRef.current!);
+            }
         } else {
           const IconComponent = getIcon(file.mimeType);
           const iconString = renderToString(<IconComponent size={256} className="text-primary/20" />);
           previewRef.current.innerHTML = `
-             <div class="flex flex-col items-center justify-center h-full gap-4">
-               <div>
-                 ${iconString}
+               <div class="flex flex-col items-center justify-center h-full gap-4">
+                 <div>
+                   ${iconString}
+                 </div>
                </div>
-            </div>
-           `;
+              `;
         }
       } catch (error) {
          console.error("Preview Error:", error);
@@ -179,12 +185,38 @@ export default function FileDetail({ file }: { file: DriveFile }) {
     };
   }, [file, fileType, directLink, addToast]);
 
+  const handleSaveChanges = async () => {
+    if (editableContent === null) return;
+    setIsSaving(true);
+    try {
+        const response = await fetch('/api/files/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fileId: file.id, newContent: editableContent }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Gagal menyimpan file.');
+        
+        addToast({ message: "Perubahan berhasil disimpan!", type: 'success' });
+        setIsEditing(false);
+        triggerRefresh();
+        // Update local state to show new content immediately
+        if (fileType === 'markdown') {
+            setMarkdownContent(editableContent);
+        }
+    } catch (error: any) {
+        addToast({ message: error.message, type: 'error' });
+    } finally {
+        setIsSaving(false);
+    }
+  };
+
   const metadata = file.imageMediaMetadata || file.videoMediaMetadata;
   const durationMillis = file.videoMediaMetadata?.durationMillis ? parseInt(file.videoMediaMetadata.durationMillis, 10) : undefined;
   const showShareButton = !searchParams.get('share_token') && user?.role === 'ADMIN';
+  const isEditable = user?.role === 'ADMIN' && (fileType === 'code' || fileType === 'markdown');
 
   return (
-    // --- PERUBAHAN DI SINI: Mengganti min-h-screen menjadi h-screen dan menambahkan overflow-hidden ---
     <div className="container mx-auto px-4 py-6 flex flex-col h-screen overflow-hidden">
       
       <header className="flex items-center justify-between gap-4 mb-4">
@@ -201,13 +233,35 @@ export default function FileDetail({ file }: { file: DriveFile }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-12 flex-1 overflow-hidden">
 
         <div className="lg:col-span-2 flex flex-col flex-1 min-h-0">
-          <div className="w-full flex-1 flex items-center justify-center overflow-hidden"> 
-            {fileType === 'markdown' && markdownContent ? (
-              <div className="prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg w-full h-full overflow-y-auto p-8">
-                   <ReactMarkdown rehypePlugins={[rehypeRaw]}>{markdownContent}</ReactMarkdown>
-              </div>
+            {isEditable && (
+                <div className="mb-2 flex justify-end gap-2">
+                    {isEditing && (
+                        <button onClick={handleSaveChanges} disabled={isSaving} className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 flex items-center gap-2 disabled:opacity-50">
+                            <Save size={16} />
+                            {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
+                        </button>
+                    )}
+                    <button onClick={() => setIsEditing(!isEditing)} className="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80">
+                        {isEditing ? 'Batal' : 'Edit File'}
+                    </button>
+                </div>
+            )}
+          
+          <div className="w-full flex-1 flex items-center justify-center overflow-hidden border rounded-lg"> 
+            {isEditing && isEditable ? (
+                <textarea
+                    value={editableContent || ''}
+                    onChange={(e) => setEditableContent(e.target.value)}
+                    className="w-full h-full p-4 bg-background font-mono text-sm resize-none focus:outline-none"
+                />
             ) : (
-              <div ref={previewRef} className="w-full h-full flex items-center justify-center"></div>
+                fileType === 'markdown' && markdownContent ? (
+                    <div className="prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg w-full h-full overflow-y-auto p-8">
+                         <ReactMarkdown rehypePlugins={[rehypeRaw]}>{markdownContent}</ReactMarkdown>
+                    </div>
+                ) : (
+                    <div ref={previewRef} className="w-full h-full flex items-center justify-center"></div>
+                )
             )}
           </div>
         </div>
@@ -245,9 +299,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
             <a href={directLink} download className="flex-1 flex items-center justify-center px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold text-lg">
                 <i className="fas fa-download mr-3"></i>Unduh File
             </a>
-            {showShareButton && (
-               <ShareButton path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`} itemName={file.name} />
-            )}
+            {/* Tombol Share ini duplikat, bisa dihapus jika tidak diperlukan di bawah */}
           </div>
         </div>
       </div>

@@ -5,10 +5,10 @@ import { formatBytes, getIcon, cn } from '@/lib/utils';
 import React from 'react';
 import { motion, Variants } from 'framer-motion';
 import Image from 'next/image';
-import { Lock } from 'lucide-react';
+import { Lock, Star } from 'lucide-react';
 
 interface FileItemProps {
-  file: DriveFile;
+  file: DriveFile & { isFavorite?: boolean };
   onClick: () => void;
   onContextMenu: (e: React.MouseEvent<HTMLDivElement>) => void;
   isSelected: boolean;
@@ -85,7 +85,7 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
         <div
           className={cn(
             "flex-1 min-w-0",
-            view === "grid" && "mt-2 w-full text-center" // Dihapus max-w agar truncate bekerja
+            view === "grid" && "mt-2 w-full text-center"
           )}
         >
           <p
@@ -95,6 +95,7 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
             )}
             title={file.name}
           >
+            {file.isFavorite && <Star size={12} className="text-yellow-400 fill-yellow-400 shrink-0" />}
             {view === 'list' && file.isProtected && <Lock size={12} className="text-muted-foreground shrink-0" />}
             <span className="truncate">{file.name}</span>
           </p>
