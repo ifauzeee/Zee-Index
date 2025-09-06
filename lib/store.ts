@@ -134,6 +134,8 @@ export const useAppStore = create<AppState>()(
       },
       currentFolderId: null,
       setCurrentFolderId: (id) => set({ currentFolderId: id }),
+      
+      // --- KODE PERBAIKAN DIMULAI DI SINI ---
       shareLinks: [],
       fetchShareLinks: async () => {
         try {
@@ -186,8 +188,8 @@ export const useAppStore = create<AppState>()(
           get().addToast({ message: error.message, type: 'error' });
         }
       },
+      // --- KODE PERBAIKAN BERAKHIR DI SINI ---
 
-      // --- Implementasi logika Manajemen Admin ---
       adminEmails: [],
       isFetchingAdmins: false,
       fetchAdminEmails: async () => {
