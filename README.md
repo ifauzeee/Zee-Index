@@ -64,7 +64,7 @@ Perfect for personal file hosting, team document sharing, or media libraries —
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/Zee-Index.git
+git clone https://github.com/ifauzeee/Zee-Index.git
 cd Zee-Index
 ```
 
