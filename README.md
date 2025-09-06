@@ -177,5 +177,3 @@ Any public use, modification, distribution, or deployment of this software must 
 ```
 
 See the [LICENSE](./LICENSE) file for details.
-
-```
