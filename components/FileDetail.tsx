@@ -14,12 +14,11 @@ import 'prismjs/plugins/line-numbers/prism-line-numbers.css';
 import Plyr from 'plyr';
 import Prism from 'prismjs';
 import 'prismjs/plugins/line-numbers/prism-line-numbers.min.js';
-import { getFileType, formatBytes, formatDuration, getIcon, cn } from '@/lib/utils';
+import { getFileType, formatBytes, formatDuration, getIcon } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
 import { renderToString } from 'react-dom/server';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
-import { createRoot } from 'react-dom/client';
 
 declare const pdfjsLib: any;
 
@@ -82,7 +81,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
         playerRef.current = null;
       }
       previewRef.current.innerHTML = '<div class="flex items-center justify-center h-full text-primary"><i class="fas fa-spinner fa-spin text-4xl"></i></div>';
-       
+      
       try {
         if (fileType === 'video' || fileType === 'audio') {
           const mediaTag = fileType === 'video' ? 'video' : 'audio';
@@ -91,7 +90,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
           mediaElement.id = 'player';
            mediaElement.setAttribute('playsinline', '');
           mediaElement.setAttribute('controls', '');
-           mediaElement.style.width = '100%'; 
+          mediaElement.style.width = '100%'; 
           mediaElement.style.height = '100%';
            if (posterUrl) mediaElement.setAttribute('data-poster', posterUrl);
           
@@ -154,18 +153,18 @@ export default function FileDetail({ file }: { file: DriveFile }) {
           code.textContent = textContent;
           Prism.highlightAllUnder(previewRef.current);
         } else {
-           const IconComponent = getIcon(file.mimeType);
-          const iconString = renderToString(<IconComponent size={96} className="text-primary" />);
+          const IconComponent = getIcon(file.mimeType);
+          const iconString = renderToString(<IconComponent size={256} className="text-primary/20" />);
           previewRef.current.innerHTML = `
              <div class="flex flex-col items-center justify-center h-full gap-4">
-               <div class="text-9xl">
-                ${iconString}
+               <div>
+                 ${iconString}
                </div>
             </div>
            `;
         }
       } catch (error) {
-        console.error("Preview Error:", error);
+         console.error("Preview Error:", error);
         previewRef.current.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-4 text-red-500"><i class="fas fa-exclamation-triangle text-6xl"></i><p>Gagal memuat pratinjau.</p></div>`;
       }
     };
@@ -178,31 +177,34 @@ export default function FileDetail({ file }: { file: DriveFile }) {
         playerRef.current = null;
       }
     };
-  }, [file, fileType, directLink]);
+  }, [file, fileType, directLink, addToast]);
 
   const metadata = file.imageMediaMetadata || file.videoMediaMetadata;
   const durationMillis = file.videoMediaMetadata?.durationMillis ? parseInt(file.videoMediaMetadata.durationMillis, 10) : undefined;
   const showShareButton = !searchParams.get('share_token') && user?.role === 'ADMIN';
 
   return (
-    <div className="container mx-auto px-4 py-6 flex flex-col min-h-screen">
-      <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-12 flex-1 overflow-hidden">
-        <div className="lg:col-span-2 flex flex-col flex-1 min-h-0">
-          <header className="flex items-center justify-between gap-4 mb-4">
-            {showBackButton && (
-              <button onClick={handleBack} className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors shrink-0">
-                <ArrowLeft size={20} /> Kembali
-              </button>
-            )}
-            {!showBackButton && <div />} 
-            
-            {showShareButton && <ShareButton path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`} itemName={file.name} />}
-          </header>
+    // --- PERUBAHAN DI SINI: Mengganti min-h-screen menjadi h-screen dan menambahkan overflow-hidden ---
+    <div className="container mx-auto px-4 py-6 flex flex-col h-screen overflow-hidden">
+      
+      <header className="flex items-center justify-between gap-4 mb-4">
+        {showBackButton && (
+          <button onClick={handleBack} className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors shrink-0">
+            <ArrowLeft size={20} /> Kembali
+          </button>
+        )}
+        {!showBackButton && <div />} 
+        
+        {showShareButton && <ShareButton path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`} itemName={file.name} />}
+      </header>
           
-          <div className="w-full flex-1 flex items-center justify-center overflow-hidden bg-muted/20 rounded-lg"> 
+      <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-12 flex-1 overflow-hidden">
+
+        <div className="lg:col-span-2 flex flex-col flex-1 min-h-0">
+          <div className="w-full flex-1 flex items-center justify-center overflow-hidden"> 
             {fileType === 'markdown' && markdownContent ? (
               <div className="prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg w-full h-full overflow-y-auto p-8">
-                  <ReactMarkdown rehypePlugins={[rehypeRaw]}>{markdownContent}</ReactMarkdown>
+                   <ReactMarkdown rehypePlugins={[rehypeRaw]}>{markdownContent}</ReactMarkdown>
               </div>
             ) : (
               <div ref={previewRef} className="w-full h-full flex items-center justify-center"></div>
@@ -210,9 +212,9 @@ export default function FileDetail({ file }: { file: DriveFile }) {
           </div>
         </div>
 
-        <div className="lg:col-span-1 mt-8 lg:mt-[52px] overflow-y-auto">
+        <div className="lg:col-span-1 mt-8 lg:mt-0 overflow-y-auto">
           <div className="mb-6">
-            <h1 className="text-2xl lg:text-3xl font-bold break-words mb-6">{file.name}</h1>
+             <h1 className="text-2xl lg:text-3xl font-bold break-words mb-6">{file.name}</h1>
             <h3 className="text-lg font-semibold mb-4 border-b pb-2">Informasi File</h3>
             <ul className="space-y-3 text-sm text-foreground">
               <ListItem label="Ukuran" value={file.size ? formatBytes(Number(file.size)) : '-'} />
@@ -225,10 +227,10 @@ export default function FileDetail({ file }: { file: DriveFile }) {
                )}
               <ListItem label="Diubah" value={new Date(file.modifiedTime).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} />
               <ListItem label="Dibuat" value={new Date(file.createdTime).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} />
-              {file.owners && file.owners.length > 0 && (
+               {file.owners && file.owners.length > 0 && (
                 <ListItem label="Pemilik" value={file.owners[0].displayName} />
                )}
-              {file.lastModifyingUser && (
+               {file.lastModifyingUser && (
                 <ListItem label="Diubah oleh" value={file.lastModifyingUser.displayName} />
                )}
               {file.md5Checksum && (
@@ -238,10 +240,10 @@ export default function FileDetail({ file }: { file: DriveFile }) {
                  </li>
               )}
             </ul>
-           </div>
+            </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <a href={directLink} download className="flex-1 flex items-center justify-center px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold text-lg">
-               <i className="fas fa-download mr-3"></i>Unduh File
+                <i className="fas fa-download mr-3"></i>Unduh File
             </a>
             {showShareButton && (
                <ShareButton path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`} itemName={file.name} />
@@ -265,7 +267,7 @@ function getLanguageFromFilename(name: string): string {
     const langMap: Record<string, string> = { 
         js: 'javascript', ts: 'typescript', jsx: 'jsx', tsx: 'tsx',
         json: 'json', py: 'python', css: 'css', html: 'html', 
-         md: 'markdown', txt: 'text', sh: 'bash', java: 'java',
+        md: 'markdown', txt: 'text', sh: 'bash', java: 'java',
         c: 'c', cpp: 'cpp', cs: 'csharp', go: 'go', rb: 'ruby',
         php: 'php', swift: 'swift', kt: 'kotlin', rs: 'rust'
     };
