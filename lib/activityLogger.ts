@@ -1,12 +1,28 @@
 // File: lib/activityLogger.ts
 import { kv } from '@vercel/kv';
 
-type ActivityType = 'UPLOAD' | 'DOWNLOAD' | 'SHARE_LINK_CREATED' | 'ADMIN_ADDED';
+export type ActivityType = 
+  | 'UPLOAD' 
+  | 'DOWNLOAD' 
+  | 'DELETE'
+  | 'RENAME'
+  | 'MOVE'
+  | 'COPY'
+  | 'SHARE_LINK_CREATED' 
+  | 'SHARE_LINK_DELETED'
+  | 'ADMIN_ADDED'
+  | 'ADMIN_REMOVED'
+  | 'LOGIN_SUCCESS'
+  | 'LOGIN_FAILURE';
 
-interface ActivityDetails {
+export interface ActivityDetails {
   itemName?: string;
-  itemSize?: string;
-  userEmail?: string | null;
+  itemSize?: string | number;
+  userEmail?: string | null; // Pelaku aksi
+  targetUser?: string; // Target aksi (misal: admin yang ditambahkan/dihapus)
+  destinationFolder?: string;
+  status?: 'success' | 'failure';
+  error?: string;
 }
 
 const ACTIVITY_LOG_KEY = 'zee-index:activity-log';

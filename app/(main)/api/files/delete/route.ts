@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
 import { revalidateTag } from 'next/cache';
 import { z } from 'zod';
+import { logActivity } from '@/lib/activityLogger'; // Import logger
 
 const deleteSchema = z.object({
   fileId: z.string().min(1),
@@ -16,18 +17,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 });
   }
 
+  let fileDetails: { name?: string; parents?: string[] } | null = null;
+
   try {
     const body = await request.json();
     const validation = deleteSchema.safeParse(body);
 
     if (!validation.success) {
-      // PERBAIKAN: Gunakan 'issues' bukan 'errors'
+      // Gunakan 'issues' dari Zod untuk detail error yang lebih baik
       return NextResponse.json({ error: 'Input tidak valid', details: validation.error.issues }, { status: 400 });
     }
     
     const { fileId } = validation.data;
 
-    const fileDetails = await getFileDetailsFromDrive(fileId);
+    // Ambil detail file SEBELUM menghapus untuk logging
+    fileDetails = await getFileDetailsFromDrive(fileId);
     if (!fileDetails || !fileDetails.parents) {
       throw new Error("Tidak dapat menemukan file atau folder induk.");
     }
@@ -50,10 +54,29 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // --- LOGGING SUKSES ---
+    await logActivity('DELETE', {
+        itemName: fileDetails?.name,
+        userEmail: session?.user?.email,
+        status: 'success'
+    });
+    // --- AKHIR LOGGING ---
+
     revalidateTag(`files-in-folder-${parentId}`);
 
     return NextResponse.json({ success: true });
+
   } catch (error: any) {
+    // --- LOGGING ERROR ---
+    await logActivity('DELETE', {
+        // Coba sertakan nama item jika sudah didapatkan
+        itemName: fileDetails?.name || 'Unknown',
+        userEmail: session?.user?.email,
+        status: 'failure',
+        error: error.message
+    });
+    // --- AKHIR LOGGING ---
+    
     console.error('Delete API Error:', error.message);
     return NextResponse.json({ error: 'Internal Server Error.', details: error.message }, { status: 500 });
   }
