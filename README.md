@@ -1,11 +1,13 @@
 <p align="center">
-  <img src="https://seekicon.com/free-icon-download/google-drive_10.svg" alt="Google Drive Icon" width="140">
+  <a href="https://github.com/ifauzeee/Zee-Index">
+    <img src="https://seekicon.com/free-icon-download/google-drive_10.svg" alt="Google Drive Icon" width="140">
+  </a>
 </p>
 
 <h1 align="center">Zee-Index: The Ultimate Self-Hosted Google Drive Explorer</h1>
 
 <p align="center">
-  Transform your Google Drive into a high-performance, feature-rich, and visually appealing file-sharing website. Zee-Index is a powerful, self-hostable solution built with Next.js and TypeScript, offering granular control over your files with a clean and modern interface.
+  Ubah Google Drive Anda menjadi sebuah situs berbagi file modern, cepat, dan kaya fitur. Zee-Index adalah solusi self-hostable dengan Next.js dan TypeScript, menawarkan kontrol penuh dan antarmuka profesional.
 </p>
 
 <p align="center">
@@ -26,172 +28,196 @@
 
 <p align="center">
   <a href="https://zee-index.vercel.app/" target="_blank">
-    <img src="https://img.shields.io/badge/Explore_Live_Demo-🚀-007BFF?style=for-the-badge&logo=vercel&logoColor=white" alt="Visit Live Demo">
+    <img src="https://img.shields.io/badge/Jelajahi_Live_Demo-🚀-007BFF?style=for-the-badge&logo=vercel&logoColor=white" alt="Kunjungi Live Demo">
   </a>
 </p>
 
 ---
 
-## 🤔 Why Zee-Index?
+## Daftar Isi
+- [Mengapa Zee-Index?](#mengapa-zee-index)
+- [Fitur Unggulan](#fitur-unggulan)
+- [Tumpukan Teknologi (Tech Stack)](#tumpukan-teknologi-tech-stack)
+- [Arsitektur Proyek](#arsitektur-proyek)
+- [Panduan Memulai](#panduan-memulai)
+- [Variabel Lingkungan (.env)](#variabel-lingkungan-env)
+- [Deployment](#deployment)
+- [Berkontribusi](#berkontribusi)
+- [Lisensi](#lisensi)
 
-While the native Google Drive interface is functional, it lacks customization, public-sharing performance, and advanced access control. Zee-Index addresses these limitations by providing:
+## Mengapa Zee-Index?
 
-* **Superior Performance:** Leverages Next.js Server-Side Rendering (SSR) and a Redis/KV caching layer for faster content delivery.
-* **Professional Presentation:** Clean, modern, and brandable interface suitable for portfolios, project deliveries, or personal archives.
-* **Granular Security:** Multiple layers of access control, including admin lockdown and password-protected folders.
-* **Complete Ownership:** Host it yourself, full control over your data and presentation. No third-party tracking or ads.
+Zee-Index mengatasi batasan Google Drive standar dengan menyediakan:
 
----
+* ⚡ **Performa Superior**: SSR Next.js + cache Redis/Vercel KV untuk pengiriman konten cepat.  
+* 🔒 **Keamanan Berlapis**: Kontrol akses granular, folder privat, folder password, dan tautan berbagi aman.  
+* 🎨 **Antarmuka Modern & Profesional**: Tampilan bersih, modern, dan dapat disesuaikan.  
+* 👑 **Kepemilikan Penuh**: Dihosting sendiri, kontrol penuh tanpa iklan atau pelacakan pihak ketiga.  
 
-## ✨ Feature Showcase
+## Fitur Unggulan
 
-### 📂 File Management & Viewing
-* **Intuitive Navigation:** Breadcrumb-based UI for easy folder traversal.
-* **Grid & List Views:** Toggle between visual grid and detailed list layouts.
-* **Built-in Media Players:**
-  * 🎞️ **Video:** Stream `mp4`, `webm`, and other supported video formats.
-  * 🎵 **Audio:** Play `mp3`, `wav`, and more directly in the browser.
-  * 🖼️ **Image Gallery:** Fullscreen gallery for images (`jpg`, `png`, `gif`).
-* **Advanced Document Preview:**
-  * 📄 **PDF Viewer**
-  * ✍️ **Markdown Rendering**
-  * 💻 **Code Viewer** (`js`, `py`, `css`, `html`, `txt`, etc.)
+<details>
+<summary><strong>📂 Manajemen & Pratinjau File</strong></summary>
 
-### 🔐 Security & Access Control
-* **Admin Dashboard:** Restrict access to authorized admin Google accounts.
-* **Private Folders:** Hidden from non-admin users.
-* **Password Protection:** Secure folders with unique credentials.
-* **Signed Share Links:** Time-sensitive secure links for individual files.
+* Navigasi berbasis breadcrumb  
+* Tampilan Grid & Daftar  
+* Pemutar Media Internal:
+  - Video: `mp4`, `webm`, `mkv` (Plyr)  
+  - Audio: `mp3`, `wav`  
+  - Galeri Gambar: `jpg`, `png`, `gif`  
+* Pratinjau Dokumen:
+  - PDF Viewer  
+  - Dokumen Office (`.docx`, `.xlsx`, `.pptx`)  
+  - E-book Reader `.epub`  
+  - Render Markdown `.md`  
+  - Penampil Kode dengan syntax highlight  
+* Aksi File Lengkap: Rename, Delete, Move, Copy  
+* Editor Teks langsung di browser  
+* Favorit untuk akses cepat  
 
-### ⚡ Performance & Optimization
-* **Server-Side Rendering (SSR)**
-* **Aggressive Caching:** Redis or Vercel KV to cache Google Drive API responses.
-* **Optimized Builds:** Next.js production-ready code.
+</details>
 
----
+<details>
+<summary><strong>🔍 Pencarian & Filtrasi Canggih</strong></summary>
 
-## 🏛️ Architectural Overview
+* Pencarian full-text  
+* Pencarian global & lokal di folder  
+* Filter pencarian (tipe file, tanggal modifikasi)  
 
-1. **Frontend:** React + Next.js, styled with Tailwind CSS and Shadcn/ui.  
-2. **Backend Logic:** Next.js API Routes act as secure intermediary to Google Drive API.  
-3. **Authentication:** NextAuth.js with Google OAuth for admin logins.  
-4. **Data Fetching:** Uses Google Drive API v3 with refresh token for metadata.  
-5. **Caching:** Redis/Vercel KV for API response caching.
+</details>
 
----
+<details>
+<summary><strong>🔐 Keamanan & Kontrol Akses</strong></summary>
 
-## 🚀 Getting Started
+* Otentikasi Admin  
+* Folder Privat  
+* Folder Terproteksi Password  
+* Autentikasi Dua Faktor (2FA) - Segera hadir  
+* Log Audit Terperinci  
 
-### Prerequisites
-* **Node.js:** v18+ ([Download](https://nodejs.org/))  
-* **Package Manager:** `pnpm` (`npm install -g pnpm`)  
-* **Google Cloud Account:** Access to [Google Cloud Platform](https://console.cloud.google.com/)  
-* **Git**: Required for cloning the repository  
+</details>
 
-### Step 1: Clone the Repository
+<details>
+<summary><strong>🔗 Berbagi & Kolaborasi</strong></summary>
+
+* Tautan berbagi aman & berbatas waktu  
+* Tautan dengan syarat login  
+* Analitik tautan  
+* Aksi massal (bulk download ke `.zip`)  
+
+</details>
+
+## Tumpukan Teknologi (Tech Stack)
+
+* **Framework**: Next.js 14 (App Router)  
+* **Bahasa**: TypeScript  
+* **Styling**: Tailwind CSS + Shadcn/ui + Framer Motion  
+* **Otentikasi**: NextAuth.js (Google Provider)  
+* **Caching**: Vercel KV / Redis  
+* **API**: Google Drive API v3  
+* **Package Manager**: pnpm  
+
+## Arsitektur Proyek
+
+1. Frontend: React + Next.js SSR, interaktivitas dengan Zustand  
+2. Backend: API Routes Next.js sebagai perantara Google Drive API  
+3. Otentikasi: NextAuth.js + JWT  
+4. Caching: Vercel KV / Redis  
+5. Cron Jobs: Pemeliharaan rutin seperti laporan mingguan  
+
+## Panduan Memulai
+
+### Prasyarat
+* Node.js v18+  
+* pnpm (`npm install -g pnpm`)  
+* Akun Google Cloud  
+* Git  
+
+### Langkah 1: Kloning Repositori
 ```bash
 git clone https://github.com/ifauzeee/Zee-Index.git
 cd Zee-Index
 ````
 
-### Step 2: Install Dependencies
+### Langkah 2: Instal Dependensi
 
 ```bash
 pnpm install
 ```
 
-### Step 3: Google Cloud & API Setup
+### Langkah 3: Google Cloud & API
 
-1.  Create Google Cloud Project.
+1. Buat proyek baru di Google Cloud Console
+2. Aktifkan Google Drive API
+3. Konfigurasi OAuth Consent Screen
+4. Buat ID Klien OAuth 2.0
+5. Tambahkan redirect URI:
 
-2.  Enable **Google Drive API**.
+   * Dev: `http://localhost:3000/api/auth/callback/google`
+   * Prod: `https://yourdomain.com/api/auth/callback/google`
+6. Salin Client ID & Client Secret
+7. Dapatkan Refresh Token via OAuth 2.0 Playground
 
-3.  Configure OAuth Consent Screen (External, add `drive.readonly` scope).
-
-4.  Create OAuth Client ID (Web Application) and set redirect URI:
-
-    ```
-    http://localhost:3000/api/auth/callback/google
-    ```
-
-5.  Obtain **Refresh Token** via [OAuth 2.0 Playground](https://developers.google.com/oauthplayground).
-
-### Step 4: Configure Environment Variables
+### Langkah 4: Konfigurasi Variabel Lingkungan
 
 ```bash
 cp .env.example .env.local
 ```
 
-Edit `.env.local` and fill in all credentials and configuration values.
+Edit `.env.local` dengan nilai kredensial Anda.
 
-### Step 5: Run the Application
+### Langkah 5: Jalankan Aplikasi
 
 ```bash
 pnpm dev
 ```
 
-Open `http://localhost:3000`.
+Buka `http://localhost:3000`.
 
------
+## Variabel Lingkungan (.env)
 
-## 🔑 Environment Variables
+| Variabel                                       |   Wajib  | Deskripsi                                 |
+| :--------------------------------------------- | :------: | :---------------------------------------- |
+| GOOGLE\_CLIENT\_ID                             |     ✅    | Client ID Google OAuth                    |
+| GOOGLE\_CLIENT\_SECRET                         |     ✅    | Client Secret Google OAuth                |
+| GOOGLE\_REFRESH\_TOKEN                         |     ✅    | Refresh Token Drive API                   |
+| NEXT\_PUBLIC\_ROOT\_FOLDER\_ID                 |     ✅    | ID folder utama Google Drive              |
+| NEXT\_PUBLIC\_ROOT\_FOLDER\_NAME               |     ✅    | Nama folder utama                         |
+| NEXTAUTH\_SECRET                               |     ✅    | String acak untuk enkripsi sesi           |
+| NEXTAUTH\_URL                                  |     ✅    | URL lengkap aplikasi                      |
+| ADMIN\_EMAILS                                  | Opsional | Daftar email admin (koma sebagai pemisah) |
+| PRIVATE\_FOLDER\_IDS                           | Opsional | Folder yang disembunyikan dari non-admin  |
+| SHARE\_SECRET\_KEY                             |     ✅    | Kunci untuk menandatangani tautan berbagi |
+| PROTECTED\_FOLDERS\_JSON                       | Opsional | Konfigurasi folder password               |
+| KV\_URL / REDIS\_URL                           | Opsional | URL database cache                        |
+| SMTP\_HOST, SMTP\_PORT, SMTP\_USER, SMTP\_PASS | Opsional | Server email untuk notifikasi             |
+| CRON\_SECRET                                   | Opsional | Kunci rahasia cron job                    |
 
-| Variable                       | Required | Description                          |
-| :----------------------------- | :------: | :----------------------------------- |
-| `GOOGLE_CLIENT_ID`             |    ✅    | Google OAuth Client ID               |
-| `GOOGLE_CLIENT_SECRET`         |    ✅    | Google OAuth Client Secret           |
-| `GOOGLE_REFRESH_TOKEN`         |    ✅    | Refresh token for Drive API          |
-| `NEXT_PUBLIC_ROOT_FOLDER_ID`   |    ✅    | Main folder ID                       |
-| `NEXT_PUBLIC_ROOT_FOLDER_NAME` |    ✅    | Display name for root folder         |
-| `NEXTAUTH_SECRET`              |    ✅    | Random string for session encryption |
-| `NEXTAUTH_URL`                 |    ✅    | App URL (`http://localhost:3000`)    |
-| `ADMIN_EMAILS`                 | Optional | Comma-separated admin emails         |
-| `PRIVATE_FOLDER_IDS`           | Optional | Comma-separated hidden folder IDs    |
-| `SHARE_SECRET_KEY`             |    ✅    | Secret key to sign share links       |
-| `PROTECTED_FOLDERS_JSON`       | Optional | JSON for folder password protection  |
-| `KV_URL` / `REDIS_URL`         | Optional | Caching backend URL                  |
-| `CRON_SECRET`                  | Optional | Secret for cron jobs                 |
+## Deployment
 
------
+1. Upload ke GitHub
+2. Impor repositori ke Vercel
+3. Set variabel lingkungan di Vercel
+4. Update NEXTAUTH\_URL ke produksi
+5. Tambahkan redirect URI produksi di Google OAuth
+6. Deploy!
 
-## ☁️ Deployment
+## Berkontribusi
 
-Optimized for [Vercel](https://vercel.com/):
+1. Fork repositori
+2. Buat branch baru: `git checkout -b feature/FiturBaruSaya`
+3. Commit perubahan: `git commit -m 'feat: Menambahkan Fitur Luar Biasa'`
+4. Linting: `pnpm lint`
+5. Push: `git push origin feature/FiturBaruSaya`
+6. Buka Pull Request
 
-1.  Push to GitHub.
-2.  Import repository into Vercel.
-3.  Set environment variables.
-4.  Update `NEXTAUTH_URL` to production URL and add OAuth redirect URI.
-5.  Deploy & enjoy\!
+## Lisensi
 
------
-
-## 🚨 Troubleshooting
-
-  * **403 Forbidden / permission\_denied**: Check Drive API enabled & correct scope.
-  * **redirect\_uri\_mismatch**: Ensure `NEXTAUTH_URL` matches Google Cloud redirect URIs.
-  * **Root folder not displaying**: Verify `NEXT_PUBLIC_ROOT_FOLDER_ID` and sharing settings.
-
------
-
-## 🙌 How to Contribute
-
-1.  Fork the repository.
-2.  Create feature branch: `git checkout -b feature/MyNewFeature`
-3.  Commit changes: `git commit -m 'Add some AmazingFeature'`
-4.  Push branch: `git push origin feature/MyNewFeature`
-5.  Open Pull Request.
-
------
-
-## 📜 License
-
-This project is licensed under the **GNU AGPL v3** with additional attribution requirements.
-
-Any public use, modification, distribution, or deployment of this software must retain the following visible notice on all user-facing pages:
+Proyek ini dilisensikan di bawah **GNU AGPL v3**.
+Setiap penggunaan publik/modifikasi/distribusi wajib mempertahankan pemberitahuan:
 
 ```
 © 2025 All rights reserved - Muhammad Ibnu Fauzi
 ```
 
-See the [LICENSE](https://github.com/ifauzeee/Zee-Index/blob/main/LICENSE) file for details.
+Lihat [LICENSE](https://github.com/ifauzeee/Zee-Index/blob/main/LICENSE) untuk detail lengkap.
