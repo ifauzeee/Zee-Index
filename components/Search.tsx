@@ -22,8 +22,11 @@ export default function Search({ onSearchClose }: SearchProps) {
 
   useEffect(() => {
     const query = searchParams.get('q');
-    if (query) setSearchTerm(query);
-    inputRef.current?.focus();
+    if (query) {
+      setSearchTerm(query);
+    }
+    // --- FIX: Baris yang menyebabkan fokus otomatis dihapus ---
+    // inputRef.current?.focus(); 
   }, [searchParams]);
 
   useEffect(() => {

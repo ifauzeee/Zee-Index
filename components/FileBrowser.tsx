@@ -77,16 +77,23 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         const timeUntilExpiration = expirationTime - currentTime;
 
         if (timeUntilExpiration > 0) {
+          // Token valid, atur timer untuk kedaluwarsa di masa depan
           const timer = setTimeout(() => {
             addToast({ message: 'Sesi berbagi Anda telah berakhir.', type: 'info' });
             setShareToken(null);
             router.push('/login?error=InvalidOrExpiredShareLink');
           }, timeUntilExpiration);
-
           return () => clearTimeout(timer);
+        } else {
+          // --- FIX: Token sudah kedaluwarsa saat halaman dimuat ---
+          addToast({ message: 'Tautan berbagi yang Anda gunakan telah kedaluwarsa.', type: 'error' });
+          router.push('/login?error=InvalidOrExpiredShareLink');
         }
       } catch (error) {
+        // --- FIX: Token tidak valid atau rusak ---
         console.error("Token tidak valid:", error);
+        addToast({ message: 'Tautan berbagi yang Anda gunakan tidak valid.', type: 'error' });
+        router.push('/login?error=InvalidOrExpiredShareLink');
       }
     }
   }, [searchParams, router, addToast, setShareToken]);
@@ -101,9 +108,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ shareToken }),
         });
-
         const data = await response.json();
-
         if (!data.valid) {
           clearInterval(intervalId);
           addToast({ message: 'Akses untuk tautan ini telah dicabut.', type: 'error' });
@@ -159,8 +164,8 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
       
       const response = await fetch(url.toString(), { headers });
       if (!response.ok) {
-          await handleFetchError(response, 'Gagal mengambil data file.', folderId, folderName);
-         return;
+         await handleFetchError(response, 'Gagal mengambil data file.', folderId, folderName);
+        return;
       }
       const data = await response.json();
       setFiles(data.files || []);
@@ -241,9 +246,9 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   const handleAuthSubmit = async (id: string, password: string) => {
     setIsAuthLoading(true);
     try {
-         const response = await fetch('/api/auth/folder', {
+        const response = await fetch('/api/auth/folder', {
             method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ folderId: authModal.folderId, id, password })
         });
         const data = await response.json();
@@ -259,7 +264,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     } catch (err: any) {
         addToast({ message: err.message, type: 'error' });
     } finally {
-         setIsAuthLoading(false);
+        setIsAuthLoading(false);
     }
   };
 
@@ -293,22 +298,22 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
        }
 
       if (!initialFolderId || initialFolderId === rootFolder.id) {
-          if(history.length > 1 || history[0]?.id !== rootFolder.id) setHistory([rootFolder]);
+         if(history.length > 1 || history[0]?.id !== rootFolder.id) setHistory([rootFolder]);
        } else {
         const currentHistoryId = history[history.length - 1]?.id;
         if (currentHistoryId !== initialFolderId) {
           try {
             setIsLoading(true);
             const url = new URL(`/api/folderpath`, window.location.origin);
-              url.searchParams.set('folderId', initialFolderId);
+            url.searchParams.set('folderId', initialFolderId);
             
             const response = await fetch(url.toString());
-              
-              if (!response.ok) {
-                 addToast({ message: "Gagal memuat path, kembali ke Beranda.", type: 'error' });
-                 router.push('/');
-                 return;
-              }
+            
+            if (!response.ok) {
+                addToast({ message: "Gagal memuat path, kembali ke Beranda.", type: 'error' });
+                router.push('/');
+                return;
+            }
             const path = await response.json();
             setHistory([rootFolder, ...path]);
           } catch (error) {
@@ -331,7 +336,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   const handleShare = (file: DriveFile | null) => {
     if (user?.role !== 'ADMIN') {
        addToast({ message: 'Fitur berbagi hanya untuk Admin.', type: 'error' });
-      return;
+       return;
     }
     setActionState({ type: 'share', file });
   };
@@ -462,19 +467,19 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         {isUploadModalOpen && <UploadModal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} />}
       </AnimatePresence>
       <div className="flex justify-between items-center py-4 overflow-x-hidden">
-           <nav className="flex items-center space-x-2 text-sm text-muted-foreground overflow-x-auto whitespace-nowrap">
-           {history.map((folder, index) => (
-             <span key={folder.id} className="flex items-center">
-               <button 
-                onClick={() => handleBreadcrumbClick(folder.id)} 
-                className={`transition-colors ${shareToken && index === 0 ? 'cursor-default text-muted-foreground' : 'hover:text-primary'}`}
-               >
-                {folder.name}
-               </button>
-              {index < history.length - 1 && <span className="mx-2">/</span>}
-             </span>
-           ))}
-          </nav>
+         <nav className="flex items-center space-x-2 text-sm text-muted-foreground overflow-x-auto whitespace-nowrap">
+        {history.map((folder, index) => (
+          <span key={folder.id} className="flex items-center">
+            <button 
+             onClick={() => handleBreadcrumbClick(folder.id)} 
+             className={`transition-colors ${shareToken && index === 0 ? 'cursor-default text-muted-foreground' : 'hover:text-primary'}`}
+            >
+             {folder.name}
+            </button>
+           {index < history.length - 1 && <span className="mx-2">/</span>}
+          </span>
+        ))}
+        </nav>
         <div className="flex items-center gap-2 shrink-0">
           {!shareToken && user?.role === 'ADMIN' && (
               <>
