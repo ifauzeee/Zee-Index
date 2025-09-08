@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
-import { Search as SearchIcon, X, Globe } from 'lucide-react';
+import { Search as SearchIcon, X, Globe, FileText, ScanText } from 'lucide-react';
 
 interface SearchProps {
   onSearchClose?: () => void;
@@ -16,21 +16,17 @@ export default function Search({ onSearchClose }: SearchProps) {
   const { currentFolderId } = useAppStore();
   
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchType, setSearchType] = useState<'name' | 'fullText'>('name');
   const [isGlobalSearch, setIsGlobalSearch] = useState(!currentFolderId);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Set initial search term from URL if present
     const query = searchParams.get('q');
-    if (query) {
-      setSearchTerm(query);
-    }
-    // Automatically focus on the search input when it appears
+    if (query) setSearchTerm(query);
     inputRef.current?.focus();
   }, [searchParams]);
 
   useEffect(() => {
-    // Update global search state based on currentFolderId
     setIsGlobalSearch(!currentFolderId);
   }, [currentFolderId]);
 
@@ -39,8 +35,8 @@ export default function Search({ onSearchClose }: SearchProps) {
     if (searchTerm.trim()) {
       const params = new URLSearchParams();
       params.set('q', searchTerm.trim());
+      params.set('searchType', searchType);
       
-      // Only add folderId if it's NOT a global search
       if (!isGlobalSearch && currentFolderId) {
         params.set('folderId', currentFolderId);
       }
@@ -56,15 +52,21 @@ export default function Search({ onSearchClose }: SearchProps) {
   };
 
   const placeholderText = isGlobalSearch 
-    ? "Cari di semua folder..." 
-    : "Cari di folder ini...";
+    ? "Cari semua file berdasarkan " + (searchType === 'name' ? 'nama...' : 'konten...')
+    : "Cari di folder ini berdasarkan " + (searchType === 'name' ? 'nama...' : 'konten...');
 
   return (
     <form onSubmit={performSearch} className="w-full">
       <div className="relative w-full">
-        <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-          <SearchIcon size={20} className="text-muted-foreground" />
-        </span>
+        <button
+            type="button"
+            onClick={() => setSearchType(prev => prev === 'name' ? 'fullText' : 'name')}
+            className="absolute inset-y-0 left-0 flex items-center justify-center w-10 text-muted-foreground hover:text-foreground"
+            title={searchType === 'name' ? "Cari berdasarkan nama" : "Cari berdasarkan konten"}
+        >
+            {searchType === 'name' ? <FileText size={18} /> : <ScanText size={18} className="text-primary" />}
+        </button>
+
         <input
           ref={inputRef}
           type="search"
@@ -73,6 +75,7 @@ export default function Search({ onSearchClose }: SearchProps) {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full pl-10 pr-20 py-2 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-shadow"
         />
+        
         {searchTerm && (
           <button
             type="button"
@@ -91,7 +94,7 @@ export default function Search({ onSearchClose }: SearchProps) {
         >
             <Globe size={18} className={isGlobalSearch ? 'text-primary' : ''} />
         </button>
-      </div>
+       </div>
     </form>
   );
 }

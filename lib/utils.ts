@@ -23,7 +23,6 @@ export function getIcon(mimeType: string): LucideIcon {
   if (mimeType.startsWith("video/")) return Video;
   if (mimeType.startsWith("audio/")) return Music;
   if (mimeType.startsWith("application/zip") || mimeType.startsWith("application/x-rar-compressed")) return Archive;
-  // BARU: Ikon spesifik untuk file teks/markdown
   if (mimeType.startsWith("text/plain") || mimeType.startsWith("text/markdown")) return FileText;
   return FileIcon;
 }
@@ -48,16 +47,24 @@ export const formatDuration = (seconds: number | string): string => {
 
 export function getFileType(file: { mimeType: string; name: string }): string {
   const mimeType = file.mimeType || '';
+  const name = file.name.toLowerCase();
 
   if (mimeType.startsWith('video/')) return 'video';
   if (mimeType.startsWith('audio/')) return 'audio';
   if (mimeType.startsWith('image/')) return 'image';
   if (mimeType === 'application/pdf') return 'pdf';
-  // BARU: Deteksi file markdown
-  if (mimeType === 'text/markdown' || file.name.endsWith('.md')) return 'markdown';
+  if (mimeType === 'text/markdown' || name.endsWith('.md')) return 'markdown';
+  
+  // Dukungan Office
+  if (mimeType.includes('officedocument.wordprocessingml') || name.endsWith('.docx')) return 'office';
+  if (mimeType.includes('officedocument.spreadsheetml') || name.endsWith('.xlsx')) return 'office';
+  if (mimeType.includes('officedocument.presentationml') || name.endsWith('.pptx')) return 'office';
+
+  // Dukungan E-book
+  if (mimeType === 'application/epub+zip' || name.endsWith('.epub')) return 'ebook';
 
   const codeExtensions = ['js', 'ts', 'jsx', 'tsx', 'json', 'py', 'css', 'html', 'sh', 'java', 'c', 'cpp', 'cs', 'go', 'rb', 'php', 'swift', 'kt', 'rs', 'txt'];
-  const fileExtension = file.name.split('.').pop()?.toLowerCase();
+  const fileExtension = name.split('.').pop();
   if (fileExtension && codeExtensions.includes(fileExtension)) {
     return 'code';
   }

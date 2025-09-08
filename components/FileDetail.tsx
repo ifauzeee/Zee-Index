@@ -1,5 +1,4 @@
 // File: components/FileDetail.tsx
-
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -21,6 +20,7 @@ import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 
 declare const pdfjsLib: any;
+declare const ePub: any; // Deklarasi untuk ePub.js
 
 export default function FileDetail({ file }: { file: DriveFile }) {
   const previewRef = useRef<HTMLDivElement>(null);
@@ -31,7 +31,6 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   const [showBackButton, setShowBackButton] = useState(true);
   const [markdownContent, setMarkdownContent] = useState<string | null>(null);
 
-  // State untuk editor
   const [editableContent, setEditableContent] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -116,7 +115,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
           previewRef.current.appendChild(img);
         } else if (fileType === 'pdf') {
           if (typeof pdfjsLib !== 'undefined' && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
-               pdfjsLib.GlobalWorkerOptions.workerSrc = `https://mozilla.github.io/pdf.js/build/pdf.worker.mjs`;
+              pdfjsLib.GlobalWorkerOptions.workerSrc = `https://mozilla.github.io/pdf.js/build/pdf.worker.mjs`;
           }
           const container = document.createElement('div');
           container.id = 'pdf-viewer-container';
@@ -137,17 +136,39 @@ export default function FileDetail({ file }: { file: DriveFile }) {
             const renderContext = { canvasContext: context!, viewport: viewport };
             await page.render(renderContext).promise;
           }
+        } else if (fileType === 'office') {
+          const iframe = document.createElement('iframe');
+          iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(directLink)}&embedded=true`;
+          iframe.className = "w-full h-full border-0";
+          previewRef.current.innerHTML = '';
+          previewRef.current.appendChild(iframe);
+        } else if (fileType === 'ebook') {
+          if (typeof ePub !== 'undefined') {
+            const bookContainer = document.createElement('div');
+            bookContainer.id = 'epub-reader';
+            bookContainer.className = 'w-full h-full';
+            previewRef.current.innerHTML = '';
+            previewRef.current.appendChild(bookContainer);
+            
+            const book = ePub(directLink);
+            const rendition = book.renderTo(bookContainer.id, {
+                width: "100%",
+                height: "100%",
+            });
+            rendition.display();
+          } else {
+            throw new Error('Pustaka ePub.js tidak termuat.');
+          }
         } else if (fileType === 'markdown' || fileType === 'code') {
             const response = await fetch(directLink);
             if (!response.ok) throw new Error('Gagal mengambil konten file');
             const textContent = await response.text();
             
-            // Simpan konten untuk editor
             setEditableContent(textContent);
 
             if (fileType === 'markdown') {
                 setMarkdownContent(textContent);
-            } else { // ini adalah 'code'
+            } else { 
                 const pre = document.createElement('pre');
                 pre.className = 'line-numbers h-full w-full overflow-auto text-sm';
                 const code = document.createElement('code');
@@ -200,7 +221,6 @@ export default function FileDetail({ file }: { file: DriveFile }) {
         addToast({ message: "Perubahan berhasil disimpan!", type: 'success' });
         setIsEditing(false);
         triggerRefresh();
-        // Update local state to show new content immediately
         if (fileType === 'markdown') {
             setMarkdownContent(editableContent);
         }
@@ -222,7 +242,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
       <header className="flex items-center justify-between gap-4 mb-4">
         {showBackButton && (
           <button onClick={handleBack} className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors shrink-0">
-            <ArrowLeft size={20} /> Kembali
+             <ArrowLeft size={20} /> Kembali
           </button>
         )}
         {!showBackButton && <div />} 
@@ -242,12 +262,12 @@ export default function FileDetail({ file }: { file: DriveFile }) {
                         </button>
                     )}
                     <button onClick={() => setIsEditing(!isEditing)} className="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80">
-                        {isEditing ? 'Batal' : 'Edit File'}
+                         {isEditing ? 'Batal' : 'Edit File'}
                     </button>
                 </div>
             )}
           
-          <div className="w-full flex-1 flex items-start justify-center overflow-hidden"> 
+           <div className="w-full flex-1 flex items-start justify-center overflow-hidden"> 
             {isEditing && isEditable ? (
                 <textarea
                     value={editableContent || ''}
@@ -266,12 +286,11 @@ export default function FileDetail({ file }: { file: DriveFile }) {
           </div>
         </div>
 
-        {/* --- KODE YANG DIPERBARUI (TANPA KARTU) --- */}
         <div className="lg:col-span-1 mt-8 lg:mt-0">
             <h1 className="text-2xl lg:text-3xl font-bold break-words mb-6">{file.name}</h1>
             <h3 className="text-lg font-semibold mb-4 border-b pb-2">Informasi File</h3>
             <ul className="space-y-3 text-sm text-foreground">
-                <ListItem label="Ukuran" value={file.size ? formatBytes(Number(file.size)) : '-'} />
+                 <ListItem label="Ukuran" value={file.size ? formatBytes(Number(file.size)) : '-'} />
                 <ListItem label="Tipe" value={file.mimeType} />
                 {metadata?.width && metadata?.height && (
                     <ListItem label="Dimensi" value={`${metadata.width} x ${metadata.height} px`} />
@@ -279,7 +298,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
                 {durationMillis && (
                     <ListItem label="Durasi" value={formatDuration(durationMillis / 1000)} />
                 )}
-                <ListItem label="Diubah" value={new Date(file.modifiedTime).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} />
+                 <ListItem label="Diubah" value={new Date(file.modifiedTime).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} />
                 <ListItem label="Dibuat" value={new Date(file.createdTime).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} />
                 {file.owners && file.owners.length > 0 && (
                     <ListItem label="Pemilik" value={file.owners[0].displayName} />
@@ -287,7 +306,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
                 {file.lastModifyingUser && (
                     <ListItem label="Diubah oleh" value={file.lastModifyingUser.displayName} />
                 )}
-                {file.md5Checksum && (
+                 {file.md5Checksum && (
                     <li className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t border-border">
                     <span className="font-medium text-muted-foreground shrink-0">MD5</span>
                     <span className="font-mono text-xs break-all text-left sm:text-right">{file.md5Checksum}</span>
@@ -300,7 +319,6 @@ export default function FileDetail({ file }: { file: DriveFile }) {
                 </a>
             </div>
         </div>
-        {/* --- AKHIR DARI KODE YANG DIPERBARUI --- */}
 
       </div>
      </div>

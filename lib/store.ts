@@ -1,3 +1,4 @@
+// File: lib/store.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { DriveFile } from './googleDrive';
@@ -16,6 +17,7 @@ export interface ShareLink {
     expiresAt: string;
     loginRequired: boolean;
     itemName: string;
+    viewCount?: number; // Ditambahkan untuk analitik
 }
 
 interface UserProfile {
@@ -241,7 +243,6 @@ export const useAppStore = create<AppState>()(
           const response = await fetch('/api/favorites');
           if (!response.ok) return;
           const files: DriveFile[] = await response.json();
-          // Simpan hanya ID-nya untuk pengecekan cepat
           set({ favorites: files.map(f => f.id) });
         } catch (error) {
           console.error("Gagal mengambil data favorit:", error);
@@ -251,7 +252,6 @@ export const useAppStore = create<AppState>()(
         const originalFavorites = get().favorites;
         const apiPath = isCurrentlyFavorite ? '/api/favorites/remove' : '/api/favorites/add';
 
-        // Optimistic Update
         const newFavorites = isCurrentlyFavorite
           ? originalFavorites.filter(id => id !== fileId)
           : [...originalFavorites, fileId];
@@ -270,7 +270,6 @@ export const useAppStore = create<AppState>()(
           get().addToast({ message: result.message, type: 'success' });
         } catch (error: any) {
           get().addToast({ message: error.message, type: 'error' });
-          // Rollback jika gagal
           set({ favorites: originalFavorites });
         }
       },

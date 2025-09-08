@@ -21,7 +21,6 @@ const SHARE_LINKS_KEY = 'zee-index:share-links';
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    // Pastikan session ada, role adalah ADMIN, dan email ada
     if (session?.user?.role !== 'ADMIN' || !session.user.email) {
       return NextResponse.json({ error: 'Akses ditolak. Izin admin dan email pengguna diperlukan.' }, { status: 403 });
     }
@@ -59,12 +58,11 @@ export async function POST(req: NextRequest) {
       itemName,
     };
 
-    const existingLinks: ShareLink[] = (await kv.get(SHARE_LINKS_KEY)) || [];
+    const existingLinks: ShareLink[] = await kv.get(SHARE_LINKS_KEY) || [];
     const updatedLinks = [...existingLinks, newShareLink];
     await kv.set(SHARE_LINKS_KEY, updatedLinks);
 
-    // --- Logika pengiriman email notifikasi ---
-    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()).filter(Boolean) || [];
+    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map((email: string) => email.trim()).filter(Boolean) || [];
     if (adminEmails.length > 0) {
         await sendMail({
             to: adminEmails,
@@ -82,7 +80,6 @@ export async function POST(req: NextRequest) {
             `
         });
     }
-    // --- Akhir dari logika email ---
 
     return NextResponse.json({ shareableUrl, token, jti, newShareLink });
 

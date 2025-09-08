@@ -1,8 +1,7 @@
 // File: components/FileBrowser.tsx
-
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { jwtDecode } from 'jwt-decode';
@@ -64,6 +63,13 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
 
     if (currentShareToken) {
       setShareToken(currentShareToken);
+      
+      fetch('/api/share/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shareToken: currentShareToken }),
+      }).catch(err => console.error("Tracking failed:", err));
+
       try {
         const decodedToken: { exp: number } = jwtDecode(currentShareToken);
         const expirationTime = decodedToken.exp * 1000;
@@ -143,7 +149,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
       const url = new URL(window.location.origin + '/api/files');
       url.searchParams.append('folderId', folderId);
       if (shareToken) {
-         url.searchParams.append('share_token', shareToken);
+        url.searchParams.append('share_token', shareToken);
       }
       const headers = new Headers();
       const folderAuthToken = folderTokens[folderId];
@@ -188,7 +194,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         throw new Error('Gagal memuat halaman berikutnya.');
       }
       const data = await response.json();
-      setFiles(prevFiles => [...prevFiles, ...(data.files || [])]);
+      setFiles((prevFiles: DriveFile[]) => [...prevFiles, ...(data.files || [])]);
       setNextPageToken(data.nextPageToken || null);
     } catch (error: any) {
       addToast({ message: error.message, type: 'error' });
@@ -235,7 +241,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   const handleAuthSubmit = async (id: string, password: string) => {
     setIsAuthLoading(true);
     try {
-        const response = await fetch('/api/auth/folder', {
+         const response = await fetch('/api/auth/folder', {
             method: 'POST',
               headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ folderId: authModal.folderId, id, password })
@@ -288,7 +294,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
 
       if (!initialFolderId || initialFolderId === rootFolder.id) {
           if(history.length > 1 || history[0]?.id !== rootFolder.id) setHistory([rootFolder]);
-      } else {
+       } else {
         const currentHistoryId = history[history.length - 1]?.id;
         if (currentHistoryId !== initialFolderId) {
           try {
@@ -344,7 +350,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
       return;
     }
     const fileToCopy = contextMenu.file;
-    setContextMenu(null); // Tutup menu segera
+    setContextMenu(null);
     addToast({ message: `Menyalin "${fileToCopy.name}"...`, type: 'info' });
 
     try {
@@ -357,7 +363,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
       if (!response.ok) throw new Error(result.error || 'Gagal membuat salinan.');
 
       addToast({ message: 'File berhasil disalin!', type: 'success' });
-      triggerRefresh(); // Memuat ulang daftar file
+      triggerRefresh();
     } catch (err: any) {
       addToast({ message: err.message, type: 'error' });
     }
@@ -371,7 +377,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         const response = await fetch('/api/files/rename', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileId: actionState.file.id, newName }) });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Gagal mengubah nama');
-        setFiles(prevFiles => prevFiles.map(f => f.id === data.file.id ? { ...f, name: data.file.name } : f));
+        setFiles((prevFiles: DriveFile[]) => prevFiles.map((f: DriveFile) => f.id === data.file.id ? { ...f, name: data.file.name } : f));
         addToast({ message: 'Nama berhasil diubah!', type: 'success' });
         setActionState({ type: null, file: null });
     } catch(err: any) { addToast({ message: err.message, type: 'error' }); }
@@ -383,7 +389,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         const response = await fetch('/api/files/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileId: actionState.file.id }) });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Gagal menghapus file');
-        setFiles(prevFiles => prevFiles.filter(f => f.id !== actionState.file?.id));
+        setFiles((prevFiles: DriveFile[]) => prevFiles.filter((f: DriveFile) => f.id !== actionState.file?.id));
         addToast({ message: 'File berhasil dihapus!', type: 'success' });
         setActionState({ type: null, file: null });
     } catch(err: any) { addToast({ message: err.message, type: 'error' }); }
@@ -404,7 +410,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Gagal memindahkan file');
       
-      setFiles(prevFiles => prevFiles.filter(f => f.id !== actionState.file?.id));
+      setFiles((prevFiles: DriveFile[]) => prevFiles.filter((f: DriveFile) => f.id !== actionState.file?.id));
       addToast({ message: 'File berhasil dipindahkan!', type: 'success' });
       setActionState({ type: null, file: null });
     } catch (err: any) {
@@ -436,7 +442,6 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <AnimatePresence>
         {authModal.isOpen && (<AuthModal folderName={authModal.folderName} isLoading={isAuthLoading} onClose={() => setAuthModal({ isOpen: false, folderId: '', folderName: '' })} onSubmit={handleAuthSubmit}/>)}
-        
         {contextMenu && (
           <ContextMenu 
             x={contextMenu.x} y={contextMenu.y} 
@@ -450,7 +455,6 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
             onCopy={handleCopy}
           />
         )}
-        
         {actionState.type === 'rename' && actionState.file && (<RenameModal currentName={actionState.file.name} onClose={() => setActionState({ type: null, file: null })} onRename={handleRename}/>)}
         {actionState.type === 'delete' && actionState.file && (<DeleteConfirm itemName={actionState.file.name} onClose={() => setActionState({ type: null, file: null })} onConfirm={handleDelete}/>)}
         {actionState.type === 'share' && actionState.file && (<ShareButton path={getSharePath(actionState.file)} itemName={actionState.file.name} isOpen={true} onClose={() => setActionState({ type: null, file: null })}/>)}
@@ -458,7 +462,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         {isUploadModalOpen && <UploadModal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} />}
       </AnimatePresence>
       <div className="flex justify-between items-center py-4 overflow-x-hidden">
-          <nav className="flex items-center space-x-2 text-sm text-muted-foreground overflow-x-auto whitespace-nowrap">
+           <nav className="flex items-center space-x-2 text-sm text-muted-foreground overflow-x-auto whitespace-nowrap">
            {history.map((folder, index) => (
              <span key={folder.id} className="flex items-center">
                <button 
@@ -484,11 +488,11 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
                     onClick={() => handleShare({ id: currentFolderId, name: history[history.length - 1]?.name || 'Folder', isFolder: true, mimeType: '', modifiedTime: '', createdTime: '', hasThumbnail: false, webViewLink: '' })} 
                     className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground" 
                     title="Bagikan Folder Ini">
-                  <Share2 size={18} />
+                   <Share2 size={18} />
                 </button>
                 <button onClick={() => setBulkMode(!isBulkMode)} className={`p-2 rounded-lg transition-colors flex items-center justify-center text-sm ${isBulkMode ? 'bg-blue-600 text-white' : 'bg-transparent hover:bg-accent text-foreground'}`} title="Pilih Beberapa File"><CheckSquare size={18} /><span className="sr-only">Pilih</span></button>
               </>
-            )}
+           )}
             <div className="flex items-center border border-border rounded-lg p-0.5">
               <button onClick={() => setView('list')} className={`p-1.5 rounded-md transition-colors ${view === 'list' ? 'bg-background text-primary shadow-sm' : 'hover:bg-accent/50 text-muted-foreground'}`} title="Tampilan Daftar"><List size={18} /></button>
               <button onClick={() => setView('grid')} className={`p-1.5 rounded-md transition-colors ${view === 'grid' ? 'bg-background text-primary shadow-sm' : 'hover:bg-accent/50 text-muted-foreground'}`} title="Tampilan Grid"><Grid size={18} /></button>
