@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'ID, JTI, dan expiresAt diperlukan.' }, { status: 400 });
     }
 
-    // 1. Tambahkan JTI ke blocklist (revoke token)
+    
     const now = new Date();
     const expirationDate = new Date(expiresAt);
     const expiresInSeconds = Math.round((expirationDate.getTime() - now.getTime()) / 1000);
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       await kv.set(`zee-index:blocked:${jti}`, 'blocked', { ex: expiresInSeconds });
     }
 
-    // 2. Hapus data tautan dari daftar utama di KV
+    
     const existingLinks: ShareLink[] = await kv.get(SHARE_LINKS_KEY) || [];
     const updatedLinks = existingLinks.filter(link => link.id !== id);
     await kv.set(SHARE_LINKS_KEY, updatedLinks);

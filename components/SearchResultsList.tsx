@@ -1,4 +1,4 @@
-// File: components/SearchResultsList.tsx
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -14,7 +14,7 @@ export default function SearchResultsList() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const searchTerm = searchParams.get('q');
-    const folderId = searchParams.get('folderId'); // Akan null jika pencarian global
+    const folderId = searchParams.get('folderId'); 
     const { shareToken, addToast, currentFolderId } = useAppStore();
 
     const [results, setResults] = useState<DriveFile[]>([]);
@@ -55,14 +55,14 @@ export default function SearchResultsList() {
         setResults([]);
 
         try {
-            // Tentukan endpoint API berdasarkan ada atau tidaknya 'folderId' di URL
+            
             const isGlobalSearch = !folderId;
             const apiPath = isGlobalSearch ? '/api/search/global' : '/api/search';
             
             const url = new URL(apiPath, window.location.origin);
             url.searchParams.append('q', searchTerm);
             
-            // Hanya tambahkan folderId untuk pencarian lokal (bukan global)
+            
             if (!isGlobalSearch && folderId) {
                 url.searchParams.append('folderId', folderId);
             }

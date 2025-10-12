@@ -1,4 +1,4 @@
-// File: app/(main)/layout.tsx
+
 "use client";
 
 import { useEffect } from 'react';
@@ -12,7 +12,7 @@ import { useSession } from 'next-auth/react';
 
 const Header = dynamic(() => import('@/components/Header'), { ssr: false });
 
-// --- BARU: Komponen Footer yang terpisah ---
+
 const AppFooter = () => {
   const { dataUsage } = useAppStore();
   const currentYear = new Date().getFullYear();
@@ -36,11 +36,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (status === 'authenticated') {
       fetchUser();
-      fetchDataUsage(); // Panggil fetch data usage saat user terotentikasi
+      fetchDataUsage(); 
     }
   }, [status, fetchUser, fetchDataUsage]);
 
-  // --- BARU: Panggil fetchDataUsage saat refreshKey berubah ---
+  
   useEffect(() => {
     if(status === 'authenticated') {
         fetchDataUsage();

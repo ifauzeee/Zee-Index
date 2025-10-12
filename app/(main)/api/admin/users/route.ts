@@ -1,4 +1,4 @@
-// File: app/(main)/api/admin/users/route.ts
+
 import { NextResponse, NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
@@ -8,12 +8,12 @@ import { sendMail } from '@/lib/mailer';
 
 const ADMIN_EMAILS_KEY = 'zee-index:admins';
 
-// Skema validasi
+
 const emailSchema = z.object({
     email: z.string().email('Format email tidak valid.'),
 });
 
-// Helper untuk memeriksa apakah user saat ini adalah admin
+
 async function isAdmin(session: any): Promise<boolean> {
     if (session?.user?.role !== 'ADMIN' || !session?.user?.email) {
         return false;
@@ -22,7 +22,7 @@ async function isAdmin(session: any): Promise<boolean> {
     return admins.includes(session.user.email);
 }
 
-// GET: Mendapatkan daftar admin
+
 export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!await isAdmin(session)) {
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     }
 }
 
-// POST: Menambahkan admin baru
+
 export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!await isAdmin(session) || !session?.user?.email) {
@@ -55,9 +55,9 @@ export async function POST(request: NextRequest) {
         const { email } = validation.data;
         await kv.sadd(ADMIN_EMAILS_KEY, email);
 
-        // --- Kirim email notifikasi ---
+        
         const adminWhoAdded = session.user.email;
-        // Kirim email ke admin yang baru ditambahkan
+        
         await sendMail({
             to: email,
             subject: 'Anda Telah Dijadikan Admin di Zee Index',
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
             `
         });
         
-        // Kirim notifikasi ke semua admin lain
+        
         const allAdmins: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
         const otherAdmins = allAdmins.filter(adminEmail => adminEmail !== email && adminEmail !== adminWhoAdded);
         if (otherAdmins.length > 0) {
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
                 `
             });
         }
-        // --- Akhir dari blok email ---
+        
 
         return NextResponse.json({ success: true, message: `Email ${email} telah ditambahkan sebagai admin.` });
 
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// DELETE: Menghapus admin
+
 export async function DELETE(request: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!await isAdmin(session)) {

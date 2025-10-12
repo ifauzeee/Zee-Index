@@ -1,4 +1,4 @@
-// File: app/(main)/api/files/rename/route.ts
+
 import { NextResponse, NextRequest } from 'next/server';
 import { getAccessToken, getFileDetailsFromDrive } from '@/lib/googleDrive';
 import { getServerSession } from 'next-auth/next';
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const validation = renameSchema.safeParse(body);
 
     if (!validation.success) {
-      // PERBAIKAN: Gunakan 'issues' bukan 'errors'
+      
       return NextResponse.json({ error: 'Input tidak valid', details: validation.error.issues }, { status: 400 });
     }
     

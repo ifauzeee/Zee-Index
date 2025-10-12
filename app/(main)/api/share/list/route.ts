@@ -1,4 +1,4 @@
-// File: app/(main)/api/share/list/route.ts
+
 
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';

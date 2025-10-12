@@ -1,4 +1,4 @@
-// File: lib/activityLogger.ts
+
 import { kv } from '@vercel/kv';
 
 export type ActivityType = 
@@ -18,15 +18,15 @@ export type ActivityType =
 export interface ActivityDetails {
   itemName?: string;
   itemSize?: string | number;
-  userEmail?: string | null; // Pelaku aksi
-  targetUser?: string; // Target aksi (misal: admin yang ditambahkan/dihapus)
+  userEmail?: string | null; 
+  targetUser?: string; 
   destinationFolder?: string;
   status?: 'success' | 'failure';
   error?: string;
 }
 
 const ACTIVITY_LOG_KEY = 'zee-index:activity-log';
-const LOG_EXPIRATION_SECONDS = 60 * 60 * 24 * 30; // Simpan log selama 30 hari
+const LOG_EXPIRATION_SECONDS = 60 * 60 * 24 * 30; 
 
 export async function logActivity(type: ActivityType, details: ActivityDetails = {}) {
   try {
@@ -37,10 +37,10 @@ export async function logActivity(type: ActivityType, details: ActivityDetails =
       ...details,
     };
 
-    // Gunakan Sorted Set: score adalah timestamp, value adalah log entry
+    
     await kv.zadd(ACTIVITY_LOG_KEY, { score: timestamp, member: JSON.stringify(logEntry) });
 
-    // Hapus log yang lebih tua dari 30 hari
+    
     const thirtyDaysAgo = Date.now() - (LOG_EXPIRATION_SECONDS * 1000);
     await kv.zremrangebyscore(ACTIVITY_LOG_KEY, 0, thirtyDaysAgo);
 

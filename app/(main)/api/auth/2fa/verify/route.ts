@@ -1,4 +1,4 @@
-// File: app/(main)/api/auth/2fa/verify/route.ts
+
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Kode verifikasi tidak valid.' }, { status: 400 });
         }
 
-        // Simpan secret secara permanen dan tandai 2FA aktif
+        
         await kv.set(`2fa:secret:${userEmail}`, secret);
         await kv.set(`2fa:enabled:${userEmail}`, true);
         await kv.del(`2fa:secret:temp:${userEmail}`);

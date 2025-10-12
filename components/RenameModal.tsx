@@ -1,4 +1,4 @@
-// components/RenameModal.tsx
+
 "use client";
 
 import { useState } from 'react';

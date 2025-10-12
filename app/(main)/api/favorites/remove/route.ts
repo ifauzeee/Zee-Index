@@ -1,4 +1,4 @@
-// File: app/(main)/api/favorites/remove/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';

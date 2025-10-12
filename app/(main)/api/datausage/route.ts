@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getStorageDetails } from '@/lib/googleDrive';
 
-; // Ditambahkan
+; 
 export const revalidate = 14400;
 
 export async function GET() {

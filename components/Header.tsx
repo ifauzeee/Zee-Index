@@ -1,4 +1,4 @@
-// File: components/Header.tsx
+
 
 "use client";
 
@@ -10,13 +10,13 @@ import { useAppStore } from '@/lib/store';
 import Search from '@/components/Search';
 import { AnimatePresence, motion } from 'framer-motion';
 
-// Varian untuk overlay latar belakang
+
 const overlayVariants = {
   open: { opacity: 1 },
   closed: { opacity: 0 },
 };
 
-// Varian untuk container item menu (untuk stagger)
+
 const navContainerVariants = {
   open: {
     transition: { staggerChildren: 0.07, delayChildren: 0.2 }
@@ -26,7 +26,7 @@ const navContainerVariants = {
   }
 };
 
-// Varian untuk setiap item menu
+
 const navItemVariants = {
   open: {
     y: 0,
@@ -183,7 +183,7 @@ export default function Header() {
 
     return (
         <>
-            {/* --- PERUBAHAN DI BARIS INI --- */}
+            {}
             <header className="sticky top-0 z-30 bg-background flex justify-between items-center py-4 border-b gap-4">
                 <h1 
                     onClick={handleLogoClick} 

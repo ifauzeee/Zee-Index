@@ -1,4 +1,4 @@
-// components/FileList.tsx
+
 import { motion } from 'framer-motion';
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from '@/lib/store';

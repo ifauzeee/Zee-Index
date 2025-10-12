@@ -1,11 +1,11 @@
-// File: app/(main)/api/search/global/route.ts
+
 import { NextResponse } from 'next/server';
-import { getAccessToken, DriveFile } from '@/lib/googleDrive'; // Pastikan DriveFile di-import
+import { getAccessToken, DriveFile } from '@/lib/googleDrive'; 
 import { isProtected } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-// Fungsi helper ini tidak perlu diubah
+
 async function isDescendant(fileId: string, rootId: string, accessToken: string): Promise<boolean> {
   if (!fileId || fileId === rootId) {
     return false;
@@ -78,8 +78,8 @@ export async function GET(request: Request) {
     const data = await response.json();
     const allFoundFiles = data.files || [];
 
-    // Filter hasil untuk hanya menyertakan file di dalam rootFolderId
-    // MODIFIKASI: Tambahkan tipe DriveFile di sini untuk mengatasi error 'implicit any'
+    
+    
     const descendantCheckPromises = allFoundFiles.map((file: DriveFile) => 
       isDescendant(file.id, rootFolderId, accessToken)
         .then(isDesc => (isDesc ? file : null))

@@ -1,4 +1,4 @@
-// components/ShareButton.tsx
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -69,7 +69,7 @@ export default function ShareButton({ path, itemName, isOpen: controlledIsOpen, 
       const response = await fetch('/api/share', {
          method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // --- PERBAIKAN DI SINI: Menambahkan `itemName` ke body request ---
+        
         body: JSON.stringify({ path, itemName, type, expiresIn, loginRequired }),
       });
 
@@ -78,10 +78,10 @@ export default function ShareButton({ path, itemName, isOpen: controlledIsOpen, 
         throw new Error(errorData.error || 'Gagal membuat tautan.');
       }
 
-      // API sekarang mengembalikan tautan baru yang dibuat
+      
       const { shareableUrl, newShareLink } = await response.json();
       
-      // Tambahkan tautan baru ke state lokal untuk sinkronisasi UI
+      
       addShareLink(newShareLink);
 
       await navigator.clipboard.writeText(shareableUrl);

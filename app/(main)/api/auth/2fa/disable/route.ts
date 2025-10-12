@@ -1,4 +1,4 @@
-// File: app/(main)/api/auth/2fa/disable/route.ts
+
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     try {
         const userEmail = session.user.email;
         
-        // Hapus kunci terkait 2FA
+        
         await kv.del(`2fa:secret:${userEmail}`);
         await kv.del(`2fa:enabled:${userEmail}`);
 

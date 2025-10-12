@@ -1,4 +1,4 @@
-// components/FileItem.tsx
+
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from '@/lib/store';
 import { formatBytes, getIcon, cn } from '@/lib/utils';

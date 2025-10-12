@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getAccessToken } from '@/lib/googleDrive';
 import JSZip from 'jszip';
 
-; // Ditambahkan
+; 
 
 export async function POST(request: Request) {
   try {

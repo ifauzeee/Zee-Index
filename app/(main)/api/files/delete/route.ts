@@ -1,11 +1,11 @@
-// File: app/(main)/api/files/delete/route.ts
+
 import { NextResponse, NextRequest } from 'next/server';
 import { getAccessToken, getFileDetailsFromDrive } from '@/lib/googleDrive';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
 import { revalidateTag } from 'next/cache';
 import { z } from 'zod';
-import { logActivity } from '@/lib/activityLogger'; // Import logger
+import { logActivity } from '@/lib/activityLogger'; 
 
 const deleteSchema = z.object({
   fileId: z.string().min(1),
@@ -24,13 +24,13 @@ export async function POST(request: NextRequest) {
     const validation = deleteSchema.safeParse(body);
 
     if (!validation.success) {
-      // Gunakan 'issues' dari Zod untuk detail error yang lebih baik
+      
       return NextResponse.json({ error: 'Input tidak valid', details: validation.error.issues }, { status: 400 });
     }
     
     const { fileId } = validation.data;
 
-    // Ambil detail file SEBELUM menghapus untuk logging
+    
     fileDetails = await getFileDetailsFromDrive(fileId);
     if (!fileDetails || !fileDetails.parents) {
       throw new Error("Tidak dapat menemukan file atau folder induk.");
@@ -54,28 +54,28 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // --- LOGGING SUKSES ---
+    
     await logActivity('DELETE', {
         itemName: fileDetails?.name,
         userEmail: session?.user?.email,
         status: 'success'
     });
-    // --- AKHIR LOGGING ---
+    
 
     revalidateTag(`files-in-folder-${parentId}`);
 
     return NextResponse.json({ success: true });
 
   } catch (error: any) {
-    // --- LOGGING ERROR ---
+    
     await logActivity('DELETE', {
-        // Coba sertakan nama item jika sudah didapatkan
+        
         itemName: fileDetails?.name || 'Unknown',
         userEmail: session?.user?.email,
         status: 'failure',
         error: error.message
     });
-    // --- AKHIR LOGGING ---
+    
     
     console.error('Delete API Error:', error.message);
     return NextResponse.json({ error: 'Internal Server Error.', details: error.message }, { status: 500 });

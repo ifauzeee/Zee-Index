@@ -1,4 +1,4 @@
-// File: components/FileDetail.tsx
+
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -20,7 +20,7 @@ import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 
 declare const pdfjsLib: any;
-declare const ePub: any; // Deklarasi untuk ePub.js
+declare const ePub: any; 
 
 export default function FileDetail({ file }: { file: DriveFile }) {
   const previewRef = useRef<HTMLDivElement>(null);

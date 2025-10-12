@@ -1,4 +1,4 @@
-// File: lib/utils.ts
+
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { File as FileIcon, Video, Image, Music, Archive, LucideIcon, Folder, FileText } from "lucide-react";
@@ -55,12 +55,12 @@ export function getFileType(file: { mimeType: string; name: string }): string {
   if (mimeType === 'application/pdf') return 'pdf';
   if (mimeType === 'text/markdown' || name.endsWith('.md')) return 'markdown';
   
-  // Dukungan Office
+  
   if (mimeType.includes('officedocument.wordprocessingml') || name.endsWith('.docx')) return 'office';
   if (mimeType.includes('officedocument.spreadsheetml') || name.endsWith('.xlsx')) return 'office';
   if (mimeType.includes('officedocument.presentationml') || name.endsWith('.pptx')) return 'office';
 
-  // Dukungan E-book
+  
   if (mimeType === 'application/epub+zip' || name.endsWith('.epub')) return 'ebook';
 
   const codeExtensions = ['js', 'ts', 'jsx', 'tsx', 'json', 'py', 'css', 'html', 'sh', 'java', 'c', 'cpp', 'cs', 'go', 'rb', 'php', 'swift', 'kt', 'rs', 'txt'];

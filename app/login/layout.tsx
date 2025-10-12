@@ -1,4 +1,4 @@
-// File: app/login/layout.tsx
+
 import '../(main)/globals.css'; 
 
 export const metadata = {

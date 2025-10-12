@@ -1,4 +1,4 @@
-// File: app/(main)/api/share/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { SignJWT, decodeJwt } from 'jose';
 import { getServerSession } from 'next-auth';

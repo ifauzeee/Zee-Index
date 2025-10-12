@@ -1,4 +1,4 @@
-// File: app/(main)/api/share/track/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
 import type { ShareLink } from '@/lib/store';
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
 
     return new Response(null, { status: 204 });
   } catch (error) {
-    // Gagal secara diam-diam agar tidak mengganggu pengalaman pengguna
+    
     console.error('Share link tracking error:', error);
     return new Response(null, { status: 204 });
   }

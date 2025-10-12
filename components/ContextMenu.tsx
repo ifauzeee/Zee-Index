@@ -1,4 +1,4 @@
-// components/ContextMenu.tsx
+
 import { motion } from 'framer-motion';
 import { Pencil, Trash2, Share2, Move, Star, Copy } from 'lucide-react';
 

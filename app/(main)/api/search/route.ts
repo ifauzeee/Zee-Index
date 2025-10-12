@@ -1,4 +1,4 @@
-// File: app/(main)/api/search/route.ts
+
 
 import { NextResponse } from 'next/server';
 import { getAccessToken, DriveFile } from '@/lib/googleDrive';
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Search term is required.' }, { status: 400 });
   }
   
-  // PERBAIKAN KRITIS: Tolak permintaan jika folderId tidak ada
+  
   if (!folderId) {
       return NextResponse.json({ error: 'Folder ID is required for a scoped search.' }, { status: 400 });
   }
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     const accessToken = await getAccessToken();
     const driveUrl = 'https://www.googleapis.com/drive/v3/files';
 
-    // Bangun query dengan batasan folder yang wajib
+    
     let driveQuery = `name contains '${searchTerm}' and trashed=false`;
     driveQuery += ` and '${folderId}' in parents`;
 

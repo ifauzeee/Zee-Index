@@ -1,4 +1,4 @@
-// tailwind.config.ts
+
 import type { Config } from "tailwindcss";
 
 const config: Config = {
@@ -91,7 +91,7 @@ const config: Config = {
   plugins: [
     require("tailwindcss-animate"),
     require('@tailwindcss/aspect-ratio'),
-    require('@tailwindcss/typography'), // BARU: Tambahkan plugin ini untuk styling markdown
+    require('@tailwindcss/typography'), 
   ],
 };
 

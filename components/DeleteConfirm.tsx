@@ -1,4 +1,4 @@
-// components/DeleteConfirm.tsx
+
 "use client";
 
 import { useState } from 'react';
@@ -17,7 +17,7 @@ export default function DeleteConfirm({ itemName, onClose, onConfirm }: DeleteCo
   const handleConfirm = async () => {
     setIsLoading(true);
     await onConfirm();
-    // Komponen akan ditutup oleh parent
+    
   };
 
   return (

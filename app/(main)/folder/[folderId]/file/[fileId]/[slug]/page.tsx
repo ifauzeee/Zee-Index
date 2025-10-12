@@ -1,4 +1,4 @@
-// app/(main)/folder/[folderid]/file/[fileid]/[slug]/page.tsx
+
 import { getFileDetailsFromDrive } from "@/lib/googleDrive";
 import dynamic from 'next/dynamic';
 import Loading from '@/components/Loading';
@@ -8,7 +8,7 @@ const FileDetail = dynamic(() => import('@/components/FileDetail'), {
   loading: () => <Loading />,
 });
 
-// Helper component untuk menampilkan error
+
 const FileError = ({ message }: { message: string }) => (
   <div className="text-center py-20 text-muted-foreground">
     <h1 className="text-4xl font-bold">Gagal Memuat</h1>

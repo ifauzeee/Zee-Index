@@ -1,4 +1,4 @@
-// File: app/(main)/api/favorites/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
@@ -19,12 +19,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([]);
     }
 
-    // Ambil detail untuk setiap file secara paralel
+    
     const favoriteFilesDetails = await Promise.all(
       favoriteIds.map(id => getFileDetailsFromDrive(id))
     );
 
-    // Filter file yang mungkin sudah tidak ada atau null
+    
     const validFiles = favoriteFilesDetails.filter(file => file !== null);
 
     return NextResponse.json(validFiles);

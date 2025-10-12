@@ -1,4 +1,4 @@
-// components/Toast.tsx
+
 'use client';
 
 import { useEffect } from 'react';
@@ -8,7 +8,7 @@ import { CheckCircle2, XCircle, Info, X } from 'lucide-react';
 
 interface ToastProps {
   toast: Toast;
-  // PERBAIKAN: Tipe ID diubah dari number menjadi string
+  
   onRemove: (id: string) => void;
 }
 
@@ -18,7 +18,7 @@ const ToastComponent = ({ toast, onRemove }: ToastProps) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       onRemove(id);
-    }, 5000); // Auto-dismiss after 5 seconds
+    }, 5000); 
 
     return () => {
       clearTimeout(timer);

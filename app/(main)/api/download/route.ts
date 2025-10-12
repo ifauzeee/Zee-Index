@@ -1,4 +1,4 @@
-// File: app/(main)/api/download/route.ts
+
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { getAccessToken, getFileDetailsFromDrive } from '@/lib/googleDrive';
@@ -44,13 +44,13 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'File tidak ditemukan atau ukurannya tidak diketahui.' }, { status: 404 });
     }
 
-    // --- Catat aktivitas download ---
+    
     await logActivity('DOWNLOAD', {
         itemName: fileDetails.name,
         itemSize: fileDetails.size,
-        userEmail: session?.user?.email, // Akan null jika diakses via share token tanpa login
+        userEmail: session?.user?.email, 
     });
-    // --- Akhir dari blok logging ---
+    
 
     const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
     const fileSize = parseInt(fileDetails.size, 10);

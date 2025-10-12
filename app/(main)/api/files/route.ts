@@ -1,4 +1,4 @@
-// File: app/(main)/api/files/route.ts
+
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +10,7 @@ import { authOptions } from "@/lib/authOptions";
 import { jwtVerify } from 'jose';
 import { kv } from '@/lib/kv';
 
-// Helper untuk memvalidasi share token langsung dari request
+
 async function validateShareToken(request: Request): Promise<boolean> {
   const { searchParams } = new URL(request.url);
   const shareToken = searchParams.get('share_token');
@@ -20,7 +20,7 @@ async function validateShareToken(request: Request): Promise<boolean> {
     const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
     const { payload } = await jwtVerify(shareToken, secret);
 
-    // Verifikasi blocklist di Vercel KV
+    
     if (typeof payload.jti !== 'string') {
         console.error("Token tidak memiliki JTI.");
         return false;

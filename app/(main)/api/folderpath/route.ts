@@ -1,4 +1,4 @@
-// app/api/folderpath/route.ts
+
 import { NextResponse } from 'next/server';
 import { getFolderPath } from '@/lib/googleDrive';
 
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Parameter folderId tidak ditemukan.' }, { status: 400 });
   }
   
-  // Jangan proses jika itu adalah root folder
+  
   if (folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
     return NextResponse.json([]);
   }

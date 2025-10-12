@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2020", // PENINGKATAN: Menggunakan target yang lebih modern untuk fitur JS yang lebih luas.
+    "target": "ES2020", 
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,

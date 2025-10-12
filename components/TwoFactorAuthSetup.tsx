@@ -1,4 +1,4 @@
-// File: components/TwoFactorAuthSetup.tsx
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';

@@ -1,4 +1,4 @@
-// File: app/(main)/api/admin/logs/route.ts
+
 import { NextResponse, NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
@@ -11,12 +11,12 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        // Ambil semua log (bisa ditambahkan paginasi jika data sangat besar)
+        
         const logs: string[] = await kv.zrange(
             'zee-index:activity-log', 
             0, 
-            -1, // Ambil semua
-            { rev: true } // Urutkan dari yang terbaru
+            -1, 
+            { rev: true } 
         ); 
         
         return NextResponse.json(logs.map(log => JSON.parse(log)));

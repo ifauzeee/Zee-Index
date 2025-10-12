@@ -1,4 +1,4 @@
-// File: app/admin/page.tsx
+
 "use client";
 
 import React, { useState, useEffect, useMemo, FC } from "react";
@@ -11,7 +11,7 @@ import Loading from '@/components/Loading';
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import TwoFactorAuthSetup from "@/components/TwoFactorAuthSetup"; // --- IMPORT BARU ---
+import TwoFactorAuthSetup from "@/components/TwoFactorAuthSetup"; 
 
 const DeleteConfirmationModal: FC<{ onConfirm: () => void, onCancel: () => void }> = ({ onConfirm, onCancel }) => (
     <motion.div
@@ -142,10 +142,10 @@ export default function AdminPage() {
                     <h1 className="text-3xl font-bold">Admin Dashboard</h1>
                 </div>
 
-                {/* --- PERUBAHAN TATA LETAK DIMULAI DI SINI --- */}
+                {}
                 <div className="flex flex-col gap-8">
 
-                    {/* Panel Statistik */}
+                    {}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div className="bg-card border rounded-lg p-6 flex items-center gap-4">
                             <div className="p-3 bg-primary/10 rounded-lg text-primary"><LinkIcon size={28} /></div>
@@ -165,7 +165,7 @@ export default function AdminPage() {
                         </div>
                     </div>
 
-                    {/* Panel Keamanan */}
+                    {}
                     <div>
                         <h2 className="text-2xl font-semibold mb-6">Pengaturan Keamanan</h2>
                         <div className="bg-card border rounded-lg p-6">
@@ -173,7 +173,7 @@ export default function AdminPage() {
                         </div>
                     </div>
 
-                    {/* Panel Manajemen Tautan */}
+                    {}
                     <div>
                         <h2 className="text-2xl font-semibold mb-6">Manajemen Tautan Berbagi</h2>
                         {shareLinks.length === 0 ? (
@@ -246,7 +246,7 @@ export default function AdminPage() {
                         )}
                     </div>
 
-                    {/* Panel Manajemen Admin */}
+                    {}
                     <div>
                          <h2 className="text-2xl font-semibold mb-6">Manajemen Admin</h2>
                          <div className="bg-card border rounded-lg p-6 space-y-4">
@@ -294,7 +294,7 @@ export default function AdminPage() {
                          </div>
                     </div>
                 </div>
-                {/* --- AKHIR PERUBAHAN TATA LETAK --- */}
+                {}
             </motion.div>
 
             <AnimatePresence>

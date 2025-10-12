@@ -1,4 +1,4 @@
-// File: app/admin/layout.tsx
+
 
 import MainLayout from "@/app/(main)/layout";
 
@@ -12,6 +12,6 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Gunakan kembali MainLayout dari aplikasi utama untuk konsistensi
+  
   return <MainLayout>{children}</MainLayout>;
 }

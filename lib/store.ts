@@ -1,4 +1,4 @@
-// File: lib/store.ts
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { DriveFile } from './googleDrive';
@@ -17,7 +17,7 @@ export interface ShareLink {
     expiresAt: string;
     loginRequired: boolean;
     itemName: string;
-    viewCount?: number; // Ditambahkan untuk analitik
+    viewCount?: number; 
 }
 
 interface UserProfile {

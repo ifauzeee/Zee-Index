@@ -1,11 +1,11 @@
-// File: app/(main)/api/cron/weekly-report/route.ts
+
 import { NextResponse } from 'next/server';
 import { kv } from '@vercel/kv';
 import { sendMail } from '@/lib/mailer';
 import { formatBytes } from '@/lib/utils';
 
 export async function GET(request: Request) {
-  // Amankan endpoint dengan secret token
+  
   const authHeader = request.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return new Response('Unauthorized', { status: 401 });

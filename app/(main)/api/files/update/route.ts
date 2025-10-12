@@ -1,4 +1,4 @@
-// File: app/(main)/api/files/update/route.ts
+
 import { NextResponse, NextRequest } from 'next/server';
 import { getAccessToken, getFileDetailsFromDrive } from '@/lib/googleDrive';
 import { getServerSession } from 'next-auth/next';
@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 const updateSchema = z.object({
   fileId: z.string().min(1),
-  newContent: z.string(), // Konten bisa kosong
+  newContent: z.string(), 
 });
 
 export async function POST(request: NextRequest) {
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       method: 'PATCH',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': fileDetails.mimeType, // Gunakan mimeType asli file
+        'Content-Type': fileDetails.mimeType, 
       },
       body: newContent,
     });
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       throw new Error(`Google Drive API Error: ${errorData.error?.message || 'Gagal menyimpan perubahan.'}`);
     }
 
-    // Revalidasi cache untuk folder induk
+    
     revalidateTag(`files-in-folder-${parentId}`);
     
     const updatedFile = await response.json();

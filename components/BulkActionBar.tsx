@@ -1,4 +1,4 @@
-// components/BulkActionBar.tsx
+
 "use client";
 
 import { useState, useEffect } from 'react';

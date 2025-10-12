@@ -1,4 +1,4 @@
-// File: app/(main)/favorites/page.tsx
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -62,7 +62,7 @@ export default function FavoritesPage() {
                 <FileList 
                     files={favoriteFiles} 
                     onItemClick={handleItemClick}
-                    onItemContextMenu={(e) => e.preventDefault()} // Bisa dikembangkan untuk 'Hapus dari Favorit'
+                    onItemContextMenu={(e) => e.preventDefault()} 
                 />
             ) : (
                 <div className="text-center py-20 text-muted-foreground">

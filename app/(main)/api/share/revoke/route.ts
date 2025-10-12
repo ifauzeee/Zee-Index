@@ -1,9 +1,9 @@
-// File: app/(main)/api/share/revoke/route.ts
+
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
-import { kv } from '@/lib/kv'; // Impor client KV kita
+import { kv } from '@/lib/kv'; 
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,17 +18,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'JTI dan expiresAt diperlukan.' }, { status: 400 });
     }
 
-    // Hitung sisa waktu token dalam detik untuk TTL di KV
+    
     const now = new Date();
     const expirationDate = new Date(expiresAt);
     const expiresInSeconds = Math.round((expirationDate.getTime() - now.getTime()) / 1000);
 
-    // Jangan simpan jika sudah kedaluwarsa
+    
     if (expiresInSeconds <= 0) {
       return NextResponse.json({ success: true, message: 'Tautan sudah kedaluwarsa, tidak perlu diblokir.' });
     }
 
-    // Simpan JTI ke Vercel KV dengan TTL (Time-To-Live)
+    
     await kv.set(`zee-index:blocked:${jti}`, 'blocked', { ex: expiresInSeconds });
 
     return NextResponse.json({ success: true, message: 'Tautan berhasil dibatalkan.' });

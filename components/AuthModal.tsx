@@ -1,13 +1,13 @@
-// components/AuthModal.tsx
+
 "use client";
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { KeyRound, X, User } from 'lucide-react'; // Tambahkan ikon User
+import { KeyRound, X, User } from 'lucide-react'; 
 
 interface AuthModalProps {
   folderName: string;
-  // Perbarui onSubmit untuk menerima id dan password
+  
   onSubmit: (id: string, password: string) => void;
   onClose: () => void;
   isLoading: boolean;
@@ -26,13 +26,13 @@ const overlayVariants = {
 };
 
 export default function AuthModal({ folderName, onSubmit, onClose, isLoading }: AuthModalProps) {
-  // Tambahkan state untuk id
+  
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(id, password); // Kirim id dan password
+    onSubmit(id, password); 
   };
 
   return (
@@ -58,7 +58,7 @@ export default function AuthModal({ folderName, onSubmit, onClose, isLoading }: 
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Input untuk ID Pengguna */}
+                {}
                 <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <input
@@ -72,7 +72,7 @@ export default function AuthModal({ folderName, onSubmit, onClose, isLoading }: 
                     />
                 </div>
 
-                {/* Input untuk Kata Sandi */}
+                {}
                 <div className="relative">
                     <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <input

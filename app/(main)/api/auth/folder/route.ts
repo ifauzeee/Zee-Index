@@ -1,4 +1,4 @@
-// FINAL VERSION: Memvalidasi kredensial untuk folder yang terkunci.
+
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { SignJWT } from 'jose';

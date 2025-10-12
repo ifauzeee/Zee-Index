@@ -1,11 +1,11 @@
-// File: lib/authOptions.ts
+
 import { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { kv } from '@vercel/kv';
 
 const ADMIN_EMAILS_KEY = 'zee-index:admins';
 
-// Fungsi untuk memastikan daftar admin awal ada di KV
+
 async function ensureInitialAdmins() {
   try {
     const initialAdmins = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()).filter(Boolean) || [];
@@ -14,8 +14,8 @@ async function ensureInitialAdmins() {
       const adminsToAdd = initialAdmins.filter(email => !existingAdmins.includes(email));
       
       if (adminsToAdd.length > 0) {
-        // PERBAIKAN: Menambahkan type assertion '[string, ...string[]]' untuk mengatasi error TS2556
-        // Ini meyakinkan TypeScript bahwa array ini tidak kosong, yang aman karena ada di dalam blok if (adminsToAdd.length > 0).
+        
+        
         await kv.sadd(ADMIN_EMAILS_KEY, ...adminsToAdd as [string, ...string[]]);
         console.log('Initial admins have been synced to Vercel KV.');
       }
@@ -25,7 +25,7 @@ async function ensureInitialAdmins() {
   }
 }
 
-// Panggil fungsi ini sekali saat server dimulai
+
 ensureInitialAdmins();
 
 export const authOptions: AuthOptions = {
@@ -42,7 +42,7 @@ export const authOptions: AuthOptions = {
   callbacks: {
     async jwt({ token, profile }) {
       if (profile?.email) {
-        // Logika sekarang membaca daftar admin dari Vercel KV
+        
         const adminEmails: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
         if (adminEmails.includes(profile.email)) {
           token.role = "ADMIN";

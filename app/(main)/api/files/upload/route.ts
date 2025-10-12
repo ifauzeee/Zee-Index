@@ -1,4 +1,4 @@
-// File: app/(main)/api/files/upload/route.ts
+
 import { NextResponse, NextRequest } from 'next/server';
 import { getAccessToken } from '@/lib/googleDrive';
 import { getServerSession } from 'next-auth/next';

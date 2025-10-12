@@ -1,4 +1,4 @@
-// File: app/(main)/api/files/copy/route.ts
+
 import { NextResponse, NextRequest } from 'next/server';
 import { getAccessToken, getFileDetailsFromDrive } from '@/lib/googleDrive';
 import { getServerSession } from 'next-auth/next';
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        name: `Salinan dari ${fileDetails.name}` // Memberi nama default untuk salinan
+        name: `Salinan dari ${fileDetails.name}` 
       }),
     });
 
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       throw new Error(`Google Drive API Error: ${errorData.error?.message || 'Gagal membuat salinan.'}`);
     }
 
-    // Revalidasi cache agar file baru muncul
+    
     revalidateTag(`files-in-folder-${parentId}`);
     
     const copiedFile = await response.json();

@@ -1,4 +1,4 @@
-// File: app/(main)/api/cron/storage-check/route.ts
+
 import { NextResponse } from 'next/server';
 import { getStorageDetails } from '@/lib/googleDrive';
 import { sendMail } from '@/lib/mailer';
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     const usagePercentage = details.usage / details.limit;
 
     if (usagePercentage > threshold) {
-      // Cek apakah peringatan sudah dikirim dalam 7 hari terakhir untuk menghindari spam
+      
       const warningSentTimestamp = await kv.get(WARNING_SENT_KEY);
       const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
 
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
         html: warningHtml,
       });
 
-      // Tandai bahwa peringatan telah dikirim
+      
       await kv.set(WARNING_SENT_KEY, Date.now());
       
       return NextResponse.json({ success: true, message: "Peringatan kapasitas terkirim." });

@@ -1,4 +1,4 @@
-// File: components/UploadModal.tsx
+
 "use client";
 
 import { useState, useCallback, useRef } from 'react';
@@ -141,7 +141,7 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
             <h3 className="text-lg font-semibold mb-4">Upload File atau Buat Folder Baru</h3>
 
             <div className="space-y-6">
-              {/* Bagian Upload File */}
+              {}
               <div 
                 className={cn("border-2 border-dashed rounded-lg p-6 text-center transition-colors", isDragging ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50')}
                 onDragOver={handleDragOver}
@@ -156,7 +156,7 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
                 </p>
               </div>
 
-              {/* Bagian Buat Folder */}
+              {}
               <form onSubmit={handleCreateFolder} className="space-y-2">
                 <label className="text-sm font-medium">Buat Folder Baru</label>
                 <div className="flex gap-2">
@@ -177,7 +177,7 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
               </form>
             </div>
 
-            {/* Daftar Progress Upload */}
+            {}
             {Object.keys(uploads).length > 0 && (
               <div className="mt-6 max-h-40 overflow-y-auto pr-2 space-y-3">
                 {Object.values(uploads).map(up => (

@@ -1,4 +1,4 @@
-// File: components/MoveModal.tsx
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -57,7 +57,7 @@ export default function MoveModal({ fileToMove, onClose, onConfirmMove }: MoveMo
   const handleMoveConfirm = async () => {
     setIsMoving(true);
     await onConfirmMove(currentFolderId);
-    // onClose akan dipanggil oleh parent setelah proses selesai
+    
   };
 
   const currentFolderName = folderStack[folderStack.length - 1].name;

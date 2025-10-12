@@ -1,4 +1,4 @@
-// File: lib/mailer.ts
+
 import nodemailer from 'nodemailer';
 
 interface MailOptions {
@@ -18,7 +18,7 @@ export async function sendMail({ to, subject, html }: MailOptions) {
   const transporter = nodemailer.createTransport({
     host: SMTP_HOST,
     port: parseInt(SMTP_PORT, 10),
-    secure: parseInt(SMTP_PORT, 10) === 465, // true for 465, false for other ports
+    secure: parseInt(SMTP_PORT, 10) === 465, 
     auth: {
       user: SMTP_USER,
       pass: SMTP_PASS,
