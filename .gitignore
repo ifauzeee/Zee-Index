@@ -27,7 +27,7 @@ yarn-error.log*
 # JANGAN PERNAH diunggah ke GitHub.
 .env.local
 .env*.local
-
+.env
 # Vercel
 # Konfigurasi spesifik untuk deployment di Vercel.
 .vercel
