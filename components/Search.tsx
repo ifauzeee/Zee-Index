@@ -21,10 +21,12 @@ export default function Search({ onSearchClose }: SearchProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const query = searchParams.get('q');
-    if (query) setSearchTerm(query);
-    inputRef.current?.focus();
-  }, [searchParams]);
+  const query = searchParams.get('q');
+  if (query) {
+    setSearchTerm(query);
+    inputRef.current?.focus(); 
+  }
+}, [searchParams]);
 
   useEffect(() => {
     setIsGlobalSearch(!currentFolderId);
