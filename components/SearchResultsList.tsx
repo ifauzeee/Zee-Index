@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -55,13 +54,11 @@ export default function SearchResultsList() {
         setResults([]);
 
         try {
-            
             const isGlobalSearch = !folderId;
             const apiPath = isGlobalSearch ? '/api/search/global' : '/api/search';
             
             const url = new URL(apiPath, window.location.origin);
             url.searchParams.append('q', searchTerm);
-            
             
             if (!isGlobalSearch && folderId) {
                 url.searchParams.append('folderId', folderId);
@@ -75,7 +72,7 @@ export default function SearchResultsList() {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || 'Gagal mencari file.');
+                 throw new Error(data.error || 'Gagal mencari file.');
             }
 
             setResults(data.files);
@@ -100,16 +97,21 @@ export default function SearchResultsList() {
     }
 
     return (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-            <h1 className="text-xl font-bold mb-4">Hasil Pencarian untuk "{searchTerm}"</h1>
+        <motion.div 
+            className="py-3" 
+            initial={{ opacity: 0, y: 10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.3 }}
+        >
+            <h1 className="text-xl font-bold mb-8">Hasil Pencarian untuk "{searchTerm}"</h1>
             {results.length > 0 ? (
                 <FileList 
                      files={results} 
                     onItemClick={handleItemClick}
-                    onItemContextMenu={(e) => e.preventDefault()}
+                     onItemContextMenu={(e) => e.preventDefault()}
                 />
             ) : (
-                <div className="text-center py-20 text-muted-foreground">
+                <div className="mt-8 text-center py-20 text-muted-foreground">
                     <i className="fas fa-search text-6xl"></i>
                     <p className="mt-4">Tidak ada file atau folder yang cocok dengan pencarian Anda.</p>
                 </div>
