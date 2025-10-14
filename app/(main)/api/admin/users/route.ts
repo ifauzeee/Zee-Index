@@ -1,4 +1,3 @@
-
 import { NextResponse, NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
@@ -8,11 +7,9 @@ import { sendMail } from '@/lib/mailer';
 
 const ADMIN_EMAILS_KEY = 'zee-index:admins';
 
-
 const emailSchema = z.object({
     email: z.string().email('Format email tidak valid.'),
 });
-
 
 async function isAdmin(session: any): Promise<boolean> {
     if (session?.user?.role !== 'ADMIN' || !session?.user?.email) {
@@ -21,7 +18,6 @@ async function isAdmin(session: any): Promise<boolean> {
     const admins: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
     return admins.includes(session.user.email);
 }
-
 
 export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
@@ -36,7 +32,6 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Gagal mengambil daftar admin.' }, { status: 500 });
     }
 }
-
 
 export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
@@ -55,7 +50,6 @@ export async function POST(request: NextRequest) {
         const { email } = validation.data;
         await kv.sadd(ADMIN_EMAILS_KEY, email);
 
-        
         const adminWhoAdded = session.user.email;
         
         await sendMail({
@@ -67,7 +61,6 @@ export async function POST(request: NextRequest) {
                 <p>Sekarang Anda memiliki akses ke fitur-fitur manajemen di dasbor admin.</p>
             `
         });
-        
         
         const allAdmins: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
         const otherAdmins = allAdmins.filter(adminEmail => adminEmail !== email && adminEmail !== adminWhoAdded);
@@ -82,7 +75,6 @@ export async function POST(request: NextRequest) {
             });
         }
         
-
         return NextResponse.json({ success: true, message: `Email ${email} telah ditambahkan sebagai admin.` });
 
     } catch (error) {
@@ -90,7 +82,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Gagal menambahkan admin.' }, { status: 500 });
     }
 }
-
 
 export async function DELETE(request: NextRequest) {
     const session = await getServerSession(authOptions);
@@ -109,7 +100,7 @@ export async function DELETE(request: NextRequest) {
         const { email } = validation.data;
 
         const admins: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
-        if (admins.length <= 1 && admins.includes(email)) {
+        if (admins.length <= 1) {
             return NextResponse.json({ error: 'Tidak dapat menghapus satu-satunya admin yang tersisa.' }, { status: 400 });
         }
         

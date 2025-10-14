@@ -1,8 +1,10 @@
-
+// FILE: app/(main)/api/search/route.ts
 
 import { NextResponse } from 'next/server';
 import { getAccessToken, DriveFile } from '@/lib/googleDrive';
 import { isProtected } from '@/lib/auth';
+
+const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, '');
 
 export const dynamic = 'force-dynamic';
 
@@ -19,8 +21,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Folder ID is required for a scoped search.' }, { status: 400 });
   }
 
-  
-  const searchTerm = rawSearchTerm.replace(/'/g, "''");
+  const sanitizedSearchTerm = sanitizeString(rawSearchTerm);
+  const searchTerm = sanitizedSearchTerm.replace(/'/g, "''");
 
   try {
     const accessToken = await getAccessToken();
@@ -28,7 +30,7 @@ export async function GET(request: Request) {
     
     let driveQuery = `name contains '${searchTerm}' and trashed=false`;
     driveQuery += ` and '${folderId}' in parents`;
-
+    
     const params = new URLSearchParams({
       q: driveQuery,
       fields: 'files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents)',

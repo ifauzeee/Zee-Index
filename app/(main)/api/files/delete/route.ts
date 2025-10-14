@@ -1,3 +1,4 @@
+// FILE: app/(main)/api/files/delete/route.ts
 
 import { NextResponse, NextRequest } from 'next/server';
 import { getAccessToken, getFileDetailsFromDrive } from '@/lib/googleDrive';
@@ -24,16 +25,15 @@ export async function POST(request: NextRequest) {
     const validation = deleteSchema.safeParse(body);
 
     if (!validation.success) {
-      
       return NextResponse.json({ error: 'Input tidak valid', details: validation.error.issues }, { status: 400 });
     }
     
     const { fileId } = validation.data;
-
     
     fileDetails = await getFileDetailsFromDrive(fileId);
-    if (!fileDetails || !fileDetails.parents) {
-      throw new Error("Tidak dapat menemukan file atau folder induk.");
+    
+    if (!fileDetails || !fileDetails.parents || fileDetails.parents.length === 0) {
+      throw new Error("Tidak dapat menemukan file atau informasi folder induk.");
     }
     const parentId = fileDetails.parents[0];
 
@@ -54,14 +54,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    
     await logActivity('DELETE', {
         itemName: fileDetails?.name,
         userEmail: session?.user?.email,
         status: 'success'
     });
     
-
     revalidateTag(`files-in-folder-${parentId}`);
 
     return NextResponse.json({ success: true });
@@ -69,13 +67,11 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     
     await logActivity('DELETE', {
-        
         itemName: fileDetails?.name || 'Unknown',
         userEmail: session?.user?.email,
         status: 'failure',
         error: error.message
     });
-    
     
     console.error('Delete API Error:', error.message);
     return NextResponse.json({ error: 'Internal Server Error.', details: error.message }, { status: 500 });

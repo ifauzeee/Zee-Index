@@ -1,3 +1,4 @@
+// FILE: app/(main)/api/files/update/route.ts
 
 import { NextResponse, NextRequest } from 'next/server';
 import { getAccessToken, getFileDetailsFromDrive } from '@/lib/googleDrive';
@@ -20,22 +21,20 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validation = updateSchema.safeParse(body);
-
     if (!validation.success) {
       return NextResponse.json({ error: 'Input tidak valid', details: validation.error.issues }, { status: 400 });
     }
     
     const { fileId, newContent } = validation.data;
-
     const fileDetails = await getFileDetailsFromDrive(fileId);
-    if (!fileDetails || !fileDetails.parents) {
-      throw new Error("Tidak dapat menemukan file atau folder induk.");
+    
+    if (!fileDetails || !fileDetails.parents || fileDetails.parents.length === 0) {
+      throw new Error("Tidak dapat menemukan file atau informasi folder induk.");
     }
     const parentId = fileDetails.parents[0];
 
     const accessToken = await getAccessToken();
     const uploadUrl = `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`;
-
     const response = await fetch(uploadUrl, {
       method: 'PATCH',
       headers: {
@@ -49,10 +48,8 @@ export async function POST(request: NextRequest) {
       const errorData = await response.json();
       throw new Error(`Google Drive API Error: ${errorData.error?.message || 'Gagal menyimpan perubahan.'}`);
     }
-
     
     revalidateTag(`files-in-folder-${parentId}`);
-    
     const updatedFile = await response.json();
     return NextResponse.json({ success: true, file: updatedFile });
   } catch (error: any) {

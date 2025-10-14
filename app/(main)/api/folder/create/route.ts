@@ -1,3 +1,4 @@
+// FILE: app/(main)/api/folder/create/route.ts
 
 import { NextResponse, NextRequest } from 'next/server';
 import { getAccessToken } from '@/lib/googleDrive';
@@ -6,13 +7,13 @@ import { authOptions } from '@/lib/authOptions';
 import { revalidateTag } from 'next/cache';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activityLogger';
+import { kv } from '@vercel/kv';
 
-// Fungsi utilitas sederhana untuk membersihkan tag HTML
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, '');
 
 const createFolderSchema = z.object({
   folderName: z.string().min(1, { message: "Nama folder tidak boleh kosong." })
-    .transform(val => sanitizeString(val)), // PERBAIKAN: Tambahkan sanitasi
+    .transform(val => sanitizeString(val)),
   parentId: z.string().min(1, { message: "Folder induk diperlukan." }),
 });
 
@@ -27,12 +28,10 @@ export async function POST(request: NextRequest) {
     const validation = createFolderSchema.safeParse(body);
 
     if (!validation.success) {
-      
       return NextResponse.json({ error: 'Input tidak valid', details: validation.error.issues }, { status: 400 });
     }
     
     const { folderName, parentId } = validation.data;
-
     const accessToken = await getAccessToken();
     const fileMetadata = {
       name: folderName,
@@ -42,10 +41,7 @@ export async function POST(request: NextRequest) {
 
     const response = await fetch('https://www.googleapis.com/drive/v3/files', {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(fileMetadata),
     });
 
@@ -61,7 +57,12 @@ export async function POST(request: NextRequest) {
     }
 
     revalidateTag(`files-in-folder-${parentId}`);
-
+    
+    const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
+    if (rootFolderId) {
+      await kv.del(`zee-index:folder-tree:${rootFolderId}`);
+    }
+    
     await logActivity('UPLOAD', {
       itemName: folderName,
       userEmail: session.user.email,

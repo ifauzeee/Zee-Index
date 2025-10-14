@@ -1,12 +1,12 @@
-
+// FILE: app/(main)/api/search/global/route.ts
 
 import { NextResponse } from 'next/server';
-import { getAccessToken, DriveFile, getAllDescendantFolders } from '@/lib/googleDrive'; 
+import { getAccessToken, DriveFile, getAllDescendantFolders } from '@/lib/googleDrive';
 import { isProtected } from '@/lib/auth';
 
+const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, '');
+
 export const dynamic = 'force-dynamic';
-
-
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -20,15 +20,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Root folder ID is not configured.' }, { status: 500 });
   }
   
-  const searchTerm = rawSearchTerm.replace(/'/g, "''");
+  const sanitizedSearchTerm = sanitizeString(rawSearchTerm);
+  const searchTerm = sanitizedSearchTerm.replace(/'/g, "''");
   
   try {
     const accessToken = await getAccessToken();
-    
-    
-    
     const descendantFolderIds = await getAllDescendantFolders(accessToken, rootFolderId);
-    
     
     const parentQueries = descendantFolderIds.map(id => `'${id}' in parents`);
     const driveQuery = `name contains '${searchTerm}' and trashed=false and (${parentQueries.join(' or ')})`;
@@ -39,25 +36,22 @@ export async function GET(request: Request) {
       fields: 'files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents)',
       pageSize: '200', 
     });
-    
+
     const response = await fetch(`${driveUrl}?${params.toString()}`, {
       headers: { 'Authorization': `Bearer ${accessToken}` }
     });
-    
+
     if (!response.ok) {
        const errorData = await response.json();
        throw new Error(`Google Drive API Error: ${errorData.error.message}`);
     }
 
     const data = await response.json();
-    
-    
     const processedFiles = (data.files || []).map((file: DriveFile) => ({
       ...file,
       isFolder: file.mimeType === 'application/vnd.google-apps.folder',
       isProtected: file.mimeType === 'application/vnd.google-apps.folder' && isProtected(file.id),
     }));
-    
     return NextResponse.json({ files: processedFiles });
 
   } catch (error: any) {
