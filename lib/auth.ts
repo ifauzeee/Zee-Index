@@ -19,7 +19,8 @@ export async function isProtected(folderId: string): Promise<boolean> {
     return protectedFolders ? !!protectedFolders[folderId] : false;
   } catch (e) {
     console.error("Gagal memeriksa folder terproteksi dari KV:", e);
-    return false;
+    
+    return true;
   }
 }
 

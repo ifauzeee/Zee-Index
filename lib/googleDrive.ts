@@ -249,29 +249,60 @@ export async function getFileDetailsFromDrive(fileId: string): Promise<DriveFile
 }
 
 export async function getFolderPath(folderId: string): Promise<{ id: string; name: string }[]> {
+  const cacheKey = `zee-index:folder-path:${folderId}`;
+  
+  // PERBAIKAN: Cek cache terlebih dahulu
+  try {
+    const cachedPath: { id: string; name: string }[] | null = await kv.get(cacheKey);
+    if (cachedPath) {
+      console.log(`Menggunakan path folder dari cache untuk: ${folderId}`);
+      return cachedPath;
+    }
+  } catch (e) {
+    console.error("Gagal mengambil path dari cache:", e);
+  }
+
   const accessToken = await getAccessToken();
   const path = [];
   let currentId = folderId;
   const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
-  while (currentId && currentId !== rootId) {
-    const driveUrl = `https://www.googleapis.com/drive/v3/files/${currentId}`;
-    const params = new URLSearchParams({ fields: 'id, name, parents' });
-    const response = await fetchWithRetry(`${driveUrl}?${params.toString()}`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` },
-      cache: 'no-store'
-    });
-    if (!response.ok) {
-      console.error(`Gagal mengambil detail untuk folder ID: ${currentId}`);
-      break;
-    }
-    const data: { id: string, name: string, parents?: string[] } = await response.json();
-    path.unshift({ id: data.id, name: data.name });
-    if (data.parents && data.parents.length > 0) {
-      currentId = data.parents[0];
-    } else {
-      break;
-    }
+
+  // Tambahkan root folder secara manual jika folderId adalah rootId
+  if (folderId === rootId) {
+      path.unshift({ id: rootId, name: 'Home' }); 
+  } else {
+      while (currentId && currentId !== rootId) {
+        const driveUrl = `https://www.googleapis.com/drive/v3/files/${currentId}`;
+        const params = new URLSearchParams({ fields: 'id, name, parents' });
+        const response = await fetchWithRetry(`${driveUrl}?${params.toString()}`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` },
+          cache: 'no-store'
+        });
+
+        if (!response.ok) {
+          console.error(`Gagal mengambil detail untuk folder ID: ${currentId}`);
+          break;
+        }
+
+        const data: { id: string, name: string, parents?: string[] } = await response.json();
+        path.unshift({ id: data.id, name: data.name });
+
+        if (data.parents && data.parents.length > 0) {
+          currentId = data.parents[0];
+        } else {
+          break;
+        }
+      }
   }
+
+  // Setelah path berhasil dibuat:
+  // PERBAIKAN: Simpan hasil ke dalam cache dengan masa berlaku (misalnya, 1 jam)
+  try {
+    await kv.set(cacheKey, path, { ex: 3600 }); 
+  } catch (e) {
+    console.error("Gagal menyimpan path ke cache:", e);
+  }
+
   return path;
 }
 

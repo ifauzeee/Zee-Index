@@ -284,13 +284,18 @@ export default function AdminPage() {
                                         {(adminEmails || []).map((email: string) => (
                                             <li key={email} className="flex justify-between items-center bg-accent/50 p-2 rounded-md">
                                                 <span className="text-sm truncate">{email}</span>
-                                                <button 
+                                                <button
                                                     onClick={() => handleRemoveAdmin(email)}
                                                     disabled={session?.user?.email === email && adminEmails.length === 1}
                                                     className="p-1 text-red-500 hover:bg-red-500/10 rounded-full disabled:text-muted-foreground disabled:hover:bg-transparent disabled:cursor-not-allowed"
-                                                    title={session?.user?.email === email && adminEmails.length === 1 ? 'Tidak dapat menghapus diri sendiri' : 'Hapus admin'}
+                                                    // PERBAIKAN: Tambahkan title untuk umpan balik
+                                                    title={
+                                                        session?.user?.email === email && adminEmails.length === 1
+                                                            ? 'Tidak dapat menghapus diri sendiri sebagai admin terakhir.'
+                                                            : 'Hapus admin'
+                                                    }
                                                 >
-                                                    <Trash2 size={16}/>
+                                                    <Trash2 size={16} />
                                                 </button>
                                              </li>
                                         ))}

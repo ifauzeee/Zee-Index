@@ -40,6 +40,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     }
   }, [status, fetchUser, fetchDataUsage, refreshKey]); 
 
+  // Efek untuk menginisialisasi tema dari localStorage saat komponen dimuat
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
     if (savedTheme) {
@@ -47,6 +48,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     }
   }, [setTheme]);
 
+  // Efek untuk menerapkan perubahan tema ke DOM dan localStorage
   useEffect(() => {
     document.documentElement.className = theme;
     document.documentElement.style.colorScheme = theme;
@@ -56,8 +58,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       <div id="app-container" className={`bg-background text-foreground min-h-screen flex flex-col`}>
+        <Header />
         <div className="container mx-auto px-4 max-w-7xl flex-grow">
-          <Header />
           <main className="min-h-[50vh] mb-12">
             {children}
           </main>

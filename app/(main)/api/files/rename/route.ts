@@ -6,9 +6,13 @@ import { authOptions } from '@/lib/authOptions';
 import { revalidateTag } from 'next/cache';
 import { z } from 'zod';
 
+// Fungsi utilitas sederhana untuk membersihkan tag HTML
+const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, '');
+
 const renameSchema = z.object({
   fileId: z.string().min(1),
-  newName: z.string().min(1, { message: "Nama baru tidak boleh kosong." }),
+  newName: z.string().min(1, { message: "Nama baru tidak boleh kosong." })
+    .transform(val => sanitizeString(val)), // PERBAIKAN: Tambahkan sanitasi
 });
 
 export async function POST(request: NextRequest) {

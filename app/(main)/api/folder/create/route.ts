@@ -7,8 +7,12 @@ import { revalidateTag } from 'next/cache';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activityLogger';
 
+// Fungsi utilitas sederhana untuk membersihkan tag HTML
+const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, '');
+
 const createFolderSchema = z.object({
-  folderName: z.string().min(1, { message: "Nama folder tidak boleh kosong." }),
+  folderName: z.string().min(1, { message: "Nama folder tidak boleh kosong." })
+    .transform(val => sanitizeString(val)), // PERBAIKAN: Tambahkan sanitasi
   parentId: z.string().min(1, { message: "Folder induk diperlukan." }),
 });
 

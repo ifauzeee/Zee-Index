@@ -22,7 +22,7 @@ async function validateShareToken(request: Request): Promise<boolean> {
 
     
     if (typeof payload.jti !== 'string') {
-        console.error("Token tidak memiliki JTI.");
+        console.error("Token tidak memiliki JTI yang valid.");
         return false;
     }
     const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);

@@ -125,6 +125,16 @@ export default function Header() {
     const { theme, toggleTheme, triggerRefresh, shareToken, user } = useAppStore();
     const [isSearchVisible, setIsSearchVisible] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 10);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        handleScroll();
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const menuItems = [
          { id: 'favorites', href: '/favorites', icon: Star, label: 'Favorit' },
@@ -185,68 +195,70 @@ export default function Header() {
     return (
         <>
              {}
-            <header className="sticky top-0 z-30 bg-background flex justify-between items-center py-4 border-b gap-4">
-                <h1 
-                    onClick={handleLogoClick} 
-                     className={`text-2xl font-bold flex items-center shrink-0 ${!shareToken ? 'cursor-pointer' : 'cursor-default'}`} 
-                    title={!shareToken ? 'Kembali ke Beranda' : 'Zee Index'}
-                >
-                    <i className="fab fa-google-drive text-blue-500 mr-3"></i>Zee Index
-                 </h1>
-            
-                <div className="flex-1 min-w-0 max-w-md hidden sm:block">
-                     <Suspense fallback={<div className="w-full h-10 bg-muted rounded-lg animate-pulse" />}>
-                        <Search />
-                    </Suspense>
-                  </div>
-                  
-                <div className="hidden sm:flex items-center gap-2">
-                      {shareToken ? (
-                         <>
-                             {menuItems
-                               .filter(item => publicShareLinkItems.includes(item.id))
-                                 .map(item => {
-                                     const Icon = item.icon;
-                                     return 'href' in item && item.href ? (
-                                         <a key={item.id} href={item.target ? item.href : createLink(item.href)} target={item.target} rel={item.rel} title={item.label} className="p-2 rounded-lg hover:bg-accent">
-                                          <Icon size={20} />
-                                         </a>
-                                  ) : (
-                                         'onClick' in item && <button key={item.id} onClick={item.onClick} title={item.label} className="p-2 rounded-lg hover:bg-accent">
-                                          <Icon size={20} />
-                                         </button>
-                                  );
-                                 })}
-                             {authButton}
-                           </>
-                      ) : (
-                         <>
-                             {menuItems.map((item) => {
-                                 const Icon = item.icon;
-                                 return 'href' in item && item.href ? (
-                                      <a key={item.id} href={item.href} target={item.target} rel={item.rel} title={item.label} className="p-2 rounded-lg hover:bg-accent">
-                                         <Icon size={20} />
-                                      </a>
-                                 ) : (
-                                     'onClick' in item && <button key={item.id} onClick={item.onClick} title={item.label} className="p-2 rounded-lg hover:bg-accent">
-                                        <Icon size={20} />
-                                     </button>
-                                  );
-                             })}
-                             {authButton}
-                         </>
-                     )}
-                </div>
+            <header className={`sticky top-0 z-30 w-full transition-all duration-200 ${isScrolled ? 'border-b border-border bg-background/90 backdrop-blur-lg shadow-sm' : 'border-b border-transparent'}`}>
+                <div className="container mx-auto flex items-center justify-between gap-4 px-4 max-w-7xl h-16">
+                    <h1 
+                        onClick={handleLogoClick} 
+                        className={`text-2xl font-bold flex items-center shrink-0 ${!shareToken ? 'cursor-pointer' : 'cursor-default'}`} 
+                        title={!shareToken ? 'Kembali ke Beranda' : 'Zee Index'}
+                    >
+                        <i className="fab fa-google-drive text-blue-500 mr-3"></i>Zee Index
+                    </h1>
                 
-                <div className="flex items-center gap-2 sm:hidden">
-                    <button onClick={() => setIsSearchVisible(!isSearchVisible)} title="Cari" className="p-2 rounded-lg hover:bg-accent z-50">
-                        {isSearchVisible ? <ArrowLeft size={20} /> : <SearchIcon size={20} />}
-                    </button>
-                     <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 rounded-lg hover:bg-accent z-50" title="Menu">
-                        <Menu size={20} />
-                    </button>
+                    <div className="flex-1 min-w-0 max-w-md hidden sm:block">
+                        <Suspense fallback={<div className="w-full h-10 bg-muted rounded-lg animate-pulse" />}>
+                            <Search />
+                        </Suspense>
+                    </div>
+                    
+                    <div className="hidden sm:flex items-center gap-2">
+                        {shareToken ? (
+                            <>
+                                {menuItems
+                                .filter(item => publicShareLinkItems.includes(item.id))
+                                    .map(item => {
+                                        const Icon = item.icon;
+                                        return 'href' in item && item.href ? (
+                                            <a key={item.id} href={item.target ? item.href : createLink(item.href)} target={item.target} rel={item.rel} title={item.label} className="p-2 rounded-lg hover:bg-accent">
+                                            <Icon size={20} />
+                                            </a>
+                                    ) : (
+                                            'onClick' in item && <button key={item.id} onClick={item.onClick} title={item.label} className="p-2 rounded-lg hover:bg-accent">
+                                            <Icon size={20} />
+                                            </button>
+                                    );
+                                    })}
+                                {authButton}
+                            </>
+                        ) : (
+                            <>
+                                {menuItems.map((item) => {
+                                    const Icon = item.icon;
+                                    return 'href' in item && item.href ? (
+                                        <a key={item.id} href={item.href} target={item.target} rel={item.rel} title={item.label} className="p-2 rounded-lg hover:bg-accent">
+                                            <Icon size={20} />
+                                        </a>
+                                    ) : (
+                                        'onClick' in item && <button key={item.id} onClick={item.onClick} title={item.label} className="p-2 rounded-lg hover:bg-accent">
+                                            <Icon size={20} />
+                                        </button>
+                                    );
+                                })}
+                                {authButton}
+                            </>
+                        )}
+                    </div>
+                    
+                    <div className="flex items-center gap-2 sm:hidden">
+                        <button onClick={() => setIsSearchVisible(!isSearchVisible)} title="Cari" className="p-2 rounded-lg hover:bg-accent z-50">
+                            {isSearchVisible ? <ArrowLeft size={20} /> : <SearchIcon size={20} />}
+                        </button>
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 rounded-lg hover:bg-accent z-50" title="Menu">
+                            <Menu size={20} />
+                        </button>
+                    </div>
                 </div>
-             </header>
+            </header>
             
             {isSearchVisible && (
                  <div className="mt-4 sm:hidden">
