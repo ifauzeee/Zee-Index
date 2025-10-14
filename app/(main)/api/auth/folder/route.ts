@@ -1,17 +1,9 @@
 
+
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { SignJWT } from 'jose';
-
-function safeParseJson(jsonString: string | null) {
-    if (!jsonString) return null;
-    try {
-        return JSON.parse(jsonString);
-    } catch (e) {
-        console.error("Gagal parse JSON:", e);
-        return null;
-    }
-}
+import { getProtectedFolderCredentials } from '@/lib/auth'; 
 
 export async function POST(request: Request) {
     try {
@@ -20,14 +12,9 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Folder ID, ID, and password are required.' }, { status: 400 });
         }
 
-        const protectedFoldersConfig = safeParseJson(process.env.PROTECTED_FOLDERS_JSON!);
-        if (!protectedFoldersConfig) {
-            return NextResponse.json({ error: 'Protected folders are not configured.' }, { status: 500 });
-        }
-
-        const folderConfig = protectedFoldersConfig[folderId];
+        const folderConfig = await getProtectedFolderCredentials(folderId); 
         if (!folderConfig) {
-            return NextResponse.json({ error: 'This folder is not configured for protection.' }, { status: 404 });
+            return NextResponse.json({ error: 'Folder ini tidak dikonfigurasi untuk perlindungan atau tidak ditemukan.' }, { status: 404 });
         }
 
         const isIdValid = crypto.timingSafeEqual(Buffer.from(id), Buffer.from(folderConfig.id));

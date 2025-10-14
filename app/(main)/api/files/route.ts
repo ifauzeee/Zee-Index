@@ -61,7 +61,9 @@ export async function GET(request: Request) {
     
     const canSeeAll = userRole === 'ADMIN';
 
-    if (!canSeeAll && isProtected(folderId)) {
+    const isFolderProtected = await isProtected(folderId);
+
+    if (!canSeeAll && isFolderProtected) {
       const authHeader = request.headers.get('Authorization');
       const token = authHeader?.split(' ')[1];
       const isTokenValid = await verifyFolderToken(token || '', folderId);
@@ -73,17 +75,20 @@ export async function GET(request: Request) {
 
     const driveResponse = await listFilesFromDrive(folderId, pageToken);
     
-    const processedFiles = driveResponse.files
+    const filteredFiles = driveResponse.files
       .filter((file) => {
         if (canSeeAll) return true;
         const isFolder = file.mimeType === 'application/vnd.google-apps.folder';
         return isFolder ? !isPrivateFolder(file.id) : true;
-      })
-      .map((file) => ({
+      });
+
+    const processedFiles = await Promise.all(
+      filteredFiles.map(async (file) => ({
         ...file,
         isFolder: file.mimeType === 'application/vnd.google-apps.folder',
-        isProtected: !canSeeAll && isProtected(file.id),
-      }));
+        isProtected: !canSeeAll && (await isProtected(file.id)),
+      }))
+    );
 
     return NextResponse.json({
       files: processedFiles,

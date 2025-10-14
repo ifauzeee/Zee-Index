@@ -45,4 +45,6 @@ next-env.d.ts
 
 # File yang Dihasilkan Secara Manual
 # File ini dibuat untuk keperluan diskusi kita dan bukan bagian dari kode proyek.
-cat_output.txt
+all_project_code.txt
+cat.py
+cmtdel.js

@@ -11,7 +11,8 @@ import Loading from '@/components/Loading';
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import TwoFactorAuthSetup from "@/components/TwoFactorAuthSetup"; 
+import TwoFactorAuthSetup from "@/components/TwoFactorAuthSetup";
+import ProtectedFoldersManager from '@/components/ProtectedFoldersManager';
 
 const DeleteConfirmationModal: FC<{ onConfirm: () => void, onCancel: () => void }> = ({ onConfirm, onCancel }) => (
     <motion.div
@@ -172,6 +173,8 @@ export default function AdminPage() {
                             <TwoFactorAuthSetup />
                         </div>
                     </div>
+
+                    <ProtectedFoldersManager />
 
                     {}
                     <div>
