@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
 import { kv } from '@vercel/kv';
 import { z } from 'zod';
-import bcrypt from 'bcrypt'; 
+import bcrypt from 'bcryptjs'; 
 
 const PROTECTED_FOLDERS_KEY = 'zee-index:protected-folders';
 
