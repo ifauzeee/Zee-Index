@@ -1,10 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = path.resolve(__dirname, '..');
-const BACKUP_DIR = path.join(ROOT, 'backups', `comments-backup-${Date.now()}`);
+
+const ROOT = process.cwd();
 const TARGET_EXTS = new Set(['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs', '.json']);
-const IGNORE_DIRS = new Set(['node_modules', '.git', 'backups']);
+
+const IGNORE_DIRS = new Set(['node_modules', '.git']);
+
 
 function isBinary(buffer) {
   for (let i = 0; i < 24 && i < buffer.length; i++) {
@@ -13,88 +15,136 @@ function isBinary(buffer) {
   return false;
 }
 
-function ensureDir(p) { if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true }); }
-
-function backupFile(src, rel) {
-  const dest = path.join(BACKUP_DIR, rel);
-  ensureDir(path.dirname(dest));
-  fs.copyFileSync(src, dest);
-}
-
 
 function stripComments(content) {
   let out = '';
   let i = 0;
   const len = content.length;
-  let state = null; 
+  let state = 'default'; 
 
   while (i < len) {
-    const ch = content[i];
-    const next = content[i+1];
+    const char = content[i];
+    const next = content[i + 1];
+    const prev = i > 0 ? content[i - 1] : null;
 
-    if (state === 'block-comment') {
-      if (ch === '*' && next === '/') { state = null; i += 2; continue; }
-      i++; continue;
-    }
-    if (state === 'line-comment') {
-      if (ch === '\n') { state = null; out += ch; i++; continue; }
-      i++; continue;
-    }
-    if (state === 'single') {
-      if (ch === '\\' && i+1 < len) { out += ch + content[i+1]; i += 2; continue; }
-      if (ch === "'") { out += ch; state = null; i++; continue; }
-      out += ch; i++; continue;
-    }
-    if (state === 'double') {
-      if (ch === '\\' && i+1 < len) { out += ch + content[i+1]; i += 2; continue; }
-      if (ch === '"') { out += ch; state = null; i++; continue; }
-      out += ch; i++; continue;
-    }
-    if (state === 'template') {
-      if (ch === '`') { out += ch; state = null; i++; continue; }
-      if (ch === '\\' && i+1 < len) { out += ch + content[i+1]; i += 2; continue; }
-      out += ch; i++; continue;
-    }
+    switch (state) {
+      case 'line-comment':
+        if (char === '\n') {
+          out += char;
+          state = 'default';
+        }
+        break;
 
-    
-    if (ch === '/' && next === '*') { state = 'block-comment'; i += 2; continue; }
-    if (ch === '/' && next === '/') { state = 'line-comment'; i += 2; continue; }
-    if (ch === '<' && content.substr(i,4) === '<!--') {
-      const end = content.indexOf('-->', i+4);
-      if (end === -1) return out; 
-      i = end + 3; continue;
-    }
-    if (ch === "'") { state = 'single'; out += ch; i++; continue; }
-    if (ch === '"') { state = 'double'; out += ch; i++; continue; }
-    if (ch === '`') { state = 'template'; out += ch; i++; continue; }
+      case 'block-comment':
+        if (char === '*' && next === '/') {
+          i++; 
+          state = 'default';
+        }
+        break;
 
-    out += ch; i++;
+      case 'single':
+        out += char;
+        
+        if (char === "'" && prev !== '\\') {
+          state = 'default';
+        }
+        break;
+
+      case 'double':
+        out += char;
+        if (char === '"' && prev !== '\\') {
+          state = 'default';
+        }
+        break;
+
+      case 'template':
+        out += char;
+        if (char === '`' && prev !== '\\') {
+          state = 'default';
+        }
+        break;
+
+      case 'regex':
+        out += char;
+        if (char === '/' && prev !== '\\') {
+          state = 'default';
+        }
+        break;
+
+      // State default: analisis karakter
+      default:
+        if (char === '/' && next === '/') {
+          state = 'line-comment';
+          i++; // Lewati '/' kedua
+        } else if (char === '/' && next === '*') {
+          state = 'block-comment';
+          i++; // Lewati '*'
+        } else if (char === "'") {
+          out += char;
+          state = 'single';
+        } else if (char === '"') {
+          out += char;
+          state = 'double';
+        } else if (char === '`') {
+          out += char;
+          state = 'template';
+        } else if (char === '/') {
+          // Heuristik untuk membedakan pembagian dari regex.
+          const lastMeaningfulChar = out.trim().slice(-1);
+          if ('(,=:[!&|?{};'.includes(lastMeaningfulChar) || out.trim().endsWith('return')) {
+            out += char;
+            state = 'regex';
+          } else {
+            out += char;
+          }
+        } else {
+          out += char;
+        }
+        break;
+    }
+    i++;
   }
   return out;
 }
 
 const results = { processed: 0, modified: 0, skipped: 0, errors: [] };
 
+/**
+ * Berjalan secara rekursif melalui direktori untuk memproses file.
+ * @param {string} dir Direktori untuk dipindai.
+ */
 function walk(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const ent of entries) {
     const name = ent.name;
     if (IGNORE_DIRS.has(name)) continue;
+
     const full = path.join(dir, name);
-    const rel = path.relative(ROOT, full);
 
     try {
-      if (ent.isDirectory()) { walk(full); continue; }
+      if (ent.isDirectory()) {
+        walk(full);
+        continue;
+      }
+
       const ext = path.extname(name).toLowerCase();
-      if (!TARGET_EXTS.has(ext)) { results.skipped++; continue; }
+      if (!TARGET_EXTS.has(ext)) {
+        results.skipped++;
+        continue;
+      }
 
       const buffer = fs.readFileSync(full);
-      if (isBinary(buffer)) { results.skipped++; continue; }
+      if (isBinary(buffer)) {
+        results.skipped++;
+        continue;
+      }
+
       const text = buffer.toString('utf8');
       const stripped = stripComments(text);
       results.processed++;
+
       if (stripped !== text) {
-        backupFile(full, rel);
+        // Langsung menimpa file asli, tanpa backup.
         fs.writeFileSync(full, stripped, 'utf8');
         results.modified++;
       }
@@ -104,12 +154,22 @@ function walk(dir) {
   }
 }
 
-ensureDir(BACKUP_DIR);
-console.log('Backup directory:', BACKUP_DIR);
-walk(ROOT);
-console.log('Done. Summary:', results);
-if (results.errors.length) {
-  console.error('Errors:', results.errors.slice(0,5));
-  process.exit(2);
+// ---- EKSEKUSI SKRIP ----
+try {
+  console.log('Starting comment removal in:', ROOT);
+  console.log('WARNING: This operation is permanent and does not create backups.');
+  
+  walk(ROOT);
+  
+  console.log('Done. Summary:', results);
+
+  if (results.errors.length) {
+    console.error('Errors occurred during processing:');
+    results.errors.slice(0, 5).forEach(e => console.error(`- File: ${e.file}\n  Error: ${e.error}`));
+    process.exit(2);
+  }
+  process.exit(0);
+} catch (err) {
+  console.error('A fatal error occurred:', err);
+  process.exit(1);
 }
-process.exit(0);

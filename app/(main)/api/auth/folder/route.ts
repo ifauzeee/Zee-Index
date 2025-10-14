@@ -1,18 +1,24 @@
 
 
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import crypto from 'crypto';
 import { SignJWT } from 'jose';
-import { getProtectedFolderCredentials } from '@/lib/auth'; 
+import { getProtectedFolderCredentials } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/ratelimit';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+    const { success } = await checkRateLimit(request);
+    if (!success) {
+        return NextResponse.json({ error: 'Terlalu banyak percobaan. Silakan coba lagi nanti.' }, { status: 429 });
+    }
+
     try {
         const { folderId, id, password } = await request.json();
         if (!folderId || !id || !password) {
             return NextResponse.json({ error: 'Folder ID, ID, and password are required.' }, { status: 400 });
         }
 
-        const folderConfig = await getProtectedFolderCredentials(folderId); 
+        const folderConfig = await getProtectedFolderCredentials(folderId);
         if (!folderConfig) {
             return NextResponse.json({ error: 'Folder ini tidak dikonfigurasi untuk perlindungan atau tidak ditemukan.' }, { status: 404 });
         }

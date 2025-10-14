@@ -8,22 +8,23 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const searchTerm = searchParams.get('q');
+  const rawSearchTerm = searchParams.get('q');
   const folderId = searchParams.get('folderId');
 
-  if (!searchTerm) {
+  if (!rawSearchTerm) {
     return NextResponse.json({ error: 'Search term is required.' }, { status: 400 });
   }
-  
   
   if (!folderId) {
       return NextResponse.json({ error: 'Folder ID is required for a scoped search.' }, { status: 400 });
   }
 
+  
+  const searchTerm = rawSearchTerm.replace(/'/g, "''");
+
   try {
     const accessToken = await getAccessToken();
     const driveUrl = 'https://www.googleapis.com/drive/v3/files';
-
     
     let driveQuery = `name contains '${searchTerm}' and trashed=false`;
     driveQuery += ` and '${folderId}' in parents`;
@@ -47,7 +48,6 @@ export async function GET(request: Request) {
     }
 
     const data = await response.json();
-    
     const processedFiles = (data.files || []).map((file: DriveFile) => ({
       ...file,
       isFolder: file.mimeType === 'application/vnd.google-apps.folder',

@@ -1,10 +1,10 @@
 
+
 import { NextResponse } from 'next/server';
-import { getAccessToken, DriveFile } from '@/lib/googleDrive'; 
+import { getAccessToken, DriveFile } from '@/lib/googleDrive';
 import { isProtected } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
-
 
 async function isDescendant(fileId: string, rootId: string, accessToken: string): Promise<boolean> {
   if (!fileId || fileId === rootId) {
@@ -16,11 +16,9 @@ async function isDescendant(fileId: string, rootId: string, accessToken: string)
   const detailsResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${currentId}?fields=parents`, {
     headers: { 'Authorization': `Bearer ${accessToken}` }
   });
-
   if (!detailsResponse.ok) return false;
   const details = await detailsResponse.json();
   if (!details.parents || details.parents.length === 0) return false;
-
   let parentId = details.parents[0];
   const visited = new Set();
 
@@ -33,7 +31,6 @@ async function isDescendant(fileId: string, rootId: string, accessToken: string)
     const parentResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${parentId}?fields=parents`, {
       headers: { 'Authorization': `Bearer ${accessToken}` }
     });
-    
     if (!parentResponse.ok) break;
     const parentDetails = await parentResponse.json();
     parentId = parentDetails.parents?.[0];
@@ -44,20 +41,22 @@ async function isDescendant(fileId: string, rootId: string, accessToken: string)
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const searchTerm = searchParams.get('q');
+  const rawSearchTerm = searchParams.get('q');
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
 
-  if (!searchTerm) {
+  if (!rawSearchTerm) {
     return NextResponse.json({ error: 'Search term is required.' }, { status: 400 });
   }
   if (!rootFolderId) {
     return NextResponse.json({ error: 'Root folder ID is not configured.' }, { status: 500 });
   }
+  
+  
+  const searchTerm = rawSearchTerm.replace(/'/g, "''");
 
   try {
     const accessToken = await getAccessToken();
     const driveUrl = 'https://www.googleapis.com/drive/v3/files';
-    
     const driveQuery = `name contains '${searchTerm}' and trashed=false`;
 
     const params = new URLSearchParams({
@@ -77,14 +76,11 @@ export async function GET(request: Request) {
 
     const data = await response.json();
     const allFoundFiles = data.files || [];
-
-    
     
     const descendantCheckPromises = allFoundFiles.map((file: DriveFile) => 
       isDescendant(file.id, rootFolderId, accessToken)
         .then(isDesc => (isDesc ? file : null))
     );
-
     const filteredFilesRaw = await Promise.all(descendantCheckPromises);
     const filteredFiles = filteredFilesRaw.filter(Boolean);
     

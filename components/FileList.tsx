@@ -1,4 +1,5 @@
 
+
 import { motion } from 'framer-motion';
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from '@/lib/store';
@@ -31,8 +32,8 @@ export default function FileList({ files, onItemClick, onItemContextMenu }: File
     },
   };
 
-  const containerClass = view === 'list' 
-    ? 'flex flex-col gap-2' 
+  const containerClass = view === 'list'
+    ? 'flex flex-col gap-2'
     : 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4';
 
   return (
@@ -43,9 +44,9 @@ export default function FileList({ files, onItemClick, onItemContextMenu }: File
       animate="visible"
     >
       {files.map((file) => (
-        <FileItem 
-          key={file.id} 
-          file={file} 
+        <FileItem
+          key={file.id}
+          file={file}
           onClick={() => onItemClick(file)}
           onContextMenu={(event: React.MouseEvent<HTMLDivElement>) => onItemContextMenu(event, file)}
           isSelected={selectedFiles.includes(file.id)}

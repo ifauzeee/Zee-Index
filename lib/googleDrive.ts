@@ -27,8 +27,32 @@ interface StorageBreakdown {
   size: number;
 }
 
+
+async function fetchWithRetry(url: string, options: RequestInit, retries = 3, delay = 1000): Promise<Response> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.ok) {
+        return response;
+      }
+      
+      if (response.status >= 400 && response.status < 500) {
+        return response;
+      }
+    } catch (error: any) {
+      if (i === retries - 1) throw error; 
+      console.log(`Fetch gagal (percobaan ${i + 1}/${retries}), mencoba lagi dalam ${delay / 1000} detik...`);
+      await new Promise(res => setTimeout(res, delay));
+    }
+  }
+  
+  throw new Error("Gagal melakukan fetch setelah beberapa kali percobaan.");
+}
+
+
 export async function getAccessToken(): Promise<string> {
-  const response = await fetch('https://oauth2.googleapis.com/token', {
+  const url = 'https://oauth2.googleapis.com/token';
+  const options = {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -37,8 +61,12 @@ export async function getAccessToken(): Promise<string> {
       refresh_token: process.env.GOOGLE_REFRESH_TOKEN!,
       grant_type: 'refresh_token',
     }),
-    cache: 'no-store',
-  });
+    
+    cache: 'no-store' as RequestCache,
+  };
+  
+  
+  const response = await fetchWithRetry(url, options);
 
   if (!response.ok) {
     const errorData = await response.json();
@@ -67,11 +95,10 @@ async function fetchAllFilesRecursively(accessToken: string, rootFolderId: strin
       });
       if (pageToken) params.set('pageToken', pageToken);
 
-      const response = await fetch(`${GOOGLE_DRIVE_API_URL}?${params.toString()}`, {
+      const response = await fetchWithRetry(`${GOOGLE_DRIVE_API_URL}?${params.toString()}`, {
         headers: { 'Authorization': `Bearer ${accessToken}` },
         cache: 'no-store',
       });
-
       if (!response.ok) {
         console.error(`Gagal mengambil file dari folder ${folderId}`);
         break;
@@ -98,14 +125,14 @@ export async function listFilesFromDrive(folderId: string, pageToken?: string | 
     orderBy: 'folder, name',
     pageSize: String(pageSize),
   });
-
   if (pageToken) {
     params.append('pageToken', pageToken);
   }
 
-  const response = await fetch(`${GOOGLE_DRIVE_API_URL}?${params.toString()}`, {
+  
+  const response = await fetchWithRetry(`${GOOGLE_DRIVE_API_URL}?${params.toString()}`, {
     headers: { 'Authorization': `Bearer ${accessToken}` },
-    next: { tags: [`files-in-folder-${folderId}`] }
+    cache: 'no-store', 
   });
 
   if (!response.ok) {
@@ -119,7 +146,6 @@ export async function listFilesFromDrive(folderId: string, pageToken?: string | 
     ...file,
     isFolder: file.mimeType === 'application/vnd.google-apps.folder',
   }));
-
   return {
     files: processedFiles,
     nextPageToken: data.nextPageToken || null,
@@ -132,10 +158,10 @@ export async function getFileDetailsFromDrive(fileId: string): Promise<DriveFile
   const params = new URLSearchParams({
     fields: 'id, name, mimeType, size, modifiedTime, createdTime, webViewLink, webContentLink, thumbnailLink, hasThumbnail, parents, owners(displayName, emailAddress), lastModifyingUser(displayName), md5Checksum, imageMediaMetadata(width, height), videoMediaMetadata(width, height, durationMillis)'
   });
-
-  const response = await fetch(`${driveUrl}?${params.toString()}`, {
+  
+  const response = await fetchWithRetry(`${driveUrl}?${params.toString()}`, {
     headers: { 'Authorization': `Bearer ${accessToken}` },
-    next: { revalidate: 3600 },
+    cache: 'no-store',
   });
 
   if (!response.ok) {
@@ -155,12 +181,10 @@ export async function getFolderPath(folderId: string): Promise<{ id: string; nam
   const path = [];
   let currentId = folderId;
   const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
-
   while (currentId && currentId !== rootId) {
     const driveUrl = `https://www.googleapis.com/drive/v3/files/${currentId}`;
     const params = new URLSearchParams({ fields: 'id, name, parents' });
-
-    const response = await fetch(`${driveUrl}?${params.toString()}`, {
+    const response = await fetchWithRetry(`${driveUrl}?${params.toString()}`, {
       headers: { 'Authorization': `Bearer ${accessToken}` },
       cache: 'no-store'
     });
@@ -181,21 +205,19 @@ export async function getFolderPath(folderId: string): Promise<{ id: string; nam
 
 export async function getStorageDetails() {
   const accessToken = await getAccessToken();
-  const aboutResponse = await fetch('https://www.googleapis.com/drive/v3/about?fields=storageQuota', {
+  const aboutResponse = await fetchWithRetry('https://www.googleapis.com/drive/v3/about?fields=storageQuota', {
     headers: { 'Authorization': `Bearer ${accessToken}` },
     cache: 'no-store',
   });
-
   if (!aboutResponse.ok) {
     throw new Error('Gagal mengambil data kuota Google Drive.');
   }
   const aboutData: { storageQuota: { usage: string, limit: string } } = await aboutResponse.json();
-
   const usage = parseInt(aboutData.storageQuota.usage, 10);
   const limit = parseInt(aboutData.storageQuota.limit, 10);
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
   const allFiles = await fetchAllFilesRecursively(accessToken, rootFolderId);
-
+  
   const largestFiles = allFiles
     .filter((file: DriveFile) => file.mimeType !== 'application/vnd.google-apps.folder' && file.size)
     .sort((a: DriveFile, b: DriveFile) => parseInt(b.size!, 10) - parseInt(a.size!, 10))
@@ -224,7 +246,7 @@ export async function getStorageDetails() {
   const formattedBreakdown: StorageBreakdown[] = (Object.entries(breakdown) as [string, { count: number; size: number }][])
     .map(([type, data]) => ({ type, count: data.count, size: data.size }))
     .sort((a: StorageBreakdown, b: StorageBreakdown) => b.size - a.size);
-
+    
   return {
     usage,
     limit,
