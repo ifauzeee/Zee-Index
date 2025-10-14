@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
 import { revalidateTag } from 'next/cache';
 import { z } from 'zod';
+import { logActivity } from '@/lib/activityLogger';
 
 const createFolderSchema = z.object({
   folderName: z.string().min(1, { message: "Nama folder tidak boleh kosong." }),
@@ -46,10 +47,22 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
     if (!response.ok) {
+        await logActivity('UPLOAD', {
+          itemName: folderName,
+          userEmail: session.user.email,
+          status: 'failure',
+          error: data.error?.message || 'Gagal membuat folder di Google Drive.',
+        });
         throw new Error(data.error?.message || 'Gagal membuat folder di Google Drive.');
     }
 
     revalidateTag(`files-in-folder-${parentId}`);
+
+    await logActivity('UPLOAD', {
+      itemName: folderName,
+      userEmail: session.user.email,
+      status: 'success',
+    });
 
     return NextResponse.json(data, { status: 200 });
   } catch (error: any) {

@@ -8,7 +8,7 @@ import { kv } from '@vercel/kv';
 import type { ActivityLog } from '@/lib/activityLogger';
 
 const ACTIVITY_LOG_KEY = 'zee-index:activity-log';
-const LOGS_PER_PAGE = 50;
+const LOGS_PER_PAGE = 5;
 
 async function isAdmin(session: any): Promise<boolean> {
     return session?.user?.role === 'ADMIN';
@@ -34,7 +34,8 @@ export async function GET(request: NextRequest) {
 
         const logs: ActivityLog[] = logStrings.map(logStr => {
             try {
-                return JSON.parse(logStr);
+                
+                return typeof logStr === 'string' ? JSON.parse(logStr) : logStr;
             } catch (e) {
                 console.error("Gagal mem-parsing entri log:", logStr, e);
                 return null;

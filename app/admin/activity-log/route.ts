@@ -32,15 +32,7 @@ export async function GET(request: NextRequest) {
             { rev: true } 
         );
 
-        const logs: ActivityLog[] = logStrings.map(logStr => {
-            try {
-                return JSON.parse(logStr);
-            } catch (e) {
-                console.error("Gagal mem-parsing entri log:", logStr, e);
-                return null;
-            }
-        }).filter((log): log is ActivityLog => log !== null);
-        
+        const logs: ActivityLog[] = logStrings.map(logStr => JSON.parse(logStr));
         
         return NextResponse.json({ 
             logs,
