@@ -1,3 +1,7 @@
+
+
+
+
 const fs = require('fs');
 const path = require('path');
 
@@ -34,17 +38,14 @@ function stripComments(content) {
           state = 'default';
         }
         break;
-
       case 'block-comment':
         if (char === '*' && next === '/') {
-          i++; 
+          i++;
           state = 'default';
         }
         break;
-
       case 'single':
         out += char;
-        
         if (char === "'" && prev !== '\\') {
           state = 'default';
         }
@@ -71,14 +72,13 @@ function stripComments(content) {
         }
         break;
 
-      // State default: analisis karakter
       default:
         if (char === '/' && next === '/') {
           state = 'line-comment';
-          i++; // Lewati '/' kedua
+          i++; 
         } else if (char === '/' && next === '*') {
           state = 'block-comment';
-          i++; // Lewati '*'
+          i++;
         } else if (char === "'") {
           out += char;
           state = 'single';
@@ -89,9 +89,13 @@ function stripComments(content) {
           out += char;
           state = 'template';
         } else if (char === '/') {
-          // Heuristik untuk membedakan pembagian dari regex.
-          const lastMeaningfulChar = out.trim().slice(-1);
-          if ('(,=:[!&|?{};'.includes(lastMeaningfulChar) || out.trim().endsWith('return')) {
+          // REFACTOR: Heuristik yang sedikit lebih baik untuk membedakan pembagian dari regex.
+          // Regex sering muncul setelah operator, tanda kurung, atau kata kunci 'return'.
+          const trimmedOut = out.trim();
+          const lastMeaningfulChar = trimmedOut.slice(-1);
+          const lastWord = trimmedOut.split(/\s+/).pop();
+
+          if ('(,=:[!&|?{};'.includes(lastMeaningfulChar) || lastWord === 'return') {
             out += char;
             state = 'regex';
           } else {
@@ -109,10 +113,7 @@ function stripComments(content) {
 
 const results = { processed: 0, modified: 0, skipped: 0, errors: [] };
 
-/**
- * Berjalan secara rekursif melalui direktori untuk memproses file.
- * @param {string} dir Direktori untuk dipindai.
- */
+
 function walk(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const ent of entries) {
@@ -142,9 +143,7 @@ function walk(dir) {
       const text = buffer.toString('utf8');
       const stripped = stripComments(text);
       results.processed++;
-
       if (stripped !== text) {
-        // Langsung menimpa file asli, tanpa backup.
         fs.writeFileSync(full, stripped, 'utf8');
         results.modified++;
       }
@@ -154,15 +153,15 @@ function walk(dir) {
   }
 }
 
-// ---- EKSEKUSI SKRIP ----
+
 try {
   console.log('Starting comment removal in:', ROOT);
   console.log('WARNING: This operation is permanent and does not create backups.');
+  console.warn('See the warning at the top of cmtdel.js before proceeding on critical code.');
   
   walk(ROOT);
   
   console.log('Done. Summary:', results);
-
   if (results.errors.length) {
     console.error('Errors occurred during processing:');
     results.errors.slice(0, 5).forEach(e => console.error(`- File: ${e.file}\n  Error: ${e.error}`));

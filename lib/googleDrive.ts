@@ -1,5 +1,7 @@
 
 
+import { kv } from '@/lib/kv'; 
+
 export interface DriveFile {
   id: string;
   name: string;
@@ -40,7 +42,7 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 3, de
         return response;
       }
     } catch (error: any) {
-      if (i === retries - 1) throw error; 
+      if (i === retries - 1) throw error;
       console.log(`Fetch gagal (percobaan ${i + 1}/${retries}), mencoba lagi dalam ${delay / 1000} detik...`);
       await new Promise(res => setTimeout(res, delay));
     }
@@ -64,8 +66,6 @@ export async function getAccessToken(): Promise<string> {
     
     cache: 'no-store' as RequestCache,
   };
-  
-  
   const response = await fetchWithRetry(url, options);
 
   if (!response.ok) {
@@ -77,6 +77,81 @@ export async function getAccessToken(): Promise<string> {
   const tokenData: { access_token: string } = await response.json();
   return tokenData.access_token;
 }
+
+
+export async function getAllDescendantFolders(accessToken: string, rootFolderId: string): Promise<string[]> {
+    const cacheKey = `zee-index:folder-tree:${rootFolderId}`;
+    
+    
+    try {
+        const cachedTree: string[] | null = await kv.get(cacheKey);
+        if (cachedTree) {
+            console.log("Menggunakan folder tree dari cache.");
+            return cachedTree;
+        }
+    } catch (e) {
+        console.error("Gagal mengambil folder tree dari cache:", e);
+    }
+
+    console.log("Membangun folder tree baru (tidak ada di cache).");
+    const allFolderIds = new Set<string>([rootFolderId]);
+    const queue: string[] = [rootFolderId];
+    const GOOGLE_DRIVE_API_URL = 'https://www.googleapis.com/drive/v3/files';
+
+    while (queue.length > 0) {
+        const folderId = queue.shift()!;
+        let pageToken: string | null = null;
+
+        do {
+            const params = new URLSearchParams({
+                q: `'${folderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+                fields: 'nextPageToken, files(id)',
+                pageSize: '1000',
+            });
+            if (pageToken) params.set('pageToken', pageToken);
+
+            try {
+                const response = await fetchWithRetry(`${GOOGLE_DRIVE_API_URL}?${params.toString()}`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                    cache: 'no-store',
+                });
+
+                if (!response.ok) {
+                    console.error(`Gagal mengambil subfolder dari folder ${folderId}`);
+                    break; 
+                }
+
+                const data: { files?: { id: string }[], nextPageToken?: string | null } = await response.json();
+
+                if (data.files) {
+                    for (const folder of data.files) {
+                        if (!allFolderIds.has(folder.id)) {
+                            allFolderIds.add(folder.id);
+                            queue.push(folder.id);
+                        }
+                    }
+                }
+                pageToken = data.nextPageToken ?? null;
+            } catch (error) {
+                console.error(`Error saat fetching subfolder untuk ${folderId}:`, error);
+                
+                pageToken = null; 
+            }
+        } while (pageToken);
+    }
+    
+    const folderArray = Array.from(allFolderIds);
+    
+    
+    try {
+        await kv.set(cacheKey, folderArray, { ex: 3600 });
+    } catch (e) {
+        console.error("Gagal menyimpan folder tree ke cache:", e);
+    }
+
+    return folderArray;
+}
+
 
 async function fetchAllFilesRecursively(accessToken: string, rootFolderId: string): Promise<any[]> {
   let allFiles: any[] = [];
@@ -134,7 +209,6 @@ export async function listFilesFromDrive(folderId: string, pageToken?: string | 
     headers: { 'Authorization': `Bearer ${accessToken}` },
     cache: 'no-store', 
   });
-
   if (!response.ok) {
     const errorData = await response.json();
     console.error("Google Drive API Error:", errorData);
@@ -158,12 +232,10 @@ export async function getFileDetailsFromDrive(fileId: string): Promise<DriveFile
   const params = new URLSearchParams({
     fields: 'id, name, mimeType, size, modifiedTime, createdTime, webViewLink, webContentLink, thumbnailLink, hasThumbnail, parents, owners(displayName, emailAddress), lastModifyingUser(displayName), md5Checksum, imageMediaMetadata(width, height), videoMediaMetadata(width, height, durationMillis)'
   });
-  
   const response = await fetchWithRetry(`${driveUrl}?${params.toString()}`, {
     headers: { 'Authorization': `Bearer ${accessToken}` },
     cache: 'no-store',
   });
-
   if (!response.ok) {
     console.error(`Gagal mengambil detail untuk file ID: ${fileId}`);
     return null;
@@ -217,13 +289,11 @@ export async function getStorageDetails() {
   const limit = parseInt(aboutData.storageQuota.limit, 10);
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
   const allFiles = await fetchAllFilesRecursively(accessToken, rootFolderId);
-  
   const largestFiles = allFiles
     .filter((file: DriveFile) => file.mimeType !== 'application/vnd.google-apps.folder' && file.size)
     .sort((a: DriveFile, b: DriveFile) => parseInt(b.size!, 10) - parseInt(a.size!, 10))
     .slice(0, 10)
     .map((file: DriveFile) => ({...file, isFolder: false}));
-
   const breakdown = allFiles.reduce((acc: Record<string, { count: number, size: number }>, file: DriveFile) => {
     if (file.mimeType !== 'application/vnd.google-apps.folder' && file.size) {
       const size = parseInt(file.size, 10);
@@ -242,11 +312,9 @@ export async function getStorageDetails() {
     }
     return acc;
   }, {} as Record<string, { count: number, size: number }>);
-
   const formattedBreakdown: StorageBreakdown[] = (Object.entries(breakdown) as [string, { count: number; size: number }][])
     .map(([type, data]) => ({ type, count: data.count, size: data.size }))
     .sort((a: StorageBreakdown, b: StorageBreakdown) => b.size - a.size);
-    
   return {
     usage,
     limit,

@@ -1,7 +1,8 @@
 
+
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
 import type { DriveFile } from '@/lib/googleDrive';
@@ -20,7 +21,7 @@ import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 
 declare const pdfjsLib: any;
-declare const ePub: any; 
+declare const ePub: any;
 
 export default function FileDetail({ file }: { file: DriveFile }) {
   const previewRef = useRef<HTMLDivElement>(null);
@@ -30,15 +31,33 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   const { addToast, user, triggerRefresh } = useAppStore();
   const [showBackButton, setShowBackButton] = useState(true);
   const [markdownContent, setMarkdownContent] = useState<string | null>(null);
-
   const [editableContent, setEditableContent] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
   const shareToken = useMemo(() => searchParams.get('share_token'), [searchParams]);
+
+  
+  const validateShareToken = useCallback(async (token: string) => {
+    try {
+        const res = await fetch('/api/share/status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ shareToken: token }),
+        });
+        const data = await res.json();
+        if (!data.valid) {
+            addToast({ message: 'Tautan berbagi ini tidak valid atau telah dicabut.', type: 'error' });
+            router.push('/login?error=ShareLinkRevoked');
+        }
+    } catch (e) {
+        addToast({ message: 'Gagal memvalidasi tautan berbagi.', type: 'error' });
+        router.push('/login?error=InvalidOrExpiredShareLink');
+    }
+  }, [addToast, router]);
 
   useEffect(() => {
     if (shareToken) {
+      validateShareToken(shareToken); 
       try {
         const decodedToken: { path: string, exp: number } = jwtDecode(shareToken);
         const currentPath = window.location.pathname;
@@ -56,13 +75,14 @@ export default function FileDetail({ file }: { file: DriveFile }) {
             addToast({ message: 'Sesi berbagi Anda telah berakhir.', type: 'info' });
             router.push('/login?error=InvalidOrExpiredShareLink');
            }, timeUntilExpiration);
-          return () => clearTimeout(timer);
+          
+           return () => clearTimeout(timer);
         }
       } catch (error) {
         console.error("Token tidak valid:", error);
        }
     }
-  }, [shareToken, router, addToast]);
+  }, [shareToken, router, addToast, validateShareToken]);
 
   const handleBack = () => router.back();
   const directLink = useMemo(() => {
@@ -72,7 +92,6 @@ export default function FileDetail({ file }: { file: DriveFile }) {
     }
     return url;
   }, [file.id, shareToken]);
-  
   const fileType = getFileType(file);
 
   useEffect(() => {
@@ -93,11 +112,11 @@ export default function FileDetail({ file }: { file: DriveFile }) {
            mediaElement.id = 'player';
            mediaElement.setAttribute('playsinline', '');
           mediaElement.setAttribute('controls', '');
+    
           mediaElement.style.width = '100%'; 
           mediaElement.style.height = '100%';
            if (posterUrl) mediaElement.setAttribute('data-poster', posterUrl);
-          
-          const mimeType = file.mimeType === 'application/octet-stream' && file.name.endsWith('.mkv') ? 'video/x-matroska' : file.mimeType;
+           const mimeType = file.mimeType === 'application/octet-stream' && file.name.endsWith('.mkv') ? 'video/x-matroska' : file.mimeType;
 
           const sourceElement = document.createElement('source');
           sourceElement.src = directLink;
@@ -109,7 +128,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
           playerRef.current = new Plyr(mediaElement);
         } else if (fileType === 'image') {
            const img = document.createElement('img');
-          img.src = directLink;
+           img.src = directLink;
           img.className = "w-full h-full object-contain mx-auto";
           previewRef.current.innerHTML = '';
           previewRef.current.appendChild(img);
@@ -165,7 +184,6 @@ export default function FileDetail({ file }: { file: DriveFile }) {
             const textContent = await response.text();
             
             setEditableContent(textContent);
-
             if (fileType === 'markdown') {
                 setMarkdownContent(textContent);
             } else { 
@@ -189,10 +207,10 @@ export default function FileDetail({ file }: { file: DriveFile }) {
                  </div>
                </div>
               `;
-        }
+       }
        } catch (error) {
          console.error("Preview Error:", error);
-        previewRef.current.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-4 text-red-500"><i class="fas fa-exclamation-triangle text-6xl"></i><p>Gagal memuat pratinjau.</p></div>`;
+         previewRef.current.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-4 text-red-500"><i class="fas fa-exclamation-triangle text-6xl"></i><p>Gagal memuat pratinjau.</p></div>`;
       }
     };
     if (typeof window !== 'undefined') {
@@ -205,7 +223,6 @@ export default function FileDetail({ file }: { file: DriveFile }) {
       }
     };
   }, [file, fileType, directLink, addToast]);
-
   const handleSaveChanges = async () => {
     if (editableContent === null) return;
     setIsSaving(true);
@@ -217,7 +234,6 @@ export default function FileDetail({ file }: { file: DriveFile }) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Gagal menyimpan file.');
-        
         addToast({ message: "Perubahan berhasil disimpan!", type: 'success' });
         setIsEditing(false);
         triggerRefresh();
@@ -235,7 +251,6 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   const durationMillis = file.videoMediaMetadata?.durationMillis ? parseInt(file.videoMediaMetadata.durationMillis, 10) : undefined;
   const showShareButton = !searchParams.get('share_token') && user?.role === 'ADMIN';
   const isEditable = user?.role === 'ADMIN' && (fileType === 'code' || fileType === 'markdown');
-
   return (
     <div className="container mx-auto px-4 py-6 flex flex-col h-screen overflow-hidden">
       
@@ -245,6 +260,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
              <ArrowLeft size={20} /> Kembali
           </button>
         )}
+        
         {!showBackButton && <div />} 
         
         {showShareButton && <ShareButton path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`} itemName={file.name} />}
@@ -262,13 +278,14 @@ export default function FileDetail({ file }: { file: DriveFile }) {
                         </button>
                     )}
                     <button onClick={() => setIsEditing(!isEditing)} className="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80">
-                         {isEditing ? 'Batal' : 'Edit File'}
+                      {isEditing ? 'Batal' : 'Edit File'}
                     </button>
                 </div>
             )}
           
            <div className="w-full flex-1 flex items-start justify-center overflow-hidden"> 
-            {isEditing && isEditable ? (
+            {isEditing && isEditable ?
+            (
                 <textarea
                     value={editableContent || ''}
                     onChange={(e) => setEditableContent(e.target.value)}
@@ -295,6 +312,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
                 {metadata?.width && metadata?.height && (
                     <ListItem label="Dimensi" value={`${metadata.width} x ${metadata.height} px`} />
                 )}
+                
                 {durationMillis && (
                     <ListItem label="Durasi" value={formatDuration(durationMillis / 1000)} />
                 )}
@@ -331,7 +349,6 @@ const ListItem = ({ label, value }: { label: string, value: string }) => (
     <span className="text-right break-all">{value}</span>
   </li>
 );
-
 function getLanguageFromFilename(name: string): string {
     const ext = name.split('.').pop()?.toLowerCase() || '';
     const langMap: Record<string, string> = { 

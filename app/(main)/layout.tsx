@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useEffect } from 'react';
@@ -12,11 +13,9 @@ import { useSession } from 'next-auth/react';
 
 const Header = dynamic(() => import('@/components/Header'), { ssr: false });
 
-
 const AppFooter = () => {
   const { dataUsage } = useAppStore();
   const currentYear = new Date().getFullYear();
-
   return (
     <footer className="text-center py-6 text-sm text-muted-foreground border-t bg-background">
       <p className="mb-2">
@@ -33,19 +32,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   } = useAppStore();
   const { status } = useSession();
 
+  
   useEffect(() => {
     if (status === 'authenticated') {
       fetchUser();
       fetchDataUsage(); 
     }
-  }, [status, fetchUser, fetchDataUsage]);
-
-  
-  useEffect(() => {
-    if(status === 'authenticated') {
-        fetchDataUsage();
-    }
-  }, [refreshKey, status, fetchDataUsage]);
+  }, [status, fetchUser, fetchDataUsage, refreshKey]); 
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
@@ -71,7 +64,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         <div id="toast-container" className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3">
-            <AnimatePresence>
+           <AnimatePresence>
             {toasts.map((toast) => (
               <Toast key={toast.id} toast={toast} onRemove={removeToast} />
             ))}
