@@ -1,10 +1,9 @@
-
-
 import { NextResponse, NextRequest } from 'next/server';
 import crypto from 'crypto';
 import { SignJWT } from 'jose';
 import { getProtectedFolderCredentials } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/ratelimit';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
     const { success } = await checkRateLimit(request);
@@ -24,7 +23,7 @@ export async function POST(request: NextRequest) {
         }
 
         const isIdValid = crypto.timingSafeEqual(Buffer.from(id), Buffer.from(folderConfig.id));
-        const isPasswordValid = crypto.timingSafeEqual(Buffer.from(password), Buffer.from(folderConfig.password));
+        const isPasswordValid = await bcrypt.compare(password, folderConfig.password);
 
         if (isIdValid && isPasswordValid) {
             const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
@@ -33,6 +32,7 @@ export async function POST(request: NextRequest) {
                 .setIssuedAt()
                 .setExpirationTime('1h')
                 .sign(secret);
+
             return NextResponse.json({ success: true, token }, { status: 200 });
         } else {
             return NextResponse.json({ error: 'Invalid credentials for this folder.' }, { status: 401 });
