@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
@@ -41,12 +39,9 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, file: DriveFile } | null>(null);
   const [actionState, setActionState] = useState<ActionState>({ type: null, file: null });
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-
-  
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const loaderRef = useRef<HTMLDivElement | null>(null);
-
   const {
     sort, isBulkMode, setBulkMode, toggleSelection,
     view, setView, refreshKey, addToast, triggerRefresh,
@@ -87,7 +82,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         addToast({ message: 'Sesi Anda telah berakhir. Silakan login kembali.', type: 'error' });
         if (!shareToken) {
           router.push('/login?error=SessionExpired');
-        }
+       }
       }
     } else {
       addToast({ message: errorData.error || defaultMessage, type: 'error' });
@@ -95,10 +90,9 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     setIsLoading(false);
   }, [addToast, router, shareToken]);
 
-  
   const fetchFiles = useCallback(async (folderId: string, folderName: string) => {
     setIsLoading(true);
-    setFiles([]); 
+    setFiles([]);
     setNextPageToken(null);
     try {
       const url = new URL(window.location.origin + '/api/files');
@@ -109,7 +103,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
       const headers = new Headers();
       const folderAuthToken = folderTokens[folderId];
       if (folderAuthToken) {
-        headers.append('Authorization', `Bearer ${folderAuthToken}`);
+         headers.append('Authorization', `Bearer ${folderAuthToken}`);
       }
 
       const response = await fetch(url.toString(), { headers, credentials: 'include' });
@@ -122,13 +116,13 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
       setFiles(data.files || []);
       setNextPageToken(data.nextPageToken || null);
     } catch (error) {
-      addToast({ message: 'Terjadi kesalahan jaringan.', type: 'error' });
+       addToast({ message: 'Terjadi kesalahan jaringan.', type: 'error' });
     } finally {
       setIsLoading(false);
     }
   }, [folderTokens, handleFetchError, addToast, shareToken]);
 
-  
+
   const fetchNextPage = useCallback(async () => {
     if (isFetchingNextPage || !nextPageToken || !currentFolderId) return;
 
@@ -160,7 +154,6 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     }
   }, [isFetchingNextPage, nextPageToken, currentFolderId, shareToken, folderTokens, addToast]);
 
-  
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -177,12 +170,11 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     }
 
     return () => {
-      if (currentLoader) {
+       if (currentLoader) {
         observer.unobserve(currentLoader);
       }
     };
   }, [fetchNextPage]);
-
 
   useEffect(() => {
     if (sessionStatus === 'loading' && !shareToken) {
@@ -218,7 +210,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         fetchPath();
       }
     }
-  }, [initialFolderId, sessionStatus, shareToken, router, addToast]);
+  }, [initialFolderId, sessionStatus, shareToken, router, addToast, history]); // history added to dependencies
 
   useEffect(() => {
     const currentFolder = history[history.length - 1];
@@ -431,7 +423,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
       <div className="flex justify-between items-center py-4 overflow-x-hidden">
         <nav className="flex items-center space-x-2 text-sm text-muted-foreground overflow-x-auto whitespace-nowrap">
           {history.map((folder, index) => (
-            <span key={folder.id} className="flex items-center">
+             <span key={folder.id} className="flex items-center">
               <button
                 onClick={() => handleBreadcrumbClick(folder.id)}
                 className={`transition-colors ${shareToken && index === 0 ? 'cursor-default text-muted-foreground' : 'hover:text-primary'}`}
@@ -442,18 +434,31 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
             </span>
           ))}
         </nav>
-        <div className="flex items-center gap-2 shrink-0">
+
+       <div className="flex items-center gap-2 shrink-0">
           {!shareToken && user?.role === 'ADMIN' && (
             <>
               <button
                 onClick={() => setIsUploadModalOpen(true)}
                 className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground"
-                title="Upload atau Buat Folder">
+                 title="Upload atau Buat Folder">
                 <Upload size={18} />
               </button>
               <button
-                onClick={() => handleShare({ id: currentFolderId, name: history[history.length - 1]?.name || 'Folder', isFolder: true, mimeType: '', modifiedTime: '', createdTime: '', hasThumbnail: false, webViewLink: '' })}
-                className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground"
+                // --- PERBAIKAN DI SINI ---
+                onClick={() => handleShare({
+                    id: currentFolderId,
+                    name: history[history.length - 1]?.name || 'Folder',
+                    isFolder: true,
+                    mimeType: 'application/vnd.google-apps.folder', // Tipe mime folder
+                    modifiedTime: '', // Placeholder
+                    createdTime: '', // Placeholder
+                    hasThumbnail: false, // Placeholder
+                    webViewLink: '', // Placeholder
+                    trashed: false // <-- Tambahkan ini
+                 })}
+                 // --- AKHIR PERBAIKAN ---
+                 className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground"
                 title="Bagikan Folder Ini">
                 <Share2 size={18} />
               </button>
@@ -472,10 +477,10 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         ) : (
           <>
             <FileList files={sortedFiles} onItemClick={handleItemClick} onItemContextMenu={handleContextMenu} />
-            {}
+            {/* Infinite scroll loader */}
             <div ref={loaderRef} className="flex justify-center items-center p-4 h-20">
               {isFetchingNextPage && <Loader2 className="animate-spin text-primary" />}
-              {!isFetchingNextPage && !nextPageToken && files.length > 0 && <span className="text-sm text-muted-foreground">Akhir dari daftar</span>}
+               {!isFetchingNextPage && !nextPageToken && files.length > 0 && <span className="text-sm text-muted-foreground">Akhir dari daftar</span>}
             </div>
           </>
         )}
