@@ -1,5 +1,3 @@
-// FILE: app/(main)/api/search/global/route.ts
-
 import { NextResponse } from 'next/server';
 import { getAccessToken, DriveFile, getAllDescendantFolders } from '@/lib/googleDrive';
 import { isProtected } from '@/lib/auth';
@@ -11,6 +9,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const rawSearchTerm = searchParams.get('q');
+  const searchType = searchParams.get('searchType') || 'name';
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
 
   if (!rawSearchTerm) {
@@ -26,21 +25,22 @@ export async function GET(request: Request) {
   try {
     const accessToken = await getAccessToken();
     const descendantFolderIds = await getAllDescendantFolders(accessToken, rootFolderId);
-    
     const parentQueries = descendantFolderIds.map(id => `'${id}' in parents`);
-    const driveQuery = `name contains '${searchTerm}' and trashed=false and (${parentQueries.join(' or ')})`;
     
+    const queryField = searchType === 'fullText' ? 'fullText' : 'name';
+    const driveQuery = `${queryField} contains '${searchTerm}' and trashed=false and (${parentQueries.join(' or ')})`;
+
     const driveUrl = 'https://www.googleapis.com/drive/v3/files';
     const params = new URLSearchParams({
       q: driveQuery,
       fields: 'files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents)',
       pageSize: '200', 
     });
-
+    
     const response = await fetch(`${driveUrl}?${params.toString()}`, {
       headers: { 'Authorization': `Bearer ${accessToken}` }
     });
-
+    
     if (!response.ok) {
        const errorData = await response.json();
        throw new Error(`Google Drive API Error: ${errorData.error.message}`);
@@ -52,6 +52,7 @@ export async function GET(request: Request) {
       isFolder: file.mimeType === 'application/vnd.google-apps.folder',
       isProtected: file.mimeType === 'application/vnd.google-apps.folder' && isProtected(file.id),
     }));
+    
     return NextResponse.json({ files: processedFiles });
 
   } catch (error: any) {

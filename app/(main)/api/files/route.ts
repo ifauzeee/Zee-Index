@@ -1,7 +1,4 @@
-
-
 export const dynamic = 'force-dynamic';
-
 import { NextResponse } from 'next/server';
 import { listFilesFromDrive } from '@/lib/googleDrive';
 import { isPrivateFolder, isProtected, verifyFolderToken } from '@/lib/auth';
@@ -44,7 +41,7 @@ async function validateShareToken(request: Request): Promise<boolean> {
 export async function GET(request: Request) {
   try {
    const session = await getServerSession(authOptions);
-    const isShareAuth = await validateShareToken(request);
+   const isShareAuth = await validateShareToken(request);
 
     if (!session && !isShareAuth) {
       return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
@@ -62,7 +59,6 @@ export async function GET(request: Request) {
     const canSeeAll = userRole === 'ADMIN';
 
     const isFolderProtected = await isProtected(folderId);
-
     if (!canSeeAll && isFolderProtected) {
       const authHeader = request.headers.get('Authorization');
       const token = authHeader?.split(' ')[1];
@@ -72,6 +68,8 @@ export async function GET(request: Request) {
          return NextResponse.json({ error: 'Authentication required for this folder.', protected: true }, { status: 401 });
       }
     }
+    
+    const allProtectedFolders = !canSeeAll ? (await kv.hgetall('zee-index:protected-folders') || {}) : {};
 
     const driveResponse = await listFilesFromDrive(folderId, pageToken);
     
@@ -81,20 +79,18 @@ export async function GET(request: Request) {
         const isFolder = file.mimeType === 'application/vnd.google-apps.folder';
         return isFolder ? !isPrivateFolder(file.id) : true;
       });
-
-    const processedFiles = await Promise.all(
-      filteredFiles.map(async (file) => ({
+      
+    const processedFiles = filteredFiles.map((file) => ({
         ...file,
         isFolder: file.mimeType === 'application/vnd.google-apps.folder',
-        isProtected: !canSeeAll && (await isProtected(file.id)),
-      }))
-    );
-
+        isProtected: !canSeeAll && !!allProtectedFolders[file.id],
+    }));
+    
     return NextResponse.json({
       files: processedFiles,
       nextPageToken: driveResponse.nextPageToken
     });
-
+    
   } catch (error: any) {
     console.error('[API /api/files ERROR]:', error);
     return NextResponse.json(

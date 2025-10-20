@@ -1,26 +1,29 @@
-
-
 import { NextResponse, type NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
 import { kv } from '@vercel/kv';
 import { z } from 'zod';
-import bcrypt from 'bcryptjs'; 
+import bcrypt from 'bcryptjs';
 
 const PROTECTED_FOLDERS_KEY = 'zee-index:protected-folders';
 
+const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, '');
+
 const folderSchema = z.object({
-  folderId: z.string().min(5, 'Folder ID tidak valid.'),
-  id: z.string().min(1, 'ID Pengguna tidak boleh kosong.'),
+  folderId: z.string().min(5, 'Folder ID tidak valid.').transform(val => sanitizeString(val)),
+  id: z.string().min(1, 'ID Pengguna tidak boleh kosong.').transform(val => sanitizeString(val)),
   password: z.string().min(1, 'Password tidak boleh kosong.'),
 });
 
+// --- FUNGSI isAdmin DIPERBARUI ---
 async function isAdmin(session: any): Promise<boolean> {
+    // Percayakan role yang sudah ada di session
     return session?.user?.role === 'ADMIN';
 }
+// --- AKHIR PEMBARUAN ---
 
 export async function GET(request: NextRequest) {
-    
+
     const session = await getServerSession(authOptions);
     if (!await isAdmin(session)) {
         return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 });
@@ -46,18 +49,13 @@ export async function POST(request: NextRequest) {
         if (!validation.success) {
             return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 });
         }
-        
-        const { folderId, id, password } = validation.data;
 
-        
-        
+        const { folderId, id, password } = validation.data;
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
-        
-        
-        await kv.hset(PROTECTED_FOLDERS_KEY, { [folderId]: { id, password: hashedPassword } });
-        
 
+
+        await kv.hset(PROTECTED_FOLDERS_KEY, { [folderId]: { id, password: hashedPassword } });
         return NextResponse.json({ success: true, message: `Folder ${folderId} berhasil dilindungi.` });
     } catch (error) {
         console.error("Gagal menambah folder terproteksi:", error);
@@ -66,7 +64,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-    
+
     const session = await getServerSession(authOptions);
     if (!await isAdmin(session)) {
         return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 });

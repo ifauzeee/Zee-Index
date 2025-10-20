@@ -1,5 +1,3 @@
-// FILE: app/(main)/api/search/route.ts
-
 import { NextResponse } from 'next/server';
 import { getAccessToken, DriveFile } from '@/lib/googleDrive';
 import { isProtected } from '@/lib/auth';
@@ -12,6 +10,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const rawSearchTerm = searchParams.get('q');
   const folderId = searchParams.get('folderId');
+  const searchType = searchParams.get('searchType') || 'name';
 
   if (!rawSearchTerm) {
     return NextResponse.json({ error: 'Search term is required.' }, { status: 400 });
@@ -23,12 +22,13 @@ export async function GET(request: Request) {
 
   const sanitizedSearchTerm = sanitizeString(rawSearchTerm);
   const searchTerm = sanitizedSearchTerm.replace(/'/g, "''");
-
+  
   try {
     const accessToken = await getAccessToken();
     const driveUrl = 'https://www.googleapis.com/drive/v3/files';
     
-    let driveQuery = `name contains '${searchTerm}' and trashed=false`;
+    const queryField = searchType === 'fullText' ? 'fullText' : 'name';
+    let driveQuery = `${queryField} contains '${searchTerm}' and trashed=false`;
     driveQuery += ` and '${folderId}' in parents`;
     
     const params = new URLSearchParams({
@@ -36,14 +36,14 @@ export async function GET(request: Request) {
       fields: 'files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents)',
       pageSize: '100',
     });
-
+    
     const response = await fetch(`${driveUrl}?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`
       },
       next: { revalidate: 3600 }
     });
-
+    
     if (!response.ok) {
         const errorData = await response.json();
         throw new Error(`Google Drive API Error: ${errorData.error.message}`);
@@ -55,7 +55,7 @@ export async function GET(request: Request) {
       isFolder: file.mimeType === 'application/vnd.google-apps.folder',
       isProtected: file.mimeType === 'application/vnd.google-apps.folder' && isProtected(file.id),
     }));
-
+    
     return NextResponse.json({ files: processedFiles, nextPageToken: data.nextPageToken });
   } catch (error: any) {
     console.error('Search API Error:', error.message);
