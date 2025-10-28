@@ -10,7 +10,7 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
-      role?: 'ADMIN' | 'USER';
+      role?: "ADMIN" | "USER";
       twoFactorRequired?: boolean;
     };
   }
@@ -18,7 +18,7 @@ declare module "next-auth" {
 
 declare module "next-auth/jwt" {
   interface JWT {
-    role?: 'ADMIN' | 'USER';
+    role?: "ADMIN" | "USER";
     email?: string | null;
     twoFactorRequired?: boolean;
   }

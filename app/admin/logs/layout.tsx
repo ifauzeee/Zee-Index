@@ -1,10 +1,9 @@
-
 import MainLayout from "@/app/(main)/layout";
 
 export const metadata = {
-  title: 'Log Aktivitas - Admin Zee Index',
-  description: 'Lihat dan kelola log aktivitas sistem.',
-}
+  title: "Log Aktivitas - Admin Zee Index",
+  description: "Lihat dan kelola log aktivitas sistem.",
+};
 
 export default function LogsLayout({
   children,

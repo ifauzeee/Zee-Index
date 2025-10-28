@@ -1,9 +1,6 @@
-
-
 import { Ratelimit } from "@upstash/ratelimit";
 import { kv } from "@vercel/kv";
 import { NextRequest } from "next/server";
-
 
 export const ratelimit = new Ratelimit({
   redis: kv,
@@ -13,6 +10,6 @@ export const ratelimit = new Ratelimit({
 });
 
 export async function checkRateLimit(request: NextRequest) {
-    const ip = request.ip ?? "127.0.0.1";
-    return await ratelimit.limit(ip);
-} 
+  const ip = request.ip ?? "127.0.0.1";
+  return await ratelimit.limit(ip);
+}

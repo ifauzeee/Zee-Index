@@ -1,33 +1,37 @@
+import { NextResponse } from "next/server";
+import { getStorageDetails } from "@/lib/googleDrive";
+import { sendMail } from "@/lib/mailer";
+import { formatBytes } from "@/lib/utils";
+import { kv } from "@vercel/kv";
 
-import { NextResponse } from 'next/server';
-import { getStorageDetails } from '@/lib/googleDrive';
-import { sendMail } from '@/lib/mailer';
-import { formatBytes } from '@/lib/utils';
-import { kv } from '@vercel/kv';
-
-const WARNING_SENT_KEY = 'zee-index:storage-warning-sent';
+const WARNING_SENT_KEY = "zee-index:storage-warning-sent";
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization');
+  const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response('Unauthorized', { status: 401 });
+    return new Response("Unauthorized", { status: 401 });
   }
 
   try {
-    const threshold = parseFloat(process.env.STORAGE_WARNING_THRESHOLD || "0.90");
+    const threshold = parseFloat(
+      process.env.STORAGE_WARNING_THRESHOLD || "0.90",
+    );
     const details = await getStorageDetails();
     const usagePercentage = details.usage / details.limit;
 
     if (usagePercentage > threshold) {
-      
       const warningSentTimestamp = await kv.get(WARNING_SENT_KEY);
-      const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+      const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
       if (warningSentTimestamp && Number(warningSentTimestamp) > sevenDaysAgo) {
-        return NextResponse.json({ message: "Peringatan sudah dikirim baru-baru ini." });
+        return NextResponse.json({
+          message: "Peringatan sudah dikirim baru-baru ini.",
+        });
       }
 
-      const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim());
+      const adminEmails = process.env.ADMIN_EMAILS?.split(",").map((email) =>
+        email.trim(),
+      );
       if (!adminEmails || adminEmails.length === 0) {
         throw new Error("Tidak ada admin untuk dikirimi peringatan.");
       }
@@ -44,19 +48,27 @@ export async function GET(request: Request) {
 
       await sendMail({
         to: adminEmails,
-        subject: '⚠️ Peringatan: Penyimpanan Google Drive Hampir Penuh',
+        subject: "⚠️ Peringatan: Penyimpanan Google Drive Hampir Penuh",
         html: warningHtml,
       });
 
-      
       await kv.set(WARNING_SENT_KEY, Date.now());
-      
-      return NextResponse.json({ success: true, message: "Peringatan kapasitas terkirim." });
+
+      return NextResponse.json({
+        success: true,
+        message: "Peringatan kapasitas terkirim.",
+      });
     }
 
-    return NextResponse.json({ success: true, message: "Kapasitas penyimpanan masih aman." });
+    return NextResponse.json({
+      success: true,
+      message: "Kapasitas penyimpanan masih aman.",
+    });
   } catch (error: any) {
     console.error("Gagal memeriksa penyimpanan:", error);
-    return NextResponse.json({ error: 'Gagal memproses pemeriksaan penyimpanan.' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Gagal memproses pemeriksaan penyimpanan." },
+      { status: 500 },
+    );
   }
 }

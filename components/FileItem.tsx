@@ -1,11 +1,10 @@
-
 import type { DriveFile } from "@/lib/googleDrive";
-import { useAppStore } from '@/lib/store';
-import { formatBytes, getIcon, cn } from '@/lib/utils';
-import React from 'react';
-import { motion, Variants } from 'framer-motion';
-import Image from 'next/image';
-import { Lock, Star } from 'lucide-react';
+import { useAppStore } from "@/lib/store";
+import { formatBytes, getIcon, cn } from "@/lib/utils";
+import React from "react";
+import { motion, Variants } from "framer-motion";
+import Image from "next/image";
+import { Lock, Star } from "lucide-react";
 
 interface FileItemProps {
   file: DriveFile & { isFavorite?: boolean };
@@ -15,21 +14,27 @@ interface FileItemProps {
   isBulkMode: boolean;
 }
 
-export default function FileItem({ file, onClick, onContextMenu, isSelected, isBulkMode }: FileItemProps) {
+export default function FileItem({
+  file,
+  onClick,
+  onContextMenu,
+  isSelected,
+  isBulkMode,
+}: FileItemProps) {
   const { view } = useAppStore();
   const Icon = getIcon(file.mimeType);
 
   const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20, scale: 0.95 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      scale: 1, 
-      transition: { duration: 0.3, ease: [0.2, 0, 0.2, 1] }
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: { duration: 0.3, ease: [0.2, 0, 0.2, 1] },
     },
-    hover: { 
-      scale: 1.02, 
-      transition: { duration: 0.2 } 
+    hover: {
+      scale: 1.02,
+      transition: { duration: 0.2 },
     },
   };
 
@@ -44,7 +49,7 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
         isSelected && "bg-accent/80 ring-2 ring-primary",
         view === "list"
           ? "flex items-center p-3 bg-card border border-border shadow-sm hover:shadow-md hover:bg-accent/50"
-          : "flex flex-col items-center justify-center text-center p-2 sm:p-4 bg-card border border-border shadow-sm hover:shadow-md w-full"
+          : "flex flex-col items-center justify-center text-center p-2 sm:p-4 bg-card border border-border shadow-sm hover:shadow-md w-full",
       )}
       onClick={onClick}
       onContextMenu={onContextMenu}
@@ -52,9 +57,9 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
       <div
         className={cn(
           "flex w-full",
-          view === "list" 
-            ? "items-center gap-4" 
-            : "flex-col items-center justify-center gap-2"
+          view === "list"
+            ? "items-center gap-4"
+            : "flex-col items-center justify-center gap-2",
         )}
       >
         <div className="relative">
@@ -70,12 +75,17 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
               />
             </div>
           ) : (
-            <div className={cn("text-3xl text-primary shrink-0 flex items-center justify-center", view === "grid" && "text-4xl mb-2")}>
+            <div
+              className={cn(
+                "text-3xl text-primary shrink-0 flex items-center justify-center",
+                view === "grid" && "text-4xl mb-2",
+              )}
+            >
               {React.createElement(Icon, { size: view === "grid" ? 48 : 28 })}
             </div>
           )}
 
-          {view === 'grid' && file.isProtected && (
+          {view === "grid" && file.isProtected && (
             <div className="absolute -bottom-1 -right-1 flex items-center justify-center p-1.5 bg-background/60 backdrop-blur-sm rounded-full ring-2 ring-background/20">
               <Lock size={12} className="text-primary" />
             </div>
@@ -85,21 +95,30 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
         <div
           className={cn(
             "flex-1 min-w-0",
-            view === "grid" && "mt-2 w-full text-center"
+            view === "grid" && "mt-2 w-full text-center",
           )}
         >
           <p
             className={cn(
               "font-medium truncate flex items-center gap-1.5",
-              view === "list" ? "text-sm justify-start" : "text-xs sm:text-sm justify-center"
+              view === "list"
+                ? "text-sm justify-start"
+                : "text-xs sm:text-sm justify-center",
             )}
             title={file.name}
           >
-            {file.isFavorite && <Star size={12} className="text-yellow-400 fill-yellow-400 shrink-0" />}
-            {view === 'list' && file.isProtected && <Lock size={12} className="text-muted-foreground shrink-0" />}
+            {file.isFavorite && (
+              <Star
+                size={12}
+                className="text-yellow-400 fill-yellow-400 shrink-0"
+              />
+            )}
+            {view === "list" && file.isProtected && (
+              <Lock size={12} className="text-muted-foreground shrink-0" />
+            )}
             <span className="truncate">{file.name}</span>
           </p>
-          
+
           {view === "list" && !file.isFolder && (
             <p className="text-xs text-muted-foreground mt-1 text-left">
               {file.size ? formatBytes(parseInt(file.size)) : "-"} •{" "}
@@ -118,17 +137,19 @@ export default function FileItem({ file, onClick, onContextMenu, isSelected, isB
         </div>
 
         {isBulkMode && (
-           <input
+          <input
             type="checkbox"
             checked={isSelected}
             readOnly
             className={cn(
               "absolute h-5 w-5 pointer-events-none",
-              view === "list" ? "right-4 top-1/2 -translate-y-1/2" : "top-2 right-2",
-              "rounded border-primary text-primary focus:ring-primary"
+              view === "list"
+                ? "right-4 top-1/2 -translate-y-1/2"
+                : "top-2 right-2",
+              "rounded border-primary text-primary focus:ring-primary",
             )}
             onClick={(e) => e.stopPropagation()}
-           />
+          />
         )}
       </div>
     </motion.div>

@@ -1,18 +1,23 @@
-
-
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
 import type { DriveFile } from "@/lib/googleDrive";
-import { useAppStore } from '@/lib/store';
+import { useAppStore } from "@/lib/store";
 import FileItem from "./FileItem";
-import React from 'react';
+import React from "react";
 
 interface FileListProps {
   files: DriveFile[];
   onItemClick: (file: DriveFile) => void;
-  onItemContextMenu: (event: React.MouseEvent<HTMLDivElement>, file: DriveFile) => void;
+  onItemContextMenu: (
+    event: React.MouseEvent<HTMLDivElement>,
+    file: DriveFile,
+  ) => void;
 }
 
-export default function FileList({ files, onItemClick, onItemContextMenu }: FileListProps) {
+export default function FileList({
+  files,
+  onItemClick,
+  onItemContextMenu,
+}: FileListProps) {
   const { view, selectedFiles, isBulkMode } = useAppStore();
 
   if (files.length === 0) {
@@ -32,9 +37,10 @@ export default function FileList({ files, onItemClick, onItemContextMenu }: File
     },
   };
 
-  const containerClass = view === 'list'
-    ? 'flex flex-col gap-2'
-    : 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4';
+  const containerClass =
+    view === "list"
+      ? "flex flex-col gap-2"
+      : "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4";
 
   return (
     <motion.div
@@ -48,7 +54,9 @@ export default function FileList({ files, onItemClick, onItemContextMenu }: File
           key={file.id}
           file={file}
           onClick={() => onItemClick(file)}
-          onContextMenu={(event: React.MouseEvent<HTMLDivElement>) => onItemContextMenu(event, file)}
+          onContextMenu={(event: React.MouseEvent<HTMLDivElement>) =>
+            onItemContextMenu(event, file)
+          }
           isSelected={selectedFiles.includes(file.id)}
           isBulkMode={isBulkMode}
         />

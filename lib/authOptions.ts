@@ -1,19 +1,27 @@
 import { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { kv } from '@vercel/kv';
+import { kv } from "@vercel/kv";
 
-const ADMIN_EMAILS_KEY = 'zee-index:admins';
+const ADMIN_EMAILS_KEY = "zee-index:admins";
 
 async function ensureInitialAdmins() {
   try {
-    const initialAdmins = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()).filter(Boolean) || [];
+    const initialAdmins =
+      process.env.ADMIN_EMAILS?.split(",")
+        .map((email) => email.trim())
+        .filter(Boolean) || [];
     if (initialAdmins.length > 0) {
       const existingAdmins = await kv.smembers(ADMIN_EMAILS_KEY);
-      const adminsToAdd = initialAdmins.filter(email => !existingAdmins.includes(email));
-      
+      const adminsToAdd = initialAdmins.filter(
+        (email) => !existingAdmins.includes(email),
+      );
+
       if (adminsToAdd.length > 0) {
-        await kv.sadd(ADMIN_EMAILS_KEY, ...adminsToAdd as [string, ...string[]]);
-        console.log('Initial admins have been synced to Vercel KV.');
+        await kv.sadd(
+          ADMIN_EMAILS_KEY,
+          ...(adminsToAdd as [string, ...string[]]),
+        );
+        console.log("Initial admins have been synced to Vercel KV.");
       }
     }
   } catch (error) {
@@ -31,8 +39,8 @@ export const authOptions: AuthOptions = {
     }),
   ],
   pages: {
-    signIn: '/login',
-    error: '/login',
+    signIn: "/login",
+    error: "/login",
   },
   callbacks: {
     async jwt({ token, profile }) {
@@ -44,7 +52,7 @@ export const authOptions: AuthOptions = {
           token.role = "USER";
         }
         token.email = profile.email;
-        
+
         const is2FAEnabled = await kv.get(`2fa:enabled:${profile.email}`);
         if (is2FAEnabled) {
           token.twoFactorRequired = true;

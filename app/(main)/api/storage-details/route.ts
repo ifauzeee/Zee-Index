@@ -1,7 +1,6 @@
-import { NextResponse } from 'next/server';
-import { getStorageDetails } from '@/lib/googleDrive';
+import { NextResponse } from "next/server";
+import { getStorageDetails } from "@/lib/googleDrive";
 
-; 
 export const revalidate = 14400;
 
 export async function GET() {
@@ -9,10 +8,10 @@ export async function GET() {
     const details = await getStorageDetails();
     return NextResponse.json(details);
   } catch (error: any) {
-    console.error('Storage Details API Error:', error.message);
+    console.error("Storage Details API Error:", error.message);
     return NextResponse.json(
-      { error: 'Gagal mengambil detail penyimpanan.', details: error.message },
-      { status: 500 }
+      { error: "Gagal mengambil detail penyimpanan.", details: error.message },
+      { status: 500 },
     );
   }
 }

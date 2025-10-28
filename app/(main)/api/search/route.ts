@@ -1,67 +1,79 @@
-import { NextResponse } from 'next/server';
-import { getAccessToken, DriveFile } from '@/lib/googleDrive';
-import { isProtected } from '@/lib/auth';
+import { NextResponse } from "next/server";
+import { getAccessToken, DriveFile } from "@/lib/googleDrive";
+import { isProtected } from "@/lib/auth";
 
-const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, '');
+const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const rawSearchTerm = searchParams.get('q');
-  const folderId = searchParams.get('folderId');
-  const searchType = searchParams.get('searchType') || 'name';
+  const rawSearchTerm = searchParams.get("q");
+  const folderId = searchParams.get("folderId");
+  const searchType = searchParams.get("searchType") || "name";
 
   if (!rawSearchTerm) {
-    return NextResponse.json({ error: 'Search term is required.' }, { status: 400 });
+    return NextResponse.json(
+      { error: "Search term is required." },
+      { status: 400 },
+    );
   }
-  
+
   if (!folderId) {
-      return NextResponse.json({ error: 'Folder ID is required for a scoped search.' }, { status: 400 });
+    return NextResponse.json(
+      { error: "Folder ID is required for a scoped search." },
+      { status: 400 },
+    );
   }
 
   const sanitizedSearchTerm = sanitizeString(rawSearchTerm);
   const searchTerm = sanitizedSearchTerm.replace(/'/g, "''");
-  
+
   try {
     const accessToken = await getAccessToken();
-    const driveUrl = 'https://www.googleapis.com/drive/v3/files';
-    
-    const queryField = searchType === 'fullText' ? 'fullText' : 'name';
+    const driveUrl = "https://www.googleapis.com/drive/v3/files";
+
+    const queryField = searchType === "fullText" ? "fullText" : "name";
     let driveQuery = `${queryField} contains '${searchTerm}' and trashed=false`;
     driveQuery += ` and '${folderId}' in parents`;
-    
+
     const params = new URLSearchParams({
       q: driveQuery,
-      fields: 'files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents)',
-      pageSize: '100',
+      fields:
+        "files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents)",
+      pageSize: "100",
     });
-    
+
     const response = await fetch(`${driveUrl}?${params.toString()}`, {
       headers: {
-        'Authorization': `Bearer ${accessToken}`
+        Authorization: `Bearer ${accessToken}`,
       },
-      next: { revalidate: 3600 }
+      next: { revalidate: 3600 },
     });
-    
+
     if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Google Drive API Error: ${errorData.error.message}`);
+      const errorData = await response.json();
+      throw new Error(`Google Drive API Error: ${errorData.error.message}`);
     }
 
     const data = await response.json();
     const processedFiles = (data.files || []).map((file: DriveFile) => ({
       ...file,
-      isFolder: file.mimeType === 'application/vnd.google-apps.folder',
-      isProtected: file.mimeType === 'application/vnd.google-apps.folder' && isProtected(file.id),
+      isFolder: file.mimeType === "application/vnd.google-apps.folder",
+      isProtected:
+        file.mimeType === "application/vnd.google-apps.folder" &&
+        isProtected(file.id),
     }));
-    
-    return NextResponse.json({ files: processedFiles, nextPageToken: data.nextPageToken });
+
+    return NextResponse.json({
+      files: processedFiles,
+      nextPageToken: data.nextPageToken,
+    });
   } catch (error: any) {
-    console.error('Search API Error:', error.message);
+    console.error("Search API Error:", error.message);
     return NextResponse.json(
-      { error: 'Failed to perform search.', details: error.message },
-      { status: 500 }
+      { error: "Failed to perform search.", details: error.message },
+      { status: 500 },
     );
   }
 }

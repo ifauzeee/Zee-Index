@@ -1,10 +1,9 @@
+import { NextRequest, NextResponse } from "next/server";
+import { kv } from "@/lib/kv";
+import type { ShareLink } from "@/lib/store";
+import { jwtVerify } from "jose";
 
-import { NextRequest, NextResponse } from 'next/server';
-import { kv } from '@/lib/kv';
-import type { ShareLink } from '@/lib/store';
-import { jwtVerify } from 'jose';
-
-const SHARE_LINKS_KEY = 'zee-index:share-links';
+const SHARE_LINKS_KEY = "zee-index:share-links";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,10 +16,10 @@ export async function POST(req: NextRequest) {
 
     if (!jti) return new Response(null, { status: 204 });
 
-    const existingLinks: ShareLink[] = await kv.get(SHARE_LINKS_KEY) || [];
+    const existingLinks: ShareLink[] = (await kv.get(SHARE_LINKS_KEY)) || [];
     let linkFound = false;
 
-    const updatedLinks = existingLinks.map(link => {
+    const updatedLinks = existingLinks.map((link) => {
       if (link.jti === jti) {
         linkFound = true;
         return { ...link, viewCount: (link.viewCount || 0) + 1 };
@@ -34,8 +33,7 @@ export async function POST(req: NextRequest) {
 
     return new Response(null, { status: 204 });
   } catch (error) {
-    
-    console.error('Share link tracking error:', error);
+    console.error("Share link tracking error:", error);
     return new Response(null, { status: 204 });
   }
 }

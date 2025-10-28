@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/storage-check",
-      "schedule": "0 5 * * *" 
+      "schedule": "0 5 * * *"
     },
     {
       "path": "/api/cron/weekly-report",

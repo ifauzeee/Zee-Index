@@ -1,15 +1,16 @@
-import { NextResponse } from 'next/server';
-import { getAccessToken } from '@/lib/googleDrive';
-import JSZip from 'jszip';
-
-; 
+import { NextResponse } from "next/server";
+import { getAccessToken } from "@/lib/googleDrive";
+import JSZip from "jszip";
 
 export async function POST(request: Request) {
   try {
     const { fileIds } = await request.json();
 
     if (!fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {
-      return NextResponse.json({ error: 'Parameter fileIds tidak valid.' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Parameter fileIds tidak valid." },
+        { status: 400 },
+      );
     }
 
     const accessToken = await getAccessToken();
@@ -20,14 +21,14 @@ export async function POST(request: Request) {
       const detailsUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=name`;
 
       const detailsResponse = await fetch(detailsUrl, {
-        headers: { 'Authorization': `Bearer ${accessToken}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
       if (!detailsResponse.ok) continue;
       const fileDetails = await detailsResponse.json();
       const fileName = fileDetails.name || fileId;
 
       const fileResponse = await fetch(driveUrl, {
-        headers: { 'Authorization': `Bearer ${accessToken}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
 
       if (fileResponse.ok) {
@@ -36,15 +37,17 @@ export async function POST(request: Request) {
       }
     }
 
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const zipBlob = await zip.generateAsync({ type: "blob" });
     const headers = new Headers();
-    headers.set('Content-Type', 'application/zip');
-    headers.set('Content-Disposition', 'attachment; filename="download.zip"');
+    headers.set("Content-Type", "application/zip");
+    headers.set("Content-Disposition", 'attachment; filename="download.zip"');
 
     return new NextResponse(zipBlob, { status: 200, headers });
-
   } catch (error: any) {
-    console.error('Bulk Download API Error:', error.message);
-    return NextResponse.json({ error: 'Internal Server Error.' }, { status: 500 });
+    console.error("Bulk Download API Error:", error.message);
+    return NextResponse.json(
+      { error: "Internal Server Error." },
+      { status: 500 },
+    );
   }
 }

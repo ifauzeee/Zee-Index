@@ -45,10 +45,10 @@ Zee-Index is a self-hostable solution built with Next.js and TypeScript, offerin
 
 Zee-Index addresses the limitations of the standard Google Drive interface by providing:
 
-* **⚡ Superior Performance:** Built with **Next.js 14 (App Router)** and optimized with Vercel KV (Redis) caching for blazing-fast content delivery.
-* **🔒 Multilayered Security:** Offers granular access control with **Admin roles**, private folders, password-protected folders (with **bcrypt hashing**), **Two-Factor Authentication (2FA)**, and secure **JWT-signed share links**.
-* **🎨 Modern & Professional Interface:** A clean, responsive look using **Tailwind CSS** and **Shadcn/UI**, featuring smooth animations from **Framer Motion**.
-* **👑 Full Ownership:** Being **self-hosted** gives you complete control over your data and functionality, free from third-party ads or tracking.
+- **⚡ Superior Performance:** Built with **Next.js 14 (App Router)** and optimized with Vercel KV (Redis) caching for blazing-fast content delivery.
+- **🔒 Multilayered Security:** Offers granular access control with **Admin roles**, private folders, password-protected folders (with **bcrypt hashing**), **Two-Factor Authentication (2FA)**, and secure **JWT-signed share links**.
+- **🎨 Modern & Professional Interface:** A clean, responsive look using **Tailwind CSS** and **Shadcn/UI**, featuring smooth animations from **Framer Motion**.
+- **👑 Full Ownership:** Being **self-hosted** gives you complete control over your data and functionality, free from third-party ads or tracking.
 
 ---
 
@@ -57,43 +57,43 @@ Zee-Index addresses the limitations of the standard Google Drive interface by pr
 <details>
 <summary><strong>📂 File Management & Preview</strong></summary>
 
-* **Intuitive Navigation:** Directory navigation with breadcrumbs.
-* **Customizable Views:** Adjustable Grid & List view options.
-* **Internal Media Player:** Built-in player for videos (mp4, webm, mkv) and audio (mp3, wav).
-* **Comprehensive Document Previews:** PDF Viewer, Office Documents, E-books (.epub), Markdown rendering, and code viewer with syntax highlighting.
-* **Text Editor:** Edit text, code, and markdown files directly in the browser (**Admin-only**).
-* **Favorites Feature:** Mark important files for quick access for each user.
-* **Full File Actions (Admin):** Upload, Create Folder, Rename, Delete, Move, and Copy.
-* **Bulk Actions (Admin):** Download multiple files as .zip, delete, or move multiple items at once.
+- **Intuitive Navigation:** Directory navigation with breadcrumbs.
+- **Customizable Views:** Adjustable Grid & List view options.
+- **Internal Media Player:** Built-in player for videos (mp4, webm, mkv) and audio (mp3, wav).
+- **Comprehensive Document Previews:** PDF Viewer, Office Documents, E-books (.epub), Markdown rendering, and code viewer with syntax highlighting.
+- **Text Editor:** Edit text, code, and markdown files directly in the browser (**Admin-only**).
+- **Favorites Feature:** Mark important files for quick access for each user.
+- **Full File Actions (Admin):** Upload, Create Folder, Rename, Delete, Move, and Copy.
+- **Bulk Actions (Admin):** Download multiple files as .zip, delete, or move multiple items at once.
 </details>
 
 <details>
 <summary><strong>🔍 Advanced Search & Filtering</strong></summary>
 
-* **Scoped & Global Search:** Search within the current folder locally or globally across the entire connected drive.
-* **Content Filtering:** Filter searches by file name or file content.
-* **Sorting Options:** Sort files by name, size, or modification date.
+- **Scoped & Global Search:** Search within the current folder locally or globally across the entire connected drive.
+- **Content Filtering:** Filter searches by file name or file content.
+- **Sorting Options:** Sort files by name, size, or modification date.
 
 </details>
 
 <details>
 <summary><strong>🔐 Security & Access Control (Admin)</strong></summary>
 
-* **Centralized Admin Dashboard:** Manage users, share links, and security settings from a single place.
-* **Role Management:** Clear access distinction between **ADMIN** and **USER**.
-* **Private Folders:** Hide sensitive folders from non-admin users.
-* **Password-Protected Folders:** Secure folders with unique credentials stored safely using **bcrypt hashing**.
-* **Two-Factor Authentication (2FA):** Enhance account security with TOTP-based 2FA.
-* **Detailed Audit Log:** Monitor all critical activities such as uploads, downloads, deletions, and logins.
+- **Centralized Admin Dashboard:** Manage users, share links, and security settings from a single place.
+- **Role Management:** Clear access distinction between **ADMIN** and **USER**.
+- **Private Folders:** Hide sensitive folders from non-admin users.
+- **Password-Protected Folders:** Secure folders with unique credentials stored safely using **bcrypt hashing**.
+- **Two-Factor Authentication (2FA):** Enhance account security with TOTP-based 2FA.
+- **Detailed Audit Log:** Monitor all critical activities such as uploads, downloads, deletions, and logins.
 
 </details>
 
 <details>
 <summary><strong>🔗 Sharing & Collaboration (Admin)</strong></summary>
 
-* **Secure Time-Bound Links:** Create secure share links with expiration times (seconds, minutes, hours, days).
-* **Login Requirement:** Option to enforce login for users accessing the shared link.
-* **Link Management Dashboard:** Monitor click counts, view active/expired links, and revoke access at any time.
+- **Secure Time-Bound Links:** Create secure share links with expiration times (seconds, minutes, hours, days).
+- **Login Requirement:** Option to enforce login for users accessing the shared link.
+- **Link Management Dashboard:** Monitor click counts, view active/expired links, and revoke access at any time.
 
 </details>
 
@@ -101,27 +101,27 @@ Zee-Index addresses the limitations of the standard Google Drive interface by pr
 
 ## Tech Stack
 
-| Category | Technology |
-| :--- | :--- |
-| **Framework** | Next.js 14 (App Router) |
-| **Language** | TypeScript |
-| **Styling** | Tailwind CSS + Shadcn/UI + Framer Motion |
-| **Authentication** | NextAuth.js v4 (Google Provider) |
-| **Database & Caching** | Vercel KV / Redis |
-| **API** | Google Drive API v3 |
-| **State Management** | Zustand |
-| **Validation** | Zod |
-| **Deployment** | Vercel |
+| Category               | Technology                               |
+| :--------------------- | :--------------------------------------- |
+| **Framework**          | Next.js 14 (App Router)                  |
+| **Language**           | TypeScript                               |
+| **Styling**            | Tailwind CSS + Shadcn/UI + Framer Motion |
+| **Authentication**     | NextAuth.js v4 (Google Provider)         |
+| **Database & Caching** | Vercel KV / Redis                        |
+| **API**                | Google Drive API v3                      |
+| **State Management**   | Zustand                                  |
+| **Validation**         | Zod                                      |
+| **Deployment**         | Vercel                                   |
 
 ---
 
 ## Project Architecture
 
-* **Frontend:** Built with **React** and **Next.js** (SSR), with interactivity managed by **Zustand**.
-* **Backend (BFF):** **Next.js API Routes** act as a secure intermediary between the client and the Google Drive API. All secrets remain server-side.
-* **Authentication:** The login flow is handled by **NextAuth.js**, which generates JWTs for session management.
-* **Caching:** **Vercel KV** is extensively used to store sessions, tokens, admin lists, and cache API data (like folder hierarchy) to minimize latency.
-* **Cron Jobs:** Scheduled maintenance tasks (e.g., weekly reports, storage checks) are configured via `vercel.json`.
+- **Frontend:** Built with **React** and **Next.js** (SSR), with interactivity managed by **Zustand**.
+- **Backend (BFF):** **Next.js API Routes** act as a secure intermediary between the client and the Google Drive API. All secrets remain server-side.
+- **Authentication:** The login flow is handled by **NextAuth.js**, which generates JWTs for session management.
+- **Caching:** **Vercel KV** is extensively used to store sessions, tokens, admin lists, and cache API data (like folder hierarchy) to minimize latency.
+- **Cron Jobs:** Scheduled maintenance tasks (e.g., weekly reports, storage checks) are configured via `vercel.json`.
 
 ---
 
@@ -129,18 +129,18 @@ Zee-Index addresses the limitations of the standard Google Drive interface by pr
 
 ### Prerequisites
 
-* Node.js v18+
-* pnpm (`npm install -g pnpm`)
-* Google Cloud Account
-* Vercel & Upstash Account (for Vercel KV)
-* Git
+- Node.js v18+
+- pnpm (`npm install -g pnpm`)
+- Google Cloud Account
+- Vercel & Upstash Account (for Vercel KV)
+- Git
 
 ### Step 1: Clone the Repository
 
 ```bash
 git clone https://github.com/ifauzeee/Zee-Index.git
 cd Zee-Index
-````
+```
 
 ### Step 2: Install Dependencies
 
@@ -155,8 +155,8 @@ pnpm install
 3.  Configure the **OAuth Consent Screen**.
 4.  Create **OAuth 2.0 Client ID** credentials.
 5.  Add the authorized redirect URIs:
-      * For development: `http://localhost:3000/api/auth/callback/google`
-      * For production: `https://yourdomain.com/api/auth/callback/google`
+    - For development: `http://localhost:3000/api/auth/callback/google`
+    - For production: `https://yourdomain.com/api/auth/callback/google`
 6.  Copy the **Client ID** & **Client Secret**.
 7.  Use the **OAuth 2.0 Playground** to obtain your **Refresh Token**.
 
@@ -176,28 +176,28 @@ pnpm dev
 
 Open `http://localhost:3000` in your browser.
 
------
+---
 
 ## Environment Variables (.env)
 
-| Variable | Required | Description |
-| :--- | :--- | :--- |
-| `GOOGLE_CLIENT_ID` | ✅ | Your Google OAuth Client ID. |
-| `GOOGLE_CLIENT_SECRET` | ✅ | Your Google OAuth Client Secret. |
-| `GOOGLE_REFRESH_TOKEN` | ✅ | The Refresh Token for Google Drive API access. |
-| `NEXT_PUBLIC_ROOT_FOLDER_ID` | ✅ | The ID of the main folder in Google Drive to be displayed. |
-| `NEXT_PUBLIC_ROOT_FOLDER_NAME` | ✅ | The name to be displayed for the root folder. |
-| `NEXTAUTH_SECRET` | ✅ | A random string for NextAuth.js session encryption. |
-| `NEXTAUTH_URL` | ✅ | The full URL of your application (e.g., `http://localhost:3000`). |
-| `ADMIN_EMAILS` | Optional | A list of initial admin emails (comma-separated). |
-| `PRIVATE_FOLDER_IDS` | Optional | IDs of folders to be hidden from non-admins (comma-separated). |
-| `SHARE_SECRET_KEY` | ✅ | A secret key (random string) for signing share link JWTs. |
-| `KV_URL` & `KV_..._TOKEN` | ✅ | Credentials for Vercel KV (automatically set by Vercel). |
-| `SMTP_HOST`, `SMTP_PORT`, ... | Optional | Email server credentials for notifications (reports, alerts). |
-| `CRON_SECRET` | Optional | A secret key to secure cron job execution. |
-| `PROTECTED_FOLDERS_JSON` | ❌ | **[DEPRECATED]** Do not use. Manage protected folders via the Admin Dashboard. |
+| Variable                       | Required | Description                                                                    |
+| :----------------------------- | :------- | :----------------------------------------------------------------------------- |
+| `GOOGLE_CLIENT_ID`             | ✅       | Your Google OAuth Client ID.                                                   |
+| `GOOGLE_CLIENT_SECRET`         | ✅       | Your Google OAuth Client Secret.                                               |
+| `GOOGLE_REFRESH_TOKEN`         | ✅       | The Refresh Token for Google Drive API access.                                 |
+| `NEXT_PUBLIC_ROOT_FOLDER_ID`   | ✅       | The ID of the main folder in Google Drive to be displayed.                     |
+| `NEXT_PUBLIC_ROOT_FOLDER_NAME` | ✅       | The name to be displayed for the root folder.                                  |
+| `NEXTAUTH_SECRET`              | ✅       | A random string for NextAuth.js session encryption.                            |
+| `NEXTAUTH_URL`                 | ✅       | The full URL of your application (e.g., `http://localhost:3000`).              |
+| `ADMIN_EMAILS`                 | Optional | A list of initial admin emails (comma-separated).                              |
+| `PRIVATE_FOLDER_IDS`           | Optional | IDs of folders to be hidden from non-admins (comma-separated).                 |
+| `SHARE_SECRET_KEY`             | ✅       | A secret key (random string) for signing share link JWTs.                      |
+| `KV_URL` & `KV_..._TOKEN`      | ✅       | Credentials for Vercel KV (automatically set by Vercel).                       |
+| `SMTP_HOST`, `SMTP_PORT`, ...  | Optional | Email server credentials for notifications (reports, alerts).                  |
+| `CRON_SECRET`                  | Optional | A secret key to secure cron job execution.                                     |
+| `PROTECTED_FOLDERS_JSON`       | ❌       | **[DEPRECATED]** Do not use. Manage protected folders via the Admin Dashboard. |
 
------
+---
 
 ## Deployment
 
@@ -208,7 +208,7 @@ Open `http://localhost:3000` in your browser.
 5.  Add the production redirect URI in your Google OAuth credentials.
 6.  **Deploy\!**
 
------
+---
 
 ## Contributing
 
@@ -221,7 +221,7 @@ Contributions are highly welcome\! Please feel free to fork this repository, cre
 5.  Push to your branch: `git push origin feature/AwesomeFeature`
 6.  Open a Pull Request.
 
------
+---
 
 ## License
 

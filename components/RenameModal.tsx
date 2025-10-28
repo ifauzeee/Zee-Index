@@ -1,9 +1,8 @@
-
 "use client";
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { X } from "lucide-react";
 
 interface RenameModalProps {
   currentName: string;
@@ -11,7 +10,11 @@ interface RenameModalProps {
   onRename: (newName: string) => Promise<void>;
 }
 
-export default function RenameModal({ currentName, onClose, onRename }: RenameModalProps) {
+export default function RenameModal({
+  currentName,
+  onClose,
+  onRename,
+}: RenameModalProps) {
   const [newName, setNewName] = useState(currentName);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -23,9 +26,9 @@ export default function RenameModal({ currentName, onClose, onRename }: RenameMo
   };
 
   return (
-    <motion.div 
-      className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" 
-      initial={{ opacity: 0 }} 
+    <motion.div
+      className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+      initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       onClick={onClose}
     >
@@ -35,7 +38,10 @@ export default function RenameModal({ currentName, onClose, onRename }: RenameMo
         animate={{ scale: 1 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button onClick={onClose} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-muted-foreground hover:text-foreground"
+        >
           <X size={20} />
         </button>
         <h3 className="text-lg font-semibold mb-4">Ubah Nama File</h3>
@@ -49,7 +55,11 @@ export default function RenameModal({ currentName, onClose, onRename }: RenameMo
             onFocus={(e) => e.target.select()}
           />
           <div className="flex justify-end gap-2 mt-4">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-md hover:bg-accent">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-md hover:bg-accent"
+            >
               Batal
             </button>
             <button
@@ -57,7 +67,7 @@ export default function RenameModal({ currentName, onClose, onRename }: RenameMo
               disabled={isLoading || !newName || newName === currentName}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:bg-primary/50"
             >
-              {isLoading ? 'Menyimpan...' : 'Simpan'}
+              {isLoading ? "Menyimpan..." : "Simpan"}
             </button>
           </div>
         </form>

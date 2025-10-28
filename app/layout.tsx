@@ -1,14 +1,13 @@
-
-
-import type { Metadata } from 'next';
-import { Providers } from './providers'; 
-import './(main)/globals.css'; 
-import '@fortawesome/fontawesome-free/css/all.min.css';
-import 'plyr/dist/plyr.css';
+import type { Metadata } from "next";
+import { Providers } from "./providers";
+import "./(main)/globals.css";
+import "@fortawesome/fontawesome-free/css/all.min.css";
+import "plyr/dist/plyr.css";
 
 export const metadata: Metadata = {
-  title: 'Zee Index - Google Drive Index',
-  description: 'A modern, fast, and feature-rich Google Drive indexer built with Next.js.',
+  title: "Zee Index - Google Drive Index",
+  description:
+    "A modern, fast, and feature-rich Google Drive indexer built with Next.js.",
 };
 
 export default function RootLayout({
