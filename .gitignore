@@ -1,50 +1,23 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# Dependencies
-# Hindari mengunggah folder ini karena ukurannya sangat besar.
-# Siapa pun bisa menginstalnya kembali dengan `npm install`.
 /node_modules
 /.pnp
 .pnp.*
-
-# Build artifacts
-# Folder ini berisi hasil 'build' proyek Anda, yang dibuat secara otomatis.
 /.next/
 /out/
-
-# Production
 /build
-
-# Log files
-# File log untuk debugging yang tidak perlu dibagikan.
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-
-# Environment variables
-# SANGAT PENTING: File-file ini berisi kunci rahasia (API keys, database URL).
-# JANGAN PERNAH diunggah ke GitHub.
 .env.local
 .env*.local
 .env
-# Vercel
-# Konfigurasi spesifik untuk deployment di Vercel.
 .vercel
-
-# TypeScript
-# File cache sementara yang dibuat oleh TypeScript.
 *.tsbuildinfo
 next-env.d.ts
-
-# Lain-lain
-# File sistem operasi dan file sementara.
 .DS_Store
 *.pem
 /lib/generated/prisma
-
-# File yang Dihasilkan Secara Manual
-# File ini dibuat untuk keperluan diskusi kita dan bukan bagian dari kode proyek.
 all_project_code.txt
 cat.py
 cmtdel.js
+analysis_results

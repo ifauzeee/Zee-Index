@@ -104,9 +104,11 @@ export default function MoveModal({
           >
             <X size={20} />
           </button>
+          {/* BARIS YANG DIMODIFIKASI */}
           <h3 className="text-lg font-semibold mb-2">
-            Pindahkan "{fileToMove.name}"
+            Pindahkan &quot;{fileToMove.name}&quot;
           </h3>
+          {/* AKHIR MODIFIKASI */}
           <p className="text-sm text-muted-foreground mb-4">
             Pilih folder tujuan:
           </p>

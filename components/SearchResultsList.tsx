@@ -110,9 +110,11 @@ export default function SearchResultsList() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
+      {/* BARIS YANG DIMODIFIKASI */}
       <h1 className="text-xl font-bold mb-8">
-        Hasil Pencarian untuk "{searchTerm}"
+        Hasil Pencarian untuk &quot;{searchTerm}&quot;
       </h1>
+      {/* AKHIR MODIFIKASI */}
       {results.length > 0 ? (
         <FileList
           files={results}
