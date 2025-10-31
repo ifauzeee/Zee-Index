@@ -15,10 +15,8 @@ export default function FavoritesPage() {
   const { addToast, shareToken } = useAppStore();
   const [favoriteFiles, setFavoriteFiles] = useState<DriveFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
-
   const fetchFavorites = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -32,11 +30,9 @@ export default function FavoritesPage() {
       setIsLoading(false);
     }
   }, [addToast]);
-
   useEffect(() => {
     fetchFavorites();
   }, [fetchFavorites]);
-
   const handleItemClick = useCallback(
     (file: DriveFile) => {
       const parentFolder = file.parents?.[0];
@@ -44,7 +40,9 @@ export default function FavoritesPage() {
       if (file.isFolder) {
         destinationUrl = `/folder/${file.id}`;
       } else if (parentFolder) {
-        destinationUrl = `/folder/${parentFolder}/file/${file.id}/${createSlug(file.name)}`;
+        destinationUrl = `/folder/${parentFolder}/file/${file.id}/${createSlug(
+          file.name,
+        )}`;
       } else {
         addToast({
           message: "Tidak dapat menemukan lokasi file.",
@@ -56,7 +54,6 @@ export default function FavoritesPage() {
     },
     [router, addToast],
   );
-
   if (isLoading) {
     return <Loading />;
   }
@@ -73,6 +70,7 @@ export default function FavoritesPage() {
           files={favoriteFiles}
           onItemClick={handleItemClick}
           onItemContextMenu={(e) => e.preventDefault()}
+          activeFileId={null}
         />
       ) : (
         <div className="text-center py-20 text-muted-foreground">
