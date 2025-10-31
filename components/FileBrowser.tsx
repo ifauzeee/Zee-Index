@@ -14,7 +14,15 @@ import { useAppStore } from "@/lib/store";
 import Loading from "@/components/Loading";
 import FileList from "@/components/FileList";
 import AuthModal from "./AuthModal";
-import { List, Grid, CheckSquare, Share2, Upload, Loader2 } from "lucide-react";
+import {
+  List,
+  Grid,
+  CheckSquare,
+  Share2,
+  Upload,
+  Loader2,
+  X,
+} from "lucide-react";
 import ContextMenu from "./ContextMenu";
 import RenameModal from "./RenameModal";
 import DeleteConfirm from "./DeleteConfirm";
@@ -22,6 +30,8 @@ import UploadModal from "./UploadModal";
 import MoveModal from "./MoveModal";
 import ShareButton from "./ShareButton";
 import { useSession } from "next-auth/react";
+import FileDetail from "./FileDetail";
+import DetailsPanel from "./DetailsPanel";
 
 interface HistoryItem {
   id: string;
@@ -63,6 +73,10 @@ export default function FileBrowser({
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const loaderRef = useRef<HTMLDivElement | null>(null);
+  const [activeFileId, setActiveFileId] = useState<string | null>(null);
+  const [previewFile, setPreviewFile] = useState<DriveFile | null>(null);
+  const [detailsFile, setDetailsFile] = useState<DriveFile | null>(null);
+
   const {
     sort,
     isBulkMode,
@@ -84,33 +98,58 @@ export default function FileBrowser({
     fetchFavorites,
     toggleFavorite,
   } = useAppStore();
-
   useEffect(() => {
     if (sessionStatus === "authenticated" && !user) {
       fetchUser();
       fetchFavorites();
     }
   }, [sessionStatus, user, fetchUser, fetchFavorites]);
-
   useEffect(() => {
     const currentShareToken = searchParams.get("share_token");
     if (currentShareToken) {
       setShareToken(currentShareToken);
     }
   }, [searchParams, setShareToken]);
-
   const currentFolderId =
     history.length > 0
       ? history[history.length - 1]?.id
       : initialFolderId || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
-
   useEffect(() => {
     setCurrentFolderId(currentFolderId);
   }, [currentFolderId, setCurrentFolderId]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space" && activeFileId && !previewFile && !detailsFile) {
+        e.preventDefault();
+        const fileToPreview = files.find((f) => f.id === activeFileId);
+        if (fileToPreview && !fileToPreview.isFolder) {
+          setPreviewFile(fileToPreview);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [activeFileId, files, previewFile, detailsFile]);
+
+  useEffect(() => {
+    const isOverlayActive = contextMenu || detailsFile || previewFile;
+
+    if (isOverlayActive) {
+      document.body.classList.add("mobile-menu-open"); 
+    } else {
+      document.body.classList.remove("mobile-menu-open");
+    }
+
+    return () => {
+      document.body.classList.remove("mobile-menu-open");
+    };
+  }, [contextMenu, detailsFile, previewFile]);
+
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
-
   const handleFetchError = useCallback(
     async (
       response: Response,
@@ -138,12 +177,12 @@ export default function FileBrowser({
     },
     [addToast, router, shareToken],
   );
-
   const fetchFiles = useCallback(
     async (folderId: string, folderName: string) => {
       setIsLoading(true);
       setFiles([]);
       setNextPageToken(null);
+      setActiveFileId(null);
       try {
         const url = new URL(window.location.origin + "/api/files");
         url.searchParams.append("folderId", folderId);
@@ -181,7 +220,6 @@ export default function FileBrowser({
     },
     [folderTokens, handleFetchError, addToast, shareToken],
   );
-
   const fetchNextPage = useCallback(async () => {
     if (isFetchingNextPage || !nextPageToken || !currentFolderId) return;
 
@@ -222,7 +260,6 @@ export default function FileBrowser({
     folderTokens,
     addToast,
   ]);
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -244,7 +281,6 @@ export default function FileBrowser({
       }
     };
   }, [fetchNextPage]);
-
   useEffect(() => {
     if (sessionStatus === "loading" && !shareToken) {
       setIsLoading(true);
@@ -286,7 +322,7 @@ export default function FileBrowser({
         fetchPath();
       }
     }
-  }, [initialFolderId, sessionStatus, shareToken, router, addToast, history]); // history added to dependencies
+  }, [initialFolderId, sessionStatus, shareToken, router, addToast, history]);
 
   useEffect(() => {
     const currentFolder = history[history.length - 1];
@@ -294,27 +330,38 @@ export default function FileBrowser({
       fetchFiles(currentFolder.id, currentFolder.name);
     }
   }, [refreshKey, history, fetchFiles]);
-
   const handleItemClick = (file: DriveFile) => {
     if (isBulkMode) {
       toggleSelection(file.id);
       return;
     }
 
-    if (file.isFolder && file.isProtected && !folderTokens[file.id]) {
-      setAuthModal({ isOpen: true, folderId: file.id, folderName: file.name });
+    if (file.isFolder) {
+      if (file.isProtected && !folderTokens[file.id]) {
+        setAuthModal({ isOpen: true, folderId: file.id, folderName: file.name });
+        return;
+      }
+      let destinationUrl = `/folder/${file.id}`;
+      if (shareToken) {
+        destinationUrl += `?share_token=${shareToken}`;
+      }
+      setActiveFileId(null);
+      router.push(destinationUrl);
       return;
     }
 
-    let destinationUrl = file.isFolder
-      ? `/folder/${file.id}`
-      : `/folder/${currentFolderId}/file/${file.id}/${createSlug(file.name)}`;
-
-    if (shareToken) {
-      destinationUrl += `?share_token=${shareToken}`;
+    if (activeFileId === file.id) {
+      let destinationUrl = `/folder/${currentFolderId}/file/${
+        file.id
+      }/${createSlug(file.name)}`;
+      if (shareToken) {
+        destinationUrl += `?share_token=${shareToken}`;
+      }
+      setActiveFileId(null);
+      router.push(destinationUrl);
+    } else {
+      setActiveFileId(file.id);
     }
-
-    router.push(destinationUrl);
   };
 
   const handleAuthSubmit = async (id: string, password: string) => {
@@ -340,7 +387,6 @@ export default function FileBrowser({
       setIsAuthLoading(false);
     }
   };
-
   const handleBreadcrumbClick = (folderId: string) => {
     if (shareToken && folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
       addToast({
@@ -359,17 +405,16 @@ export default function FileBrowser({
     }
     router.push(folderUrl);
   };
-
   const handleContextMenu = useCallback(
     (event: React.MouseEvent, file: DriveFile) => {
       event.preventDefault();
       if (isBulkMode || shareToken) return;
       if (!user) return;
+      setActiveFileId(file.id);
       setContextMenu({ x: event.clientX, y: event.clientY, file });
     },
     [isBulkMode, shareToken, user],
   );
-
   const handleShare = (file: DriveFile | null) => {
     if (user?.role !== "ADMIN") {
       addToast({ message: "Fitur berbagi hanya untuk Admin.", type: "error" });
@@ -377,7 +422,6 @@ export default function FileBrowser({
     }
     setActionState({ type: "share", file });
   };
-
   const handleToggleFavorite = () => {
     if (!contextMenu?.file) return;
     const { file } = contextMenu;
@@ -434,7 +478,6 @@ export default function FileBrowser({
       addToast({ message: err.message, type: "error" });
     }
   };
-
   const handleDelete = async () => {
     if (!actionState.file) return;
     try {
@@ -454,7 +497,6 @@ export default function FileBrowser({
       addToast({ message: err.message, type: "error" });
     }
   };
-
   const handleMove = async (newParentId: string) => {
     if (!actionState.file || !actionState.file.parents) {
       setActionState({ type: null, file: null });
@@ -482,7 +524,6 @@ export default function FileBrowser({
       addToast({ message: err.message, type: "error" });
     }
   };
-
   const sortedFiles = useMemo(() => {
     return [...files]
       .map((file) => ({ ...file, isFavorite: favorites.includes(file.id) }))
@@ -507,12 +548,10 @@ export default function FileBrowser({
         }
       });
   }, [files, sort, favorites]);
-
   const getSharePath = (file: DriveFile) => {
     if (file.isFolder) return `/folder/${file.id}`;
     return `/folder/${currentFolderId}/file/${file.id}/${createSlug(file.name)}`;
   };
-
   if (isLoading || (sessionStatus === "loading" && !shareToken)) {
     return <Loading />;
   }
@@ -558,6 +597,21 @@ export default function FileBrowser({
             isFavorite={favorites.includes(contextMenu.file.id)}
             onToggleFavorite={handleToggleFavorite}
             onCopy={handleCopy}
+            onShowDetails={() => {
+              setDetailsFile(contextMenu.file);
+              setContextMenu(null);
+            }}
+            onPreview={() => {
+              if (!contextMenu.file.isFolder) {
+                setPreviewFile(contextMenu.file);
+              } else {
+                addToast({
+                  message: "Pratinjau cepat tidak tersedia untuk folder.",
+                  type: "info",
+                });
+              }
+              setContextMenu(null);
+            }}
           />
         )}
         {actionState.type === "rename" && actionState.file && (
@@ -595,6 +649,37 @@ export default function FileBrowser({
             onClose={() => setIsUploadModalOpen(false)}
           />
         )}
+        {previewFile && (
+          <motion.div
+            className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setPreviewFile(null)}
+          >
+            <motion.div
+              className="relative w-full h-full max-w-6xl max-h-[90vh] bg-background rounded-lg shadow-xl overflow-hidden"
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setPreviewFile(null)}
+                className="absolute top-3 right-3 z-50 p-2 bg-background/50 rounded-full text-foreground hover:bg-background"
+              >
+                <X size={24} />
+              </button>
+              <FileDetail file={previewFile} isModal={true} />
+            </motion.div>
+          </motion.div>
+        )}
+        {detailsFile && (
+          <DetailsPanel
+            file={detailsFile}
+            onClose={() => setDetailsFile(null)}
+          />
+        )}
       </AnimatePresence>
       <div className="flex justify-between items-center py-4 overflow-x-hidden">
         <nav className="flex items-center space-x-2 text-sm text-muted-foreground overflow-x-auto whitespace-nowrap">
@@ -602,7 +687,11 @@ export default function FileBrowser({
             <span key={folder.id} className="flex items-center">
               <button
                 onClick={() => handleBreadcrumbClick(folder.id)}
-                className={`transition-colors ${shareToken && index === 0 ? "cursor-default text-muted-foreground" : "hover:text-primary"}`}
+                className={`transition-colors ${
+                  shareToken && index === 0
+                    ? "cursor-default text-muted-foreground"
+                    : "hover:text-primary"
+                }`}
               >
                 {folder.name}
               </button>
@@ -622,21 +711,19 @@ export default function FileBrowser({
                 <Upload size={18} />
               </button>
               <button
-                // --- PERBAIKAN DI SINI ---
                 onClick={() =>
                   handleShare({
                     id: currentFolderId,
                     name: history[history.length - 1]?.name || "Folder",
                     isFolder: true,
-                    mimeType: "application/vnd.google-apps.folder", // Tipe mime folder
-                    modifiedTime: "", // Placeholder
-                    createdTime: "", // Placeholder
-                    hasThumbnail: false, // Placeholder
-                    webViewLink: "", // Placeholder
-                    trashed: false, // <-- Tambahkan ini
+                    mimeType: "application/vnd.google-apps.folder",
+                    modifiedTime: "",
+                    createdTime: "",
+                    hasThumbnail: false,
+                    webViewLink: "",
+                    trashed: false,
                   })
                 }
-                // --- AKHIR PERBAIKAN ---
                 className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground"
                 title="Bagikan Folder Ini"
               >
@@ -644,7 +731,11 @@ export default function FileBrowser({
               </button>
               <button
                 onClick={() => setBulkMode(!isBulkMode)}
-                className={`p-2 rounded-lg transition-colors flex items-center justify-center text-sm ${isBulkMode ? "bg-blue-600 text-white" : "bg-transparent hover:bg-accent text-foreground"}`}
+                className={`p-2 rounded-lg transition-colors flex items-center justify-center text-sm ${
+                  isBulkMode
+                    ? "bg-blue-600 text-white"
+                    : "bg-transparent hover:bg-accent text-foreground"
+                }`}
                 title="Pilih Beberapa File"
               >
                 <CheckSquare size={18} />
@@ -655,14 +746,22 @@ export default function FileBrowser({
           <div className="flex items-center border border-border rounded-lg p-0.5">
             <button
               onClick={() => setView("list")}
-              className={`p-1.5 rounded-md transition-colors ${view === "list" ? "bg-background text-primary shadow-sm" : "hover:bg-accent/50 text-muted-foreground"}`}
+              className={`p-1.5 rounded-md transition-colors ${
+                view === "list"
+                  ? "bg-background text-primary shadow-sm"
+                  : "hover:bg-accent/50 text-muted-foreground"
+              }`}
               title="Tampilan Daftar"
             >
               <List size={18} />
             </button>
             <button
               onClick={() => setView("grid")}
-              className={`p-1.5 rounded-md transition-colors ${view === "grid" ? "bg-background text-primary shadow-sm" : "hover:bg-accent/50 text-muted-foreground"}`}
+              className={`p-1.5 rounded-md transition-colors ${
+                view === "grid"
+                  ? "bg-background text-primary shadow-sm"
+                  : "hover:bg-accent/50 text-muted-foreground"
+              }`}
               title="Tampilan Grid"
             >
               <Grid size={18} />
@@ -677,10 +776,10 @@ export default function FileBrowser({
           <>
             <FileList
               files={sortedFiles}
+              activeFileId={activeFileId}
               onItemClick={handleItemClick}
               onItemContextMenu={handleContextMenu}
             />
-            {/* Infinite scroll loader */}
             <div
               ref={loaderRef}
               className="flex justify-center items-center p-4 h-20"

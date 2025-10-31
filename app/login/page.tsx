@@ -102,7 +102,7 @@ function CustomLoginPage() {
             </div>
 
             <p className="text-center text-xs text-muted-foreground pt-12">
-              Â© {new Date().getFullYear()} - Dibuat oleh{" "}
+              © {new Date().getFullYear()} - Dibuat oleh{" "}
               <a
                 href="https://ifauzeee.vercel.app/"
                 target="_blank"

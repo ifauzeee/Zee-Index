@@ -1,6 +1,14 @@
 import { motion } from "framer-motion";
-import { Pencil, Trash2, Share2, Move, Star, Copy } from "lucide-react";
-
+import {
+  Pencil,
+  Trash2,
+  Share2,
+  Move,
+  Star,
+  Copy,
+  Info,
+  Eye,
+} from "lucide-react";
 interface ContextMenuProps {
   x: number;
   y: number;
@@ -12,6 +20,8 @@ interface ContextMenuProps {
   onToggleFavorite: () => void;
   isFavorite: boolean;
   onCopy: () => void;
+  onShowDetails: () => void;
+  onPreview: () => void;
 }
 
 export default function ContextMenu({
@@ -25,6 +35,8 @@ export default function ContextMenu({
   onToggleFavorite,
   isFavorite,
   onCopy,
+  onShowDetails,
+  onPreview,
 }: ContextMenuProps) {
   return (
     <div className="fixed inset-0 z-50" onClick={onClose}>
@@ -36,6 +48,23 @@ export default function ContextMenu({
         transition={{ duration: 0.1 }}
       >
         <ul>
+          <li>
+            <button
+              onClick={onPreview}
+              className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent flex items-center gap-2"
+            >
+              <Eye size={16} /> Pratinjau Cepat
+            </button>
+          </li>
+          <li>
+            <button
+              onClick={onShowDetails}
+              className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent flex items-center gap-2"
+            >
+              <Info size={16} /> Lihat Detail
+            </button>
+          </li>
+          <li className="border-t my-1"></li>
           <li>
             <button
               onClick={onToggleFavorite}

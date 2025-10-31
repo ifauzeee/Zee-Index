@@ -8,6 +8,7 @@ import React, {
   useCallback,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from "@/lib/store";
@@ -19,27 +20,30 @@ import Plyr from "plyr";
 import Prism from "prismjs";
 import "prismjs/plugins/line-numbers/prism-line-numbers.min.js";
 import { getFileType, formatBytes, formatDuration, getIcon } from "@/lib/utils";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Save,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { renderToString } from "react-dom/server";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 
 declare const pdfjsLib: any;
 declare const ePub: any;
-
 const LoadingPreview: React.FC = () => (
   <div className="flex items-center justify-center h-full text-primary">
     <Loader2 className="animate-spin text-4xl" />
   </div>
 );
-
 const ErrorPreview: React.FC<{ message: string }> = ({ message }) => (
   <div className="flex flex-col items-center justify-center h-full gap-4 text-red-500">
     <i className="fas fa-exclamation-triangle text-6xl"></i>
     <p>{message}</p>
   </div>
 );
-
 const VideoAudioPreview: React.FC<{
   src: string;
   type: "video" | "audio";
@@ -53,7 +57,6 @@ const VideoAudioPreview: React.FC<{
     if (ref.current) {
       const options: Plyr.Options = {
         debug: false,
-        // title: 'Preview', // <-- Hapus baris ini
       };
       playerRef.current = new Plyr(ref.current, options);
     }
@@ -61,14 +64,11 @@ const VideoAudioPreview: React.FC<{
       playerRef.current?.destroy();
     };
   }, []);
-
   const Tag = type === "video" ? "video" : "audio";
   const posterUrl = poster ? poster.replace(/=s\d+/, "=s1280") : undefined;
-
   return (
     <Tag
-      // ref={ref} // <-- Ganti baris ini
-      ref={ref as any} // <-- Dengan baris ini
+      ref={ref as any}
       id="player"
       playsInline
       controls
@@ -87,12 +87,10 @@ const ImagePreview: React.FC<{ src: string }> = ({ src }) => (
     alt="File preview"
   />
 );
-
 const PdfPreview: React.FC<{ src: string }> = ({ src }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     let isCancelled = false;
     const loadPdf = async () => {
@@ -141,7 +139,6 @@ const PdfPreview: React.FC<{ src: string }> = ({ src }) => {
       isCancelled = true;
     };
   }, [src]);
-
   return (
     <div ref={containerRef} className="w-full h-full overflow-auto p-4">
       {isLoading && <LoadingPreview />}
@@ -156,12 +153,10 @@ const OfficePreview: React.FC<{ src: string }> = ({ src }) => (
     className="w-full h-full border-0"
   />
 );
-
 const EbookPreview: React.FC<{ src: string }> = ({ src }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     if (!containerRef.current) return;
     if (typeof ePub === "undefined") {
@@ -189,7 +184,6 @@ const EbookPreview: React.FC<{ src: string }> = ({ src }) => {
       book.destroy();
     };
   }, [src]);
-
   return (
     <div className="w-full h-full">
       {isLoading && <LoadingPreview />}
@@ -209,7 +203,6 @@ const CodePreview: React.FC<{ src: string; fileName: string }> = ({
   const [content, setContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     const fetchContent = async () => {
       try {
@@ -225,13 +218,11 @@ const CodePreview: React.FC<{ src: string; fileName: string }> = ({
     };
     fetchContent();
   }, [src]);
-
   useEffect(() => {
     if (content) {
       Prism.highlightAll();
     }
   }, [content]);
-
   if (isLoading) return <LoadingPreview />;
   if (error) return <ErrorPreview message={error} />;
 
@@ -256,7 +247,17 @@ const DefaultPreview: React.FC<{ mimeType: string }> = ({ mimeType }) => {
   );
 };
 
-export default function FileDetail({ file }: { file: DriveFile }) {
+export default function FileDetail({
+  file,
+  isModal = false,
+  prevFileUrl,
+  nextFileUrl,
+}: {
+  file: DriveFile;
+  isModal?: boolean;
+  prevFileUrl?: string;
+  nextFileUrl?: string;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToast, user, triggerRefresh } = useAppStore();
@@ -267,12 +268,10 @@ export default function FileDetail({ file }: { file: DriveFile }) {
   const [isSaving, setIsSaving] = useState(false);
   const [isFetchingEditableContent, setIsFetchingEditableContent] =
     useState(false);
-
   const shareToken = useMemo(
     () => searchParams.get("share_token"),
     [searchParams],
   );
-
   const validateShareToken = useCallback(
     async (token: string) => {
       try {
@@ -300,7 +299,6 @@ export default function FileDetail({ file }: { file: DriveFile }) {
     },
     [addToast, router],
   );
-
   useEffect(() => {
     if (shareToken) {
       validateShareToken(shareToken);
@@ -335,6 +333,23 @@ export default function FileDetail({ file }: { file: DriveFile }) {
     }
   }, [shareToken, router, addToast, validateShareToken]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isEditing) return;
+
+      if (e.key === "ArrowLeft") {
+        if (prevFileUrl) router.push(prevFileUrl);
+      } else if (e.key === "ArrowRight") {
+        if (nextFileUrl) router.push(nextFileUrl);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [prevFileUrl, nextFileUrl, router, isEditing]);
+
   const handleBack = () => router.back();
 
   const directLink = useMemo(() => {
@@ -344,11 +359,9 @@ export default function FileDetail({ file }: { file: DriveFile }) {
     }
     return url;
   }, [file.id, shareToken]);
-
   const fileType = getFileType(file);
   const isEditable =
     user?.role === "ADMIN" && (fileType === "code" || fileType === "markdown");
-
   useEffect(() => {
     if (isEditing && isEditable && editableContent === null) {
       setIsFetchingEditableContent(true);
@@ -374,7 +387,6 @@ export default function FileDetail({ file }: { file: DriveFile }) {
         .finally(() => setIsFetchingEditableContent(false));
     }
   }, [isEditing, isEditable, fileType, directLink, editableContent, addToast]);
-
   const handleSaveChanges = async () => {
     if (editableContent === null) return;
     setIsSaving(true);
@@ -399,13 +411,11 @@ export default function FileDetail({ file }: { file: DriveFile }) {
       setIsSaving(false);
     }
   };
-
   const renderPreview = () => {
     const mimeType =
       file.mimeType === "application/octet-stream" && file.name.endsWith(".mkv")
         ? "video/x-matroska"
         : file.mimeType;
-
     switch (fileType) {
       case "video":
         return (
@@ -454,32 +464,35 @@ export default function FileDetail({ file }: { file: DriveFile }) {
     : undefined;
   const showShareButton =
     !searchParams.get("share_token") && user?.role === "ADMIN";
-
   return (
-    <div className="container mx-auto px-4 py-6 flex flex-col h-screen overflow-hidden">
-      <header className="flex items-center justify-between gap-4 mb-4">
-        {showBackButton && (
-          <button
-            onClick={handleBack}
-            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors shrink-0"
-          >
-            <ArrowLeft size={20} /> Kembali
-          </button>
-        )}
+    <div className="container mx-auto px-4 py-6 flex flex-col h-full overflow-hidden">
+      {!isModal && (
+        <header className="flex items-center justify-between gap-4 mb-4">
+          {showBackButton && (
+            <button
+              onClick={handleBack}
+              className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            >
+              <ArrowLeft size={20} /> Kembali
+            </button>
+          )}
 
-        {!showBackButton && <div />}
+          {!showBackButton && <div />}
 
-        {showShareButton && (
-          <ShareButton
-            path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`}
-            itemName={file.name}
-          />
-        )}
-      </header>
+          {showShareButton && (
+            <ShareButton
+              path={`/folder/${file.parents?.[0]}/file/${
+                file.id
+              }/${encodeURIComponent(file.name)}`}
+              itemName={file.name}
+            />
+          )}
+        </header>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-12 flex-1 overflow-hidden">
-        <div className="lg:col-span-2 flex flex-col flex-1 min-h-0">
-          {isEditable && (
+        <div className="lg:col-span-2 flex flex-col flex-1 min-h-0 relative group">
+          {isEditable && !isModal && (
             <div className="mb-2 flex justify-end gap-2">
               {isEditing && (
                 <button
@@ -502,7 +515,7 @@ export default function FileDetail({ file }: { file: DriveFile }) {
           )}
 
           <div className="w-full flex-1 flex items-start justify-center overflow-hidden bg-muted/20 rounded-lg border">
-            {isEditing && isEditable ? (
+            {isEditing && isEditable && !isModal ? (
               isFetchingEditableContent ? (
                 <LoadingPreview />
               ) : (
@@ -518,9 +531,32 @@ export default function FileDetail({ file }: { file: DriveFile }) {
               </div>
             )}
           </div>
+
+          {!isModal && prevFileUrl && (
+            <Link
+              href={prevFileUrl}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 m-2 bg-background/50 rounded-full text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background"
+              title="File Sebelumnya (Panah Kiri)"
+            >
+              <ChevronLeft size={28} />
+            </Link>
+          )}
+          {!isModal && nextFileUrl && (
+            <Link
+              href={nextFileUrl}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 m-2 bg-background/50 rounded-full text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background"
+              title="File Berikutnya (Panah Kanan)"
+            >
+              <ChevronRight size={28} />
+            </Link>
+          )}
         </div>
 
-        <div className="lg:col-span-1 mt-8 lg:mt-0 lg:overflow-y-auto">
+        <div
+          className={`lg:col-span-1 lg:overflow-y-auto ${
+            isModal ? "mt-4 lg:mt-0" : "mt-8 lg:mt-0"
+          }`}
+        >
           <h1 className="text-2xl lg:text-3xl font-bold break-words mb-6">
             {file.name}
           </h1>
@@ -581,15 +617,17 @@ export default function FileDetail({ file }: { file: DriveFile }) {
               </li>
             )}
           </ul>
-          <div className="flex flex-col sm:flex-row gap-4 mt-6">
-            <a
-              href={directLink}
-              download
-              className="flex-1 flex items-center justify-center px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold text-lg"
-            >
-              <i className="fas fa-download mr-3"></i>Unduh File
-            </a>
-          </div>
+          {!isModal && (
+            <div className="flex flex-col sm:flex-row gap-4 mt-6">
+              <a
+                href={directLink}
+                download
+                className="flex-1 flex items-center justify-center px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold text-lg"
+              >
+                <i className="fas fa-download mr-3"></i>Unduh File
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -602,7 +640,6 @@ const ListItem = ({ label, value }: { label: string; value: string }) => (
     <span className="text-right break-all">{value}</span>
   </li>
 );
-
 function getLanguageFromFilename(name: string): string {
   const ext = name.split(".").pop()?.toLowerCase() || "";
   const langMap: Record<string, string> = {

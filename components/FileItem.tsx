@@ -5,12 +5,12 @@ import React from "react";
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
 import { Lock, Star } from "lucide-react";
-
 interface FileItemProps {
   file: DriveFile & { isFavorite?: boolean };
   onClick: () => void;
   onContextMenu: (e: React.MouseEvent<HTMLDivElement>) => void;
   isSelected: boolean;
+  isActive: boolean;
   isBulkMode: boolean;
 }
 
@@ -19,6 +19,7 @@ export default function FileItem({
   onClick,
   onContextMenu,
   isSelected,
+  isActive,
   isBulkMode,
 }: FileItemProps) {
   const { view } = useAppStore();
@@ -37,7 +38,6 @@ export default function FileItem({
       transition: { duration: 0.2 },
     },
   };
-
   return (
     <motion.div
       variants={itemVariants}
@@ -47,6 +47,7 @@ export default function FileItem({
       className={cn(
         "relative rounded-lg transition-all duration-200 ease-out cursor-pointer",
         isSelected && "bg-accent/80 ring-2 ring-primary",
+        isActive && !isBulkMode && "ring-2 ring-primary/50",
         view === "list"
           ? "flex items-center p-3 bg-card border border-border shadow-sm hover:shadow-md hover:bg-accent/50"
           : "flex flex-col items-center justify-center text-center p-2 sm:p-4 bg-card border border-border shadow-sm hover:shadow-md w-full",

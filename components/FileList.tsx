@@ -11,15 +11,16 @@ interface FileListProps {
     event: React.MouseEvent<HTMLDivElement>,
     file: DriveFile,
   ) => void;
+  activeFileId: string | null;
 }
 
 export default function FileList({
   files,
   onItemClick,
   onItemContextMenu,
+  activeFileId,
 }: FileListProps) {
   const { view, selectedFiles, isBulkMode } = useAppStore();
-
   if (files.length === 0) {
     return (
       <div className="text-center py-20 text-muted-foreground col-span-full">
@@ -36,12 +37,10 @@ export default function FileList({
       transition: { staggerChildren: 0.05 },
     },
   };
-
   const containerClass =
     view === "list"
       ? "flex flex-col gap-2"
       : "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4";
-
   return (
     <motion.div
       className={containerClass}
@@ -58,6 +57,7 @@ export default function FileList({
             onItemContextMenu(event, file)
           }
           isSelected={selectedFiles.includes(file.id)}
+          isActive={!isBulkMode && activeFileId === file.id}
           isBulkMode={isBulkMode}
         />
       ))}
