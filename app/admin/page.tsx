@@ -197,7 +197,9 @@ export default function AdminPage() {
                     <LinkIcon size={28} />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Tautan</p>
+                    <p className="text-sm text-muted-foreground">
+                      Total Tautan
+                    </p>
                     <p className="text-2xl font-bold">{shareLinks.length}</p>
                   </div>
                 </div>
@@ -206,7 +208,9 @@ export default function AdminPage() {
                     <Clock size={28} />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Tautan Aktif</p>
+                    <p className="text-sm text-muted-foreground">
+                      Tautan Aktif
+                    </p>
                     <p className="text-2xl font-bold">{activeLinks.length}</p>
                   </div>
                 </div>
@@ -226,13 +230,17 @@ export default function AdminPage() {
                     <Users size={28} />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Jumlah Admin</p>
+                    <p className="text-sm text-muted-foreground">
+                      Jumlah Admin
+                    </p>
                     <p className="text-2xl font-bold">{adminEmails.length}</p>
                   </div>
                 </div>
               </div>
               <div>
-                <h2 className="text-2xl font-semibold mb-6">Visualisasi Data</h2>
+                <h2 className="text-2xl font-semibold mb-6">
+                  Visualisasi Data
+                </h2>
                 <div className="bg-card border rounded-lg p-6 h-64 flex items-center justify-center text-muted-foreground">
                   <BarChart2 className="h-12 w-12 mr-4" />
                   <p>Grafik dan visualisasi data akan muncul di sini.</p>

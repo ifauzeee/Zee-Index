@@ -138,7 +138,7 @@ export default function FileBrowser({
     const isOverlayActive = contextMenu || detailsFile || previewFile;
 
     if (isOverlayActive) {
-      document.body.classList.add("mobile-menu-open"); 
+      document.body.classList.add("mobile-menu-open");
     } else {
       document.body.classList.remove("mobile-menu-open");
     }
@@ -338,7 +338,11 @@ export default function FileBrowser({
 
     if (file.isFolder) {
       if (file.isProtected && !folderTokens[file.id]) {
-        setAuthModal({ isOpen: true, folderId: file.id, folderName: file.name });
+        setAuthModal({
+          isOpen: true,
+          folderId: file.id,
+          folderName: file.name,
+        });
         return;
       }
       let destinationUrl = `/folder/${file.id}`;

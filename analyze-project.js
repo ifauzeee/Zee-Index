@@ -48,10 +48,10 @@ let logFunction = (message, type = "info") => {
     type === "error"
       ? "❌"
       : type === "success"
-      ? "✅"
-      : type === "warn"
-      ? "⚠️"
-      : "ℹ️";
+        ? "✅"
+        : type === "warn"
+          ? "⚠️"
+          : "ℹ️";
   const fullMsg = `${prefix} ${message}`;
   console.log(fullMsg);
   const logEntry = `[${timestamp}] [${type.toUpperCase()}] ${message}\n`;
@@ -183,10 +183,10 @@ function loadAdvancedDeps() {
           type === "error"
             ? "❌"
             : type === "success"
-            ? "✅"
-            : type === "warn"
-            ? "⚠️"
-            : "ℹ️";
+              ? "✅"
+              : type === "warn"
+                ? "⚠️"
+                : "ℹ️";
         console.log(`${prefix} ${message}`);
         if (
           !chalkFailedCheck &&
