@@ -8,7 +8,6 @@ import FileList from "@/components/FileList";
 import type { DriveFile } from "@/lib/googleDrive";
 import { motion } from "framer-motion";
 import React from "react";
-
 export default function SearchResultsList() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -19,10 +18,8 @@ export default function SearchResultsList() {
   const [results, setResults] = useState<DriveFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
-
   const handleItemClick = useCallback(
     (file: DriveFile) => {
       let destinationUrl = "";
@@ -31,7 +28,9 @@ export default function SearchResultsList() {
       if (file.isFolder) {
         destinationUrl = `/folder/${file.id}`;
       } else if (parentFolder) {
-        destinationUrl = `/folder/${parentFolder}/file/${file.id}/${createSlug(file.name)}`;
+        destinationUrl = `/folder/${parentFolder}/file/${file.id}/${createSlug(
+          file.name,
+        )}`;
       } else {
         addToast({
           message: "Tidak dapat menentukan lokasi file.",
@@ -48,7 +47,6 @@ export default function SearchResultsList() {
     },
     [router, shareToken, addToast, currentFolderId],
   );
-
   const fetchSearchResults = useCallback(async () => {
     if (!searchTerm) {
       setResults([]);
@@ -90,7 +88,6 @@ export default function SearchResultsList() {
       setIsLoading(false);
     }
   }, [searchTerm, folderId, addToast, shareToken]);
-
   useEffect(() => {
     fetchSearchResults();
   }, [fetchSearchResults]);
@@ -110,16 +107,15 @@ export default function SearchResultsList() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      {/* BARIS YANG DIMODIFIKASI */}
       <h1 className="text-xl font-bold mb-8">
         Hasil Pencarian untuk &quot;{searchTerm}&quot;
       </h1>
-      {/* AKHIR MODIFIKASI */}
       {results.length > 0 ? (
         <FileList
           files={results}
           onItemClick={handleItemClick}
           onItemContextMenu={(e) => e.preventDefault()}
+          activeFileId={null}
         />
       ) : (
         <div className="mt-8 text-center py-20 text-muted-foreground">
