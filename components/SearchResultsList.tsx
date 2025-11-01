@@ -8,18 +8,24 @@ import FileList from "@/components/FileList";
 import type { DriveFile } from "@/lib/googleDrive";
 import { motion } from "framer-motion";
 import React from "react";
+import EmptyState from "./EmptyState";
+import { SearchX } from "lucide-react";
+
 export default function SearchResultsList() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchTerm = searchParams.get("q");
   const folderId = searchParams.get("folderId");
-  const { shareToken, addToast, currentFolderId } = useAppStore();
+  const { shareToken, addToast, currentFolderId, user } = useAppStore();
 
   const [results, setResults] = useState<DriveFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
+
+  const isAdmin = user?.role === "ADMIN" && !user?.isGuest;
+
   const handleItemClick = useCallback(
     (file: DriveFile) => {
       let destinationUrl = "";
@@ -116,13 +122,18 @@ export default function SearchResultsList() {
           onItemClick={handleItemClick}
           onItemContextMenu={(e) => e.preventDefault()}
           activeFileId={null}
+          onShareClick={() => {}}
+          onDetailsClick={() => {}}
+          onDownloadClick={() => {}}
+          isAdmin={isAdmin}
         />
       ) : (
         <div className="mt-8 text-center py-20 text-muted-foreground">
-          <i className="fas fa-search text-6xl"></i>
-          <p className="mt-4">
-            Tidak ada file atau folder yang cocok dengan pencarian Anda.
-          </p>
+          <EmptyState
+            icon={SearchX}
+            title="Tidak Ditemukan"
+            message="Tidak ada file atau folder yang cocok dengan pencarian Anda."
+          />
         </div>
       )}
     </motion.div>

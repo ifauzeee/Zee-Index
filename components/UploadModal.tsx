@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -16,6 +16,7 @@ import React from "react";
 interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialFiles?: FileList | null;
 }
 
 interface UploadProgress {
@@ -25,7 +26,11 @@ interface UploadProgress {
   error?: string;
 }
 
-export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
+export default function UploadModal({
+  isOpen,
+  onClose,
+  initialFiles,
+}: UploadModalProps) {
   const { currentFolderId, triggerRefresh, addToast } = useAppStore();
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
@@ -61,7 +66,6 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
       setIsCreatingFolder(false);
     }
   };
-
   const updateUploadProgress = (
     fileName: string,
     progress: number,
@@ -116,7 +120,6 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
             }
           }
         };
-
         xhr.onerror = () => {
           updateUploadProgress(
             file.name,
@@ -133,18 +136,22 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
     [currentFolderId, triggerRefresh],
   );
 
+  useEffect(() => {
+    if (isOpen && initialFiles) {
+      handleFileUpload(initialFiles);
+    }
+  }, [isOpen, initialFiles, handleFileUpload]);
+
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
   }, []);
-
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
   }, []);
-
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -154,11 +161,9 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
     },
     [handleFileUpload],
   );
-
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleFileUpload(e.target.files);
   };
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -187,7 +192,6 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
             </h3>
 
             <div className="space-y-6">
-              {}
               <div
                 className={cn(
                   "border-2 border-dashed rounded-lg p-6 text-center transition-colors",
@@ -216,7 +220,6 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
                 </p>
               </div>
 
-              {}
               <form onSubmit={handleCreateFolder} className="space-y-2">
                 <label className="text-sm font-medium">Buat Folder Baru</label>
                 <div className="flex gap-2">
@@ -245,7 +248,6 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
               </form>
             </div>
 
-            {}
             {Object.keys(uploads).length > 0 && (
               <div className="mt-6 max-h-40 overflow-y-auto pr-2 space-y-3">
                 {Object.values(uploads).map((up) => (

@@ -22,6 +22,7 @@ import {
   Upload,
   Loader2,
   X,
+  Info,
   UploadCloud,
   File as FileIcon,
 } from "lucide-react";
@@ -86,7 +87,6 @@ export default function FileBrowser({
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [previewFile, setPreviewFile] = useState<DriveFile | null>(null);
-  const [detailsFile, setDetailsFile] = useState<DriveFile | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploads, setUploads] = useState<Record<string, UploadProgress>>({});
 
@@ -110,6 +110,8 @@ export default function FileBrowser({
     favorites,
     fetchFavorites,
     toggleFavorite,
+    detailsFile,
+    setDetailsFile,
   } = useAppStore();
 
   useEffect(() => {
@@ -712,6 +714,24 @@ export default function FileBrowser({
     [isAdmin, handleFileUpload],
   );
 
+  const handleQuickShare = (e: React.MouseEvent, file: DriveFile) => {
+    e.stopPropagation();
+    handleShare(file);
+  };
+
+  const handleQuickDetails = (e: React.MouseEvent, file: DriveFile) => {
+    e.stopPropagation();
+    setDetailsFile(file);
+  };
+
+  const handleQuickDownload = (e: React.MouseEvent, file: DriveFile) => {
+    e.stopPropagation();
+    const downloadUrl = `/api/download?fileId=${file.id}${
+      shareToken ? `&share_token=${shareToken}` : ""
+    }`;
+    window.open(downloadUrl, "_blank");
+  };
+
   if (isLoading || (sessionStatus === "loading" && !shareToken)) {
     return <FileBrowserLoading />;
   }
@@ -842,12 +862,6 @@ export default function FileBrowser({
             </motion.div>
           </motion.div>
         )}
-        {detailsFile && (
-          <DetailsPanel
-            file={detailsFile}
-            onClose={() => setDetailsFile(null)}
-          />
-        )}
         {isDragging && isAdmin && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -919,6 +933,17 @@ export default function FileBrowser({
                 <Share2 size={18} />
               </button>
               <button
+                onClick={() => {
+                  const file = files.find((f) => f.id === activeFileId);
+                  if (file) setDetailsFile(file);
+                }}
+                disabled={!activeFileId}
+                className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Lihat Detail"
+              >
+                <Info size={18} />
+              </button>
+              <button
                 onClick={() => setBulkMode(!isBulkMode)}
                 className={`p-2 rounded-lg transition-colors flex items-center justify-center text-sm ${
                   isBulkMode
@@ -968,6 +993,10 @@ export default function FileBrowser({
               activeFileId={activeFileId}
               onItemClick={handleItemClick}
               onItemContextMenu={handleContextMenu}
+              onShareClick={handleQuickShare}
+              onDetailsClick={handleQuickDetails}
+              onDownloadClick={handleQuickDownload}
+              isAdmin={isAdmin}
             />
             <div
               ref={loaderRef}

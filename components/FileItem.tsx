@@ -4,7 +4,8 @@ import { formatBytes, getIcon, cn } from "@/lib/utils";
 import React from "react";
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
-import { Lock, Star } from "lucide-react";
+import { Lock, Star, Share2, Download, Info } from "lucide-react";
+
 interface FileItemProps {
   file: DriveFile & { isFavorite?: boolean };
   onClick: () => void;
@@ -12,6 +13,10 @@ interface FileItemProps {
   isSelected: boolean;
   isActive: boolean;
   isBulkMode: boolean;
+  onShare: (e: React.MouseEvent) => void;
+  onShowDetails: (e: React.MouseEvent) => void;
+  onDownload: (e: React.MouseEvent) => void;
+  isAdmin: boolean;
 }
 
 export default function FileItem({
@@ -21,6 +26,10 @@ export default function FileItem({
   isSelected,
   isActive,
   isBulkMode,
+  onShare,
+  onShowDetails,
+  onDownload,
+  isAdmin,
 }: FileItemProps) {
   const { view } = useAppStore();
   const Icon = getIcon(file.mimeType);
@@ -45,7 +54,7 @@ export default function FileItem({
       animate="visible"
       whileHover="hover"
       className={cn(
-        "relative rounded-lg transition-all duration-200 ease-out cursor-pointer",
+        "group relative rounded-lg transition-all duration-200 ease-out cursor-pointer",
         isSelected && "bg-accent/80 ring-2 ring-primary",
         isActive && !isBulkMode && "ring-2 ring-primary/50",
         view === "list"
@@ -136,6 +145,36 @@ export default function FileItem({
             </p>
           )}
         </div>
+
+        {view === "list" && !isBulkMode && (
+          <div className="flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+            {isAdmin && (
+              <button
+                onClick={onShare}
+                title="Bagikan"
+                className="p-2 rounded-full hover:bg-muted"
+              >
+                <Share2 size={16} />
+              </button>
+            )}
+            {!file.isFolder && (
+              <button
+                onClick={onDownload}
+                title="Unduh"
+                className="p-2 rounded-full hover:bg-muted"
+              >
+                <Download size={16} />
+              </button>
+            )}
+            <button
+              onClick={onShowDetails}
+              title="Lihat Detail"
+              className="p-2 rounded-full hover:bg-muted"
+            >
+              <Info size={16} />
+            </button>
+          </div>
+        )}
 
         {isBulkMode && (
           <input

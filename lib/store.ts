@@ -77,6 +77,8 @@ interface AppState {
     fileId: string,
     isCurrentlyFavorite: boolean,
   ) => Promise<void>;
+  detailsFile: DriveFile | null;
+  setDetailsFile: (file: DriveFile | null) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -193,7 +195,6 @@ export const useAppStore = create<AppState>()(
           const result = await response.json();
           if (!response.ok)
             throw new Error(result.error || "Gagal menghapus tautan.");
-
           set((state) => ({
             shareLinks: state.shareLinks.filter(
               (link) => link.id !== linkToRemove.id,
@@ -216,7 +217,9 @@ export const useAppStore = create<AppState>()(
           const response = await fetch("/api/datausage");
           if (!response.ok) throw new Error("Gagal mengambil data penggunaan.");
           const data = await response.json();
-          const formattedUsage = `${(data.totalUsage / 1024 / 1024 / 1024).toFixed(2)} GB`;
+          const formattedUsage = `${(data.totalUsage / 1024 / 1024 / 1024).toFixed(
+            2,
+          )} GB`;
           set({ dataUsage: { status: "success", value: formattedUsage } });
         } catch (error: any) {
           set({ dataUsage: { status: "error", value: "Gagal memuat" } });
@@ -248,7 +251,6 @@ export const useAppStore = create<AppState>()(
           const result = await response.json();
           if (!response.ok)
             throw new Error(result.error || "Gagal menambahkan admin.");
-
           set((state) => ({
             adminEmails: [...state.adminEmails, email].sort(),
           }));
@@ -267,7 +269,6 @@ export const useAppStore = create<AppState>()(
           const result = await response.json();
           if (!response.ok)
             throw new Error(result.error || "Gagal menghapus admin.");
-
           set((state) => ({
             adminEmails: state.adminEmails.filter(
               (adminEmail) => adminEmail !== email,
@@ -294,7 +295,6 @@ export const useAppStore = create<AppState>()(
         const apiPath = isCurrentlyFavorite
           ? "/api/favorites/remove"
           : "/api/favorites/add";
-
         const newFavorites = isCurrentlyFavorite
           ? originalFavorites.filter((id) => id !== fileId)
           : [...originalFavorites, fileId];
@@ -316,6 +316,8 @@ export const useAppStore = create<AppState>()(
           set({ favorites: originalFavorites });
         }
       },
+      detailsFile: null,
+      setDetailsFile: (file) => set({ detailsFile: file }),
     }),
     {
       name: "zee-index-storage",

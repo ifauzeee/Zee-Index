@@ -3,6 +3,8 @@ import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from "@/lib/store";
 import FileItem from "./FileItem";
 import React from "react";
+import EmptyState from "./EmptyState";
+import { FolderSearch } from "lucide-react";
 
 interface FileListProps {
   files: DriveFile[];
@@ -12,6 +14,10 @@ interface FileListProps {
     file: DriveFile,
   ) => void;
   activeFileId: string | null;
+  onShareClick: (e: React.MouseEvent, file: DriveFile) => void;
+  onDetailsClick: (e: React.MouseEvent, file: DriveFile) => void;
+  onDownloadClick: (e: React.MouseEvent, file: DriveFile) => void;
+  isAdmin: boolean;
 }
 
 export default function FileList({
@@ -19,13 +25,20 @@ export default function FileList({
   onItemClick,
   onItemContextMenu,
   activeFileId,
+  onShareClick,
+  onDetailsClick,
+  onDownloadClick,
+  isAdmin,
 }: FileListProps) {
   const { view, selectedFiles, isBulkMode } = useAppStore();
   if (files.length === 0) {
     return (
       <div className="text-center py-20 text-muted-foreground col-span-full">
-        <i className="fas fa-box-open text-6xl"></i>
-        <p className="mt-4">Folder ini kosong.</p>
+        <EmptyState
+          icon={FolderSearch}
+          title="Folder ini Kosong"
+          message="Unggah file atau buat folder baru untuk memulai."
+        />
       </div>
     );
   }
@@ -59,6 +72,10 @@ export default function FileList({
           isSelected={selectedFiles.includes(file.id)}
           isActive={!isBulkMode && activeFileId === file.id}
           isBulkMode={isBulkMode}
+          onShare={(e) => onShareClick(e, file)}
+          onShowDetails={(e) => onDetailsClick(e, file)}
+          onDownload={(e) => onDownloadClick(e, file)}
+          isAdmin={isAdmin}
         />
       ))}
     </motion.div>

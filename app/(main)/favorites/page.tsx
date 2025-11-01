@@ -9,6 +9,7 @@ import type { DriveFile } from "@/lib/googleDrive";
 import { motion } from "framer-motion";
 import { StarOff } from "lucide-react";
 import React from "react";
+import EmptyState from "@/components/EmptyState";
 
 export default function FavoritesPage() {
   const router = useRouter();
@@ -71,14 +72,18 @@ export default function FavoritesPage() {
           onItemClick={handleItemClick}
           onItemContextMenu={(e) => e.preventDefault()}
           activeFileId={null}
+          onShareClick={() => {}}
+          onDetailsClick={() => {}}
+          onDownloadClick={() => {}}
+          isAdmin={false}
         />
       ) : (
         <div className="text-center py-20 text-muted-foreground">
-          <StarOff className="mx-auto h-16 w-16" />
-          <p className="mt-4">Anda belum memiliki file favorit.</p>
-          <p className="text-sm">
-            Klik kanan pada file untuk menambahkannya ke favorit.
-          </p>
+          <EmptyState
+            icon={StarOff}
+            title="Belum Ada Favorit"
+            message="Klik kanan pada file untuk menambahkannya ke favorit."
+          />
         </div>
       )}
     </motion.div>
