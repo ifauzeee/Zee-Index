@@ -1,7 +1,7 @@
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from "@/lib/store";
 import { formatBytes, getIcon, cn } from "@/lib/utils";
-import React from "react";
+import React, { useRef } from "react";
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
 import { Lock, Star, Share2, Download, Info } from "lucide-react";
@@ -9,7 +9,10 @@ import { Lock, Star, Share2, Download, Info } from "lucide-react";
 interface FileItemProps {
   file: DriveFile & { isFavorite?: boolean };
   onClick: () => void;
-  onContextMenu: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onContextMenu: (
+    event: { clientX: number; clientY: number },
+    file: DriveFile,
+  ) => void;
   isSelected: boolean;
   isActive: boolean;
   isBulkMode: boolean;
@@ -33,6 +36,37 @@ export default function FileItem({
 }: FileItemProps) {
   const { view } = useAppStore();
   const Icon = getIcon(file.mimeType);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const longPressFired = useRef(false);
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    longPressFired.current = false;
+    timerRef.current = setTimeout(() => {
+      longPressFired.current = true;
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+      onContextMenu(e.touches[0], file);
+    }, 500);
+  };
+
+  const handleTouchMove = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (longPressFired.current) {
+      e.preventDefault();
+      longPressFired.current = false;
+    }
+  };
 
   const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20, scale: 0.95 },
@@ -62,7 +96,13 @@ export default function FileItem({
           : "flex flex-col items-center justify-center text-center p-2 sm:p-4 bg-card border border-border shadow-sm hover:shadow-md w-full",
       )}
       onClick={onClick}
-      onContextMenu={onContextMenu}
+      onContextMenu={(e: React.MouseEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
+      }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <div
         className={cn(
@@ -147,7 +187,7 @@ export default function FileItem({
         </div>
 
         {view === "list" && !isBulkMode && (
-          <div className="flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 focus-within:opacity-100">
             {isAdmin && (
               <button
                 onClick={onShare}

@@ -10,7 +10,7 @@ interface FileListProps {
   files: DriveFile[];
   onItemClick: (file: DriveFile) => void;
   onItemContextMenu: (
-    event: React.MouseEvent<HTMLDivElement>,
+    event: { clientX: number; clientY: number },
     file: DriveFile,
   ) => void;
   activeFileId: string | null;
@@ -66,9 +66,7 @@ export default function FileList({
           key={file.id}
           file={file}
           onClick={() => onItemClick(file)}
-          onContextMenu={(event: React.MouseEvent<HTMLDivElement>) =>
-            onItemContextMenu(event, file)
-          }
+          onContextMenu={(event) => onItemContextMenu(event, file)}
           isSelected={selectedFiles.includes(file.id)}
           isActive={!isBulkMode && activeFileId === file.id}
           isBulkMode={isBulkMode}

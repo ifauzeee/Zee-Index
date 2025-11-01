@@ -120,7 +120,7 @@ export default function SearchResultsList() {
         <FileList
           files={results}
           onItemClick={handleItemClick}
-          onItemContextMenu={(e) => e.preventDefault()}
+          onItemContextMenu={() => {}}
           activeFileId={null}
           onShareClick={() => {}}
           onDetailsClick={() => {}}

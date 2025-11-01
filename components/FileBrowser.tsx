@@ -442,8 +442,7 @@ export default function FileBrowser({
   };
 
   const handleContextMenu = useCallback(
-    (event: React.MouseEvent, file: DriveFile) => {
-      event.preventDefault();
+    (event: { clientX: number; clientY: number }, file: DriveFile) => {
       if (isBulkMode || shareToken || !isAdmin) return;
       if (!user) return;
       setActiveFileId(file.id);

@@ -19,18 +19,15 @@ const ListItem = ({ label, value }: { label: string; value: string }) => (
     <span className="text-right break-all">{value}</span>
   </li>
 );
-
 export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
   const Icon = getIcon(file.mimeType);
   const metadata = file.imageMediaMetadata || file.videoMediaMetadata;
   const durationMillis = file.videoMediaMetadata?.durationMillis
     ? parseInt(file.videoMediaMetadata.durationMillis, 10)
     : undefined;
-
   const iconString = renderToString(
     <Icon size={128} className="text-primary/10" />,
   );
-
   return (
     <motion.div
       className="fixed inset-0 bg-black/60 z-40"
@@ -40,14 +37,24 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
       onClick={onClose}
     >
       <motion.div
-        className="absolute right-0 top-0 h-full w-full max-w-sm bg-background border-l shadow-xl flex flex-col"
-        initial={{ x: "100%" }}
-        animate={{ x: "0%" }}
-        exit={{ x: "100%" }}
+        className="fixed bottom-0 left-0 right-0 w-full max-h-[85vh] rounded-t-xl shadow-2xl flex flex-col bg-background
+                   lg:absolute lg:right-0 lg:top-0 lg:h-full lg:max-h-full lg:w-full lg:max-w-sm lg:rounded-t-none lg:border-l"
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        variants={{
+          initial: { y: "100%", x: "0%" },
+          animate: { y: "0%", x: "0%" },
+          exit: { y: "100%", x: "0%" },
+          lgInitial: { x: "100%", y: "0%" },
+          lgAnimate: { x: "0%", y: "0%" },
+          lgExit: { x: "100%", y: "0%" },
+        }}
+        initial="initial"
+        animate="animate"
+        exit="exit"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="flex items-center justify-between p-4 border-b">
+        <div className="absolute left-1/2 top-3 -translate-x-1/2 w-12 h-1.5 bg-muted rounded-full lg:hidden" />
+        <header className="flex items-center justify-between p-4 pt-8 lg:pt-4 border-b">
           <h3 className="text-lg font-semibold">Detail Item</h3>
           <button
             onClick={onClose}

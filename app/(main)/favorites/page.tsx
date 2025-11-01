@@ -70,7 +70,7 @@ export default function FavoritesPage() {
         <FileList
           files={favoriteFiles}
           onItemClick={handleItemClick}
-          onItemContextMenu={(e) => e.preventDefault()}
+          onItemContextMenu={() => {}}
           activeFileId={null}
           onShareClick={() => {}}
           onDetailsClick={() => {}}
