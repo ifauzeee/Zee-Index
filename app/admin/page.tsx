@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect, useMemo, FC } from "react";
 import { useAppStore, ShareLink } from "@/lib/store";
 import { format } from "date-fns";
@@ -18,6 +19,7 @@ import {
   Users,
   Eye,
   BarChart2,
+  Download,
 } from "lucide-react";
 import Loading from "@/components/Loading";
 import { cn } from "@/lib/utils";
@@ -27,6 +29,9 @@ import TwoFactorAuthSetup from "@/components/TwoFactorAuthSetup";
 import ProtectedFoldersManager from "@/components/ProtectedFoldersManager";
 import ActivityLogDashboard from "@/components/ActivityLogDashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { AdminStats } from "@/lib/adminStats";
+import TodayDownloadsChart from "@/components/charts/TodayDownloadsChart";
+import DayOfWeekChart from "@/components/charts/DayOfWeekChart";
 
 const DeleteConfirmationModal: FC<{
   onConfirm: () => void;
@@ -92,6 +97,9 @@ export default function AdminPage() {
   const [linkToDelete, setLinkToDelete] = useState<ShareLink | null>(null);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [isSubmittingAdmin, setIsSubmittingAdmin] = useState(false);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+
   useEffect(() => {
     if (status === "authenticated") {
       if (!user) {
@@ -99,8 +107,23 @@ export default function AdminPage() {
       }
       fetchShareLinks();
       fetchAdminEmails();
+
+      setIsLoadingStats(true);
+      fetch("/api/admin/stats")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.error) throw new Error(data.error);
+          setStats(data);
+        })
+        .catch((err) =>
+          addToast({
+            message: `Gagal memuat statistik: ${err.message}`,
+            type: "error",
+          }),
+        )
+        .finally(() => setIsLoadingStats(false));
     }
-  }, [status, user, fetchUser, fetchShareLinks, fetchAdminEmails]);
+  }, [status, user, fetchUser, fetchShareLinks, fetchAdminEmails, addToast]);
   const { activeLinks, expiredLinks } = useMemo(() => {
     const now = new Date();
     const active: ShareLink[] = [];
@@ -241,10 +264,74 @@ export default function AdminPage() {
                 <h2 className="text-2xl font-semibold mb-6">
                   Visualisasi Data
                 </h2>
-                <div className="bg-card border rounded-lg p-6 h-64 flex items-center justify-center text-muted-foreground">
-                  <BarChart2 className="h-12 w-12 mr-4" />
-                  <p>Grafik dan visualisasi data akan muncul di sini.</p>
-                </div>
+                {isLoadingStats ? (
+                  <div className="bg-card border rounded-lg p-6 h-64 flex items-center justify-center text-muted-foreground">
+                    <Loader2 className="h-12 w-12 animate-spin" />
+                  </div>
+                ) : stats ? (
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <div className="bg-card border rounded-lg p-6">
+                      <h3 className="text-lg font-semibold mb-4">
+                        Aktivitas Unduhan Hari Ini (Per Jam)
+                      </h3>
+                      <TodayDownloadsChart data={stats.downloadsToday} />
+                    </div>
+                    <div className="bg-card border rounded-lg p-6">
+                      <h3 className="text-lg font-semibold mb-4">
+                        Top 5 File Diunduh (90 Hari)
+                      </h3>
+                      {stats.topFiles.length > 0 ? (
+                        <ol className="space-y-3 h-[300px] overflow-y-auto px-1">
+                          {stats.topFiles.map((file, index) => (
+                            <li
+                              key={file.name}
+                              className="flex items-center gap-4 text-sm py-2"
+                            >
+                              <span
+                                className={cn(
+                                  "flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0",
+                                  index === 0 &&
+                                    "bg-primary text-primary-foreground",
+                                  index === 1 &&
+                                    "bg-primary/70 text-primary-foreground",
+                                  index === 2 &&
+                                    "bg-primary/50 text-primary-foreground",
+                                  index > 2 && "bg-muted text-muted-foreground",
+                                )}
+                              >
+                                {index + 1}
+                              </span>
+                              <span
+                                className="flex-1 truncate"
+                                title={file.name}
+                              >
+                                {file.name}
+                              </span>
+                              <span className="font-mono text-muted-foreground">
+                                {file.count}x
+                              </span>
+                            </li>
+                          ))}
+                        </ol>
+                      ) : (
+                        <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                          <p>Belum ada data unduhan.</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="bg-card border rounded-lg p-6 xl:col-span-2">
+                      <h3 className="text-lg font-semibold mb-4">
+                        Unduhan per Hari (7 Minggu Terakhir)
+                      </h3>
+                      <DayOfWeekChart data={stats.downloadsByDayOfWeek} />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-card border rounded-lg p-6 h-64 flex items-center justify-center text-muted-foreground">
+                    <AlertCircle className="h-12 w-12 mr-4" />
+                    <p>Gagal memuat data statistik.</p>
+                  </div>
+                )}
               </div>
             </div>
           </TabsContent>
