@@ -24,7 +24,7 @@ export async function GET() {
 
   try {
     const ninetyDaysAgo = subDays(new Date(), 90).getTime();
-    
+
     // Mengubah nama variabel agar lebih jelas dan menggunakan tipe 'any[]'
     const logMembers: any[] = await kv.zrange(
       "zee-index:activity-log",
