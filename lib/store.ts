@@ -217,9 +217,12 @@ export const useAppStore = create<AppState>()(
           const response = await fetch("/api/datausage");
           if (!response.ok) throw new Error("Gagal mengambil data penggunaan.");
           const data = await response.json();
-          const formattedUsage = `${(data.totalUsage / 1024 / 1024 / 1024).toFixed(
-            2,
-          )} GB`;
+          const formattedUsage = `${(
+            data.totalUsage /
+            1024 /
+            1024 /
+            1024
+          ).toFixed(2)} GB`;
           set({ dataUsage: { status: "success", value: formattedUsage } });
         } catch (error: any) {
           set({ dataUsage: { status: "error", value: "Gagal memuat" } });

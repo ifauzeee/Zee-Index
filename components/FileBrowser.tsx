@@ -522,9 +522,7 @@ export default function FileBrowser({
     const fileToDelete = actionState.file;
     const originalFiles = files;
 
-    setFiles((prevFiles) =>
-      prevFiles.filter((f) => f.id !== fileToDelete.id),
-    );
+    setFiles((prevFiles) => prevFiles.filter((f) => f.id !== fileToDelete.id));
     setActionState({ type: null, file: null });
 
     try {
@@ -702,11 +700,7 @@ export default function FileBrowser({
       e.preventDefault();
       e.stopPropagation();
       setIsDragging(false);
-      if (
-        isAdmin &&
-        e.dataTransfer.files &&
-        e.dataTransfer.files.length > 0
-      ) {
+      if (isAdmin && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
         handleFileUpload(e.dataTransfer.files);
       }
     },
@@ -874,7 +868,8 @@ export default function FileBrowser({
                 Lepas untuk Mengunggah
               </p>
               <p className="text-muted-foreground">
-                File akan ditambahkan ke folder &quot;{history.at(-1)?.name}&quot;
+                File akan ditambahkan ke folder &quot;{history.at(-1)?.name}
+                &quot;
               </p>
             </div>
           </motion.div>

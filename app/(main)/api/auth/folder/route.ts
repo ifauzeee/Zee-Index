@@ -36,12 +36,12 @@ export async function POST(request: NextRequest) {
 
     // Ensure both buffers have the same length for timingSafeEqual
     const maxLength = Math.max(id.length, folderConfig.id.length);
-    const paddedId = id.padEnd(maxLength, '\0');
-    const paddedConfigId = folderConfig.id.padEnd(maxLength, '\0');
-    
+    const paddedId = id.padEnd(maxLength, "\0");
+    const paddedConfigId = folderConfig.id.padEnd(maxLength, "\0");
+
     const isIdValid = crypto.timingSafeEqual(
-      Buffer.from(paddedId, 'utf8'),
-      Buffer.from(paddedConfigId, 'utf8'),
+      Buffer.from(paddedId, "utf8"),
+      Buffer.from(paddedConfigId, "utf8"),
     );
     const isPasswordValid = await bcrypt.compare(
       password,
@@ -65,15 +65,9 @@ export async function POST(request: NextRequest) {
           { status: 401 },
         );
       } else if (!isIdValid) {
-        return NextResponse.json(
-          { error: "ID salah." },
-          { status: 401 },
-        );
+        return NextResponse.json({ error: "ID salah." }, { status: 401 });
       } else {
-        return NextResponse.json(
-          { error: "Password salah." },
-          { status: 401 },
-        );
+        return NextResponse.json({ error: "Password salah." }, { status: 401 });
       }
     }
   } catch (error) {
