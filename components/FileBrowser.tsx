@@ -11,7 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from "@/lib/store";
-import Loading from "@/components/Loading";
+import FileBrowserLoading from "./FileBrowserLoading";
 import FileList from "@/components/FileList";
 import AuthModal from "./AuthModal";
 import {
@@ -22,6 +22,8 @@ import {
   Upload,
   Loader2,
   X,
+  UploadCloud,
+  File as FileIcon,
 } from "lucide-react";
 import ContextMenu from "./ContextMenu";
 import RenameModal from "./RenameModal";
@@ -32,6 +34,7 @@ import ShareButton from "./ShareButton";
 import { useSession } from "next-auth/react";
 import FileDetail from "./FileDetail";
 import DetailsPanel from "./DetailsPanel";
+import { cn } from "@/lib/utils";
 
 interface HistoryItem {
   id: string;
@@ -42,6 +45,13 @@ type ActionState = {
   type: "rename" | "delete" | "share" | "move" | "copy" | null;
   file: DriveFile | null;
 };
+
+interface UploadProgress {
+  name: string;
+  progress: number;
+  status: "uploading" | "success" | "error";
+  error?: string;
+}
 
 export default function FileBrowser({
   initialFolderId,
@@ -70,12 +80,15 @@ export default function FileBrowser({
     file: null,
   });
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [droppedFiles, setDroppedFiles] = useState<FileList | null>(null);
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [previewFile, setPreviewFile] = useState<DriveFile | null>(null);
   const [detailsFile, setDetailsFile] = useState<DriveFile | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploads, setUploads] = useState<Record<string, UploadProgress>>({});
 
   const {
     sort,
@@ -98,22 +111,26 @@ export default function FileBrowser({
     fetchFavorites,
     toggleFavorite,
   } = useAppStore();
+
   useEffect(() => {
     if (sessionStatus === "authenticated" && !user) {
       fetchUser();
       fetchFavorites();
     }
   }, [sessionStatus, user, fetchUser, fetchFavorites]);
+
   useEffect(() => {
     const currentShareToken = searchParams.get("share_token");
     if (currentShareToken) {
       setShareToken(currentShareToken);
     }
   }, [searchParams, setShareToken]);
+
   const currentFolderId =
     history.length > 0
       ? history[history.length - 1]?.id
       : initialFolderId || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
+
   useEffect(() => {
     setCurrentFolderId(currentFolderId);
   }, [currentFolderId, setCurrentFolderId]);
@@ -129,6 +146,7 @@ export default function FileBrowser({
       }
     };
     window.addEventListener("keydown", handleKeyDown);
+
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
@@ -148,11 +166,12 @@ export default function FileBrowser({
     };
   }, [contextMenu, detailsFile, previewFile]);
 
-  // Check if user is a guest
   const isGuest = user?.isGuest === true;
+  const isAdmin = user?.role === "ADMIN" && !isGuest;
 
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
+
   const handleFetchError = useCallback(
     async (
       response: Response,
@@ -180,6 +199,7 @@ export default function FileBrowser({
     },
     [addToast, router, shareToken],
   );
+
   const fetchFiles = useCallback(
     async (folderId: string, folderName: string) => {
       setIsLoading(true);
@@ -192,6 +212,7 @@ export default function FileBrowser({
         if (shareToken) {
           url.searchParams.append("share_token", shareToken);
         }
+
         const headers = new Headers();
         const folderAuthToken = folderTokens[folderId];
         if (folderAuthToken) {
@@ -223,6 +244,7 @@ export default function FileBrowser({
     },
     [folderTokens, handleFetchError, addToast, shareToken],
   );
+
   const fetchNextPage = useCallback(async () => {
     if (isFetchingNextPage || !nextPageToken || !currentFolderId) return;
 
@@ -263,6 +285,7 @@ export default function FileBrowser({
     folderTokens,
     addToast,
   ]);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -284,6 +307,7 @@ export default function FileBrowser({
       }
     };
   }, [fetchNextPage]);
+
   useEffect(() => {
     if (sessionStatus === "loading" && !shareToken) {
       setIsLoading(true);
@@ -333,6 +357,7 @@ export default function FileBrowser({
       fetchFiles(currentFolder.id, currentFolder.name);
     }
   }, [refreshKey, history, fetchFiles]);
+
   const handleItemClick = (file: DriveFile) => {
     if (isBulkMode) {
       toggleSelection(file.id);
@@ -394,6 +419,7 @@ export default function FileBrowser({
       setIsAuthLoading(false);
     }
   };
+
   const handleBreadcrumbClick = (folderId: string) => {
     if (shareToken && folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
       addToast({
@@ -412,16 +438,18 @@ export default function FileBrowser({
     }
     router.push(folderUrl);
   };
+
   const handleContextMenu = useCallback(
     (event: React.MouseEvent, file: DriveFile) => {
       event.preventDefault();
-      if (isBulkMode || shareToken || isGuest) return;
+      if (isBulkMode || shareToken || !isAdmin) return;
       if (!user) return;
       setActiveFileId(file.id);
       setContextMenu({ x: event.clientX, y: event.clientY, file });
     },
-    [isBulkMode, shareToken, user, isGuest],
+    [isBulkMode, shareToken, user, isAdmin],
   );
+
   const handleShare = (file: DriveFile | null) => {
     if (user?.role !== "ADMIN") {
       addToast({ message: "Fitur berbagi hanya untuk Admin.", type: "error" });
@@ -429,6 +457,7 @@ export default function FileBrowser({
     }
     setActionState({ type: "share", file });
   };
+
   const handleToggleFavorite = () => {
     if (!contextMenu?.file) return;
     const { file } = contextMenu;
@@ -485,25 +514,33 @@ export default function FileBrowser({
       addToast({ message: err.message, type: "error" });
     }
   };
+
   const handleDelete = async () => {
     if (!actionState.file) return;
+
+    const fileToDelete = actionState.file;
+    const originalFiles = files;
+
+    setFiles((prevFiles) =>
+      prevFiles.filter((f) => f.id !== fileToDelete.id),
+    );
+    setActionState({ type: null, file: null });
+
     try {
       const response = await fetch("/api/files/delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileId: actionState.file.id }),
+        body: JSON.stringify({ fileId: fileToDelete.id }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Gagal menghapus file");
-      setFiles((prevFiles: DriveFile[]) =>
-        prevFiles.filter((f: DriveFile) => f.id !== actionState.file?.id),
-      );
       addToast({ message: "File berhasil dihapus!", type: "success" });
-      setActionState({ type: null, file: null });
     } catch (err: any) {
       addToast({ message: err.message, type: "error" });
+      setFiles(originalFiles);
     }
   };
+
   const handleMove = async (newParentId: string) => {
     if (!actionState.file || !actionState.file.parents) {
       setActionState({ type: null, file: null });
@@ -531,6 +568,7 @@ export default function FileBrowser({
       addToast({ message: err.message, type: "error" });
     }
   };
+
   const sortedFiles = useMemo(() => {
     return [...files]
       .map((file) => ({ ...file, isFavorite: favorites.includes(file.id) }))
@@ -555,12 +593,127 @@ export default function FileBrowser({
         }
       });
   }, [files, sort, favorites]);
+
   const getSharePath = (file: DriveFile) => {
     if (file.isFolder) return `/folder/${file.id}`;
     return `/folder/${currentFolderId}/file/${file.id}/${createSlug(file.name)}`;
   };
+
+  const updateUploadProgress = (
+    fileName: string,
+    progress: number,
+    status: "uploading" | "success" | "error",
+    error?: string,
+  ) => {
+    setUploads((prev) => ({
+      ...prev,
+      [fileName]: { name: fileName, progress, status, error },
+    }));
+
+    if (status === "success" || status === "error") {
+      setTimeout(() => {
+        setUploads((prev) => {
+          const newUploads = { ...prev };
+          delete newUploads[fileName];
+          return newUploads;
+        });
+      }, 5000);
+    }
+  };
+
+  const handleFileUpload = useCallback(
+    async (files: FileList | null) => {
+      if (!files || files.length === 0 || !currentFolderId || !isAdmin) return;
+
+      for (const file of Array.from(files)) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("parentId", currentFolderId);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/files/upload", true);
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            updateUploadProgress(file.name, percentComplete, "uploading");
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            updateUploadProgress(file.name, 100, "success");
+            triggerRefresh();
+          } else {
+            try {
+              const errorResponse = JSON.parse(xhr.responseText);
+              updateUploadProgress(
+                file.name,
+                0,
+                "error",
+                errorResponse.error || "Upload gagal",
+              );
+            } catch {
+              updateUploadProgress(
+                file.name,
+                0,
+                "error",
+                "Terjadi kesalahan server",
+              );
+            }
+          }
+        };
+        xhr.onerror = () => {
+          updateUploadProgress(
+            file.name,
+            0,
+            "error",
+            "Kesalahan jaringan saat mengunggah",
+          );
+        };
+
+        updateUploadProgress(file.name, 0, "uploading");
+        xhr.send(formData);
+      }
+    },
+    [currentFolderId, triggerRefresh, isAdmin],
+  );
+
+  const handleDragOver = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isAdmin) {
+        setIsDragging(true);
+      }
+    },
+    [isAdmin],
+  );
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      if (
+        isAdmin &&
+        e.dataTransfer.files &&
+        e.dataTransfer.files.length > 0
+      ) {
+        handleFileUpload(e.dataTransfer.files);
+      }
+    },
+    [isAdmin, handleFileUpload],
+  );
+
   if (isLoading || (sessionStatus === "loading" && !shareToken)) {
-    return <Loading />;
+    return <FileBrowserLoading />;
   }
 
   return (
@@ -568,6 +721,10 @@ export default function FileBrowser({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
+      className="relative"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       <AnimatePresence>
         {authModal.isOpen && (
@@ -653,7 +810,11 @@ export default function FileBrowser({
         {isUploadModalOpen && (
           <UploadModal
             isOpen={isUploadModalOpen}
-            onClose={() => setIsUploadModalOpen(false)}
+            onClose={() => {
+              setIsUploadModalOpen(false);
+              setDroppedFiles(null);
+            }}
+            initialFiles={droppedFiles}
           />
         )}
         {previewFile && (
@@ -687,6 +848,24 @@ export default function FileBrowser({
             onClose={() => setDetailsFile(null)}
           />
         )}
+        {isDragging && isAdmin && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-primary/30 backdrop-blur-sm"
+          >
+            <div className="flex flex-col items-center justify-center p-12 bg-background rounded-lg shadow-2xl ring-4 ring-primary ring-dashed">
+              <UploadCloud className="h-24 w-24 text-primary" />
+              <p className="mt-4 text-2xl font-semibold text-foreground">
+                Lepas untuk Mengunggah
+              </p>
+              <p className="text-muted-foreground">
+                File akan ditambahkan ke folder &quot;{history.at(-1)?.name}&quot;
+              </p>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
       <div className="flex justify-between items-center py-4 overflow-x-hidden">
         <nav className="flex items-center space-x-2 text-sm text-muted-foreground overflow-x-auto whitespace-nowrap">
@@ -708,10 +887,13 @@ export default function FileBrowser({
         </nav>
 
         <div className="flex items-center gap-2 shrink-0">
-          {!shareToken && user?.role === "ADMIN" && !isGuest && (
+          {!shareToken && isAdmin && (
             <>
               <button
-                onClick={() => setIsUploadModalOpen(true)}
+                onClick={() => {
+                  setIsUploadModalOpen(true);
+                  setDroppedFiles(null);
+                }}
                 className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground"
                 title="Upload atau Buat Folder"
               >
@@ -778,7 +960,7 @@ export default function FileBrowser({
       </div>
       <main className="min-h-[50vh] mb-12">
         {isLoading ? (
-          <Loading />
+          <FileBrowserLoading />
         ) : (
           <>
             <FileList
@@ -803,6 +985,51 @@ export default function FileBrowser({
           </>
         )}
       </main>
+
+      {Object.keys(uploads).length > 0 && (
+        <div className="fixed bottom-6 right-6 z-[9990] w-80 space-y-3">
+          {Object.values(uploads).map((up) => (
+            <motion.div
+              layout
+              key={up.name}
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.9 }}
+              className="p-4 rounded-lg shadow-lg bg-card border"
+            >
+              <div className="flex justify-between items-center text-sm mb-1">
+                <p className="truncate font-medium flex items-center gap-2">
+                  <FileIcon size={14} />
+                  <span className="max-w-[150px] truncate">{up.name}</span>
+                </p>
+                <span
+                  className={cn(
+                    "text-xs font-mono",
+                    up.status === "error" && "text-red-500",
+                    up.status === "success" && "text-green-500",
+                  )}
+                >
+                  {up.status === "uploading" && `${up.progress.toFixed(0)}%`}
+                  {up.status === "success" && `Selesai`}
+                  {up.status === "error" && `Gagal`}
+                </span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                <div
+                  className={cn(
+                    "h-2 rounded-full transition-all",
+                    up.status === "error" ? "bg-red-500" : "bg-primary",
+                  )}
+                  style={{ width: `${up.progress}%` }}
+                ></div>
+              </div>
+              {up.status === "error" && (
+                <p className="text-xs text-red-500 mt-1">{up.error}</p>
+              )}
+            </motion.div>
+          ))}
+        </div>
+      )}
     </motion.div>
   );
 }
