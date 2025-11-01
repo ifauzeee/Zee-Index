@@ -33,6 +33,16 @@ function CustomLoginPage() {
         case "ShareLinkRevoked":
           setError("Akses untuk tautan ini telah dicabut oleh administrator.");
           break;
+        case "GuestAccessDenied":
+          setError(
+            "Akses tamu tidak diizinkan untuk halaman ini. Silakan login menggunakan akun Google.",
+          );
+          break;
+        case "GuestLogout":
+          setError(
+            "Anda telah logout dari sesi tamu. Selamat datang kembali kapan saja!",
+          );
+          break;
         default:
           setError("Terjadi kesalahan. Silakan coba lagi.");
           break;
@@ -91,13 +101,24 @@ function CustomLoginPage() {
               </div>
             )}
 
-            <div className="pt-4">
+            <div className="pt-4 space-y-3">
               <button
                 onClick={handleGoogleSignIn}
                 className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-card border rounded-lg hover:bg-accent transition-colors font-semibold"
               >
                 <i className="fab fa-google text-lg"></i>
                 Lanjutkan dengan Google
+              </button>
+              <button
+                onClick={() =>
+                  signIn("guest", {
+                    callbackUrl: searchParams.get("callbackUrl") || "/",
+                  })
+                }
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-muted/50 border rounded-lg hover:bg-accent transition-colors font-semibold"
+              >
+                <i className="fas fa-user text-lg"></i>
+                Lanjutkan sebagai Tamu
               </button>
             </div>
 

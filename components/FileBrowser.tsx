@@ -148,6 +148,9 @@ export default function FileBrowser({
     };
   }, [contextMenu, detailsFile, previewFile]);
 
+  // Check if user is a guest
+  const isGuest = user?.isGuest === true;
+
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
   const handleFetchError = useCallback(
@@ -412,12 +415,12 @@ export default function FileBrowser({
   const handleContextMenu = useCallback(
     (event: React.MouseEvent, file: DriveFile) => {
       event.preventDefault();
-      if (isBulkMode || shareToken) return;
+      if (isBulkMode || shareToken || isGuest) return;
       if (!user) return;
       setActiveFileId(file.id);
       setContextMenu({ x: event.clientX, y: event.clientY, file });
     },
-    [isBulkMode, shareToken, user],
+    [isBulkMode, shareToken, user, isGuest],
   );
   const handleShare = (file: DriveFile | null) => {
     if (user?.role !== "ADMIN") {
@@ -705,7 +708,7 @@ export default function FileBrowser({
         </nav>
 
         <div className="flex items-center gap-2 shrink-0">
-          {!shareToken && user?.role === "ADMIN" && (
+          {!shareToken && user?.role === "ADMIN" && !isGuest && (
             <>
               <button
                 onClick={() => setIsUploadModalOpen(true)}

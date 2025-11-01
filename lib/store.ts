@@ -23,7 +23,8 @@ interface UserProfile {
   name?: string | null;
   email?: string | null;
   image?: string | null;
-  role: "USER" | "ADMIN";
+  role?: "USER" | "ADMIN" | "GUEST";
+  isGuest?: boolean;
 }
 
 type ViewMode = "list" | "grid";

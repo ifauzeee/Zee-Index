@@ -250,18 +250,34 @@ export default function Header() {
     }
   }, [isMobileMenuOpen]);
 
+  const handleGuestLogout = () => {
+    // For guest users, we'll sign out and redirect to login page with a message
+    signOut({ callbackUrl: "/login?error=GuestLogout" });
+  };
+
   const authButton =
     status === "loading" ? (
       <div className="w-24 h-9 bg-muted rounded-lg animate-pulse" />
-    ) : session ? (
-      <button
-        onClick={() => signOut({ callbackUrl: "/login" })}
-        title="Logout"
-        className="flex items-center gap-2 sm:gap-4 hover:text-primary transition-colors"
-      >
-        <LogOut size={24} />
-        <span className="sm:hidden">Logout</span>
-      </button>
+    ) : session?.user ? (
+      session.user.isGuest ? (
+        <button
+          onClick={handleGuestLogout}
+          title="Logout (Tamu)"
+          className="flex items-center gap-2 sm:gap-4 hover:text-primary transition-colors text-muted-foreground"
+        >
+          <LogOut size={24} />
+          <span className="sm:hidden">Logout (Tamu)</span>
+        </button>
+      ) : (
+        <button
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          title="Logout"
+          className="flex items-center gap-2 sm:gap-4 hover:text-primary transition-colors"
+        >
+          <LogOut size={24} />
+          <span className="sm:hidden">Logout</span>
+        </button>
+      )
     ) : (
       <button
         onClick={handleLoginClick}

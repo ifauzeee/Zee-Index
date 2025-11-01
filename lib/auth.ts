@@ -50,3 +50,8 @@ export async function verifyFolderToken(
     return false;
   }
 }
+
+// Function to check if user is a guest
+export function isGuestUser(token: any): boolean {
+  return token?.isGuest === true;
+}
