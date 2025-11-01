@@ -8,9 +8,7 @@ import Toast from "@/components/Toast";
 import { AnimatePresence } from "framer-motion";
 import { Analytics } from "@vercel/analytics/next";
 import { useSession } from "next-auth/react";
-
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
-
 const AppFooter = () => {
   const { dataUsage } = useAppStore();
   const currentYear = new Date().getFullYear();
@@ -40,15 +38,8 @@ export default function MainLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const {
-    theme,
-    setTheme,
-    refreshKey,
-    toasts,
-    removeToast,
-    fetchUser,
-    fetchDataUsage,
-  } = useAppStore();
+  const { theme, refreshKey, toasts, removeToast, fetchUser, fetchDataUsage } =
+    useAppStore();
   const { status } = useSession();
 
   useEffect(() => {
@@ -58,21 +49,10 @@ export default function MainLayout({
     }
   }, [status, fetchUser, fetchDataUsage, refreshKey]);
 
-  // Efek untuk menginisialisasi tema dari localStorage saat komponen dimuat
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
-  }, [setTheme]);
-
-  // Efek untuk menerapkan perubahan tema ke DOM dan localStorage
   useEffect(() => {
     document.documentElement.className = theme;
     document.documentElement.style.colorScheme = theme;
-    localStorage.setItem("theme", theme);
   }, [theme]);
-
   return (
     <>
       <div
