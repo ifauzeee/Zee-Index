@@ -363,7 +363,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: "zee-index-storage",
-      partials: (state) => ({
+      partialize: (state) => ({
         theme: state.theme,
         view: state.view,
         sort: state.sort,
