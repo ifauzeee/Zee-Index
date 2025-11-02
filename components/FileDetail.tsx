@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { renderToString } from "react-dom/server";
 import ReactMarkdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 
 declare const pdfjsLib: any;
 declare const ePub: any;
@@ -451,7 +451,7 @@ export default function FileDetail({
         if (markdownContent === null) return <LoadingPreview />;
         return (
           <div className="prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg w-full h-full overflow-y-auto p-8">
-            <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+            <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
               {markdownContent}
             </ReactMarkdown>
           </div>
