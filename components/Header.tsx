@@ -298,7 +298,6 @@ export default function Header() {
 
   return (
     <>
-      {}
       <header
         className={`sticky top-0 z-30 w-full transition-all duration-200 ${isScrolled ? "border-b border-border bg-background/90 backdrop-blur-lg shadow-sm" : "border-b border-transparent"}`}
       >

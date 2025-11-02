@@ -20,9 +20,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Check if user is a guest and restrict access to certain paths
   if (token && token.isGuest) {
-    // Prevent guests from accessing admin pages
     if (pathname.startsWith("/admin")) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);

@@ -34,7 +34,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Ensure both buffers have the same length for timingSafeEqual
     const maxLength = Math.max(id.length, folderConfig.id.length);
     const paddedId = id.padEnd(maxLength, "\0");
     const paddedConfigId = folderConfig.id.padEnd(maxLength, "\0");
@@ -58,7 +57,6 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ success: true, token }, { status: 200 });
     } else {
-      // Return specific error messages for different authentication failures
       if (!isIdValid && !isPasswordValid) {
         return NextResponse.json(
           { error: "ID dan password salah." },

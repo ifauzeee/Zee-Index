@@ -81,6 +81,7 @@ export default function FileItem({
       transition: { duration: 0.2 },
     },
   };
+
   return (
     <motion.div
       variants={itemVariants}

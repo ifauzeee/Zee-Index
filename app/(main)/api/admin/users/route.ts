@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { kv } from "@vercel/kv";
@@ -17,23 +17,11 @@ async function isAdmin(session: any): Promise<boolean> {
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
 
-  // --- LOGGING DITAMBAHKAN ---
-  console.log("--- SESSION INFO in /api/admin/users GET ---");
-  console.log("Timestamp:", new Date().toISOString());
-  console.log("Session Object:", JSON.stringify(session, null, 2));
-  console.log("----------------------------------------------");
-  // --- AKHIR LOGGING ---
-
   if (!(await isAdmin(session))) {
-    // Log tambahan jika isAdmin gagal
-    console.error(
-      `isAdmin check failed in GET /api/admin/users. Expected 'ADMIN', got: ${session?.user?.role}`,
-    );
     return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
   }
 
   try {
-    console.log("Admin access granted in GET /api/admin/users."); // Log sukses akses
     const adminEmails = await kv.smembers(ADMIN_EMAILS_KEY);
     return NextResponse.json(adminEmails);
   } catch (error) {
@@ -48,24 +36,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
 
-  // --- LOGGING DITAMBAHKAN ---
-  console.log("--- SESSION INFO in /api/admin/users POST ---");
-  console.log("Timestamp:", new Date().toISOString());
-  console.log("Session Object:", JSON.stringify(session, null, 2));
-  console.log("-----------------------------------------------");
-  // --- AKHIR LOGGING ---
-
-  // Pengecekan email ditambahkan di sini karena kita butuh email penambah
   if (!(await isAdmin(session)) || !session?.user?.email) {
-    // Log tambahan jika isAdmin gagal
-    console.error(
-      `isAdmin check failed in POST /api/admin/users. Expected 'ADMIN', got: ${session?.user?.role}. Email present: ${!!session?.user?.email}`,
-    );
     return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
   }
 
   try {
-    console.log("Admin access granted in POST /api/admin/users."); // Log sukses akses
     const body = await request.json();
     const validation = emailSchema.safeParse(body);
 
@@ -85,10 +60,10 @@ export async function POST(request: NextRequest) {
       to: email,
       subject: "Anda Telah Dijadikan Admin di Zee Index",
       html: `
-                <p>Halo ${email},</p>
-                <p>Anda telah ditambahkan sebagai admin untuk aplikasi Zee Index oleh <b>${adminWhoAdded}</b>.</p>
-                <p>Sekarang Anda memiliki akses ke fitur-fitur manajemen di dasbor admin.</p>
-            `,
+                <p>Halo ${email},</p>
+                <p>Anda telah ditambahkan sebagai admin untuk aplikasi Zee Index oleh <b>${adminWhoAdded}</b>.</p>
+                <p>Sekarang Anda memiliki akses ke fitur-fitur manajemen di dasbor admin.</p>
+            `,
     });
 
     const allAdmins: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
@@ -100,9 +75,9 @@ export async function POST(request: NextRequest) {
         to: otherAdmins,
         subject: "[Zee Index] Admin Baru Ditambahkan",
         html: `
-                    <p>Halo Admin,</p>
-                    <p>Pengguna dengan email <b>${email}</b> telah ditambahkan sebagai admin baru oleh <b>${adminWhoAdded}</b>.</p>
-                `,
+                    <p>Halo Admin,</p>
+                    <p>Pengguna dengan email <b>${email}</b> telah ditambahkan sebagai admin baru oleh <b>${adminWhoAdded}</b>.</p>
+                `,
       });
     }
 
@@ -122,23 +97,11 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const session = await getServerSession(authOptions);
 
-  // --- LOGGING DITAMBAHKAN ---
-  console.log("--- SESSION INFO in /api/admin/users DELETE ---");
-  console.log("Timestamp:", new Date().toISOString());
-  console.log("Session Object:", JSON.stringify(session, null, 2));
-  console.log("-------------------------------------------------");
-  // --- AKHIR LOGGING ---
-
   if (!(await isAdmin(session))) {
-    // Log tambahan jika isAdmin gagal
-    console.error(
-      `isAdmin check failed in DELETE /api/admin/users. Expected 'ADMIN', got: ${session?.user?.role}`,
-    );
     return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
   }
 
   try {
-    console.log("Admin access granted in DELETE /api/admin/users."); // Log sukses akses
     const body = await request.json();
     const validation = emailSchema.safeParse(body);
 

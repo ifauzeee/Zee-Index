@@ -66,6 +66,7 @@ export default function UploadModal({
       setIsCreatingFolder(false);
     }
   };
+
   const updateUploadProgress = (
     fileName: string,
     progress: number,
@@ -147,11 +148,13 @@ export default function UploadModal({
     e.stopPropagation();
     setIsDragging(true);
   }, []);
+
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
   }, []);
+
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -161,9 +164,11 @@ export default function UploadModal({
     },
     [handleFileUpload],
   );
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleFileUpload(e.target.files);
   };
+
   return (
     <AnimatePresence>
       {isOpen && (

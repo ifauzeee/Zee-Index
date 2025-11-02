@@ -37,14 +37,14 @@ export async function GET(request: Request) {
       }
 
       const warningHtml = `
-        <h1>⚠️ Peringatan Kapasitas Penyimpanan Zee Index</h1>
-        <p>Penyimpanan Google Drive Anda hampir penuh!</p>
-        <ul>
-            <li><b>Kapasitas Terpakai:</b> ${formatBytes(details.usage)} (${(usagePercentage * 100).toFixed(2)}%)</li>
-            <li><b>Batas Kapasitas:</b> ${formatBytes(details.limit)}</li>
-        </ul>
-        <p>Disarankan untuk membersihkan file yang tidak diperlukan untuk menghindari masalah di kemudian hari.</p>
-      `;
+        <h1>⚠️ Peringatan Kapasitas Penyimpanan Zee Index</h1>
+        <p>Penyimpanan Google Drive Anda hampir penuh!</p>
+        <ul>
+            <li><b>Kapasitas Terpakai:</b> ${formatBytes(details.usage)} (${(usagePercentage * 100).toFixed(2)}%)</li>
+            <li><b>Batas Kapasitas:</b> ${formatBytes(details.limit)}</li>
+        </ul>
+        <p>Disarankan untuk membersihkan file yang tidak diperlukan untuk menghindari masalah di kemudian hari.</p>
+      `;
 
       await sendMail({
         to: adminEmails,

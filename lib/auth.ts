@@ -16,7 +16,6 @@ export async function isProtected(folderId: string): Promise<boolean> {
     return protectedFolders ? !!protectedFolders[folderId] : false;
   } catch (e) {
     console.error("Gagal memeriksa folder terproteksi dari KV:", e);
-
     return true;
   }
 }
@@ -51,7 +50,6 @@ export async function verifyFolderToken(
   }
 }
 
-// Function to check if user is a guest
 export function isGuestUser(token: any): boolean {
   return token?.isGuest === true;
 }

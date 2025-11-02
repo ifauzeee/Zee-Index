@@ -44,7 +44,6 @@ export const authOptions: AuthOptions = {
       name: "Guest",
       credentials: {},
       async authorize(): Promise<User | null> {
-        // Return a guest user object
         return {
           id: `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           name: "Pengguna Tamu",
@@ -62,14 +61,12 @@ export const authOptions: AuthOptions = {
   callbacks: {
     async jwt({ token, account, profile, user }) {
       if (user && user.isGuest) {
-        // Handle guest user
         token.id = user.id;
         token.name = user.name;
         token.email = user.email;
         token.role = user.role;
         token.isGuest = user.isGuest;
       } else if (profile?.email) {
-        // Handle Google login
         const adminEmails: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
         if (adminEmails.includes(profile.email)) {
           token.role = "ADMIN";

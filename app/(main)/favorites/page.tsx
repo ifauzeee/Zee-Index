@@ -16,8 +16,10 @@ export default function FavoritesPage() {
   const { addToast, shareToken, user } = useAppStore();
   const [favoriteFiles, setFavoriteFiles] = useState<DriveFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
+
   const fetchFavorites = useCallback(async () => {
     setIsLoading(true);
     try {

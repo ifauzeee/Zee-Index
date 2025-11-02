@@ -21,12 +21,9 @@ const folderSchema = z.object({
   password: z.string().min(1, "Password tidak boleh kosong."),
 });
 
-// --- FUNGSI isAdmin DIPERBARUI ---
 async function isAdmin(session: any): Promise<boolean> {
-  // Percayakan role yang sudah ada di session
   return session?.user?.role === "ADMIN";
 }
-// --- AKHIR PEMBARUAN ---
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);

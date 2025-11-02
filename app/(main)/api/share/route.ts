@@ -80,16 +80,16 @@ export async function POST(req: NextRequest) {
         to: adminEmails,
         subject: `[Zee Index] Tautan Berbagi Baru Dibuat`,
         html: `
-                <p>Halo Admin,</p>
-                <p>Tautan berbagi baru telah dibuat oleh <b>${session.user.email}</b>.</p>
-                <ul>
-                    <li><b>Item:</b> ${itemName}</li>
-                    <li><b>Path:</b> ${path}</li>
-                    <li><b>Kedaluwarsa pada:</b> ${new Date(newShareLink.expiresAt).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}</li>
-                    <li><b>Wajib Login:</b> ${loginRequired ? "Ya" : "Tidak"}</li>
-                </ul>
-                <p>Anda dapat mengelola semua tautan di dasbor admin.</p>
-            `,
+                <p>Halo Admin,</p>
+                <p>Tautan berbagi baru telah dibuat oleh <b>${session.user.email}</b>.</p>
+                <ul>
+                    <li><b>Item:</b> ${itemName}</li>
+                    <li><b>Path:</b> ${path}</li>
+                    <li><b>Kedaluwarsa pada:</b> ${new Date(newShareLink.expiresAt).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}</li>
+                    <li><b>Wajib Login:</b> ${loginRequired ? "Ya" : "Tidak"}</li>
+                </ul>
+                <p>Anda dapat mengelola semua tautan di dasbor admin.</p>
+            `,
       });
     }
 

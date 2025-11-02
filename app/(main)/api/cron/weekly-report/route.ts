@@ -43,15 +43,15 @@ export async function GET(request: Request) {
     }
 
     const reportHtml = `
-        <h1>Laporan Aktivitas Mingguan Zee Index</h1>
-        <p>Berikut adalah ringkasan aktivitas dalam 7 hari terakhir:</p>
-        <ul>
-            <li><b>Total File Diunggah:</b> ${uploadCount} file</li>
-            <li><b>Total Ukuran Unggahan:</b> ${formatBytes(totalUploadSize)}</li>
-            <li><b>Total File Diunduh:</b> ${downloadCount} file</li>
-        </ul>
-        <p>Laporan ini dibuat secara otomatis pada ${new Date().toLocaleString("id-ID")}.</p>
-    `;
+        <h1>Laporan Aktivitas Mingguan Zee Index</h1>
+        <p>Berikut adalah ringkasan aktivitas dalam 7 hari terakhir:</p>
+        <ul>
+            <li><b>Total File Diunggah:</b> ${uploadCount} file</li>
+            <li><b>Total Ukuran Unggahan:</b> ${formatBytes(totalUploadSize)}</li>
+            <li><b>Total File Diunduh:</b> ${downloadCount} file</li>
+        </ul>
+        <p>Laporan ini dibuat secara otomatis pada ${new Date().toLocaleString("id-ID")}.</p>
+    `;
 
     await sendMail({
       to: adminEmails,

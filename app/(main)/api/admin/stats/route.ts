@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { kv } from "@vercel/kv";
@@ -25,7 +25,6 @@ export async function GET() {
   try {
     const ninetyDaysAgo = subDays(new Date(), 90).getTime();
 
-    // Mengubah nama variabel agar lebih jelas dan menggunakan tipe 'any[]'
     const logMembers: any[] = await kv.zrange(
       "zee-index:activity-log",
       ninetyDaysAgo,
@@ -33,11 +32,9 @@ export async function GET() {
       { byScore: true },
     );
 
-    // --- AWAL PERBAIKAN LOGIKA PARSING ---
     const downloadLogs: ActivityLog[] = logMembers
       .map((logMember) => {
         try {
-          // Logika parsing yang aman: cek jika sudah objek atau masih string
           return typeof logMember === "string"
             ? (JSON.parse(logMember) as ActivityLog)
             : (logMember as ActivityLog);
@@ -46,7 +43,6 @@ export async function GET() {
           return null;
         }
       })
-      // --- AKHIR PERBAIKAN LOGIKA PARSING ---
       .filter(
         (log): log is ActivityLog =>
           log !== null && log.type === "DOWNLOAD" && !!log.itemName,

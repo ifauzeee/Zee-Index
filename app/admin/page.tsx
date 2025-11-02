@@ -18,8 +18,6 @@ import {
   Loader2,
   Users,
   Eye,
-  BarChart2,
-  Download,
 } from "lucide-react";
 import Loading from "@/components/Loading";
 import { cn } from "@/lib/utils";

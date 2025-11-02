@@ -21,6 +21,7 @@ export default function SearchResultsList() {
   const [results, setResults] = useState<DriveFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
 
@@ -53,6 +54,7 @@ export default function SearchResultsList() {
     },
     [router, shareToken, addToast, currentFolderId],
   );
+
   const fetchSearchResults = useCallback(async () => {
     if (!searchTerm) {
       setResults([]);
@@ -94,6 +96,7 @@ export default function SearchResultsList() {
       setIsLoading(false);
     }
   }, [searchTerm, folderId, addToast, shareToken]);
+
   useEffect(() => {
     fetchSearchResults();
   }, [fetchSearchResults]);

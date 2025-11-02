@@ -7,12 +7,9 @@ import type { ActivityLog } from "@/lib/activityLogger";
 const ACTIVITY_LOG_KEY = "zee-index:activity-log";
 const LOGS_PER_PAGE = 50;
 
-// --- FUNGSI isAdmin DIPERBARUI ---
 async function isAdmin(session: any): Promise<boolean> {
-  // Percayakan role yang sudah ada di session
   return session?.user?.role === "ADMIN";
 }
-// --- AKHIR PEMBARUAN ---
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);

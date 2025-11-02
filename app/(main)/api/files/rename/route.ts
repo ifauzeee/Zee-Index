@@ -1,5 +1,3 @@
-// FILE: app/(main)/api/files/rename/route.ts
-
 import { NextResponse, NextRequest } from "next/server";
 import { getAccessToken, getFileDetailsFromDrive } from "@/lib/googleDrive";
 import { getServerSession } from "next-auth/next";
@@ -8,6 +6,7 @@ import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
+
 const renameSchema = z.object({
   fileId: z.string().min(1),
   newName: z

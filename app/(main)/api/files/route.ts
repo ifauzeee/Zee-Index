@@ -17,7 +17,6 @@ async function validateShareToken(request: Request): Promise<boolean> {
     const { payload } = await jwtVerify(shareToken, secret);
 
     if (typeof payload.jti !== "string") {
-      console.error("Token tidak memiliki JTI yang valid.");
       return false;
     }
     const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);

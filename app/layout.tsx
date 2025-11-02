@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   description:
     "A modern, fast, and feature-rich Google Drive indexer built with Next.js.",
 };
+
 export default function RootLayout({
   children,
 }: {

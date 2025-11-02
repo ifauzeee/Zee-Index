@@ -8,6 +8,7 @@ import Toast from "@/components/Toast";
 import { AnimatePresence } from "framer-motion";
 import { Analytics } from "@vercel/analytics/next";
 import { useSession } from "next-auth/react";
+
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 const DetailsPanel = dynamic(() => import("@/components/DetailsPanel"), {
   ssr: false,
@@ -60,10 +61,12 @@ export default function MainLayout({
       fetchDataUsage();
     }
   }, [status, fetchUser, fetchDataUsage, refreshKey]);
+
   useEffect(() => {
     document.documentElement.className = theme;
     document.documentElement.style.colorScheme = theme;
   }, [theme]);
+
   return (
     <>
       <div

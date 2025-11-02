@@ -1,5 +1,3 @@
-// FILE: app/(main)/api/folder/create/route.ts
-
 import { NextResponse, NextRequest } from "next/server";
 import { getAccessToken } from "@/lib/googleDrive";
 import { getServerSession } from "next-auth/next";

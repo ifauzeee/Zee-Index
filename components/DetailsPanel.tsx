@@ -19,6 +19,7 @@ const ListItem = ({ label, value }: { label: string; value: string }) => (
     <span className="text-right break-all">{value}</span>
   </li>
 );
+
 export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
   const Icon = getIcon(file.mimeType);
   const metadata = file.imageMediaMetadata || file.videoMediaMetadata;
@@ -28,6 +29,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
   const iconString = renderToString(
     <Icon size={128} className="text-primary/10" />,
   );
+
   return (
     <motion.div
       className="fixed inset-0 bg-black/60 z-40"
@@ -38,7 +40,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
     >
       <motion.div
         className="fixed bottom-0 left-0 right-0 w-full max-h-[85vh] rounded-t-xl shadow-2xl flex flex-col bg-background
-                   lg:absolute lg:right-0 lg:top-0 lg:h-full lg:max-h-full lg:w-full lg:max-w-sm lg:rounded-t-none lg:border-l"
+                   lg:absolute lg:right-0 lg:top-0 lg:h-full lg:max-h-full lg:w-full lg:max-w-sm lg:rounded-t-none lg:border-l"
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         variants={{
           initial: { y: "100%", x: "0%" },
