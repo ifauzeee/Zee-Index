@@ -442,7 +442,7 @@ export default function AdminPage() {
                   <TwoFactorAuthSetup />
                 </div>
               </div>
-              
+
               <ProtectedFoldersManager />
             </div>
           </TabsContent>

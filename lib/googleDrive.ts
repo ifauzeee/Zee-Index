@@ -23,7 +23,7 @@ export interface DriveFile {
     height: number;
     durationMillis: string;
   };
-  trashed: boolean; 
+  trashed: boolean;
 }
 
 interface StorageBreakdown {
@@ -263,7 +263,7 @@ export async function getFileDetailsFromDrive(
   const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}`;
   const params = new URLSearchParams({
     fields:
-      "id, name, mimeType, size, modifiedTime, createdTime, webViewLink, webContentLink, thumbnailLink, hasThumbnail, parents, owners(displayName, emailAddress), lastModifyingUser(displayName), md5Checksum, imageMediaMetadata(width, height), videoMediaMetadata(width, height, durationMillis), trashed", 
+      "id, name, mimeType, size, modifiedTime, createdTime, webViewLink, webContentLink, thumbnailLink, hasThumbnail, parents, owners(displayName, emailAddress), lastModifyingUser(displayName), md5Checksum, imageMediaMetadata(width, height), videoMediaMetadata(width, height, durationMillis), trashed",
   });
   const response = await fetchWithRetry(`${driveUrl}?${params.toString()}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -284,7 +284,7 @@ export async function getFileDetailsFromDrive(
 export async function getFolderPath(
   folderId: string,
 ): Promise<{ id: string; name: string }[]> {
-  const cacheKey = `zee-index:folder-path:${folderId}`; 
+  const cacheKey = `zee-index:folder-path:${folderId}`;
   try {
     const cachedPath: { id: string; name: string }[] | null =
       await kv.get(cacheKey);
@@ -299,7 +299,7 @@ export async function getFolderPath(
   const accessToken = await getAccessToken();
   const path = [];
   let currentId = folderId;
-  const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID; 
+  const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
 
   if (folderId === rootId) {
     path.unshift({ id: rootId, name: "Home" });
@@ -330,7 +330,7 @@ export async function getFolderPath(
         break;
       }
     }
-  } 
+  }
 
   try {
     await kv.set(cacheKey, path, { ex: 3600 });

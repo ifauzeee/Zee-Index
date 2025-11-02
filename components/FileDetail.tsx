@@ -273,10 +273,8 @@ export default function FileDetail({
     () => searchParams.get("share_token"),
     [searchParams],
   );
-
   const isAdmin = user?.role === "ADMIN";
   const canShowAuthor = isAdmin || !hideAuthor;
-
   const validateShareToken = useCallback(
     async (token: string) => {
       try {

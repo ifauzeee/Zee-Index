@@ -47,8 +47,8 @@ export default function SecurityConfig() {
             <div>
               <p className="font-semibold">Sembunyikan Author</p>
               <p className="text-sm text-muted-foreground">
-                Sembunyikan info "Pemilik" dan "Diubah oleh" untuk pengguna
-                non-Admin.
+                Sembunyikan info &quot;Pemilik&quot; dan &quot;Diubah oleh&quot;
+                untuk pengguna non-Admin.
               </p>
             </div>
           </label>

@@ -24,7 +24,7 @@ import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import type { ActivityLog, ActivityType } from "@/lib/activityLogger";
-import EmptyState from "./EmptyState"; 
+import EmptyState from "./EmptyState";
 
 const iconMap: Record<string, React.ElementType> = {
   UPLOAD: Upload,
@@ -156,7 +156,9 @@ export default function ActivityLogDashboard() {
       <div className="flex flex-col sm:flex-row gap-4 mb-4">
         <select
           value={filterType}
-          onChange={(e) => setFilterType(e.target.value as ActivityType | "ALL")}
+          onChange={(e) =>
+            setFilterType(e.target.value as ActivityType | "ALL")
+          }
           className="w-full sm:w-48 px-3 py-2 rounded-md border bg-transparent focus:ring-2 focus:ring-ring focus:outline-none text-sm"
         >
           <option value={ALL_TYPES}>Semua Tipe</option>

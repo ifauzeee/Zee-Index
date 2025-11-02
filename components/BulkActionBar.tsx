@@ -203,8 +203,10 @@ export default function BulkActionBar() {
                 className="p-2 rounded-md bg-yellow-600 text-white hover:bg-yellow-700 disabled:bg-yellow-400 flex items-center gap-2 transition-colors"
               >
                 <Move size={18} />
-                <span className="hidden
-sm:inline">
+                <span
+                  className="hidden
+sm:inline"
+                >
                   Pindahkan
                 </span>
               </button>
@@ -248,7 +250,7 @@ sm:inline">
               createdTime: "",
               hasThumbnail: false,
               webViewLink: "",
-              trashed: false, 
+              trashed: false,
             }}
             onClose={() => setShowMoveModal(false)}
             onConfirmMove={handleBulkMove}

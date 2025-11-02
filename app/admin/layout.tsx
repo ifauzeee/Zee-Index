@@ -57,7 +57,7 @@ export default function MainLayout({
 
   useEffect(() => {
     fetchConfig();
-    
+
     if (status === "authenticated") {
       fetchUser();
       fetchDataUsage();
