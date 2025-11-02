@@ -32,6 +32,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { AdminStats } from "@/lib/adminStats";
 import TodayDownloadsChart from "@/components/charts/TodayDownloadsChart";
 import DayOfWeekChart from "@/components/charts/DayOfWeekChart";
+import SecurityConfig from "@/components/SecurityConfig";
 
 const DeleteConfirmationModal: FC<{
   onConfirm: () => void;
@@ -431,14 +432,17 @@ export default function AdminPage() {
 
           <TabsContent value="security" className="mt-6">
             <div className="flex flex-col gap-8">
+              <SecurityConfig />
+
               <div>
                 <h2 className="text-2xl font-semibold mb-6">
-                  Pengaturan Keamanan Akun
+                  Pengaturan Keamanan Akun (2FA)
                 </h2>
                 <div className="bg-card border rounded-lg p-6">
                   <TwoFactorAuthSetup />
                 </div>
               </div>
+              
               <ProtectedFoldersManager />
             </div>
           </TabsContent>

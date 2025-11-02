@@ -31,6 +31,10 @@ type ViewMode = "list" | "grid";
 type SortKey = "name" | "size" | "modifiedTime";
 type SortOrder = "asc" | "desc";
 
+interface AppConfig {
+  hideAuthor: boolean;
+}
+
 interface AppState {
   theme: "light" | "dark";
   toggleTheme: () => void;
@@ -79,6 +83,11 @@ interface AppState {
   ) => Promise<void>;
   detailsFile: DriveFile | null;
   setDetailsFile: (file: DriveFile | null) => void;
+
+  hideAuthor: boolean | null;
+  isConfigLoading: boolean;
+  fetchConfig: () => Promise<void>;
+  setConfig: (config: Partial<AppConfig>) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()(
@@ -321,10 +330,40 @@ export const useAppStore = create<AppState>()(
       },
       detailsFile: null,
       setDetailsFile: (file) => set({ detailsFile: file }),
+
+      hideAuthor: null,
+      isConfigLoading: false,
+      fetchConfig: async () => {
+        set({ isConfigLoading: true });
+        try {
+          const response = await fetch("/api/admin/config");
+          const config: AppConfig = await response.json();
+          set({ hideAuthor: config.hideAuthor || false });
+        } catch (error) {
+          console.error("Gagal fetch config:", error);
+          set({ hideAuthor: false });
+        } finally {
+          set({ isConfigLoading: false });
+        }
+      },
+      setConfig: async (config) => {
+        try {
+          const response = await fetch("/api/admin/config", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(config),
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error);
+          set({ hideAuthor: result.config.hideAuthor });
+        } catch (error: any) {
+          get().addToast({ message: error.message, type: "error" });
+        }
+      },
     }),
     {
       name: "zee-index-storage",
-      partialize: (state) => ({
+      partials: (state) => ({
         theme: state.theme,
         view: state.view,
         sort: state.sort,

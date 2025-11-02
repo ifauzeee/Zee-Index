@@ -7,6 +7,7 @@ import { formatBytes, formatDuration, getIcon } from "@/lib/utils";
 import { renderToString } from "react-dom/server";
 import Image from "next/image";
 import React from "react";
+import { useAppStore } from "@/lib/store";
 
 interface DetailsPanelProps {
   file: DriveFile;
@@ -19,17 +20,20 @@ const ListItem = ({ label, value }: { label: string; value: string }) => (
     <span className="text-right break-all">{value}</span>
   </li>
 );
-
 export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
   const Icon = getIcon(file.mimeType);
   const metadata = file.imageMediaMetadata || file.videoMediaMetadata;
   const durationMillis = file.videoMediaMetadata?.durationMillis
     ? parseInt(file.videoMediaMetadata.durationMillis, 10)
     : undefined;
+
+  const { user, hideAuthor } = useAppStore();
+  const isAdmin = user?.role === "ADMIN";
+  const canShowAuthor = isAdmin || !hideAuthor;
+
   const iconString = renderToString(
     <Icon size={128} className="text-primary/10" />,
   );
-
   return (
     <motion.div
       className="fixed inset-0 bg-black/60 z-40"
@@ -125,10 +129,10 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 timeStyle: "short",
               })}
             />
-            {file.owners && file.owners.length > 0 && (
+            {canShowAuthor && file.owners && file.owners.length > 0 && (
               <ListItem label="Pemilik" value={file.owners[0].displayName} />
             )}
-            {file.lastModifyingUser && (
+            {canShowAuthor && file.lastModifyingUser && (
               <ListItem
                 label="Diubah oleh"
                 value={file.lastModifyingUser.displayName}

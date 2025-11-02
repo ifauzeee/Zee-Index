@@ -39,14 +39,12 @@ const LoadingPreview: React.FC = () => (
     <Loader2 className="animate-spin text-4xl" />
   </div>
 );
-
 const ErrorPreview: React.FC<{ message: string }> = ({ message }) => (
   <div className="flex flex-col items-center justify-center h-full gap-4 text-red-500">
     <i className="fas fa-exclamation-triangle text-6xl"></i>
     <p>{message}</p>
   </div>
 );
-
 const VideoAudioPreview: React.FC<{
   src: string;
   type: "video" | "audio";
@@ -67,10 +65,8 @@ const VideoAudioPreview: React.FC<{
       playerRef.current?.destroy();
     };
   }, []);
-
   const Tag = type === "video" ? "video" : "audio";
   const posterUrl = poster ? poster.replace(/=s\d+/, "=s1280") : undefined;
-
   return (
     <Tag
       ref={ref as any}
@@ -92,12 +88,10 @@ const ImagePreview: React.FC<{ src: string }> = ({ src }) => (
     alt="File preview"
   />
 );
-
 const PdfPreview: React.FC<{ src: string }> = ({ src }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     let isCancelled = false;
     const loadPdf = async () => {
@@ -146,7 +140,6 @@ const PdfPreview: React.FC<{ src: string }> = ({ src }) => {
       isCancelled = true;
     };
   }, [src]);
-
   return (
     <div ref={containerRef} className="w-full h-full overflow-auto p-4">
       {isLoading && <LoadingPreview />}
@@ -161,12 +154,10 @@ const OfficePreview: React.FC<{ src: string }> = ({ src }) => (
     className="w-full h-full border-0"
   />
 );
-
 const EbookPreview: React.FC<{ src: string }> = ({ src }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     if (!containerRef.current) return;
     if (typeof ePub === "undefined") {
@@ -194,7 +185,6 @@ const EbookPreview: React.FC<{ src: string }> = ({ src }) => {
       book.destroy();
     };
   }, [src]);
-
   return (
     <div className="w-full h-full">
       {isLoading && <LoadingPreview />}
@@ -214,7 +204,6 @@ const CodePreview: React.FC<{ src: string; fileName: string }> = ({
   const [content, setContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     const fetchContent = async () => {
       try {
@@ -230,18 +219,15 @@ const CodePreview: React.FC<{ src: string; fileName: string }> = ({
     };
     fetchContent();
   }, [src]);
-
   useEffect(() => {
     if (content) {
       Prism.highlightAll();
     }
   }, [content]);
-
   if (isLoading) return <LoadingPreview />;
   if (error) return <ErrorPreview message={error} />;
 
   const language = getLanguageFromFilename(fileName);
-
   return (
     <pre className="line-numbers h-full w-full overflow-auto text-sm !m-0 !p-4">
       <code className={`language-${language}`}>{content}</code>
@@ -254,7 +240,6 @@ const DefaultPreview: React.FC<{ mimeType: string }> = ({ mimeType }) => {
   const iconString = renderToString(
     <IconComponent size={256} className="text-primary/20" />,
   );
-
   return (
     <div
       className="flex flex-col items-center justify-center h-full gap-4"
@@ -276,7 +261,7 @@ export default function FileDetail({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { addToast, user, triggerRefresh } = useAppStore();
+  const { addToast, user, triggerRefresh, hideAuthor } = useAppStore();
   const [showBackButton, setShowBackButton] = useState(true);
   const [markdownContent, setMarkdownContent] = useState<string | null>(null);
   const [editableContent, setEditableContent] = useState<string | null>(null);
@@ -284,11 +269,13 @@ export default function FileDetail({
   const [isSaving, setIsSaving] = useState(false);
   const [isFetchingEditableContent, setIsFetchingEditableContent] =
     useState(false);
-
   const shareToken = useMemo(
     () => searchParams.get("share_token"),
     [searchParams],
   );
+
+  const isAdmin = user?.role === "ADMIN";
+  const canShowAuthor = isAdmin || !hideAuthor;
 
   const validateShareToken = useCallback(
     async (token: string) => {
@@ -317,7 +304,6 @@ export default function FileDetail({
     },
     [addToast, router],
   );
-
   useEffect(() => {
     if (shareToken) {
       validateShareToken(shareToken);
@@ -351,7 +337,6 @@ export default function FileDetail({
       }
     }
   }, [shareToken, router, addToast, validateShareToken]);
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isEditing) return;
@@ -378,12 +363,10 @@ export default function FileDetail({
     }
     return url;
   }, [file.id, shareToken]);
-
   const fileType = getFileType(file);
 
   const isEditable =
     user?.role === "ADMIN" && (fileType === "code" || fileType === "markdown");
-
   useEffect(() => {
     if (isEditing && isEditable && editableContent === null) {
       setIsFetchingEditableContent(true);
@@ -409,7 +392,6 @@ export default function FileDetail({
         .finally(() => setIsFetchingEditableContent(false));
     }
   }, [isEditing, isEditable, fileType, directLink, editableContent, addToast]);
-
   const handleSaveChanges = async () => {
     if (editableContent === null) return;
     setIsSaving(true);
@@ -434,7 +416,6 @@ export default function FileDetail({
       setIsSaving(false);
     }
   };
-
   const renderPreview = () => {
     const mimeType =
       file.mimeType === "application/octet-stream" && file.name.endsWith(".mkv")
@@ -488,7 +469,6 @@ export default function FileDetail({
     : undefined;
   const showShareButton =
     !searchParams.get("share_token") && user?.role === "ADMIN";
-
   return (
     <div className="container mx-auto px-4 py-6 flex flex-col h-full overflow-hidden">
       {!isModal && (
@@ -622,10 +602,10 @@ export default function FileDetail({
                 timeStyle: "short",
               })}
             />
-            {file.owners && file.owners.length > 0 && (
+            {canShowAuthor && file.owners && file.owners.length > 0 && (
               <ListItem label="Pemilik" value={file.owners[0].displayName} />
             )}
-            {file.lastModifyingUser && (
+            {canShowAuthor && file.lastModifyingUser && (
               <ListItem
                 label="Diubah oleh"
                 value={file.lastModifyingUser.displayName}
@@ -665,7 +645,6 @@ const ListItem = ({ label, value }: { label: string; value: string }) => (
     <span className="text-right break-all">{value}</span>
   </li>
 );
-
 function getLanguageFromFilename(name: string): string {
   const ext = name.split(".").pop()?.toLowerCase() || "";
   const langMap: Record<string, string> = {
