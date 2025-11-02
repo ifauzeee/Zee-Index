@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, FC } from "react";
+import React, { useState, useEffect, useCallback, FC, useMemo } from "react";
 import { useAppStore } from "@/lib/store";
 import {
   Loader2,
@@ -16,12 +16,15 @@ import {
   UserMinus,
   LogIn,
   KeyRound,
+  ChevronLeft,
+  ChevronRight,
+  FileSearch,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-
-import type { ActivityLog } from "@/lib/activityLogger";
+import type { ActivityLog, ActivityType } from "@/lib/activityLogger";
+import EmptyState from "./EmptyState"; 
 
 const iconMap: Record<string, React.ElementType> = {
   UPLOAD: Upload,
@@ -74,67 +77,123 @@ const LogDetail: FC<{ log: ActivityLog }> = ({ log }) => {
   );
 };
 
+const LOGS_PER_PAGE = 50;
+const ALL_TYPES = "ALL";
+
+const logTypes: ActivityType[] = [
+  "UPLOAD",
+  "DOWNLOAD",
+  "DELETE",
+  "RENAME",
+  "MOVE",
+  "COPY",
+  "SHARE_LINK_CREATED",
+  "SHARE_LINK_DELETED",
+  "ADMIN_ADDED",
+  "ADMIN_REMOVED",
+  "LOGIN_SUCCESS",
+  "LOGIN_FAILURE",
+];
+
 export default function ActivityLogDashboard() {
   const { addToast } = useAppStore();
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [offset, setOffset] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [filterType, setFilterType] = useState<ActivityType | "ALL">(ALL_TYPES);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchLogs = useCallback(
-    async (currentOffset: number) => {
-      if (currentOffset === 0) setIsLoading(true);
-      else setIsLoadingMore(true);
-
+    async (page: number) => {
+      setIsLoading(true);
       try {
         const response = await fetch(
-          `/api/admin/activity-log?offset=${currentOffset}`,
+          `/api/admin/activity-log?page=${page}&limit=${LOGS_PER_PAGE}`,
         );
         if (!response.ok) throw new Error("Gagal mengambil log.");
         const data = await response.json();
 
-        setLogs((prev) =>
-          currentOffset === 0 ? data.logs : [...prev, ...data.logs],
-        );
-        setHasMore(data.hasMore);
-        setOffset(currentOffset + data.logs.length);
+        setLogs(data.logs);
+        setTotalPages(data.totalPages);
+        setCurrentPage(data.currentPage);
       } catch (err: any) {
         addToast({ message: err.message, type: "error" });
       } finally {
         setIsLoading(false);
-        setIsLoadingMore(false);
       }
     },
     [addToast],
   );
 
   useEffect(() => {
-    fetchLogs(0);
+    fetchLogs(1);
   }, [fetchLogs]);
 
-  const handleLoadMore = () => {
-    if (!isLoadingMore && hasMore) {
-      fetchLogs(offset);
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      fetchLogs(newPage);
     }
   };
+
+  const filteredLogs = useMemo(() => {
+    return logs.filter((log) => {
+      const typeMatch = filterType === ALL_TYPES || log.type === filterType;
+      const searchMatch =
+        !searchQuery ||
+        log.itemName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        log.userEmail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        log.targetUser?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        log.error?.toLowerCase().includes(searchQuery.toLowerCase());
+      return typeMatch && searchMatch;
+    });
+  }, [logs, filterType, searchQuery]);
 
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6">Log Aktivitas</h2>
+
+      <div className="flex flex-col sm:flex-row gap-4 mb-4">
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value as ActivityType | "ALL")}
+          className="w-full sm:w-48 px-3 py-2 rounded-md border bg-transparent focus:ring-2 focus:ring-ring focus:outline-none text-sm"
+        >
+          <option value={ALL_TYPES}>Semua Tipe</option>
+          {logTypes.map((type) => (
+            <option key={type} value={type}>
+              {type.replace(/_/g, " ")}
+            </option>
+          ))}
+        </select>
+        <div className="relative flex-grow">
+          <FileSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Cari log (user, item, error...)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 rounded-lg border bg-transparent text-sm"
+          />
+        </div>
+      </div>
+
       <div className="bg-card border rounded-lg">
         {isLoading ? (
           <div className="flex justify-center items-center h-48">
             <Loader2 className="animate-spin text-muted-foreground" />
           </div>
-        ) : logs.length === 0 ? (
+        ) : filteredLogs.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
-            <AlertCircle className="h-16 w-16 mx-auto mb-4" />
-            <p>Belum ada aktivitas yang tercatat.</p>
+            <EmptyState
+              icon={AlertCircle}
+              title="Tidak Ada Log"
+              message="Tidak ada aktivitas yang tercatat atau cocok dengan filter Anda."
+            />
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {logs.map((log, index) => {
+            {filteredLogs.map((log, index) => {
               const Icon = iconMap[log.type] || AlertCircle;
               return (
                 <motion.div
@@ -143,7 +202,7 @@ export default function ActivityLogDashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{
                     duration: 0.3,
-                    delay: index < 10 ? index * 0.05 : 0,
+                    delay: index * 0.05,
                   }}
                   className="p-4 hover:bg-accent/50"
                 >
@@ -172,18 +231,26 @@ export default function ActivityLogDashboard() {
             })}
           </div>
         )}
-        {hasMore && !isLoading && (
-          <div className="p-4 border-t border-border text-center">
+        {totalPages > 1 && !isLoading && (
+          <div className="p-4 border-t border-border flex justify-between items-center">
             <button
-              onClick={handleLoadMore}
-              disabled={isLoadingMore}
-              className="px-4 py-2 text-sm font-medium rounded-md hover:bg-accent disabled:opacity-50"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 text-sm font-medium rounded-md hover:bg-accent disabled:opacity-50 flex items-center gap-1"
             >
-              {isLoadingMore ? (
-                <Loader2 className="animate-spin mx-auto" />
-              ) : (
-                "Muat Lebih Banyak"
-              )}
+              <ChevronLeft size={16} />
+              Sebelumnya
+            </button>
+            <span className="text-sm text-muted-foreground">
+              Halaman {currentPage} dari {totalPages}
+            </span>
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 text-sm font-medium rounded-md hover:bg-accent disabled:opacity-50 flex items-center gap-1"
+            >
+              Berikutnya
+              <ChevronRight size={16} />
             </button>
           </div>
         )}

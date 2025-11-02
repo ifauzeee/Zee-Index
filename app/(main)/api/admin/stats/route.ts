@@ -8,6 +8,7 @@ import type {
   HourlyDownload,
   TopFile,
   DayOfWeekDownload,
+  TopUser,
 } from "@/lib/adminStats";
 import { format, startOfToday, subDays, getDay } from "date-fns";
 import { id } from "date-fns/locale";
@@ -24,7 +25,6 @@ export async function GET() {
 
   try {
     const ninetyDaysAgo = subDays(new Date(), 90).getTime();
-
     const logMembers: any[] = await kv.zrange(
       "zee-index:activity-log",
       ninetyDaysAgo,
@@ -32,7 +32,7 @@ export async function GET() {
       { byScore: true },
     );
 
-    const downloadLogs: ActivityLog[] = logMembers
+    const allLogs: ActivityLog[] = logMembers
       .map((logMember) => {
         try {
           return typeof logMember === "string"
@@ -43,10 +43,7 @@ export async function GET() {
           return null;
         }
       })
-      .filter(
-        (log): log is ActivityLog =>
-          log !== null && log.type === "DOWNLOAD" && !!log.itemName,
-      );
+      .filter((log): log is ActivityLog => log !== null);
 
     const todayStart = startOfToday().getTime();
     const sevenWeeksAgo = subDays(new Date(), 49).getTime();
@@ -59,6 +56,8 @@ export async function GET() {
       }));
 
     const fileCounts = new Map<string, number>();
+    const userCounts = new Map<string, number>();
+    const uploadCounts = new Map<string, number>();
 
     const downloadsByDayOfWeek: DayOfWeekDownload[] = [
       { name: "Min", downloads: 0 },
@@ -70,21 +69,46 @@ export async function GET() {
       { name: "Sab", downloads: 0 },
     ];
 
-    for (const log of downloadLogs) {
-      if (log.timestamp >= todayStart) {
-        const hour = new Date(log.timestamp).getHours();
-        downloadsToday[hour].downloads++;
+    for (const log of allLogs) {
+      if (log.userEmail) {
+        userCounts.set(log.userEmail, (userCounts.get(log.userEmail) || 0) + 1);
       }
 
-      if (log.timestamp >= sevenWeeksAgo) {
-        const dayIndex = getDay(new Date(log.timestamp));
-        downloadsByDayOfWeek[dayIndex].downloads++;
+      if (log.type === "UPLOAD" && log.itemName) {
+        uploadCounts.set(
+          log.itemName,
+          (uploadCounts.get(log.itemName) || 0) + 1,
+        );
       }
 
-      fileCounts.set(log.itemName!, (fileCounts.get(log.itemName!) || 0) + 1);
+      if (log.type === "DOWNLOAD") {
+        if (log.timestamp >= todayStart) {
+          const hour = new Date(log.timestamp).getHours();
+          downloadsToday[hour].downloads++;
+        }
+
+        if (log.timestamp >= sevenWeeksAgo) {
+          const dayIndex = getDay(new Date(log.timestamp));
+          downloadsByDayOfWeek[dayIndex].downloads++;
+        }
+
+        if (log.itemName) {
+          fileCounts.set(log.itemName, (fileCounts.get(log.itemName) || 0) + 1);
+        }
+      }
     }
 
     const topFiles: TopFile[] = Array.from(fileCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, count]) => ({ name, count }));
+
+    const topUsers: TopUser[] = Array.from(userCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([email, count]) => ({ email, count }));
+
+    const topUploadedFiles: TopFile[] = Array.from(uploadCounts.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
       .map(([name, count]) => ({ name, count }));
@@ -93,6 +117,8 @@ export async function GET() {
       downloadsToday,
       topFiles,
       downloadsByDayOfWeek,
+      topUsers,
+      topUploadedFiles,
     };
 
     return NextResponse.json(stats);

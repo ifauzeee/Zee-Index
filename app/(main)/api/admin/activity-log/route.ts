@@ -3,9 +3,14 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { kv } from "@vercel/kv";
 import type { ActivityLog } from "@/lib/activityLogger";
+import { z } from "zod";
 
 const ACTIVITY_LOG_KEY = "zee-index:activity-log";
-const LOGS_PER_PAGE = 50;
+
+const querySchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(50),
+});
 
 async function isAdmin(session: any): Promise<boolean> {
   return session?.user?.role === "ADMIN";
@@ -18,14 +23,29 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
-  const offset = parseInt(searchParams.get("offset") || "0", 10);
+  const validation = querySchema.safeParse(Object.fromEntries(searchParams));
+
+  if (!validation.success) {
+    return NextResponse.json(
+      { error: "Parameter query tidak valid." },
+      { status: 400 },
+    );
+  }
+
+  const { page, limit } = validation.data;
+  const offset = (page - 1) * limit;
+
   try {
+    const totalLogs = await kv.zcard(ACTIVITY_LOG_KEY);
+    const totalPages = Math.ceil(totalLogs / limit);
+
     const logStrings: string[] = await kv.zrange(
       ACTIVITY_LOG_KEY,
       offset,
-      offset + LOGS_PER_PAGE - 1,
+      offset + limit - 1,
       { rev: true },
     );
+
     const logs: ActivityLog[] = logStrings
       .map((logStr) => {
         try {
@@ -39,7 +59,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       logs,
-      hasMore: logs.length === LOGS_PER_PAGE,
+      totalPages,
+      currentPage: page,
+      totalLogs,
     });
   } catch (error) {
     console.error("Gagal mengambil log aktivitas:", error);

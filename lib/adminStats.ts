@@ -13,8 +13,15 @@ export interface DayOfWeekDownload {
   downloads: number;
 }
 
+export interface TopUser {
+  email: string;
+  count: number;
+}
+
 export interface AdminStats {
   downloadsToday: HourlyDownload[];
   topFiles: TopFile[];
   downloadsByDayOfWeek: DayOfWeekDownload[];
+  topUsers: TopUser[];
+  topUploadedFiles: TopFile[];
 }

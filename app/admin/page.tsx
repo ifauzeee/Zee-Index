@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect, useMemo, FC } from "react";
 import { useAppStore, ShareLink } from "@/lib/store";
 import { format } from "date-fns";
@@ -18,6 +17,9 @@ import {
   Loader2,
   Users,
   Eye,
+  Activity,
+  UploadCloud,
+  Download,
 } from "lucide-react";
 import Loading from "@/components/Loading";
 import { cn } from "@/lib/utils";
@@ -139,7 +141,6 @@ export default function AdminPage() {
     navigator.clipboard.writeText(shareUrl);
     addToast({ message: "Tautan disalin ke clipboard!", type: "success" });
   };
-
   const handleDeleteClick = (link: ShareLink) => {
     setLinkToDelete(link);
   };
@@ -274,8 +275,55 @@ export default function AdminPage() {
                       </h3>
                       <TodayDownloadsChart data={stats.downloadsToday} />
                     </div>
+
                     <div className="bg-card border rounded-lg p-6">
-                      <h3 className="text-lg font-semibold mb-4">
+                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <Activity size={20} />
+                        Top 5 Pengguna Aktif (90 Hari)
+                      </h3>
+                      {stats.topUsers && stats.topUsers.length > 0 ? (
+                        <ol className="space-y-3 h-[300px] overflow-y-auto px-1">
+                          {stats.topUsers.map((user, index) => (
+                            <li
+                              key={user.email}
+                              className="flex items-center gap-4 text-sm py-2"
+                            >
+                              <span
+                                className={cn(
+                                  "flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0",
+                                  index === 0 &&
+                                    "bg-primary text-primary-foreground",
+                                  index === 1 &&
+                                    "bg-primary/70 text-primary-foreground",
+                                  index === 2 &&
+                                    "bg-primary/50 text-primary-foreground",
+                                  index > 2 && "bg-muted text-muted-foreground",
+                                )}
+                              >
+                                {index + 1}
+                              </span>
+                              <span
+                                className="flex-1 truncate"
+                                title={user.email}
+                              >
+                                {user.email}
+                              </span>
+                              <span className="font-mono text-muted-foreground">
+                                {user.count}x
+                              </span>
+                            </li>
+                          ))}
+                        </ol>
+                      ) : (
+                        <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                          <p>Belum ada data aktivitas pengguna.</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="bg-card border rounded-lg p-6">
+                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <Download size={20} />
                         Top 5 File Diunduh (90 Hari)
                       </h3>
                       {stats.topFiles.length > 0 ? (
@@ -317,6 +365,53 @@ export default function AdminPage() {
                         </div>
                       )}
                     </div>
+
+                    <div className="bg-card border rounded-lg p-6">
+                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <UploadCloud size={20} />
+                        Top 5 File Diunggah (90 Hari)
+                      </h3>
+                      {stats.topUploadedFiles &&
+                      stats.topUploadedFiles.length > 0 ? (
+                        <ol className="space-y-3 h-[300px] overflow-y-auto px-1">
+                          {stats.topUploadedFiles.map((file, index) => (
+                            <li
+                              key={file.name}
+                              className="flex items-center gap-4 text-sm py-2"
+                            >
+                              <span
+                                className={cn(
+                                  "flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0",
+                                  index === 0 &&
+                                    "bg-primary text-primary-foreground",
+                                  index === 1 &&
+                                    "bg-primary/70 text-primary-foreground",
+                                  index === 2 &&
+                                    "bg-primary/50 text-primary-foreground",
+                                  index > 2 && "bg-muted text-muted-foreground",
+                                )}
+                              >
+                                {index + 1}
+                              </span>
+                              <span
+                                className="flex-1 truncate"
+                                title={file.name}
+                              >
+                                {file.name}
+                              </span>
+                              <span className="font-mono text-muted-foreground">
+                                {file.count}x
+                              </span>
+                            </li>
+                          ))}
+                        </ol>
+                      ) : (
+                        <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                          <p>Belum ada data unggahan.</p>
+                        </div>
+                      )}
+                    </div>
+
                     <div className="bg-card border rounded-lg p-6 xl:col-span-2">
                       <h3 className="text-lg font-semibold mb-4">
                         Unduhan per Hari (7 Minggu Terakhir)
