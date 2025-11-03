@@ -3,8 +3,8 @@ import {
   getAccessToken,
   DriveFile,
   getAllDescendantFolders,
+  searchFilesInFolder,
 } from "@/lib/googleDrive";
-
 import { isProtected } from "@/lib/auth";
 
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
@@ -47,6 +47,7 @@ const getDateQuery = (modifiedTime?: string | null) => {
 };
 
 export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const rawSearchTerm = searchParams.get("q");
@@ -54,6 +55,7 @@ export async function GET(request: Request) {
   const mimeType = searchParams.get("mimeType");
   const modifiedTime = searchParams.get("modifiedTime");
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
+
   if (!rawSearchTerm) {
     return NextResponse.json(
       { error: "Search term is required." },
@@ -69,45 +71,58 @@ export async function GET(request: Request) {
 
   const sanitizedSearchTerm = sanitizeString(rawSearchTerm);
   const searchTerm = sanitizedSearchTerm.replace(/'/g, "''");
+
   try {
     const accessToken = await getAccessToken();
+
     const descendantFolderIds = await getAllDescendantFolders(
       accessToken,
       rootFolderId,
     );
-    const parentQueries = descendantFolderIds.map((id) => `'${id}' in parents`);
 
     const queryField = searchType === "fullText" ? "fullText" : "name";
-    let driveQuery = `${queryField} contains '${searchTerm}' and trashed=false and (${parentQueries.join(
-      " or ",
-    )})`;
+    const mimeQuery = getMimeQuery(mimeType);
+    const dateQuery = getDateQuery(modifiedTime);
 
-    driveQuery += getMimeQuery(mimeType);
-    driveQuery += getDateQuery(modifiedTime);
+    const searchPromises = descendantFolderIds.map((folderId) =>
+      searchFilesInFolder(
+        accessToken,
+        folderId,
+        searchTerm,
+        queryField,
+        mimeQuery,
+        dateQuery,
+      ),
+    );
 
-    const driveUrl = "https://www.googleapis.com/drive/v3/files";
-    const params = new URLSearchParams({
-      q: driveQuery,
-      fields:
-        "files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents)",
-      pageSize: "200",
-    });
-    const response = await fetch(`${driveUrl}?${params.toString()}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`Google Drive API Error: ${errorData.error.message}`);
+    const results = await Promise.allSettled(searchPromises);
+
+    let allFiles: DriveFile[] = [];
+    for (const result of results) {
+      if (result.status === "fulfilled" && result.value.length > 0) {
+        allFiles.push(...result.value);
+      } else if (result.status === "rejected") {
+        console.error("Sebagian pencarian global gagal:", result.reason);
+      }
     }
 
-    const data = await response.json();
-    const processedFiles = (data.files || []).map((file: DriveFile) => ({
-      ...file,
-      isFolder: file.mimeType === "application/vnd.google-apps.folder",
-      isProtected:
-        file.mimeType === "application/vnd.google-apps.folder" &&
-        isProtected(file.id),
-    }));
+    const uniqueFiles = new Map<string, DriveFile>();
+    for (const file of allFiles) {
+      if (!uniqueFiles.has(file.id)) {
+        uniqueFiles.set(file.id, file);
+      }
+    }
+
+    const processedFiles = Array.from(uniqueFiles.values()).map(
+      (file: DriveFile) => ({
+        ...file,
+        isFolder: file.mimeType === "application/vnd.google-apps.folder",
+        isProtected:
+          file.mimeType === "application/vnd.google-apps.folder" &&
+          isProtected(file.id),
+      }),
+    );
+
     return NextResponse.json({ files: processedFiles });
   } catch (error: any) {
     console.error("Global Search API Error:", error.message);

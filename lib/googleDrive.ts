@@ -50,7 +50,9 @@ async function fetchWithRetry(
     } catch (error: any) {
       if (i === retries - 1) throw error;
       console.log(
-        `Fetch gagal (percobaan ${i + 1}/${retries}), mencoba lagi dalam ${delay / 1000} detik...`,
+        `Fetch gagal (percobaan ${
+          i + 1
+        }/${retries}), mencoba lagi dalam ${delay / 1000} detik...`,
       );
       await new Promise((res) => setTimeout(res, delay));
     }
@@ -77,7 +79,9 @@ export async function getAccessToken(): Promise<string> {
     const errorData = await response.json();
     console.error("Gagal mendapatkan Access Token:", errorData);
     throw new Error(
-      `Otentikasi Gagal: ${errorData.error_description || "Periksa konfigurasi .env.local Anda."}`,
+      `Otentikasi Gagal: ${
+        errorData.error_description || "Periksa konfigurasi .env.local Anda."
+      }`,
     );
   }
 
@@ -125,7 +129,6 @@ export async function getAllDescendantFolders(
             cache: "no-store",
           },
         );
-
         if (!response.ok) {
           console.error(`Gagal mengambil subfolder dari folder ${folderId}`);
           break;
@@ -240,7 +243,9 @@ export async function listFilesFromDrive(
     const errorData = await response.json();
     console.error("Google Drive API Error:", errorData);
     throw new Error(
-      `Google Drive API Error: ${errorData.error?.message || "Pastikan folder ID benar dan dapat diakses."}`,
+      `Google Drive API Error: ${
+        errorData.error?.message || "Pastikan folder ID benar dan dapat diakses."
+      }`,
     );
   }
 
@@ -300,7 +305,6 @@ export async function getFolderPath(
   const path = [];
   let currentId = folderId;
   const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
-
   if (folderId === rootId) {
     path.unshift({ id: rootId, name: "Home" });
   } else {
@@ -314,7 +318,6 @@ export async function getFolderPath(
           cache: "no-store",
         },
       );
-
       if (!response.ok) {
         console.error(`Gagal mengambil detail untuk folder ID: ${currentId}`);
         break;
@@ -323,7 +326,6 @@ export async function getFolderPath(
       const data: { id: string; name: string; parents?: string[] } =
         await response.json();
       path.unshift({ id: data.id, name: data.name });
-
       if (data.parents && data.parents.length > 0) {
         currentId = data.parents[0];
       } else {
@@ -403,4 +405,46 @@ export async function getStorageDetails() {
     breakdown: formattedBreakdown,
     largestFiles,
   };
+}
+
+export async function searchFilesInFolder(
+  accessToken: string,
+  folderId: string,
+  searchTerm: string,
+  queryField: string,
+  mimeQuery: string,
+  dateQuery: string,
+): Promise<DriveFile[]> {
+  const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3/files";
+
+  let driveQuery = `${queryField} contains '${searchTerm}' and trashed=false`;
+  driveQuery += ` and '${folderId}' in parents`;
+  driveQuery += mimeQuery;
+  driveQuery += dateQuery;
+
+  const params = new URLSearchParams({
+    q: driveQuery,
+    fields:
+      "files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents)",
+    pageSize: "1000",
+  });
+
+  const response = await fetchWithRetry(
+    `${GOOGLE_DRIVE_API_URL}?${params.toString()}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    console.error(
+      `Gagal mencari di folder ${folderId}:`,
+      await response.json(),
+    );
+    return [];
+  }
+
+  const data = await response.json();
+  return (data.files || []) as DriveFile[];
 }
