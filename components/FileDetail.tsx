@@ -548,11 +548,26 @@ export default function FileDetail({
             {isEditing && isEditable && !isModal ? (
               isFetchingEditableContent ? (
                 <LoadingPreview />
+              ) : fileType === "markdown" ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-px h-full w-full bg-border">
+                  <textarea
+                    value={editableContent || ""}
+                    onChange={(e) => setEditableContent(e.target.value)}
+                    className="w-full h-full p-4 bg-background font-mono text-sm resize-none focus:outline-none"
+                    spellCheck="false"
+                  />
+                  <div className="prose dark:prose-invert prose-sm w-full h-full overflow-y-auto p-4 bg-background">
+                    <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
+                      {editableContent || ""}
+                    </ReactMarkdown>
+                  </div>
+                </div>
               ) : (
                 <textarea
                   value={editableContent || ""}
                   onChange={(e) => setEditableContent(e.target.value)}
                   className="w-full h-full p-4 bg-background font-mono text-sm resize-none focus:outline-none"
+                  spellCheck="false"
                 />
               )
             ) : (
