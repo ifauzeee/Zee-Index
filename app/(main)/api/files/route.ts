@@ -1,7 +1,12 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { listFilesFromDrive } from "@/lib/googleDrive";
-import { isPrivateFolder, isProtected, verifyFolderToken } from "@/lib/auth";
+import { listFilesFromDrive, DriveFile } from "@/lib/googleDrive";
+import {
+  isPrivateFolder,
+  isProtected,
+  verifyFolderToken,
+  hasUserAccess,
+} from "@/lib/auth";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { jwtVerify } from "jose";
@@ -48,6 +53,7 @@ export async function GET(request: Request) {
     }
 
     const userRole = session?.user?.role;
+    const userEmail = session?.user?.email;
     const { searchParams } = new URL(request.url);
     const folderId =
       searchParams.get("folderId") || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
@@ -84,12 +90,34 @@ export async function GET(request: Request) {
       : {};
 
     const driveResponse = await listFilesFromDrive(folderId, pageToken);
+    let filteredFiles: DriveFile[];
 
-    const filteredFiles = driveResponse.files.filter((file) => {
-      if (canSeeAll) return true;
-      const isFolder = file.mimeType === "application/vnd.google-apps.folder";
-      return isFolder ? !isPrivateFolder(file.id) : true;
-    });
+    if (canSeeAll) {
+      filteredFiles = driveResponse.files;
+    } else {
+      filteredFiles = [];
+      for (const file of driveResponse.files) {
+        const isFolder = file.mimeType === "application/vnd.google-apps.folder";
+
+        if (!isFolder) {
+          filteredFiles.push(file);
+          continue;
+        }
+
+        const isPriv = isPrivateFolder(file.id);
+        if (!isPriv) {
+          filteredFiles.push(file);
+          continue;
+        }
+
+        if (userEmail) {
+          const hasAccess = await hasUserAccess(userEmail, file.id);
+          if (hasAccess) {
+            filteredFiles.push(file);
+          }
+        }
+      }
+    }
 
     const processedFiles = filteredFiles.map((file) => ({
       ...file,

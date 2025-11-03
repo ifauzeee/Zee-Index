@@ -33,6 +33,7 @@ import type { AdminStats } from "@/lib/adminStats";
 import TodayDownloadsChart from "@/components/charts/TodayDownloadsChart";
 import DayOfWeekChart from "@/components/charts/DayOfWeekChart";
 import SecurityConfig from "@/components/SecurityConfig";
+import UserFolderAccessManager from "@/components/UserFolderAccessManager";
 
 const DeleteConfirmationModal: FC<{
   onConfirm: () => void;
@@ -79,6 +80,7 @@ const DeleteConfirmationModal: FC<{
     </motion.div>
   </motion.div>
 );
+
 export default function AdminPage() {
   const {
     user,
@@ -125,6 +127,7 @@ export default function AdminPage() {
         .finally(() => setIsLoadingStats(false));
     }
   }, [status, user, fetchUser, fetchShareLinks, fetchAdminEmails, addToast]);
+
   const { activeLinks, expiredLinks } = useMemo(() => {
     const now = new Date();
     const active: ShareLink[] = [];
@@ -138,13 +141,16 @@ export default function AdminPage() {
     });
     return { activeLinks: active, expiredLinks: expired };
   }, [shareLinks]);
+
   const handleCopy = (shareUrl: string) => {
     navigator.clipboard.writeText(shareUrl);
     addToast({ message: "Tautan disalin ke clipboard!", type: "success" });
   };
+
   const handleDeleteClick = (link: ShareLink) => {
     setLinkToDelete(link);
   };
+
   const confirmDelete = async () => {
     if (linkToDelete) {
       await removeShareLink(linkToDelete);
@@ -204,10 +210,11 @@ export default function AdminPage() {
         </div>
 
         <Tabs defaultValue="summary" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
             <TabsTrigger value="summary">Ringkasan</TabsTrigger>
             <TabsTrigger value="security">Keamanan</TabsTrigger>
-            <TabsTrigger value="users">Pengguna</TabsTrigger>
+            <TabsTrigger value="users">Admin</TabsTrigger>
+            <TabsTrigger value="user-access">Akses Folder</TabsTrigger>
             <TabsTrigger value="links">Tautan</TabsTrigger>
             <TabsTrigger value="logs">Log Aktivitas</TabsTrigger>
           </TabsList>
@@ -520,6 +527,10 @@ export default function AdminPage() {
                 </div>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="user-access" className="mt-6">
+            <UserFolderAccessManager />
           </TabsContent>
 
           <TabsContent value="links" className="mt-6">

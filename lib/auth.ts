@@ -53,3 +53,16 @@ export async function verifyFolderToken(
 export function isGuestUser(token: any): boolean {
   return token?.isGuest === true;
 }
+
+export async function hasUserAccess(
+  email: string,
+  folderId: string,
+): Promise<boolean> {
+  try {
+    const result = await kv.sismember(`folder:access:${folderId}`, email);
+    return result === 1;
+  } catch (error) {
+    console.error("Gagal memeriksa akses folder pengguna:", error);
+    return false;
+  }
+}
