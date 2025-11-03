@@ -24,6 +24,7 @@ export default function BulkActionBar() {
     addToast,
     currentFolderId,
   } = useAppStore();
+
   const isVisible = isBulkMode && selectedFiles.length > 0;
 
   useEffect(() => {
@@ -36,6 +37,7 @@ export default function BulkActionBar() {
       document.body.classList.remove("bulk-action-bar-visible");
     };
   }, [isVisible]);
+
   const getFileNameFromHeader = (header: string | null): string => {
     if (!header) return "file";
     const utf8Match = header.match(/filename\*=UTF-8''([^;]+)/);
@@ -83,6 +85,7 @@ export default function BulkActionBar() {
           }
         }),
       );
+
       if (Object.keys(zip.files).length === 0) {
         throw new Error("Tidak ada file yang berhasil diproses untuk di-zip.");
       }
@@ -108,6 +111,7 @@ export default function BulkActionBar() {
       setIsDownloading(false);
     }
   };
+
   const handleBulkDelete = async () => {
     if (selectedFiles.length === 0) return;
     setIsDeleting(true);
@@ -115,11 +119,15 @@ export default function BulkActionBar() {
       const response = await fetch("/api/files/bulk-delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileIds: selectedFiles.map((f) => f.id) }),
+        body: JSON.stringify({
+          fileIds: selectedFiles.map((f) => f.id),
+          parentId: currentFolderId,
+        }),
       });
       const result = await response.json();
       if (!response.ok && response.status !== 207)
         throw new Error(result.error || "Gagal menghapus item.");
+
       addToast({
         message: result.message,
         type: response.ok ? "success" : "info",
@@ -133,6 +141,7 @@ export default function BulkActionBar() {
       setShowDeleteConfirm(false);
     }
   };
+
   const handleBulkMove = async (newParentId: string) => {
     if (selectedFiles.length === 0 || !currentFolderId) return;
     setIsMoving(true);
@@ -149,6 +158,7 @@ export default function BulkActionBar() {
       const result = await response.json();
       if (!response.ok && response.status !== 207)
         throw new Error(result.error || "Gagal memindahkan item.");
+
       addToast({
         message: result.message,
         type: response.ok ? "success" : "info",
@@ -162,6 +172,7 @@ export default function BulkActionBar() {
       setShowMoveModal(false);
     }
   };
+
   return (
     <>
       <AnimatePresence>

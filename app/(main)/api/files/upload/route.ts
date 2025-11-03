@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { getAccessToken } from "@/lib/googleDrive";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import { revalidateTag } from "next/cache";
+import { invalidateFolderCache } from "@/lib/cache";
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    revalidateTag(`files-in-folder-${parentId}`);
+    await invalidateFolderCache(parentId);
 
     return NextResponse.json(data, { status: 200 });
   } catch (error: any) {

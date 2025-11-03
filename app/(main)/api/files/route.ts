@@ -12,6 +12,8 @@ import { authOptions } from "@/lib/authOptions";
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
 
+const CACHE_TTL_SECONDS = 300; // 5 Menit
+
 async function validateShareToken(request: Request): Promise<boolean> {
   const { searchParams } = new URL(request.url);
   const shareToken = searchParams.get("share_token");
@@ -64,6 +66,22 @@ export async function GET(request: Request) {
         { error: "Folder ID tidak ditemukan." },
         { status: 400 },
       );
+    }
+
+    const cacheKey = `folder:content:${folderId}:${
+      userRole || "GUEST"
+    }:${pageToken || "page1"}`;
+
+    try {
+      const cachedData: {
+        files: DriveFile[];
+        nextPageToken: string | null;
+      } | null = await kv.get(cacheKey);
+      if (cachedData) {
+        return NextResponse.json(cachedData);
+      }
+    } catch (e) {
+      console.error("Gagal membaca cache KV:", e);
     }
 
     const canSeeAll = userRole === "ADMIN";
@@ -125,10 +143,18 @@ export async function GET(request: Request) {
       isProtected: !canSeeAll && !!allProtectedFolders[file.id],
     }));
 
-    return NextResponse.json({
+    const responseData = {
       files: processedFiles,
       nextPageToken: driveResponse.nextPageToken,
-    });
+    };
+
+    try {
+      await kv.set(cacheKey, responseData, { ex: CACHE_TTL_SECONDS });
+    } catch (e) {
+      console.error("Gagal menulis cache KV:", e);
+    }
+
+    return NextResponse.json(responseData);
   } catch (error: any) {
     console.error("[API /api/files ERROR]:", error);
     return NextResponse.json(

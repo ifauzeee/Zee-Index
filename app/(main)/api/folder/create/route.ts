@@ -2,10 +2,10 @@ import { NextResponse, NextRequest } from "next/server";
 import { getAccessToken } from "@/lib/googleDrive";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { logActivity } from "@/lib/activityLogger";
 import { kv } from "@vercel/kv";
+import { invalidateFolderCache } from "@/lib/cache";
 
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
 
@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
 
     const { folderName, parentId } = validation.data;
     const accessToken = await getAccessToken();
+
     const fileMetadata = {
       name: folderName,
       mimeType: "application/vnd.google-apps.folder",
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    revalidateTag(`files-in-folder-${parentId}`);
+    await invalidateFolderCache(parentId);
 
     const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
     if (rootFolderId) {

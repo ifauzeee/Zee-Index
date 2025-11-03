@@ -4,9 +4,11 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { z } from "zod";
 import { logActivity } from "@/lib/activityLogger";
+import { invalidateFolderCache } from "@/lib/cache";
 
 const deleteSchema = z.object({
   fileIds: z.array(z.string().min(1)),
+  parentId: z.string().min(1),
 });
 
 export async function POST(request: NextRequest) {
@@ -26,7 +28,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { fileIds } = validation.data;
+    const { fileIds, parentId } = validation.data;
     const accessToken = await getAccessToken();
 
     const batch = fileIds.map((fileId) => {
@@ -41,6 +43,10 @@ export async function POST(request: NextRequest) {
     const failedDeletes = results.filter(
       (res) => !res.ok && res.status !== 204,
     );
+
+    if (failedDeletes.length < fileIds.length) {
+      await invalidateFolderCache(parentId);
+    }
 
     await logActivity("DELETE", {
       itemName: `${fileIds.length} files/folders`,
@@ -57,7 +63,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: `${fileIds.length - failedDeletes.length} item berhasil dihapus, ${failedDeletes.length} gagal.`,
+          message: `${
+            fileIds.length - failedDeletes.length
+          } item berhasil dihapus, ${failedDeletes.length} gagal.`,
         },
         { status: 207 },
       );

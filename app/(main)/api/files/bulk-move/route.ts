@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { z } from "zod";
 import { logActivity } from "@/lib/activityLogger";
+import { invalidateFolderCache } from "@/lib/cache";
 
 const moveSchema = z.object({
   fileIds: z.array(z.string().min(1)),
@@ -20,6 +21,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validation = moveSchema.safeParse(body);
+
     if (!validation.success) {
       return NextResponse.json(
         { error: "Input tidak valid", details: validation.error.issues },
@@ -28,6 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { fileIds, currentParentId, newParentId } = validation.data;
+
     if (currentParentId === newParentId) {
       return NextResponse.json({
         success: true,
@@ -48,6 +51,11 @@ export async function POST(request: NextRequest) {
     const results = await Promise.all(batch);
     const failedMoves = results.filter((res) => !res.ok);
 
+    if (failedMoves.length < fileIds.length) {
+      await invalidateFolderCache(currentParentId);
+      await invalidateFolderCache(newParentId);
+    }
+
     await logActivity("MOVE", {
       itemName: `${fileIds.length} files/folders`,
       userEmail: session.user.email,
@@ -63,7 +71,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: `${fileIds.length - failedMoves.length} item berhasil dipindahkan, ${failedMoves.length} gagal.`,
+          message: `${
+            fileIds.length - failedMoves.length
+          } item berhasil dipindahkan, ${failedMoves.length} gagal.`,
         },
         { status: 207 },
       );

@@ -2,8 +2,8 @@ import { NextResponse, NextRequest } from "next/server";
 import { getAccessToken, getFileDetailsFromDrive } from "@/lib/googleDrive";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import { revalidateTag } from "next/cache";
 import { z } from "zod";
+import { invalidateFolderCache } from "@/lib/cache";
 
 const updateSchema = z.object({
   fileId: z.string().min(1),
@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validation = updateSchema.safeParse(body);
+
     if (!validation.success) {
       return NextResponse.json(
         { error: "Input tidak valid", details: validation.error.issues },
@@ -42,6 +43,7 @@ export async function POST(request: NextRequest) {
 
     const accessToken = await getAccessToken();
     const uploadUrl = `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`;
+
     const response = await fetch(uploadUrl, {
       method: "PATCH",
       headers: {
@@ -54,11 +56,13 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(
-        `Google Drive API Error: ${errorData.error?.message || "Gagal menyimpan perubahan."}`,
+        `Google Drive API Error: ${
+          errorData.error?.message || "Gagal menyimpan perubahan."
+        }`,
       );
     }
 
-    revalidateTag(`files-in-folder-${parentId}`);
+    await invalidateFolderCache(parentId);
     const updatedFile = await response.json();
     return NextResponse.json({ success: true, file: updatedFile });
   } catch (error: any) {

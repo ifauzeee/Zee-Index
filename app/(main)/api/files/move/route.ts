@@ -2,8 +2,8 @@ import { NextResponse, NextRequest } from "next/server";
 import { getAccessToken } from "@/lib/googleDrive";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import { revalidateTag } from "next/cache";
 import { z } from "zod";
+import { invalidateFolderCache } from "@/lib/cache";
 
 const moveSchema = z.object({
   fileId: z.string().min(1),
@@ -52,8 +52,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    revalidateTag(`files-in-folder-${currentParentId}`);
-    revalidateTag(`files-in-folder-${newParentId}`);
+    await invalidateFolderCache(currentParentId);
+    await invalidateFolderCache(newParentId);
 
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
