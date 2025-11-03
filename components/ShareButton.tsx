@@ -6,10 +6,12 @@ import { useAppStore, ShareLink } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { jwtDecode } from "jwt-decode";
+import type { DriveFile } from "@/lib/googleDrive";
 
 interface ShareButtonProps {
-  path: string;
-  itemName: string;
+  path?: string;
+  itemName?: string;
+  items?: DriveFile[];
   isOpen?: boolean;
   onClose?: () => void;
 }
@@ -21,16 +23,15 @@ const modalVariants = {
   visible: { opacity: 1, scale: 1 },
   exit: { opacity: 0, scale: 0.95 },
 };
-
 const overlayVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
   exit: { opacity: 0 },
 };
-
 export default function ShareButton({
   path,
   itemName,
+  items,
   isOpen: controlledIsOpen,
   onClose,
 }: ShareButtonProps) {
@@ -42,14 +43,12 @@ export default function ShareButton({
   const [loginRequired, setLoginRequired] = useState(false);
 
   const isOpen = controlledIsOpen ?? internalIsOpen;
-
   useEffect(() => {
     if (controlledIsOpen && user && user.role !== "ADMIN") {
       addToast({ message: "Fitur berbagi hanya untuk Admin.", type: "error" });
       if (onClose) onClose();
     }
   }, [controlledIsOpen, user, addToast, onClose]);
-
   const handleOpen = () => {
     if (user?.role !== "ADMIN") {
       addToast({ message: "Fitur berbagi hanya untuk Admin.", type: "error" });
@@ -65,22 +64,29 @@ export default function ShareButton({
       setInternalIsOpen(false);
     }
   };
-
   const generateLink = async (type: "timed" | "session") => {
     try {
       const expiresIn =
         type === "timed" ? `${customDuration}${customUnit}` : "365d";
+
+      const isCollection = items && items.length > 0;
+      const sharePath = isCollection ? null : path;
+      const shareName = isCollection
+        ? `Koleksi ${items.length} item`
+        : itemName;
+      const shareItems = isCollection ? items : undefined;
 
       const response = await fetch("/api/share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
 
         body: JSON.stringify({
-          path,
-          itemName,
+          path: sharePath,
+          itemName: shareName,
           type,
           expiresIn,
           loginRequired,
+          items: shareItems,
         }),
       });
 
@@ -90,7 +96,6 @@ export default function ShareButton({
       }
 
       const { shareableUrl, newShareLink } = await response.json();
-
       addShareLink(newShareLink);
 
       await navigator.clipboard.writeText(shareableUrl);
@@ -100,10 +105,14 @@ export default function ShareButton({
       addToast({ message: (error as Error).message, type: "error" });
     }
   };
-
   if (controlledIsOpen && user && user.role !== "ADMIN") {
     return null;
   }
+
+  const isCollection = items && items.length > 0;
+  const title = isCollection
+    ? `Bagikan ${items.length} item`
+    : `Bagikan: ${itemName}`;
 
   const ModalContent = (
     <AnimatePresence>
@@ -128,7 +137,7 @@ export default function ShareButton({
               <X size={20} />
             </button>
             <h3 className="text-lg font-semibold mb-1 whitespace-normal break-words">
-              Bagikan: {itemName}
+              {title}
             </h3>
             <p className="text-sm text-muted-foreground mb-6">
               Pilih jenis tautan berbagi.
@@ -230,7 +239,6 @@ export default function ShareButton({
       )}
     </AnimatePresence>
   );
-
   if (controlledIsOpen !== undefined) {
     return ModalContent;
   }

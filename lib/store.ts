@@ -17,6 +17,7 @@ export interface ShareLink {
   loginRequired: boolean;
   itemName: string;
   viewCount?: number;
+  isCollection?: boolean;
 }
 
 interface UserProfile {
@@ -46,8 +47,8 @@ interface AppState {
   refreshKey: number;
   triggerRefresh: () => void;
   isBulkMode: boolean;
-  selectedFiles: string[];
-  toggleSelection: (fileId: string) => void;
+  selectedFiles: DriveFile[];
+  toggleSelection: (file: DriveFile) => void;
   setBulkMode: (isActive: boolean) => void;
   clearSelection: () => void;
   shareToken: string | null;
@@ -120,11 +121,12 @@ export const useAppStore = create<AppState>()(
           set({ isBulkMode: true });
         }
       },
-      toggleSelection: (fileId) =>
+      toggleSelection: (file) =>
         set((state) => {
-          const newSelection = state.selectedFiles.includes(fileId)
-            ? state.selectedFiles.filter((id) => id !== fileId)
-            : [...state.selectedFiles, fileId];
+          const isSelected = state.selectedFiles.some((f) => f.id === file.id);
+          const newSelection = isSelected
+            ? state.selectedFiles.filter((f) => f.id !== file.id)
+            : [...state.selectedFiles, file];
           return { selectedFiles: newSelection };
         }),
       clearSelection: () => set({ selectedFiles: [], isBulkMode: false }),

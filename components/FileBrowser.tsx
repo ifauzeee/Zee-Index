@@ -1,5 +1,4 @@
 "use client";
-
 import React, {
   useState,
   useEffect,
@@ -89,7 +88,6 @@ export default function FileBrowser({
   const [previewFile, setPreviewFile] = useState<DriveFile | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploads, setUploads] = useState<Record<string, UploadProgress>>({});
-
   const {
     sort,
     isBulkMode,
@@ -113,30 +111,25 @@ export default function FileBrowser({
     detailsFile,
     setDetailsFile,
   } = useAppStore();
-
   useEffect(() => {
     if (sessionStatus === "authenticated" && !user) {
       fetchUser();
       fetchFavorites();
     }
   }, [sessionStatus, user, fetchUser, fetchFavorites]);
-
   useEffect(() => {
     const currentShareToken = searchParams.get("share_token");
     if (currentShareToken) {
       setShareToken(currentShareToken);
     }
   }, [searchParams, setShareToken]);
-
   const currentFolderId =
     history.length > 0
       ? history[history.length - 1]?.id
       : initialFolderId || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
-
   useEffect(() => {
     setCurrentFolderId(currentFolderId);
   }, [currentFolderId, setCurrentFolderId]);
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Space" && activeFileId && !previewFile && !detailsFile) {
@@ -153,7 +146,6 @@ export default function FileBrowser({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [activeFileId, files, previewFile, detailsFile]);
-
   useEffect(() => {
     const isOverlayActive = contextMenu || detailsFile || previewFile;
 
@@ -167,13 +159,10 @@ export default function FileBrowser({
       document.body.classList.remove("mobile-menu-open");
     };
   }, [contextMenu, detailsFile, previewFile]);
-
   const isGuest = user?.isGuest === true;
   const isAdmin = user?.role === "ADMIN" && !isGuest;
-
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
-
   const handleFetchError = useCallback(
     async (
       response: Response,
@@ -201,7 +190,6 @@ export default function FileBrowser({
     },
     [addToast, router, shareToken],
   );
-
   const fetchFiles = useCallback(
     async (folderId: string, folderName: string) => {
       setIsLoading(true);
@@ -246,7 +234,6 @@ export default function FileBrowser({
     },
     [folderTokens, handleFetchError, addToast, shareToken],
   );
-
   const fetchNextPage = useCallback(async () => {
     if (isFetchingNextPage || !nextPageToken || !currentFolderId) return;
 
@@ -287,7 +274,6 @@ export default function FileBrowser({
     folderTokens,
     addToast,
   ]);
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -309,7 +295,6 @@ export default function FileBrowser({
       }
     };
   }, [fetchNextPage]);
-
   useEffect(() => {
     if (sessionStatus === "loading" && !shareToken) {
       setIsLoading(true);
@@ -352,17 +337,15 @@ export default function FileBrowser({
       }
     }
   }, [initialFolderId, sessionStatus, shareToken, router, addToast, history]);
-
   useEffect(() => {
     const currentFolder = history[history.length - 1];
     if (currentFolder) {
       fetchFiles(currentFolder.id, currentFolder.name);
     }
   }, [refreshKey, history, fetchFiles]);
-
   const handleItemClick = (file: DriveFile) => {
     if (isBulkMode) {
-      toggleSelection(file.id);
+      toggleSelection(file);
       return;
     }
 
@@ -397,7 +380,6 @@ export default function FileBrowser({
       setActiveFileId(file.id);
     }
   };
-
   const handleAuthSubmit = async (id: string, password: string) => {
     setIsAuthLoading(true);
     try {
@@ -421,7 +403,6 @@ export default function FileBrowser({
       setIsAuthLoading(false);
     }
   };
-
   const handleBreadcrumbClick = (folderId: string) => {
     if (shareToken && folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
       addToast({
@@ -440,7 +421,6 @@ export default function FileBrowser({
     }
     router.push(folderUrl);
   };
-
   const handleContextMenu = useCallback(
     (event: { clientX: number; clientY: number }, file: DriveFile) => {
       if (isBulkMode || shareToken || !isAdmin) return;
@@ -450,7 +430,6 @@ export default function FileBrowser({
     },
     [isBulkMode, shareToken, user, isAdmin],
   );
-
   const handleShare = (file: DriveFile | null) => {
     if (user?.role !== "ADMIN") {
       addToast({ message: "Fitur berbagi hanya untuk Admin.", type: "error" });
@@ -458,7 +437,6 @@ export default function FileBrowser({
     }
     setActionState({ type: "share", file });
   };
-
   const handleToggleFavorite = () => {
     if (!contextMenu?.file) return;
     const { file } = contextMenu;
@@ -515,7 +493,6 @@ export default function FileBrowser({
       addToast({ message: err.message, type: "error" });
     }
   };
-
   const handleDelete = async () => {
     if (!actionState.file) return;
 
@@ -524,7 +501,6 @@ export default function FileBrowser({
 
     setFiles((prevFiles) => prevFiles.filter((f) => f.id !== fileToDelete.id));
     setActionState({ type: null, file: null });
-
     try {
       const response = await fetch("/api/files/delete", {
         method: "POST",
@@ -567,7 +543,6 @@ export default function FileBrowser({
       addToast({ message: err.message, type: "error" });
     }
   };
-
   const sortedFiles = useMemo(() => {
     return [...files]
       .map((file) => ({ ...file, isFavorite: favorites.includes(file.id) }))
@@ -592,12 +567,10 @@ export default function FileBrowser({
         }
       });
   }, [files, sort, favorites]);
-
   const getSharePath = (file: DriveFile) => {
     if (file.isFolder) return `/folder/${file.id}`;
     return `/folder/${currentFolderId}/file/${file.id}/${createSlug(file.name)}`;
   };
-
   const updateUploadProgress = (
     fileName: string,
     progress: number,
@@ -608,7 +581,6 @@ export default function FileBrowser({
       ...prev,
       [fileName]: { name: fileName, progress, status, error },
     }));
-
     if (status === "success" || status === "error") {
       setTimeout(() => {
         setUploads((prev) => {
@@ -677,7 +649,6 @@ export default function FileBrowser({
     },
     [currentFolderId, triggerRefresh, isAdmin],
   );
-
   const handleDragOver = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -688,13 +659,11 @@ export default function FileBrowser({
     },
     [isAdmin],
   );
-
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
   }, []);
-
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -706,17 +675,14 @@ export default function FileBrowser({
     },
     [isAdmin, handleFileUpload],
   );
-
   const handleQuickShare = (e: React.MouseEvent, file: DriveFile) => {
     e.stopPropagation();
     handleShare(file);
   };
-
   const handleQuickDetails = (e: React.MouseEvent, file: DriveFile) => {
     e.stopPropagation();
     setDetailsFile(file);
   };
-
   const handleQuickDownload = (e: React.MouseEvent, file: DriveFile) => {
     e.stopPropagation();
     const downloadUrl = `/api/download?fileId=${file.id}${

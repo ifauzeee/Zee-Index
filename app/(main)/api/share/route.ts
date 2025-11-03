@@ -6,17 +6,18 @@ import crypto from "crypto";
 import { kv } from "@/lib/kv";
 import type { ShareLink } from "@/lib/store";
 import { sendMail } from "@/lib/mailer";
+import type { DriveFile } from "@/lib/googleDrive";
 
 interface ShareRequestBody {
-  path: string;
+  path?: string;
   itemName: string;
   type: "timed" | "session";
   expiresIn: string;
   loginRequired?: boolean;
+  items?: DriveFile[];
 }
 
 const SHARE_LINKS_KEY = "zee-index:share-links";
-
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -27,12 +28,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { path, itemName, type, expiresIn, loginRequired }: ShareRequestBody =
-      await req.json();
+    const {
+      path,
+      itemName,
+      type,
+      expiresIn,
+      loginRequired,
+      items,
+    }: ShareRequestBody = await req.json();
+    const isCollection = items && items.length > 0;
 
-    if (!path || !type || !expiresIn || !itemName) {
+    if ((!isCollection && !path) || !itemName || !type || !expiresIn) {
       return NextResponse.json(
-        { error: "Path, itemName, type, dan expiresIn diperlukan." },
+        { error: "Parameter yang diperlukan tidak lengkap." },
         { status: 400 },
       );
     }
@@ -40,8 +48,11 @@ export async function POST(req: NextRequest) {
     const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
     const jti = crypto.randomUUID();
 
+    const sharePath = isCollection ? `/share/${jti}` : path!;
+    const shareName = itemName;
+
     const token = await new SignJWT({
-      path,
+      shareId: jti,
       loginRequired: loginRequired ?? false,
     })
       .setProtectedHeader({ alg: "HS256" })
@@ -49,22 +60,29 @@ export async function POST(req: NextRequest) {
       .setExpirationTime(expiresIn)
       .setJti(jti)
       .sign(secret);
-
-    const shareableUrl = `${req.nextUrl.origin}${path}?share_token=${token}`;
+    const shareableUrl = `${req.nextUrl.origin}${sharePath}?share_token=${token}`;
 
     const decodedToken = decodeJwt(token);
     if (!decodedToken.exp) {
       throw new Error("Token tidak memiliki waktu kedaluwarsa.");
     }
 
+    if (isCollection) {
+      const expiresInSeconds = (decodedToken.exp * 1000 - Date.now()) / 1000;
+      await kv.set(`zee-index:share-items:${jti}`, items, {
+        ex: Math.ceil(expiresInSeconds) + 3600,
+      });
+    }
+
     const newShareLink: ShareLink = {
       id: jti,
-      path,
+      path: sharePath,
       token,
       jti,
       expiresAt: new Date(decodedToken.exp * 1000).toISOString(),
       loginRequired: loginRequired ?? false,
-      itemName,
+      itemName: shareName,
+      isCollection: isCollection,
     };
 
     const existingLinks: ShareLink[] = (await kv.get(SHARE_LINKS_KEY)) || [];
@@ -78,14 +96,21 @@ export async function POST(req: NextRequest) {
     if (adminEmails.length > 0) {
       await sendMail({
         to: adminEmails,
-        subject: `[Zee Index] Tautan Berbagi Baru Dibuat`,
+        subject: `[Zee Index] Tautan ${
+          isCollection ? "Koleksi" : "Berbagi"
+        } Baru Dibuat`,
         html: `
-                <p>Halo Admin,</p>
-                <p>Tautan berbagi baru telah dibuat oleh <b>${session.user.email}</b>.</p>
+    
+        <p>Halo Admin,</p>
+                <p>Tautan ${
+          isCollection ? "koleksi" : "berbagi"
+        } baru telah dibuat oleh <b>${session.user.email}</b>.</p>
                 <ul>
-                    <li><b>Item:</b> ${itemName}</li>
-                    <li><b>Path:</b> ${path}</li>
-                    <li><b>Kedaluwarsa pada:</b> ${new Date(newShareLink.expiresAt).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}</li>
+                    <li><b>Item:</b> ${shareName}</li>
+                    <li><b>Path:</b> ${sharePath}</li>
+                    <li><b>Kedaluwarsa pada:</b> ${new Date(
+          newShareLink.expiresAt,
+        ).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}</li>
                     <li><b>Wajib Login:</b> ${loginRequired ? "Ya" : "Tidak"}</li>
                 </ul>
                 <p>Anda dapat mengelola semua tautan di dasbor admin.</p>

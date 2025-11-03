@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/lib/store";
-import { Download, X, Trash2, Move, Loader2 } from "lucide-react";
+import { Download, X, Trash2, Move, Loader2, Share2 } from "lucide-react";
 import DeleteConfirm from "./DeleteConfirm";
 import MoveModal from "./MoveModal";
 import JSZip from "jszip";
+import ShareButton from "./ShareButton";
 
 export default function BulkActionBar() {
   const [isDownloading, setIsDownloading] = useState(false);
@@ -14,6 +15,7 @@ export default function BulkActionBar() {
   const [isMoving, setIsMoving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMoveModal, setShowMoveModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const {
     isBulkMode,
     selectedFiles,
@@ -34,7 +36,6 @@ export default function BulkActionBar() {
       document.body.classList.remove("bulk-action-bar-visible");
     };
   }, [isVisible]);
-
   const getFileNameFromHeader = (header: string | null): string => {
     if (!header) return "file";
     const utf8Match = header.match(/filename\*=UTF-8''([^;]+)/);
@@ -62,11 +63,11 @@ export default function BulkActionBar() {
 
     try {
       await Promise.all(
-        selectedFiles.map(async (fileId) => {
+        selectedFiles.map(async (file) => {
           try {
-            const response = await fetch(`/api/download?fileId=${fileId}`);
+            const response = await fetch(`/api/download?fileId=${file.id}`);
             if (!response.ok) {
-              throw new Error(`Gagal mengunduh file ${fileId}`);
+              throw new Error(`Gagal mengunduh file ${file.id}`);
             }
             const blob = await response.blob();
             const fileName = getFileNameFromHeader(
@@ -76,13 +77,12 @@ export default function BulkActionBar() {
           } catch (fileError) {
             console.error(fileError);
             addToast({
-              message: `Gagal memproses file ${fileId}.`,
+              message: `Gagal memproses file ${file.id}.`,
               type: "error",
             });
           }
         }),
       );
-
       if (Object.keys(zip.files).length === 0) {
         throw new Error("Tidak ada file yang berhasil diproses untuk di-zip.");
       }
@@ -108,7 +108,6 @@ export default function BulkActionBar() {
       setIsDownloading(false);
     }
   };
-
   const handleBulkDelete = async () => {
     if (selectedFiles.length === 0) return;
     setIsDeleting(true);
@@ -116,7 +115,7 @@ export default function BulkActionBar() {
       const response = await fetch("/api/files/bulk-delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileIds: selectedFiles }),
+        body: JSON.stringify({ fileIds: selectedFiles.map((f) => f.id) }),
       });
       const result = await response.json();
       if (!response.ok && response.status !== 207)
@@ -134,7 +133,6 @@ export default function BulkActionBar() {
       setShowDeleteConfirm(false);
     }
   };
-
   const handleBulkMove = async (newParentId: string) => {
     if (selectedFiles.length === 0 || !currentFolderId) return;
     setIsMoving(true);
@@ -143,7 +141,7 @@ export default function BulkActionBar() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fileIds: selectedFiles,
+          fileIds: selectedFiles.map((f) => f.id),
           currentParentId: currentFolderId,
           newParentId,
         }),
@@ -164,7 +162,6 @@ export default function BulkActionBar() {
       setShowMoveModal(false);
     }
   };
-
   return (
     <>
       <AnimatePresence>
@@ -195,6 +192,14 @@ export default function BulkActionBar() {
                 <span className="hidden sm:inline">
                   {isDownloading ? "Mengunduh..." : "Unduh"}
                 </span>
+              </button>
+
+              <button
+                onClick={() => setShowShareModal(true)}
+                className="p-2 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:bg-green-400 flex items-center gap-2 transition-colors"
+              >
+                <Share2 size={18} />
+                <span className="hidden sm:inline">Bagikan</span>
               </button>
 
               <button
@@ -231,6 +236,13 @@ sm:inline"
         )}
       </AnimatePresence>
       <AnimatePresence>
+        {showShareModal && (
+          <ShareButton
+            items={selectedFiles}
+            isOpen={true}
+            onClose={() => setShowShareModal(false)}
+          />
+        )}
         {showDeleteConfirm && (
           <DeleteConfirm
             itemName={`${selectedFiles.length} item`}
