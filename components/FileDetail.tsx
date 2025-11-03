@@ -45,12 +45,21 @@ const ErrorPreview: React.FC<{ message: string }> = ({ message }) => (
     <p>{message}</p>
   </div>
 );
-const VideoAudioPreview: React.FC<{
+interface VideoAudioPreviewProps {
   src: string;
   type: "video" | "audio";
   poster?: string;
   mimeType: string;
-}> = ({ src, type, poster, mimeType }) => {
+  subtitleTracks?: any[];
+}
+
+const VideoAudioPreview: React.FC<VideoAudioPreviewProps> = ({
+  src,
+  type,
+  poster,
+  mimeType,
+  subtitleTracks,
+}) => {
   const ref = useRef<HTMLVideoElement | HTMLAudioElement>(null);
   const playerRef = useRef<Plyr | null>(null);
 
@@ -75,8 +84,21 @@ const VideoAudioPreview: React.FC<{
       controls
       style={{ width: "100%", height: "100%" }}
       data-poster={posterUrl}
+      crossOrigin="anonymous"
     >
       <source src={src} type={mimeType} />
+      {type === "video" &&
+        subtitleTracks &&
+        subtitleTracks.map((track, index) => (
+          <track
+            key={index}
+            kind={track.kind}
+            src={track.src}
+            srcLang={track.srcLang}
+            label={track.label}
+            default={track.default}
+          />
+        ))}
     </Tag>
   );
 };
@@ -150,7 +172,9 @@ const PdfPreview: React.FC<{ src: string }> = ({ src }) => {
 
 const OfficePreview: React.FC<{ src: string }> = ({ src }) => (
   <iframe
-    src={`https://docs.google.com/gview?url=${encodeURIComponent(src)}&embedded=true`}
+    src={`https://docs.google.com/gview?url=${encodeURIComponent(
+      src,
+    )}&embedded=true`}
     className="w-full h-full border-0"
   />
 );
@@ -253,11 +277,13 @@ export default function FileDetail({
   isModal = false,
   prevFileUrl,
   nextFileUrl,
+  subtitleTracks,
 }: {
   file: DriveFile;
   isModal?: boolean;
   prevFileUrl?: string;
   nextFileUrl?: string;
+  subtitleTracks?: any[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -427,6 +453,7 @@ export default function FileDetail({
             type="video"
             poster={file.thumbnailLink}
             mimeType={mimeType}
+            subtitleTracks={subtitleTracks}
           />
         );
       case "audio":

@@ -1,19 +1,16 @@
 import { getFileDetailsFromDrive, listFilesFromDrive } from "@/lib/googleDrive";
 import dynamic from "next/dynamic";
 import Loading from "@/components/Loading";
-
 const FileDetail = dynamic(() => import("@/components/FileDetail"), {
   ssr: false,
   loading: () => <Loading />,
 });
-
 const FileError = ({ message }: { message: string }) => (
   <div className="text-center py-20 text-muted-foreground">
     <h1 className="text-4xl font-bold">Gagal Memuat</h1>
     <p className="mt-4">{message}</p>
   </div>
 );
-
 const createSlug = (name: string) =>
   encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
 
@@ -27,6 +24,7 @@ export default async function FilePage({
 
   let prevFileUrl: string | undefined = undefined;
   let nextFileUrl: string | undefined = undefined;
+  let subtitleTracks: any[] = [];
 
   try {
     file = await getFileDetailsFromDrive(params.fileId);
@@ -37,12 +35,10 @@ export default async function FilePage({
         null,
         1000,
       );
-
       const nonFolderFiles = allFiles.filter((f) => !f.isFolder);
       const currentIndex = nonFolderFiles.findIndex(
         (f) => f.id === params.fileId,
       );
-
       if (currentIndex > 0) {
         const prevFile = nonFolderFiles[currentIndex - 1];
         prevFileUrl = `/folder/${params.folderId}/file/${
@@ -55,6 +51,36 @@ export default async function FilePage({
         nextFileUrl = `/folder/${params.folderId}/file/${
           nextFile.id
         }/${createSlug(nextFile.name)}`;
+      }
+
+      if (file.mimeType.startsWith("video/")) {
+        const baseName =
+          file.name.substring(0, file.name.lastIndexOf(".")) || file.name;
+        const supportedExtensions = [".vtt", ".srt"];
+
+        subtitleTracks = allFiles
+          .filter((f) => {
+            const fName = f.name.toLowerCase();
+            const ext = f.name.substring(f.name.lastIndexOf("."));
+            return (
+              !f.isFolder &&
+              supportedExtensions.includes(ext.toLowerCase()) &&
+              fName.startsWith(baseName.toLowerCase())
+            );
+          })
+          .map((trackFile) => {
+            const langMatch = trackFile.name.match(/[\._]([a-z]{2,3})[\._]/i);
+            const lang = langMatch ? langMatch[1] : "en";
+            const label = lang.toUpperCase();
+
+            return {
+              src: `/api/download?fileId=${trackFile.id}`,
+              kind: "subtitles",
+              srcLang: lang,
+              label: label,
+              default: lang === "en",
+            };
+          });
       }
     }
   } catch (err) {
@@ -83,6 +109,7 @@ export default async function FilePage({
       file={file}
       prevFileUrl={prevFileUrl}
       nextFileUrl={nextFileUrl}
+      subtitleTracks={subtitleTracks}
     />
   );
 }
