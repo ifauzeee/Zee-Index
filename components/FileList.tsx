@@ -67,7 +67,7 @@ export default function FileList({
           file={file}
           onClick={() => onItemClick(file)}
           onContextMenu={(event) => onItemContextMenu(event, file)}
-          isSelected={selectedFiles.includes(file.id)}
+          isSelected={selectedFiles.some((f) => f.id === file.id)}
           isActive={!isBulkMode && activeFileId === file.id}
           isBulkMode={isBulkMode}
           onShare={(e) => onShareClick(e, file)}
