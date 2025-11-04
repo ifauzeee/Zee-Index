@@ -6,12 +6,16 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const publicPaths = [
     "/login",
-    "/api/auth",
+    "/api/auth/callback/google",
+    "/api/auth/signin",
+    "/api/auth/error",
+    "/api/auth/providers",
+    "/api/auth/session",
+    "/api/auth/csrf",
     "/icon.png",
     "/verify-2fa",
-    "/api/config/public", 
+    "/api/config/public",
   ];
-
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
   const token = await getToken({
     req: request,

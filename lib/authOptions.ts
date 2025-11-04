@@ -6,7 +6,6 @@ import { User } from "next-auth";
 
 const ADMIN_EMAILS_KEY = "zee-index:admins";
 const CONFIG_KEY = "zee-index:config";
-
 async function ensureInitialAdmins() {
   try {
     const initialAdmins =
@@ -57,9 +56,9 @@ export const authOptions: AuthOptions = {
         }
 
         return {
-          id: `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          id: "guest-user",
           name: "Pengguna Tamu",
-          email: `guest_${Date.now()}@example.com`,
+          email: "guest@example.com",
           role: "GUEST",
           isGuest: true,
         };
@@ -73,7 +72,7 @@ export const authOptions: AuthOptions = {
   callbacks: {
     async jwt({ token, account, profile, user }) {
       if (user && user.isGuest) {
-        token.id = user.id;
+        token.id = `guest_${Date.now()}`;
         token.name = user.name;
         token.email = user.email;
         token.role = user.role;
