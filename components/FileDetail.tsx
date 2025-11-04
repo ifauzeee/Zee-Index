@@ -295,6 +295,9 @@ export default function FileDetail({
   const [isSaving, setIsSaving] = useState(false);
   const [isFetchingEditableContent, setIsFetchingEditableContent] =
     useState(false);
+
+  const [showTextPreview, setShowTextPreview] = useState(false);
+
   const shareToken = useMemo(
     () => searchParams.get("share_token"),
     [searchParams],
@@ -391,6 +394,9 @@ export default function FileDetail({
 
   const isEditable =
     user?.role === "ADMIN" && (fileType === "code" || fileType === "markdown");
+
+  const isTextPreviewable = fileType === "code" || fileType === "markdown";
+
   useEffect(() => {
     if (isEditing && isEditable && editableContent === null) {
       setIsFetchingEditableContent(true);
@@ -404,7 +410,7 @@ export default function FileDetail({
         .finally(() => setIsFetchingEditableContent(false));
     }
 
-    if (fileType === "markdown" && !isEditing) {
+    if (fileType === "markdown" && !isEditing && showTextPreview) {
       setIsFetchingEditableContent(true);
       fetch(directLink)
         .then((res) => {
@@ -415,7 +421,16 @@ export default function FileDetail({
         .catch((err) => addToast({ message: err.message, type: "error" }))
         .finally(() => setIsFetchingEditableContent(false));
     }
-  }, [isEditing, isEditable, fileType, directLink, editableContent, addToast]);
+  }, [
+    isEditing,
+    isEditable,
+    fileType,
+    directLink,
+    editableContent,
+    addToast,
+    showTextPreview,
+  ]);
+
   const handleSaveChanges = async () => {
     if (editableContent === null) return;
     setIsSaving(true);
@@ -472,20 +487,29 @@ export default function FileDetail({
         return <OfficePreview src={directLink} />;
       case "ebook":
         return <EbookPreview src={directLink} />;
+
       case "markdown":
-        if (markdownContent === null) return <LoadingPreview />;
-        return (
-          <div className="prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg w-full h-full overflow-y-auto p-8">
-            <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
-              {markdownContent}
-            </ReactMarkdown>
-          </div>
-        );
+        if (showTextPreview) {
+          if (markdownContent === null) return <LoadingPreview />;
+          return (
+            <div className="prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg w-full h-full overflow-y-auto p-8">
+              <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
+                {markdownContent}
+              </ReactMarkdown>
+            </div>
+          );
+        }
+        break;
       case "code":
-        return <CodePreview src={directLink} fileName={file.name} />;
+        if (showTextPreview) {
+          return <CodePreview src={directLink} fileName={file.name} />;
+        }
+        break;
+
       default:
         return <DefaultPreview mimeType={file.mimeType} />;
     }
+    return <DefaultPreview mimeType={file.mimeType} />;
   };
 
   const metadata = file.imageMediaMetadata || file.videoMediaMetadata;
@@ -664,6 +688,15 @@ export default function FileDetail({
           </ul>
           {!isModal && (
             <div className="flex flex-col sm:flex-row gap-4 mt-6">
+              {isTextPreviewable && !showTextPreview && (
+                <button
+                  onClick={() => setShowTextPreview(true)}
+                  className="flex-1 flex items-center justify-center px-4 py-3 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors font-semibold text-lg"
+                >
+                  <i className="fas fa-eye mr-3"></i>Lihat Teks
+                </button>
+              )}
+
               <a
                 href={directLink}
                 download
