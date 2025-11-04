@@ -35,16 +35,12 @@ import { useSession } from "next-auth/react";
 import FileDetail from "./FileDetail";
 import DetailsPanel from "./DetailsPanel";
 import { cn } from "@/lib/utils";
+import { useFileActions } from "@/hooks/useFileActions";
 
 interface HistoryItem {
   id: string;
   name: string;
 }
-
-type ActionState = {
-  type: "rename" | "delete" | "share" | "move" | "copy" | null;
-  file: DriveFile | null;
-};
 
 interface UploadProgress {
   name: string;
@@ -70,22 +66,12 @@ export default function FileBrowser({
     folderName: string;
   }>({ isOpen: false, folderId: "", folderName: "" });
   const [isAuthLoading, setIsAuthLoading] = useState(false);
-  const [contextMenu, setContextMenu] = useState<{
-    x: number;
-    y: number;
-    file: DriveFile;
-  } | null>(null);
-  const [actionState, setActionState] = useState<ActionState>({
-    type: null,
-    file: null,
-  });
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [droppedFiles, setDroppedFiles] = useState<FileList | null>(null);
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
-  const [previewFile, setPreviewFile] = useState<DriveFile | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploads, setUploads] = useState<Record<string, UploadProgress>>({});
   const {
@@ -107,29 +93,51 @@ export default function FileBrowser({
     setCurrentFolderId,
     favorites,
     fetchFavorites,
-    toggleFavorite,
     detailsFile,
     setDetailsFile,
   } = useAppStore();
+
+  const currentFolderId =
+    history.length > 0
+      ? history[history.length - 1]?.id
+      : initialFolderId || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
+
+  // PANGGILAN HOOK BARU: Logika Aksi dipindahkan ke sini
+  const {
+    contextMenu,
+    setContextMenu,
+    actionState,
+    setActionState,
+    previewFile,
+    setPreviewFile,
+    handleContextMenu,
+    getSharePath,
+    handleShare,
+    handleToggleFavorite,
+    handleCopy,
+    handleRename,
+    handleDelete,
+    handleMove,
+  } = useFileActions(files, setFiles, currentFolderId);
+
   useEffect(() => {
     if (sessionStatus === "authenticated" && !user) {
       fetchUser();
       fetchFavorites();
     }
   }, [sessionStatus, user, fetchUser, fetchFavorites]);
+
   useEffect(() => {
     const currentShareToken = searchParams.get("share_token");
     if (currentShareToken) {
       setShareToken(currentShareToken);
     }
   }, [searchParams, setShareToken]);
-  const currentFolderId =
-    history.length > 0
-      ? history[history.length - 1]?.id
-      : initialFolderId || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
+
   useEffect(() => {
     setCurrentFolderId(currentFolderId);
   }, [currentFolderId, setCurrentFolderId]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Space" && activeFileId && !previewFile && !detailsFile) {
@@ -145,7 +153,8 @@ export default function FileBrowser({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [activeFileId, files, previewFile, detailsFile]);
+  }, [activeFileId, files, previewFile, detailsFile, setPreviewFile]);
+
   useEffect(() => {
     const isOverlayActive = contextMenu || detailsFile || previewFile;
 
@@ -159,10 +168,13 @@ export default function FileBrowser({
       document.body.classList.remove("mobile-menu-open");
     };
   }, [contextMenu, detailsFile, previewFile]);
+
   const isGuest = user?.isGuest === true;
   const isAdmin = user?.role === "ADMIN" && !isGuest;
+
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
+
   const handleFetchError = useCallback(
     async (
       response: Response,
@@ -184,12 +196,16 @@ export default function FileBrowser({
           }
         }
       } else {
-        addToast({ message: errorData.error || defaultMessage, type: "error" });
+        addToast({
+          message: errorData.error || defaultMessage,
+          type: "error",
+        });
       }
       setIsLoading(false);
     },
     [addToast, router, shareToken],
   );
+
   const fetchFiles = useCallback(
     async (folderId: string, folderName: string) => {
       setIsLoading(true);
@@ -234,6 +250,7 @@ export default function FileBrowser({
     },
     [folderTokens, handleFetchError, addToast, shareToken],
   );
+
   const fetchNextPage = useCallback(async () => {
     if (isFetchingNextPage || !nextPageToken || !currentFolderId) return;
 
@@ -274,6 +291,7 @@ export default function FileBrowser({
     folderTokens,
     addToast,
   ]);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -295,6 +313,7 @@ export default function FileBrowser({
       }
     };
   }, [fetchNextPage]);
+
   useEffect(() => {
     if (sessionStatus === "loading" && !shareToken) {
       setIsLoading(true);
@@ -337,12 +356,14 @@ export default function FileBrowser({
       }
     }
   }, [initialFolderId, sessionStatus, shareToken, router, addToast, history]);
+
   useEffect(() => {
     const currentFolder = history[history.length - 1];
     if (currentFolder) {
       fetchFiles(currentFolder.id, currentFolder.name);
     }
   }, [refreshKey, history, fetchFiles]);
+
   const handleItemClick = (file: DriveFile) => {
     if (isBulkMode) {
       toggleSelection(file);
@@ -380,6 +401,7 @@ export default function FileBrowser({
       setActiveFileId(file.id);
     }
   };
+
   const handleAuthSubmit = async (id: string, password: string) => {
     setIsAuthLoading(true);
     try {
@@ -403,6 +425,7 @@ export default function FileBrowser({
       setIsAuthLoading(false);
     }
   };
+
   const handleBreadcrumbClick = (folderId: string) => {
     if (shareToken && folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
       addToast({
@@ -421,128 +444,18 @@ export default function FileBrowser({
     }
     router.push(folderUrl);
   };
-  const handleContextMenu = useCallback(
+
+  // LOGIKA CONTEXT MENU DIPINDAHKAN KE HOOK
+  const handleContextMenuWrapper = useCallback(
     (event: { clientX: number; clientY: number }, file: DriveFile) => {
       if (isBulkMode || shareToken || !isAdmin) return;
       if (!user) return;
       setActiveFileId(file.id);
-      setContextMenu({ x: event.clientX, y: event.clientY, file });
+      handleContextMenu(event, file); // Memanggil dari hook
     },
-    [isBulkMode, shareToken, user, isAdmin],
+    [isBulkMode, shareToken, user, isAdmin, handleContextMenu],
   );
-  const handleShare = (file: DriveFile | null) => {
-    if (user?.role !== "ADMIN") {
-      addToast({ message: "Fitur berbagi hanya untuk Admin.", type: "error" });
-      return;
-    }
-    setActionState({ type: "share", file });
-  };
-  const handleToggleFavorite = () => {
-    if (!contextMenu?.file) return;
-    const { file } = contextMenu;
-    const isCurrentlyFavorite = favorites.includes(file.id);
-    toggleFavorite(file.id, isCurrentlyFavorite);
-    setContextMenu(null);
-  };
 
-  const handleCopy = async () => {
-    if (!contextMenu?.file) {
-      setContextMenu(null);
-      return;
-    }
-    const fileToCopy = contextMenu.file;
-    setContextMenu(null);
-    addToast({ message: `Menyalin "${fileToCopy.name}"...`, type: "info" });
-    try {
-      const response = await fetch("/api/files/copy", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileId: fileToCopy.id }),
-      });
-      const result = await response.json();
-      if (!response.ok)
-        throw new Error(result.error || "Gagal membuat salinan.");
-      addToast({ message: "File berhasil disalin!", type: "success" });
-      triggerRefresh();
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
-    }
-  };
-
-  const handleRename = async (newName: string) => {
-    if (!actionState.file || newName === actionState.file.name) {
-      setActionState({ type: null, file: null });
-      return;
-    }
-    try {
-      const response = await fetch("/api/files/rename", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileId: actionState.file.id, newName }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Gagal mengubah nama");
-      setFiles((prevFiles: DriveFile[]) =>
-        prevFiles.map((f: DriveFile) =>
-          f.id === data.file.id ? { ...f, name: data.file.name } : f,
-        ),
-      );
-      addToast({ message: "Nama berhasil diubah!", type: "success" });
-      setActionState({ type: null, file: null });
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
-    }
-  };
-  const handleDelete = async () => {
-    if (!actionState.file) return;
-
-    const fileToDelete = actionState.file;
-    const originalFiles = files;
-
-    setFiles((prevFiles) => prevFiles.filter((f) => f.id !== fileToDelete.id));
-    setActionState({ type: null, file: null });
-    try {
-      const response = await fetch("/api/files/delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileId: fileToDelete.id }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Gagal menghapus file");
-      addToast({ message: "File berhasil dihapus!", type: "success" });
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
-      setFiles(originalFiles);
-    }
-  };
-
-  const handleMove = async (newParentId: string) => {
-    if (!actionState.file || !actionState.file.parents) {
-      setActionState({ type: null, file: null });
-      return;
-    }
-    const currentParentId = actionState.file.parents[0];
-    try {
-      const response = await fetch("/api/files/move", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fileId: actionState.file.id,
-          currentParentId,
-          newParentId,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Gagal memindahkan file");
-      setFiles((prevFiles: DriveFile[]) =>
-        prevFiles.filter((f: DriveFile) => f.id !== actionState.file?.id),
-      );
-      addToast({ message: "File berhasil dipindahkan!", type: "success" });
-      setActionState({ type: null, file: null });
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
-    }
-  };
   const sortedFiles = useMemo(() => {
     return [...files]
       .map((file) => ({ ...file, isFavorite: favorites.includes(file.id) }))
@@ -567,10 +480,7 @@ export default function FileBrowser({
         }
       });
   }, [files, sort, favorites]);
-  const getSharePath = (file: DriveFile) => {
-    if (file.isFolder) return `/folder/${file.id}`;
-    return `/folder/${currentFolderId}/file/${file.id}/${createSlug(file.name)}`;
-  };
+
   const updateUploadProgress = (
     fileName: string,
     progress: number,
@@ -649,6 +559,7 @@ export default function FileBrowser({
     },
     [currentFolderId, triggerRefresh, isAdmin],
   );
+
   const handleDragOver = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -659,11 +570,13 @@ export default function FileBrowser({
     },
     [isAdmin],
   );
+
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
   }, []);
+
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -675,14 +588,21 @@ export default function FileBrowser({
     },
     [isAdmin, handleFileUpload],
   );
+
   const handleQuickShare = (e: React.MouseEvent, file: DriveFile) => {
     e.stopPropagation();
+    if (user?.role !== "ADMIN") {
+      addToast({ message: "Fitur berbagi hanya untuk Admin.", type: "error" });
+      return;
+    }
     handleShare(file);
   };
+
   const handleQuickDetails = (e: React.MouseEvent, file: DriveFile) => {
     e.stopPropagation();
     setDetailsFile(file);
   };
+
   const handleQuickDownload = (e: React.MouseEvent, file: DriveFile) => {
     e.stopPropagation();
     const downloadUrl = `/api/download?fileId=${file.id}${
@@ -874,7 +794,7 @@ export default function FileBrowser({
                 <Upload size={18} />
               </button>
               <button
-                onClick={() =>
+                onClick={() => {
                   handleShare({
                     id: currentFolderId,
                     name: history[history.length - 1]?.name || "Folder",
@@ -885,8 +805,8 @@ export default function FileBrowser({
                     hasThumbnail: false,
                     webViewLink: "",
                     trashed: false,
-                  })
-                }
+                  });
+                }}
                 className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground"
                 title="Bagikan Folder Ini"
               >
@@ -952,7 +872,7 @@ export default function FileBrowser({
               files={sortedFiles}
               activeFileId={activeFileId}
               onItemClick={handleItemClick}
-              onItemContextMenu={handleContextMenu}
+              onItemContextMenu={handleContextMenuWrapper}
               onShareClick={handleQuickShare}
               onDetailsClick={handleQuickDetails}
               onDownloadClick={handleQuickDownload}
