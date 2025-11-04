@@ -34,6 +34,7 @@ type SortOrder = "asc" | "desc";
 
 interface AppConfig {
   hideAuthor: boolean;
+  disableGuestLogin: boolean;
 }
 
 interface AppState {
@@ -86,6 +87,7 @@ interface AppState {
   setDetailsFile: (file: DriveFile | null) => void;
 
   hideAuthor: boolean | null;
+  disableGuestLogin: boolean | null;
   isConfigLoading: boolean;
   fetchConfig: () => Promise<void>;
   setConfig: (config: Partial<AppConfig>) => Promise<void>;
@@ -334,16 +336,20 @@ export const useAppStore = create<AppState>()(
       setDetailsFile: (file) => set({ detailsFile: file }),
 
       hideAuthor: null,
+      disableGuestLogin: null,
       isConfigLoading: false,
       fetchConfig: async () => {
         set({ isConfigLoading: true });
         try {
           const response = await fetch("/api/admin/config");
           const config: AppConfig = await response.json();
-          set({ hideAuthor: config.hideAuthor || false });
+          set({
+            hideAuthor: config.hideAuthor || false,
+            disableGuestLogin: config.disableGuestLogin || false,
+          });
         } catch (error) {
           console.error("Gagal fetch config:", error);
-          set({ hideAuthor: false });
+          set({ hideAuthor: false, disableGuestLogin: false });
         } finally {
           set({ isConfigLoading: false });
         }
@@ -357,7 +363,10 @@ export const useAppStore = create<AppState>()(
           });
           const result = await response.json();
           if (!response.ok) throw new Error(result.error);
-          set({ hideAuthor: result.config.hideAuthor });
+          set({
+            hideAuthor: result.config.hideAuthor,
+            disableGuestLogin: result.config.disableGuestLogin,
+          });
         } catch (error: any) {
           get().addToast({ message: error.message, type: "error" });
         }

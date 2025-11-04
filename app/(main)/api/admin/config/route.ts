@@ -8,10 +8,12 @@ const CONFIG_KEY = "zee-index:config";
 
 interface AppConfig {
   hideAuthor?: boolean;
+  disableGuestLogin?: boolean;
 }
 
 const configSchema = z.object({
-  hideAuthor: z.boolean(),
+  hideAuthor: z.boolean().optional(),
+  disableGuestLogin: z.boolean().optional(),
 });
 
 async function isAdmin(session: any): Promise<boolean> {
@@ -21,7 +23,9 @@ async function isAdmin(session: any): Promise<boolean> {
 export async function GET(request: NextRequest) {
   try {
     const config: AppConfig | null = await kv.get(CONFIG_KEY);
-    return NextResponse.json(config || { hideAuthor: false });
+    return NextResponse.json(
+      config || { hideAuthor: false, disableGuestLogin: false },
+    );
   } catch (error) {
     console.error("Gagal mengambil konfigurasi:", error);
     return NextResponse.json(
@@ -40,7 +44,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validation = configSchema.safeParse(body);
-
     if (!validation.success) {
       return NextResponse.json(
         { error: "Input tidak valid", details: validation.error.issues },
@@ -50,7 +53,6 @@ export async function POST(request: NextRequest) {
 
     const currentConfig: AppConfig = (await kv.get(CONFIG_KEY)) || {};
     const newConfig = { ...currentConfig, ...validation.data };
-
     await kv.set(CONFIG_KEY, newConfig);
 
     return NextResponse.json({

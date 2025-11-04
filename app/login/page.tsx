@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { signIn } from "next-auth/react";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
@@ -10,6 +10,8 @@ function CustomLoginPage() {
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
   const currentYear = new Date().getFullYear();
+  const [isGuestLoginDisabled, setIsGuestLoginDisabled] = useState(true);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
 
   useEffect(() => {
     const errorType = searchParams.get("error");
@@ -49,6 +51,24 @@ function CustomLoginPage() {
       }
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const fetchPublicConfig = async () => {
+      try {
+        setIsLoadingConfig(true);
+        const response = await fetch("/api/config/public");
+        const data = await response.json();
+        setIsGuestLoginDisabled(data.disableGuestLogin);
+      } catch (err) {
+        console.error("Gagal memuat config publik:", err);
+        setIsGuestLoginDisabled(true);
+      } finally {
+        setIsLoadingConfig(false);
+      }
+    };
+
+    fetchPublicConfig();
+  }, []);
 
   const handleGoogleSignIn = () => {
     const callbackUrl = searchParams.get("callbackUrl") || "/";
@@ -109,13 +129,15 @@ function CustomLoginPage() {
                 <i className="fab fa-google text-lg"></i>
                 Lanjutkan dengan Google
               </button>
+
               <button
                 onClick={() =>
                   signIn("guest", {
                     callbackUrl: searchParams.get("callbackUrl") || "/",
                   })
                 }
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-muted/50 border rounded-lg hover:bg-accent transition-colors font-semibold"
+                disabled={isLoadingConfig || isGuestLoginDisabled}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-muted/50 border rounded-lg hover:bg-accent transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <i className="fas fa-user text-lg"></i>
                 Lanjutkan sebagai Tamu

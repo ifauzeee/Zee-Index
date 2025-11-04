@@ -4,16 +4,19 @@ import { getToken } from "next-auth/jwt";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  const publicPaths = ["/login", "/api/auth", "/icon.png", "/verify-2fa"];
+  const publicPaths = [
+    "/login",
+    "/api/auth",
+    "/icon.png",
+    "/verify-2fa",
+    "/api/config/public", 
+  ];
 
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
-
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
   });
-
   if (!isPublicPath && !token) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);

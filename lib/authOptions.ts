@@ -5,6 +5,7 @@ import { kv } from "@vercel/kv";
 import { User } from "next-auth";
 
 const ADMIN_EMAILS_KEY = "zee-index:admins";
+const CONFIG_KEY = "zee-index:config";
 
 async function ensureInitialAdmins() {
   try {
@@ -17,7 +18,6 @@ async function ensureInitialAdmins() {
       const adminsToAdd = initialAdmins.filter(
         (email) => !existingAdmins.includes(email),
       );
-
       if (adminsToAdd.length > 0) {
         await kv.sadd(
           ADMIN_EMAILS_KEY,
@@ -44,6 +44,18 @@ export const authOptions: AuthOptions = {
       name: "Guest",
       credentials: {},
       async authorize(): Promise<User | null> {
+        try {
+          const config: { disableGuestLogin?: boolean } | null =
+            await kv.get(CONFIG_KEY);
+
+          if (config?.disableGuestLogin) {
+            console.warn("Guest login attempt blocked by admin configuration.");
+            return null;
+          }
+        } catch (e) {
+          console.error("Failed to check guest login config from KV:", e);
+        }
+
         return {
           id: `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           name: "Pengguna Tamu",
