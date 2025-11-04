@@ -32,6 +32,8 @@ interface StorageBreakdown {
   size: number;
 }
 
+const ACCESS_TOKEN_KEY = "google:access-token";
+
 async function fetchWithRetry(
   url: string,
   options: RequestInit,
@@ -61,6 +63,15 @@ async function fetchWithRetry(
 }
 
 export async function getAccessToken(): Promise<string> {
+  try {
+    const cachedToken: string | null = await kv.get(ACCESS_TOKEN_KEY);
+    if (cachedToken) {
+      return cachedToken;
+    }
+  } catch (e) {
+    console.error("Gagal mengambil token dari cache:", e);
+  }
+
   const url = "https://oauth2.googleapis.com/token";
   const options = {
     method: "POST",
@@ -85,7 +96,15 @@ export async function getAccessToken(): Promise<string> {
     );
   }
 
-  const tokenData: { access_token: string } = await response.json();
+  const tokenData: { access_token: string; expires_in: number } =
+    await response.json();
+
+  try {
+    await kv.set(ACCESS_TOKEN_KEY, tokenData.access_token, { ex: 3000 });
+  } catch (e) {
+    console.error("Gagal menyimpan token ke cache:", e);
+  }
+
   return tokenData.access_token;
 }
 
@@ -416,7 +435,6 @@ export async function searchFilesInFolder(
   dateQuery: string,
 ): Promise<DriveFile[]> {
   const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3/files";
-
   let driveQuery = `${queryField} contains '${searchTerm}' and trashed=false`;
   driveQuery += ` and '${folderId}' in parents`;
   driveQuery += mimeQuery;
@@ -428,7 +446,6 @@ export async function searchFilesInFolder(
       "files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents)",
     pageSize: "1000",
   });
-
   const response = await fetchWithRetry(
     `${GOOGLE_DRIVE_API_URL}?${params.toString()}`,
     {
@@ -436,7 +453,6 @@ export async function searchFilesInFolder(
       cache: "no-store",
     },
   );
-
   if (!response.ok) {
     console.error(
       `Gagal mencari di folder ${folderId}:`,

@@ -199,6 +199,13 @@ export const useAppStore = create<AppState>()(
           return { shareLinks: updatedLinks };
         }),
       removeShareLink: async (linkToRemove) => {
+        const originalLinks = get().shareLinks;
+        set((state) => ({
+          shareLinks: state.shareLinks.filter(
+            (link) => link.id !== linkToRemove.id,
+          ),
+        }));
+
         try {
           const response = await fetch("/api/share/delete", {
             method: "POST",
@@ -208,17 +215,13 @@ export const useAppStore = create<AppState>()(
           const result = await response.json();
           if (!response.ok)
             throw new Error(result.error || "Gagal menghapus tautan.");
-          set((state) => ({
-            shareLinks: state.shareLinks.filter(
-              (link) => link.id !== linkToRemove.id,
-            ),
-          }));
           get().addToast({
             message: "Tautan berhasil dihapus.",
             type: "success",
           });
         } catch (error: any) {
           get().addToast({ message: error.message, type: "error" });
+          set({ shareLinks: originalLinks });
         }
       },
       dataUsage: { status: "idle", value: "Memuat..." },
@@ -276,6 +279,13 @@ export const useAppStore = create<AppState>()(
         }
       },
       removeAdminEmail: async (email: string) => {
+        const originalAdmins = get().adminEmails;
+        set((state) => ({
+          adminEmails: state.adminEmails.filter(
+            (adminEmail) => adminEmail !== email,
+          ),
+        }));
+
         try {
           const response = await fetch("/api/admin/users", {
             method: "DELETE",
@@ -285,14 +295,10 @@ export const useAppStore = create<AppState>()(
           const result = await response.json();
           if (!response.ok)
             throw new Error(result.error || "Gagal menghapus admin.");
-          set((state) => ({
-            adminEmails: state.adminEmails.filter(
-              (adminEmail) => adminEmail !== email,
-            ),
-          }));
           get().addToast({ message: result.message, type: "success" });
         } catch (error: any) {
           get().addToast({ message: error.message, type: "error" });
+          set({ adminEmails: originalAdmins });
         }
       },
       favorites: [],
