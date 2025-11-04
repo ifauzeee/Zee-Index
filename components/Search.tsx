@@ -27,7 +27,6 @@ export default function Search({ onSearchClose }: SearchProps) {
   const [searchType, setSearchType] = useState<"name" | "fullText">("name");
   const [isGlobalSearch, setIsGlobalSearch] = useState(!currentFolderId);
   const inputRef = useRef<HTMLInputElement>(null);
-
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [mimeType, setMimeType] = useState("any");
   const [modifiedTime, setModifiedTime] = useState("any");
@@ -68,6 +67,7 @@ export default function Search({ onSearchClose }: SearchProps) {
       modifiedTime,
     ],
   );
+
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
       const currentQuery = searchParams.get("q") || "";
@@ -102,6 +102,7 @@ export default function Search({ onSearchClose }: SearchProps) {
     mimeType,
     modifiedTime,
   ]);
+
   useEffect(() => {
     const query = searchParams.get("q");
     if (query && pathname.startsWith("/search")) {
@@ -110,6 +111,7 @@ export default function Search({ onSearchClose }: SearchProps) {
       setModifiedTime(searchParams.get("modifiedTime") || "any");
     }
   }, [searchParams, pathname]);
+
   useEffect(() => {
     if (!pathname.startsWith("/search")) {
       setSearchTerm("");
@@ -118,9 +120,11 @@ export default function Search({ onSearchClose }: SearchProps) {
       setAdvancedOpen(false);
     }
   }, [pathname]);
+
   useEffect(() => {
     setIsGlobalSearch(!currentFolderId);
   }, [currentFolderId]);
+
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     performSearch(searchTerm);
@@ -141,8 +145,9 @@ export default function Search({ onSearchClose }: SearchProps) {
   const placeholderText = isGlobalSearch
     ? "Cari semua file..."
     : "Cari di folder ini...";
+
   return (
-    <form onSubmit={handleFormSubmit} className="w-full">
+    <form onSubmit={handleFormSubmit} className="w-full relative">
       <div className="relative w-full">
         <button
           type="button"
@@ -206,12 +211,13 @@ export default function Search({ onSearchClose }: SearchProps) {
       <AnimatePresence>
         {advancedOpen && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-full left-0 right-0 z-10 mt-2 p-4 bg-background border rounded-lg shadow-lg"
           >
-            <div className="grid grid-cols-2 gap-2 pt-2">
+            <div className="grid grid-cols-2 gap-2">
               <select
                 value={mimeType}
                 onChange={(e) => setMimeType(e.target.value)}
