@@ -81,7 +81,6 @@ export default function FileItem({
       transition: { duration: 0.2 },
     },
   };
-
   return (
     <motion.div
       variants={itemVariants}
@@ -114,10 +113,10 @@ export default function FileItem({
         )}
       >
         <div className="relative">
-          {view === "grid" && file.thumbnailLink && !file.isFolder ? (
+          {view === "grid" && false && file.thumbnailLink && !file.isFolder ? (
             <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-md overflow-hidden flex items-center justify-center">
               <Image
-                src={file.thumbnailLink}
+                src={file.thumbnailLink!}
                 alt={file.name}
                 fill
                 className="object-cover"

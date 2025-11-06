@@ -96,13 +96,10 @@ export default function FileBrowser({
     detailsFile,
     setDetailsFile,
   } = useAppStore();
-
   const currentFolderId =
     history.length > 0
       ? history[history.length - 1]?.id
       : initialFolderId || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
-
-  // PANGGILAN HOOK BARU: Logika Aksi dipindahkan ke sini
   const {
     contextMenu,
     setContextMenu,
@@ -119,25 +116,21 @@ export default function FileBrowser({
     handleDelete,
     handleMove,
   } = useFileActions(files, setFiles, currentFolderId);
-
   useEffect(() => {
     if (sessionStatus === "authenticated" && !user) {
       fetchUser();
       fetchFavorites();
     }
   }, [sessionStatus, user, fetchUser, fetchFavorites]);
-
   useEffect(() => {
     const currentShareToken = searchParams.get("share_token");
     if (currentShareToken) {
       setShareToken(currentShareToken);
     }
   }, [searchParams, setShareToken]);
-
   useEffect(() => {
     setCurrentFolderId(currentFolderId);
   }, [currentFolderId, setCurrentFolderId]);
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Space" && activeFileId && !previewFile && !detailsFile) {
@@ -154,7 +147,6 @@ export default function FileBrowser({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [activeFileId, files, previewFile, detailsFile, setPreviewFile]);
-
   useEffect(() => {
     const isOverlayActive = contextMenu || detailsFile || previewFile;
 
@@ -168,13 +160,10 @@ export default function FileBrowser({
       document.body.classList.remove("mobile-menu-open");
     };
   }, [contextMenu, detailsFile, previewFile]);
-
   const isGuest = user?.isGuest === true;
   const isAdmin = user?.role === "ADMIN" && !isGuest;
-
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
-
   const handleFetchError = useCallback(
     async (
       response: Response,
@@ -205,7 +194,6 @@ export default function FileBrowser({
     },
     [addToast, router, shareToken],
   );
-
   const fetchFiles = useCallback(
     async (folderId: string, folderName: string) => {
       setIsLoading(true);
@@ -250,7 +238,6 @@ export default function FileBrowser({
     },
     [folderTokens, handleFetchError, addToast, shareToken],
   );
-
   const fetchNextPage = useCallback(async () => {
     if (isFetchingNextPage || !nextPageToken || !currentFolderId) return;
 
@@ -291,7 +278,6 @@ export default function FileBrowser({
     folderTokens,
     addToast,
   ]);
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -313,7 +299,6 @@ export default function FileBrowser({
       }
     };
   }, [fetchNextPage]);
-
   useEffect(() => {
     if (sessionStatus === "loading" && !shareToken) {
       setIsLoading(true);
@@ -356,14 +341,12 @@ export default function FileBrowser({
       }
     }
   }, [initialFolderId, sessionStatus, shareToken, router, addToast, history]);
-
   useEffect(() => {
     const currentFolder = history[history.length - 1];
     if (currentFolder) {
       fetchFiles(currentFolder.id, currentFolder.name);
     }
   }, [refreshKey, history, fetchFiles]);
-
   const handleItemClick = (file: DriveFile) => {
     if (isBulkMode) {
       toggleSelection(file);
@@ -401,7 +384,6 @@ export default function FileBrowser({
       setActiveFileId(file.id);
     }
   };
-
   const handleAuthSubmit = async (id: string, password: string) => {
     setIsAuthLoading(true);
     try {
@@ -425,7 +407,6 @@ export default function FileBrowser({
       setIsAuthLoading(false);
     }
   };
-
   const handleBreadcrumbClick = (folderId: string) => {
     if (shareToken && folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
       addToast({
@@ -444,18 +425,15 @@ export default function FileBrowser({
     }
     router.push(folderUrl);
   };
-
-  // LOGIKA CONTEXT MENU DIPINDAHKAN KE HOOK
   const handleContextMenuWrapper = useCallback(
     (event: { clientX: number; clientY: number }, file: DriveFile) => {
       if (isBulkMode || shareToken || !isAdmin) return;
       if (!user) return;
       setActiveFileId(file.id);
-      handleContextMenu(event, file); // Memanggil dari hook
+      handleContextMenu(event, file);
     },
     [isBulkMode, shareToken, user, isAdmin, handleContextMenu],
   );
-
   const sortedFiles = useMemo(() => {
     return [...files]
       .map((file) => ({ ...file, isFavorite: favorites.includes(file.id) }))
@@ -481,26 +459,29 @@ export default function FileBrowser({
       });
   }, [files, sort, favorites]);
 
-  const updateUploadProgress = (
-    fileName: string,
-    progress: number,
-    status: "uploading" | "success" | "error",
-    error?: string,
-  ) => {
-    setUploads((prev) => ({
-      ...prev,
-      [fileName]: { name: fileName, progress, status, error },
-    }));
-    if (status === "success" || status === "error") {
-      setTimeout(() => {
-        setUploads((prev) => {
-          const newUploads = { ...prev };
-          delete newUploads[fileName];
-          return newUploads;
-        });
-      }, 5000);
-    }
-  };
+  const updateUploadProgress = useCallback(
+    (
+      fileName: string,
+      progress: number,
+      status: "uploading" | "success" | "error",
+      error?: string,
+    ) => {
+      setUploads((prev) => ({
+        ...prev,
+        [fileName]: { name: fileName, progress, status, error },
+      }));
+      if (status === "success" || status === "error") {
+        setTimeout(() => {
+          setUploads((prev) => {
+            const newUploads = { ...prev };
+            delete newUploads[fileName];
+            return newUploads;
+          });
+        }, 5000);
+      }
+    },
+    [setUploads],
+  );
 
   const handleFileUpload = useCallback(
     async (files: FileList | null) => {
@@ -557,7 +538,7 @@ export default function FileBrowser({
         xhr.send(formData);
       }
     },
-    [currentFolderId, triggerRefresh, isAdmin],
+    [currentFolderId, triggerRefresh, isAdmin, updateUploadProgress],
   );
 
   const handleDragOver = useCallback(
@@ -570,13 +551,11 @@ export default function FileBrowser({
     },
     [isAdmin],
   );
-
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
   }, []);
-
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -588,7 +567,6 @@ export default function FileBrowser({
     },
     [isAdmin, handleFileUpload],
   );
-
   const handleQuickShare = (e: React.MouseEvent, file: DriveFile) => {
     e.stopPropagation();
     if (user?.role !== "ADMIN") {
