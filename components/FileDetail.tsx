@@ -19,17 +19,24 @@ import "prismjs/plugins/line-numbers/prism-line-numbers.css";
 import Plyr from "plyr";
 import Prism from "prismjs";
 import "prismjs/plugins/line-numbers/prism-line-numbers.min.js";
-import { getFileType, formatBytes, formatDuration, getIcon } from "@/lib/utils";
+import {
+  getFileType,
+  formatBytes,
+  formatDuration,
+  getIcon,
+} from "@/lib/utils";
 import {
   ArrowLeft,
   Save,
   Loader2,
   ChevronLeft,
   ChevronRight,
+  Archive,
 } from "lucide-react";
 import { renderToString } from "react-dom/server";
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
+import ArchivePreviewModal from "./ArchivePreviewModal";
 
 declare const pdfjsLib: any;
 declare const ePub: any;
@@ -272,6 +279,8 @@ const DefaultPreview: React.FC<{ mimeType: string }> = ({ mimeType }) => {
   );
 };
 
+const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024; 
+
 export default function FileDetail({
   file,
   isModal = false,
@@ -297,6 +306,7 @@ export default function FileDetail({
     useState(false);
 
   const [showTextPreview, setShowTextPreview] = useState(false);
+  const [showArchivePreview, setShowArchivePreview] = useState(false);
 
   const shareToken = useMemo(
     () => searchParams.get("share_token"),
@@ -304,6 +314,12 @@ export default function FileDetail({
   );
   const isAdmin = user?.role === "ADMIN";
   const canShowAuthor = isAdmin || !hideAuthor;
+
+  const fileType = getFileType(file);
+  const fileSize = parseInt(file.size || "0", 10);
+  const isArchive = fileType === "archive";
+  const isArchivePreviewable = isArchive && fileSize <= ARCHIVE_PREVIEW_LIMIT_BYTES;
+
   const validateShareToken = useCallback(
     async (token: string) => {
       try {
@@ -390,13 +406,10 @@ export default function FileDetail({
     }
     return url;
   }, [file.id, shareToken]);
-  const fileType = getFileType(file);
 
   const isEditable =
     user?.role === "ADMIN" && (fileType === "code" || fileType === "markdown");
-
   const isTextPreviewable = fileType === "code" || fileType === "markdown";
-
   useEffect(() => {
     if (isEditing && isEditable && editableContent === null) {
       setIsFetchingEditableContent(true);
@@ -430,7 +443,6 @@ export default function FileDetail({
     addToast,
     showTextPreview,
   ]);
-
   const handleSaveChanges = async () => {
     if (editableContent === null) return;
     setIsSaving(true);
@@ -487,7 +499,6 @@ export default function FileDetail({
         return <OfficePreview src={directLink} />;
       case "ebook":
         return <EbookPreview src={directLink} />;
-
       case "markdown":
         if (showTextPreview) {
           if (markdownContent === null) return <LoadingPreview />;
@@ -697,6 +708,24 @@ export default function FileDetail({
                 </button>
               )}
 
+              {isArchive && (
+                <button
+                  onClick={() => setShowArchivePreview(true)}
+                  disabled={!isArchivePreviewable}
+                  title={
+                    !isArchivePreviewable
+                      ? `File terlalu besar (> 100 MB) untuk pratinjau. Ukuran: ${formatBytes(
+                          fileSize,
+                        )}`
+                      : "Lihat Isi Arsip"
+                  }
+                  className="flex-1 flex items-center justify-center px-4 py-3 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Archive className="mr-3" size={20} />
+                  Lihat Arsip
+                </button>
+              )}
+
               <a
                 href={directLink}
                 download
@@ -708,6 +737,12 @@ export default function FileDetail({
           )}
         </div>
       </div>
+      {showArchivePreview && isArchivePreviewable && (
+        <ArchivePreviewModal
+          file={file}
+          onClose={() => setShowArchivePreview(false)}
+        />
+      )}
     </div>
   );
 }

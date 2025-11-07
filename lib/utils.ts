@@ -32,7 +32,9 @@ export function getIcon(mimeType: string): LucideIcon {
   if (mimeType.startsWith("audio/")) return Music;
   if (
     mimeType.startsWith("application/zip") ||
-    mimeType.startsWith("application/x-rar-compressed")
+    mimeType.startsWith("application/x-rar-compressed") ||
+    mimeType.startsWith("application/x-7z-compressed") ||
+    mimeType.startsWith("application/x-tar")
   )
     return Archive;
   if (mimeType.startsWith("text/plain") || mimeType.startsWith("text/markdown"))
@@ -67,7 +69,13 @@ export function getFileType(file: { mimeType: string; name: string }): string {
   if (mimeType.startsWith("image/")) return "image";
   if (mimeType === "application/pdf") return "pdf";
   if (mimeType === "text/markdown" || name.endsWith(".md")) return "markdown";
-
+  if (
+    mimeType.startsWith("application/zip") ||
+    name.endsWith(".zip") ||
+    name.endsWith(".rar") ||
+    name.endsWith(".7z")
+  )
+    return "archive";
   if (
     mimeType.includes("officedocument.wordprocessingml") ||
     name.endsWith(".docx")
@@ -83,10 +91,8 @@ export function getFileType(file: { mimeType: string; name: string }): string {
     name.endsWith(".pptx")
   )
     return "office";
-
   if (mimeType === "application/epub+zip" || name.endsWith(".epub"))
     return "ebook";
-
   const codeExtensions = [
     "js",
     "ts",

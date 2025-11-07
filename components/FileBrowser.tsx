@@ -34,8 +34,9 @@ import ShareButton from "./ShareButton";
 import { useSession } from "next-auth/react";
 import FileDetail from "./FileDetail";
 import DetailsPanel from "./DetailsPanel";
-import { cn } from "@/lib/utils";
+import { cn, getFileType, formatBytes } from "@/lib/utils";
 import { useFileActions } from "@/hooks/useFileActions";
+import ArchivePreviewModal from "./ArchivePreviewModal";
 
 interface HistoryItem {
   id: string;
@@ -48,6 +49,8 @@ interface UploadProgress {
   status: "uploading" | "success" | "error";
   error?: string;
 }
+
+const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024;
 
 export default function FileBrowser({
   initialFolderId,
@@ -74,11 +77,17 @@ export default function FileBrowser({
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploads, setUploads] = useState<Record<string, UploadProgress>>({});
+  const [dragOverBreadcrumb, setDragOverBreadcrumb] = useState<string | null>(
+    null,
+  );
+
   const {
     sort,
     isBulkMode,
     setBulkMode,
     toggleSelection,
+    selectedFiles,
+    clearSelection,
     view,
     setView,
     refreshKey,
@@ -107,6 +116,9 @@ export default function FileBrowser({
     setActionState,
     previewFile,
     setPreviewFile,
+    archivePreview,
+    setArchivePreview,
+    handleArchivePreview,
     handleContextMenu,
     getSharePath,
     handleShare,
@@ -148,7 +160,8 @@ export default function FileBrowser({
     };
   }, [activeFileId, files, previewFile, detailsFile, setPreviewFile]);
   useEffect(() => {
-    const isOverlayActive = contextMenu || detailsFile || previewFile;
+    const isOverlayActive =
+      contextMenu || detailsFile || previewFile || archivePreview;
 
     if (isOverlayActive) {
       document.body.classList.add("mobile-menu-open");
@@ -159,7 +172,7 @@ export default function FileBrowser({
     return () => {
       document.body.classList.remove("mobile-menu-open");
     };
-  }, [contextMenu, detailsFile, previewFile]);
+  }, [contextMenu, detailsFile, previewFile, archivePreview]);
   const isGuest = user?.isGuest === true;
   const isAdmin = user?.role === "ADMIN" && !isGuest;
   const createSlug = (name: string) =>
@@ -458,7 +471,6 @@ export default function FileBrowser({
         }
       });
   }, [files, sort, favorites]);
-
   const updateUploadProgress = useCallback(
     (
       fileName: string,
@@ -482,7 +494,6 @@ export default function FileBrowser({
     },
     [setUploads],
   );
-
   const handleFileUpload = useCallback(
     async (files: FileList | null) => {
       if (!files || files.length === 0 || !currentFolderId || !isAdmin) return;
@@ -541,6 +552,103 @@ export default function FileBrowser({
     [currentFolderId, triggerRefresh, isAdmin, updateUploadProgress],
   );
 
+  const handleDragStart = (e: React.DragEvent, file: DriveFile) => {
+    if (!isAdmin) {
+      e.preventDefault();
+      return;
+    }
+
+    let filesToDrag: DriveFile[];
+    const fileIsSelected = selectedFiles.some((f) => f.id === file.id);
+
+    if (isBulkMode && fileIsSelected) {
+      filesToDrag = selectedFiles;
+    } else {
+      filesToDrag = [file];
+    }
+
+    const dragData = {
+      type: "files",
+      files: filesToDrag,
+      sourceFolderId: currentFolderId,
+    };
+
+    e.dataTransfer.setData("application/json", JSON.stringify(dragData));
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDropMove = async (
+    filesToMove: DriveFile[],
+    sourceFolderId: string,
+    newParentId: string,
+  ) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/files/bulk-move", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileIds: filesToMove.map((f) => f.id),
+          currentParentId: sourceFolderId,
+          newParentId,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok && response.status !== 207)
+        throw new Error(result.error || "Gagal memindahkan item.");
+      addToast({
+        message: result.message,
+        type: response.ok ? "success" : "info",
+      });
+      triggerRefresh();
+      clearSelection();
+    } catch (error: any) {
+      addToast({ message: error.message, type: "error" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onDropOnFolder = (e: React.DragEvent, targetFolder: DriveFile) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    let data;
+    try {
+      data = JSON.parse(e.dataTransfer.getData("application/json"));
+    } catch (err) {
+      return;
+    }
+
+    if (data.type !== "files" || !data.files || !data.sourceFolderId) return;
+    if (data.sourceFolderId === targetFolder.id) return;
+    if (data.files.some((f: DriveFile) => f.id === targetFolder.id)) return;
+
+    handleDropMove(data.files, data.sourceFolderId, targetFolder.id);
+  };
+
+  const onDropOnBreadcrumb = (
+    e: React.DragEvent,
+    targetFolder: { id: string },
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverBreadcrumb(null);
+
+    let data;
+    try {
+      data = JSON.parse(e.dataTransfer.getData("application/json"));
+    } catch (err) {
+      return;
+    }
+
+    if (data.type !== "files" || !data.files || !data.sourceFolderId) return;
+    if (data.sourceFolderId === targetFolder.id) return;
+    if (data.files.some((f: DriveFile) => f.id === targetFolder.id)) return;
+
+    handleDropMove(data.files, data.sourceFolderId, targetFolder.id);
+  };
+
   const handleDragOver = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -567,6 +675,18 @@ export default function FileBrowser({
     },
     [isAdmin, handleFileUpload],
   );
+  const handleBreadcrumbDragOver = (e: React.DragEvent, folderId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverBreadcrumb(folderId);
+    e.dataTransfer.dropEffect = "move";
+  };
+  const handleBreadcrumbDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverBreadcrumb(null);
+  };
+
   const handleQuickShare = (e: React.MouseEvent, file: DriveFile) => {
     e.stopPropagation();
     if (user?.role !== "ADMIN") {
@@ -614,47 +734,59 @@ export default function FileBrowser({
             onSubmit={handleAuthSubmit}
           />
         )}
-        {contextMenu && (
-          <ContextMenu
-            x={contextMenu.x}
-            y={contextMenu.y}
-            onClose={() => setContextMenu(null)}
-            onRename={() => {
-              setActionState({ type: "rename", file: contextMenu.file });
-              setContextMenu(null);
-            }}
-            onDelete={() => {
-              setActionState({ type: "delete", file: contextMenu.file });
-              setContextMenu(null);
-            }}
-            onShare={() => {
-              handleShare(contextMenu.file);
-              setContextMenu(null);
-            }}
-            onMove={() => {
-              setActionState({ type: "move", file: contextMenu.file });
-              setContextMenu(null);
-            }}
-            isFavorite={favorites.includes(contextMenu.file.id)}
-            onToggleFavorite={handleToggleFavorite}
-            onCopy={handleCopy}
-            onShowDetails={() => {
-              setDetailsFile(contextMenu.file);
-              setContextMenu(null);
-            }}
-            onPreview={() => {
-              if (!contextMenu.file.isFolder) {
-                setPreviewFile(contextMenu.file);
-              } else {
-                addToast({
-                  message: "Pratinjau cepat tidak tersedia untuk folder.",
-                  type: "info",
-                });
-              }
-              setContextMenu(null);
-            }}
-          />
-        )}
+        {contextMenu && (() => {
+          const fileType = getFileType(contextMenu.file);
+          const fileSize = parseInt(contextMenu.file.size || "0", 10);
+          const isArchive = fileType === "archive";
+          const isArchivePreviewable =
+            isArchive && fileSize <= ARCHIVE_PREVIEW_LIMIT_BYTES;
+
+          return (
+            <ContextMenu
+              x={contextMenu.x}
+              y={contextMenu.y}
+              onClose={() => setContextMenu(null)}
+              onRename={() => {
+                setActionState({ type: "rename", file: contextMenu.file });
+                setContextMenu(null);
+              }}
+              onDelete={() => {
+                setActionState({ type: "delete", file: contextMenu.file });
+                setContextMenu(null);
+              }}
+              onShare={() => {
+                handleShare(contextMenu.file);
+                setContextMenu(null);
+              }}
+              onMove={() => {
+                setActionState({ type: "move", file: contextMenu.file });
+                setContextMenu(null);
+              }}
+              isFavorite={favorites.includes(contextMenu.file.id)}
+              onToggleFavorite={handleToggleFavorite}
+              onCopy={handleCopy}
+              onShowDetails={() => {
+                setDetailsFile(contextMenu.file);
+                setContextMenu(null);
+              }}
+              onPreview={() => {
+                if (!contextMenu.file.isFolder) {
+                  setPreviewFile(contextMenu.file);
+                } else {
+                  addToast({
+                    message: "Pratinjau cepat tidak tersedia untuk folder.",
+                    type: "info",
+                  });
+                }
+                setContextMenu(null);
+              }}
+              isArchive={isArchive}
+              isArchivePreviewable={isArchivePreviewable}
+              fileSize={fileSize}
+              onArchivePreview={handleArchivePreview}
+            />
+          );
+        })()}
         {actionState.type === "rename" && actionState.file && (
           <RenameModal
             currentName={actionState.file.name}
@@ -719,6 +851,12 @@ export default function FileBrowser({
             </motion.div>
           </motion.div>
         )}
+        {archivePreview && (
+          <ArchivePreviewModal
+            file={archivePreview}
+            onClose={() => setArchivePreview(null)}
+          />
+        )}
         {isDragging && isAdmin && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -745,11 +883,17 @@ export default function FileBrowser({
             <span key={folder.id} className="flex items-center">
               <button
                 onClick={() => handleBreadcrumbClick(folder.id)}
-                className={`transition-colors ${
+                onDragOver={(e) => handleBreadcrumbDragOver(e, folder.id)}
+                onDragLeave={handleBreadcrumbDragLeave}
+                onDrop={(e) => onDropOnBreadcrumb(e, folder)}
+                className={cn(
+                  "transition-colors rounded-md p-1",
                   shareToken && index === 0
                     ? "cursor-default text-muted-foreground"
-                    : "hover:text-primary"
-                }`}
+                    : "hover:text-primary hover:bg-accent",
+                  dragOverBreadcrumb === folder.id &&
+                    "bg-primary/20 text-primary",
+                )}
               >
                 {folder.name}
               </button>
@@ -855,6 +999,8 @@ export default function FileBrowser({
               onDetailsClick={handleQuickDetails}
               onDownloadClick={handleQuickDownload}
               isAdmin={isAdmin}
+              onDragStart={handleDragStart}
+              onFileDrop={onDropOnFolder}
             />
             <div
               ref={loaderRef}

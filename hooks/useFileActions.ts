@@ -25,13 +25,13 @@ export function useFileActions(
     toggleFavorite,
     setDetailsFile,
   } = useAppStore();
-
   const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
   const [actionState, setActionState] = useState<ActionState>({
     type: null,
     file: null,
   });
   const [previewFile, setPreviewFile] = useState<DriveFile | null>(null);
+  const [archivePreview, setArchivePreview] = useState<DriveFile | null>(null);
 
   const handleContextMenu = useCallback(
     (event: { clientX: number; clientY: number }, file: DriveFile) => {
@@ -158,6 +158,13 @@ export function useFileActions(
       addToast({ message: err.message, type: "error" });
     }
   };
+  
+  const handleArchivePreview = () => {
+    if (contextMenu?.file) {
+      setArchivePreview(contextMenu.file);
+    }
+    setContextMenu(null);
+  };
 
   return {
     contextMenu,
@@ -166,6 +173,9 @@ export function useFileActions(
     setActionState,
     previewFile,
     setPreviewFile,
+    archivePreview,
+    setArchivePreview,
+    handleArchivePreview,
     handleContextMenu,
     getSharePath,
     handleShare,

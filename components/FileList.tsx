@@ -18,6 +18,8 @@ interface FileListProps {
   onDetailsClick: (e: React.MouseEvent, file: DriveFile) => void;
   onDownloadClick: (e: React.MouseEvent, file: DriveFile) => void;
   isAdmin: boolean;
+  onDragStart: (e: React.DragEvent, file: DriveFile) => void;
+  onFileDrop: (e: React.DragEvent, targetFolder: DriveFile) => void;
 }
 
 export default function FileList({
@@ -29,6 +31,8 @@ export default function FileList({
   onDetailsClick,
   onDownloadClick,
   isAdmin,
+  onDragStart,
+  onFileDrop,
 }: FileListProps) {
   const { view, selectedFiles, isBulkMode } = useAppStore();
   if (files.length === 0) {
@@ -74,6 +78,8 @@ export default function FileList({
           onShowDetails={(e) => onDetailsClick(e, file)}
           onDownload={(e) => onDownloadClick(e, file)}
           isAdmin={isAdmin}
+          onDragStart={(e) => onDragStart(e, file)}
+          onFileDrop={onFileDrop}
         />
       ))}
     </motion.div>

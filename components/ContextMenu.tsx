@@ -8,7 +8,9 @@ import {
   Copy,
   Info,
   Eye,
+  Archive,
 } from "lucide-react";
+import { formatBytes } from "@/lib/utils";
 
 interface ContextMenuProps {
   x: number;
@@ -23,6 +25,10 @@ interface ContextMenuProps {
   onCopy: () => void;
   onShowDetails: () => void;
   onPreview: () => void;
+  isArchive: boolean;
+  onArchivePreview: () => void;
+  isArchivePreviewable: boolean;
+  fileSize: number;
 }
 
 export default function ContextMenu({
@@ -38,6 +44,10 @@ export default function ContextMenu({
   onCopy,
   onShowDetails,
   onPreview,
+  isArchive,
+  onArchivePreview,
+  isArchivePreviewable,
+  fileSize,
 }: ContextMenuProps) {
   return (
     <div className="fixed inset-0 z-50" onClick={onClose}>
@@ -65,6 +75,24 @@ export default function ContextMenu({
               <Info size={16} /> Lihat Detail
             </button>
           </li>
+          {isArchive && (
+            <li>
+              <button
+                onClick={isArchivePreviewable ? onArchivePreview : undefined}
+                disabled={!isArchivePreviewable}
+                title={
+                  !isArchivePreviewable
+                    ? `File terlalu besar (> 100 MB) untuk pratinjau. Ukuran: ${formatBytes(
+                        fileSize,
+                      )}`
+                    : "Lihat Isi Arsip"
+                }
+                className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Archive size={16} /> Lihat Isi Arsip
+              </button>
+            </li>
+          )}
           <li className="border-t my-1"></li>
           <li>
             <button
