@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect, useCallback, Suspense } from "react";
 import {
   useParams,
@@ -20,7 +19,6 @@ function SharedCollectionPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const { addToast, user } = useAppStore();
-
   const shareId = params.shareId as string;
   const shareToken = searchParams.get("share_token");
 
@@ -28,12 +26,10 @@ function SharedCollectionPage() {
   const [collectionName, setCollectionName] = useState("Koleksi Bersama");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
 
   const isAdmin = user?.role === "ADMIN" && !user?.isGuest;
-
   const handleItemClick = useCallback(
     (file: DriveFile) => {
       let destinationUrl = "";
@@ -60,7 +56,6 @@ function SharedCollectionPage() {
     },
     [router, shareToken, addToast],
   );
-
   useEffect(() => {
     if (!shareId || !shareToken) {
       setError("Tautan berbagi tidak valid atau tidak lengkap.");
@@ -133,6 +128,8 @@ function SharedCollectionPage() {
           onDetailsClick={() => {}}
           onDownloadClick={() => {}}
           isAdmin={isAdmin}
+          onDragStart={() => {}}
+          onFileDrop={() => {}}
         />
       ) : (
         <div className="mt-8 text-center py-20 text-muted-foreground">

@@ -16,10 +16,8 @@ export default function FavoritesPage() {
   const { addToast, shareToken, user } = useAppStore();
   const [favoriteFiles, setFavoriteFiles] = useState<DriveFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
-
   const fetchFavorites = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -33,7 +31,6 @@ export default function FavoritesPage() {
       setIsLoading(false);
     }
   }, [addToast]);
-
   useEffect(() => {
     if (user && !user.isGuest) {
       fetchFavorites();
@@ -41,7 +38,6 @@ export default function FavoritesPage() {
       setIsLoading(false);
     }
   }, [fetchFavorites, user]);
-
   const handleItemClick = useCallback(
     (file: DriveFile) => {
       const parentFolder = file.parents?.[0];
@@ -63,7 +59,6 @@ export default function FavoritesPage() {
     },
     [router, addToast],
   );
-
   if (user?.isGuest) {
     return (
       <motion.div
@@ -104,6 +99,8 @@ export default function FavoritesPage() {
           onDetailsClick={() => {}}
           onDownloadClick={() => {}}
           isAdmin={false}
+          onDragStart={() => {}}
+          onFileDrop={() => {}}
         />
       ) : (
         <div className="text-center py-20 text-muted-foreground">

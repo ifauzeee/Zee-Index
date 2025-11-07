@@ -24,7 +24,6 @@ export default function SearchResultsList() {
 
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
-
   const isAdmin = user?.role === "ADMIN" && !user?.isGuest;
 
   const handleItemClick = useCallback(
@@ -96,7 +95,6 @@ export default function SearchResultsList() {
       setIsLoading(false);
     }
   }, [searchTerm, folderId, addToast, shareToken]);
-
   useEffect(() => {
     fetchSearchResults();
   }, [fetchSearchResults]);
@@ -129,6 +127,8 @@ export default function SearchResultsList() {
           onDetailsClick={() => {}}
           onDownloadClick={() => {}}
           isAdmin={isAdmin}
+          onDragStart={() => {}}
+          onFileDrop={() => {}}
         />
       ) : (
         <div className="mt-8 text-center py-20 text-muted-foreground">
