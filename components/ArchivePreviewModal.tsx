@@ -2,7 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Loader2, Folder as FolderIcon, File as FileIcon, AlertCircle } from "lucide-react";
+import {
+  X,
+  Folder as FolderIcon,
+  File as FileIcon,
+  AlertCircle,
+} from "lucide-react";
 import type { DriveFile } from "@/lib/googleDrive";
 import { formatBytes } from "@/lib/utils";
 
@@ -22,13 +27,11 @@ const modalVariants = {
   visible: { opacity: 1, scale: 1 },
   exit: { opacity: 0, scale: 0.95 },
 };
-
 const overlayVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
   exit: { opacity: 0 },
 };
-
 export default function ArchivePreviewModal({
   file,
   onClose,
@@ -36,7 +39,6 @@ export default function ArchivePreviewModal({
   const [content, setContent] = useState<ArchiveEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     const fetchArchiveContent = async () => {
       setIsLoading(true);
@@ -47,9 +49,7 @@ export default function ArchivePreviewModal({
         );
         if (!response.ok) {
           const errData = await response.json();
-          throw new Error(
-            errData.error || "Gagal memuat isi arsip.",
-          );
+          throw new Error(errData.error || "Gagal memuat isi arsip.");
         }
         const data = await response.json();
         setContent(data);
@@ -94,8 +94,18 @@ export default function ArchivePreviewModal({
 
           <div className="flex-1 overflow-y-auto border rounded-md">
             {isLoading ? (
-              <div className="flex items-center justify-center h-48">
-                <Loader2 className="animate-spin text-primary" />
+              <div className="flex flex-col items-center justify-center h-48 p-4">
+                <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
+                  <motion.div
+                    className="bg-primary h-2.5 rounded-full"
+                    initial={{ width: "0%" }}
+                    animate={{ width: "95%" }}
+                    transition={{ duration: 10, ease: "linear" }}
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground mt-4">
+                  Memproses arsip, ini mungkin perlu waktu...
+                </p>
               </div>
             ) : error ? (
               <div className="flex flex-col items-center justify-center h-48 text-red-500">
@@ -104,7 +114,7 @@ export default function ArchivePreviewModal({
                 <p className="text-sm">{error}</p>
               </div>
             ) : content.length === 0 ? (
-               <div className="flex items-center justify-center h-48 text-muted-foreground">
+              <div className="flex items-center justify-center h-48 text-muted-foreground">
                 <p>Arsip ini kosong.</p>
               </div>
             ) : (
