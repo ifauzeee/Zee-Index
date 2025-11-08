@@ -23,6 +23,7 @@ import {
   getFileType,
   formatBytes,
   formatDuration,
+  cn,
   getIcon,
 } from "@/lib/utils";
 import {
@@ -33,11 +34,9 @@ import {
   ChevronRight,
   Archive,
 } from "lucide-react";
-import { renderToString } from "react-dom/server";
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import ArchivePreviewModal from "./ArchivePreviewModal";
-
 declare const pdfjsLib: any;
 declare const ePub: any;
 
@@ -268,18 +267,14 @@ const CodePreview: React.FC<{ src: string; fileName: string }> = ({
 
 const DefaultPreview: React.FC<{ mimeType: string }> = ({ mimeType }) => {
   const IconComponent = getIcon(mimeType);
-  const iconString = renderToString(
-    <IconComponent size={256} className="text-primary/20" />,
-  );
   return (
-    <div
-      className="flex flex-col items-center justify-center h-full gap-4"
-      dangerouslySetInnerHTML={{ __html: iconString }}
-    />
+    <div className="flex flex-col items-center justify-center h-full gap-4">
+      <IconComponent size={256} className="text-primary/20" />
+    </div>
   );
 };
 
-const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024; 
+const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024;
 
 export default function FileDetail({
   file,
@@ -317,6 +312,12 @@ export default function FileDetail({
 
   const fileType = getFileType(file);
   const fileSize = parseInt(file.size || "0", 10);
+  const isDefaultPreview =
+    (fileType === "markdown" && !showTextPreview) ||
+    (fileType === "code" && !showTextPreview) ||
+    fileType === "archive" ||
+    fileType === "other";
+
   const isArchive = fileType === "archive";
   const isArchivePreviewable = isArchive && fileSize <= ARCHIVE_PREVIEW_LIMIT_BYTES;
 
@@ -406,7 +407,6 @@ export default function FileDetail({
     }
     return url;
   }, [file.id, shareToken]);
-
   const isEditable =
     user?.role === "ADMIN" && (fileType === "code" || fileType === "markdown");
   const isTextPreviewable = fileType === "code" || fileType === "markdown";
@@ -579,7 +579,13 @@ export default function FileDetail({
             </div>
           )}
 
-          <div className="w-full flex-1 flex items-start justify-center overflow-hidden bg-muted/20 rounded-lg border">
+          <div
+            className={cn(
+              "w-full flex-1 flex items-start justify-center overflow-hidden",
+              !isEditing && !isDefaultPreview && "bg-muted/20 rounded-lg border",
+              isEditing && "rounded-lg border",
+            )}
+          >
             {isEditing && isEditable && !isModal ? (
               isFetchingEditableContent ? (
                 <LoadingPreview />
