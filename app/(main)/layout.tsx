@@ -52,6 +52,7 @@ export default function MainLayout({
     detailsFile,
     setDetailsFile,
     fetchConfig,
+    user,
   } = useAppStore();
   const { status } = useSession();
 
@@ -60,9 +61,15 @@ export default function MainLayout({
 
     if (status === "authenticated") {
       fetchUser();
+    }
+  }, [status, fetchUser, fetchConfig, refreshKey]);
+
+  useEffect(() => {
+    if (user && !user.isGuest) {
       fetchDataUsage();
     }
-  }, [status, fetchUser, fetchDataUsage, refreshKey, fetchConfig]);
+  }, [user, fetchDataUsage, refreshKey]);
+
   useEffect(() => {
     document.documentElement.className = theme;
     document.documentElement.style.colorScheme = theme;

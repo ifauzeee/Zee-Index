@@ -7,6 +7,7 @@ export async function middleware(request: NextRequest) {
   const publicPaths = [
     "/login",
     "/api/auth/callback/google",
+    "/api/auth/callback/guest", // <--- TAMBAHKAN BARIS INI
     "/api/auth/signin",
     "/api/auth/error",
     "/api/auth/providers",
@@ -17,11 +18,17 @@ export async function middleware(request: NextRequest) {
     "/api/config/public",
   ];
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
+
+  if (isPublicPath) {
+    return NextResponse.next();
+  }
+
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
   });
-  if (!isPublicPath && !token) {
+
+  if (!token) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);

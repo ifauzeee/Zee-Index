@@ -205,7 +205,6 @@ export const useAppStore = create<AppState>()(
             (link) => link.id !== linkToRemove.id,
           ),
         }));
-
         try {
           const response = await fetch("/api/share/delete", {
             method: "POST",
@@ -285,7 +284,6 @@ export const useAppStore = create<AppState>()(
             (adminEmail) => adminEmail !== email,
           ),
         }));
-
         try {
           const response = await fetch("/api/admin/users", {
             method: "DELETE",
@@ -347,7 +345,7 @@ export const useAppStore = create<AppState>()(
       fetchConfig: async () => {
         set({ isConfigLoading: true });
         try {
-          const response = await fetch("/api/admin/config");
+          const response = await fetch("/api/config/public");
           const config: AppConfig = await response.json();
           set({
             hideAuthor: config.hideAuthor || false,
@@ -355,7 +353,7 @@ export const useAppStore = create<AppState>()(
           });
         } catch (error) {
           console.error("Gagal fetch config:", error);
-          set({ hideAuthor: false, disableGuestLogin: false });
+          set({ hideAuthor: true, disableGuestLogin: true });
         } finally {
           set({ isConfigLoading: false });
         }
