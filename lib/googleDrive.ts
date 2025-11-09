@@ -33,6 +33,7 @@ interface StorageBreakdown {
 }
 
 const ACCESS_TOKEN_KEY = "google:access-token";
+
 async function fetchWithRetry(
   url: string,
   options: RequestInit,
@@ -97,6 +98,7 @@ export async function getAccessToken(): Promise<string> {
 
   const tokenData: { access_token: string; expires_in: number } =
     await response.json();
+
   try {
     await kv.set(ACCESS_TOKEN_KEY, tokenData.access_token, { ex: 3000 });
   } catch (e) {
@@ -184,42 +186,51 @@ export async function getAllDescendantFolders(
   return folderArray;
 }
 
-async function fetchAllFilesFromSingleFolder(
+async function fetchAllFilesRecursively(
   accessToken: string,
-  folderId: string,
+  rootFolderId: string,
 ): Promise<any[]> {
-  let files: any[] = [];
-  let pageToken: string | null = null;
+  let allFiles: any[] = [];
+  const queue: string[] = [rootFolderId];
   const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3/files";
 
-  do {
-    const params = new URLSearchParams({
-      q: `'${folderId}' in parents and trashed=false and mimeType != 'application/vnd.google-apps.folder'`,
-      fields: "nextPageToken, files(id, name, mimeType, size, parents)",
-      pageSize: "1000",
-    });
-    if (pageToken) params.set("pageToken", pageToken);
+  while (queue.length > 0) {
+    const folderId = queue.shift()!;
+    let pageToken: string | null = null;
 
-    const response = await fetchWithRetry(
-      `${GOOGLE_DRIVE_API_URL}?${params.toString()}`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-        cache: "no-store",
-      },
-    );
-    if (!response.ok) {
-      console.error(`Gagal mengambil file dari folder ${folderId}`);
-      break;
-    }
-    const data: { files?: any[]; nextPageToken?: string | null } =
-      await response.json();
-    if (data.files) {
-      files = files.concat(data.files);
-    }
-    pageToken = data.nextPageToken ?? null;
-  } while (pageToken);
+    do {
+      const params = new URLSearchParams({
+        q: `'${folderId}' in parents and trashed=false`,
+        fields: "nextPageToken, files(id, name, mimeType, size, parents)",
+        pageSize: "1000",
+      });
+      if (pageToken) params.set("pageToken", pageToken);
 
-  return files;
+      const response = await fetchWithRetry(
+        `${GOOGLE_DRIVE_API_URL}?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          cache: "no-store",
+        },
+      );
+      if (!response.ok) {
+        console.error(`Gagal mengambil file dari folder ${folderId}`);
+        break;
+      }
+      const data: { files?: any[]; nextPageToken?: string | null } =
+        await response.json();
+      if (data.files) {
+        allFiles = allFiles.concat(data.files);
+        const subFolders = data.files.filter(
+          (file: any) => file.mimeType === "application/vnd.google-apps.folder",
+        );
+        queue.push(...subFolders.map((folder: any) => folder.id));
+      }
+      pageToken = data.nextPageToken ?? null;
+    } while (pageToken);
+  }
+
+  return allFiles;
 }
 
 export async function listFilesFromDrive(
@@ -368,14 +379,7 @@ export async function getStorageDetails() {
   const usage = parseInt(aboutData.storageQuota.usage, 10);
   const limit = parseInt(aboutData.storageQuota.limit, 10);
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
-
-  const allFolderIds = await getAllDescendantFolders(accessToken, rootFolderId);
-  const fileFetchPromises = allFolderIds.map((folderId) =>
-    fetchAllFilesFromSingleFolder(accessToken, folderId),
-  );
-  const allFileArrays = await Promise.all(fileFetchPromises);
-  const allFiles = allFileArrays.flat();
-
+  const allFiles = await fetchAllFilesRecursively(accessToken, rootFolderId);
   const largestFiles = allFiles
     .filter(
       (file: DriveFile) =>
