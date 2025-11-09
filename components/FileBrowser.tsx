@@ -37,21 +37,16 @@ import DetailsPanel from "./DetailsPanel";
 import { cn, getFileType, formatBytes } from "@/lib/utils";
 import { useFileActions } from "@/hooks/useFileActions";
 import ArchivePreviewModal from "./ArchivePreviewModal";
+import { useFileFetching } from "@/hooks/useFileFetching";
+import { useUpload } from "@/hooks/useUpload";
+import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 
 interface HistoryItem {
   id: string;
   name: string;
 }
 
-interface UploadProgress {
-  name: string;
-  progress: number;
-  status: "uploading" | "success" | "error";
-  error?: string;
-}
-
 const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024;
-
 export default function FileBrowser({
   initialFolderId,
 }: {
@@ -60,26 +55,14 @@ export default function FileBrowser({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status: sessionStatus } = useSession();
-  const [files, setFiles] = useState<DriveFile[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [history, setHistory] = useState<HistoryItem[]>([]);
+
   const [authModal, setAuthModal] = useState<{
     isOpen: boolean;
     folderId: string;
     folderName: string;
   }>({ isOpen: false, folderId: "", folderName: "" });
   const [isAuthLoading, setIsAuthLoading] = useState(false);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [droppedFiles, setDroppedFiles] = useState<FileList | null>(null);
-  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
-  const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
-  const loaderRef = useRef<HTMLDivElement | null>(null);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [uploads, setUploads] = useState<Record<string, UploadProgress>>({});
-  const [dragOverBreadcrumb, setDragOverBreadcrumb] = useState<string | null>(
-    null,
-  );
 
   const {
     sort,
@@ -105,10 +88,66 @@ export default function FileBrowser({
     detailsFile,
     setDetailsFile,
   } = useAppStore();
-  const currentFolderId =
-    history.length > 0
-      ? history[history.length - 1]?.id
-      : initialFolderId || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
+
+  const {
+    files,
+    setFiles,
+    history,
+    setHistory,
+    isLoading,
+    setIsLoading,
+    isFetchingNextPage,
+    nextPageToken,
+    currentFolderId,
+    loaderRef,
+    fetchFiles,
+  } = useFileFetching({
+    initialFolderId,
+    shareToken,
+    folderTokens,
+    addToast,
+    router,
+    refreshKey,
+  });
+
+  const isGuest = user?.isGuest === true;
+  const isAdmin = user?.role === "ADMIN" && !isGuest;
+
+  const {
+    uploads,
+    isUploadModalOpen,
+    droppedFiles,
+    isDragging,
+    handleFileUpload,
+    setIsUploadModalOpen,
+    setDroppedFiles,
+    handleDragOver,
+    handleDragLeave,
+    handleDropUpload,
+  } = useUpload({
+    currentFolderId,
+    isAdmin,
+    triggerRefresh,
+  });
+
+  const {
+    isDropMoving,
+    dragOverBreadcrumb,
+    handleDragStart,
+    onDropOnFolder,
+    onDropOnBreadcrumb,
+    handleBreadcrumbDragOver,
+    handleBreadcrumbDragLeave,
+  } = useDragAndDrop({
+    isAdmin,
+    isBulkMode,
+    selectedFiles,
+    currentFolderId,
+    triggerRefresh,
+    clearSelection,
+    addToast,
+  });
+
   const {
     contextMenu,
     setContextMenu,
@@ -128,6 +167,7 @@ export default function FileBrowser({
     handleDelete,
     handleMove,
   } = useFileActions(files, setFiles, currentFolderId);
+
   useEffect(() => {
     if (sessionStatus === "authenticated" && !user) {
       fetchUser();
@@ -173,145 +213,10 @@ export default function FileBrowser({
       document.body.classList.remove("mobile-menu-open");
     };
   }, [contextMenu, detailsFile, previewFile, archivePreview]);
-  const isGuest = user?.isGuest === true;
-  const isAdmin = user?.role === "ADMIN" && !isGuest;
+
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
-  const handleFetchError = useCallback(
-    async (
-      response: Response,
-      defaultMessage: string,
-      folderId: string,
-      folderName: string,
-    ) => {
-      const errorData = await response.json();
-      if (response.status === 401) {
-        if (errorData.protected) {
-          setAuthModal({ isOpen: true, folderId, folderName });
-        } else {
-          addToast({
-            message: "Sesi Anda telah berakhir. Silakan login kembali.",
-            type: "error",
-          });
-          if (!shareToken) {
-            router.push("/login?error=SessionExpired");
-          }
-        }
-      } else {
-        addToast({
-          message: errorData.error || defaultMessage,
-          type: "error",
-        });
-      }
-      setIsLoading(false);
-    },
-    [addToast, router, shareToken],
-  );
-  const fetchFiles = useCallback(
-    async (folderId: string, folderName: string) => {
-      setIsLoading(true);
-      setFiles([]);
-      setNextPageToken(null);
-      setActiveFileId(null);
-      try {
-        const url = new URL(window.location.origin + "/api/files");
-        url.searchParams.append("folderId", folderId);
-        if (shareToken) {
-          url.searchParams.append("share_token", shareToken);
-        }
 
-        const headers = new Headers();
-        const folderAuthToken = folderTokens[folderId];
-        if (folderAuthToken) {
-          headers.append("Authorization", `Bearer ${folderAuthToken}`);
-        }
-
-        const response = await fetch(url.toString(), {
-          headers,
-          credentials: "include",
-        });
-
-        if (!response.ok) {
-          await handleFetchError(
-            response,
-            "Gagal mengambil data file.",
-            folderId,
-            folderName,
-          );
-          return;
-        }
-        const data = await response.json();
-        setFiles(data.files || []);
-        setNextPageToken(data.nextPageToken || null);
-      } catch (error) {
-        addToast({ message: "Terjadi kesalahan jaringan.", type: "error" });
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [folderTokens, handleFetchError, addToast, shareToken],
-  );
-  const fetchNextPage = useCallback(async () => {
-    if (isFetchingNextPage || !nextPageToken || !currentFolderId) return;
-
-    setIsFetchingNextPage(true);
-    try {
-      const url = new URL(window.location.origin + "/api/files");
-      url.searchParams.append("folderId", currentFolderId);
-      url.searchParams.append("pageToken", nextPageToken);
-      if (shareToken) {
-        url.searchParams.append("share_token", shareToken);
-      }
-      const headers = new Headers();
-      const folderAuthToken = folderTokens[currentFolderId];
-      if (folderAuthToken) {
-        headers.append("Authorization", `Bearer ${folderAuthToken}`);
-      }
-
-      const response = await fetch(url.toString(), {
-        headers,
-        credentials: "include",
-      });
-      if (!response.ok) {
-        throw new Error("Gagal memuat item berikutnya.");
-      }
-      const data = await response.json();
-      setFiles((prevFiles) => [...prevFiles, ...(data.files || [])]);
-      setNextPageToken(data.nextPageToken || null);
-    } catch (error: any) {
-      addToast({ message: error.message, type: "error" });
-    } finally {
-      setIsFetchingNextPage(false);
-    }
-  }, [
-    isFetchingNextPage,
-    nextPageToken,
-    currentFolderId,
-    shareToken,
-    folderTokens,
-    addToast,
-  ]);
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 1.0 },
-    );
-
-    const currentLoader = loaderRef.current;
-    if (currentLoader) {
-      observer.observe(currentLoader);
-    }
-
-    return () => {
-      if (currentLoader) {
-        observer.unobserve(currentLoader);
-      }
-    };
-  }, [fetchNextPage]);
   useEffect(() => {
     if (sessionStatus === "loading" && !shareToken) {
       setIsLoading(true);
@@ -321,43 +226,16 @@ export default function FileBrowser({
       router.push("/login?callbackUrl=" + window.location.pathname);
       return;
     }
+  }, [sessionStatus, shareToken, router]);
 
-    const rootFolder = {
-      id: process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!,
-      name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Beranda",
-    };
-    const folderToLoad = initialFolderId || rootFolder.id;
-
-    const currentFolder =
-      history.length > 0 ? history[history.length - 1] : null;
-    if (!currentFolder || currentFolder.id !== folderToLoad) {
-      if (folderToLoad === rootFolder.id) {
-        setHistory([rootFolder]);
-      } else {
-        const fetchPath = async () => {
-          try {
-            const url = new URL(`/api/folderpath`, window.location.origin);
-            url.searchParams.set("folderId", folderToLoad);
-            const response = await fetch(url.toString());
-            if (!response.ok) throw new Error("Gagal memuat path folder.");
-            const path = await response.json();
-            setHistory([rootFolder, ...path]);
-          } catch (error) {
-            addToast({
-              message: "Gagal memuat path, kembali ke Beranda.",
-              type: "error",
-            });
-            router.push("/");
-          }
-        };
-        fetchPath();
-      }
-    }
-  }, [initialFolderId, sessionStatus, shareToken, router, addToast, history]);
   useEffect(() => {
     const currentFolder = history[history.length - 1];
     if (currentFolder) {
-      fetchFiles(currentFolder.id, currentFolder.name);
+      fetchFiles(currentFolder.id, currentFolder.name).then(result => {
+        if(result?.authModal) {
+            setAuthModal(result.authModal);
+        }
+      });
     }
   }, [refreshKey, history, fetchFiles]);
   const handleItemClick = (file: DriveFile) => {
@@ -471,221 +349,6 @@ export default function FileBrowser({
         }
       });
   }, [files, sort, favorites]);
-  const updateUploadProgress = useCallback(
-    (
-      fileName: string,
-      progress: number,
-      status: "uploading" | "success" | "error",
-      error?: string,
-    ) => {
-      setUploads((prev) => ({
-        ...prev,
-        [fileName]: { name: fileName, progress, status, error },
-      }));
-      if (status === "success" || status === "error") {
-        setTimeout(() => {
-          setUploads((prev) => {
-            const newUploads = { ...prev };
-            delete newUploads[fileName];
-            return newUploads;
-          });
-        }, 5000);
-      }
-    },
-    [setUploads],
-  );
-  const handleFileUpload = useCallback(
-    async (files: FileList | null) => {
-      if (!files || files.length === 0 || !currentFolderId || !isAdmin) return;
-
-      for (const file of Array.from(files)) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("parentId", currentFolderId);
-
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", "/api/files/upload", true);
-
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const percentComplete = (event.loaded / event.total) * 100;
-            updateUploadProgress(file.name, percentComplete, "uploading");
-          }
-        };
-
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            updateUploadProgress(file.name, 100, "success");
-            triggerRefresh();
-          } else {
-            try {
-              const errorResponse = JSON.parse(xhr.responseText);
-              updateUploadProgress(
-                file.name,
-                0,
-                "error",
-                errorResponse.error || "Upload gagal",
-              );
-            } catch {
-              updateUploadProgress(
-                file.name,
-                0,
-                "error",
-                "Terjadi kesalahan server",
-              );
-            }
-          }
-        };
-        xhr.onerror = () => {
-          updateUploadProgress(
-            file.name,
-            0,
-            "error",
-            "Kesalahan jaringan saat mengunggah",
-          );
-        };
-
-        updateUploadProgress(file.name, 0, "uploading");
-        xhr.send(formData);
-      }
-    },
-    [currentFolderId, triggerRefresh, isAdmin, updateUploadProgress],
-  );
-
-  const handleDragStart = (e: React.DragEvent, file: DriveFile) => {
-    if (!isAdmin) {
-      e.preventDefault();
-      return;
-    }
-
-    let filesToDrag: DriveFile[];
-    const fileIsSelected = selectedFiles.some((f) => f.id === file.id);
-
-    if (isBulkMode && fileIsSelected) {
-      filesToDrag = selectedFiles;
-    } else {
-      filesToDrag = [file];
-    }
-
-    const dragData = {
-      type: "files",
-      files: filesToDrag,
-      sourceFolderId: currentFolderId,
-    };
-
-    e.dataTransfer.setData("application/json", JSON.stringify(dragData));
-    e.dataTransfer.effectAllowed = "move";
-  };
-
-  const handleDropMove = async (
-    filesToMove: DriveFile[],
-    sourceFolderId: string,
-    newParentId: string,
-  ) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch("/api/files/bulk-move", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fileIds: filesToMove.map((f) => f.id),
-          currentParentId: sourceFolderId,
-          newParentId,
-        }),
-      });
-      const result = await response.json();
-      if (!response.ok && response.status !== 207)
-        throw new Error(result.error || "Gagal memindahkan item.");
-      addToast({
-        message: result.message,
-        type: response.ok ? "success" : "info",
-      });
-      triggerRefresh();
-      clearSelection();
-    } catch (error: any) {
-      addToast({ message: error.message, type: "error" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const onDropOnFolder = (e: React.DragEvent, targetFolder: DriveFile) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    let data;
-    try {
-      data = JSON.parse(e.dataTransfer.getData("application/json"));
-    } catch (err) {
-      return;
-    }
-
-    if (data.type !== "files" || !data.files || !data.sourceFolderId) return;
-    if (data.sourceFolderId === targetFolder.id) return;
-    if (data.files.some((f: DriveFile) => f.id === targetFolder.id)) return;
-
-    handleDropMove(data.files, data.sourceFolderId, targetFolder.id);
-  };
-
-  const onDropOnBreadcrumb = (
-    e: React.DragEvent,
-    targetFolder: { id: string },
-  ) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOverBreadcrumb(null);
-
-    let data;
-    try {
-      data = JSON.parse(e.dataTransfer.getData("application/json"));
-    } catch (err) {
-      return;
-    }
-
-    if (data.type !== "files" || !data.files || !data.sourceFolderId) return;
-    if (data.sourceFolderId === targetFolder.id) return;
-    if (data.files.some((f: DriveFile) => f.id === targetFolder.id)) return;
-
-    handleDropMove(data.files, data.sourceFolderId, targetFolder.id);
-  };
-
-  const handleDragOver = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (isAdmin) {
-        setIsDragging(true);
-      }
-    },
-    [isAdmin],
-  );
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  }, []);
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDragging(false);
-      if (isAdmin && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        handleFileUpload(e.dataTransfer.files);
-      }
-    },
-    [isAdmin, handleFileUpload],
-  );
-  const handleBreadcrumbDragOver = (e: React.DragEvent, folderId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOverBreadcrumb(folderId);
-    e.dataTransfer.dropEffect = "move";
-  };
-  const handleBreadcrumbDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOverBreadcrumb(null);
-  };
 
   const handleQuickShare = (e: React.MouseEvent, file: DriveFile) => {
     e.stopPropagation();
@@ -721,7 +384,7 @@ export default function FileBrowser({
       className="relative"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
+      onDrop={handleDropUpload}
     >
       <AnimatePresence>
         {authModal.isOpen && (
