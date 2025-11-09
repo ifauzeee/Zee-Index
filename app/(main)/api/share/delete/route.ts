@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { kv } from "@/lib/kv";
 import type { ShareLink } from "@/lib/store";
-
 const SHARE_LINKS_KEY = "zee-index:share-links";
 
 export async function POST(req: NextRequest) {
@@ -14,7 +13,6 @@ export async function POST(req: NextRequest) {
     }
 
     const { id, jti, expiresAt } = await req.json();
-
     if (!id || !jti || !expiresAt) {
       return NextResponse.json(
         { error: "ID, JTI, dan expiresAt diperlukan." },
@@ -27,7 +25,6 @@ export async function POST(req: NextRequest) {
     const expiresInSeconds = Math.round(
       (expirationDate.getTime() - now.getTime()) / 1000,
     );
-
     if (expiresInSeconds > 0) {
       await kv.set(`zee-index:blocked:${jti}`, "blocked", {
         ex: expiresInSeconds,
@@ -37,6 +34,8 @@ export async function POST(req: NextRequest) {
     const existingLinks: ShareLink[] = (await kv.get(SHARE_LINKS_KEY)) || [];
     const updatedLinks = existingLinks.filter((link) => link.id !== id);
     await kv.set(SHARE_LINKS_KEY, updatedLinks);
+
+    await kv.del(`zee-index:share-view-count:${jti}`);
 
     return NextResponse.json({
       success: true,

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { DriveFile } from "./googleDrive";
+import { kv } from "@vercel/kv";
 
 export interface Toast {
   id: string;
@@ -93,6 +94,8 @@ interface AppState {
   setConfig: (config: Partial<AppConfig>) => Promise<void>;
 }
 
+const SHARE_LINKS_KEY = "zee-index:share-links";
+
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
@@ -175,16 +178,28 @@ export const useAppStore = create<AppState>()(
       shareLinks: [],
       fetchShareLinks: async () => {
         try {
-          const response = await fetch("/api/share/list");
-          if (!response.ok) {
-            throw new Error("Gagal mengambil daftar tautan berbagi.");
+          const links: ShareLink[] = (await kv.get(SHARE_LINKS_KEY)) || [];
+          if (links.length === 0) {
+            set({ shareLinks: [] });
+            return;
           }
-          const links: ShareLink[] = await response.json();
-          links.sort(
+
+          const countKeys = links.map(
+            (link) => `zee-index:share-view-count:${link.jti}`,
+          );
+          const counts: (number | null)[] =
+            countKeys.length > 0 ? await kv.mget(...countKeys) : [];
+
+          const linksWithCounts = links.map((link, index) => ({
+            ...link,
+            viewCount: counts[index] || 0,
+          }));
+
+          linksWithCounts.sort(
             (a, b) =>
               new Date(b.expiresAt).getTime() - new Date(a.expiresAt).getTime(),
           );
-          set({ shareLinks: links });
+          set({ shareLinks: linksWithCounts });
         } catch (error: any) {
           get().addToast({ message: error.message, type: "error" });
         }
