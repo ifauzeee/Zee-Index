@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
   const shareToken = searchParams.get("share_token");
 
   let isShareTokenValid = false;
-
   if (shareToken) {
     try {
       const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
@@ -43,7 +42,6 @@ export async function GET(request: NextRequest) {
   try {
     const accessToken = await getAccessToken();
     const fileDetails = await getFileDetailsFromDrive(fileId);
-
     if (!fileDetails || !fileDetails.size) {
       return NextResponse.json(
         { error: "File tidak ditemukan atau ukurannya tidak diketahui." },
@@ -51,11 +49,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    await logActivity("DOWNLOAD", {
-      itemName: fileDetails.name,
-      itemSize: fileDetails.size,
-      userEmail: session?.user?.email,
-    });
+    // !! logActivity TELAH DIHAPUS DARI SINI !!
 
     const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
     const fileSize = parseInt(fileDetails.size, 10);
@@ -64,8 +58,10 @@ export async function GET(request: NextRequest) {
     const headers = new Headers({
       Authorization: `Bearer ${accessToken}`,
     });
-
+    
     if (range) {
+      // Ini adalah blok streaming (buffering) ATAU download chunk
+      // Kita TIDAK mencatat log di sini
       headers.set("Range", range);
       const driveResponse = await fetch(driveUrl, { headers });
       const partialBody = driveResponse.body;
@@ -87,9 +83,16 @@ export async function GET(request: NextRequest) {
         headers: responseHeaders,
       });
     } else {
+      // Ini adalah blok unduhan penuh (bukan range request)
+      // Kita HANYA mencatat log di sini
+      await logActivity("DOWNLOAD", {
+        itemName: fileDetails.name,
+        itemSize: fileDetails.size,
+        userEmail: session?.user?.email,
+      });
+
       const driveResponse = await fetch(driveUrl, { headers });
       const body = driveResponse.body;
-
       const responseHeaders = new Headers();
       const fileName = fileDetails.name || "download";
       responseHeaders.set(
