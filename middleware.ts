@@ -4,10 +4,11 @@ import { getToken } from "next-auth/jwt";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
   const publicPaths = [
     "/login",
     "/api/auth/callback/google",
-    "/api/auth/callback/guest", // <--- TAMBAHKAN BARIS INI
+    "/api/auth/callback/guest",
     "/api/auth/signin",
     "/api/auth/error",
     "/api/auth/providers",
@@ -16,7 +17,15 @@ export async function middleware(request: NextRequest) {
     "/icon.png",
     "/verify-2fa",
     "/api/config/public",
+    "/folder",
+    "/share",
+    "/api/files",
+    "/api/download",
+    "/api/share/items",
+    "/api/folderpath",
+    "/api/share/status",
   ];
+
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
 
   if (isPublicPath) {

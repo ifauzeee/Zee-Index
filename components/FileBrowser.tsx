@@ -40,6 +40,7 @@ import ArchivePreviewModal from "./ArchivePreviewModal";
 import { useFileFetching } from "@/hooks/useFileFetching";
 import { useUpload } from "@/hooks/useUpload";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
+import { jwtDecode } from "jwt-decode";
 
 interface HistoryItem {
   id: string;
@@ -109,10 +110,8 @@ export default function FileBrowser({
     router,
     refreshKey,
   });
-
   const isGuest = user?.isGuest === true;
   const isAdmin = user?.role === "ADMIN" && !isGuest;
-
   const {
     uploads,
     isUploadModalOpen,
@@ -129,7 +128,6 @@ export default function FileBrowser({
     isAdmin,
     triggerRefresh,
   });
-
   const {
     isDropMoving,
     dragOverBreadcrumb,
@@ -147,7 +145,6 @@ export default function FileBrowser({
     clearSelection,
     addToast,
   });
-
   const {
     contextMenu,
     setContextMenu,
@@ -167,19 +164,84 @@ export default function FileBrowser({
     handleDelete,
     handleMove,
   } = useFileActions(files, setFiles, currentFolderId);
-
   useEffect(() => {
     if (sessionStatus === "authenticated" && !user) {
       fetchUser();
       fetchFavorites();
     }
   }, [sessionStatus, user, fetchUser, fetchFavorites]);
+
+  const validateShareToken = useCallback(
+    async (token: string) => {
+      try {
+        const res = await fetch("/api/share/status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ shareToken: token }),
+        });
+        const data = await res.json();
+
+        if (!data.valid) {
+          addToast({
+            message: "Tautan berbagi ini tidak valid atau telah dicabut.",
+            type: "error",
+          });
+          router.push("/login?error=ShareLinkRevoked");
+        }
+      } catch (e) {
+        addToast({
+          message: "Gagal memvalidasi tautan berbagi.",
+          type: "error",
+        });
+        router.push("/login?error=InvalidOrExpiredShareLink");
+      }
+    },
+    [addToast, router],
+  );
+
   useEffect(() => {
     const currentShareToken = searchParams.get("share_token");
+
     if (currentShareToken) {
       setShareToken(currentShareToken);
+      validateShareToken(currentShareToken);
+
+      try {
+        const decodedToken: { exp: number } = jwtDecode(currentShareToken);
+        const expirationTime = decodedToken.exp * 1000;
+        const currentTime = Date.now();
+        const timeUntilExpiration = expirationTime - currentTime;
+
+        if (timeUntilExpiration > 0) {
+          const timer = setTimeout(() => {
+            addToast({
+              message: "Sesi berbagi Anda telah berakhir.",
+              type: "info",
+            });
+            router.push("/login?error=InvalidOrExpiredShareLink");
+          }, timeUntilExpiration);
+
+          return () => clearTimeout(timer);
+        } else {
+          addToast({
+            message: "Tautan berbagi ini telah kedaluwarsa.",
+            type: "error",
+          });
+          router.push("/login?error=InvalidOrExpiredShareLink");
+        }
+      } catch (error) {
+        console.error("Token tidak valid:", error);
+        addToast({
+          message: "Tautan berbagi tidak valid.",
+          type: "error",
+        });
+        router.push("/login?error=InvalidOrExpiredShareLink");
+      }
+    } else {
+      setShareToken(null);
     }
-  }, [searchParams, setShareToken]);
+  }, [searchParams, setShareToken, addToast, router, validateShareToken]);
+
   useEffect(() => {
     setCurrentFolderId(currentFolderId);
   }, [currentFolderId, setCurrentFolderId]);
@@ -213,10 +275,8 @@ export default function FileBrowser({
       document.body.classList.remove("mobile-menu-open");
     };
   }, [contextMenu, detailsFile, previewFile, archivePreview]);
-
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
-
   useEffect(() => {
     if (sessionStatus === "loading" && !shareToken) {
       setIsLoading(true);
@@ -227,7 +287,6 @@ export default function FileBrowser({
       return;
     }
   }, [sessionStatus, shareToken, router]);
-
   useEffect(() => {
     const currentFolder = history[history.length - 1];
     if (currentFolder) {
@@ -349,7 +408,6 @@ export default function FileBrowser({
         }
       });
   }, [files, sort, favorites]);
-
   const handleQuickShare = (e: React.MouseEvent, file: DriveFile) => {
     e.stopPropagation();
     if (user?.role !== "ADMIN") {
