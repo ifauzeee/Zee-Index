@@ -3,13 +3,16 @@ import { getAccessToken } from "@/lib/googleDrive";
 import { type Session } from "next-auth";
 import { invalidateFolderCache } from "@/lib/cache";
 import { withAdminSession } from "@/lib/api-middleware";
+import { logActivity } from "@/lib/activityLogger";
 
 export const POST = withAdminSession(
   async (request: NextRequest, context: {}, session: Session) => {
+    let file: File | null = null;
+    let parentId: string | null = null;
     try {
       const formData = await request.formData();
-      const file = formData.get("file") as File | null;
-      const parentId = formData.get("parentId") as string | null;
+      file = formData.get("file") as File | null;
+      parentId = formData.get("parentId") as string | null;
 
       if (!file || !parentId) {
         return NextResponse.json(
@@ -45,7 +48,6 @@ export const POST = withAdminSession(
           body,
         },
       );
-
       const data = await response.json();
       if (!response.ok) {
         throw new Error(
@@ -55,8 +57,21 @@ export const POST = withAdminSession(
 
       await invalidateFolderCache(parentId);
 
+      await logActivity("UPLOAD", {
+        itemName: data.name,
+        itemSize: data.size,
+        userEmail: session.user?.email,
+        status: "success",
+      });
+
       return NextResponse.json(data, { status: 200 });
     } catch (error: any) {
+      await logActivity("UPLOAD", {
+        itemName: file?.name || "Unknown file",
+        userEmail: session.user?.email,
+        status: "failure",
+        error: error.message,
+      });
       console.error("Upload API Error:", error);
       return NextResponse.json(
         { error: error.message || "Internal Server Error." },

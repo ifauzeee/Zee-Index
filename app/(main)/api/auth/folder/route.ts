@@ -37,7 +37,6 @@ export async function POST(request: NextRequest) {
     const maxLength = Math.max(id.length, folderConfig.id.length);
     const paddedId = id.padEnd(maxLength, "\0");
     const paddedConfigId = folderConfig.id.padEnd(maxLength, "\0");
-
     const isIdValid = crypto.timingSafeEqual(
       Buffer.from(paddedId, "utf8"),
       Buffer.from(paddedConfigId, "utf8"),
@@ -46,7 +45,6 @@ export async function POST(request: NextRequest) {
       password,
       folderConfig.password,
     );
-
     if (isIdValid && isPasswordValid) {
       const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
       const token = await new SignJWT({ folderId: folderId })
@@ -54,19 +52,12 @@ export async function POST(request: NextRequest) {
         .setIssuedAt()
         .setExpirationTime("1h")
         .sign(secret);
-
       return NextResponse.json({ success: true, token }, { status: 200 });
     } else {
-      if (!isIdValid && !isPasswordValid) {
-        return NextResponse.json(
-          { error: "ID dan password salah." },
-          { status: 401 },
-        );
-      } else if (!isIdValid) {
-        return NextResponse.json({ error: "ID salah." }, { status: 401 });
-      } else {
-        return NextResponse.json({ error: "Password salah." }, { status: 401 });
-      }
+      return NextResponse.json(
+        { error: "ID atau password salah." },
+        { status: 401 },
+      );
     }
   } catch (error) {
     console.error("Folder Auth API error:", error);
