@@ -1,5 +1,8 @@
 import { jwtVerify } from "jose";
 import { kv } from "@vercel/kv";
+import { NextRequest } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/authOptions";
 
 const privateFolderIds = (process.env.PRIVATE_FOLDER_IDS || "")
   .split(",")
@@ -63,6 +66,36 @@ export async function hasUserAccess(
     return result === 1;
   } catch (error) {
     console.error("Gagal memeriksa akses folder pengguna:", error);
+    return false;
+  }
+}
+
+export async function validateShareToken(
+  request: NextRequest,
+): Promise<boolean> {
+  const { searchParams } = new URL(request.url);
+  const shareToken = searchParams.get("share_token");
+  if (!shareToken) return false;
+
+  try {
+    const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
+    const { payload } = await jwtVerify(shareToken, secret);
+
+    if (typeof payload.jti !== "string") {
+      return false;
+    }
+    const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);
+    if (isBlocked) {
+      console.warn(`Akses ditolak untuk token yang diblokir: ${payload.jti}`);
+      return false;
+    }
+
+    if (payload.loginRequired) {
+      const session = await getServerSession(authOptions);
+      return !!session;
+    }
+    return true;
+  } catch (error) {
     return false;
   }
 }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import {
   getAccessToken,
   DriveFile,
@@ -6,9 +6,11 @@ import {
   searchFilesInFolder,
 } from "@/lib/googleDrive";
 import { isProtected } from "@/lib/auth";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/authOptions";
+import { validateShareToken } from "@/lib/auth";
 
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
-
 const getMimeQuery = (mimeType?: string | null) => {
   switch (mimeType) {
     case "image":
@@ -47,15 +49,23 @@ const getDateQuery = (modifiedTime?: string | null) => {
 };
 
 export const dynamic = "force-dynamic";
+export async function GET(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  const isShareAuth = await validateShareToken(request);
 
-export async function GET(request: Request) {
+  if (!session && !isShareAuth) {
+    return NextResponse.json(
+      { error: "Authentication required." },
+      { status: 401 },
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const rawSearchTerm = searchParams.get("q");
   const searchType = searchParams.get("searchType") || "name";
   const mimeType = searchParams.get("mimeType");
   const modifiedTime = searchParams.get("modifiedTime");
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
-
   if (!rawSearchTerm) {
     return NextResponse.json(
       { error: "Search term is required." },
@@ -71,19 +81,15 @@ export async function GET(request: Request) {
 
   const sanitizedSearchTerm = sanitizeString(rawSearchTerm);
   const searchTerm = sanitizedSearchTerm.replace(/'/g, "''");
-
   try {
     const accessToken = await getAccessToken();
-
     const descendantFolderIds = await getAllDescendantFolders(
       accessToken,
       rootFolderId,
     );
-
     const queryField = searchType === "fullText" ? "fullText" : "name";
     const mimeQuery = getMimeQuery(mimeType);
     const dateQuery = getDateQuery(modifiedTime);
-
     const searchPromises = descendantFolderIds.map((folderId) =>
       searchFilesInFolder(
         accessToken,
@@ -94,7 +100,6 @@ export async function GET(request: Request) {
         dateQuery,
       ),
     );
-
     const results = await Promise.allSettled(searchPromises);
 
     let allFiles: DriveFile[] = [];
@@ -122,7 +127,6 @@ export async function GET(request: Request) {
           isProtected(file.id),
       }),
     );
-
     return NextResponse.json({ files: processedFiles });
   } catch (error: any) {
     console.error("Global Search API Error:", error.message);

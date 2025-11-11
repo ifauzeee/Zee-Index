@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { getAccessToken } from "@/lib/googleDrive";
 import JSZip from "jszip";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/authOptions";
 
 export async function POST(request: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "Akses ditolak." }, { status: 401 });
+  }
+
   try {
     const { fileIds } = await request.json();
-
     if (!fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {
       return NextResponse.json(
         { error: "Parameter fileIds tidak valid." },
@@ -15,22 +21,18 @@ export async function POST(request: Request) {
 
     const accessToken = await getAccessToken();
     const zip = new JSZip();
-
     for (const fileId of fileIds) {
       const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
       const detailsUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=name`;
-
       const detailsResponse = await fetch(detailsUrl, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       if (!detailsResponse.ok) continue;
       const fileDetails = await detailsResponse.json();
       const fileName = fileDetails.name || fileId;
-
       const fileResponse = await fetch(driveUrl, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-
       if (fileResponse.ok) {
         const fileBuffer = await fileResponse.arrayBuffer();
         zip.file(fileName, fileBuffer);

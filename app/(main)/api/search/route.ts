@@ -1,9 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { getAccessToken, DriveFile } from "@/lib/googleDrive";
 import { isProtected } from "@/lib/auth";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/authOptions";
+import { validateShareToken } from "@/lib/auth";
 
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
-
 const getMimeQuery = (mimeType?: string | null) => {
   switch (mimeType) {
     case "image":
@@ -42,14 +44,23 @@ const getDateQuery = (modifiedTime?: string | null) => {
 };
 
 export const dynamic = "force-dynamic";
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  const isShareAuth = await validateShareToken(request);
+
+  if (!session && !isShareAuth) {
+    return NextResponse.json(
+      { error: "Authentication required." },
+      { status: 401 },
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const rawSearchTerm = searchParams.get("q");
   const folderId = searchParams.get("folderId");
   const searchType = searchParams.get("searchType") || "name";
   const mimeType = searchParams.get("mimeType");
   const modifiedTime = searchParams.get("modifiedTime");
-
   if (!rawSearchTerm) {
     return NextResponse.json(
       { error: "Search term is required." },
@@ -75,7 +86,6 @@ export async function GET(request: Request) {
 
     driveQuery += getMimeQuery(mimeType);
     driveQuery += getDateQuery(modifiedTime);
-
     const params = new URLSearchParams({
       q: driveQuery,
       fields:
