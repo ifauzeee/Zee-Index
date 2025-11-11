@@ -18,6 +18,7 @@ interface ShareRequestBody {
 }
 
 const SHARE_LINKS_KEY = "zee-index:share-links";
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -85,14 +86,13 @@ export async function POST(req: NextRequest) {
       isCollection: isCollection,
     };
 
-    const existingLinks: ShareLink[] = (await kv.get(SHARE_LINKS_KEY)) || [];
-    const updatedLinks = [...existingLinks, newShareLink];
-    await kv.set(SHARE_LINKS_KEY, updatedLinks);
+    await kv.hset(SHARE_LINKS_KEY, { [newShareLink.jti]: newShareLink });
 
     const adminEmails =
       process.env.ADMIN_EMAILS?.split(",")
         .map((email: string) => email.trim())
-        .filter(Boolean) || [];
+        .filter(Boolean) ||
+      [];
     if (adminEmails.length > 0) {
       await sendMail({
         to: adminEmails,
@@ -113,7 +113,8 @@ export async function POST(req: NextRequest) {
         ).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}</li>
                     <li><b>Wajib Login:</b> ${loginRequired ? "Ya" : "Tidak"}</li>
                 </ul>
-                <p>Anda dapat mengelola semua tautan di dasbor admin.</p>
+    
+            <p>Anda dapat mengelola semua tautan di dasbor admin.</p>
             `,
       });
     }

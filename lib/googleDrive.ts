@@ -98,7 +98,6 @@ export async function getAccessToken(): Promise<string> {
 
   const tokenData: { access_token: string; expires_in: number } =
     await response.json();
-
   try {
     await kv.set(ACCESS_TOKEN_KEY, tokenData.access_token, { ex: 3000 });
   } catch (e) {
@@ -184,53 +183,6 @@ export async function getAllDescendantFolders(
   }
 
   return folderArray;
-}
-
-async function fetchAllFilesRecursively(
-  accessToken: string,
-  rootFolderId: string,
-): Promise<any[]> {
-  let allFiles: any[] = [];
-  const queue: string[] = [rootFolderId];
-  const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3/files";
-
-  while (queue.length > 0) {
-    const folderId = queue.shift()!;
-    let pageToken: string | null = null;
-
-    do {
-      const params = new URLSearchParams({
-        q: `'${folderId}' in parents and trashed=false`,
-        fields: "nextPageToken, files(id, name, mimeType, size, parents)",
-        pageSize: "1000",
-      });
-      if (pageToken) params.set("pageToken", pageToken);
-
-      const response = await fetchWithRetry(
-        `${GOOGLE_DRIVE_API_URL}?${params.toString()}`,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-          cache: "no-store",
-        },
-      );
-      if (!response.ok) {
-        console.error(`Gagal mengambil file dari folder ${folderId}`);
-        break;
-      }
-      const data: { files?: any[]; nextPageToken?: string | null } =
-        await response.json();
-      if (data.files) {
-        allFiles = allFiles.concat(data.files);
-        const subFolders = data.files.filter(
-          (file: any) => file.mimeType === "application/vnd.google-apps.folder",
-        );
-        queue.push(...subFolders.map((folder: any) => folder.id));
-      }
-      pageToken = data.nextPageToken ?? null;
-    } while (pageToken);
-  }
-
-  return allFiles;
 }
 
 export async function listFilesFromDrive(
@@ -364,8 +316,10 @@ export async function getFolderPath(
 
 export async function getStorageDetails() {
   const accessToken = await getAccessToken();
+  const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3";
+
   const aboutResponse = await fetchWithRetry(
-    "https://www.googleapis.com/drive/v3/about?fields=storageQuota",
+    `${GOOGLE_DRIVE_API_URL}/about?fields=storageQuota`,
     {
       headers: { Authorization: `Bearer ${accessToken}` },
       cache: "no-store",
@@ -376,52 +330,40 @@ export async function getStorageDetails() {
   }
   const aboutData: { storageQuota: { usage: string; limit: string } } =
     await aboutResponse.json();
+
   const usage = parseInt(aboutData.storageQuota.usage, 10);
   const limit = parseInt(aboutData.storageQuota.limit, 10);
-  const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
-  const allFiles = await fetchAllFilesRecursively(accessToken, rootFolderId);
-  const largestFiles = allFiles
-    .filter(
-      (file: DriveFile) =>
-        file.mimeType !== "application/vnd.google-apps.folder" && file.size,
-    )
-    .sort(
-      (a: DriveFile, b: DriveFile) =>
-        parseInt(b.size!, 10) - parseInt(a.size!, 10),
-    )
-    .slice(0, 10)
-    .map((file: DriveFile) => ({ ...file, isFolder: false }));
-  const breakdown = allFiles.reduce(
-    (acc: Record<string, { count: number; size: number }>, file: DriveFile) => {
-      if (file.mimeType !== "application/vnd.google-apps.folder" && file.size) {
-        const size = parseInt(file.size, 10);
-        let type = "Lainnya";
-        if (file.mimeType.startsWith("image/")) type = "Gambar";
-        else if (file.mimeType.startsWith("video/")) type = "Video";
-        else if (file.mimeType.startsWith("audio/")) type = "Audio";
-        else if (file.mimeType === "application/pdf") type = "Dokumen";
-        else if (file.mimeType.startsWith("application/vnd.google-apps"))
-          type = "Google Docs";
 
-        if (!acc[type]) {
-          acc[type] = { count: 0, size: 0 };
-        }
-        acc[type].count += 1;
-        acc[type].size += size;
-      }
-      return acc;
+  const largestFilesParams = new URLSearchParams({
+    q: "trashed=false and mimeType != 'application/vnd.google-apps.folder'",
+    orderBy: "quotaBytesUsed desc",
+    pageSize: "10",
+    fields:
+      "files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, hasThumbnail, parents, trashed)",
+  });
+
+  const largestFilesResponse = await fetchWithRetry(
+    `${GOOGLE_DRIVE_API_URL}/files?${largestFilesParams.toString()}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
     },
-    {} as Record<string, { count: number; size: number }>,
   );
-  const formattedBreakdown: StorageBreakdown[] = (
-    Object.entries(breakdown) as [string, { count: number; size: number }][]
-  )
-    .map(([type, data]) => ({ type, count: data.count, size: data.size }))
-    .sort((a: StorageBreakdown, b: StorageBreakdown) => b.size - a.size);
+
+  if (!largestFilesResponse.ok) {
+    throw new Error("Gagal mengambil data file terbesar.");
+  }
+
+  const largestFilesData = await largestFilesResponse.json();
+  const largestFiles = (largestFilesData.files || []).map((file: any) => ({
+    ...file,
+    isFolder: file.mimeType === "application/vnd.google-apps.folder",
+  }));
+
   return {
     usage,
     limit,
-    breakdown: formattedBreakdown,
+    breakdown: [],
     largestFiles,
   };
 }

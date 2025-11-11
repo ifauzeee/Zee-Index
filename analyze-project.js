@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { execSync } = require("child_process");
+const { execSync, spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
@@ -10,7 +10,6 @@ const logFile = path.join(OUTPUT_DIR, "analysis-log.txt");
 const reportFile = path.join(OUTPUT_DIR, "analysis-report.html");
 const jsonReport = path.join(OUTPUT_DIR, "analysis-report.json");
 const lighthouseReportPath = path.join(OUTPUT_DIR, "lighthouse-report.html");
-
 const depsToInstall = [
   "eslint",
   "@typescript-eslint/parser",
@@ -27,7 +26,6 @@ const depsToInstall = [
   "jsdom",
   "dotenv-cli",
 ];
-
 const timestamp = new Date().toISOString();
 let results = [];
 
@@ -134,7 +132,6 @@ function installDependencies(pm) {
       }
     }
   });
-
   if (missingDeps.length > 0) {
     try {
       const installCmd =
@@ -154,7 +151,6 @@ function installDependencies(pm) {
 let chalk;
 let JSDOM;
 let chalkFailedCheck = false;
-
 function loadAdvancedDeps() {
   try {
     chalk = require("chalk");
@@ -357,7 +353,6 @@ function runCommand(command, description, pm) {
     const message = error.message || "";
     let actualErrorsFound = false;
     let failureMessage = output || message;
-
     if (description.startsWith("ESLint")) {
       const match = failureMessage.match(/✖ \d+ problems? \((\d+) errors?/);
       if (match && match[1]) {
@@ -550,202 +545,244 @@ function generateReports() {
   }
 }
 
-if (require.main === module) {
-  console.log("🚀 Zee-Analyze: Next.js Code Analyzer v2.1 (Fixed)");
-
-  if (!fs.existsSync("package.json")) {
-    log(
-      "❌ No package.json found in the current directory. Please run this script from the root of your Node.js project.",
-      "error",
-    );
-    process.exit(1);
-  }
-
+async function runLighthouse(pm) {
+  log("⚡ Running Lighthouse...");
+  let serverProcess;
   try {
-    if (!fs.existsSync(OUTPUT_DIR)) {
-      fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-      log(`📁 Created output directory: ${OUTPUT_DIR}`);
+    log("ℹ️ Starting Next.js server for Lighthouse...");
+    const args =
+      pm === "pnpm"
+        ? ["run", "start"]
+        : ["run", "start"];
+    serverProcess = spawn(pm, args, {
+      detached: true,
+      stdio: "ignore",
+    });
+    log(`ℹ️ Server process started with PID: ${serverProcess.pid}`);
+
+    log("ℹ️ Waiting 10s for server to initialize...");
+    await new Promise((res) => setTimeout(res, 10000));
+
+    log("ℹ️ Running Lighthouse audit on http://localhost:3000 ...");
+    execSync(
+      `npx lighthouse http://localhost:3000 --output=html --output-path=${lighthouseReportPath} --only-categories=performance,accessibility --view`,
+      { stdio: "inherit" },
+    );
+    log(
+      `✅ Lighthouse report generated: ${lighthouseReportPath} (Opening in browser...)`,
+      "success",
+    );
+    if (isReport) {
+      results.push({
+        section: "Lighthouse",
+        status: "generated",
+        output: `See ${lighthouseReportPath}`,
+      });
     }
-    if (fs.existsSync(logFile)) fs.unlinkSync(logFile);
-    if (fs.existsSync(reportFile)) fs.unlinkSync(reportFile);
-    if (fs.existsSync(jsonReport)) fs.unlinkSync(jsonReport);
-    if (fs.existsSync(lighthouseReportPath))
-      fs.unlinkSync(lighthouseReportPath);
-  } catch (dirErr) {
-    log(
-      `❌ Failed to prepare output directory ${OUTPUT_DIR}: ${dirErr.message}. Check permissions.`,
-      "error",
-    );
-    process.exit(1);
-  }
-
-  const pm = detectPackageManager(pmType);
-  log(`📦 Using package manager: ${pm}`);
-
-  installDependencies(pm);
-  loadAdvancedDeps();
-
-  createEsLintConfig();
-  if (isHooks) {
-    setupGitHooks(pm);
-  }
-
-  runCommand(
-    "npx eslint . --ext .js,.jsx,.ts,.tsx",
-    "ESLint (Linting & Security)",
-    pm,
-  );
-  if (fs.existsSync("tsconfig.json"))
-    runCommand("npx tsc --noEmit", "TypeScript Check", pm);
-  else log("ℹ️ No tsconfig.json found, skipping TypeScript check.", "info");
-
-  const prettierCmd = isFix
-    ? "npx prettier --write ."
-    : "npx prettier --check .";
-  const prettierDesc = isFix
-    ? "Prettier Formatting (Fixing)"
-    : "Prettier Formatting (Checking)";
-  runCommand(prettierCmd, prettierDesc, pm);
-
-  const auditCmd = pm === "pnpm" ? "pnpm audit --prod" : "npm audit --omit=dev";
-  runCommand(auditCmd, "Security Audit (Production Deps)", pm);
-  runCommand(getRunCommand("build", pm), "Next.js Build", pm);
-
-  try {
-    const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
-    if (pkg.scripts?.test)
-      runCommand(getRunCommand("test", pm), "Unit Tests", pm);
-    else
-      log("ℹ️ No test script found in package.json, skipping tests.", "info");
   } catch (e) {
-    log(`⚠️ Error reading package.json for tests: ${e.message}`, "warn");
-  }
-
-  if (isPerf) {
-    if (isCommandAvailable("lighthouse")) {
-      log("⚡ Running Lighthouse...");
+    log(
+      `⚠️ Lighthouse failed: ${e.message}\n${e.stderr || ""}${e.stdout || ""}`,
+      "warn",
+    );
+    if (isReport) {
+      results.push({
+        section: "Lighthouse",
+        status: "fail",
+        output: e.message,
+      });
+    }
+  } finally {
+    if (serverProcess && serverProcess.pid) {
+      log(`ℹ️ Stopping Next.js server (PID: ${serverProcess.pid})...`);
       try {
-        execSync(
-          `npx lighthouse . --output=html --output-path=${lighthouseReportPath} --only-categories=performance,accessibility --view`,
-          { stdio: "inherit" },
-        );
+        if (process.platform === "win32") {
+          execSync(`taskkill /PID ${serverProcess.pid} /F /T`);
+        } else {
+          process.kill(-serverProcess.pid, "SIGINT");
+        }
+        log("ℹ️ Server stopped.");
+      } catch (killErr) {
         log(
-          `✅ Lighthouse report generated: ${lighthouseReportPath} (Opening in browser...)`,
-          "success",
+          `⚠️ Failed to stop server process ${serverProcess.pid}: ${killErr.message}`,
+          "warn",
         );
-        if (isReport)
-          results.push({
-            section: "Lighthouse",
-            status: "generated",
-            output: `See ${lighthouseReportPath}`,
-          });
-      } catch (e) {
+      }
+    }
+  }
+}
+
+if (require.main === module) {
+  (async () => {
+    console.log("🚀 Zee-Analyze: Next.js Code Analyzer v2.1 (Fixed)");
+    if (!fs.existsSync("package.json")) {
+      log(
+        "❌ No package.json found in the current directory. Please run this script from the root of your Node.js project.",
+        "error",
+      );
+      process.exit(1);
+    }
+
+    try {
+      if (!fs.existsSync(OUTPUT_DIR)) {
+        fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+        log(`📁 Created output directory: ${OUTPUT_DIR}`);
+      }
+      if (fs.existsSync(logFile)) fs.unlinkSync(logFile);
+      if (fs.existsSync(reportFile)) fs.unlinkSync(reportFile);
+      if (fs.existsSync(jsonReport)) fs.unlinkSync(jsonReport);
+      if (fs.existsSync(lighthouseReportPath))
+        fs.unlinkSync(lighthouseReportPath);
+    } catch (dirErr) {
+      log(
+        `❌ Failed to prepare output directory ${OUTPUT_DIR}: ${dirErr.message}. Check permissions.`,
+        "error",
+      );
+      process.exit(1);
+    }
+
+    const pm = detectPackageManager(pmType);
+    log(`📦 Using package manager: ${pm}`);
+
+    installDependencies(pm);
+    loadAdvancedDeps();
+
+    createEsLintConfig();
+    if (isHooks) {
+      setupGitHooks(pm);
+    }
+
+    runCommand(
+      "npx eslint . --ext .js,.jsx,.ts,.tsx",
+      "ESLint (Linting & Security)",
+      pm,
+    );
+    if (fs.existsSync("tsconfig.json"))
+      runCommand("npx tsc --noEmit", "TypeScript Check", pm);
+    else log("ℹ️ No tsconfig.json found, skipping TypeScript check.", "info");
+    const prettierCmd = isFix
+      ? "npx prettier --write ."
+      : "npx prettier --check .";
+    const prettierDesc = isFix
+      ? "Prettier Formatting (Fixing)"
+      : "Prettier Formatting (Checking)";
+    runCommand(prettierCmd, prettierDesc, pm);
+
+    const auditCmd =
+      pm === "pnpm" ? "pnpm audit --prod" : "npm audit --omit=dev";
+    runCommand(auditCmd, "Security Audit (Production Deps)", pm);
+    runCommand(getRunCommand("build", pm), "Next.js Build", pm);
+    try {
+      const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+      if (pkg.scripts?.test)
+        runCommand(getRunCommand("test", pm), "Unit Tests", pm);
+      else
+        log("ℹ️ No test script found in package.json, skipping tests.", "info");
+    } catch (e) {
+      log(`⚠️ Error reading package.json for tests: ${e.message}`, "warn");
+    }
+
+    if (isPerf) {
+      if (isCommandAvailable("lighthouse")) {
+        await runLighthouse(pm);
+      } else {
         log(
-          `⚠️ Lighthouse failed: ${e.message}\n${e.stderr || ""}${e.stdout || ""}`,
+          "⚠️ Lighthouse command not found, skipping performance check.",
           "warn",
         );
         if (isReport)
           results.push({
             section: "Lighthouse",
-            status: "fail",
-            output: e.message,
+            status: "skipped",
+            output: "Lighthouse not found",
           });
+      }
+    }
+
+    if (isCommandAvailable("snyk")) {
+      try {
+        log("\n=== Snyk Security Scan ===");
+        const snykCmd =
+          pm === "pnpm"
+            ? "pnpm snyk test --severity-threshold=high"
+            : "npx snyk test --severity-threshold=high";
+        const snykOutput = execSync(snykCmd, {
+          stdio: "pipe",
+          encoding: "utf8",
+        });
+        log(snykOutput.trim(), "info");
+        log("✅ Snyk: No high/critical vulnerabilities found!", "success");
+        if (isReport)
+          results.push({
+            section: "Snyk Scan",
+            status: "pass",
+            output: snykOutput.trim() || "No high/critical vulnerabilities",
+          });
+      } catch (e) {
+        const errorOutput = e.stdout || e.stderr || e.message;
+        log(
+          `❌ Snyk vulnerabilities found (>= high) or scan failed:\n${errorOutput}`,
+          "error",
+        );
+        if (isReport)
+          results.push({
+            section: "Snyk Scan",
+            status: "fail",
+            output: errorOutput,
+          });
+        if (maxWarnings === 0) {
+          log(
+            "Exiting due to Snyk failure and --max-warnings=0 setting.",
+            "error",
+          );
+          process.exit(1);
+        }
       }
     } else {
       log(
-        "⚠️ Lighthouse command not found, skipping performance check.",
+        '⚠️ Snyk command not found, skipping Snyk scan. Install with "npm i -g snyk" or "pnpm add -D snyk".',
         "warn",
       );
       if (isReport)
         results.push({
-          section: "Lighthouse",
+          section: "Snyk Scan",
           status: "skipped",
-          output: "Lighthouse not found",
+          output: "Snyk not found",
         });
     }
-  }
 
-  if (isCommandAvailable("snyk")) {
-    try {
-      log("\n=== Snyk Security Scan ===");
-      const snykCmd =
-        pm === "pnpm"
-          ? "pnpm snyk test --severity-threshold=high"
-          : "npx snyk test --severity-threshold=high";
-      const snykOutput = execSync(snykCmd, { stdio: "pipe", encoding: "utf8" });
-      log(snykOutput.trim(), "info");
-      log("✅ Snyk: No high/critical vulnerabilities found!", "success");
-      if (isReport)
-        results.push({
-          section: "Snyk Scan",
-          status: "pass",
-          output: snykOutput.trim() || "No high/critical vulnerabilities",
-        });
-    } catch (e) {
-      const errorOutput = e.stdout || e.stderr || e.message;
+    generateReports();
+
+    const finalPassCount = results.filter((r) => r.status === "pass").length;
+    const finalWarningCount = results.filter(
+      (r) => r.status === "pass_with_warnings",
+    ).length;
+    const finalFailCount = results.filter((r) => r.status === "fail").length;
+    const finalSkippedCount = results.filter(
+      (r) => r.status === "skipped",
+    ).length;
+    const finalTotalChecks = results.filter((r) => r.section).length;
+
+    log("\n🏁 Analysis Complete!", "success");
+    log(`➡️  Log file saved to: ${logFile}`);
+    if (isReport) {
+      log(`➡️  JSON report saved to: ${jsonReport}`);
+      log(`➡️  HTML report saved to: ${reportFile}`);
       log(
-        `❌ Snyk vulnerabilities found (>= high) or scan failed:\n${errorOutput}`,
+        `📊 Summary: ${finalPassCount} passed, ${finalWarningCount} with warnings, ${finalFailCount} failed, ${finalSkippedCount} skipped (out of ${finalTotalChecks} checks).`,
+      );
+    }
+
+    if (finalFailCount > 0 && maxWarnings === 0) {
+      log(
+        "\n❌ Exiting with error code due to failures and --max-warnings=0 setting.",
         "error",
       );
-      if (isReport)
-        results.push({
-          section: "Snyk Scan",
-          status: "fail",
-          output: errorOutput,
-        });
-      if (maxWarnings === 0) {
-        log(
-          "Exiting due to Snyk failure and --max-warnings=0 setting.",
-          "error",
-        );
-        process.exit(1);
-      }
+      process.exit(1);
+    } else {
+      log("\n✅ Script finished successfully.", "success");
+      process.exit(0);
     }
-  } else {
-    log(
-      '⚠️ Snyk command not found, skipping Snyk scan. Install with "npm i -g snyk" or "pnpm add -D snyk".',
-      "warn",
-    );
-    if (isReport)
-      results.push({
-        section: "Snyk Scan",
-        status: "skipped",
-        output: "Snyk not found",
-      });
-  }
-
-  generateReports();
-
-  const finalPassCount = results.filter((r) => r.status === "pass").length;
-  const finalWarningCount = results.filter(
-    (r) => r.status === "pass_with_warnings",
-  ).length;
-  const finalFailCount = results.filter((r) => r.status === "fail").length;
-  const finalSkippedCount = results.filter(
-    (r) => r.status === "skipped",
-  ).length;
-  const finalTotalChecks = results.filter((r) => r.section).length;
-
-  log("\n🏁 Analysis Complete!", "success");
-  log(`➡️  Log file saved to: ${logFile}`);
-  if (isReport) {
-    log(`➡️  JSON report saved to: ${jsonReport}`);
-    log(`➡️  HTML report saved to: ${reportFile}`);
-    log(
-      `📊 Summary: ${finalPassCount} passed, ${finalWarningCount} with warnings, ${finalFailCount} failed, ${finalSkippedCount} skipped (out of ${finalTotalChecks} checks).`,
-    );
-  }
-
-  if (finalFailCount > 0 && maxWarnings === 0) {
-    log(
-      "\n❌ Exiting with error code due to failures and --max-warnings=0 setting.",
-      "error",
-    );
-    process.exit(1);
-  } else {
-    log("\n✅ Script finished successfully.", "success");
-    process.exit(0);
-  }
+  })();
 } else {
   module.exports = { log, runCommand };
 }
