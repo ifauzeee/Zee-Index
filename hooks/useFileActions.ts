@@ -13,18 +13,9 @@ export type ContextMenuState = {
   file: DriveFile;
 } | null;
 
-export function useFileActions(
-  files: DriveFile[],
-  setFiles: React.Dispatch<React.SetStateAction<DriveFile[]>>,
-  currentFolderId: string,
-) {
-  const {
-    addToast,
-    triggerRefresh,
-    favorites,
-    toggleFavorite,
-    setDetailsFile,
-  } = useAppStore();
+export function useFileActions(currentFolderId: string) {
+  const { addToast, triggerRefresh, favorites, toggleFavorite } =
+    useAppStore();
   const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
   const [actionState, setActionState] = useState<ActionState>({
     type: null,
@@ -45,7 +36,9 @@ export function useFileActions(
 
   const getSharePath = (file: DriveFile) => {
     if (file.isFolder) return `/folder/${file.id}`;
-    return `/folder/${currentFolderId}/file/${file.id}/${createSlug(file.name)}`;
+    return `/folder/${currentFolderId}/file/${file.id}/${createSlug(
+      file.name,
+    )}`;
   };
 
   const handleShare = (file: DriveFile | null) => {
@@ -97,11 +90,7 @@ export function useFileActions(
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Gagal mengubah nama");
-      setFiles((prevFiles: DriveFile[]) =>
-        prevFiles.map((f: DriveFile) =>
-          f.id === data.file.id ? { ...f, name: data.file.name } : f,
-        ),
-      );
+      triggerRefresh();
       addToast({ message: "Nama berhasil diubah!", type: "success" });
       setActionState({ type: null, file: null });
     } catch (err: any) {
@@ -112,9 +101,6 @@ export function useFileActions(
   const handleDelete = async () => {
     if (!actionState.file) return;
     const fileToDelete = actionState.file;
-    const originalFiles = files;
-
-    setFiles((prevFiles) => prevFiles.filter((f) => f.id !== fileToDelete.id));
     setActionState({ type: null, file: null });
     try {
       const response = await fetch("/api/files/delete", {
@@ -124,10 +110,10 @@ export function useFileActions(
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Gagal menghapus file");
+      triggerRefresh();
       addToast({ message: "File berhasil dihapus!", type: "success" });
     } catch (err: any) {
       addToast({ message: err.message, type: "error" });
-      setFiles(originalFiles);
     }
   };
 
@@ -148,17 +134,16 @@ export function useFileActions(
         }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Gagal memindahkan file");
-      setFiles((prevFiles: DriveFile[]) =>
-        prevFiles.filter((f: DriveFile) => f.id !== actionState.file?.id),
-      );
+      if (!response.ok)
+        throw new Error(data.error || "Gagal memindahkan file");
+      triggerRefresh();
       addToast({ message: "File berhasil dipindahkan!", type: "success" });
       setActionState({ type: null, file: null });
     } catch (err: any) {
       addToast({ message: err.message, type: "error" });
     }
   };
-  
+
   const handleArchivePreview = () => {
     if (contextMenu?.file) {
       setArchivePreview(contextMenu.file);

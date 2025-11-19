@@ -169,7 +169,7 @@ export default function FileBrowser({
     handleRename,
     handleDelete,
     handleMove,
-  } = useFileActions(files, refetchFiles, currentFolderId);
+  } = useFileActions(currentFolderId);
   useEffect(() => {
     if (sessionStatus === "authenticated" && !user) {
       fetchUser();
