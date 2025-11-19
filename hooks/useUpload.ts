@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useAppStore } from "@/lib/store";
+import { parseDroppedItems, FileEntry } from "@/lib/fileParser";
 
 interface UploadProgress {
   name: string;
@@ -23,9 +24,10 @@ export function useUpload({
 }: UseUploadProps) {
   const [uploads, setUploads] = useState<Record<string, UploadProgress>>({});
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [droppedFiles, setDroppedFiles] = useState<FileList | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const { addToast } = useAppStore(); 
+  const { addToast } = useAppStore();
+
+  const folderIdCache = useRef<Record<string, string>>({});
 
   const updateUploadProgress = useCallback(
     (
@@ -51,7 +53,48 @@ export function useUpload({
     []
   );
 
-  const uploadFileChunked = useCallback(async (file: File) => {
+  const ensureFolderStructure = async (path: string, rootId: string): Promise<string> => {
+    const parts = path.split("/").filter(Boolean);
+    parts.pop(); 
+
+    if (parts.length === 0) return rootId;
+
+    let currentParentId = rootId;
+    let currentPath = "";
+
+    for (const folderName of parts) {
+      currentPath += (currentPath ? "/" : "") + folderName;
+
+      if (folderIdCache.current[currentPath]) {
+        currentParentId = folderIdCache.current[currentPath];
+        continue;
+      }
+
+      try {
+        const response = await fetch("/api/folder/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            folderName: folderName,
+            parentId: currentParentId,
+          }),
+        });
+
+        if (!response.ok) throw new Error("Gagal membuat folder struktur");
+        
+        const data = await response.json();
+        currentParentId = data.id;
+        folderIdCache.current[currentPath] = data.id;
+      } catch (error) {
+        console.error(`Gagal membuat folder ${folderName}:`, error);
+        throw error;
+      }
+    }
+
+    return currentParentId;
+  };
+
+  const uploadFileChunked = useCallback(async (file: File, targetParentId: string) => {
     try {
       updateUploadProgress(file.name, 0, "uploading");
 
@@ -61,7 +104,7 @@ export function useUpload({
         body: JSON.stringify({
           name: file.name,
           mimeType: file.type || "application/octet-stream",
-          parentId: currentFolderId,
+          parentId: targetParentId,
           size: file.size,
         }),
       });
@@ -73,9 +116,8 @@ export function useUpload({
       while (start < file.size) {
         const end = Math.min(start + CHUNK_SIZE, file.size);
         const chunk = file.slice(start, end);
-
         const contentRange = `bytes ${start}-${end - 1}/${file.size}`;
-        
+
         const chunkRes = await fetch(
           `/api/files/upload?type=chunk&uploadUrl=${encodeURIComponent(uploadUrl)}`,
           {
@@ -89,9 +131,7 @@ export function useUpload({
         );
 
         if (!chunkRes.ok) throw new Error("Gagal upload chunk");
-
         const chunkData = await chunkRes.json();
-        
         const percent = Math.round((end / file.size) * 100);
         updateUploadProgress(file.name, percent, "uploading");
 
@@ -99,7 +139,6 @@ export function useUpload({
           updateUploadProgress(file.name, 100, "success");
           return;
         }
-
         start = end;
       }
     } catch (error: any) {
@@ -107,19 +146,36 @@ export function useUpload({
       updateUploadProgress(file.name, 0, "error", error.message);
       addToast({ message: `Gagal mengupload ${file.name}`, type: "error" });
     }
-  }, [currentFolderId, updateUploadProgress, addToast]);
+  }, [updateUploadProgress, addToast]);
 
-  const handleFileUpload = useCallback(
-    async (files: FileList | null) => {
-      if (!files || files.length === 0 || !currentFolderId || !isAdmin) return;
+  const processUploadQueue = useCallback(async (items: FileList | FileEntry[]) => {
+    if (!currentFolderId || !isAdmin) return;
+    
+    folderIdCache.current = {}; 
 
-      for (const file of Array.from(files)) {
-        await uploadFileChunked(file);
+    const fileList = Array.isArray(items) ? items : Array.from(items).map(f => ({
+      file: f,
+      path: (f as any).webkitRelativePath || f.name 
+    }));
+
+    for (const entry of fileList) {
+      try {
+        const targetId = await ensureFolderStructure(entry.path, currentFolderId);
+        await uploadFileChunked(entry.file, targetId);
+      } catch (e) {
+        console.error("Skip file karena gagal create folder:", entry.path);
       }
-      triggerRefresh();
-    },
-    [currentFolderId, isAdmin, triggerRefresh, uploadFileChunked]
-  );
+    }
+    triggerRefresh();
+  }, [currentFolderId, isAdmin, triggerRefresh, uploadFileChunked]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      processUploadQueue(e.target.files);
+      e.target.value = ""; 
+      setIsUploadModalOpen(false); 
+    }
+  };
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -133,25 +189,30 @@ export function useUpload({
     setIsDragging(false);
   }, []);
 
-  const handleDropUpload = useCallback((e: React.DragEvent) => {
+  const handleDropUpload = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    if (isAdmin && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFileUpload(e.dataTransfer.files);
+    
+    if (isAdmin && e.dataTransfer) {
+      const entries = await parseDroppedItems(e.dataTransfer);
+      if (entries.length > 0) {
+        processUploadQueue(entries);
+      }
     }
-  }, [isAdmin, handleFileUpload]);
+  }, [isAdmin, processUploadQueue]);
 
   return {
     uploads,
     isUploadModalOpen,
-    droppedFiles,
     isDragging,
-    handleFileUpload,
     setIsUploadModalOpen,
-    setDroppedFiles,
     handleDragOver,
     handleDragLeave,
     handleDropUpload,
+    handleFileSelect,
+    droppedFiles: null,
+    setDroppedFiles: () => {},
+    handleFileUpload: () => {},
   };
 }
