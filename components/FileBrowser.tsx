@@ -396,7 +396,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
         onBreadcrumbDragOver={handleBreadcrumbDragOver}
         onBreadcrumbDragLeave={handleBreadcrumbDragLeave}
         onBreadcrumbDrop={(e, folder) => onDropOnBreadcrumb(e, folder)}
-        onUploadClick={() => { setIsUploadModalOpen(true); setDroppedFiles(null); }}
+        onUploadClick={() => { setIsUploadModalOpen(true); }}
         onShareFolderClick={() => handleShare({
             id: currentFolderId,
             name: history[history.length - 1]?.name || "Folder",
