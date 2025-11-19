@@ -124,11 +124,18 @@ export async function getAllDescendantFolders(
 
   console.log("Membangun folder tree baru (tidak ada di cache).");
   const allFolderIds = new Set<string>([rootFolderId]);
-  const queue: string[] = [rootFolderId];
+  const queue: [string, number][] = [[rootFolderId, 0]];
   const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3/files";
+  const MAX_DEPTH = 10;
 
   while (queue.length > 0) {
-    const folderId = queue.shift()!;
+    const [folderId, depth] = queue.shift()!;
+
+    if (depth >= MAX_DEPTH) {
+      console.log(`Mencapai kedalaman maksimum (${MAX_DEPTH}) pada folder ${folderId}.`);
+      continue;
+    }
+
     let pageToken: string | null = null;
 
     do {
@@ -161,7 +168,7 @@ export async function getAllDescendantFolders(
           for (const folder of data.files) {
             if (!allFolderIds.has(folder.id)) {
               allFolderIds.add(folder.id);
-              queue.push(folder.id);
+              queue.push([folder.id, depth + 1]);
             }
           }
         }

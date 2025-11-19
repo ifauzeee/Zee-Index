@@ -5,6 +5,8 @@ import { kv } from "@vercel/kv";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
+import { type Session } from "next-auth";
+
 const PROTECTED_FOLDERS_KEY = "zee-index:protected-folders";
 
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
@@ -21,7 +23,7 @@ const folderSchema = z.object({
   password: z.string().min(1, "Password tidak boleh kosong."),
 });
 
-async function isAdmin(session: any): Promise<boolean> {
+async function isAdmin(session: Session | null): Promise<boolean> {
   return session?.user?.role === "ADMIN";
 }
 

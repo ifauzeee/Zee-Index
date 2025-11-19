@@ -49,60 +49,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // !! logActivity TELAH DIHAPUS DARI SINI !!
-
-    const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
-    const fileSize = parseInt(fileDetails.size, 10);
-
-    const range = request.headers.get("range");
-    const headers = new Headers({
-      Authorization: `Bearer ${accessToken}`,
+    await logActivity("DOWNLOAD", {
+      itemName: fileDetails.name,
+      itemSize: fileDetails.size,
+      userEmail: session?.user?.email,
     });
-    
-    if (range) {
-      // Ini adalah blok streaming (buffering) ATAU download chunk
-      // Kita TIDAK mencatat log di sini
-      headers.set("Range", range);
-      const driveResponse = await fetch(driveUrl, { headers });
-      const partialBody = driveResponse.body;
-      const contentRange = driveResponse.headers.get("Content-Range");
 
-      const responseHeaders = new Headers();
-      if (contentRange) {
-        responseHeaders.set("Content-Range", contentRange);
-      }
-      responseHeaders.set("Accept-Ranges", "bytes");
-      responseHeaders.set(
-        "Content-Length",
-        driveResponse.headers.get("Content-Length") || "",
-      );
-      responseHeaders.set("Content-Type", fileDetails.mimeType);
+    const downloadUrl = fileDetails.webContentLink || fileDetails.webViewLink;
 
-      return new NextResponse(partialBody, {
-        status: 206,
-        headers: responseHeaders,
-      });
+    if (downloadUrl) {
+      return NextResponse.redirect(downloadUrl);
     } else {
-      // Ini adalah blok unduhan penuh (bukan range request)
-      // Kita HANYA mencatat log di sini
-      await logActivity("DOWNLOAD", {
-        itemName: fileDetails.name,
-        itemSize: fileDetails.size,
-        userEmail: session?.user?.email,
-      });
-
-      const driveResponse = await fetch(driveUrl, { headers });
-      const body = driveResponse.body;
-      const responseHeaders = new Headers();
-      const fileName = fileDetails.name || "download";
-      responseHeaders.set(
-        "Content-Disposition",
-        `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`,
+      return NextResponse.json(
+        { error: "Tautan unduhan tidak tersedia untuk file ini." },
+        { status: 404 },
       );
-      responseHeaders.set("Content-Type", fileDetails.mimeType);
-      responseHeaders.set("Content-Length", String(fileSize));
-
-      return new NextResponse(body, { status: 200, headers: responseHeaders });
     }
   } catch (error: any) {
     console.error("Download API Error:", error.message);

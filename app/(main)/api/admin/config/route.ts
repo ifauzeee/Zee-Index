@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/authOptions";
 import { kv } from "@vercel/kv";
 import { z } from "zod";
 
+import { type Session } from "next-auth";
+
 const CONFIG_KEY = "zee-index:config";
 
 interface AppConfig {
@@ -16,7 +18,7 @@ const configSchema = z.object({
   disableGuestLogin: z.boolean().optional(),
 });
 
-async function isAdmin(session: any): Promise<boolean> {
+async function isAdmin(session: Session | null): Promise<boolean> {
   return session?.user?.role === "ADMIN";
 }
 

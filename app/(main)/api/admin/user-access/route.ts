@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/authOptions";
 import { kv } from "@vercel/kv";
 import { z } from "zod";
 
+import { type Session } from "next-auth";
+
 const FOLDERS_WITH_ACCESS_KEY = "zee-index:user-access:folders";
 const getFolderAccessKey = (folderId: string) =>
   `folder:access:${folderId}`;
@@ -13,7 +15,7 @@ const accessSchema = z.object({
   email: z.string().email("Format email tidak valid."),
 });
 
-async function isAdmin(session: any): Promise<boolean> {
+async function isAdmin(session: Session | null): Promise<boolean> {
   return session?.user?.role === "ADMIN";
 }
 

@@ -13,7 +13,9 @@ import type {
 import { format, startOfToday, subDays, getDay } from "date-fns";
 import { id } from "date-fns/locale";
 
-async function isAdmin(session: any): Promise<boolean> {
+import { type Session } from "next-auth";
+
+async function isAdmin(session: Session | null): Promise<boolean> {
   return session?.user?.role === "ADMIN";
 }
 

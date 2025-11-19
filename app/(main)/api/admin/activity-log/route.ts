@@ -5,6 +5,8 @@ import { kv } from "@vercel/kv";
 import type { ActivityLog } from "@/lib/activityLogger";
 import { z } from "zod";
 
+import { type Session } from "next-auth";
+
 const ACTIVITY_LOG_KEY = "zee-index:activity-log";
 
 const querySchema = z.object({
@@ -12,7 +14,7 @@ const querySchema = z.object({
   limit: z.coerce.number().min(1).max(100).default(50),
 });
 
-async function isAdmin(session: any): Promise<boolean> {
+async function isAdmin(session: Session | null): Promise<boolean> {
   return session?.user?.role === "ADMIN";
 }
 

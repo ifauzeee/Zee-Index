@@ -5,12 +5,14 @@ import { kv } from "@vercel/kv";
 import { z } from "zod";
 import { sendMail } from "@/lib/mailer";
 
+import { type Session } from "next-auth";
+
 const ADMIN_EMAILS_KEY = "zee-index:admins";
 const emailSchema = z.object({
   email: z.string().email("Format email tidak valid."),
 });
 
-async function isAdmin(session: any): Promise<boolean> {
+async function isAdmin(session: Session | null): Promise<boolean> {
   return session?.user?.role === "ADMIN";
 }
 

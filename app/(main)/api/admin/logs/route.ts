@@ -5,10 +5,12 @@ import { kv } from "@vercel/kv";
 
 import type { ActivityLog } from "@/lib/activityLogger";
 
+import { type Session } from "next-auth";
+
 const ACTIVITY_LOG_KEY = "zee-index:activity-log";
 const LOGS_PER_PAGE = 50;
 
-async function isAdmin(session: any): Promise<boolean> {
+async function isAdmin(session: Session | null): Promise<boolean> {
   return session?.user?.role === "ADMIN";
 }
 
