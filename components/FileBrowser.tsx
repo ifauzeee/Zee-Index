@@ -358,7 +358,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
           <MoveModal fileToMove={actionState.file} onClose={() => setActionState({ type: null, file: null })} onConfirmMove={handleMove} />
         )}
         {isUploadModalOpen && (
-          <UploadModal isOpen={isUploadModalOpen} onClose={() => { setIsUploadModalOpen(false); setDroppedFiles(null); }} initialFiles={droppedFiles} />
+          <UploadModal isOpen={isUploadModalOpen} onClose={() => { setIsUploadModalOpen(false); }} initialFiles={droppedFiles} />
         )}
         {previewFile && (
           <motion.div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setPreviewFile(null)}>
