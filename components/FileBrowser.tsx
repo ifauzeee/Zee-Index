@@ -41,6 +41,7 @@ import { useFileFetching } from "@/hooks/useFileFetching";
 import { useUpload } from "@/hooks/useUpload";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { jwtDecode } from "jwt-decode";
+import ImageGallery from "./ImageGallery";
 
 interface HistoryItem {
   id: string;
@@ -64,6 +65,9 @@ export default function FileBrowser({
   }>({ isOpen: false, folderId: "", folderName: "" });
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
+
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [galleryStartIndex, setGalleryStartIndex] = useState(0);
 
   const {
     sort,
@@ -92,16 +96,14 @@ export default function FileBrowser({
 
   const {
     files,
-    setFiles,
     history,
-    setHistory,
     isLoading,
-    setIsLoading,
     isFetchingNextPage,
+    fetchNextPage,
     nextPageToken,
+    refetchFiles,
     currentFolderId,
-    loaderRef,
-    fetchFiles,
+    authModalInfo,
   } = useFileFetching({
     initialFolderId,
     shareToken,
@@ -110,6 +112,10 @@ export default function FileBrowser({
     router,
     refreshKey,
   });
+
+  const imageFiles = useMemo(() => {
+    return files.filter((f) => getFileType(f) === "image");
+  }, [files]);
   const isGuest = user?.isGuest === true;
   const isAdmin = user?.role === "ADMIN" && !isGuest;
   const {
@@ -163,7 +169,7 @@ export default function FileBrowser({
     handleRename,
     handleDelete,
     handleMove,
-  } = useFileActions(files, setFiles, currentFolderId);
+  } = useFileActions(files, refetchFiles, currentFolderId);
   useEffect(() => {
     if (sessionStatus === "authenticated" && !user) {
       fetchUser();
@@ -242,9 +248,7 @@ export default function FileBrowser({
     }
   }, [searchParams, setShareToken, addToast, router, validateShareToken]);
 
-  useEffect(() => {
-    setCurrentFolderId(currentFolderId);
-  }, [currentFolderId, setCurrentFolderId]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Space" && activeFileId && !previewFile && !detailsFile) {
@@ -275,11 +279,42 @@ export default function FileBrowser({
       document.body.classList.remove("mobile-menu-open");
     };
   }, [contextMenu, detailsFile, previewFile, archivePreview]);
+
+  const loaderRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => {
+      if (loaderRef.current) observer.disconnect();
+    };
+  }, [fetchNextPage]);
+
+  useEffect(() => {
+    if (authModalInfo) {
+      setAuthModal({
+        isOpen: true,
+        folderId: authModalInfo.folderId,
+        folderName: authModalInfo.folderName,
+      });
+    }
+  }, [authModalInfo]);
+
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
   useEffect(() => {
     if (sessionStatus === "loading" && !shareToken) {
-      setIsLoading(true);
       return;
     }
     if (sessionStatus === "unauthenticated" && !shareToken) {
@@ -287,20 +322,21 @@ export default function FileBrowser({
       return;
     }
   }, [sessionStatus, shareToken, router]);
-  useEffect(() => {
-    const currentFolder = history[history.length - 1];
-    if (currentFolder) {
-      fetchFiles(currentFolder.id, currentFolder.name).then(result => {
-        if(result?.authModal) {
-            setAuthModal(result.authModal);
-        }
-      });
-    }
-  }, [refreshKey, history, fetchFiles]);
+
   const handleItemClick = (file: DriveFile) => {
     if (isBulkMode) {
       toggleSelection(file);
       return;
+    }
+
+    const type = getFileType(file);
+    if (type === "image") {
+      const index = imageFiles.findIndex((img) => img.id === file.id);
+      if (index !== -1) {
+        setGalleryStartIndex(index);
+        setIsGalleryOpen(true);
+        return;
+      }
     }
 
     if (file.isFolder) {
@@ -784,6 +820,12 @@ export default function FileBrowser({
           ))}
         </div>
       )}
+      <ImageGallery
+        isOpen={isGalleryOpen}
+        initialIndex={galleryStartIndex}
+        images={imageFiles}
+        onClose={() => setIsGalleryOpen(false)}
+      />
     </motion.div>
   );
 }

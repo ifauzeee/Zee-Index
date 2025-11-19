@@ -1,82 +1,102 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getAccessToken } from "@/lib/googleDrive";
-import { type Session } from "next-auth";
-import { invalidateFolderCache } from "@/lib/cache";
 import { withAdminSession } from "@/lib/api-middleware";
 import { logActivity } from "@/lib/activityLogger";
 
+export const maxDuration = 60;
+
 export const POST = withAdminSession(
-  async (request: NextRequest, context: {}, session: Session) => {
-    let file: File | null = null;
-    let parentId: string | null = null;
+  async (request: NextRequest, context: {}, session: any) => {
+    const searchParams = request.nextUrl.searchParams;
+    const uploadType = searchParams.get("type");
+
     try {
-      const formData = await request.formData();
-      file = formData.get("file") as File | null;
-      parentId = formData.get("parentId") as string | null;
-
-      if (!file || !parentId) {
-        return NextResponse.json(
-          { error: "File dan ID folder induk diperlukan." },
-          { status: 400 },
-        );
-      }
-
       const accessToken = await getAccessToken();
-      const metadata = {
-        name: file.name,
-        parents: [parentId],
-      };
 
-      const body = new Blob([
-        `--boundary\r\n`,
-        `Content-Type: application/json; charset=UTF-8\r\n\r\n`,
-        `${JSON.stringify(metadata)}\r\n\r\n`,
-        `--boundary\r\n`,
-        `Content-Type: ${file.type}\r\n\r\n`,
-        await file.arrayBuffer(),
-        `\r\n--boundary--`,
-      ]);
+      if (uploadType === "init") {
+        const { name, mimeType, parentId, size } = await request.json();
 
-      const response = await fetch(
-        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": `multipart/related; boundary=boundary`,
-          },
-          body,
-        },
-      );
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(
-          data.error?.message || "Gagal mengunggah file ke Google Drive.",
+        const metadata = {
+          name,
+          mimeType,
+          parents: [parentId],
+        };
+
+        const response = await fetch(
+          "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+              "X-Upload-Content-Length": size.toString(),
+              "X-Upload-Content-Type": mimeType,
+            },
+            body: JSON.stringify(metadata),
+          }
         );
+
+        if (!response.ok) {
+          throw new Error("Gagal menginisialisasi sesi upload dengan Google Drive.");
+        }
+
+        const uploadUrl = response.headers.get("Location");
+        return NextResponse.json({ uploadUrl });
       }
 
-      await invalidateFolderCache(parentId);
+      else if (uploadType === "chunk") {
+        const uploadUrl = searchParams.get("uploadUrl");
+        const contentRange = request.headers.get("Content-Range");
+        const contentLength = request.headers.get("Content-Length");
 
-      await logActivity("UPLOAD", {
-        itemName: data.name,
-        itemSize: data.size,
-        userEmail: session.user?.email,
-        status: "success",
-      });
+        if (!uploadUrl || !contentRange) {
+          return NextResponse.json(
+            { error: "Parameter uploadUrl atau header Content-Range hilang." },
+            { status: 400 }
+          );
+        }
 
-      return NextResponse.json(data, { status: 200 });
+        const chunkBuffer = await request.arrayBuffer();
+
+        const driveResponse = await fetch(uploadUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Length": contentLength || chunkBuffer.byteLength.toString(),
+            "Content-Range": contentRange,
+          },
+          body: chunkBuffer,
+        });
+
+        if (driveResponse.status === 308) {
+          return NextResponse.json({ status: "partial" });
+        }
+
+        if (driveResponse.ok) {
+          const fileData = await driveResponse.json();
+          
+          await logActivity("UPLOAD", {
+            itemName: fileData.name,
+            itemSize: fileData.size,
+            userEmail: session.user?.email,
+            status: "success",
+          });
+
+          return NextResponse.json({ status: "completed", file: fileData });
+        }
+
+        throw new Error("Gagal mengunggah chunk ke Google Drive.");
+      } 
+      
+      else {
+        return NextResponse.json({ error: "Invalid upload type" }, { status: 400 });
+      }
+
     } catch (error: any) {
-      await logActivity("UPLOAD", {
-        itemName: file?.name || "Unknown file",
-        userEmail: session.user?.email,
-        status: "failure",
-        error: error.message,
-      });
       console.error("Upload API Error:", error);
       return NextResponse.json(
         { error: error.message || "Internal Server Error." },
-        { status: 500 },
+        { status: 500 }
       );
     }
-  },
+  }
 );

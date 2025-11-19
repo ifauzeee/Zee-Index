@@ -21,6 +21,7 @@
     "@radix-ui/react-toast": "^1.2.1",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/typography": "^0.5.16",
+    "@tanstack/react-query": "^5.90.10",
     "@tanstack/react-virtual": "^3.8.4",
     "@types/bcrypt": "^6.0.0",
     "@types/bcryptjs": "^2.4.6",
@@ -54,6 +55,7 @@
     "rehype-sanitize": "^6.0.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "yet-another-react-lightbox": "^3.25.0",
     "zod": "^4.1.5",
     "zustand": "^4.5.7"
   },
