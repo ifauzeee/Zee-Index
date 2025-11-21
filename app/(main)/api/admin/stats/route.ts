@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { kv } from "@vercel/kv";
@@ -10,8 +10,7 @@ import type {
   DayOfWeekDownload,
   TopUser,
 } from "@/lib/adminStats";
-import { format, startOfToday, subDays, getDay } from "date-fns";
-import { id } from "date-fns/locale";
+import { startOfToday, subDays, getDay } from "date-fns";
 
 import { type Session } from "next-auth";
 
@@ -27,7 +26,7 @@ export async function GET() {
 
   try {
     const ninetyDaysAgo = subDays(new Date(), 90).getTime();
-    const logMembers: any[] = await kv.zrange(
+    const logMembers: unknown[] = await kv.zrange(
       "zee-index:activity-log",
       ninetyDaysAgo,
       Date.now(),

@@ -3,7 +3,6 @@
 import React, { useEffect } from "react";
 import { useAppStore } from "@/lib/store";
 import { Loader2, EyeOff, UserX } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 export default function SecurityConfig() {
   const {
@@ -50,7 +49,7 @@ export default function SecurityConfig() {
             <div>
               <p className="font-semibold">Sembunyikan Author</p>
               <p className="text-sm text-muted-foreground">
-                Sembunyikan info "Pemilik" dan "Diubah oleh" untuk pengguna
+                Sembunyikan info &quot;Pemilik&quot; dan &quot;Diubah oleh&quot; untuk pengguna
                 non-Admin.
               </p>
             </div>
@@ -77,7 +76,7 @@ export default function SecurityConfig() {
             <div>
               <p className="font-semibold">Nonaktifkan Login Tamu</p>
               <p className="text-sm text-muted-foreground">
-                Mencegah pengguna baru masuk sebagai "Tamu" di halaman login.
+                Mencegah pengguna baru masuk sebagai &quot;Tamu&quot; di halaman login.
               </p>
             </div>
           </label>

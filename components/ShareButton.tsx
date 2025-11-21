@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Share2, X, Clock, Zap, Copy, ShieldCheck } from "lucide-react";
-import { useAppStore, ShareLink } from "@/lib/store";
+import { useAppStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { jwtDecode } from "jwt-decode";
 import type { DriveFile } from "@/lib/googleDrive";
 
 interface ShareButtonProps {
@@ -23,11 +22,13 @@ const modalVariants = {
   visible: { opacity: 1, scale: 1 },
   exit: { opacity: 0, scale: 0.95 },
 };
+
 const overlayVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
   exit: { opacity: 0 },
 };
+
 export default function ShareButton({
   path,
   itemName,
@@ -43,12 +44,14 @@ export default function ShareButton({
   const [loginRequired, setLoginRequired] = useState(false);
 
   const isOpen = controlledIsOpen ?? internalIsOpen;
+
   useEffect(() => {
     if (controlledIsOpen && user && user.role !== "ADMIN") {
       addToast({ message: "Fitur berbagi hanya untuk Admin.", type: "error" });
       if (onClose) onClose();
     }
   }, [controlledIsOpen, user, addToast, onClose]);
+
   const handleOpen = () => {
     if (user?.role !== "ADMIN") {
       addToast({ message: "Fitur berbagi hanya untuk Admin.", type: "error" });
@@ -64,6 +67,7 @@ export default function ShareButton({
       setInternalIsOpen(false);
     }
   };
+
   const generateLink = async (type: "timed" | "session") => {
     try {
       const expiresIn =
@@ -105,6 +109,7 @@ export default function ShareButton({
       addToast({ message: (error as Error).message, type: "error" });
     }
   };
+
   if (controlledIsOpen && user && user.role !== "ADMIN") {
     return null;
   }
@@ -239,6 +244,7 @@ export default function ShareButton({
       )}
     </AnimatePresence>
   );
+
   if (controlledIsOpen !== undefined) {
     return ModalContent;
   }

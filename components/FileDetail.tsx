@@ -1,5 +1,4 @@
 "use client";
-
 import React, {
   useEffect,
   useMemo,
@@ -37,7 +36,10 @@ import {
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import ArchivePreviewModal from "./ArchivePreviewModal";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const pdfjsLib: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const ePub: any;
 
 const LoadingPreview: React.FC = () => (
@@ -45,17 +47,20 @@ const LoadingPreview: React.FC = () => (
     <Loader2 className="animate-spin text-4xl" />
   </div>
 );
+
 const ErrorPreview: React.FC<{ message: string }> = ({ message }) => (
   <div className="flex flex-col items-center justify-center h-full gap-4 text-red-500">
     <i className="fas fa-exclamation-triangle text-6xl"></i>
     <p>{message}</p>
   </div>
 );
+
 interface VideoAudioPreviewProps {
   src: string;
   type: "video" | "audio";
   poster?: string;
   mimeType: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   subtitleTracks?: any[];
 }
 
@@ -80,11 +85,14 @@ const VideoAudioPreview: React.FC<VideoAudioPreviewProps> = ({
       playerRef.current?.destroy();
     };
   }, []);
+
   const Tag = type === "video" ? "video" : "audio";
   const posterUrl = poster ? poster.replace(/=s\d+/, "=s1280") : undefined;
+
   return (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     <Tag
-      ref={ref as any}
+      ref={ref as unknown as React.RefObject<HTMLVideoElement>}
       id="player"
       playsInline
       controls
@@ -110,16 +118,19 @@ const VideoAudioPreview: React.FC<VideoAudioPreviewProps> = ({
 };
 
 const ImagePreview: React.FC<{ src: string }> = ({ src }) => (
+  /* eslint-disable @next/next/no-img-element */
   <img
     src={src}
     className="w-full h-full object-contain mx-auto"
     alt="File preview"
   />
 );
+
 const PdfPreview: React.FC<{ src: string }> = ({ src }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     let isCancelled = false;
     const loadPdf = async () => {
@@ -156,9 +167,9 @@ const PdfPreview: React.FC<{ src: string }> = ({ src }) => {
           await page.render(renderContext).promise;
         }
         setIsLoading(false);
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!isCancelled) {
-          setError(err.message || "Gagal memuat PDF.");
+          setError(err instanceof Error ? err.message : "Gagal memuat PDF.");
           setIsLoading(false);
         }
       }
@@ -168,6 +179,7 @@ const PdfPreview: React.FC<{ src: string }> = ({ src }) => {
       isCancelled = true;
     };
   }, [src]);
+
   return (
     <div ref={containerRef} className="w-full h-full overflow-auto p-4">
       {isLoading && <LoadingPreview />}
@@ -184,10 +196,12 @@ const OfficePreview: React.FC<{ src: string }> = ({ src }) => (
     className="w-full h-full border-0"
   />
 );
+
 const EbookPreview: React.FC<{ src: string }> = ({ src }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!containerRef.current) return;
     if (typeof ePub === "undefined") {
@@ -206,8 +220,8 @@ const EbookPreview: React.FC<{ src: string }> = ({ src }) => {
       .then(() => {
         setIsLoading(false);
       })
-      .catch((err: any) => {
-        setError(err.message || "Gagal memuat e-book.");
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : "Gagal memuat e-book.");
         setIsLoading(false);
       });
 
@@ -215,6 +229,7 @@ const EbookPreview: React.FC<{ src: string }> = ({ src }) => {
       book.destroy();
     };
   }, [src]);
+
   return (
     <div className="w-full h-full">
       {isLoading && <LoadingPreview />}
@@ -234,6 +249,7 @@ const CodePreview: React.FC<{ src: string; fileName: string }> = ({
   const [content, setContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchContent = async () => {
       try {
@@ -241,23 +257,26 @@ const CodePreview: React.FC<{ src: string; fileName: string }> = ({
         if (!response.ok) throw new Error("Gagal mengambil konten file");
         const textContent = await response.text();
         setContent(textContent);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Gagal memuat kode.");
       } finally {
         setIsLoading(false);
       }
     };
     fetchContent();
   }, [src]);
+
   useEffect(() => {
     if (content) {
       Prism.highlightAll();
     }
   }, [content]);
+
   if (isLoading) return <LoadingPreview />;
   if (error) return <ErrorPreview message={error} />;
 
   const language = getLanguageFromFilename(fileName);
+
   return (
     <pre className="line-numbers h-full w-full overflow-auto text-sm !m-0 !p-4">
       <code className={`language-${language}`}>{content}</code>
@@ -287,6 +306,7 @@ export default function FileDetail({
   isModal?: boolean;
   prevFileUrl?: string;
   nextFileUrl?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   subtitleTracks?: any[];
 }) {
   const router = useRouter();
@@ -307,6 +327,7 @@ export default function FileDetail({
     () => searchParams.get("share_token"),
     [searchParams],
   );
+
   const isAdmin = user?.role === "ADMIN";
   const canShowAuthor = isAdmin || !hideAuthor;
 
@@ -338,7 +359,7 @@ export default function FileDetail({
           });
           router.push("/login?error=ShareLinkRevoked");
         }
-      } catch (e) {
+      } catch {
         addToast({
           message: "Gagal memvalidasi tautan berbagi.",
           type: "error",
@@ -348,6 +369,7 @@ export default function FileDetail({
     },
     [addToast, router],
   );
+
   useEffect(() => {
     if (shareToken) {
       validateShareToken(shareToken);
@@ -381,6 +403,7 @@ export default function FileDetail({
       }
     }
   }, [shareToken, router, addToast, validateShareToken]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isEditing) return;
@@ -407,9 +430,11 @@ export default function FileDetail({
     }
     return url;
   }, [file.id, shareToken]);
+
   const isEditable =
     user?.role === "ADMIN" && (fileType === "code" || fileType === "markdown");
   const isTextPreviewable = fileType === "code" || fileType === "markdown";
+
   useEffect(() => {
     if (isEditing && isEditable && editableContent === null) {
       setIsFetchingEditableContent(true);
@@ -443,6 +468,7 @@ export default function FileDetail({
     addToast,
     showTextPreview,
   ]);
+
   const handleSaveChanges = async () => {
     if (editableContent === null) return;
     setIsSaving(true);
@@ -461,17 +487,19 @@ export default function FileDetail({
       if (fileType === "markdown") {
         setMarkdownContent(editableContent);
       }
-    } catch (error: any) {
-      addToast({ message: error.message, type: "error" });
+    } catch (error: unknown) {
+      addToast({ message: error instanceof Error ? error.message : "Gagal menyimpan", type: "error" });
     } finally {
       setIsSaving(false);
     }
   };
+
   const renderPreview = () => {
     const mimeType =
       file.mimeType === "application/octet-stream" && file.name.endsWith(".mkv")
         ? "video/x-matroska"
         : file.mimeType;
+
     switch (fileType) {
       case "video":
         return (
@@ -527,8 +555,10 @@ export default function FileDetail({
   const durationMillis = file.videoMediaMetadata?.durationMillis
     ? parseInt(file.videoMediaMetadata.durationMillis, 10)
     : undefined;
+
   const showShareButton =
     !searchParams.get("share_token") && user?.role === "ADMIN";
+
   return (
     <div className="container mx-auto px-4 py-6 flex flex-col h-full overflow-hidden">
       {!isModal && (
@@ -759,6 +789,7 @@ const ListItem = ({ label, value }: { label: string; value: string }) => (
     <span className="text-right break-all">{value}</span>
   </li>
 );
+
 function getLanguageFromFilename(name: string): string {
   const ext = name.split(".").pop()?.toLowerCase() || "";
   const langMap: Record<string, string> = {

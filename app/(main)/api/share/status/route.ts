@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ valid: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ valid: false });
   }
 }

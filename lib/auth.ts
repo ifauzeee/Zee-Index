@@ -53,6 +53,7 @@ export async function verifyFolderToken(
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isGuestUser(token: any): boolean {
   return token?.isGuest === true;
 }
@@ -95,7 +96,7 @@ export async function validateShareToken(
       return !!session;
     }
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

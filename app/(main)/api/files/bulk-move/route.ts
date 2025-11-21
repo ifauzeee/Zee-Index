@@ -83,10 +83,12 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `${fileIds.length} item berhasil dipindahkan.`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
     console.error("Bulk Move API Error:", error);
     return NextResponse.json(
-      { error: error.message || "Internal Server Error." },
+      { error: errorMessage || "Internal Server Error." },
       { status: 500 },
     );
   }

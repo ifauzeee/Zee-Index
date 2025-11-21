@@ -22,7 +22,6 @@ import ArchivePreviewModal from "./ArchivePreviewModal";
 import { useFileFetching } from "@/hooks/useFileFetching";
 import { useUpload } from "@/hooks/useUpload";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
-import { jwtDecode } from "jwt-decode";
 import ImageGallery from "./ImageGallery";
 import FileBrowserHeader from "./FileBrowserHeader";
 import FileBrowserUploadProgress from "./FileBrowserUploadProgress";
@@ -40,7 +39,6 @@ export default function FileBrowser({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status: sessionStatus } = useSession();
-  
   const [authModal, setAuthModal] = useState<{
     isOpen: boolean;
     folderId: string;
@@ -48,7 +46,6 @@ export default function FileBrowser({
   }>({ isOpen: false, folderId: "", folderName: "" });
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
-
   const {
     sort,
     isBulkMode,
@@ -70,7 +67,6 @@ export default function FileBrowser({
     detailsFile,
     setDetailsFile,
   } = useAppStore();
-
   const {
     files,
     history,
@@ -89,17 +85,14 @@ export default function FileBrowser({
     router,
     refreshKey,
   });
-
   const isGuest = user?.isGuest === true;
   const isAdmin = user?.role === "ADMIN" && !isGuest;
-
   const {
     uploads,
     isUploadModalOpen,
     droppedFiles,
     isDragging,
     setIsUploadModalOpen,
-    setDroppedFiles,
     handleDragOver,
     handleDragLeave,
     handleDropUpload,
@@ -108,7 +101,6 @@ export default function FileBrowser({
     isAdmin,
     triggerRefresh: useAppStore.getState().triggerRefresh,
   });
-
   const {
     dragOverBreadcrumb,
     handleDragStart,
@@ -125,7 +117,6 @@ export default function FileBrowser({
     clearSelection: useAppStore.getState().clearSelection,
     addToast,
   });
-
   const {
     contextMenu,
     setContextMenu,
@@ -145,7 +136,6 @@ export default function FileBrowser({
     handleDelete,
     handleMove,
   } = useFileActions(currentFolderId);
-
   const gallery = useGallery(files);
 
   useEffect(() => {
@@ -167,7 +157,7 @@ export default function FileBrowser({
           addToast({ message: "Tautan berbagi tidak valid.", type: "error" });
           router.push("/login?error=ShareLinkRevoked");
         }
-      } catch (e) {
+      } catch {
         router.push("/login?error=InvalidOrExpiredShareLink");
       }
     }, [addToast, router]);
@@ -197,13 +187,15 @@ export default function FileBrowser({
   }, [activeFileId, files, previewFile, detailsFile, setPreviewFile]);
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
+  
   useEffect(() => {
+    const currentLoader = loaderRef.current;
     const observer = new IntersectionObserver(
       (entries) => { if (entries[0].isIntersecting) fetchNextPage(); },
       { threshold: 1.0 }
     );
-    if (loaderRef.current) observer.observe(loaderRef.current);
-    return () => { if (loaderRef.current) observer.disconnect(); };
+    if (currentLoader) observer.observe(currentLoader);
+    return () => { if (currentLoader) observer.disconnect(); };
   }, [fetchNextPage]);
 
   useEffect(() => {
@@ -211,7 +203,6 @@ export default function FileBrowser({
       setAuthModal({ isOpen: true, folderId: authModalInfo.folderId, folderName: authModalInfo.folderName });
     }
   }, [authModalInfo]);
-
 
   const createSlug = (name: string) => encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
 
@@ -261,8 +252,8 @@ export default function FileBrowser({
       addToast({ message: "Akses diberikan!", type: "success" });
       setAuthModal({ isOpen: false, folderId: "", folderName: "" });
       router.push(`/folder/${authModal.folderId}`);
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (err: unknown) {
+      addToast({ message: err instanceof Error ? err.message : "Unknown error", type: "error" });
     } finally {
       setIsAuthLoading(false);
     }

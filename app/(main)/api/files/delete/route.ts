@@ -11,7 +11,11 @@ const deleteSchema = z.object({
 });
 
 export const POST = withAdminSession(
-  async (request: NextRequest, context: {}, session: Session) => {
+  async (
+    request: NextRequest,
+    context: Record<string, unknown>,
+    session: Session,
+  ) => {
     let fileDetails: { name?: string; parents?: string[] } | null = null;
     try {
       const body = await request.json();
@@ -54,7 +58,7 @@ export const POST = withAdminSession(
               errorData.error?.message || "Gagal menghapus file."
             }`,
           );
-        } catch (e) {
+        } catch {
           throw new Error(`Google Drive API Error: Status ${response.status}`);
         }
       }
@@ -68,16 +72,18 @@ export const POST = withAdminSession(
       await invalidateFolderCache(parentId);
 
       return NextResponse.json({ success: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
       await logActivity("DELETE", {
         itemName: fileDetails?.name || "Unknown",
         userEmail: session?.user?.email,
         status: "failure",
-        error: error.message,
+        error: errorMessage,
       });
-      console.error("Delete API Error:", error.message);
+      console.error("Delete API Error:", errorMessage);
       return NextResponse.json(
-        { error: "Internal Server Error.", details: error.message },
+        { error: "Internal Server Error.", details: errorMessage },
         { status: 500 },
       );
     }

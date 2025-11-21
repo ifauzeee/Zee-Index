@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import {
-  Search as SearchIcon,
   X,
   Globe,
   FileText,
@@ -129,6 +128,7 @@ export default function Search({ onSearchClose }: SearchProps) {
     e.preventDefault();
     performSearch(searchTerm);
   };
+
   const clearSearch = () => {
     setSearchTerm("");
     setMimeType("any");

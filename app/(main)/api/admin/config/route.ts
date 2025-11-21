@@ -22,7 +22,7 @@ async function isAdmin(session: Session | null): Promise<boolean> {
   return session?.user?.role === "ADMIN";
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const config: AppConfig | null = await kv.get(CONFIG_KEY);
     return NextResponse.json(

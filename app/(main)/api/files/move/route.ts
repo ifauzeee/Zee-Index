@@ -56,10 +56,12 @@ export async function POST(request: NextRequest) {
     await invalidateFolderCache(newParentId);
 
     return NextResponse.json({ success: true, data });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
     console.error("Move API Error:", error);
     return NextResponse.json(
-      { error: error.message || "Internal Server Error." },
+      { error: errorMessage || "Internal Server Error." },
       { status: 500 },
     );
   }

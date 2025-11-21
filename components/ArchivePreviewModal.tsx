@@ -53,8 +53,10 @@ export default function ArchivePreviewModal({
         }
         const data = await response.json();
         setContent(data);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        setError(
+          err instanceof Error ? err.message : "Terjadi kesalahan tidak dikenal.",
+        );
       } finally {
         setIsLoading(false);
       }

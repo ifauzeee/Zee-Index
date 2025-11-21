@@ -85,9 +85,11 @@ function SharedCollectionPage() {
 
         setItems(data.items);
         setCollectionName(data.collectionName || "Koleksi Bersama");
-      } catch (err: any) {
-        setError(err.message);
-        addToast({ message: err.message, type: "error" });
+      } catch (err: unknown) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Terjadi kesalahan tidak dikenal.";
+        setError(errorMessage);
+        addToast({ message: errorMessage, type: "error" });
       } finally {
         setIsLoading(false);
       }

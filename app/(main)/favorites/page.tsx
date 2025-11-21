@@ -13,7 +13,7 @@ import EmptyState from "@/components/EmptyState";
 
 export default function FavoritesPage() {
   const router = useRouter();
-  const { addToast, shareToken, user } = useAppStore();
+  const { addToast, user } = useAppStore();
   const [favoriteFiles, setFavoriteFiles] = useState<DriveFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const createSlug = (name: string) =>
@@ -25,8 +25,11 @@ export default function FavoritesPage() {
       if (!response.ok) throw new Error("Gagal mengambil data favorit.");
       const data = await response.json();
       setFavoriteFiles(data);
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (err: unknown) {
+      addToast({
+        message: err instanceof Error ? err.message : "Terjadi galat.",
+        type: "error",
+      });
     } finally {
       setIsLoading(false);
     }

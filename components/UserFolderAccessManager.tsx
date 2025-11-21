@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
 import {
   Loader2,
@@ -9,7 +9,6 @@ import {
   UserCheck,
   User,
   FolderInput,
-  AlertCircle,
 } from "lucide-react";
 
 interface FolderAccess {
@@ -27,23 +26,23 @@ export default function UserFolderAccessManager() {
     email: "",
   });
 
-  const fetchPermissions = async () => {
+  const fetchPermissions = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/admin/user-access");
       if (!response.ok) throw new Error("Gagal mengambil data izin akses.");
       const data = await response.json();
       setPermissions(data);
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (err: unknown) {
+      addToast({ message: err instanceof Error ? err.message : "Error", type: "error" });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [addToast]);
 
   useEffect(() => {
     fetchPermissions();
-  }, []);
+  }, [fetchPermissions]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -64,8 +63,8 @@ export default function UserFolderAccessManager() {
       addToast({ message: result.message, type: "success" });
       setNewAccess({ folderId: "", email: "" });
       fetchPermissions();
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (err: unknown) {
+      addToast({ message: err instanceof Error ? err.message : "Error", type: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -78,7 +77,6 @@ export default function UserFolderAccessManager() {
       )
     )
       return;
-
     try {
       const response = await fetch("/api/admin/user-access", {
         method: "DELETE",
@@ -89,8 +87,8 @@ export default function UserFolderAccessManager() {
       if (!response.ok) throw new Error(result.error);
       addToast({ message: result.message, type: "success" });
       fetchPermissions();
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (err: unknown) {
+      addToast({ message: err instanceof Error ? err.message : "Error", type: "error" });
     }
   };
 

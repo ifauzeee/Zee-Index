@@ -31,10 +31,12 @@ export async function GET(request: NextRequest) {
   try {
     const path = await getFolderPath(folderId);
     return NextResponse.json(path);
-  } catch (error: any) {
-    console.error("Folder Path API Error:", error.message);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
+    console.error("Folder Path API Error:", errorMessage);
     return NextResponse.json(
-      { error: "Gagal mengambil jalur folder.", details: error.message },
+      { error: "Gagal mengambil jalur folder.", details: errorMessage },
       { status: 500 },
     );
   }

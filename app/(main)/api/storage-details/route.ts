@@ -14,10 +14,12 @@ export async function GET() {
   try {
     const details = await getStorageDetails();
     return NextResponse.json(details);
-  } catch (error: any) {
-    console.error("Storage Details API Error:", error.message);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
+    console.error("Storage Details API Error:", errorMessage);
     return NextResponse.json(
-      { error: "Gagal mengambil detail penyimpanan.", details: error.message },
+      { error: "Gagal mengambil detail penyimpanan.", details: errorMessage },
       { status: 500 },
     );
   }

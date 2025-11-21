@@ -2,11 +2,16 @@ import { NextResponse, NextRequest } from "next/server";
 import { getAccessToken } from "@/lib/googleDrive";
 import { withAdminSession } from "@/lib/api-middleware";
 import { logActivity } from "@/lib/activityLogger";
+import { type Session } from "next-auth";
 
 export const maxDuration = 60;
 
 export const POST = withAdminSession(
-  async (request: NextRequest, context: {}, session: any) => {
+  async (
+    request: NextRequest,
+    context: Record<string, unknown>,
+    session: Session,
+  ) => {
     const searchParams = request.nextUrl.searchParams;
     const uploadType = searchParams.get("type");
 
@@ -33,18 +38,18 @@ export const POST = withAdminSession(
               "X-Upload-Content-Type": mimeType,
             },
             body: JSON.stringify(metadata),
-          }
+          },
         );
 
         if (!response.ok) {
-          throw new Error("Gagal menginisialisasi sesi upload dengan Google Drive.");
+          throw new Error(
+            "Gagal menginisialisasi sesi upload dengan Google Drive.",
+          );
         }
 
         const uploadUrl = response.headers.get("Location");
         return NextResponse.json({ uploadUrl });
-      }
-
-      else if (uploadType === "chunk") {
+      } else if (uploadType === "chunk") {
         const uploadUrl = searchParams.get("uploadUrl");
         const contentRange = request.headers.get("Content-Range");
         const contentLength = request.headers.get("Content-Length");
@@ -52,7 +57,7 @@ export const POST = withAdminSession(
         if (!uploadUrl || !contentRange) {
           return NextResponse.json(
             { error: "Parameter uploadUrl atau header Content-Range hilang." },
-            { status: 400 }
+            { status: 400 },
           );
         }
 
@@ -61,7 +66,8 @@ export const POST = withAdminSession(
         const driveResponse = await fetch(uploadUrl, {
           method: "PUT",
           headers: {
-            "Content-Length": contentLength || chunkBuffer.byteLength.toString(),
+            "Content-Length":
+              contentLength || chunkBuffer.byteLength.toString(),
             "Content-Range": contentRange,
           },
           body: chunkBuffer,
@@ -73,7 +79,7 @@ export const POST = withAdminSession(
 
         if (driveResponse.ok) {
           const fileData = await driveResponse.json();
-          
+
           await logActivity("UPLOAD", {
             itemName: fileData.name,
             itemSize: fileData.size,
@@ -85,18 +91,20 @@ export const POST = withAdminSession(
         }
 
         throw new Error("Gagal mengunggah chunk ke Google Drive.");
-      } 
-      
-      else {
-        return NextResponse.json({ error: "Invalid upload type" }, { status: 400 });
+      } else {
+        return NextResponse.json(
+          { error: "Invalid upload type" },
+          { status: 400 },
+        );
       }
-
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
       console.error("Upload API Error:", error);
       return NextResponse.json(
-        { error: error.message || "Internal Server Error." },
-        { status: 500 }
+        { error: errorMessage || "Internal Server Error." },
+        { status: 500 },
       );
     }
-  }
+  },
 );

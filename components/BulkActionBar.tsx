@@ -44,7 +44,9 @@ export default function BulkActionBar() {
     if (utf8Match && utf8Match[1]) {
       try {
         return decodeURIComponent(utf8Match[1]);
-      } catch (e) {}
+      } catch {
+        // Fallback to basic match if decoding fails
+      }
     }
     const basicMatch = header.match(/filename="([^"]+)"/);
     if (basicMatch && basicMatch[1]) {
@@ -134,8 +136,12 @@ export default function BulkActionBar() {
       });
       clearSelection();
       triggerRefresh();
-    } catch (error: any) {
-      addToast({ message: error.message, type: "error" });
+    } catch (error: unknown) {
+      addToast({
+        message:
+          error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.",
+        type: "error",
+      });
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
@@ -165,8 +171,12 @@ export default function BulkActionBar() {
       });
       clearSelection();
       triggerRefresh();
-    } catch (error: any) {
-      addToast({ message: error.message, type: "error" });
+    } catch (error: unknown) {
+      addToast({
+        message:
+          error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.",
+        type: "error",
+      });
     } finally {
       setIsMoving(false);
       setShowMoveModal(false);

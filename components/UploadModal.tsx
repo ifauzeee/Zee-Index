@@ -10,7 +10,8 @@ import { useUpload } from "@/hooks/useUpload";
 interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialFiles?: any; 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  initialFiles?: any;
 }
 
 export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
@@ -19,7 +20,6 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
   
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  
   const {
     isDragging,
     handleDragOver,
@@ -31,7 +31,6 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
     isAdmin: isAdmin || false,
     triggerRefresh,
   });
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
 
@@ -54,8 +53,8 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
       triggerRefresh();
       setNewFolderName("");
       onClose();
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (err: unknown) {
+      addToast({ message: err instanceof Error ? err.message : "Error", type: "error" });
     } finally {
       setIsCreatingFolder(false);
     }
@@ -112,6 +111,7 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
                   ref={folderInputRef}
                   onChange={handleFileSelect}
                   className="hidden"
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   {...({ webkitdirectory: "", directory: "" } as any)}
                 />
                 

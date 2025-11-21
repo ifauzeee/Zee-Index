@@ -57,6 +57,7 @@ const navItemVariants = {
 };
 
 interface MobileNavProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   menuItems: any[];
   publicShareLinkItems: string[];
   authButton: React.ReactNode;
@@ -251,7 +252,6 @@ export default function Header() {
   }, [isMobileMenuOpen]);
 
   const handleGuestLogout = () => {
-    // For guest users, we'll sign out and redirect to login page with a message
     signOut({ callbackUrl: "/login?error=GuestLogout" });
   };
 

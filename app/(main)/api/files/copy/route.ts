@@ -64,10 +64,12 @@ export async function POST(request: NextRequest) {
     await invalidateFolderCache(parentId);
     const copiedFile = await response.json();
     return NextResponse.json({ success: true, file: copiedFile });
-  } catch (error: any) {
-    console.error("Copy API Error:", error.message);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
+    console.error("Copy API Error:", errorMessage);
     return NextResponse.json(
-      { error: "Internal Server Error.", details: error.message },
+      { error: "Internal Server Error.", details: errorMessage },
       { status: 500 },
     );
   }

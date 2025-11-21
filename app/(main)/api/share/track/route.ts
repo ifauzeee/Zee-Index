@@ -1,9 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { kv } from "@/lib/kv";
-import type { ShareLink } from "@/lib/store";
 import { jwtVerify } from "jose";
 
-const SHARE_LINKS_KEY = "zee-index:share-links";
 export async function POST(req: NextRequest) {
   try {
     const { shareToken } = await req.json();

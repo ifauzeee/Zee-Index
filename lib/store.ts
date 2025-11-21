@@ -165,7 +165,7 @@ export const useAppStore = create<AppState>()(
           } else {
             set({ user: null });
           }
-        } catch (error) {
+        } catch {
           set({ user: null });
         }
       },
@@ -185,8 +185,8 @@ export const useAppStore = create<AppState>()(
               new Date(b.expiresAt).getTime() - new Date(a.expiresAt).getTime(),
           );
           set({ shareLinks: links });
-        } catch (error: any) {
-          get().addToast({ message: error.message, type: "error" });
+        } catch (error: unknown) {
+          get().addToast({ message: error instanceof Error ? error.message : "Error", type: "error" });
         }
       },
       addShareLink: (link) =>
@@ -218,8 +218,8 @@ export const useAppStore = create<AppState>()(
             message: "Tautan berhasil dihapus.",
             type: "success",
           });
-        } catch (error: any) {
-          get().addToast({ message: error.message, type: "error" });
+        } catch (error: unknown) {
+          get().addToast({ message: error instanceof Error ? error.message : "Error", type: "error" });
           set({ shareLinks: originalLinks });
         }
       },
@@ -239,9 +239,9 @@ export const useAppStore = create<AppState>()(
             1024
           ).toFixed(2)} GB`;
           set({ dataUsage: { status: "success", value: formattedUsage } });
-        } catch (error: any) {
+        } catch (error: unknown) {
           set({ dataUsage: { status: "error", value: "Gagal memuat" } });
-          get().addToast({ message: error.message, type: "error" });
+          get().addToast({ message: error instanceof Error ? error.message : "Error", type: "error" });
         }
       },
       adminEmails: [],
@@ -253,8 +253,8 @@ export const useAppStore = create<AppState>()(
           if (!response.ok) throw new Error("Gagal mengambil daftar admin");
           const emails = await response.json();
           set({ adminEmails: emails });
-        } catch (error: any) {
-          get().addToast({ message: error.message, type: "error" });
+        } catch (error: unknown) {
+          get().addToast({ message: error instanceof Error ? error.message : "Error", type: "error" });
         } finally {
           set({ isFetchingAdmins: false });
         }
@@ -273,8 +273,8 @@ export const useAppStore = create<AppState>()(
             adminEmails: [...state.adminEmails, email].sort(),
           }));
           get().addToast({ message: result.message, type: "success" });
-        } catch (error: any) {
-          get().addToast({ message: error.message, type: "error" });
+        } catch (error: unknown) {
+          get().addToast({ message: error instanceof Error ? error.message : "Error", type: "error" });
         }
       },
       removeAdminEmail: async (email: string) => {
@@ -294,8 +294,8 @@ export const useAppStore = create<AppState>()(
           if (!response.ok)
             throw new Error(result.error || "Gagal menghapus admin.");
           get().addToast({ message: result.message, type: "success" });
-        } catch (error: any) {
-          get().addToast({ message: error.message, type: "error" });
+        } catch (error: unknown) {
+          get().addToast({ message: error instanceof Error ? error.message : "Error", type: "error" });
           set({ adminEmails: originalAdmins });
         }
       },
@@ -331,8 +331,8 @@ export const useAppStore = create<AppState>()(
             throw new Error(result.error || "Gagal memperbarui favorit.");
           }
           get().addToast({ message: result.message, type: "success" });
-        } catch (error: any) {
-          get().addToast({ message: error.message, type: "error" });
+        } catch (error: unknown) {
+          get().addToast({ message: error instanceof Error ? error.message : "Error", type: "error" });
           set({ favorites: originalFavorites });
         }
       },
@@ -371,8 +371,8 @@ export const useAppStore = create<AppState>()(
             hideAuthor: result.config.hideAuthor,
             disableGuestLogin: result.config.disableGuestLogin,
           });
-        } catch (error: any) {
-          get().addToast({ message: error.message, type: "error" });
+        } catch (error: unknown) {
+          get().addToast({ message: error instanceof Error ? error.message : "Error", type: "error" });
         }
       },
     }),

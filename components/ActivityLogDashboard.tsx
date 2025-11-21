@@ -117,8 +117,12 @@ export default function ActivityLogDashboard() {
         setLogs(data.logs);
         setTotalPages(data.totalPages);
         setCurrentPage(data.currentPage);
-      } catch (err: any) {
-        addToast({ message: err.message, type: "error" });
+      } catch (err: unknown) {
+        addToast({
+          message:
+            err instanceof Error ? err.message : "Terjadi kesalahan tidak dikenal.",
+          type: "error",
+        });
       } finally {
         setIsLoading(false);
       }

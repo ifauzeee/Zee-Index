@@ -14,6 +14,14 @@ const FileError = ({ message }: { message: string }) => (
 const createSlug = (name: string) =>
   encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
 
+interface SubtitleTrack {
+  src: string;
+  kind: string;
+  srcLang: string;
+  label: string;
+  default: boolean;
+}
+
 export default async function FilePage({
   params,
 }: {
@@ -24,7 +32,7 @@ export default async function FilePage({
 
   let prevFileUrl: string | undefined = undefined;
   let nextFileUrl: string | undefined = undefined;
-  let subtitleTracks: any[] = [];
+  let subtitleTracks: SubtitleTrack[] = [];
 
   try {
     file = await getFileDetailsFromDrive(params.fileId);

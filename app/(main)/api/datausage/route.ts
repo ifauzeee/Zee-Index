@@ -16,10 +16,12 @@ export async function GET() {
     return NextResponse.json({
       totalUsage: storageDetails.usage,
     });
-  } catch (error: any) {
-    console.error("Data Usage API Error:", error.message);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
+    console.error("Data Usage API Error:", errorMessage);
     return NextResponse.json(
-      { error: "Failed to calculate data usage.", details: error.message },
+      { error: "Failed to calculate data usage.", details: errorMessage },
       { status: 500 },
     );
   }

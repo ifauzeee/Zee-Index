@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
 import {
   Loader2,
@@ -21,30 +21,29 @@ export default function ProtectedFoldersManager() {
   const [folders, setFolders] = useState<Record<string, ProtectedFolder>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [newFolder, setNewFolder] = useState({
     folderId: "",
     id: "",
     password: "",
   });
 
-  const fetchFolders = async () => {
+  const fetchFolders = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/admin/protected-folders");
       if (!response.ok) throw new Error("Gagal mengambil data folder.");
       const data = await response.json();
       setFolders(data);
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (err: unknown) {
+      addToast({ message: err instanceof Error ? err.message : "Error", type: "error" });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [addToast]);
 
   useEffect(() => {
     fetchFolders();
-  }, []);
+  }, [fetchFolders]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -65,8 +64,8 @@ export default function ProtectedFoldersManager() {
       addToast({ message: result.message, type: "success" });
       setNewFolder({ folderId: "", id: "", password: "" });
       fetchFolders();
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (err: unknown) {
+      addToast({ message: err instanceof Error ? err.message : "Error", type: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -89,8 +88,8 @@ export default function ProtectedFoldersManager() {
       if (!response.ok) throw new Error(result.error);
       addToast({ message: result.message, type: "success" });
       fetchFolders();
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (err: unknown) {
+      addToast({ message: err instanceof Error ? err.message : "Error", type: "error" });
     }
   };
 

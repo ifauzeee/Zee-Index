@@ -27,10 +27,12 @@ export async function GET(request: NextRequest) {
   try {
     const details = await getFileDetailsFromDrive(fileId);
     return NextResponse.json(details);
-  } catch (error: any) {
-    console.error("File Details API Error:", error.message);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
+    console.error("File Details API Error:", errorMessage);
     return NextResponse.json(
-      { error: "Gagal mengambil detail file.", details: error.message },
+      { error: "Gagal mengambil detail file.", details: errorMessage },
       { status: 500 },
     );
   }

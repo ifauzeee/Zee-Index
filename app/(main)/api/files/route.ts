@@ -37,7 +37,7 @@ async function validateShareToken(request: Request): Promise<boolean> {
       return !!session;
     }
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -155,12 +155,14 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json(responseData);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
     console.error("[API /api/files ERROR]:", error);
     return NextResponse.json(
       {
         error: "Terjadi kesalahan internal pada server.",
-        details: error.message,
+        details: errorMessage,
       },
       { status: 500 },
     );

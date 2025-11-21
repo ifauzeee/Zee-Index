@@ -47,8 +47,8 @@ export default function MoveModal({
         if (!response.ok) throw new Error("Gagal memuat folder");
         const data = await response.json();
         setSubfolders(data.files.filter((f: DriveFile) => f.isFolder));
-      } catch (err: any) {
-        addToast({ message: err.message, type: "error" });
+      } catch (err: unknown) {
+        addToast({ message: err instanceof Error ? err.message : "Error", type: "error" });
       } finally {
         setIsLoading(false);
       }

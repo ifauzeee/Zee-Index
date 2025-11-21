@@ -85,8 +85,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
-  } catch (error: any) {
-    console.error("Download API Error:", error.message);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
+    console.error("Download API Error:", errorMessage);
     return NextResponse.json(
       { error: "Internal Server Error." },
       { status: 500 },

@@ -19,7 +19,7 @@ async function isAdmin(session: Session | null): Promise<boolean> {
   return session?.user?.role === "ADMIN";
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const session = await getServerSession(authOptions);
   if (!(await isAdmin(session))) {
     return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(permissions);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Gagal mengambil data." },
       { status: 500 },

@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { kv } from "@vercel/kv";
 import { DriveFile, getFileDetailsFromDrive } from "@/lib/googleDrive";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
     return NextResponse.json({ error: "Akses ditolak." }, { status: 401 });
@@ -35,10 +35,12 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json(validFiles);
-  } catch (error: any) {
-    console.error("Get Favorites API Error:", error);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
+    console.error("Get Favorites API Error:", errorMessage);
     return NextResponse.json(
-      { error: error.message || "Internal Server Error." },
+      { error: errorMessage || "Internal Server Error." },
       { status: 500 },
     );
   }

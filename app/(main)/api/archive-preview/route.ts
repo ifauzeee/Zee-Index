@@ -2,7 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { getAccessToken } from "@/lib/googleDrive";
-import JSZip from "jszip";
+import JSZip, { JSZipObject } from "jszip";
+
+interface JSZipFileWithData extends JSZipObject {
+  _data: {
+    uncompressedSize: number;
+  };
+}
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -39,15 +45,17 @@ export async function GET(request: NextRequest) {
 
     const content = Object.values(zip.files).map((file) => ({
       name: file.name,
-      size: file.dir ? 0 : (file as any)._data.uncompressedSize,
+      size: file.dir ? 0 : (file as JSZipFileWithData)._data.uncompressedSize,
       isFolder: file.dir,
     }));
 
     return NextResponse.json(content);
-  } catch (error: any) {
-    console.error("Archive Preview API Error:", error.message);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
+    console.error("Archive Preview API Error:", errorMessage);
     return NextResponse.json(
-      { error: "Gagal memproses file arsip.", details: error.message },
+      { error: "Gagal memproses file arsip.", details: errorMessage },
       { status: 500 },
     );
   }

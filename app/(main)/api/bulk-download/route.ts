@@ -45,8 +45,10 @@ export async function POST(request: Request) {
     headers.set("Content-Disposition", 'attachment; filename="download.zip"');
 
     return new NextResponse(zipBlob, { status: 200, headers });
-  } catch (error: any) {
-    console.error("Bulk Download API Error:", error.message);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
+    console.error("Bulk Download API Error:", errorMessage);
     return NextResponse.json(
       { error: "Internal Server Error." },
       { status: 500 },

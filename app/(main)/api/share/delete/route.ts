@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { kv } from "@/lib/kv";
-import type { ShareLink } from "@/lib/store";
 
 const SHARE_LINKS_KEY = "zee-index:share-links";
 

@@ -2,14 +2,13 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 function CustomLoginPage() {
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
-  const currentYear = new Date().getFullYear();
   const [isGuestLoginDisabled, setIsGuestLoginDisabled] = useState(true);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
 

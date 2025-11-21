@@ -1,8 +1,6 @@
 "use client";
-
 import React from "react";
 import { useAppStore } from "@/lib/store";
-import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 const SkeletonItem = ({ view }: { view: "list" | "grid" }) => {
@@ -29,12 +27,10 @@ const SkeletonItem = ({ view }: { view: "list" | "grid" }) => {
 
 const FileItemSkeleton = () => {
   const { view } = useAppStore();
-
   const itemVariants = {
     hidden: { opacity: 0, y: 10, scale: 0.98 },
     visible: { opacity: 1, y: 0, scale: 1 },
   };
-
   return (
     <motion.div variants={itemVariants}>
       <SkeletonItem view={view} />

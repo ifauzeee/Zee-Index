@@ -63,8 +63,11 @@ export async function GET(request: Request) {
       success: true,
       message: "Laporan mingguan berhasil dikirim.",
     });
-  } catch (error: any) {
-    console.error("Gagal membuat laporan mingguan:", error);
+  } catch (error: unknown) {
+    console.error(
+      "Gagal membuat laporan mingguan:",
+      error instanceof Error ? error.message : error,
+    );
     return NextResponse.json(
       { error: "Gagal memproses laporan." },
       { status: 500 },

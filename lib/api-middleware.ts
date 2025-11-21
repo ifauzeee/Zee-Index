@@ -5,15 +5,14 @@ import { authOptions } from "@/lib/authOptions";
 
 type AdminApiHandler = (
   req: NextRequest,
-  context: { params?: any },
+  context: { params?: unknown },
   session: Session,
 ) => Promise<NextResponse>;
 
 export function withAdminSession(handler: AdminApiHandler) {
-  return async (req: NextRequest, context: { params?: any }) => {
+  return async (req: NextRequest, context: { params?: unknown }) => {
     try {
       const session = await getServerSession(authOptions);
-
       if (
         !session ||
         !session.user ||
@@ -24,7 +23,7 @@ export function withAdminSession(handler: AdminApiHandler) {
       }
 
       return await handler(req, context, session);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(
         `[Admin Middleware Error] Gagal memproses ${req.url}:`,
         error,

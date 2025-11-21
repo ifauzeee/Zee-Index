@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
     );
     const results = await Promise.allSettled(searchPromises);
 
-    let allFiles: DriveFile[] = [];
+    const allFiles: DriveFile[] = [];
     for (const result of results) {
       if (result.status === "fulfilled" && result.value.length > 0) {
         allFiles.push(...result.value);
@@ -128,10 +128,12 @@ export async function GET(request: NextRequest) {
       }),
     );
     return NextResponse.json({ files: processedFiles });
-  } catch (error: any) {
-    console.error("Global Search API Error:", error.message);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
+    console.error("Global Search API Error:", errorMessage);
     return NextResponse.json(
-      { error: "Failed to perform global search.", details: error.message },
+      { error: "Failed to perform global search.", details: errorMessage },
       { status: 500 },
     );
   }

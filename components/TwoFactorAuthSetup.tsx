@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, ShieldCheck, ShieldOff } from "lucide-react";
 import Image from "next/image";
 import { useAppStore } from "@/lib/store";
-import { cn } from "@/lib/utils";
 
 export default function TwoFactorAuthSetup() {
   const [isEnabled, setIsEnabled] = useState<boolean | null>(null);
@@ -24,8 +23,8 @@ export default function TwoFactorAuthSetup() {
       if (!response.ok) throw new Error("Gagal memeriksa status 2FA.");
       const data = await response.json();
       setIsEnabled(data.isEnabled);
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (err: unknown) {
+      addToast({ message: err instanceof Error ? err.message : "Error", type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -47,8 +46,8 @@ export default function TwoFactorAuthSetup() {
       if (!response.ok) throw new Error("Gagal membuat kode QR.");
       const data = await response.json();
       setQrCodeDataURL(data.qrCodeDataURL);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error");
     } finally {
       setIsLoading(false);
     }
@@ -66,13 +65,12 @@ export default function TwoFactorAuthSetup() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Verifikasi gagal.");
-
       addToast({ message: "2FA berhasil diaktifkan!", type: "success" });
       setIsEnabled(true);
       setQrCodeDataURL(null);
       setVerificationCode("");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error");
     } finally {
       setIsLoading(false);
     }
@@ -93,8 +91,8 @@ export default function TwoFactorAuthSetup() {
 
       addToast({ message: "2FA berhasil dinonaktifkan.", type: "info" });
       setIsEnabled(false);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error");
     } finally {
       setIsLoading(false);
     }

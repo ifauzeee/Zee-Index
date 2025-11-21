@@ -24,6 +24,7 @@ export default function SearchResultsList() {
 
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
+
   const isAdmin = user?.role === "ADMIN" && !user?.isGuest;
 
   const handleItemClick = useCallback(
@@ -88,13 +89,15 @@ export default function SearchResultsList() {
       }
 
       setResults(data.files);
-    } catch (err: any) {
-      setError(err.message);
-      addToast({ message: err.message, type: "error" });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      setError(msg);
+      addToast({ message: msg, type: "error" });
     } finally {
       setIsLoading(false);
     }
   }, [searchTerm, folderId, addToast, shareToken]);
+
   useEffect(() => {
     fetchSearchResults();
   }, [fetchSearchResults]);

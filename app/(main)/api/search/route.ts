@@ -115,10 +115,12 @@ export async function GET(request: NextRequest) {
       files: processedFiles,
       nextPageToken: data.nextPageToken,
     });
-  } catch (error: any) {
-    console.error("Search API Error:", error.message);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
+    console.error("Search API Error:", errorMessage);
     return NextResponse.json(
-      { error: "Failed to perform search.", details: error.message },
+      { error: "Failed to perform search.", details: errorMessage },
       { status: 500 },
     );
   }

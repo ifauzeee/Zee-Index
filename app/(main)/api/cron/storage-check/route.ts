@@ -64,8 +64,11 @@ export async function GET(request: Request) {
       success: true,
       message: "Kapasitas penyimpanan masih aman.",
     });
-  } catch (error: any) {
-    console.error("Gagal memeriksa penyimpanan:", error);
+  } catch (error: unknown) {
+    console.error(
+      "Gagal memeriksa penyimpanan:",
+      error instanceof Error ? error.message : error,
+    );
     return NextResponse.json(
       { error: "Gagal memproses pemeriksaan penyimpanan." },
       { status: 500 },

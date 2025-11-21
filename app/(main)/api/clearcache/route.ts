@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 

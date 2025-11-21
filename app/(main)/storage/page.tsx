@@ -8,12 +8,6 @@ import Loading from "@/components/Loading";
 import { formatBytes, getIcon } from "@/lib/utils";
 import {
   HardDrive,
-  FileVideo,
-  FileImage,
-  FileAudio,
-  FileText,
-  FileQuestion,
-  StickyNote,
   ArrowLeft,
 } from "lucide-react";
 import type { DriveFile } from "@/lib/googleDrive";
@@ -30,15 +24,6 @@ interface StorageDetails {
   breakdown: BreakdownItem[];
   largestFiles: DriveFile[];
 }
-
-const typeIcons: Record<string, React.ReactNode> = {
-  Video: <FileVideo className="h-5 w-5 text-red-400" />,
-  Gambar: <FileImage className="h-5 w-5 text-green-400" />,
-  Audio: <FileAudio className="h-5 w-5 text-purple-400" />,
-  Dokumen: <FileText className="h-5 w-5 text-orange-400" />,
-  "Google Docs": <StickyNote className="h-5 w-5 text-blue-400" />,
-  Lainnya: <FileQuestion className="h-5 w-5 text-gray-400" />,
-};
 
 const chartColors = [
   "hsl(var(--chart-1))",
@@ -76,8 +61,10 @@ export default function StoragePage() {
         }
         const result = await response.json();
         setData(result);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        setError(
+          err instanceof Error ? err.message : "Terjadi kesalahan tidak dikenal.",
+        );
       } finally {
         setIsLoading(false);
       }
