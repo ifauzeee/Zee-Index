@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,10 +30,10 @@ import { useGallery } from "@/hooks/useGallery";
 
 const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024;
 
-export default function FileBrowser({ 
+export default function FileBrowser({
   initialFolderId,
   initialFolderPath,
-}: { 
+}: {
   initialFolderId?: string;
   initialFolderPath?: { id: string; name: string }[];
 }) {
@@ -66,7 +67,9 @@ export default function FileBrowser({
     fetchFavorites,
     detailsFile,
     setDetailsFile,
+    setCurrentFolderId,
   } = useAppStore();
+
   const {
     files,
     history,
@@ -85,8 +88,16 @@ export default function FileBrowser({
     router,
     refreshKey,
   });
+
+  useEffect(() => {
+    if (currentFolderId) {
+      setCurrentFolderId(currentFolderId);
+    }
+  }, [currentFolderId, setCurrentFolderId]);
+
   const isGuest = user?.isGuest === true;
   const isAdmin = user?.role === "ADMIN" && !isGuest;
+
   const {
     uploads,
     isUploadModalOpen,
@@ -96,11 +107,13 @@ export default function FileBrowser({
     handleDragOver,
     handleDragLeave,
     handleDropUpload,
+    handleFileSelect,
   } = useUpload({
     currentFolderId,
     isAdmin,
     triggerRefresh: useAppStore.getState().triggerRefresh,
   });
+
   const {
     dragOverBreadcrumb,
     handleDragStart,
@@ -117,6 +130,7 @@ export default function FileBrowser({
     clearSelection: useAppStore.getState().clearSelection,
     addToast,
   });
+
   const {
     contextMenu,
     setContextMenu,
@@ -136,6 +150,7 @@ export default function FileBrowser({
     handleDelete,
     handleMove,
   } = useFileActions(currentFolderId);
+
   const gallery = useGallery(files);
 
   useEffect(() => {
@@ -145,7 +160,8 @@ export default function FileBrowser({
     }
   }, [sessionStatus, user, fetchUser, fetchFavorites]);
 
-  const validateShareToken = useCallback(async (token: string) => {
+  const validateShareToken = useCallback(
+    async (token: string) => {
       try {
         const res = await fetch("/api/share/status", {
           method: "POST",
@@ -160,7 +176,9 @@ export default function FileBrowser({
       } catch {
         router.push("/login?error=InvalidOrExpiredShareLink");
       }
-    }, [addToast, router]);
+    },
+    [addToast, router],
+  );
 
   useEffect(() => {
     const currentShareToken = searchParams.get("share_token");
@@ -183,28 +201,38 @@ export default function FileBrowser({
       }
     };
     window.addEventListener("keydown", handleKeyDown);
+
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeFileId, files, previewFile, detailsFile, setPreviewFile]);
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
-  
+
   useEffect(() => {
-    const currentLoader = loaderRef.current;
     const observer = new IntersectionObserver(
-      (entries) => { if (entries[0].isIntersecting) fetchNextPage(); },
-      { threshold: 1.0 }
+      (entries) => {
+        if (entries[0].isIntersecting) fetchNextPage();
+      },
+      { threshold: 1.0 },
     );
+    const currentLoader = loaderRef.current;
     if (currentLoader) observer.observe(currentLoader);
-    return () => { if (currentLoader) observer.disconnect(); };
+    return () => {
+      if (currentLoader) observer.disconnect();
+    };
   }, [fetchNextPage]);
 
   useEffect(() => {
     if (authModalInfo) {
-      setAuthModal({ isOpen: true, folderId: authModalInfo.folderId, folderName: authModalInfo.folderName });
+      setAuthModal({
+        isOpen: true,
+        folderId: authModalInfo.folderId,
+        folderName: authModalInfo.folderName,
+      });
     }
   }, [authModalInfo]);
 
-  const createSlug = (name: string) => encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
+  const createSlug = (name: string) =>
+    encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
 
   const handleItemClick = (file: DriveFile) => {
     if (isBulkMode) {
@@ -218,7 +246,11 @@ export default function FileBrowser({
 
     if (file.isFolder) {
       if (file.isProtected && !folderTokens[file.id]) {
-        setAuthModal({ isOpen: true, folderId: file.id, folderName: file.name });
+        setAuthModal({
+          isOpen: true,
+          folderId: file.id,
+          folderName: file.name,
+        });
         return;
       }
       let destinationUrl = `/folder/${file.id}`;
@@ -253,25 +285,33 @@ export default function FileBrowser({
       setAuthModal({ isOpen: false, folderId: "", folderName: "" });
       router.push(`/folder/${authModal.folderId}`);
     } catch (err: unknown) {
-      addToast({ message: err instanceof Error ? err.message : "Unknown error", type: "error" });
+      const message = err instanceof Error ? err.message : "Terjadi kesalahan";
+      addToast({ message: message, type: "error" });
     } finally {
       setIsAuthLoading(false);
     }
   };
 
   const handleBreadcrumbClick = (folderId: string) => {
-    if (shareToken && folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) return;
-    let folderUrl = folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID ? "/" : `/folder/${folderId}`;
+    if (shareToken && folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID)
+      return;
+    let folderUrl =
+      folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID
+        ? "/"
+        : `/folder/${folderId}`;
     if (shareToken) folderUrl += `?share_token=${shareToken}`;
     router.push(folderUrl);
   };
 
-  const handleContextMenuWrapper = useCallback((event: { clientX: number; clientY: number }, file: DriveFile) => {
+  const handleContextMenuWrapper = useCallback(
+    (event: { clientX: number; clientY: number }, file: DriveFile) => {
       if (isBulkMode || shareToken || !isAdmin) return;
       if (!user) return;
       setActiveFileId(file.id);
       handleContextMenu(event, file);
-  }, [isBulkMode, shareToken, user, isAdmin, handleContextMenu]);
+    },
+    [isBulkMode, shareToken, user, isAdmin, handleContextMenu],
+  );
 
   const sortedFiles = useMemo(() => {
     return [...files]
@@ -279,9 +319,15 @@ export default function FileBrowser({
       .sort((a, b) => {
         const isAsc = sort.order === "asc" ? 1 : -1;
         if (a.isFolder !== b.isFolder) return a.isFolder ? -1 : 1;
-        if (sort.key === "name") return a.name.localeCompare(b.name, "id", { numeric: true }) * isAsc;
-        if (sort.key === "size") return (Number(a.size || 0) - Number(b.size || 0)) * isAsc;
-        return (new Date(a.modifiedTime).getTime() - new Date(b.modifiedTime).getTime()) * isAsc;
+        if (sort.key === "name")
+          return a.name.localeCompare(b.name, "id", { numeric: true }) * isAsc;
+        if (sort.key === "size")
+          return (Number(a.size || 0) - Number(b.size || 0)) * isAsc;
+        return (
+          (new Date(a.modifiedTime).getTime() -
+            new Date(b.modifiedTime).getTime()) *
+          isAsc
+        );
       });
   }, [files, sort, favorites]);
 
@@ -293,10 +339,14 @@ export default function FileBrowser({
 
   const handleQuickDownload = (e: React.MouseEvent, file: DriveFile) => {
     e.stopPropagation();
-    window.open(`/api/download?fileId=${file.id}${shareToken ? `&share_token=${shareToken}` : ""}`, "_blank");
+    window.open(
+      `/api/download?fileId=${file.id}${shareToken ? `&share_token=${shareToken}` : ""}`,
+      "_blank",
+    );
   };
 
-  if (isLoading || (sessionStatus === "loading" && !shareToken)) return <FileBrowserLoading />;
+  if (isLoading || (sessionStatus === "loading" && !shareToken))
+    return <FileBrowserLoading />;
 
   return (
     <motion.div
@@ -313,7 +363,9 @@ export default function FileBrowser({
           <AuthModal
             folderName={authModal.folderName}
             isLoading={isAuthLoading}
-            onClose={() => setAuthModal({ isOpen: false, folderId: "", folderName: "" })}
+            onClose={() =>
+              setAuthModal({ isOpen: false, folderId: "", folderName: "" })
+            }
             onSubmit={handleAuthSubmit}
           />
         )}
@@ -323,45 +375,105 @@ export default function FileBrowser({
             y={contextMenu.y}
             onClose={() => setContextMenu(null)}
             fileSize={parseInt(contextMenu.file.size || "0", 10)}
-            {...{ 
-              onRename: () => { setActionState({ type: "rename", file: contextMenu.file }); setContextMenu(null); },
-              onDelete: () => { setActionState({ type: "delete", file: contextMenu.file }); setContextMenu(null); },
-              onShare: () => { handleShare(contextMenu.file); setContextMenu(null); },
-              onMove: () => { setActionState({ type: "move", file: contextMenu.file }); setContextMenu(null); },
+            {...{
+              onRename: () => {
+                setActionState({ type: "rename", file: contextMenu.file });
+                setContextMenu(null);
+              },
+              onDelete: () => {
+                setActionState({ type: "delete", file: contextMenu.file });
+                setContextMenu(null);
+              },
+              onShare: () => {
+                handleShare(contextMenu.file);
+                setContextMenu(null);
+              },
+              onMove: () => {
+                setActionState({ type: "move", file: contextMenu.file });
+                setContextMenu(null);
+              },
               isFavorite: favorites.includes(contextMenu.file.id),
               onToggleFavorite: handleToggleFavorite,
               onCopy: handleCopy,
-              onShowDetails: () => { setDetailsFile(contextMenu.file); setContextMenu(null); },
-              onPreview: () => { 
-                 if (!contextMenu.file.isFolder) setPreviewFile(contextMenu.file);
-                 else addToast({ message: "Tidak tersedia untuk folder.", type: "info" });
-                 setContextMenu(null);
+              onShowDetails: () => {
+                setDetailsFile(contextMenu.file);
+                setContextMenu(null);
+              },
+              onPreview: () => {
+                if (!contextMenu.file.isFolder)
+                  setPreviewFile(contextMenu.file);
+                else
+                  addToast({
+                    message: "Tidak tersedia untuk folder.",
+                    type: "info",
+                  });
+                setContextMenu(null);
               },
               isArchive: getFileType(contextMenu.file) === "archive",
-              isArchivePreviewable: getFileType(contextMenu.file) === "archive" && parseInt(contextMenu.file.size || "0", 10) <= ARCHIVE_PREVIEW_LIMIT_BYTES,
-              onArchivePreview: handleArchivePreview
+              isArchivePreviewable:
+                getFileType(contextMenu.file) === "archive" &&
+                parseInt(contextMenu.file.size || "0", 10) <=
+                  ARCHIVE_PREVIEW_LIMIT_BYTES,
+              onArchivePreview: handleArchivePreview,
             }}
           />
         )}
         {actionState.type === "rename" && actionState.file && (
-          <RenameModal currentName={actionState.file.name} onClose={() => setActionState({ type: null, file: null })} onRename={handleRename} />
+          <RenameModal
+            currentName={actionState.file.name}
+            onClose={() => setActionState({ type: null, file: null })}
+            onRename={handleRename}
+          />
         )}
         {actionState.type === "delete" && actionState.file && (
-          <DeleteConfirm itemName={actionState.file.name} onClose={() => setActionState({ type: null, file: null })} onConfirm={handleDelete} />
+          <DeleteConfirm
+            itemName={actionState.file.name}
+            onClose={() => setActionState({ type: null, file: null })}
+            onConfirm={handleDelete}
+          />
         )}
         {actionState.type === "share" && actionState.file && (
-          <ShareButton path={getSharePath(actionState.file)} itemName={actionState.file.name} isOpen={true} onClose={() => setActionState({ type: null, file: null })} />
+          <ShareButton
+            path={getSharePath(actionState.file)}
+            itemName={actionState.file.name}
+            isOpen={true}
+            onClose={() => setActionState({ type: null, file: null })}
+          />
         )}
         {actionState.type === "move" && actionState.file && (
-          <MoveModal fileToMove={actionState.file} onClose={() => setActionState({ type: null, file: null })} onConfirmMove={handleMove} />
+          <MoveModal
+            fileToMove={actionState.file}
+            onClose={() => setActionState({ type: null, file: null })}
+            onConfirmMove={handleMove}
+          />
         )}
         {isUploadModalOpen && (
-          <UploadModal isOpen={isUploadModalOpen} onClose={() => { setIsUploadModalOpen(false); }} initialFiles={droppedFiles} />
+          <UploadModal
+            isOpen={isUploadModalOpen}
+            onClose={() => {
+              setIsUploadModalOpen(false);
+            }}
+            initialFiles={droppedFiles}
+            handleFileSelect={handleFileSelect}
+            handleDragOver={handleDragOver}
+            handleDragLeave={handleDragLeave}
+            handleDropUpload={handleDropUpload}
+            isDragging={isDragging}
+          />
         )}
         {previewFile && (
-          <motion.div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setPreviewFile(null)}>
-            <motion.div className="relative w-full h-full max-w-6xl max-h-[90vh] bg-background rounded-lg shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-              <button onClick={() => setPreviewFile(null)} className="absolute top-3 right-3 z-50 p-2 bg-background/50 rounded-full text-foreground hover:bg-background">
+          <motion.div
+            className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+            onClick={() => setPreviewFile(null)}
+          >
+            <motion.div
+              className="relative w-full h-full max-w-6xl max-h-[90vh] bg-background rounded-lg shadow-xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setPreviewFile(null)}
+                className="absolute top-3 right-3 z-50 p-2 bg-background/50 rounded-full text-foreground hover:bg-background"
+              >
                 <X size={24} />
               </button>
               <FileDetail file={previewFile} isModal={true} />
@@ -369,20 +481,32 @@ export default function FileBrowser({
           </motion.div>
         )}
         {archivePreview && (
-          <ArchivePreviewModal file={archivePreview} onClose={() => setArchivePreview(null)} />
+          <ArchivePreviewModal
+            file={archivePreview}
+            onClose={() => setArchivePreview(null)}
+          />
         )}
         {isDragging && isAdmin && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-primary/30 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-primary/30 backdrop-blur-sm"
+          >
             <div className="flex flex-col items-center justify-center p-12 bg-background rounded-lg shadow-2xl ring-4 ring-primary ring-dashed">
               <UploadCloud className="h-24 w-24 text-primary" />
-              <p className="mt-4 text-2xl font-semibold text-foreground">Lepas untuk Mengunggah</p>
-              <p className="text-muted-foreground">Ke folder &quot;{history.at(-1)?.name}&quot;</p>
+              <p className="mt-4 text-2xl font-semibold text-foreground">
+                Lepas untuk Mengunggah
+              </p>
+              <p className="text-muted-foreground">
+                Ke folder &quot;{history.at(-1)?.name}&quot;
+              </p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <FileBrowserHeader 
+      <FileBrowserHeader
         history={history}
         shareToken={shareToken}
         isAdmin={isAdmin}
@@ -394,14 +518,22 @@ export default function FileBrowser({
         onBreadcrumbDragOver={handleBreadcrumbDragOver}
         onBreadcrumbDragLeave={handleBreadcrumbDragLeave}
         onBreadcrumbDrop={(e, folder) => onDropOnBreadcrumb(e, folder)}
-        onUploadClick={() => { setIsUploadModalOpen(true); }}
-        onShareFolderClick={() => handleShare({
+        onUploadClick={() => {
+          setIsUploadModalOpen(true);
+        }}
+        onShareFolderClick={() =>
+          handleShare({
             id: currentFolderId,
             name: history[history.length - 1]?.name || "Folder",
             isFolder: true,
             mimeType: "application/vnd.google-apps.folder",
-            modifiedTime: "", createdTime: "", hasThumbnail: false, webViewLink: "", trashed: false,
-        })}
+            modifiedTime: "",
+            createdTime: "",
+            hasThumbnail: false,
+            webViewLink: "",
+            trashed: false,
+          })
+        }
         onToggleBulkMode={() => setBulkMode(!isBulkMode)}
         onSetView={setView}
         onDetailsClick={() => {
@@ -411,26 +543,36 @@ export default function FileBrowser({
       />
 
       <main className="min-h-[50vh] mb-12">
-          <>
-            <FileList
-              files={sortedFiles}
-              activeFileId={activeFileId}
-              onItemClick={handleItemClick}
-              onItemContextMenu={handleContextMenuWrapper}
-              onShareClick={handleQuickShare}
-              onDetailsClick={(e, file) => { e.stopPropagation(); setDetailsFile(file); }}
-              onDownloadClick={handleQuickDownload}
-              isAdmin={isAdmin}
-              onDragStart={handleDragStart}
-              onFileDrop={onDropOnFolder}
-            />
-            <div ref={loaderRef} className="flex justify-center items-center p-4 h-20">
-              {isFetchingNextPage && <Loader2 className="animate-spin text-primary" />}
-              {!isFetchingNextPage && !nextPageToken && files.length > 0 && (
-                <span className="text-sm text-muted-foreground">Akhir dari daftar</span>
-              )}
-            </div>
-          </>
+        <>
+          <FileList
+            files={sortedFiles}
+            activeFileId={activeFileId}
+            onItemClick={handleItemClick}
+            onItemContextMenu={handleContextMenuWrapper}
+            onShareClick={handleQuickShare}
+            onDetailsClick={(e, file) => {
+              e.stopPropagation();
+              setDetailsFile(file);
+            }}
+            onDownloadClick={handleQuickDownload}
+            isAdmin={isAdmin}
+            onDragStart={handleDragStart}
+            onFileDrop={onDropOnFolder}
+          />
+          <div
+            ref={loaderRef}
+            className="flex justify-center items-center p-4 h-20"
+          >
+            {isFetchingNextPage && (
+              <Loader2 className="animate-spin text-primary" />
+            )}
+            {!isFetchingNextPage && !nextPageToken && files.length > 0 && (
+              <span className="text-sm text-muted-foreground">
+                Akhir dari daftar
+              </span>
+            )}
+          </div>
+        </>
       </main>
 
       <FileBrowserUploadProgress uploads={uploads} />

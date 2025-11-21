@@ -5,32 +5,31 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, UploadCloud, FolderPlus, FilePlus, Loader2 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import { useUpload } from "@/hooks/useUpload";
+import { FileEntry } from "@/lib/fileParser";
 
 interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  initialFiles?: any;
+  initialFiles?: FileList | FileEntry[] | null;
+  handleFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleDragOver: (e: React.DragEvent) => void;
+  handleDragLeave: (e: React.DragEvent) => void;
+  handleDropUpload: (e: React.DragEvent) => Promise<void>;
+  isDragging: boolean;
 }
 
-export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
-  const { currentFolderId, triggerRefresh, addToast, user } = useAppStore();
-  const isAdmin = user?.role === "ADMIN";
-  
+export default function UploadModal({
+  isOpen,
+  onClose,
+  handleFileSelect,
+  handleDragOver,
+  handleDragLeave,
+  handleDropUpload,
+  isDragging,
+}: UploadModalProps) {
+  const { currentFolderId, triggerRefresh, addToast } = useAppStore();
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  const {
-    isDragging,
-    handleDragOver,
-    handleDragLeave,
-    handleDropUpload,
-    handleFileSelect,
-  } = useUpload({
-    currentFolderId: currentFolderId || "",
-    isAdmin: isAdmin || false,
-    triggerRefresh,
-  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
 
@@ -49,12 +48,16 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Gagal membuat folder");
-      addToast({ message: `Folder "${newFolderName}" berhasil dibuat.`, type: "success" });
+      addToast({
+        message: `Folder "${newFolderName}" berhasil dibuat.`,
+        type: "success",
+      });
       triggerRefresh();
       setNewFolderName("");
       onClose();
     } catch (err: unknown) {
-      addToast({ message: err instanceof Error ? err.message : "Error", type: "error" });
+      const message = err instanceof Error ? err.message : "Terjadi kesalahan";
+      addToast({ message: message, type: "error" });
     } finally {
       setIsCreatingFolder(false);
     }
@@ -83,7 +86,9 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
             >
               <X size={20} />
             </button>
-            <h3 className="text-lg font-semibold mb-4">Upload File & Folder</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              Upload File & Folder
+            </h3>
 
             <div className="space-y-6">
               <div
@@ -91,7 +96,7 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
                   "border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer group",
                   isDragging
                     ? "border-primary bg-primary/10"
-                    : "border-border hover:border-primary/50"
+                    : "border-border hover:border-primary/50",
                 )}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -111,10 +116,15 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
                   ref={folderInputRef}
                   onChange={handleFileSelect}
                   className="hidden"
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  {...({ webkitdirectory: "", directory: "" } as any)}
+                  {...({
+                    webkitdirectory: "",
+                    directory: "",
+                  } as React.InputHTMLAttributes<HTMLInputElement> & {
+                    webkitdirectory?: string;
+                    directory?: string;
+                  })}
                 />
-                
+
                 <UploadCloud className="mx-auto h-12 w-12 text-muted-foreground group-hover:text-primary transition-colors" />
                 <p className="mt-3 text-sm font-medium text-foreground">
                   Seret file atau folder ke sini
@@ -142,7 +152,9 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
               <div className="border-t my-4"></div>
 
               <form onSubmit={handleCreateFolder} className="space-y-2">
-                <label className="text-sm font-medium">Buat Folder Baru di Drive</label>
+                <label className="text-sm font-medium">
+                  Buat Folder Baru di Drive
+                </label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -156,7 +168,11 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
                     disabled={isCreatingFolder || !newFolderName.trim()}
                     className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm disabled:opacity-50 flex items-center gap-2"
                   >
-                    {isCreatingFolder ? <Loader2 className="animate-spin" size={16} /> : "Buat"}
+                    {isCreatingFolder ? (
+                      <Loader2 className="animate-spin" size={16} />
+                    ) : (
+                      "Buat"
+                    )}
                   </button>
                 </div>
               </form>

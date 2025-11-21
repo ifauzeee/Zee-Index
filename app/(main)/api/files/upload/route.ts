@@ -3,6 +3,7 @@ import { getAccessToken } from "@/lib/googleDrive";
 import { withAdminSession } from "@/lib/api-middleware";
 import { logActivity } from "@/lib/activityLogger";
 import { type Session } from "next-auth";
+import { invalidateFolderCache } from "@/lib/cache";
 
 export const maxDuration = 60;
 
@@ -51,6 +52,7 @@ export const POST = withAdminSession(
         return NextResponse.json({ uploadUrl });
       } else if (uploadType === "chunk") {
         const uploadUrl = searchParams.get("uploadUrl");
+        const parentId = searchParams.get("parentId");
         const contentRange = request.headers.get("Content-Range");
         const contentLength = request.headers.get("Content-Length");
 
@@ -62,7 +64,6 @@ export const POST = withAdminSession(
         }
 
         const chunkBuffer = await request.arrayBuffer();
-
         const driveResponse = await fetch(uploadUrl, {
           method: "PUT",
           headers: {
@@ -80,13 +81,16 @@ export const POST = withAdminSession(
         if (driveResponse.ok) {
           const fileData = await driveResponse.json();
 
+          if (parentId) {
+            await invalidateFolderCache(parentId);
+          }
+
           await logActivity("UPLOAD", {
             itemName: fileData.name,
             itemSize: fileData.size,
             userEmail: session.user?.email,
             status: "success",
           });
-
           return NextResponse.json({ status: "completed", file: fileData });
         }
 
@@ -99,7 +103,8 @@ export const POST = withAdminSession(
       }
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
+        error instanceof Error ?
+          error.message : "Terjadi kesalahan tidak dikenal.";
       console.error("Upload API Error:", error);
       return NextResponse.json(
         { error: errorMessage || "Internal Server Error." },

@@ -26,7 +26,6 @@ export function useUpload({
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const { addToast } = useAppStore();
-
   const folderIdCache = useRef<Record<string, string>>({});
 
   const updateUploadProgress = useCallback(
@@ -55,16 +54,13 @@ export function useUpload({
 
   const ensureFolderStructure = async (path: string, rootId: string): Promise<string> => {
     const parts = path.split("/").filter(Boolean);
-    parts.pop(); 
-
+    parts.pop();
     if (parts.length === 0) return rootId;
 
     let currentParentId = rootId;
     let currentPath = "";
-
     for (const folderName of parts) {
       currentPath += (currentPath ? "/" : "") + folderName;
-
       if (folderIdCache.current[currentPath]) {
         currentParentId = folderIdCache.current[currentPath];
         continue;
@@ -116,10 +112,13 @@ export function useUpload({
       while (start < file.size) {
         const end = Math.min(start + CHUNK_SIZE, file.size);
         const chunk = file.slice(start, end);
+        
         const contentRange = `bytes ${start}-${end - 1}/${file.size}`;
 
         const chunkRes = await fetch(
-          `/api/files/upload?type=chunk&uploadUrl=${encodeURIComponent(uploadUrl)}`,
+          `/api/files/upload?type=chunk&uploadUrl=${encodeURIComponent(
+            uploadUrl
+          )}&parentId=${targetParentId}`,
           {
             method: "POST",
             headers: {
@@ -149,7 +148,14 @@ export function useUpload({
   }, [updateUploadProgress, addToast]);
 
   const processUploadQueue = useCallback(async (items: FileList | FileEntry[]) => {
-    if (!currentFolderId || !isAdmin) return;
+    if (!currentFolderId) {
+        addToast({ message: "Folder tujuan tidak ditemukan (ID null).", type: "error" });
+        return;
+    }
+    if (!isAdmin) {
+        addToast({ message: "Akses ditolak: Anda bukan Admin.", type: "error" });
+        return;
+    }
     
     folderIdCache.current = {}; 
 
@@ -167,7 +173,7 @@ export function useUpload({
       }
     }
     triggerRefresh();
-  }, [currentFolderId, isAdmin, triggerRefresh, uploadFileChunked]);
+  }, [currentFolderId, isAdmin, triggerRefresh, uploadFileChunked, addToast]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
