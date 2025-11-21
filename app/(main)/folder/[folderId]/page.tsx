@@ -1,15 +1,11 @@
-import dynamic from "next/dynamic";
-import Loading from "@/components/Loading";
+import FileBrowser from "@/components/FileBrowser";
+import { getFolderPath } from "@/lib/googleDrive";
 
-const FileBrowser = dynamic(() => import("@/components/FileBrowser"), {
-  ssr: false,
-  loading: () => <Loading />,
-});
-
-export default function FolderPage({
+export default async function FolderPage({
   params,
 }: {
   params: { folderId: string };
 }) {
-  return <FileBrowser initialFolderId={params.folderId} />;
+  const folderPath = await getFolderPath(params.folderId);
+  return <FileBrowser initialFolderId={params.folderId} initialFolderPath={folderPath} />;
 }

@@ -30,7 +30,13 @@ import { useGallery } from "@/hooks/useGallery";
 
 const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024;
 
-export default function FileBrowser({ initialFolderId }: { initialFolderId?: string }) {
+export default function FileBrowser({ 
+  initialFolderId,
+  initialFolderPath,
+}: { 
+  initialFolderId?: string;
+  initialFolderPath?: { id: string; name: string }[];
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status: sessionStatus } = useSession();
@@ -76,6 +82,7 @@ export default function FileBrowser({ initialFolderId }: { initialFolderId?: str
     authModalInfo,
   } = useFileFetching({
     initialFolderId,
+    initialFolderPath,
     shareToken,
     folderTokens,
     addToast,

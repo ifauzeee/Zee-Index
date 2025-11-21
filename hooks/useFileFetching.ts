@@ -5,6 +5,7 @@ import type { DriveFile } from "@/lib/googleDrive";
 
 interface UseFileFetchingProps {
   initialFolderId?: string;
+  initialFolderPath?: { id: string; name: string }[];
   shareToken: string | null;
   folderTokens: Record<string, string>;
   addToast: (toast: { message: string; type: "error" | "info" }) => void;
@@ -58,6 +59,7 @@ const fetchFolderPathApi = async (folderId: string, shareToken: string | null) =
 
 export function useFileFetching({
   initialFolderId,
+  initialFolderPath,
   shareToken,
   folderTokens,
   addToast,
@@ -71,7 +73,7 @@ export function useFileFetching({
     queryKey: ["folderPath", currentFolderId, shareToken],
     queryFn: () => fetchFolderPathApi(currentFolderId, shareToken),
     enabled: !!currentFolderId && currentFolderId !== rootFolderId,
-    initialData: [],
+    initialData: initialFolderPath,
   });
 
   const history = useMemo(() => {
