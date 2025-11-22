@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "dotenv -- next dev",
-    "build": "dotenv -- next build",
-    "start": "next start",
+    "build": "next build",
+    "start": "dotenv -- next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "format:check": "prettier --check .",

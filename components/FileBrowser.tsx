@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -40,6 +39,7 @@ export default function FileBrowser({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status: sessionStatus } = useSession();
+  const [isNavigating, setIsNavigating] = useState(false);
   const [authModal, setAuthModal] = useState<{
     isOpen: boolean;
     folderId: string;
@@ -69,7 +69,6 @@ export default function FileBrowser({
     setDetailsFile,
     setCurrentFolderId,
   } = useAppStore();
-
   const {
     files,
     history,
@@ -240,12 +239,20 @@ export default function FileBrowser({
       return;
     }
 
+    if (isNavigating) return;
+
     if (gallery.openGallery(file.id)) {
       return;
     }
 
+    setIsNavigating(true);
+    addToast({ message: "Memuat...", type: "info" });
+
+    let destinationUrl = "";
+
     if (file.isFolder) {
       if (file.isProtected && !folderTokens[file.id]) {
+        setIsNavigating(false);
         setAuthModal({
           isOpen: true,
           folderId: file.id,
@@ -253,21 +260,16 @@ export default function FileBrowser({
         });
         return;
       }
-      let destinationUrl = `/folder/${file.id}`;
-      if (shareToken) destinationUrl += `?share_token=${shareToken}`;
-      setActiveFileId(null);
-      router.push(destinationUrl);
-      return;
+      destinationUrl = `/folder/${file.id}`;
+    } else {
+      destinationUrl = `/folder/${currentFolderId}/file/${file.id}/${createSlug(file.name)}`;
     }
 
-    if (activeFileId === file.id) {
-      let destinationUrl = `/folder/${currentFolderId}/file/${file.id}/${createSlug(file.name)}`;
-      if (shareToken) destinationUrl += `?share_token=${shareToken}`;
-      setActiveFileId(null);
-      router.push(destinationUrl);
-    } else {
-      setActiveFileId(file.id);
+    if (shareToken) {
+      destinationUrl += `?share_token=${shareToken}`;
     }
+
+    router.push(destinationUrl);
   };
 
   const handleAuthSubmit = async (id: string, password: string) => {
@@ -321,6 +323,7 @@ export default function FileBrowser({
         if (a.isFolder !== b.isFolder) return a.isFolder ? -1 : 1;
         if (sort.key === "name")
           return a.name.localeCompare(b.name, "id", { numeric: true }) * isAsc;
+
         if (sort.key === "size")
           return (Number(a.size || 0) - Number(b.size || 0)) * isAsc;
         return (
@@ -414,6 +417,7 @@ export default function FileBrowser({
                 getFileType(contextMenu.file) === "archive" &&
                 parseInt(contextMenu.file.size || "0", 10) <=
                   ARCHIVE_PREVIEW_LIMIT_BYTES,
+
               onArchivePreview: handleArchivePreview,
             }}
           />
@@ -528,6 +532,7 @@ export default function FileBrowser({
             isFolder: true,
             mimeType: "application/vnd.google-apps.folder",
             modifiedTime: "",
+
             createdTime: "",
             hasThumbnail: false,
             webViewLink: "",
@@ -583,6 +588,14 @@ export default function FileBrowser({
         images={gallery.imageFiles}
         onClose={gallery.closeGallery}
       />
+
+      {isNavigating && (
+        <div className="fixed inset-0 z-[9999] bg-black/10 backdrop-blur-[1px] flex items-center justify-center cursor-wait">
+          <div className="bg-background/80 p-4 rounded-full shadow-lg">
+            <Loader2 className="animate-spin text-primary h-8 w-8" />
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

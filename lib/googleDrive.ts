@@ -355,8 +355,7 @@ export async function getStorageDetails() {
   }
 
   const largestFilesData = await largestFilesResponse.json();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const allFiles = (largestFilesData.files || []).map((file: any) => ({
+  const allFiles = (largestFilesData.files || []).map((file: DriveFile) => ({
     ...file,
     isFolder: file.mimeType === "application/vnd.google-apps.folder",
   }));
@@ -364,10 +363,10 @@ export async function getStorageDetails() {
   // 3. Hitung Breakdown berdasarkan sample file terbesar
   const breakdownMap: Record<string, { size: number; count: number }> = {};
 
-  allFiles.forEach((file: any) => {
+  allFiles.forEach((file: DriveFile) => {
     let type = "Lainnya";
     const mime = file.mimeType || "";
-    
+
     if (mime.startsWith("image/")) type = "Gambar";
     else if (mime.startsWith("video/")) type = "Video";
     else if (mime.startsWith("audio/")) type = "Audio";

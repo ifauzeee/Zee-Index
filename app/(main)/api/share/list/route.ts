@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/authOptions";
 import { kv } from "@/lib/kv";
 import type { ShareLink } from "@/lib/store";
 
+export const dynamic = "force-dynamic";
+
 const SHARE_LINKS_KEY = "zee-index:share-links";
 
 export async function GET() {

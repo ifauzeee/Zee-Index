@@ -1,15 +1,11 @@
 "use client";
 
 import { useState, useEffect, createElement } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Loading from "@/components/Loading";
 import { formatBytes, getIcon } from "@/lib/utils";
-import {
-  HardDrive,
-  ArrowLeft,
-} from "lucide-react";
 import type { DriveFile } from "@/lib/googleDrive";
 
 interface BreakdownItem {
@@ -40,7 +36,6 @@ export default function StoragePage() {
   const [hoveredSegment, setHoveredSegment] = useState<BreakdownItem | null>(
     null,
   );
-  const router = useRouter();
 
   const searchParams = useSearchParams();
   const shareToken = searchParams.get("share_token");
@@ -78,7 +73,7 @@ export default function StoragePage() {
   if (!data) return null;
 
   const usagePercentage = data.limit > 0 ? (data.usage / data.limit) * 100 : 0;
-  
+
   const totalBreakdownSize = data.breakdown.reduce(
     (acc, item) => acc + item.size,
     0,
@@ -108,7 +103,7 @@ export default function StoragePage() {
           {/* PERBAIKAN: Gunakan string persentase yang eksplisit */}
           <motion.div
             className="bg-primary h-4 rounded-full"
-            initial={{ width: "0%" }} 
+            initial={{ width: "0%" }}
             animate={{ width: `${usagePercentage}%` }}
             transition={{ duration: 1.5, ease: "easeOut" }}
           />
@@ -140,7 +135,7 @@ export default function StoragePage() {
                   totalBreakdownSize > 0
                     ? (item.size / totalBreakdownSize) * 100
                     : 0;
-                
+
                 const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
                 const strokeDashoffset = -accumulatedOffset;
                 accumulatedOffset += (percentage / 100) * circumference;
