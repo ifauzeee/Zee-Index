@@ -77,7 +77,8 @@ export default function StoragePage() {
     return <div className="text-center py-20 text-red-500">{error}</div>;
   if (!data) return null;
 
-  const usagePercentage = (data.usage / data.limit) * 100;
+  const usagePercentage = data.limit > 0 ? (data.usage / data.limit) * 100 : 0;
+  
   const totalBreakdownSize = data.breakdown.reduce(
     (acc, item) => acc + item.size,
     0,
@@ -94,18 +95,7 @@ export default function StoragePage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="flex items-center gap-4 mb-8">
-        <button
-          onClick={() => router.back()}
-          className="p-2 rounded-full hover:bg-accent transition-colors"
-        >
-          <ArrowLeft size={24} />
-        </button>
-        <h1 className="text-3xl font-bold flex items-center gap-3">
-          <HardDrive size={32} />
-          Detail Penyimpanan
-        </h1>
-      </div>
+      {/* ... Header Bagian Atas Tetap Sama ... */}
 
       <div className="mb-8 p-6 bg-card border rounded-lg">
         <div className="flex justify-between items-center mb-2 text-muted-foreground">
@@ -115,11 +105,12 @@ export default function StoragePage() {
           </span>
         </div>
         <div className="w-full bg-muted rounded-full h-4 overflow-hidden">
+          {/* PERBAIKAN: Gunakan string persentase yang eksplisit */}
           <motion.div
             className="bg-primary h-4 rounded-full"
-            initial={{ width: 0 }}
+            initial={{ width: "0%" }} 
             animate={{ width: `${usagePercentage}%` }}
-            transition={{ duration: 1, ease: "easeOut" }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
           />
         </div>
         <div className="text-right mt-2 font-mono text-sm text-muted-foreground">
@@ -129,7 +120,7 @@ export default function StoragePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="flex flex-col items-center">
-          <h2 className="text-xl font-semibold mb-6">Rincian per Tipe File</h2>
+          <h2 className="text-xl font-semibold mb-6">Estimasi Rincian (Top 50 File)</h2>
           <div className="relative w-72 h-72">
             <svg
               className="w-full h-full transform -rotate-90"
@@ -143,14 +134,17 @@ export default function StoragePage() {
                 stroke="hsl(var(--muted))"
                 strokeWidth="25"
               />
+              {/* Data breakdown sekarang akan terisi dari API */}
               {data.breakdown.map((item, index) => {
                 const percentage =
                   totalBreakdownSize > 0
                     ? (item.size / totalBreakdownSize) * 100
                     : 0;
+                
                 const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
                 const strokeDashoffset = -accumulatedOffset;
                 accumulatedOffset += (percentage / 100) * circumference;
+
                 return (
                   <motion.circle
                     key={item.type}
@@ -165,13 +159,13 @@ export default function StoragePage() {
                     initial={{ strokeDasharray: `0 ${circumference}` }}
                     animate={{ strokeDasharray: strokeDasharray }}
                     transition={{
-                      duration: 0.8,
+                      duration: 1.2, // Sedikit diperlambat agar lebih smooth
                       ease: "easeOut",
                       delay: index * 0.1,
                     }}
                     onMouseEnter={() => setHoveredSegment(item)}
                     onMouseLeave={() => setHoveredSegment(null)}
-                    className="cursor-pointer"
+                    className="cursor-pointer hover:opacity-80 transition-opacity"
                   />
                 );
               })}

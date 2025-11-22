@@ -337,10 +337,11 @@ export async function getStorageDetails() {
   const largestFilesParams = new URLSearchParams({
     q: "trashed=false and mimeType != 'application/vnd.google-apps.folder'",
     orderBy: "quotaBytesUsed desc",
-    pageSize: "10",
+    pageSize: "50",
     fields:
       "files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, hasThumbnail, parents, trashed)",
   });
+
   const largestFilesResponse = await fetchWithRetry(
     `${GOOGLE_DRIVE_API_URL}/files?${largestFilesParams.toString()}`,
     {
@@ -348,21 +349,54 @@ export async function getStorageDetails() {
       cache: "no-store",
     },
   );
+
   if (!largestFilesResponse.ok) {
     throw new Error("Gagal mengambil data file terbesar.");
   }
 
   const largestFilesData = await largestFilesResponse.json();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const largestFiles = (largestFilesData.files || []).map((file: any) => ({
+  const allFiles = (largestFilesData.files || []).map((file: any) => ({
     ...file,
     isFolder: file.mimeType === "application/vnd.google-apps.folder",
   }));
+
+  // 3. Hitung Breakdown berdasarkan sample file terbesar
+  const breakdownMap: Record<string, { size: number; count: number }> = {};
+
+  allFiles.forEach((file: any) => {
+    let type = "Lainnya";
+    const mime = file.mimeType || "";
+    
+    if (mime.startsWith("image/")) type = "Gambar";
+    else if (mime.startsWith("video/")) type = "Video";
+    else if (mime.startsWith("audio/")) type = "Audio";
+    else if (mime === "application/pdf") type = "PDF";
+    else if (mime.includes("zip") || mime.includes("rar") || mime.includes("tar") || mime.includes("7z")) type = "Arsip";
+    else if (mime.includes("word") || mime.includes("document") || mime.includes("sheet") || mime.includes("presentation")) type = "Dokumen";
+
+    if (!breakdownMap[type]) {
+      breakdownMap[type] = { size: 0, count: 0 };
+    }
+    
+    const fileSize = parseInt(file.size || "0", 10);
+    breakdownMap[type].size += fileSize;
+    breakdownMap[type].count += 1;
+  });
+
+  const breakdown = Object.entries(breakdownMap)
+    .map(([type, data]) => ({
+      type,
+      count: data.count,
+      size: data.size,
+    }))
+    .sort((a, b) => b.size - a.size);
+
   return {
     usage,
     limit,
-    breakdown: [],
-    largestFiles,
+    breakdown,
+    largestFiles: allFiles.slice(0, 10),
   };
 }
 
