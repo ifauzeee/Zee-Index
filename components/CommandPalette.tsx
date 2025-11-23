@@ -1,0 +1,187 @@
+"use client";
+import * as React from "react";
+import { Command } from "cmdk";
+import { useRouter } from "next/navigation";
+import { useAppStore } from "@/lib/store";
+import {
+  LayoutDashboard,
+  HardDrive,
+  Sun,
+  Moon,
+  LogOut,
+  Search,
+  Star,
+  Home,
+  Github,
+  Send,
+} from "lucide-react";
+import { signOut } from "next-auth/react";
+
+export default function CommandPalette() {
+  const router = useRouter();
+  const [open, setOpen] = React.useState(false);
+  const { toggleTheme, theme, user } = useAppStore();
+
+  React.useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setOpen((open) => !open);
+      }
+    };
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, []);
+
+  const runCommand = React.useCallback((command: () => void) => {
+    setOpen(false);
+    command();
+  }, []);
+
+  const itemClass =
+    "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled='true']:pointer-events-none data-[disabled='true']:opacity-50 transition-colors";
+
+  return (
+    <Command.Dialog
+      open={open}
+      onOpenChange={setOpen}
+      label="Global Command Menu"
+      className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[640px] bg-popover text-popover-foreground rounded-xl shadow-2xl border border-border z-[9999] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+    >
+      <div
+        className="flex items-center border-b border-border px-4"
+        cmdk-input-wrapper=""
+      >
+        <Search className="mr-2 h-5 w-5 shrink-0 opacity-50" />
+        <Command.Input
+          placeholder="Ketik perintah atau cari..."
+          className="flex h-12 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+        />
+      </div>
+
+      <Command.List className="max-h-[300px] overflow-y-auto overflow-x-hidden p-2">
+        <Command.Empty className="py-6 text-center text-sm text-muted-foreground">
+          Tidak ada hasil ditemukan.
+        </Command.Empty>
+
+        <Command.Group
+          heading="Navigasi"
+          className="overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
+        >
+          <Command.Item
+            value="beranda home dashboard"
+            onSelect={() => runCommand(() => router.push("/"))}
+            className={itemClass}
+          >
+            <Home className="mr-2 h-4 w-4" />
+            <span>Beranda</span>
+          </Command.Item>
+
+          <Command.Item
+            value="favorit favorites bintang"
+            onSelect={() => runCommand(() => router.push("/favorites"))}
+            className={itemClass}
+          >
+            <Star className="mr-2 h-4 w-4" />
+            <span>Favorit</span>
+          </Command.Item>
+
+          <Command.Item
+            value="penyimpanan storage drive"
+            onSelect={() => runCommand(() => router.push("/storage"))}
+            className={itemClass}
+          >
+            <HardDrive className="mr-2 h-4 w-4" />
+            <span>Penyimpanan</span>
+          </Command.Item>
+        </Command.Group>
+
+        {user?.role === "ADMIN" && (
+          <Command.Group
+            heading="Admin"
+            className="overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
+          >
+            <Command.Item
+              value="dashboard admin panel pengaturan"
+              onSelect={() => runCommand(() => router.push("/admin"))}
+              className={itemClass}
+            >
+              <LayoutDashboard className="mr-2 h-4 w-4" />
+              <span>Dashboard Admin</span>
+            </Command.Item>
+          </Command.Group>
+        )}
+
+        <Command.Group
+          heading="Pengaturan"
+          className="overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
+        >
+          <Command.Item
+            value="ganti tema theme dark mode light mode"
+            onSelect={() => runCommand(() => toggleTheme())}
+            className={itemClass}
+          >
+            {theme === "dark" ? (
+              <Sun className="mr-2 h-4 w-4" />
+            ) : (
+              <Moon className="mr-2 h-4 w-4" />
+            )}
+            <span>Ganti Tema ({theme === "dark" ? "Light" : "Dark"})</span>
+          </Command.Item>
+        </Command.Group>
+
+        <Command.Group
+          heading="Eksternal"
+          className="overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
+        >
+          <Command.Item
+            value="github repo source code"
+            onSelect={() =>
+              runCommand(() =>
+                window.open("https://github.com/ifauzeee/Zee-Index", "_blank"),
+              )
+            }
+            className={itemClass}
+          >
+            <Github className="mr-2 h-4 w-4" />
+            <span>GitHub</span>
+          </Command.Item>
+
+          <Command.Item
+            value="telegram grup komunitas"
+            onSelect={() =>
+              runCommand(() =>
+                window.open("https://t.me/RyzeeenUniverse", "_blank"),
+              )
+            }
+            className={itemClass}
+          >
+            <Send className="mr-2 h-4 w-4" />
+            <span>Telegram Grup</span>
+          </Command.Item>
+        </Command.Group>
+
+        {user && (
+          <>
+            <Command.Separator className="-mx-1 h-px bg-border my-1" />
+            <Command.Group
+              heading="Akun"
+              className="overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
+            >
+              <Command.Item
+                value="logout keluar sign out"
+                onSelect={() =>
+                  runCommand(() => signOut({ callbackUrl: "/login" }))
+                }
+                className={`${itemClass} text-red-500 aria-selected:text-red-500`}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Logout</span>
+              </Command.Item>
+            </Command.Group>
+          </>
+        )}
+      </Command.List>
+    </Command.Dialog>
+  );
+}

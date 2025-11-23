@@ -1,0 +1,41 @@
+GNU AFFERO GENERAL PUBLIC LICENSE
+Version 3, 19 November 2007
+
+Copyright (C) 2025 Muhammad Ibnu Fauzi
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+ADDITIONAL TERMS (permitted under Section 7 of AGPL v3):
+
+1. Attribution Requirement:
+   Any public use, modification, distribution, or deployment of this software,
+   whether modified or unmodified, MUST retain a visible attribution notice
+   on all user-facing pages of the application that states exactly:
+
+   © 2025 All rights reserved - Muhammad Ibnu Fauzi
+
+   The attribution notice must be displayed permanently. It may appear in the
+   footer, header, layout, or any other persistent section of the interface,
+   as long as it is clearly visible to end users. This notice cannot be removed
+   or altered.
+
+2. If you combine or distribute this software with other software, this
+   attribution requirement still applies.
+
+---
+
+For the full license text of the GNU Affero General Public License v3.0,
+please visit: https://www.gnu.org/licenses/agpl-3.0.txt
