@@ -82,9 +82,9 @@ export async function GET(request: NextRequest) {
         "Content-Type": fileDetails.mimeType!,
         "Content-Length": fileDetails.size!,
         "Content-Disposition": `inline; filename="${fileDetails.name}"`,
+        "Access-Control-Allow-Origin": "*", 
       },
     });
-
   } catch (error: unknown) {
     const errorMessage =
       error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";

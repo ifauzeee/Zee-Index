@@ -9,6 +9,7 @@ import {
   Info,
   Eye,
   Archive,
+  Edit3, 
 } from "lucide-react";
 import { formatBytes } from "@/lib/utils";
 
@@ -29,6 +30,8 @@ interface ContextMenuProps {
   onArchivePreview: () => void;
   isArchivePreviewable: boolean;
   fileSize: number;
+  isImage: boolean;        
+  onEditImage: () => void; 
 }
 
 export default function ContextMenu({
@@ -48,25 +51,40 @@ export default function ContextMenu({
   onArchivePreview,
   isArchivePreviewable,
   fileSize,
+  isImage,
+  onEditImage,
 }: ContextMenuProps) {
   return (
     <div className="fixed inset-0 z-50" onClick={onClose}>
       <motion.div
-        className="absolute w-48 bg-background border rounded-md shadow-lg py-1"
+        className="absolute w-56 bg-background border rounded-md shadow-lg py-1 z-50"
         style={{ top: y, left: x }}
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.1 }}
       >
-        <ul>
+        <ul className="py-1">
           <li>
             <button
               onClick={onPreview}
               className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent flex items-center gap-2"
             >
-              <Eye size={16} /> Pratinjau Cepat
+              <Eye size={16} /> Pratinjau / Buka
             </button>
           </li>
+          
+          {/* OPSI EDIT GAMBAR BARU */}
+          {isImage && (
+            <li>
+              <button
+                onClick={onEditImage}
+                className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent flex items-center gap-2"
+              >
+                <Edit3 size={16} /> Edit Gambar
+              </button>
+            </li>
+          )}
+
           <li>
             <button
               onClick={onShowDetails}
@@ -75,6 +93,7 @@ export default function ContextMenu({
               <Info size={16} /> Lihat Detail
             </button>
           </li>
+          
           {isArchive && (
             <li>
               <button
@@ -82,9 +101,7 @@ export default function ContextMenu({
                 disabled={!isArchivePreviewable}
                 title={
                   !isArchivePreviewable
-                    ? `File terlalu besar (> 100 MB) untuk pratinjau. Ukuran: ${formatBytes(
-                        fileSize,
-                      )}`
+                    ? `File terlalu besar (> 100 MB). Ukuran: ${formatBytes(fileSize)}`
                     : "Lihat Isi Arsip"
                 }
                 className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -93,6 +110,7 @@ export default function ContextMenu({
               </button>
             </li>
           )}
+          
           <li className="border-t my-1"></li>
           <li>
             <button
@@ -138,6 +156,7 @@ export default function ContextMenu({
               <Pencil size={16} /> Ubah Nama
             </button>
           </li>
+          <li className="border-t my-1"></li>
           <li>
             <button
               onClick={onDelete}

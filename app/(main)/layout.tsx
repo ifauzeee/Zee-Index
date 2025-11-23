@@ -8,11 +8,16 @@ import Toast from "@/components/Toast";
 import { AnimatePresence } from "framer-motion";
 import { Analytics } from "@vercel/analytics/next";
 import { useSession } from "next-auth/react";
+import CommandPalette from "@/components/CommandPalette";
+import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
+import KeyboardShortcutsModal from "@/components/KeyboardShortcutsModal";
+import NotificationCenter from "@/components/NotificationCenter";
 
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 const DetailsPanel = dynamic(() => import("@/components/DetailsPanel"), {
   ssr: false,
 });
+
 const AppFooter = () => {
   const { dataUsage } = useAppStore();
   const currentYear = new Date().getFullYear();
@@ -74,6 +79,7 @@ export default function MainLayout({
     document.documentElement.className = theme;
     document.documentElement.style.colorScheme = theme;
   }, [theme]);
+
   return (
     <>
       <div
@@ -99,6 +105,10 @@ export default function MainLayout({
         <AppFooter />
       </div>
       <BulkActionBar />
+      <GlobalAudioPlayer />
+      <CommandPalette />
+      <KeyboardShortcutsModal />
+      <NotificationCenter />
       <Analytics />
       <AnimatePresence>
         {detailsFile && (

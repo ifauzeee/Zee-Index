@@ -1,5 +1,5 @@
 import React from "react";
-import { Share2, Upload, CheckSquare, List, Grid, Info } from "lucide-react";
+import { Share2, Upload, CheckSquare, List, Grid, Info, LayoutTemplate, UploadCloud } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FileBrowserHeaderProps {
@@ -7,7 +7,7 @@ interface FileBrowserHeaderProps {
   shareToken: string | null;
   isAdmin: boolean;
   isBulkMode: boolean;
-  view: "list" | "grid";
+  view: "list" | "grid" | "gallery";
   dragOverBreadcrumb: string | null;
   onBreadcrumbClick: (id: string) => void;
   onBreadcrumbDragOver: (e: React.DragEvent, id: string) => void;
@@ -16,9 +16,10 @@ interface FileBrowserHeaderProps {
   onUploadClick: () => void;
   onShareFolderClick: () => void;
   onToggleBulkMode: () => void;
-  onSetView: (view: "list" | "grid") => void;
+  onSetView: (view: "list" | "grid" | "gallery") => void;
   onDetailsClick: (e?: React.MouseEvent) => void;
   activeFileId: string | null;
+  onRequestFileClick: () => void;
 }
 
 export default function FileBrowserHeader({
@@ -38,6 +39,7 @@ export default function FileBrowserHeader({
   onSetView,
   onDetailsClick,
   activeFileId,
+  onRequestFileClick,
 }: FileBrowserHeaderProps) {
   return (
     <div className="flex justify-between items-center py-4 overflow-x-hidden">
@@ -74,6 +76,15 @@ export default function FileBrowserHeader({
             >
               <Upload size={18} />
             </button>
+            
+            <button
+              onClick={onRequestFileClick}
+              className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground"
+              title="Buat Link Terima File"
+            >
+              <UploadCloud size={18} />
+            </button>
+
             <button
               onClick={onShareFolderClick}
               className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground"
@@ -102,7 +113,7 @@ export default function FileBrowserHeader({
             </button>
           </>
         )}
-        <div className="flex items-center border border-border rounded-lg p-0.5">
+        <div className="flex items-center border border-border rounded-lg p-0.5 bg-card/50">
           <button
             onClick={() => onSetView("list")}
             className={`p-1.5 rounded-md transition-colors ${
@@ -124,6 +135,17 @@ export default function FileBrowserHeader({
             title="Tampilan Grid"
           >
             <Grid size={18} />
+          </button>
+          <button
+            onClick={() => onSetView("gallery")}
+            className={`p-1.5 rounded-md transition-colors ${
+              view === "gallery"
+                ? "bg-background text-primary shadow-sm"
+                : "hover:bg-accent/50 text-muted-foreground"
+            }`}
+            title="Tampilan Galeri"
+          >
+            <LayoutTemplate size={18} />
           </button>
         </div>
       </div>

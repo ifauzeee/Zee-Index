@@ -26,6 +26,21 @@ export interface DriveFile {
   trashed: boolean;
 }
 
+export interface DriveRevision {
+  id: string;
+  modifiedTime: string;
+  keepForever: boolean;
+  size: string;
+  originalFilename: string;
+  lastModifyingUser?: { displayName: string };
+}
+
+interface DriveListResponse {
+  files?: unknown[];
+  nextPageToken?: string | null;
+  error?: { message: string };
+}
+
 const ACCESS_TOKEN_KEY = "google:access-token";
 
 async function fetchWithRetry(
@@ -49,7 +64,7 @@ async function fetchWithRetry(
         `Fetch gagal (percobaan ${
           i + 1
         }/${retries}), mencoba lagi dalam ${delay / 1000} detik...`,
-        error
+        error,
       );
       await new Promise((res) => setTimeout(res, delay));
     }
@@ -79,6 +94,7 @@ export async function getAccessToken(): Promise<string> {
     }),
     cache: "no-store" as RequestCache,
   };
+
   const response = await fetchWithRetry(url, options);
 
   if (!response.ok) {
@@ -93,6 +109,7 @@ export async function getAccessToken(): Promise<string> {
 
   const tokenData: { access_token: string; expires_in: number } =
     await response.json();
+
   try {
     await kv.set(ACCESS_TOKEN_KEY, tokenData.access_token, { ex: 3000 });
   } catch (e) {
@@ -110,14 +127,12 @@ export async function getAllDescendantFolders(
   try {
     const cachedTree: string[] | null = await kv.get(cacheKey);
     if (cachedTree) {
-      console.log("Menggunakan folder tree dari cache.");
       return cachedTree;
     }
   } catch (e) {
     console.error("Gagal mengambil folder tree dari cache:", e);
   }
 
-  console.log("Membangun folder tree baru (tidak ada di cache).");
   const allFolderIds = new Set<string>([rootFolderId]);
   const queue: [string, number][] = [[rootFolderId, 0]];
   const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3/files";
@@ -126,7 +141,6 @@ export async function getAllDescendantFolders(
   while (queue.length > 0) {
     const [folderId, depth] = queue.shift()!;
     if (depth >= MAX_DEPTH) {
-      console.log(`Mencapai kedalaman maksimum (${MAX_DEPTH}) pada folder ${folderId}.`);
       continue;
     }
 
@@ -147,8 +161,8 @@ export async function getAllDescendantFolders(
             cache: "no-store",
           },
         );
+
         if (!response.ok) {
-          console.error(`Gagal mengambil subfolder dari folder ${folderId}`);
           break;
         }
 
@@ -166,11 +180,7 @@ export async function getAllDescendantFolders(
           }
         }
         pageToken = data.nextPageToken ?? null;
-      } catch (error) {
-        console.error(
-          `Error saat fetching subfolder untuk ${folderId}:`,
-          error,
-        );
+      } catch {
         pageToken = null;
       }
     } while (pageToken);
@@ -199,6 +209,7 @@ export async function listFilesFromDrive(
     orderBy: "folder, name",
     pageSize: String(pageSize),
   });
+
   if (pageToken) {
     params.append("pageToken", pageToken);
   }
@@ -210,9 +221,9 @@ export async function listFilesFromDrive(
       cache: "no-store",
     },
   );
+
   if (!response.ok) {
     const errorData = await response.json();
-    console.error("Google Drive API Error:", errorData);
     throw new Error(
       `Google Drive API Error: ${
         errorData.error?.message || "Pastikan folder ID benar dan dapat diakses."
@@ -220,14 +231,15 @@ export async function listFilesFromDrive(
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data: { files: any[]; nextPageToken?: string | null } =
-    await response.json();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const processedFiles: DriveFile[] = (data.files || []).map((file: any) => ({
-    ...file,
-    isFolder: file.mimeType === "application/vnd.google-apps.folder",
-  }));
+  const data: DriveListResponse = await response.json();
+  const processedFiles: DriveFile[] = (data.files || []).map((file) => {
+    const driveFile = file as DriveFile;
+    return {
+      ...driveFile,
+      isFolder: driveFile.mimeType === "application/vnd.google-apps.folder",
+    };
+  });
+
   return {
     files: processedFiles,
     nextPageToken: data.nextPageToken || null,
@@ -243,17 +255,17 @@ export async function getFileDetailsFromDrive(
     fields:
       "id, name, mimeType, size, modifiedTime, createdTime, webViewLink, webContentLink, thumbnailLink, hasThumbnail, parents, owners(displayName, emailAddress), lastModifyingUser(displayName), md5Checksum, imageMediaMetadata(width, height), videoMediaMetadata(width, height, durationMillis), trashed",
   });
+
   const response = await fetchWithRetry(`${driveUrl}?${params.toString()}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
   });
+
   if (!response.ok) {
-    console.error(`Gagal mengambil detail untuk file ID: ${fileId}`);
     return null;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data: any = await response.json();
+  const data = (await response.json()) as DriveFile;
   return {
     ...data,
     isFolder: data.mimeType === "application/vnd.google-apps.folder",
@@ -268,7 +280,6 @@ export async function getFolderPath(
     const cachedPath: { id: string; name: string }[] | null =
       await kv.get(cacheKey);
     if (cachedPath) {
-      console.log(`Menggunakan path folder dari cache untuk: ${folderId}`);
       return cachedPath;
     }
   } catch (e) {
@@ -279,6 +290,7 @@ export async function getFolderPath(
   const path = [];
   let currentId = folderId;
   const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
+
   if (folderId === rootId) {
     path.unshift({ id: rootId, name: "Home" });
   } else {
@@ -292,14 +304,15 @@ export async function getFolderPath(
           cache: "no-store",
         },
       );
+
       if (!response.ok) {
-        console.error(`Gagal mengambil detail untuk folder ID: ${currentId}`);
         break;
       }
 
       const data: { id: string; name: string; parents?: string[] } =
         await response.json();
       path.unshift({ id: data.id, name: data.name });
+
       if (data.parents && data.parents.length > 0) {
         currentId = data.parents[0];
       } else {
@@ -320,6 +333,7 @@ export async function getFolderPath(
 export async function getStorageDetails() {
   const accessToken = await getAccessToken();
   const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3";
+
   const aboutResponse = await fetchWithRetry(
     `${GOOGLE_DRIVE_API_URL}/about?fields=storageQuota`,
     {
@@ -327,13 +341,16 @@ export async function getStorageDetails() {
       cache: "no-store",
     },
   );
+
   if (!aboutResponse.ok) {
     throw new Error("Gagal mengambil data kuota Google Drive.");
   }
   const aboutData: { storageQuota: { usage: string; limit: string } } =
     await aboutResponse.json();
+
   const usage = parseInt(aboutData.storageQuota.usage, 10);
   const limit = parseInt(aboutData.storageQuota.limit, 10);
+
   const largestFilesParams = new URLSearchParams({
     q: "trashed=false and mimeType != 'application/vnd.google-apps.folder'",
     orderBy: "quotaBytesUsed desc",
@@ -360,7 +377,6 @@ export async function getStorageDetails() {
     isFolder: file.mimeType === "application/vnd.google-apps.folder",
   }));
 
-  // 3. Hitung Breakdown berdasarkan sample file terbesar
   const breakdownMap: Record<string, { size: number; count: number }> = {};
 
   allFiles.forEach((file: DriveFile) => {
@@ -371,13 +387,25 @@ export async function getStorageDetails() {
     else if (mime.startsWith("video/")) type = "Video";
     else if (mime.startsWith("audio/")) type = "Audio";
     else if (mime === "application/pdf") type = "PDF";
-    else if (mime.includes("zip") || mime.includes("rar") || mime.includes("tar") || mime.includes("7z")) type = "Arsip";
-    else if (mime.includes("word") || mime.includes("document") || mime.includes("sheet") || mime.includes("presentation")) type = "Dokumen";
+    else if (
+      mime.includes("zip") ||
+      mime.includes("rar") ||
+      mime.includes("tar") ||
+      mime.includes("7z")
+    )
+      type = "Arsip";
+    else if (
+      mime.includes("word") ||
+      mime.includes("document") ||
+      mime.includes("sheet") ||
+      mime.includes("presentation")
+    )
+      type = "Dokumen";
 
     if (!breakdownMap[type]) {
       breakdownMap[type] = { size: 0, count: 0 };
     }
-    
+
     const fileSize = parseInt(file.size || "0", 10);
     breakdownMap[type].size += fileSize;
     breakdownMap[type].count += 1;
@@ -419,6 +447,7 @@ export async function searchFilesInFolder(
       "files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents)",
     pageSize: "1000",
   });
+
   const response = await fetchWithRetry(
     `${GOOGLE_DRIVE_API_URL}?${params.toString()}`,
     {
@@ -426,14 +455,85 @@ export async function searchFilesInFolder(
       cache: "no-store",
     },
   );
+
   if (!response.ok) {
-    console.error(
-      `Gagal mencari di folder ${folderId}:`,
-      await response.json(),
-    );
     return [];
   }
 
   const data = await response.json();
   return (data.files || []) as DriveFile[];
+}
+
+export async function listTrashedFiles() {
+  const accessToken = await getAccessToken();
+  const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3/files";
+  const params = new URLSearchParams({
+    q: "trashed=true",
+    fields:
+      "files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents, trashed)",
+    pageSize: "100",
+    orderBy: "modifiedTime desc",
+  });
+
+  const response = await fetchWithRetry(
+    `${GOOGLE_DRIVE_API_URL}?${params.toString()}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) throw new Error("Failed to fetch trash");
+  const data = await response.json();
+  return (data.files || []).map((file: unknown) => {
+    const driveFile = file as DriveFile;
+    return {
+      ...driveFile,
+      isFolder: driveFile.mimeType === "application/vnd.google-apps.folder",
+    };
+  });
+}
+
+export async function restoreTrash(fileId: string) {
+  const accessToken = await getAccessToken();
+  const response = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${fileId}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ trashed: false }),
+    },
+  );
+  if (!response.ok) throw new Error("Failed to restore file");
+}
+
+export async function deleteForever(fileId: string) {
+  const accessToken = await getAccessToken();
+  const response = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${fileId}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+  if (!response.ok) throw new Error("Failed to delete file forever");
+}
+
+export async function listFileRevisions(
+  fileId: string,
+): Promise<DriveRevision[]> {
+  const accessToken = await getAccessToken();
+  const response = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${fileId}/revisions?fields=revisions(id,modifiedTime,keepForever,size,originalFilename,lastModifyingUser)`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+
+  if (!response.ok) throw new Error("Failed to list revisions");
+  const data = await response.json();
+  return data.revisions || [];
 }

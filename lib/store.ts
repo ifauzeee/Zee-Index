@@ -8,6 +8,14 @@ export interface Toast {
   type: "success" | "error" | "info";
 }
 
+export interface NotificationItem {
+  id: string;
+  message: string;
+  type: "success" | "error" | "info";
+  timestamp: number;
+  read: boolean;
+}
+
 export interface ShareLink {
   id: string;
   path: string;
@@ -20,6 +28,16 @@ export interface ShareLink {
   isCollection?: boolean;
 }
 
+export interface FileRequestLink {
+  token: string;
+  folderId: string;
+  folderName: string;
+  title: string;
+  expiresAt: number;
+  createdAt: number;
+  type: "file-request";
+}
+
 interface UserProfile {
   name?: string | null;
   email?: string | null;
@@ -28,7 +46,7 @@ interface UserProfile {
   isGuest?: boolean;
 }
 
-type ViewMode = "list" | "grid";
+type ViewMode = "list" | "grid" | "gallery";
 type SortKey = "name" | "size" | "modifiedTime";
 type SortOrder = "asc" | "desc";
 
@@ -59,6 +77,13 @@ interface AppState {
   toasts: Toast[];
   addToast: (toast: Omit<Toast, "id">) => void;
   removeToast: (id: string) => void;
+
+  notifications: NotificationItem[];
+  isNotificationOpen: boolean;
+  toggleNotificationCenter: () => void;
+  markAllNotificationsRead: () => void;
+  clearNotifications: () => void;
+
   user: UserProfile | null;
   fetchUser: () => Promise<void>;
   currentFolderId: string | null;
@@ -67,6 +92,9 @@ interface AppState {
   fetchShareLinks: () => Promise<void>;
   addShareLink: (link: ShareLink) => void;
   removeShareLink: (link: ShareLink) => Promise<void>;
+  fileRequests: FileRequestLink[];
+  fetchFileRequests: () => Promise<void>;
+  removeFileRequest: (token: string) => Promise<void>;
   dataUsage: {
     status: "idle" | "loading" | "success" | "error";
     value: string;
@@ -85,6 +113,12 @@ interface AppState {
   ) => Promise<void>;
   detailsFile: DriveFile | null;
   setDetailsFile: (file: DriveFile | null) => void;
+
+  activeAudioFile: DriveFile | null;
+  isAudioPlaying: boolean;
+  playAudio: (file: DriveFile) => void;
+  toggleAudioPlay: () => void;
+  closeAudio: () => void;
 
   hideAuthor: boolean | null;
   disableGuestLogin: boolean | null;
@@ -144,17 +178,41 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           folderTokens: { ...state.folderTokens, [folderId]: token },
         })),
+
       toasts: [],
       addToast: (toastDetails) => {
         const id = new Date().toISOString() + Math.random();
         const newToast = { ...toastDetails, id };
-        set((state) => ({ toasts: [...state.toasts, newToast] }));
+
+        const newNotification: NotificationItem = {
+          id,
+          message: toastDetails.message,
+          type: toastDetails.type,
+          timestamp: Date.now(),
+          read: false,
+        };
+
+        set((state) => ({
+          toasts: [...state.toasts, newToast],
+          notifications: [newNotification, ...state.notifications].slice(0, 50),
+        }));
       },
       removeToast: (id) => {
         set((state) => ({
           toasts: state.toasts.filter((toast) => toast.id !== id),
         }));
       },
+
+      notifications: [],
+      isNotificationOpen: false,
+      toggleNotificationCenter: () =>
+        set((state) => ({ isNotificationOpen: !state.isNotificationOpen })),
+      markAllNotificationsRead: () =>
+        set((state) => ({
+          notifications: state.notifications.map((n) => ({ ...n, read: true })),
+        })),
+      clearNotifications: () => set({ notifications: [] }),
+
       user: null,
       fetchUser: async () => {
         try {
@@ -186,7 +244,11 @@ export const useAppStore = create<AppState>()(
           );
           set({ shareLinks: links });
         } catch (error: unknown) {
-          get().addToast({ message: error instanceof Error ? error.message : "Error", type: "error" });
+          get().addToast({
+            message:
+              error instanceof Error ? error.message : "Error",
+            type: "error",
+          });
         }
       },
       addShareLink: (link) =>
@@ -219,10 +281,49 @@ export const useAppStore = create<AppState>()(
             type: "success",
           });
         } catch (error: unknown) {
-          get().addToast({ message: error instanceof Error ? error.message : "Error", type: "error" });
+          get().addToast({
+            message:
+              error instanceof Error ? error.message : "Error",
+            type: "error",
+          });
           set({ shareLinks: originalLinks });
         }
       },
+
+      fileRequests: [],
+      fetchFileRequests: async () => {
+        try {
+          const response = await fetch("/api/file-request");
+          if (!response.ok) throw new Error("Gagal mengambil data request.");
+          const requests: FileRequestLink[] = await response.json();
+          requests.sort((a, b) => b.expiresAt - a.expiresAt);
+          set({ fileRequests: requests });
+        } catch (error: unknown) {
+          console.error("Fetch file requests failed", error);
+        }
+      },
+      removeFileRequest: async (token) => {
+        const original = get().fileRequests;
+        set((state) => ({
+          fileRequests: state.fileRequests.filter((r) => r.token !== token),
+        }));
+        try {
+          const response = await fetch("/api/file-request", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token }),
+          });
+          if (!response.ok) throw new Error("Gagal menghapus");
+          get().addToast({ message: "Link request dihapus", type: "success" });
+        } catch {
+          set({ fileRequests: original });
+          get().addToast({
+            message: "Gagal menghapus link request",
+            type: "error",
+          });
+        }
+      },
+
       dataUsage: { status: "idle", value: "Memuat..." },
       fetchDataUsage: async () => {
         set((state) => ({
@@ -241,7 +342,11 @@ export const useAppStore = create<AppState>()(
           set({ dataUsage: { status: "success", value: formattedUsage } });
         } catch (error: unknown) {
           set({ dataUsage: { status: "error", value: "Gagal memuat" } });
-          get().addToast({ message: error instanceof Error ? error.message : "Error", type: "error" });
+          get().addToast({
+            message:
+              error instanceof Error ? error.message : "Error",
+            type: "error",
+          });
         }
       },
       adminEmails: [],
@@ -254,7 +359,11 @@ export const useAppStore = create<AppState>()(
           const emails = await response.json();
           set({ adminEmails: emails });
         } catch (error: unknown) {
-          get().addToast({ message: error instanceof Error ? error.message : "Error", type: "error" });
+          get().addToast({
+            message:
+              error instanceof Error ? error.message : "Error",
+            type: "error",
+          });
         } finally {
           set({ isFetchingAdmins: false });
         }
@@ -274,7 +383,11 @@ export const useAppStore = create<AppState>()(
           }));
           get().addToast({ message: result.message, type: "success" });
         } catch (error: unknown) {
-          get().addToast({ message: error instanceof Error ? error.message : "Error", type: "error" });
+          get().addToast({
+            message:
+              error instanceof Error ? error.message : "Error",
+            type: "error",
+          });
         }
       },
       removeAdminEmail: async (email: string) => {
@@ -295,7 +408,11 @@ export const useAppStore = create<AppState>()(
             throw new Error(result.error || "Gagal menghapus admin.");
           get().addToast({ message: result.message, type: "success" });
         } catch (error: unknown) {
-          get().addToast({ message: error instanceof Error ? error.message : "Error", type: "error" });
+          get().addToast({
+            message:
+              error instanceof Error ? error.message : "Error",
+            type: "error",
+          });
           set({ adminEmails: originalAdmins });
         }
       },
@@ -332,12 +449,23 @@ export const useAppStore = create<AppState>()(
           }
           get().addToast({ message: result.message, type: "success" });
         } catch (error: unknown) {
-          get().addToast({ message: error instanceof Error ? error.message : "Error", type: "error" });
+          get().addToast({
+            message:
+              error instanceof Error ? error.message : "Error",
+            type: "error",
+          });
           set({ favorites: originalFavorites });
         }
       },
       detailsFile: null,
       setDetailsFile: (file) => set({ detailsFile: file }),
+
+      activeAudioFile: null,
+      isAudioPlaying: false,
+      playAudio: (file) => set({ activeAudioFile: file, isAudioPlaying: true }),
+      toggleAudioPlay: () =>
+        set((state) => ({ isAudioPlaying: !state.isAudioPlaying })),
+      closeAudio: () => set({ activeAudioFile: null, isAudioPlaying: false }),
 
       hideAuthor: null,
       disableGuestLogin: null,
@@ -372,7 +500,11 @@ export const useAppStore = create<AppState>()(
             disableGuestLogin: result.config.disableGuestLogin,
           });
         } catch (error: unknown) {
-          get().addToast({ message: error instanceof Error ? error.message : "Error", type: "error" });
+          get().addToast({
+            message:
+              error instanceof Error ? error.message : "Error",
+            type: "error",
+          });
         }
       },
     }),
@@ -383,6 +515,7 @@ export const useAppStore = create<AppState>()(
         view: state.view,
         sort: state.sort,
         folderTokens: state.folderTokens,
+        notifications: state.notifications,
       }),
     },
   ),

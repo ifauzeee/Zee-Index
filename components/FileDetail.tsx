@@ -1,4 +1,5 @@
 "use client";
+
 import React, {
   useEffect,
   useMemo,
@@ -12,12 +13,12 @@ import { jwtDecode } from "jwt-decode";
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from "@/lib/store";
 import ShareButton from "./ShareButton";
+import { useSession } from "next-auth/react";
 import "plyr/dist/plyr.css";
 import "prismjs/themes/prism-tomorrow.min.css";
 import "prismjs/plugins/line-numbers/prism-line-numbers.css";
-import Plyr from "plyr";
 import Prism from "prismjs";
-import "prismjs/plugins/line-numbers/prism-line-numbers.min.js";
+
 import {
   getFileType,
   formatBytes,
@@ -32,15 +33,25 @@ import {
   ChevronLeft,
   ChevronRight,
   Archive,
+  History,
+  Edit,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import ArchivePreviewModal from "./ArchivePreviewModal";
+import ImageEditorModal from "./ImageEditorModal";
+import FileRevisionsModal from "./FileRevisionsModal";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const pdfjsLib: any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const ePub: any;
+
+interface SubtitleTrack {
+  kind: string;
+  src: string;
+  srcLang: string;
+  label: string;
+  default: boolean;
+}
 
 const LoadingPreview: React.FC = () => (
   <div className="flex items-center justify-center h-full text-primary">
@@ -60,8 +71,7 @@ interface VideoAudioPreviewProps {
   type: "video" | "audio";
   poster?: string;
   mimeType: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  subtitleTracks?: any[];
+  subtitleTracks?: SubtitleTrack[];
 }
 
 const VideoAudioPreview: React.FC<VideoAudioPreviewProps> = ({
@@ -76,13 +86,18 @@ const VideoAudioPreview: React.FC<VideoAudioPreviewProps> = ({
 
   useEffect(() => {
     if (ref.current) {
-      const options: Plyr.Options = {
-        debug: false,
-      };
-      playerRef.current = new Plyr(ref.current, options);
+      import("plyr").then((p) => {
+        const Plyr = p.default;
+        const options = {
+          debug: false,
+        };
+        playerRef.current = new Plyr(ref.current as HTMLElement, options);
+      });
     }
     return () => {
-      playerRef.current?.destroy();
+      if (playerRef.current) {
+        playerRef.current.destroy();
+      }
     };
   }, []);
 
@@ -90,7 +105,6 @@ const VideoAudioPreview: React.FC<VideoAudioPreviewProps> = ({
   const posterUrl = poster ? poster.replace(/=s\d+/, "=s1280") : undefined;
 
   return (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     <Tag
       ref={ref as unknown as React.RefObject<HTMLVideoElement>}
       id="player"
@@ -268,7 +282,12 @@ const CodePreview: React.FC<{ src: string; fileName: string }> = ({
 
   useEffect(() => {
     if (content) {
-      Prism.highlightAll();
+      // @ts-expect-error: Suppress missing type definition for minified file
+      import("prismjs/plugins/line-numbers/prism-line-numbers.min.js")
+        .then(() => {
+          Prism.highlightAll();
+        })
+        .catch((e) => console.error("Failed to load Prism plugin:", e));
     }
   }, [content]);
 
@@ -306,12 +325,13 @@ export default function FileDetail({
   isModal?: boolean;
   prevFileUrl?: string;
   nextFileUrl?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  subtitleTracks?: any[];
+  subtitleTracks?: SubtitleTrack[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToast, user, triggerRefresh, hideAuthor } = useAppStore();
+  const { data: session } = useSession();
+
   const [showBackButton, setShowBackButton] = useState(true);
   const [markdownContent, setMarkdownContent] = useState<string | null>(null);
   const [editableContent, setEditableContent] = useState<string | null>(null);
@@ -323,12 +343,15 @@ export default function FileDetail({
   const [showTextPreview, setShowTextPreview] = useState(false);
   const [showArchivePreview, setShowArchivePreview] = useState(false);
 
+  const [showImageEditor, setShowImageEditor] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+
   const shareToken = useMemo(
     () => searchParams.get("share_token"),
     [searchParams],
   );
 
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = user?.role === "ADMIN" || session?.user?.role === "ADMIN";
   const canShowAuthor = isAdmin || !hideAuthor;
 
   const fileType = getFileType(file);
@@ -340,7 +363,8 @@ export default function FileDetail({
     fileType === "other";
 
   const isArchive = fileType === "archive";
-  const isArchivePreviewable = isArchive && fileSize <= ARCHIVE_PREVIEW_LIMIT_BYTES;
+  const isArchivePreviewable =
+    isArchive && fileSize <= ARCHIVE_PREVIEW_LIMIT_BYTES;
 
   const validateShareToken = useCallback(
     async (token: string) => {
@@ -432,7 +456,7 @@ export default function FileDetail({
   }, [file.id, shareToken]);
 
   const isEditable =
-    user?.role === "ADMIN" && (fileType === "code" || fileType === "markdown");
+    isAdmin && (fileType === "code" || fileType === "markdown");
   const isTextPreviewable = fileType === "code" || fileType === "markdown";
 
   useEffect(() => {
@@ -488,7 +512,10 @@ export default function FileDetail({
         setMarkdownContent(editableContent);
       }
     } catch (error: unknown) {
-      addToast({ message: error instanceof Error ? error.message : "Gagal menyimpan", type: "error" });
+      addToast({
+        message: error instanceof Error ? error.message : "Gagal menyimpan",
+        type: "error",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -556,8 +583,7 @@ export default function FileDetail({
     ? parseInt(file.videoMediaMetadata.durationMillis, 10)
     : undefined;
 
-  const showShareButton =
-    !searchParams.get("share_token") && user?.role === "ADMIN";
+  const showShareButton = !searchParams.get("share_token") && isAdmin;
 
   return (
     <div className="container mx-auto px-4 py-6 flex flex-col h-full overflow-hidden">
@@ -612,7 +638,9 @@ export default function FileDetail({
           <div
             className={cn(
               "w-full flex-1 flex items-start justify-center overflow-hidden",
-              !isEditing && !isDefaultPreview && "bg-muted/20 rounded-lg border",
+              !isEditing &&
+                !isDefaultPreview &&
+                "bg-muted/20 rounded-lg border",
               isEditing && "rounded-lg border",
             )}
           >
@@ -676,6 +704,26 @@ export default function FileDetail({
           <h1 className="text-2xl lg:text-3xl font-bold break-words mb-6">
             {file.name}
           </h1>
+
+          {isAdmin && !isModal && (
+            <div className="flex gap-2 mb-6">
+              {fileType === "image" && (
+                <button
+                  onClick={() => setShowImageEditor(true)}
+                  className="px-3 py-2 bg-secondary hover:bg-secondary/80 rounded-md text-sm font-medium flex items-center gap-2 transition-colors"
+                >
+                  <Edit size={16} /> Edit Gambar
+                </button>
+              )}
+              <button
+                onClick={() => setShowHistory(true)}
+                className="px-3 py-2 bg-secondary hover:bg-secondary/80 rounded-md text-sm font-medium flex items-center gap-2 transition-colors"
+              >
+                <History size={16} /> Riwayat
+              </button>
+            </div>
+          )}
+
           <h3 className="text-lg font-semibold mb-4 border-b pb-2">
             Informasi File
           </h3>
@@ -777,6 +825,19 @@ export default function FileDetail({
         <ArchivePreviewModal
           file={file}
           onClose={() => setShowArchivePreview(false)}
+        />
+      )}
+      {showImageEditor && (
+        <ImageEditorModal
+          file={file}
+          onClose={() => setShowImageEditor(false)}
+        />
+      )}
+      {showHistory && (
+        <FileRevisionsModal
+          fileId={file.id}
+          fileName={file.name}
+          onClose={() => setShowHistory(false)}
         />
       )}
     </div>

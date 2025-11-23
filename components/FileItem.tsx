@@ -4,7 +4,7 @@ import { formatBytes, getIcon, cn } from "@/lib/utils";
 import React, { useRef, useState } from "react";
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
-import { Lock, Star, Share2, Download, Info } from "lucide-react";
+import { Lock, Star, Share2, Download, Info, ImageOff } from "lucide-react";
 
 interface FileItemProps {
   file: DriveFile & { isFavorite?: boolean };
@@ -38,11 +38,13 @@ export default function FileItem({
   onDragStart,
   onFileDrop,
 }: FileItemProps) {
-  const { view } = useAppStore();
+  const { view, shareToken } = useAppStore();
   const Icon = getIcon(file.mimeType);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const longPressFired = useRef(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(true);
 
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     longPressFired.current = false;
@@ -111,21 +113,40 @@ export default function FileItem({
     }
   };
 
+  const getThumbnailSrc = () => {
+    if (file.thumbnailLink) {
+      return file.thumbnailLink.replace(/=s\d+/, "=s800");
+    }
+    let url = `/api/download?fileId=${file.id}`;
+    if (shareToken) url += `&share_token=${shareToken}`;
+    return url;
+  };
+
+  const isGallery = view === "gallery";
+  const hasImage =
+    (file.mimeType.startsWith("image/") || file.thumbnailLink) &&
+    !file.isFolder &&
+    !imageError;
+
   return (
     <motion.div
       variants={itemVariants}
       initial="hidden"
       animate="visible"
       whileHover="hover"
+      className={cn(isGallery && "mb-4")}
     >
       <div
         className={cn(
-          "group relative rounded-lg transition-all duration-200 ease-out cursor-pointer",
+          "group relative rounded-lg transition-all duration-200 ease-out cursor-pointer overflow-hidden",
           isSelected && "bg-accent/80 ring-2 ring-primary",
           isActive && !isBulkMode && "ring-2 ring-primary/50",
           view === "list"
             ? "flex items-center p-3 bg-card border border-border shadow-sm hover:shadow-md hover:bg-accent/50"
-            : "flex flex-col items-center justify-center text-center p-2 sm:p-4 bg-card border border-border shadow-sm hover:shadow-md w-full",
+            : "bg-card border border-border shadow-sm hover:shadow-md w-full",
+          view === "grid" &&
+            "flex flex-col items-center justify-center text-center p-2 sm:p-4",
+          isGallery && "p-0",
           isDragOver && "ring-2 ring-primary ring-inset bg-primary/10",
         )}
         onClick={onClick}
@@ -147,19 +168,51 @@ export default function FileItem({
             "flex w-full",
             view === "list"
               ? "items-center gap-4"
-              : "flex-col items-center justify-center gap-2",
+              : view === "grid"
+                ? "flex-col items-center justify-center gap-2"
+                : "flex-col",
           )}
         >
-          <div className="relative">
-            {view === "grid" && false && file.thumbnailLink && !file.isFolder ? (
-              <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-md overflow-hidden flex items-center justify-center">
+          <div className={cn("relative", isGallery && "w-full min-h-[150px]")}>
+            {isGallery && hasImage ? (
+              <div className="relative w-full bg-muted/20">
+                {isImageLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-muted/30 animate-pulse z-10">
+                    <Icon size={32} className="opacity-20" />
+                  </div>
+                )}
+                {/* eslint-disable @next/next/no-img-element */}
+                <img
+                  src={getThumbnailSrc()}
+                  alt={file.name}
+                  className={cn(
+                    "w-full h-auto object-cover display-block transition-opacity duration-300",
+                    isImageLoading ? "opacity-0" : "opacity-100",
+                  )}
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  onLoad={() => setIsImageLoading(false)}
+                  onError={() => {
+                    setIsImageLoading(false);
+                    setImageError(true);
+                  }}
+                />
+                {file.isProtected && (
+                  <div className="absolute bottom-2 right-2 flex items-center justify-center p-1.5 bg-background/60 backdrop-blur-sm rounded-full ring-2 ring-background/20 z-20">
+                    <Lock size={12} className="text-primary" />
+                  </div>
+                )}
+              </div>
+            ) : view === "grid" && hasImage ? (
+              <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-md overflow-hidden flex items-center justify-center bg-muted/20">
                 <Image
-                  src={file.thumbnailLink!}
+                  src={file.thumbnailLink || getThumbnailSrc()}
                   alt={file.name}
                   fill
                   className="object-cover"
                   sizes="(max-width: 640px) 80px, 96px"
-                  priority={false}
+                  referrerPolicy="no-referrer"
+                  onError={() => setImageError(true)}
                 />
               </div>
             ) : (
@@ -167,13 +220,23 @@ export default function FileItem({
                 className={cn(
                   "text-3xl text-primary shrink-0 flex items-center justify-center",
                   view === "grid" && "text-4xl mb-2",
+                  isGallery &&
+                    "py-8 text-6xl bg-accent/10 w-full flex flex-col gap-2",
                 )}
               >
-                {React.createElement(Icon, { size: view === "grid" ? 48 : 28 })}
+                {React.createElement(Icon, {
+                  size: view === "grid" ? 48 : isGallery ? 64 : 28,
+                })}
+                {isGallery && imageError && (
+                  <span className="text-xs text-muted-foreground mt-2">
+                    <ImageOff size={16} className="inline mr-1" />
+                    Gagal muat
+                  </span>
+                )}
               </div>
             )}
 
-            {view === "grid" && file.isProtected && (
+            {view !== "list" && file.isProtected && !isGallery && (
               <div className="absolute -bottom-1 -right-1 flex items-center justify-center p-1.5 bg-background/60 backdrop-blur-sm rounded-full ring-2 ring-background/20">
                 <Lock size={12} className="text-primary" />
               </div>
@@ -184,6 +247,7 @@ export default function FileItem({
             className={cn(
               "flex-1 min-w-0",
               view === "grid" && "mt-2 w-full text-center",
+              isGallery && "p-3",
             )}
           >
             <p
@@ -191,7 +255,9 @@ export default function FileItem({
                 "font-medium truncate flex items-center gap-1.5",
                 view === "list"
                   ? "text-sm justify-start"
-                  : "text-xs sm:text-sm justify-center",
+                  : view === "grid"
+                    ? "text-xs sm:text-sm justify-center"
+                    : "text-sm",
               )}
               title={file.name}
             >
@@ -217,8 +283,13 @@ export default function FileItem({
                 })}
               </p>
             )}
-            {view === "grid" && !file.isFolder && (
-              <p className="text-xs text-muted-foreground mt-1 text-center">
+            {(view === "grid" || view === "gallery") && !file.isFolder && (
+              <p
+                className={cn(
+                  "text-xs text-muted-foreground mt-1",
+                  view === "grid" ? "text-center" : "text-left",
+                )}
+              >
                 {file.size ? formatBytes(parseInt(file.size)) : "-"}
               </p>
             )}

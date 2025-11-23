@@ -18,6 +18,8 @@ import {
   ShieldCheck,
   Star,
   Github,
+  Trash2,
+  Bell, // Import Bell Icon
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import Search from "@/components/Search";
@@ -106,7 +108,7 @@ const MobileNav: FC<MobileNavProps> = ({
               }
               if (
                 user?.role !== "ADMIN" &&
-                (item.id === "admin" || item.id === "storage")
+                (item.id === "admin" || item.id === "storage" || item.id === "trash")
               ) {
                 return false;
               }
@@ -163,11 +165,13 @@ const MobileNav: FC<MobileNavProps> = ({
 export default function Header() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { theme, toggleTheme, triggerRefresh, shareToken, user } =
+  const { theme, toggleTheme, triggerRefresh, shareToken, user, notifications, toggleNotificationCenter } =
     useAppStore();
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -181,7 +185,10 @@ export default function Header() {
   const menuItems = [
     { id: "favorites", href: "/favorites", icon: Star, label: "Favorit" },
     ...(user?.role === "ADMIN"
-      ? [{ id: "admin", href: "/admin", icon: ShieldCheck, label: "Admin" }]
+      ? [
+          { id: "admin", href: "/admin", icon: ShieldCheck, label: "Admin" },
+          { id: "trash", href: "/trash", icon: Trash2, label: "Sampah" }, 
+        ]
       : []),
     { id: "storage", href: "/storage", icon: HardDrive, label: "Penyimpanan" },
     {
@@ -196,7 +203,6 @@ export default function Header() {
       icon: RefreshCw,
       label: "Segarkan Halaman",
     },
-
     {
       id: "github",
       href: "https://github.com/ifauzeee/Zee-Index",
@@ -205,7 +211,6 @@ export default function Header() {
       icon: Github,
       label: "GitHub",
     },
-
     {
       id: "telegram",
       href: "https://t.me/RyzeeenUniverse",
@@ -355,6 +360,16 @@ export default function Header() {
               </>
             ) : (
               <>
+                <button
+                  onClick={toggleNotificationCenter}
+                  className="p-2 rounded-lg hover:bg-accent relative"
+                  title="Notifikasi"
+                >
+                  <Bell size={20} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-background"></span>
+                  )}
+                </button>
                 {menuItems.map((item) => {
                   const Icon = item.icon;
                   return "href" in item && item.href ? (
@@ -387,6 +402,15 @@ export default function Header() {
           </div>
 
           <div className="flex items-center gap-2 sm:hidden">
+            <button
+              onClick={toggleNotificationCenter}
+              className="p-2 rounded-lg hover:bg-accent relative z-50"
+            >
+              <Bell size={20} />
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-background"></span>
+              )}
+            </button>
             <button
               onClick={() => setIsSearchVisible(!isSearchVisible)}
               title="Cari"

@@ -5,6 +5,7 @@ import FileItem from "./FileItem";
 import React from "react";
 import EmptyState from "./EmptyState";
 import { FolderSearch } from "lucide-react";
+import Masonry from "react-masonry-css";
 
 interface FileListProps {
   files: DriveFile[];
@@ -35,6 +36,7 @@ export default function FileList({
   onFileDrop,
 }: FileListProps) {
   const { view, selectedFiles, isBulkMode } = useAppStore();
+
   if (files.length === 0) {
     return (
       <div className="text-center py-20 text-muted-foreground col-span-full">
@@ -54,10 +56,57 @@ export default function FileList({
       transition: { staggerChildren: 0.05 },
     },
   };
+
+  const renderFileItem = (file: DriveFile) => (
+    <FileItem
+      key={file.id}
+      file={file}
+      onClick={() => onItemClick(file)}
+      onContextMenu={(event) => onItemContextMenu(event, file)}
+      isSelected={selectedFiles.some((f) => f.id === file.id)}
+      isActive={!isBulkMode && activeFileId === file.id}
+      isBulkMode={isBulkMode}
+      onShare={(e) => onShareClick(e, file)}
+      onShowDetails={(e) => onDetailsClick(e, file)}
+      onDownload={(e) => onDownloadClick(e, file)}
+      isAdmin={isAdmin}
+      onDragStart={(e) => onDragStart(e, file)}
+      onFileDrop={onFileDrop}
+    />
+  );
+
+  if (view === "gallery") {
+    const breakpointColumnsObj = {
+      default: 5,
+      1536: 5, // 2xl
+      1280: 4, // xl
+      1024: 3, // lg
+      768: 2,  // md
+      640: 1   // sm
+    };
+
+    return (
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <Masonry
+          breakpointCols={breakpointColumnsObj}
+          className="flex w-auto -ml-4"
+          columnClassName="pl-4 bg-clip-padding"
+        >
+          {files.map(renderFileItem)}
+        </Masonry>
+      </motion.div>
+    );
+  }
+
   const containerClass =
     view === "list"
       ? "flex flex-col gap-2"
-      : "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4";
+      : "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4";
+
   return (
     <motion.div
       className={containerClass}
@@ -65,23 +114,7 @@ export default function FileList({
       initial="hidden"
       animate="visible"
     >
-      {files.map((file) => (
-        <FileItem
-          key={file.id}
-          file={file}
-          onClick={() => onItemClick(file)}
-          onContextMenu={(event) => onItemContextMenu(event, file)}
-          isSelected={selectedFiles.some((f) => f.id === file.id)}
-          isActive={!isBulkMode && activeFileId === file.id}
-          isBulkMode={isBulkMode}
-          onShare={(e) => onShareClick(e, file)}
-          onShowDetails={(e) => onDetailsClick(e, file)}
-          onDownload={(e) => onDownloadClick(e, file)}
-          isAdmin={isAdmin}
-          onDragStart={(e) => onDragStart(e, file)}
-          onFileDrop={onFileDrop}
-        />
-      ))}
+      {files.map(renderFileItem)}
     </motion.div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo, FC } from "react";
-import { useAppStore, ShareLink } from "@/lib/store";
+import { useAppStore, ShareLink, FileRequestLink } from "@/lib/store";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -86,6 +86,9 @@ export default function AdminPage() {
     user,
     shareLinks,
     removeShareLink,
+    fileRequests,
+    fetchFileRequests,
+    removeFileRequest,
     addToast,
     fetchUser,
     fetchShareLinks,
@@ -97,7 +100,10 @@ export default function AdminPage() {
   } = useAppStore();
   const { status, data: session } = useSession();
   const router = useRouter();
-  const [linkToDelete, setLinkToDelete] = useState<ShareLink | null>(null);
+  const [linkToDelete, setLinkToDelete] = useState<{
+    type: "share" | "request";
+    item: ShareLink | FileRequestLink;
+  } | null>(null);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [isSubmittingAdmin, setIsSubmittingAdmin] = useState(false);
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -109,6 +115,7 @@ export default function AdminPage() {
         fetchUser();
       }
       fetchShareLinks();
+      fetchFileRequests();
       fetchAdminEmails();
 
       setIsLoadingStats(true);
@@ -126,9 +133,17 @@ export default function AdminPage() {
         )
         .finally(() => setIsLoadingStats(false));
     }
-  }, [status, user, fetchUser, fetchShareLinks, fetchAdminEmails, addToast]);
+  }, [
+    status,
+    user,
+    fetchUser,
+    fetchShareLinks,
+    fetchFileRequests,
+    fetchAdminEmails,
+    addToast,
+  ]);
 
-  const { activeLinks, expiredLinks } = useMemo(() => {
+  const { expiredLinks } = useMemo(() => {
     const now = new Date();
     const active: ShareLink[] = [];
     const expired: ShareLink[] = [];
@@ -142,18 +157,25 @@ export default function AdminPage() {
     return { activeLinks: active, expiredLinks: expired };
   }, [shareLinks]);
 
-  const handleCopy = (shareUrl: string) => {
-    navigator.clipboard.writeText(shareUrl);
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
     addToast({ message: "Tautan disalin ke clipboard!", type: "success" });
   };
 
-  const handleDeleteClick = (link: ShareLink) => {
-    setLinkToDelete(link);
+  const handleDeleteClick = (
+    item: ShareLink | FileRequestLink,
+    type: "share" | "request",
+  ) => {
+    setLinkToDelete({ type, item });
   };
 
   const confirmDelete = async () => {
     if (linkToDelete) {
-      await removeShareLink(linkToDelete);
+      if (linkToDelete.type === "share") {
+        await removeShareLink(linkToDelete.item as ShareLink);
+      } else {
+        await removeFileRequest((linkToDelete.item as FileRequestLink).token);
+      }
       setLinkToDelete(null);
     }
   };
@@ -228,20 +250,25 @@ export default function AdminPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      Total Tautan
+                      Total Tautan (Share)
                     </p>
                     <p className="text-2xl font-bold">{shareLinks.length}</p>
                   </div>
                 </div>
                 <div className="bg-card border rounded-lg p-6 flex items-center gap-4">
-                  <div className="p-3 bg-green-500/10 rounded-lg text-green-500">
-                    <Clock size={28} />
+                  <div className="p-3 bg-purple-500/10 rounded-lg text-purple-500">
+                    <UploadCloud size={28} />
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      Tautan Aktif
+                      Request File Aktif
                     </p>
-                    <p className="text-2xl font-bold">{activeLinks.length}</p>
+                    <p className="text-2xl font-bold">
+                      {
+                        fileRequests.filter((r) => r.expiresAt > Date.now())
+                          .length
+                      }
+                    </p>
                   </div>
                 </div>
                 <div className="bg-card border rounded-lg p-6 flex items-center gap-4">
@@ -536,118 +563,221 @@ export default function AdminPage() {
           <TabsContent value="links" className="mt-6">
             <div>
               <h2 className="text-2xl font-semibold mb-6">
-                Manajemen Tautan Berbagi
+                Manajemen Tautan Berbagi & Request
               </h2>
-              {shareLinks.length === 0 ? (
+
+              {shareLinks.length === 0 && fileRequests.length === 0 ? (
                 <div className="text-center py-20 text-muted-foreground bg-card border rounded-lg">
                   <AlertCircle className="h-16 w-16 mx-auto mb-4" />
-                  <p>Tidak ada tautan berbagi yang pernah dibuat.</p>
+                  <p>Tidak ada tautan berbagi atau request yang aktif.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <AnimatePresence>
-                    {shareLinks.map((link: ShareLink) => {
-                      const isExpired = new Date(link.expiresAt) < new Date();
-                      return (
-                        <motion.div
-                          key={link.id}
-                          layout
-                          initial={{ opacity: 0, y: 20, scale: 0.98 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{
-                            opacity: 0,
-                            scale: 0.95,
-                            transition: { duration: 0.2 },
-                          }}
-                          className={cn(
-                            "bg-card border rounded-lg p-4 transition-colors",
-                            isExpired && "bg-muted/50 border-dashed",
-                          )}
-                        >
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm text-muted-foreground">
-                                {link.itemName}
-                              </p>
-                              <a
-                                href={`${window.location.origin}${link.path}?share_token=${link.token}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-base font-semibold text-primary truncate block hover:underline"
-                              >
-                                {link.path}
-                              </a>
-                            </div>
-                            <div className="flex items-center gap-4 mt-3 sm:mt-0">
-                              <span
+                  {fileRequests.length > 0 && (
+                    <>
+                      <h3 className="text-lg font-semibold mt-4 mb-2 flex items-center gap-2">
+                        <UploadCloud size={20} className="text-purple-500" />
+                        Link Permintaan Upload (File Request)
+                      </h3>
+                      <div className="space-y-3 mb-8">
+                        <AnimatePresence>
+                          {fileRequests.map((req) => {
+                            const isExpired = req.expiresAt < Date.now();
+                            const publicUrl = `${window.location.origin}/request/${req.token}`;
+                            return (
+                              <motion.div
+                                key={req.token}
+                                layout
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
                                 className={cn(
-                                  "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
-                                  link.loginRequired
-                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300"
-                                    : "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300",
+                                  "bg-card border border-purple-200 dark:border-purple-900 rounded-lg p-4 transition-colors",
+                                  isExpired && "bg-muted/50 border-dashed",
                                 )}
                               >
-                                <ShieldCheck size={14} />
-                                {link.loginRequired ? "Login" : "Publik"}
-                              </span>
-                              <span
-                                className={cn(
-                                  "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
-                                  isExpired
-                                    ? "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300"
-                                    : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
-                                )}
-                              >
-                                <Clock size={14} />
-                                {isExpired ? "Kedaluwarsa" : "Aktif"}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="border-t my-4"></div>
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                            <p className="text-xs text-muted-foreground mb-2 sm:mb-0 flex items-center flex-wrap gap-x-2 gap-y-1">
-                              <span className="flex items-center gap-1.5">
-                                <Clock size={12} />
-                                Kedaluwarsa:{" "}
-                                {format(
-                                  new Date(link.expiresAt),
-                                  "dd MMM yyyy, HH:mm",
-                                  { locale: id },
-                                )}
-                              </span>
-                              <span className="hidden sm:inline text-gray-400 dark:text-gray-600">
-                                |
-                              </span>
-                              <span className="flex items-center gap-1.5">
-                                <Eye size={12} />
-                                Dilihat: {link.viewCount || 0} kali
-                              </span>
-                            </p>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() =>
-                                  handleCopy(
-                                    `${window.location.origin}${link.path}?share_token=${link.token}`,
-                                  )
-                                }
-                                className="p-2 rounded-md hover:bg-accent"
-                                title="Salin Tautan"
-                              >
-                                <Copy size={16} />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteClick(link)}
-                                className="p-2 rounded-md hover:bg-accent text-red-500"
-                                title="Hapus & Batalkan Tautan"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </AnimatePresence>
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                      {req.title}
+                                      <span className="text-xs font-normal text-muted-foreground px-2 py-0.5 bg-muted rounded-full">
+                                        Upload ke: {req.folderName}
+                                      </span>
+                                    </p>
+                                    <a
+                                      href={publicUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-sm text-purple-600 hover:underline block mt-1 truncate"
+                                    >
+                                      {publicUrl}
+                                    </a>
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-3 sm:mt-0">
+                                    <span
+                                      className={cn(
+                                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
+                                        isExpired
+                                          ? "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300"
+                                          : "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300",
+                                      )}
+                                    >
+                                      {isExpired ? "Kedaluwarsa" : "Aktif"}
+                                    </span>
+                                    <button
+                                      onClick={() => handleCopy(publicUrl)}
+                                      className="p-2 rounded-md hover:bg-accent"
+                                      title="Salin Tautan"
+                                    >
+                                      <Copy size={16} />
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        handleDeleteClick(req, "request")
+                                      }
+                                      className="p-2 rounded-md hover:bg-accent text-red-500"
+                                      title="Hapus Link Request"
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="mt-2 text-xs text-muted-foreground flex gap-4">
+                                  <span>
+                                    Dibuat:{" "}
+                                    {format(req.createdAt, "dd MMM yyyy", {
+                                      locale: id,
+                                    })}
+                                  </span>
+                                  <span>
+                                    Berakhir:{" "}
+                                    {format(req.expiresAt, "dd MMM yyyy, HH:mm", {
+                                      locale: id,
+                                    })}
+                                  </span>
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </AnimatePresence>
+                      </div>
+                    </>
+                  )}
+
+                  {shareLinks.length > 0 && (
+                    <>
+                      <h3 className="text-lg font-semibold mt-4 mb-2 flex items-center gap-2">
+                        <LinkIcon size={20} className="text-blue-500" />
+                        Link Berbagi File (Share Links)
+                      </h3>
+                      <AnimatePresence>
+                        {shareLinks.map((link: ShareLink) => {
+                          const isExpired =
+                            new Date(link.expiresAt) < new Date();
+                          return (
+                            <motion.div
+                              key={link.id}
+                              layout
+                              initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{
+                                opacity: 0,
+                                scale: 0.95,
+                                transition: { duration: 0.2 },
+                              }}
+                              className={cn(
+                                "bg-card border rounded-lg p-4 transition-colors",
+                                isExpired && "bg-muted/50 border-dashed",
+                              )}
+                            >
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm text-muted-foreground">
+                                    {link.itemName}
+                                  </p>
+                                  <a
+                                    href={`${window.location.origin}${link.path}?share_token=${link.token}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-base font-semibold text-primary truncate block hover:underline"
+                                  >
+                                    {link.path}
+                                  </a>
+                                </div>
+                                <div className="flex items-center gap-4 mt-3 sm:mt-0">
+                                  <span
+                                    className={cn(
+                                      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
+                                      link.loginRequired
+                                        ? "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300"
+                                        : "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300",
+                                    )}
+                                  >
+                                    <ShieldCheck size={14} />
+                                    {link.loginRequired ? "Login" : "Publik"}
+                                  </span>
+                                  <span
+                                    className={cn(
+                                      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
+                                      isExpired
+                                        ? "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300"
+                                        : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
+                                    )}
+                                  >
+                                    <Clock size={14} />
+                                    {isExpired ? "Kedaluwarsa" : "Aktif"}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="border-t my-4"></div>
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                                <p className="text-xs text-muted-foreground mb-2 sm:mb-0 flex items-center flex-wrap gap-x-2 gap-y-1">
+                                  <span className="flex items-center gap-1.5">
+                                    <Clock size={12} />
+                                    Kedaluwarsa:{" "}
+                                    {format(
+                                      new Date(link.expiresAt),
+                                      "dd MMM yyyy, HH:mm",
+                                      { locale: id },
+                                    )}
+                                  </span>
+                                  <span className="hidden sm:inline text-gray-400 dark:text-gray-600">
+                                    |
+                                  </span>
+                                  <span className="flex items-center gap-1.5">
+                                    <Eye size={12} />
+                                    Dilihat: {link.viewCount || 0} kali
+                                  </span>
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() =>
+                                      handleCopy(
+                                        `${window.location.origin}${link.path}?share_token=${link.token}`,
+                                      )
+                                    }
+                                    className="p-2 rounded-md hover:bg-accent"
+                                    title="Salin Tautan"
+                                  >
+                                    <Copy size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleDeleteClick(link, "share")
+                                    }
+                                    className="p-2 rounded-md hover:bg-accent text-red-500"
+                                    title="Hapus & Batalkan Tautan"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </AnimatePresence>
+                    </>
+                  )}
                 </div>
               )}
             </div>

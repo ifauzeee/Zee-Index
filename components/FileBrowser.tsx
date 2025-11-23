@@ -26,6 +26,9 @@ import ImageGallery from "./ImageGallery";
 import FileBrowserHeader from "./FileBrowserHeader";
 import FileBrowserUploadProgress from "./FileBrowserUploadProgress";
 import { useGallery } from "@/hooks/useGallery";
+import FileRequestModal from "./FileRequestModal";
+import FolderReadme from "./FolderReadme";
+import ImageEditorModal from "./ImageEditorModal"; 
 
 const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024;
 
@@ -47,6 +50,9 @@ export default function FileBrowser({
   }>({ isOpen: false, folderId: "", folderName: "" });
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
+  const [isFileRequestModalOpen, setIsFileRequestModalOpen] = useState(false);
+  const [imageEditorFile, setImageEditorFile] = useState<DriveFile | null>(null); 
+
   const {
     sort,
     isBulkMode,
@@ -68,7 +74,9 @@ export default function FileBrowser({
     detailsFile,
     setDetailsFile,
     setCurrentFolderId,
+    playAudio
   } = useAppStore();
+
   const {
     files,
     history,
@@ -152,6 +160,10 @@ export default function FileBrowser({
 
   const gallery = useGallery(files);
 
+  const readmeFile = useMemo(() => {
+    return files.find(f => f.name.toLowerCase() === "readme.md" && !f.trashed);
+  }, [files]);
+
   useEffect(() => {
     if (sessionStatus === "authenticated" && !user) {
       fetchUser();
@@ -168,7 +180,8 @@ export default function FileBrowser({
           body: JSON.stringify({ shareToken: token }),
         });
         const data = await res.json();
-        if (!data.valid) {
+        if (!data.valid) 
+        {
           addToast({ message: "Tautan berbagi tidak valid.", type: "error" });
           router.push("/login?error=ShareLinkRevoked");
         }
@@ -239,6 +252,11 @@ export default function FileBrowser({
       return;
     }
 
+    if (getFileType(file) === 'audio') {
+      playAudio(file);
+      return;
+    }
+
     if (isNavigating) return;
 
     if (gallery.openGallery(file.id)) {
@@ -249,7 +267,6 @@ export default function FileBrowser({
     addToast({ message: "Memuat...", type: "info" });
 
     let destinationUrl = "";
-
     if (file.isFolder) {
       if (file.isProtected && !folderTokens[file.id]) {
         setIsNavigating(false);
@@ -287,7 +304,8 @@ export default function FileBrowser({
       setAuthModal({ isOpen: false, folderId: "", folderName: "" });
       router.push(`/folder/${authModal.folderId}`);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Terjadi kesalahan";
+      const message = err instanceof Error ?
+        err.message : "Terjadi kesalahan";
       addToast({ message: message, type: "error" });
     } finally {
       setIsAuthLoading(false);
@@ -299,7 +317,8 @@ export default function FileBrowser({
       return;
     let folderUrl =
       folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID
-        ? "/"
+        ?
+        "/"
         : `/folder/${folderId}`;
     if (shareToken) folderUrl += `?share_token=${shareToken}`;
     router.push(folderUrl);
@@ -372,12 +391,33 @@ export default function FileBrowser({
             onSubmit={handleAuthSubmit}
           />
         )}
-        {contextMenu && (
+        {isFileRequestModalOpen && (
+          <FileRequestModal
+            folderId={currentFolderId}
+            folderName={history[history.length - 1]?.name || "Folder"}
+            onClose={() => setIsFileRequestModalOpen(false)}
+          />
+        )}
+        {/* MODAL IMAGE EDITOR */}
+        {imageEditorFile && (
+          <ImageEditorModal
+            file={imageEditorFile}
+            onClose={() => setImageEditorFile(null)}
+          />
+        )}
+        
+        {contextMenu && 
+        (
           <ContextMenu
             x={contextMenu.x}
             y={contextMenu.y}
             onClose={() => setContextMenu(null)}
             fileSize={parseInt(contextMenu.file.size || "0", 10)}
+            isImage={getFileType(contextMenu.file) === 'image'} 
+            onEditImage={() => {
+              setImageEditorFile(contextMenu.file);
+              setContextMenu(null);
+            }}
             {...{
               onRename: () => {
                 setActionState({ type: "rename", file: contextMenu.file });
@@ -465,7 +505,8 @@ export default function FileBrowser({
             isDragging={isDragging}
           />
         )}
-        {previewFile && (
+        {previewFile && 
+        (
           <motion.div
             className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
             onClick={() => setPreviewFile(null)}
@@ -532,13 +573,13 @@ export default function FileBrowser({
             isFolder: true,
             mimeType: "application/vnd.google-apps.folder",
             modifiedTime: "",
-
             createdTime: "",
             hasThumbnail: false,
             webViewLink: "",
             trashed: false,
           })
         }
+        onRequestFileClick={() => setIsFileRequestModalOpen(true)}
         onToggleBulkMode={() => setBulkMode(!isBulkMode)}
         onSetView={setView}
         onDetailsClick={() => {
@@ -549,6 +590,8 @@ export default function FileBrowser({
 
       <main className="min-h-[50vh] mb-12">
         <>
+          {readmeFile && <FolderReadme fileId={readmeFile.id} />}
+          
           <FileList
             files={sortedFiles}
             activeFileId={activeFileId}
