@@ -11,7 +11,7 @@ interface FileItemProps {
   onClick: () => void;
   onContextMenu: (
     event: { clientX: number; clientY: number },
-    file: DriveFile,
+    file: DriveFile
   ) => void;
   isSelected: boolean;
   isActive: boolean;
@@ -22,6 +22,7 @@ interface FileItemProps {
   isAdmin: boolean;
   onDragStart: (e: React.DragEvent) => void;
   onFileDrop: (e: React.DragEvent, targetFolder: DriveFile) => void;
+  onMouseEnter?: () => void;
 }
 
 export default function FileItem({
@@ -37,6 +38,7 @@ export default function FileItem({
   isAdmin,
   onDragStart,
   onFileDrop,
+  onMouseEnter,
 }: FileItemProps) {
   const { view, shareToken } = useAppStore();
   const Icon = getIcon(file.mimeType);
@@ -54,7 +56,7 @@ export default function FileItem({
         navigator.vibrate(50);
       }
       onContextMenu(e.touches[0], file);
-    }, 500);
+    }, 250);
   };
 
   const handleTouchMove = () => {
@@ -81,11 +83,11 @@ export default function FileItem({
       opacity: 1,
       y: 0,
       scale: 1,
-      transition: { duration: 0.3, ease: [0.2, 0, 0.2, 1] },
+      transition: { duration: 0.2 },
     },
     hover: {
       scale: 1.02,
-      transition: { duration: 0.2 },
+      transition: { duration: 0.1 },
     },
   };
 
@@ -135,6 +137,7 @@ export default function FileItem({
       animate="visible"
       whileHover="hover"
       className={cn(isGallery && "mb-4")}
+      onMouseEnter={onMouseEnter}
     >
       <div
         className={cn(
@@ -147,7 +150,7 @@ export default function FileItem({
           view === "grid" &&
             "flex flex-col items-center justify-center text-center p-2 sm:p-4",
           isGallery && "p-0",
-          isDragOver && "ring-2 ring-primary ring-inset bg-primary/10",
+          isDragOver && "ring-2 ring-primary ring-inset bg-primary/10"
         )}
         onClick={onClick}
         onContextMenu={(e: React.MouseEvent<HTMLDivElement>) => {
@@ -169,8 +172,8 @@ export default function FileItem({
             view === "list"
               ? "items-center gap-4"
               : view === "grid"
-                ? "flex-col items-center justify-center gap-2"
-                : "flex-col",
+              ? "flex-col items-center justify-center gap-2"
+              : "flex-col"
           )}
         >
           <div className={cn("relative", isGallery && "w-full min-h-[150px]")}>
@@ -181,21 +184,23 @@ export default function FileItem({
                     <Icon size={32} className="opacity-20" />
                   </div>
                 )}
-                {/* eslint-disable @next/next/no-img-element */}
-                <img
+                <Image
                   src={getThumbnailSrc()}
                   alt={file.name}
+                  width={0}
+                  height={0}
+                  sizes="100vw"
+                  style={{ width: "100%", height: "auto" }}
                   className={cn(
-                    "w-full h-auto object-cover display-block transition-opacity duration-300",
-                    isImageLoading ? "opacity-0" : "opacity-100",
+                    "object-cover block transition-opacity duration-300",
+                    isImageLoading ? "opacity-0" : "opacity-100"
                   )}
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
                   onLoad={() => setIsImageLoading(false)}
                   onError={() => {
                     setIsImageLoading(false);
                     setImageError(true);
                   }}
+                  unoptimized
                 />
                 {file.isProtected && (
                   <div className="absolute bottom-2 right-2 flex items-center justify-center p-1.5 bg-background/60 backdrop-blur-sm rounded-full ring-2 ring-background/20 z-20">
@@ -212,6 +217,7 @@ export default function FileItem({
                   className="object-cover"
                   sizes="(max-width: 640px) 80px, 96px"
                   referrerPolicy="no-referrer"
+                  unoptimized={true}
                   onError={() => setImageError(true)}
                 />
               </div>
@@ -221,7 +227,7 @@ export default function FileItem({
                   "text-3xl text-primary shrink-0 flex items-center justify-center",
                   view === "grid" && "text-4xl mb-2",
                   isGallery &&
-                    "py-8 text-6xl bg-accent/10 w-full flex flex-col gap-2",
+                    "py-8 text-6xl bg-accent/10 w-full flex flex-col gap-2"
                 )}
               >
                 {React.createElement(Icon, {
@@ -247,7 +253,7 @@ export default function FileItem({
             className={cn(
               "flex-1 min-w-0",
               view === "grid" && "mt-2 w-full text-center",
-              isGallery && "p-3",
+              isGallery && "p-3"
             )}
           >
             <p
@@ -256,8 +262,8 @@ export default function FileItem({
                 view === "list"
                   ? "text-sm justify-start"
                   : view === "grid"
-                    ? "text-xs sm:text-sm justify-center"
-                    : "text-sm",
+                  ? "text-xs sm:text-sm justify-center"
+                  : "text-sm"
               )}
               title={file.name}
             >
@@ -287,7 +293,7 @@ export default function FileItem({
               <p
                 className={cn(
                   "text-xs text-muted-foreground mt-1",
-                  view === "grid" ? "text-center" : "text-left",
+                  view === "grid" ? "text-center" : "text-left"
                 )}
               >
                 {file.size ? formatBytes(parseInt(file.size)) : "-"}
@@ -335,7 +341,7 @@ export default function FileItem({
                 view === "list"
                   ? "right-4 top-1/2 -translate-y-1/2"
                   : "top-2 right-2",
-                "rounded border-primary text-primary focus:ring-primary",
+                "rounded border-primary text-primary focus:ring-primary"
               )}
               onClick={(e) => e.stopPropagation()}
             />

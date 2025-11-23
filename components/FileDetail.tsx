@@ -1,5 +1,4 @@
 "use client";
-
 import React, {
   useEffect,
   useMemo,
@@ -18,7 +17,6 @@ import "plyr/dist/plyr.css";
 import "prismjs/themes/prism-tomorrow.min.css";
 import "prismjs/plugins/line-numbers/prism-line-numbers.css";
 import Prism from "prismjs";
-
 import {
   getFileType,
   formatBytes,
@@ -42,8 +40,47 @@ import ArchivePreviewModal from "./ArchivePreviewModal";
 import ImageEditorModal from "./ImageEditorModal";
 import FileRevisionsModal from "./FileRevisionsModal";
 
-declare const pdfjsLib: any;
-declare const ePub: any;
+interface PdfViewport {
+  height: number;
+  width: number;
+}
+
+interface PdfPage {
+  getViewport: (params: { scale: number }) => PdfViewport;
+  render: (params: {
+    canvasContext: CanvasRenderingContext2D;
+    viewport: PdfViewport;
+  }) => { promise: Promise<void> };
+}
+
+interface PdfDocument {
+  numPages: number;
+  getPage: (num: number) => Promise<PdfPage>;
+}
+
+interface PdfJsLib {
+  GlobalWorkerOptions: { workerSrc: string };
+  getDocument: (src: string) => { promise: Promise<PdfDocument> };
+}
+
+interface EPubRendition {
+  display: () => Promise<void>;
+}
+
+interface EPubBook {
+  renderTo: (
+    element: HTMLDivElement,
+    options: { width: string; height: string }
+  ) => EPubRendition;
+  destroy: () => void;
+}
+
+interface EPubLib {
+  (src: string): EPubBook;
+}
+
+declare const pdfjsLib: PdfJsLib;
+declare const ePub: EPubLib;
 
 interface SubtitleTrack {
   kind: string;
@@ -165,6 +202,7 @@ const PdfPreview: React.FC<{ src: string }> = ({ src }) => {
           if (isCancelled) return;
           const page = await pdfDoc.getPage(pageNum);
           const viewport = page.getViewport({ scale: 1.5 });
+
           const canvas = document.createElement("canvas");
           canvas.className = "mb-4 mx-auto shadow-lg";
           const context = canvas.getContext("2d");
@@ -205,7 +243,7 @@ const PdfPreview: React.FC<{ src: string }> = ({ src }) => {
 const OfficePreview: React.FC<{ src: string }> = ({ src }) => (
   <iframe
     src={`https://docs.google.com/gview?url=${encodeURIComponent(
-      src,
+      src
     )}&embedded=true`}
     className="w-full h-full border-0"
   />
@@ -331,7 +369,6 @@ export default function FileDetail({
   const searchParams = useSearchParams();
   const { addToast, user, triggerRefresh, hideAuthor } = useAppStore();
   const { data: session } = useSession();
-
   const [showBackButton, setShowBackButton] = useState(true);
   const [markdownContent, setMarkdownContent] = useState<string | null>(null);
   const [editableContent, setEditableContent] = useState<string | null>(null);
@@ -339,7 +376,6 @@ export default function FileDetail({
   const [isSaving, setIsSaving] = useState(false);
   const [isFetchingEditableContent, setIsFetchingEditableContent] =
     useState(false);
-
   const [showTextPreview, setShowTextPreview] = useState(false);
   const [showArchivePreview, setShowArchivePreview] = useState(false);
 
@@ -348,10 +384,11 @@ export default function FileDetail({
 
   const shareToken = useMemo(
     () => searchParams.get("share_token"),
-    [searchParams],
+    [searchParams]
   );
 
-  const isAdmin = user?.role === "ADMIN" || session?.user?.role === "ADMIN";
+  const isAdmin =
+    user?.role === "ADMIN" || session?.user?.role === "ADMIN";
   const canShowAuthor = isAdmin || !hideAuthor;
 
   const fileType = getFileType(file);
@@ -391,7 +428,7 @@ export default function FileDetail({
         router.push("/login?error=InvalidOrExpiredShareLink");
       }
     },
-    [addToast, router],
+    [addToast, router]
   );
 
   useEffect(() => {
@@ -641,7 +678,7 @@ export default function FileDetail({
               !isEditing &&
                 !isDefaultPreview &&
                 "bg-muted/20 rounded-lg border",
-              isEditing && "rounded-lg border",
+              isEditing && "rounded-lg border"
             )}
           >
             {isEditing && isEditable && !isModal ? (
@@ -685,6 +722,7 @@ export default function FileDetail({
               <ChevronLeft size={28} />
             </Link>
           )}
+
           {!isModal && nextFileUrl && (
             <Link
               href={nextFileUrl}
@@ -799,7 +837,7 @@ export default function FileDetail({
                   title={
                     !isArchivePreviewable
                       ? `File terlalu besar (> 100 MB) untuk pratinjau. Ukuran: ${formatBytes(
-                          fileSize,
+                          fileSize
                         )}`
                       : "Lihat Isi Arsip"
                   }

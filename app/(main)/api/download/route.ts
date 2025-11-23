@@ -26,17 +26,11 @@ export async function GET(request: NextRequest) {
   }
 
   if (!session && !isShareTokenValid) {
-    return NextResponse.json(
-      { error: "Akses ditolak. Diperlukan autentikasi." },
-      { status: 401 },
-    );
+    return NextResponse.json({ error: "Akses ditolak." }, { status: 401 });
   }
 
   if (!fileId) {
-    return NextResponse.json(
-      { error: "Parameter fileId tidak ditemukan." },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Parameter fileId tidak ditemukan." }, { status: 400 });
   }
 
   try {
@@ -44,54 +38,56 @@ export async function GET(request: NextRequest) {
     const fileDetails = await getFileDetailsFromDrive(fileId);
 
     if (!fileDetails || !fileDetails.size) {
-      return NextResponse.json(
-        { error: "File tidak ditemukan atau ukurannya tidak diketahui." },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "File tidak ditemukan." }, { status: 404 });
     }
 
-    const response = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      console.error("Google Drive API Error:", error);
-      return NextResponse.json(
-        { error: "Gagal mengunduh file dari Google Drive." },
-        { status: response.status },
-      );
-    }
+    const range = request.headers.get("range");
+    const headers = new Headers();
+    headers.set("Authorization", `Bearer ${accessToken}`);
     
-    await logActivity("DOWNLOAD", {
-      itemName: fileDetails.name,
-      itemSize: fileDetails.size,
-      userEmail: session?.user?.email,
-    });
+    if (range) {
+      headers.set("Range", range);
+    }
 
-    const readableStream = response.body;
-
-    return new Response(readableStream, {
-      status: 200,
-      headers: {
-        "Content-Type": fileDetails.mimeType!,
-        "Content-Length": fileDetails.size!,
-        "Content-Disposition": `inline; filename="${fileDetails.name}"`,
-        "Access-Control-Allow-Origin": "*", 
-      },
-    });
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal.";
-    console.error("Download API Error:", errorMessage);
-    return NextResponse.json(
-      { error: "Internal Server Error." },
-      { status: 500 },
+    const googleResponse = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+      { headers }
     );
+
+    if (!googleResponse.ok) {
+      return NextResponse.json(
+        { error: "Gagal mengambil dari Google Drive" }, 
+        { status: googleResponse.status }
+      );
+    }
+
+    const responseHeaders = new Headers();
+    responseHeaders.set("Content-Type", fileDetails.mimeType);
+    responseHeaders.set("Content-Disposition", `inline; filename="${fileDetails.name}"`);
+    
+    if (googleResponse.headers.get("Content-Range")) {
+      responseHeaders.set("Content-Range", googleResponse.headers.get("Content-Range")!);
+    }
+    if (googleResponse.headers.get("Content-Length")) {
+      responseHeaders.set("Content-Length", googleResponse.headers.get("Content-Length")!);
+    }
+    responseHeaders.set("Accept-Ranges", "bytes"); 
+
+    if (!range) {
+        await logActivity("DOWNLOAD", {
+        itemName: fileDetails.name,
+        itemSize: fileDetails.size,
+        userEmail: session?.user?.email,
+        });
+    }
+
+    return new Response(googleResponse.body, {
+      status: googleResponse.status, 
+      headers: responseHeaders,
+    });
+
+  } catch (error: unknown) {
+    console.error("Download API Error:", error);
+    return NextResponse.json({ error: "Internal Server Error." }, { status: 500 });
   }
 }

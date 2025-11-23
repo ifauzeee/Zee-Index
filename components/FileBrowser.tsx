@@ -1,7 +1,8 @@
 "use client";
+
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from "@/lib/store";
 import FileBrowserLoading from "./FileBrowserLoading";
@@ -28,7 +29,8 @@ import FileBrowserUploadProgress from "./FileBrowserUploadProgress";
 import { useGallery } from "@/hooks/useGallery";
 import FileRequestModal from "./FileRequestModal";
 import FolderReadme from "./FolderReadme";
-import ImageEditorModal from "./ImageEditorModal"; 
+import ImageEditorModal from "./ImageEditorModal";
+import { useQueryClient } from "@tanstack/react-query";
 
 const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024;
 
@@ -42,7 +44,8 @@ export default function FileBrowser({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status: sessionStatus } = useSession();
-  const [isNavigating, setIsNavigating] = useState(false);
+  const queryClient = useQueryClient();
+
   const [authModal, setAuthModal] = useState<{
     isOpen: boolean;
     folderId: string;
@@ -51,7 +54,7 @@ export default function FileBrowser({
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [isFileRequestModalOpen, setIsFileRequestModalOpen] = useState(false);
-  const [imageEditorFile, setImageEditorFile] = useState<DriveFile | null>(null); 
+  const [imageEditorFile, setImageEditorFile] = useState<DriveFile | null>(null);
 
   const {
     sort,
@@ -74,7 +77,7 @@ export default function FileBrowser({
     detailsFile,
     setDetailsFile,
     setCurrentFolderId,
-    playAudio
+    playAudio,
   } = useAppStore();
 
   const {
@@ -161,7 +164,7 @@ export default function FileBrowser({
   const gallery = useGallery(files);
 
   const readmeFile = useMemo(() => {
-    return files.find(f => f.name.toLowerCase() === "readme.md" && !f.trashed);
+    return files.find((f) => f.name.toLowerCase() === "readme.md" && !f.trashed);
   }, [files]);
 
   useEffect(() => {
@@ -180,8 +183,7 @@ export default function FileBrowser({
           body: JSON.stringify({ shareToken: token }),
         });
         const data = await res.json();
-        if (!data.valid) 
-        {
+        if (!data.valid) {
           addToast({ message: "Tautan berbagi tidak valid.", type: "error" });
           router.push("/login?error=ShareLinkRevoked");
         }
@@ -189,7 +191,7 @@ export default function FileBrowser({
         router.push("/login?error=InvalidOrExpiredShareLink");
       }
     },
-    [addToast, router],
+    [addToast, router]
   );
 
   useEffect(() => {
@@ -213,18 +215,16 @@ export default function FileBrowser({
       }
     };
     window.addEventListener("keydown", handleKeyDown);
-
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeFileId, files, previewFile, detailsFile, setPreviewFile]);
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) fetchNextPage();
       },
-      { threshold: 1.0 },
+      { threshold: 1.0 }
     );
     const currentLoader = loaderRef.current;
     if (currentLoader) observer.observe(currentLoader);
@@ -252,24 +252,18 @@ export default function FileBrowser({
       return;
     }
 
-    if (getFileType(file) === 'audio') {
+    if (getFileType(file) === "audio") {
       playAudio(file);
       return;
     }
-
-    if (isNavigating) return;
 
     if (gallery.openGallery(file.id)) {
       return;
     }
 
-    setIsNavigating(true);
-    addToast({ message: "Memuat...", type: "info" });
-
     let destinationUrl = "";
     if (file.isFolder) {
       if (file.isProtected && !folderTokens[file.id]) {
-        setIsNavigating(false);
         setAuthModal({
           isOpen: true,
           folderId: file.id,
@@ -289,6 +283,26 @@ export default function FileBrowser({
     router.push(destinationUrl);
   };
 
+  const handlePrefetchFolder = useCallback((folderId: string) => {
+    const fetchUrl = new URL(window.location.origin + "/api/files");
+    fetchUrl.searchParams.append("folderId", folderId);
+    if (shareToken) fetchUrl.searchParams.append("share_token", shareToken);
+    
+    queryClient.prefetchInfiniteQuery({
+      queryKey: ["files", folderId, shareToken, folderTokens[folderId], refreshKey],
+      queryFn: async () => {
+        const headers = new Headers();
+        if (folderTokens[folderId]) {
+          headers.append("Authorization", `Bearer ${folderTokens[folderId]}`);
+        }
+        const res = await fetch(fetchUrl.toString(), { headers });
+        if(!res.ok) throw new Error("Failed to prefetch");
+        return res.json();
+      },
+      initialPageParam: null as string | null,
+    });
+  }, [queryClient, shareToken, folderTokens, refreshKey]);
+
   const handleAuthSubmit = async (id: string, password: string) => {
     setIsAuthLoading(true);
     try {
@@ -304,8 +318,7 @@ export default function FileBrowser({
       setAuthModal({ isOpen: false, folderId: "", folderName: "" });
       router.push(`/folder/${authModal.folderId}`);
     } catch (err: unknown) {
-      const message = err instanceof Error ?
-        err.message : "Terjadi kesalahan";
+      const message = err instanceof Error ? err.message : "Terjadi kesalahan";
       addToast({ message: message, type: "error" });
     } finally {
       setIsAuthLoading(false);
@@ -313,13 +326,9 @@ export default function FileBrowser({
   };
 
   const handleBreadcrumbClick = (folderId: string) => {
-    if (shareToken && folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID)
-      return;
+    if (shareToken && folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) return;
     let folderUrl =
-      folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID
-        ?
-        "/"
-        : `/folder/${folderId}`;
+      folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID ? "/" : `/folder/${folderId}`;
     if (shareToken) folderUrl += `?share_token=${shareToken}`;
     router.push(folderUrl);
   };
@@ -331,7 +340,7 @@ export default function FileBrowser({
       setActiveFileId(file.id);
       handleContextMenu(event, file);
     },
-    [isBulkMode, shareToken, user, isAdmin, handleContextMenu],
+    [isBulkMode, shareToken, user, isAdmin, handleContextMenu]
   );
 
   const sortedFiles = useMemo(() => {
@@ -342,13 +351,10 @@ export default function FileBrowser({
         if (a.isFolder !== b.isFolder) return a.isFolder ? -1 : 1;
         if (sort.key === "name")
           return a.name.localeCompare(b.name, "id", { numeric: true }) * isAsc;
-
         if (sort.key === "size")
           return (Number(a.size || 0) - Number(b.size || 0)) * isAsc;
         return (
-          (new Date(a.modifiedTime).getTime() -
-            new Date(b.modifiedTime).getTime()) *
-          isAsc
+          (new Date(a.modifiedTime).getTime() - new Date(b.modifiedTime).getTime()) * isAsc
         );
       });
   }, [files, sort, favorites]);
@@ -363,7 +369,7 @@ export default function FileBrowser({
     e.stopPropagation();
     window.open(
       `/api/download?fileId=${file.id}${shareToken ? `&share_token=${shareToken}` : ""}`,
-      "_blank",
+      "_blank"
     );
   };
 
@@ -372,9 +378,6 @@ export default function FileBrowser({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
       className="relative"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -385,9 +388,7 @@ export default function FileBrowser({
           <AuthModal
             folderName={authModal.folderName}
             isLoading={isAuthLoading}
-            onClose={() =>
-              setAuthModal({ isOpen: false, folderId: "", folderName: "" })
-            }
+            onClose={() => setAuthModal({ isOpen: false, folderId: "", folderName: "" })}
             onSubmit={handleAuthSubmit}
           />
         )}
@@ -398,68 +399,57 @@ export default function FileBrowser({
             onClose={() => setIsFileRequestModalOpen(false)}
           />
         )}
-        {/* MODAL IMAGE EDITOR */}
         {imageEditorFile && (
           <ImageEditorModal
             file={imageEditorFile}
             onClose={() => setImageEditorFile(null)}
           />
         )}
-        
-        {contextMenu && 
-        (
+        {contextMenu && (
           <ContextMenu
             x={contextMenu.x}
             y={contextMenu.y}
             onClose={() => setContextMenu(null)}
             fileSize={parseInt(contextMenu.file.size || "0", 10)}
-            isImage={getFileType(contextMenu.file) === 'image'} 
+            isImage={getFileType(contextMenu.file) === "image"}
             onEditImage={() => {
               setImageEditorFile(contextMenu.file);
               setContextMenu(null);
             }}
-            {...{
-              onRename: () => {
-                setActionState({ type: "rename", file: contextMenu.file });
-                setContextMenu(null);
-              },
-              onDelete: () => {
-                setActionState({ type: "delete", file: contextMenu.file });
-                setContextMenu(null);
-              },
-              onShare: () => {
-                handleShare(contextMenu.file);
-                setContextMenu(null);
-              },
-              onMove: () => {
-                setActionState({ type: "move", file: contextMenu.file });
-                setContextMenu(null);
-              },
-              isFavorite: favorites.includes(contextMenu.file.id),
-              onToggleFavorite: handleToggleFavorite,
-              onCopy: handleCopy,
-              onShowDetails: () => {
-                setDetailsFile(contextMenu.file);
-                setContextMenu(null);
-              },
-              onPreview: () => {
-                if (!contextMenu.file.isFolder)
-                  setPreviewFile(contextMenu.file);
-                else
-                  addToast({
-                    message: "Tidak tersedia untuk folder.",
-                    type: "info",
-                  });
-                setContextMenu(null);
-              },
-              isArchive: getFileType(contextMenu.file) === "archive",
-              isArchivePreviewable:
-                getFileType(contextMenu.file) === "archive" &&
-                parseInt(contextMenu.file.size || "0", 10) <=
-                  ARCHIVE_PREVIEW_LIMIT_BYTES,
-
-              onArchivePreview: handleArchivePreview,
+            onRename={() => {
+              setActionState({ type: "rename", file: contextMenu.file });
+              setContextMenu(null);
             }}
+            onDelete={() => {
+              setActionState({ type: "delete", file: contextMenu.file });
+              setContextMenu(null);
+            }}
+            onShare={() => {
+              handleShare(contextMenu.file);
+              setContextMenu(null);
+            }}
+            onMove={() => {
+              setActionState({ type: "move", file: contextMenu.file });
+              setContextMenu(null);
+            }}
+            isFavorite={favorites.includes(contextMenu.file.id)}
+            onToggleFavorite={handleToggleFavorite}
+            onCopy={handleCopy}
+            onShowDetails={() => {
+              setDetailsFile(contextMenu.file);
+              setContextMenu(null);
+            }}
+            onPreview={() => {
+              if (!contextMenu.file.isFolder) setPreviewFile(contextMenu.file);
+              else addToast({ message: "Tidak tersedia untuk folder.", type: "info" });
+              setContextMenu(null);
+            }}
+            isArchive={getFileType(contextMenu.file) === "archive"}
+            isArchivePreviewable={
+              getFileType(contextMenu.file) === "archive" &&
+              parseInt(contextMenu.file.size || "0", 10) <= ARCHIVE_PREVIEW_LIMIT_BYTES
+            }
+            onArchivePreview={handleArchivePreview}
           />
         )}
         {actionState.type === "rename" && actionState.file && (
@@ -494,9 +484,7 @@ export default function FileBrowser({
         {isUploadModalOpen && (
           <UploadModal
             isOpen={isUploadModalOpen}
-            onClose={() => {
-              setIsUploadModalOpen(false);
-            }}
+            onClose={() => setIsUploadModalOpen(false)}
             initialFiles={droppedFiles}
             handleFileSelect={handleFileSelect}
             handleDragOver={handleDragOver}
@@ -505,8 +493,7 @@ export default function FileBrowser({
             isDragging={isDragging}
           />
         )}
-        {previewFile && 
-        (
+        {previewFile && (
           <motion.div
             className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
             onClick={() => setPreviewFile(null)}
@@ -563,9 +550,7 @@ export default function FileBrowser({
         onBreadcrumbDragOver={handleBreadcrumbDragOver}
         onBreadcrumbDragLeave={handleBreadcrumbDragLeave}
         onBreadcrumbDrop={(e, folder) => onDropOnBreadcrumb(e, folder)}
-        onUploadClick={() => {
-          setIsUploadModalOpen(true);
-        }}
+        onUploadClick={() => setIsUploadModalOpen(true)}
         onShareFolderClick={() =>
           handleShare({
             id: currentFolderId,
@@ -591,7 +576,7 @@ export default function FileBrowser({
       <main className="min-h-[50vh] mb-12">
         <>
           {readmeFile && <FolderReadme fileId={readmeFile.id} />}
-          
+
           <FileList
             files={sortedFiles}
             activeFileId={activeFileId}
@@ -606,18 +591,12 @@ export default function FileBrowser({
             isAdmin={isAdmin}
             onDragStart={handleDragStart}
             onFileDrop={onDropOnFolder}
+            onPrefetchFolder={handlePrefetchFolder}
           />
-          <div
-            ref={loaderRef}
-            className="flex justify-center items-center p-4 h-20"
-          >
-            {isFetchingNextPage && (
-              <Loader2 className="animate-spin text-primary" />
-            )}
+          <div ref={loaderRef} className="flex justify-center items-center p-4 h-20">
+            {isFetchingNextPage && <Loader2 className="animate-spin text-primary" />}
             {!isFetchingNextPage && !nextPageToken && files.length > 0 && (
-              <span className="text-sm text-muted-foreground">
-                Akhir dari daftar
-              </span>
+              <span className="text-sm text-muted-foreground">Akhir dari daftar</span>
             )}
           </div>
         </>
@@ -631,14 +610,6 @@ export default function FileBrowser({
         images={gallery.imageFiles}
         onClose={gallery.closeGallery}
       />
-
-      {isNavigating && (
-        <div className="fixed inset-0 z-[9999] bg-black/10 backdrop-blur-[1px] flex items-center justify-center cursor-wait">
-          <div className="bg-background/80 p-4 rounded-full shadow-lg">
-            <Loader2 className="animate-spin text-primary h-8 w-8" />
-          </div>
-        </div>
-      )}
     </motion.div>
   );
 }

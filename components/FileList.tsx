@@ -12,7 +12,7 @@ interface FileListProps {
   onItemClick: (file: DriveFile) => void;
   onItemContextMenu: (
     event: { clientX: number; clientY: number },
-    file: DriveFile,
+    file: DriveFile
   ) => void;
   activeFileId: string | null;
   onShareClick: (e: React.MouseEvent, file: DriveFile) => void;
@@ -21,6 +21,7 @@ interface FileListProps {
   isAdmin: boolean;
   onDragStart: (e: React.DragEvent, file: DriveFile) => void;
   onFileDrop: (e: React.DragEvent, targetFolder: DriveFile) => void;
+  onPrefetchFolder?: (folderId: string) => void;
 }
 
 export default function FileList({
@@ -34,6 +35,7 @@ export default function FileList({
   isAdmin,
   onDragStart,
   onFileDrop,
+  onPrefetchFolder,
 }: FileListProps) {
   const { view, selectedFiles, isBulkMode } = useAppStore();
 
@@ -72,19 +74,23 @@ export default function FileList({
       isAdmin={isAdmin}
       onDragStart={(e) => onDragStart(e, file)}
       onFileDrop={onFileDrop}
+      onMouseEnter={() => {
+        if (file.isFolder && onPrefetchFolder) {
+          onPrefetchFolder(file.id);
+        }
+      }}
     />
   );
 
   if (view === "gallery") {
     const breakpointColumnsObj = {
       default: 5,
-      1536: 5, // 2xl
-      1280: 4, // xl
-      1024: 3, // lg
-      768: 2,  // md
-      640: 1   // sm
+      1536: 5,
+      1280: 4,
+      1024: 3,
+      768: 2,
+      640: 1,
     };
-
     return (
       <motion.div
         variants={containerVariants}

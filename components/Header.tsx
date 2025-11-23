@@ -19,7 +19,7 @@ import {
   Star,
   Github,
   Trash2,
-  Bell, // Import Bell Icon
+  Bell,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import Search from "@/components/Search";
@@ -58,9 +58,18 @@ const navItemVariants = {
   },
 };
 
+interface MenuItem {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  href?: string;
+  target?: string;
+  rel?: string;
+  onClick?: () => void;
+}
+
 interface MobileNavProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  menuItems: any[];
+  menuItems: MenuItem[];
   publicShareLinkItems: string[];
   authButton: React.ReactNode;
   shareToken: string | null;
@@ -80,7 +89,7 @@ const MobileNav: FC<MobileNavProps> = ({
 }) => {
   return (
     <motion.div
-      className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm sm:hidden"
+      className="fixed inset-0 z-40 bg-black/50 sm:hidden"
       variants={overlayVariants}
       initial="closed"
       animate="open"
@@ -108,7 +117,9 @@ const MobileNav: FC<MobileNavProps> = ({
               }
               if (
                 user?.role !== "ADMIN" &&
-                (item.id === "admin" || item.id === "storage" || item.id === "trash")
+                (item.id === "admin" ||
+                  item.id === "storage" ||
+                  item.id === "trash")
               ) {
                 return false;
               }
@@ -136,7 +147,7 @@ const MobileNav: FC<MobileNavProps> = ({
                     typeof item.onClick === "function" && (
                       <button
                         onClick={() => {
-                          item.onClick();
+                          item.onClick!();
                           onClose();
                         }}
                         className={commonClasses}
@@ -165,13 +176,20 @@ const MobileNav: FC<MobileNavProps> = ({
 export default function Header() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { theme, toggleTheme, triggerRefresh, shareToken, user, notifications, toggleNotificationCenter } =
-    useAppStore();
+  const {
+    theme,
+    toggleTheme,
+    triggerRefresh,
+    shareToken,
+    user,
+    notifications,
+    toggleNotificationCenter,
+  } = useAppStore();
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -182,12 +200,12 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     { id: "favorites", href: "/favorites", icon: Star, label: "Favorit" },
     ...(user?.role === "ADMIN"
       ? [
           { id: "admin", href: "/admin", icon: ShieldCheck, label: "Admin" },
-          { id: "trash", href: "/trash", icon: Trash2, label: "Sampah" }, 
+          { id: "trash", href: "/trash", icon: Trash2, label: "Sampah" },
         ]
       : []),
     { id: "storage", href: "/storage", icon: HardDrive, label: "Penyimpanan" },
@@ -304,12 +322,18 @@ export default function Header() {
   return (
     <>
       <header
-        className={`sticky top-0 z-30 w-full transition-all duration-200 ${isScrolled ? "border-b border-border bg-background/90 backdrop-blur-lg shadow-sm" : "border-b border-transparent"}`}
+        className={`sticky top-0 z-30 w-full transition-all duration-200 ${
+          isScrolled
+            ? "border-b border-border bg-card/95 shadow-sm"
+            : "border-b border-transparent"
+        }`}
       >
         <div className="container mx-auto flex items-center justify-between gap-4 px-4 max-w-7xl h-16">
           <h1
             onClick={handleLogoClick}
-            className={`text-2xl font-bold flex items-center shrink-0 ${!shareToken ? "cursor-pointer" : "cursor-default"}`}
+            className={`text-2xl font-bold flex items-center shrink-0 ${
+              !shareToken ? "cursor-pointer" : "cursor-default"
+            }`}
             title={!shareToken ? "Kembali ke Beranda" : "Zee Index"}
           >
             <i className="fab fa-google-drive text-blue-500 mr-3"></i>Zee Index
@@ -344,7 +368,8 @@ export default function Header() {
                         <Icon size={20} />
                       </a>
                     ) : (
-                      "onClick" in item && (
+                      "onClick" in item &&
+                      typeof item.onClick === "function" && (
                         <button
                           key={item.id}
                           onClick={item.onClick}
@@ -384,7 +409,8 @@ export default function Header() {
                       <Icon size={20} />
                     </a>
                   ) : (
-                    "onClick" in item && (
+                    "onClick" in item &&
+                    typeof item.onClick === "function" && (
                       <button
                         key={item.id}
                         onClick={item.onClick}
