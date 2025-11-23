@@ -18,16 +18,19 @@ const fetchFilesApi = async ({
   pageToken,
   shareToken,
   folderToken,
+  refresh,
 }: {
   folderId: string;
   pageToken?: string | null;
   shareToken?: string | null;
   folderToken?: string;
+  refresh?: boolean;
 }) => {
   const url = new URL(window.location.origin + "/api/files");
   url.searchParams.append("folderId", folderId);
   if (pageToken) url.searchParams.append("pageToken", pageToken);
   if (shareToken) url.searchParams.append("share_token", shareToken);
+  if (refresh) url.searchParams.append("refresh", "true");
 
   const headers = new Headers();
   if (folderToken) {
@@ -35,7 +38,6 @@ const fetchFilesApi = async ({
   }
 
   const response = await fetch(url.toString(), { headers });
-  
   if (!response.ok) {
     const errorData = await response.json();
     if (response.status === 401 && errorData.protected) {
@@ -85,7 +87,6 @@ export function useFileFetching({
     return [rootItem, ...(Array.isArray(historyData) ? historyData : [])];
   }, [historyData, currentFolderId, rootFolderId]);
 
-
   const {
     data,
     fetchNextPage,
@@ -102,6 +103,7 @@ export function useFileFetching({
         pageToken: pageParam as string | null,
         shareToken,
         folderToken: folderTokens[currentFolderId],
+        refresh: refreshKey > 0,
       }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextPageToken || undefined,

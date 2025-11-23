@@ -70,7 +70,7 @@ interface EPubRendition {
 interface EPubBook {
   renderTo: (
     element: HTMLDivElement,
-    options: { width: string; height: string }
+    options: { width: string; height: string },
   ) => EPubRendition;
   destroy: () => void;
 }
@@ -169,7 +169,6 @@ const VideoAudioPreview: React.FC<VideoAudioPreviewProps> = ({
 };
 
 const ImagePreview: React.FC<{ src: string }> = ({ src }) => (
-  /* eslint-disable @next/next/no-img-element */
   <img
     src={src}
     className="w-full h-full object-contain mx-auto"
@@ -243,7 +242,7 @@ const PdfPreview: React.FC<{ src: string }> = ({ src }) => {
 const OfficePreview: React.FC<{ src: string }> = ({ src }) => (
   <iframe
     src={`https://docs.google.com/gview?url=${encodeURIComponent(
-      src
+      src,
     )}&embedded=true`}
     className="w-full h-full border-0"
   />
@@ -320,7 +319,7 @@ const CodePreview: React.FC<{ src: string; fileName: string }> = ({
 
   useEffect(() => {
     if (content) {
-      // @ts-expect-error: Suppress missing type definition for minified file
+      // File: prism.d.ts
       import("prismjs/plugins/line-numbers/prism-line-numbers.min.js")
         .then(() => {
           Prism.highlightAll();
@@ -384,7 +383,7 @@ export default function FileDetail({
 
   const shareToken = useMemo(
     () => searchParams.get("share_token"),
-    [searchParams]
+    [searchParams],
   );
 
   const isAdmin =
@@ -428,7 +427,7 @@ export default function FileDetail({
         router.push("/login?error=InvalidOrExpiredShareLink");
       }
     },
-    [addToast, router]
+    [addToast, router],
   );
 
   useEffect(() => {
@@ -678,7 +677,7 @@ export default function FileDetail({
               !isEditing &&
                 !isDefaultPreview &&
                 "bg-muted/20 rounded-lg border",
-              isEditing && "rounded-lg border"
+              isEditing && "rounded-lg border",
             )}
           >
             {isEditing && isEditable && !isModal ? (
@@ -837,7 +836,7 @@ export default function FileDetail({
                   title={
                     !isArchivePreviewable
                       ? `File terlalu besar (> 100 MB) untuk pratinjau. Ukuran: ${formatBytes(
-                          fileSize
+                          fileSize,
                         )}`
                       : "Lihat Isi Arsip"
                   }

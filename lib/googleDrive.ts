@@ -43,33 +43,8 @@ interface DriveListResponse {
 
 const ACCESS_TOKEN_KEY = "google:access-token";
 
-async function fetchWithRetry(
-  url: string,
-  options: RequestInit,
-  retries = 3,
-  delay = 1000,
-): Promise<Response> {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const response = await fetch(url, options);
-      if (response.ok) {
-        return response;
-      }
-      if (response.status >= 400 && response.status < 500) {
-        return response;
-      }
-    } catch (error: unknown) {
-      if (i === retries - 1) throw error;
-      console.log(
-        `Fetch gagal (percobaan ${
-          i + 1
-        }/${retries}), mencoba lagi dalam ${delay / 1000} detik...`,
-        error,
-      );
-      await new Promise((res) => setTimeout(res, delay));
-    }
-  }
-  throw new Error("Gagal melakukan fetch setelah beberapa kali percobaan.");
+async function invalidateAccessToken() {
+  await kv.del(ACCESS_TOKEN_KEY);
 }
 
 export async function getAccessToken(): Promise<string> {
@@ -79,7 +54,7 @@ export async function getAccessToken(): Promise<string> {
       return cachedToken;
     }
   } catch (e) {
-    console.error("Gagal mengambil token dari cache:", e);
+    console.error(e);
   }
 
   const url = "https://oauth2.googleapis.com/token";
@@ -95,28 +70,68 @@ export async function getAccessToken(): Promise<string> {
     cache: "no-store" as RequestCache,
   };
 
-  const response = await fetchWithRetry(url, options);
+  const response = await fetch(url, options);
 
   if (!response.ok) {
     const errorData = await response.json();
-    console.error("Gagal mendapatkan Access Token:", errorData);
+    console.error(errorData);
     throw new Error(
-      `Otentikasi Gagal: ${
-        errorData.error_description || "Periksa konfigurasi .env.local Anda."
-      }`,
+      errorData.error_description || "Otentikasi Gagal"
     );
   }
 
-  const tokenData: { access_token: string; expires_in: number } =
-    await response.json();
+  const tokenData: { access_token: string; expires_in: number } = await response.json();
 
   try {
-    await kv.set(ACCESS_TOKEN_KEY, tokenData.access_token, { ex: 3000 });
+    await kv.set(ACCESS_TOKEN_KEY, tokenData.access_token, { ex: 3500 });
   } catch (e) {
-    console.error("Gagal menyimpan token ke cache:", e);
+    console.error(e);
   }
 
   return tokenData.access_token;
+}
+
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  retries = 5,
+  delay = 1000,
+): Promise<Response> {
+  const originalHeaders = new Headers(options.headers);
+
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, options);
+
+      if (response.ok) {
+        return response;
+      }
+
+      if (response.status === 404) {
+        return response;
+      }
+
+      if (response.status === 401) {
+        await invalidateAccessToken();
+        const newToken = await getAccessToken();
+        originalHeaders.set("Authorization", `Bearer ${newToken}`);
+        options.headers = originalHeaders;
+        continue;
+      }
+
+      if (response.status === 429 || response.status >= 500) {
+        await new Promise((res) => setTimeout(res, delay * Math.pow(2, i)));
+        continue;
+      }
+
+      return response;
+
+    } catch (error: unknown) {
+      if (i === retries - 1) throw error;
+      await new Promise((res) => setTimeout(res, delay * Math.pow(2, i)));
+    }
+  }
+  throw new Error("Gagal melakukan fetch setelah beberapa kali percobaan.");
 }
 
 export async function getAllDescendantFolders(
@@ -130,7 +145,7 @@ export async function getAllDescendantFolders(
       return cachedTree;
     }
   } catch (e) {
-    console.error("Gagal mengambil folder tree dari cache:", e);
+    console.error(e);
   }
 
   const allFolderIds = new Set<string>([rootFolderId]);
@@ -161,7 +176,6 @@ export async function getAllDescendantFolders(
             cache: "no-store",
           },
         );
-
         if (!response.ok) {
           break;
         }
@@ -189,7 +203,7 @@ export async function getAllDescendantFolders(
   try {
     await kv.set(cacheKey, folderArray, { ex: 3600 });
   } catch (e) {
-    console.error("Gagal menyimpan folder tree ke cache:", e);
+    console.error(e);
   }
 
   return folderArray;
@@ -209,7 +223,6 @@ export async function listFilesFromDrive(
     orderBy: "folder, name",
     pageSize: String(pageSize),
   });
-
   if (pageToken) {
     params.append("pageToken", pageToken);
   }
@@ -225,9 +238,7 @@ export async function listFilesFromDrive(
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(
-      `Google Drive API Error: ${
-        errorData.error?.message || "Pastikan folder ID benar dan dapat diakses."
-      }`,
+      errorData.error?.message || "Pastikan folder ID benar dan dapat diakses."
     );
   }
 
@@ -239,7 +250,6 @@ export async function listFilesFromDrive(
       isFolder: driveFile.mimeType === "application/vnd.google-apps.folder",
     };
   });
-
   return {
     files: processedFiles,
     nextPageToken: data.nextPageToken || null,
@@ -262,6 +272,8 @@ export async function getFileDetailsFromDrive(
   });
 
   if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`[getFileDetails Error] ID: ${fileId} | Status: ${response.status} | Msg: ${errorText}`);
     return null;
   }
 
@@ -283,7 +295,7 @@ export async function getFolderPath(
       return cachedPath;
     }
   } catch (e) {
-    console.error("Gagal mengambil path dari cache:", e);
+    console.error(e);
   }
 
   const accessToken = await getAccessToken();
@@ -312,7 +324,6 @@ export async function getFolderPath(
       const data: { id: string; name: string; parents?: string[] } =
         await response.json();
       path.unshift({ id: data.id, name: data.name });
-
       if (data.parents && data.parents.length > 0) {
         currentId = data.parents[0];
       } else {
@@ -324,7 +335,7 @@ export async function getFolderPath(
   try {
     await kv.set(cacheKey, path, { ex: 3600 });
   } catch (e) {
-    console.error("Gagal menyimpan path ke cache:", e);
+    console.error(e);
   }
 
   return path;
@@ -333,7 +344,6 @@ export async function getFolderPath(
 export async function getStorageDetails() {
   const accessToken = await getAccessToken();
   const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3";
-
   const aboutResponse = await fetchWithRetry(
     `${GOOGLE_DRIVE_API_URL}/about?fields=storageQuota`,
     {
@@ -347,7 +357,6 @@ export async function getStorageDetails() {
   }
   const aboutData: { storageQuota: { usage: string; limit: string } } =
     await aboutResponse.json();
-
   const usage = parseInt(aboutData.storageQuota.usage, 10);
   const limit = parseInt(aboutData.storageQuota.limit, 10);
 
@@ -378,7 +387,6 @@ export async function getStorageDetails() {
   }));
 
   const breakdownMap: Record<string, { size: number; count: number }> = {};
-
   allFiles.forEach((file: DriveFile) => {
     let type = "Lainnya";
     const mime = file.mimeType || "";
@@ -532,7 +540,6 @@ export async function listFileRevisions(
       headers: { Authorization: `Bearer ${accessToken}` },
     },
   );
-
   if (!response.ok) throw new Error("Failed to list revisions");
   const data = await response.json();
   return data.revisions || [];

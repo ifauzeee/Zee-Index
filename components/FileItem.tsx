@@ -141,7 +141,7 @@ export default function FileItem({
     >
       <div
         className={cn(
-          "group relative rounded-lg transition-all duration-200 ease-out cursor-pointer overflow-hidden",
+          "group relative rounded-lg transition-all duration-200 ease-out cursor-pointer overflow-hidden select-none",
           isSelected && "bg-accent/80 ring-2 ring-primary",
           isActive && !isBulkMode && "ring-2 ring-primary/50",
           view === "list"

@@ -12,7 +12,7 @@ import { authOptions } from "@/lib/authOptions";
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
 
-const CACHE_TTL_SECONDS = 300; // 5 Menit
+const CACHE_TTL_SECONDS = 300;
 
 async function validateShareToken(request: Request): Promise<boolean> {
   const { searchParams } = new URL(request.url);
@@ -60,6 +60,7 @@ export async function GET(request: Request) {
     const folderId =
       searchParams.get("folderId") || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
     const pageToken = searchParams.get("pageToken");
+    const forceRefresh = searchParams.get("refresh") === "true";
 
     if (!folderId) {
       return NextResponse.json(
@@ -72,16 +73,18 @@ export async function GET(request: Request) {
       userRole || "GUEST"
     }:${pageToken || "page1"}`;
 
-    try {
-      const cachedData: {
-        files: DriveFile[];
-        nextPageToken: string | null;
-      } | null = await kv.get(cacheKey);
-      if (cachedData) {
-        return NextResponse.json(cachedData);
+    if (!forceRefresh) {
+      try {
+        const cachedData: {
+          files: DriveFile[];
+          nextPageToken: string | null;
+        } | null = await kv.get(cacheKey);
+        if (cachedData) {
+          return NextResponse.json(cachedData);
+        }
+      } catch (e) {
+        console.error("Gagal membaca cache KV:", e);
       }
-    } catch (e) {
-      console.error("Gagal membaca cache KV:", e);
     }
 
     const canSeeAll = userRole === "ADMIN";
@@ -109,14 +112,12 @@ export async function GET(request: Request) {
 
     const driveResponse = await listFilesFromDrive(folderId, pageToken);
     let filteredFiles: DriveFile[];
-
     if (canSeeAll) {
       filteredFiles = driveResponse.files;
     } else {
       filteredFiles = [];
       for (const file of driveResponse.files) {
         const isFolder = file.mimeType === "application/vnd.google-apps.folder";
-
         if (!isFolder) {
           filteredFiles.push(file);
           continue;

@@ -5,12 +5,17 @@ const FileDetail = dynamic(() => import("@/components/FileDetail"), {
   ssr: false,
   loading: () => <Loading />,
 });
+
 const FileError = ({ message }: { message: string }) => (
   <div className="text-center py-20 text-muted-foreground">
     <h1 className="text-4xl font-bold">Gagal Memuat</h1>
-    <p className="mt-4">{message}</p>
+    <p className="mt-4 mb-6">{message}</p>
+    <a href="" className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 text-sm">
+       Coba Muat Ulang
+    </a>
   </div>
 );
+
 const createSlug = (name: string) =>
   encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
 
@@ -43,10 +48,12 @@ export default async function FilePage({
         null,
         1000,
       );
+
       const nonFolderFiles = allFiles.filter((f) => !f.isFolder);
       const currentIndex = nonFolderFiles.findIndex(
         (f) => f.id === params.fileId,
       );
+
       if (currentIndex > 0) {
         const prevFile = nonFolderFiles[currentIndex - 1];
         prevFileUrl = `/folder/${params.folderId}/file/${
@@ -105,9 +112,12 @@ export default async function FilePage({
     return (
       <div className="text-center py-20 text-muted-foreground">
         <h1 className="text-4xl font-bold">File Tidak Ditemukan</h1>
-        <p className="mt-4">
-          File yang Anda cari tidak ada atau tidak dapat diakses.
+        <p className="mt-4 mb-6">
+          File yang Anda cari tidak ada atau Google Drive sedang sibuk.
         </p>
+        <a href="" className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 text-sm">
+           Coba Muat Ulang
+        </a>
       </div>
     );
   }
