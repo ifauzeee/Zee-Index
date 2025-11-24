@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Share2,
   Upload,
@@ -8,6 +8,8 @@ import {
   Info,
   LayoutTemplate,
   UploadCloud,
+  Home,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -50,109 +52,150 @@ export default function FileBrowserHeader({
   activeFileId,
   onRequestFileClick,
 }: FileBrowserHeaderProps) {
+  const navRef = useRef<HTMLElement>(null);
+
+  // Auto-scroll breadcrumb ke kanan saat folder berubah
+  useEffect(() => {
+    if (navRef.current) {
+      navRef.current.scrollLeft = navRef.current.scrollWidth;
+    }
+  }, [history]);
+
   return (
-    <div className="flex justify-between items-center py-4 overflow-x-hidden">
-      <nav className="flex items-center space-x-2 text-sm text-muted-foreground overflow-x-auto whitespace-nowrap">
-        {history.map((folder, index) => (
-          <span key={folder.id} className="flex items-center">
-            <button
-              onClick={() => onBreadcrumbClick(folder.id)}
-              onDragOver={(e) => onBreadcrumbDragOver(e, folder.id)}
-              onDragLeave={onBreadcrumbDragLeave}
-              onDrop={(e) => onBreadcrumbDrop(e, folder)}
-              className={cn(
-                "transition-colors rounded-md p-1",
-                shareToken && index === 0
-                  ? "cursor-default text-muted-foreground"
-                  : "hover:text-primary hover:bg-accent",
-                dragOverBreadcrumb === folder.id &&
-                  "bg-primary/20 text-primary",
+    <div className="flex flex-col gap-4 py-4">
+      {/* 1. AREA NAVIGASI (Breadcrumbs Scrollable) */}
+      <nav
+        ref={navRef}
+        className="flex items-center gap-1 overflow-x-auto whitespace-nowrap w-full no-scrollbar px-1 py-1 mask-gradient-right"
+      >
+        {history.map((folder, index) => {
+          const isLast = index === history.length - 1;
+          const isRoot = index === 0;
+
+          return (
+            <div key={folder.id} className="flex items-center shrink-0">
+              <button
+                onClick={() => onBreadcrumbClick(folder.id)}
+                onDragOver={(e) => onBreadcrumbDragOver(e, folder.id)}
+                onDragLeave={onBreadcrumbDragLeave}
+                onDrop={(e) => onBreadcrumbDrop(e, folder)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all border",
+                  isLast
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-foreground",
+                  dragOverBreadcrumb === folder.id &&
+                    "ring-2 ring-primary ring-offset-2",
+                )}
+              >
+                {isRoot && <Home size={14} />}
+                <span className="max-w-[120px] md:max-w-[200px] truncate">
+                  {folder.name}
+                </span>
+              </button>
+
+              {!isLast && (
+                <ChevronRight
+                  size={14}
+                  className="text-muted-foreground mx-1 opacity-50"
+                />
               )}
-            >
-              {folder.name}
-            </button>
-            {index < history.length - 1 && <span className="mx-2">/</span>}
-          </span>
-        ))}
+            </div>
+          );
+        })}
       </nav>
 
-      <div className="flex items-center gap-2 shrink-0">
-        {!shareToken && isAdmin && (
-          <>
-            <button
-              onClick={onUploadClick}
-              className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground"
-              title="Upload atau Buat Folder"
-            >
-              <Upload size={18} />
-            </button>
+      {/* 2. AREA TOOLBAR (Mobile: Full Width & Justified, Desktop: Right Aligned) */}
+      <div className="flex items-center justify-between w-full md:justify-end gap-4">
+        {/* KIRI: Grup Tombol Aksi (Scrollable di layar sangat kecil) */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+          {!shareToken && isAdmin && (
+            <>
+              <button
+                onClick={onUploadClick}
+                className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-primary transition-colors shadow-sm flex items-center justify-center"
+                title="Upload atau Buat Folder"
+              >
+                <Upload size={18} />
+              </button>
 
-            <button
-              onClick={onRequestFileClick}
-              className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground"
-              title="Buat Link Terima File"
-            >
-              <UploadCloud size={18} />
-            </button>
+              <button
+                onClick={onRequestFileClick}
+                className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-purple-500 transition-colors shadow-sm flex items-center justify-center"
+                title="Buat Link Terima File"
+              >
+                <UploadCloud size={18} />
+              </button>
 
-            <button
-              onClick={onShareFolderClick}
-              className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground"
-              title="Bagikan Folder Ini"
-            >
-              <Share2 size={18} />
-            </button>
-            <button
-              onClick={onDetailsClick}
-              disabled={!activeFileId}
-              className="p-2 rounded-lg hover:bg-accent flex items-center justify-center text-sm gap-2 text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Lihat Detail"
-            >
-              <Info size={18} />
-            </button>
-            <button
-              onClick={onToggleBulkMode}
-              className={`p-2 rounded-lg transition-colors flex items-center justify-center text-sm ${
-                isBulkMode
-                  ? "bg-blue-600 text-white"
-                  : "bg-transparent hover:bg-accent text-foreground"
-              }`}
-              title="Pilih Beberapa File"
-            >
-              <CheckSquare size={18} />
-            </button>
-          </>
-        )}
-        <div className="flex items-center border border-border rounded-lg p-0.5 bg-card/50">
+              <button
+                onClick={onShareFolderClick}
+                className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-blue-500 transition-colors shadow-sm flex items-center justify-center"
+                title="Bagikan Folder Ini"
+              >
+                <Share2 size={18} />
+              </button>
+
+              <div className="w-px h-6 bg-border mx-1 hidden sm:block"></div>
+
+              <button
+                onClick={onDetailsClick}
+                disabled={!activeFileId}
+                className="p-2 rounded-lg bg-card border hover:bg-accent transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                title="Lihat Detail"
+              >
+                <Info size={18} />
+              </button>
+
+              <button
+                onClick={onToggleBulkMode}
+                className={cn(
+                  "p-2 rounded-lg border transition-colors shadow-sm flex items-center justify-center",
+                  isBulkMode
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-card hover:bg-accent border-border",
+                )}
+                title="Pilih Beberapa File"
+              >
+                <CheckSquare size={18} />
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* KANAN: Grup Tampilan (Sticky ke kanan) */}
+        <div className="flex items-center border border-border rounded-lg p-1 bg-muted/30 shrink-0 ml-auto">
           <button
             onClick={() => onSetView("list")}
-            className={`p-1.5 rounded-md transition-colors ${
+            className={cn(
+              "p-1.5 rounded-md transition-all",
               view === "list"
-                ? "bg-background text-primary shadow-sm"
-                : "hover:bg-accent/50 text-muted-foreground"
-            }`}
+                ? "bg-background text-primary shadow-sm scale-105"
+                : "text-muted-foreground hover:text-foreground",
+            )}
             title="Tampilan Daftar"
           >
             <List size={18} />
           </button>
           <button
             onClick={() => onSetView("grid")}
-            className={`p-1.5 rounded-md transition-colors ${
+            className={cn(
+              "p-1.5 rounded-md transition-all",
               view === "grid"
-                ? "bg-background text-primary shadow-sm"
-                : "hover:bg-accent/50 text-muted-foreground"
-            }`}
+                ? "bg-background text-primary shadow-sm scale-105"
+                : "text-muted-foreground hover:text-foreground",
+            )}
             title="Tampilan Grid"
           >
             <Grid size={18} />
           </button>
           <button
             onClick={() => onSetView("gallery")}
-            className={`p-1.5 rounded-md transition-colors ${
+            className={cn(
+              "p-1.5 rounded-md transition-all",
               view === "gallery"
-                ? "bg-background text-primary shadow-sm"
-                : "hover:bg-accent/50 text-muted-foreground"
-            }`}
+                ? "bg-background text-primary shadow-sm scale-105"
+                : "text-muted-foreground hover:text-foreground",
+            )}
             title="Tampilan Galeri"
           >
             <LayoutTemplate size={18} />
