@@ -257,6 +257,16 @@ export async function listFilesFromDrive(
 export async function getFileDetailsFromDrive(
   fileId: string,
 ): Promise<DriveFile | null> {
+  const cacheKey = `gdrive:file-details:${fileId}`;
+  try {
+    const cachedDetails: DriveFile | null = await kv.get(cacheKey);
+    if (cachedDetails) {
+      return cachedDetails;
+    }
+  } catch (e) {
+    console.error(`Gagal mengambil cache untuk file ${fileId}:`, e);
+  }
+
   const accessToken = await getAccessToken();
   const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}`;
   const params = new URLSearchParams({
@@ -278,10 +288,18 @@ export async function getFileDetailsFromDrive(
   }
 
   const data = (await response.json()) as DriveFile;
-  return {
+  const fileDetails = {
     ...data,
     isFolder: data.mimeType === "application/vnd.google-apps.folder",
   };
+
+  try {
+    await kv.set(cacheKey, fileDetails, { ex: 600 }); 
+  } catch (e) {
+    console.error(`Gagal mengatur cache untuk file ${fileId}:`, e);
+  }
+
+  return fileDetails;
 }
 
 export async function getFolderPath(
