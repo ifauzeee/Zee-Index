@@ -19,9 +19,6 @@ import {
   Eye,
   Activity,
   UploadCloud,
-  Download,
-  Menu,
-  X,
 } from "lucide-react";
 import Loading from "@/components/Loading";
 import { cn } from "@/lib/utils";
@@ -37,6 +34,7 @@ import DayOfWeekChart from "@/components/charts/DayOfWeekChart";
 import SecurityConfig from "@/components/SecurityConfig";
 import UserFolderAccessManager from "@/components/UserFolderAccessManager";
 
+// Utility untuk menyembunyikan scrollbar tapi tetap bisa discroll
 const scrollbarHideStyles = {
   msOverflowStyle: "none" as const /* IE and Edge */,
   scrollbarWidth: "none" as const /* Firefox */,
