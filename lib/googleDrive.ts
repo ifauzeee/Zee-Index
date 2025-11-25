@@ -1,3 +1,4 @@
+import { getAppCredentials } from "@/lib/config";
 import { kv } from "@/lib/kv";
 
 export interface DriveFile {
@@ -57,20 +58,27 @@ export async function getAccessToken(): Promise<string> {
     console.error(e);
   }
 
+  const creds = await getAppCredentials();
+  if (!creds) {
+    throw new Error(
+      "Aplikasi belum dikonfigurasi. Silakan jalankan Setup Wizard.",
+    );
+  }
+
   const url = "https://oauth2.googleapis.com/token";
-  const options = {
+  const bodyParams = new URLSearchParams({
+    client_id: creds.clientId,
+    client_secret: creds.clientSecret,
+    refresh_token: creds.refreshToken,
+    grant_type: "refresh_token",
+  });
+
+  const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      refresh_token: process.env.GOOGLE_REFRESH_TOKEN!,
-      grant_type: "refresh_token",
-    }),
-    cache: "no-store" as RequestCache,
-  };
-
-  const response = await fetch(url, options);
+    body: bodyParams,
+    cache: "no-store",
+  });
 
   if (!response.ok) {
     const errorData = await response.json();

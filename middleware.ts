@@ -5,6 +5,20 @@ import { getToken } from "next-auth/jwt";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  const isConfigured = !!process.env.GOOGLE_REFRESH_TOKEN;
+
+  if (isConfigured && pathname.startsWith("/setup")) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  if (!isConfigured && !pathname.startsWith("/setup") && !pathname.startsWith("/api/setup")) {
+    const allowedPaths = ["/login", "/api/auth", "/icon.png"];
+    const isAllowed = allowedPaths.some((p) => pathname.startsWith(p));
+    if (!isAllowed) {
+      return NextResponse.redirect(new URL("/setup", request.url));
+    }
+  }
+
   const publicPaths = [
     "/login",
     "/api/auth/callback/google",
@@ -24,6 +38,8 @@ export async function middleware(request: NextRequest) {
     "/api/share/items",
     "/api/folderpath",
     "/api/share/status",
+    "/setup", 
+    "/api/setup/finish", 
   ];
 
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
