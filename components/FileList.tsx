@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from "@/lib/store";
 import FileItem from "./FileItem";
-import React from "react";
+import React, { useEffect } from "react";
 import EmptyState from "./EmptyState";
 import { FolderSearch } from "lucide-react";
 import Masonry from "react-masonry-css";
@@ -37,7 +37,20 @@ export default function FileList({
   onFileDrop,
   onPrefetchFolder,
 }: FileListProps) {
-  const { view, selectedFiles, isBulkMode } = useAppStore();
+  const {
+    view,
+    selectedFiles,
+    isBulkMode,
+    density,
+    shareLinks,
+    fetchShareLinks,
+  } = useAppStore();
+
+  useEffect(() => {
+    if (isAdmin && shareLinks.length === 0) {
+      fetchShareLinks();
+    }
+  }, [isAdmin, shareLinks.length, fetchShareLinks]);
 
   if (files.length === 0) {
     return (
@@ -59,28 +72,38 @@ export default function FileList({
     },
   };
 
-  const renderFileItem = (file: DriveFile) => (
-    <FileItem
-      key={file.id}
-      file={file}
-      onClick={() => onItemClick(file)}
-      onContextMenu={(event) => onItemContextMenu(event, file)}
-      isSelected={selectedFiles.some((f) => f.id === file.id)}
-      isActive={!isBulkMode && activeFileId === file.id}
-      isBulkMode={isBulkMode}
-      onShare={(e) => onShareClick(e, file)}
-      onShowDetails={(e) => onDetailsClick(e, file)}
-      onDownload={(e) => onDownloadClick(e, file)}
-      isAdmin={isAdmin}
-      onDragStart={(e) => onDragStart(e, file)}
-      onFileDrop={onFileDrop}
-      onMouseEnter={() => {
-        if (file.isFolder && onPrefetchFolder) {
-          onPrefetchFolder(file.id);
-        }
-      }}
-    />
-  );
+  const renderFileItem = (file: DriveFile) => {
+    // Check if link is shared (only for collection links or exact match items if logic permits)
+    // For simplicity, checking if file ID exists in any single-item share link
+    const isShared = shareLinks.some(
+      (link) => !link.isCollection && link.path.includes(file.id),
+    );
+
+    return (
+      <FileItem
+        key={file.id}
+        file={file}
+        onClick={() => onItemClick(file)}
+        onContextMenu={(event) => onItemContextMenu(event, file)}
+        isSelected={selectedFiles.some((f) => f.id === file.id)}
+        isActive={!isBulkMode && activeFileId === file.id}
+        isBulkMode={isBulkMode}
+        onShare={(e) => onShareClick(e, file)}
+        onShowDetails={(e) => onDetailsClick(e, file)}
+        onDownload={(e) => onDownloadClick(e, file)}
+        isAdmin={isAdmin}
+        onDragStart={(e) => onDragStart(e, file)}
+        onFileDrop={onFileDrop}
+        onMouseEnter={() => {
+          if (file.isFolder && onPrefetchFolder) {
+            onPrefetchFolder(file.id);
+          }
+        }}
+        density={density}
+        isShared={isShared}
+      />
+    );
+  };
 
   if (view === "gallery") {
     const breakpointColumnsObj = {

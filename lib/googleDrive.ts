@@ -294,7 +294,7 @@ export async function getFileDetailsFromDrive(
   };
 
   try {
-    await kv.set(cacheKey, fileDetails, { ex: 600 }); 
+    await kv.set(cacheKey, fileDetails, { ex: 600 });
   } catch (e) {
     console.error(`Gagal mengatur cache untuk file ${fileId}:`, e);
   }

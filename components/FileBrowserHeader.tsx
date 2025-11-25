@@ -10,8 +10,11 @@ import {
   UploadCloud,
   Home,
   ChevronRight,
+  AlignJustify,
+  StretchHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/lib/store";
 
 interface FileBrowserHeaderProps {
   history: { id: string; name: string }[];
@@ -53,8 +56,8 @@ export default function FileBrowserHeader({
   onRequestFileClick,
 }: FileBrowserHeaderProps) {
   const navRef = useRef<HTMLElement>(null);
+  const { density, setDensity } = useAppStore();
 
-  // Auto-scroll breadcrumb ke kanan saat folder berubah
   useEffect(() => {
     if (navRef.current) {
       navRef.current.scrollLeft = navRef.current.scrollWidth;
@@ -63,7 +66,6 @@ export default function FileBrowserHeader({
 
   return (
     <div className="flex flex-col gap-4 py-4">
-      {/* 1. AREA NAVIGASI (Breadcrumbs Scrollable) */}
       <nav
         ref={navRef}
         className="flex items-center gap-1 overflow-x-auto whitespace-nowrap w-full no-scrollbar px-1 py-1 mask-gradient-right"
@@ -105,9 +107,7 @@ export default function FileBrowserHeader({
         })}
       </nav>
 
-      {/* 2. AREA TOOLBAR (Mobile: Full Width & Justified, Desktop: Right Aligned) */}
       <div className="flex items-center justify-between w-full md:justify-end gap-4">
-        {/* KIRI: Grup Tombol Aksi (Scrollable di layar sangat kecil) */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0">
           {!shareToken && isAdmin && (
             <>
@@ -162,8 +162,26 @@ export default function FileBrowserHeader({
           )}
         </div>
 
-        {/* KANAN: Grup Tampilan (Sticky ke kanan) */}
         <div className="flex items-center border border-border rounded-lg p-1 bg-muted/30 shrink-0 ml-auto">
+          {view === "list" && (
+            <button
+              onClick={() =>
+                setDensity(density === "compact" ? "comfortable" : "compact")
+              }
+              className={cn(
+                "p-1.5 rounded-md transition-all mr-1",
+                "text-muted-foreground hover:text-foreground hover:bg-background",
+              )}
+              title={density === "compact" ? "Mode Nyaman" : "Mode Kompak"}
+            >
+              {density === "compact" ? (
+                <StretchHorizontal size={18} />
+              ) : (
+                <AlignJustify size={18} />
+              )}
+            </button>
+          )}
+          <div className="w-px h-4 bg-border mx-1"></div>
           <button
             onClick={() => onSetView("list")}
             className={cn(

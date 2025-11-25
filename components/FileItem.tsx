@@ -1,10 +1,18 @@
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from "@/lib/store";
 import { formatBytes, getIcon, cn } from "@/lib/utils";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useMemo } from "react";
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
-import { Lock, Star, Share2, Download, Info, ImageOff } from "lucide-react";
+import {
+  Lock,
+  Star,
+  Share2,
+  Download,
+  Info,
+  ImageOff,
+  Link as LinkIcon,
+} from "lucide-react";
 
 interface FileItemProps {
   file: DriveFile & { isFavorite?: boolean };
@@ -23,6 +31,8 @@ interface FileItemProps {
   onDragStart: (e: React.DragEvent) => void;
   onFileDrop: (e: React.DragEvent, targetFolder: DriveFile) => void;
   onMouseEnter?: () => void;
+  density?: "comfortable" | "compact";
+  isShared?: boolean;
 }
 
 export default function FileItem({
@@ -39,6 +49,8 @@ export default function FileItem({
   onDragStart,
   onFileDrop,
   onMouseEnter,
+  density = "comfortable",
+  isShared = false,
 }: FileItemProps) {
   const { view, shareToken } = useAppStore();
   const Icon = getIcon(file.mimeType);
@@ -47,6 +59,12 @@ export default function FileItem({
   const [isDragOver, setIsDragOver] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
+
+  const isNew = useMemo(() => {
+    const created = new Date(file.createdTime).getTime();
+    const now = Date.now();
+    return now - created < 24 * 60 * 60 * 1000;
+  }, [file.createdTime]);
 
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     longPressFired.current = false;
@@ -130,6 +148,8 @@ export default function FileItem({
     !file.isFolder &&
     !imageError;
 
+  const compactClass = density === "compact" && view === "list";
+
   return (
     <motion.div
       variants={itemVariants}
@@ -145,7 +165,10 @@ export default function FileItem({
           isSelected && "bg-accent/80 ring-2 ring-primary",
           isActive && !isBulkMode && "ring-2 ring-primary/50",
           view === "list"
-            ? "flex items-center p-3 bg-card border border-border shadow-sm hover:shadow-md hover:bg-accent/50"
+            ? cn(
+                "flex items-center bg-card border border-border shadow-sm hover:shadow-md hover:bg-accent/50",
+                compactClass ? "p-1.5 min-h-[40px]" : "p-3 min-h-[68px]",
+              )
             : "bg-card border border-border shadow-sm hover:shadow-md w-full",
           view === "grid" &&
             "flex flex-col items-center justify-center text-center p-2 sm:p-4",
@@ -170,7 +193,7 @@ export default function FileItem({
           className={cn(
             "flex w-full",
             view === "list"
-              ? "items-center gap-4"
+              ? "items-center gap-3"
               : view === "grid"
                 ? "flex-col items-center justify-center gap-2"
                 : "flex-col",
@@ -231,7 +254,14 @@ export default function FileItem({
                 )}
               >
                 {React.createElement(Icon, {
-                  size: view === "grid" ? 48 : isGallery ? 64 : 28,
+                  size:
+                    view === "grid"
+                      ? 48
+                      : isGallery
+                        ? 64
+                        : compactClass
+                          ? 20
+                          : 28,
                 })}
                 {isGallery && imageError && (
                   <span className="text-xs text-muted-foreground mt-2">
@@ -256,9 +286,9 @@ export default function FileItem({
               isGallery && "p-3",
             )}
           >
-            <p
+            <div
               className={cn(
-                "font-medium truncate flex items-center gap-1.5",
+                "font-medium flex items-center gap-1.5",
                 view === "list"
                   ? "text-sm justify-start"
                   : view === "grid"
@@ -277,9 +307,25 @@ export default function FileItem({
                 <Lock size={12} className="text-muted-foreground shrink-0" />
               )}
               <span className="truncate">{file.name}</span>
-            </p>
 
-            {view === "list" && !file.isFolder && (
+              {/* Status Badges */}
+              {view === "list" && (
+                <div className="flex gap-1 ml-2">
+                  {isNew && (
+                    <span className="bg-green-500/10 text-green-500 text-[10px] px-1.5 py-0.5 rounded-full border border-green-500/20 whitespace-nowrap">
+                      New
+                    </span>
+                  )}
+                  {isShared && (
+                    <span className="bg-blue-500/10 text-blue-500 text-[10px] px-1.5 py-0.5 rounded-full border border-blue-500/20 flex items-center gap-0.5">
+                      <LinkIcon size={8} /> Link
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {view === "list" && !file.isFolder && !compactClass && (
               <p className="text-xs text-muted-foreground mt-1 text-left">
                 {file.size ? formatBytes(parseInt(file.size)) : "-"} •{" "}
                 {new Date(file.modifiedTime).toLocaleDateString("id-ID", {
@@ -290,19 +336,38 @@ export default function FileItem({
               </p>
             )}
             {(view === "grid" || view === "gallery") && !file.isFolder && (
-              <p
-                className={cn(
-                  "text-xs text-muted-foreground mt-1",
-                  view === "grid" ? "text-center" : "text-left",
-                )}
-              >
-                {file.size ? formatBytes(parseInt(file.size)) : "-"}
-              </p>
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex gap-1 mt-1">
+                  {isNew && (
+                    <span className="bg-green-500/10 text-green-500 text-[9px] px-1 rounded-full border border-green-500/20">
+                      New
+                    </span>
+                  )}
+                  {isShared && (
+                    <span className="bg-blue-500/10 text-blue-500 text-[9px] px-1 rounded-full border border-blue-500/20">
+                      Link
+                    </span>
+                  )}
+                </div>
+                <p
+                  className={cn(
+                    "text-xs text-muted-foreground mt-0.5",
+                    view === "grid" ? "text-center" : "text-left",
+                  )}
+                >
+                  {file.size ? formatBytes(parseInt(file.size)) : "-"}
+                </p>
+              </div>
             )}
           </div>
 
           {view === "list" && !isBulkMode && (
-            <div className="flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 focus-within:opacity-100">
+            <div
+              className={cn(
+                "flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 focus-within:opacity-100",
+                compactClass && "scale-90 origin-right",
+              )}
+            >
               {isAdmin && (
                 <button
                   onClick={onShare}

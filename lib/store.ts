@@ -49,6 +49,7 @@ interface UserProfile {
 type ViewMode = "list" | "grid" | "gallery";
 type SortKey = "name" | "size" | "modifiedTime";
 type SortOrder = "asc" | "desc";
+type DensityMode = "comfortable" | "compact";
 
 interface AppConfig {
   hideAuthor: boolean;
@@ -61,6 +62,8 @@ interface AppState {
   setTheme: (theme: "light" | "dark") => void;
   view: ViewMode;
   setView: (view: ViewMode) => void;
+  density: DensityMode;
+  setDensity: (density: DensityMode) => void;
   sort: { key: SortKey; order: SortOrder };
   setSort: (key: SortKey) => void;
   refreshKey: number;
@@ -136,6 +139,8 @@ export const useAppStore = create<AppState>()(
         set((state) => ({ theme: state.theme === "dark" ? "light" : "dark" })),
       view: "list",
       setView: (view) => set({ view }),
+      density: "comfortable",
+      setDensity: (density) => set({ density }),
       sort: { key: "name", order: "asc" },
       setSort: (key) => {
         const currentSort = get().sort;
@@ -191,7 +196,6 @@ export const useAppStore = create<AppState>()(
           timestamp: Date.now(),
           read: false,
         };
-
         set((state) => ({
           toasts: [...state.toasts, newToast],
           notifications: [newNotification, ...state.notifications].slice(0, 50),
@@ -505,6 +509,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         theme: state.theme,
         view: state.view,
+        density: state.density,
         sort: state.sort,
         folderTokens: state.folderTokens,
         notifications: state.notifications,
