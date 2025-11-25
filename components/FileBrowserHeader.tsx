@@ -58,6 +58,8 @@ export default function FileBrowserHeader({
   const navRef = useRef<HTMLElement>(null);
   const { density, setDensity } = useAppStore();
 
+  const showAdminActions = !shareToken && isAdmin;
+
   useEffect(() => {
     if (navRef.current) {
       navRef.current.scrollLeft = navRef.current.scrollWidth;
@@ -65,10 +67,20 @@ export default function FileBrowserHeader({
   }, [history]);
 
   return (
-    <div className="flex flex-col gap-4 py-4">
+    <div
+      className={cn(
+        "flex gap-4 py-4 transition-all duration-300",
+        showAdminActions
+          ? "flex-col"
+          : "flex-col md:flex-row md:items-center md:justify-between",
+      )}
+    >
       <nav
         ref={navRef}
-        className="flex items-center gap-1 overflow-x-auto whitespace-nowrap w-full no-scrollbar px-1 py-1 mask-gradient-right"
+        className={cn(
+          "flex items-center gap-1 overflow-x-auto whitespace-nowrap no-scrollbar px-1 py-1 mask-gradient-right",
+          showAdminActions ? "w-full" : "w-full md:flex-1",
+        )}
       >
         {history.map((folder, index) => {
           const isLast = index === history.length - 1;
@@ -107,60 +119,65 @@ export default function FileBrowserHeader({
         })}
       </nav>
 
-      <div className="flex items-center justify-between w-full md:justify-end gap-4">
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0">
-          {!shareToken && isAdmin && (
-            <>
-              <button
-                onClick={onUploadClick}
-                className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-primary transition-colors shadow-sm flex items-center justify-center"
-                title="Upload atau Buat Folder"
-              >
-                <Upload size={18} />
-              </button>
+      <div
+        className={cn(
+          "flex items-center gap-4",
+          showAdminActions
+            ? "justify-between w-full md:justify-end"
+            : "justify-end shrink-0",
+        )}
+      >
+        {showAdminActions && (
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+            <button
+              onClick={onUploadClick}
+              className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-primary transition-colors shadow-sm flex items-center justify-center"
+              title="Upload atau Buat Folder"
+            >
+              <Upload size={18} />
+            </button>
 
-              <button
-                onClick={onRequestFileClick}
-                className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-purple-500 transition-colors shadow-sm flex items-center justify-center"
-                title="Buat Link Terima File"
-              >
-                <UploadCloud size={18} />
-              </button>
+            <button
+              onClick={onRequestFileClick}
+              className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-purple-500 transition-colors shadow-sm flex items-center justify-center"
+              title="Buat Link Terima File"
+            >
+              <UploadCloud size={18} />
+            </button>
 
-              <button
-                onClick={onShareFolderClick}
-                className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-blue-500 transition-colors shadow-sm flex items-center justify-center"
-                title="Bagikan Folder Ini"
-              >
-                <Share2 size={18} />
-              </button>
+            <button
+              onClick={onShareFolderClick}
+              className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-blue-500 transition-colors shadow-sm flex items-center justify-center"
+              title="Bagikan Folder Ini"
+            >
+              <Share2 size={18} />
+            </button>
 
-              <div className="w-px h-6 bg-border mx-1 hidden sm:block"></div>
+            <div className="w-px h-6 bg-border mx-1 hidden sm:block"></div>
 
-              <button
-                onClick={onDetailsClick}
-                disabled={!activeFileId}
-                className="p-2 rounded-lg bg-card border hover:bg-accent transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                title="Lihat Detail"
-              >
-                <Info size={18} />
-              </button>
+            <button
+              onClick={onDetailsClick}
+              disabled={!activeFileId}
+              className="p-2 rounded-lg bg-card border hover:bg-accent transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              title="Lihat Detail"
+            >
+              <Info size={18} />
+            </button>
 
-              <button
-                onClick={onToggleBulkMode}
-                className={cn(
-                  "p-2 rounded-lg border transition-colors shadow-sm flex items-center justify-center",
-                  isBulkMode
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-card hover:bg-accent border-border",
-                )}
-                title="Pilih Beberapa File"
-              >
-                <CheckSquare size={18} />
-              </button>
-            </>
-          )}
-        </div>
+            <button
+              onClick={onToggleBulkMode}
+              className={cn(
+                "p-2 rounded-lg border transition-colors shadow-sm flex items-center justify-center",
+                isBulkMode
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-card hover:bg-accent border-border",
+              )}
+              title="Pilih Beberapa File"
+            >
+              <CheckSquare size={18} />
+            </button>
+          </div>
+        )}
 
         <div className="flex items-center border border-border rounded-lg p-1 bg-muted/30 shrink-0 ml-auto">
           {view === "list" && (
