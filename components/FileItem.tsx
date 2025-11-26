@@ -74,6 +74,8 @@ function FileItem({
   }, [file.createdTime]);
 
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length > 1) return;
+
     longPressFired.current = false;
     
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -85,7 +87,7 @@ function FileItem({
       }
       const touch = e.touches[0];
       onContextMenu({ clientX: touch.clientX, clientY: touch.clientY }, file);
-    }, 500); 
+    }, 600); 
   };
 
   const handleTouchMove = () => {
@@ -100,9 +102,17 @@ function FileItem({
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
+    
     if (longPressFired.current) {
-      e.preventDefault(); 
+      if (e.cancelable) e.preventDefault();
       longPressFired.current = false;
+    }
+  };
+
+  const handleContextMenuEvent = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (e.nativeEvent instanceof PointerEvent && e.nativeEvent.pointerType === 'mouse') {
+        onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
     }
   };
 
@@ -179,7 +189,11 @@ function FileItem({
     >
       <div
         className={cn(
-          "group relative rounded-lg transition-all duration-200 ease-out cursor-pointer overflow-hidden select-none",
+          "group relative rounded-lg transition-all duration-200 ease-out cursor-pointer overflow-hidden",
+          "select-none", 
+          "touch-pan-y", 
+          "[-webkit-tap-highlight-color:transparent]", 
+          "[-webkit-touch-callout:none]", 
           isSelected && "bg-accent/80 ring-2 ring-primary",
           isActive && !isBulkMode && "ring-2 ring-primary/50",
           view === "list"
@@ -195,10 +209,7 @@ function FileItem({
           isError && "ring-2 ring-destructive/50 bg-destructive/5"
         )}
         onClick={!isUploading ? onClick : undefined}
-        onContextMenu={!isUploading ? (e: React.MouseEvent<HTMLDivElement>) => {
-          e.preventDefault();
-          onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
-        } : undefined}
+        onContextMenu={!isUploading ? handleContextMenuEvent : undefined}
         onTouchStart={!isUploading ? handleTouchStart : undefined}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
