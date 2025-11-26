@@ -23,6 +23,7 @@ interface FileListProps {
   onDragStart: (e: React.DragEvent, file: DriveFile) => void;
   onFileDrop: (e: React.DragEvent, targetFolder: DriveFile) => void;
   onPrefetchFolder?: (folderId: string) => void;
+  uploads?: Record<string, any>; 
 }
 
 export default function FileList({
@@ -37,6 +38,7 @@ export default function FileList({
   onDragStart,
   onFileDrop,
   onPrefetchFolder,
+  uploads = {},
 }: FileListProps) {
   const {
     view,
@@ -45,7 +47,6 @@ export default function FileList({
     density,
     shareLinks,
     fetchShareLinks,
-    toggleSelection,
     setSelectedFiles,
     setBulkMode,
   } = useAppStore();
@@ -86,7 +87,25 @@ export default function FileList({
     onItemClick(file);
   };
 
-  if (files.length === 0) {
+  const uploadGhostFiles = Object.values(uploads).map((upload: any) => ({
+    id: `upload-${upload.name}`,
+    name: upload.name,
+    mimeType: 'application/octet-stream',
+    size: '0',
+    modifiedTime: new Date().toISOString(),
+    createdTime: new Date().toISOString(),
+    webViewLink: '',
+    hasThumbnail: false,
+    isFolder: false,
+    trashed: false,
+    uploadProgress: upload.progress,
+    uploadStatus: upload.status,
+    uploadError: upload.error
+  } as any));
+
+  const allItems = [...uploadGhostFiles, ...files];
+
+  if (allItems.length === 0) {
     return (
       <div className="text-center py-20 text-muted-foreground col-span-full">
         <EmptyState
@@ -106,13 +125,13 @@ export default function FileList({
     },
   };
 
-  const renderFileItem = (file: DriveFile) => {
-    const isShared = shareLinks.some(
+  const renderFileItem = (file: DriveFile & { uploadProgress?: number, uploadStatus?: string, uploadError?: string }) => {
+    const isShared = !file.uploadStatus && shareLinks.some(
       (link) => !link.isCollection && link.path.includes(file.id),
     );
 
     return (
-      <div key={file.id} onClick={(e) => handleItemClickWrapper(file, e)}>
+      <div key={file.id} onClick={(e) => !file.uploadStatus && handleItemClickWrapper(file, e)}>
         <FileItem
           file={file}
           onClick={() => {}} 
@@ -127,12 +146,15 @@ export default function FileList({
           onDragStart={(e) => onDragStart(e, file)}
           onFileDrop={onFileDrop}
           onMouseEnter={() => {
-            if (file.isFolder && onPrefetchFolder) {
+            if (file.isFolder && onPrefetchFolder && !file.uploadStatus) {
               onPrefetchFolder(file.id);
             }
           }}
           density={density}
           isShared={isShared}
+          uploadProgress={file.uploadProgress}
+          uploadStatus={file.uploadStatus as any}
+          uploadError={file.uploadError}
         />
       </div>
     );
@@ -150,7 +172,7 @@ export default function FileList({
           className="flex w-auto -ml-4"
           columnClassName="pl-4 bg-clip-padding"
         >
-          {files.map(renderFileItem)}
+          {allItems.map(renderFileItem)}
         </Masonry>
       </motion.div>
     );
@@ -168,7 +190,7 @@ export default function FileList({
       initial="hidden"
       animate="visible"
     >
-      {files.map(renderFileItem)}
+      {allItems.map(renderFileItem)}
     </motion.div>
   );
 }

@@ -31,7 +31,6 @@ import { useUpload } from "@/hooks/useUpload";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import ImageGallery from "./ImageGallery";
 import FileBrowserHeader from "./FileBrowserHeader";
-import FileBrowserUploadProgress from "./FileBrowserUploadProgress";
 import { useGallery } from "@/hooks/useGallery";
 import FileRequestModal from "./FileRequestModal";
 import FolderReadme from "./FolderReadme";
@@ -636,6 +635,7 @@ export default function FileBrowser({
               onDragStart={handleDragStart}
               onFileDrop={onDropOnFolder}
               onPrefetchFolder={handlePrefetchFolder}
+              uploads={uploads}
             />
             <div
               ref={loaderRef}
@@ -654,7 +654,7 @@ export default function FileBrowser({
         )}
       </main>
 
-      <FileBrowserUploadProgress uploads={uploads} />
+      {/* Floating Progress Bar Removed - integrated into FileList */}
 
       <ImageGallery
         isOpen={gallery.isOpen}

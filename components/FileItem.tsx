@@ -12,6 +12,7 @@ import {
   Info,
   ImageOff,
   Link as LinkIcon,
+  XCircle,
 } from "lucide-react";
 
 interface FileItemProps {
@@ -33,6 +34,9 @@ interface FileItemProps {
   onMouseEnter?: () => void;
   density?: "comfortable" | "compact";
   isShared?: boolean;
+  uploadProgress?: number;
+  uploadStatus?: "uploading" | "error" | "success";
+  uploadError?: string;
 }
 
 export default function FileItem({
@@ -51,6 +55,9 @@ export default function FileItem({
   onMouseEnter,
   density = "comfortable",
   isShared = false,
+  uploadProgress,
+  uploadStatus,
+  uploadError,
 }: FileItemProps) {
   const { view, shareToken } = useAppStore();
   const Icon = getIcon(file.mimeType);
@@ -110,7 +117,7 @@ export default function FileItem({
   };
 
   const handleDragOver = (e: React.DragEvent) => {
-    if (file.isFolder && isAdmin) {
+    if (file.isFolder && isAdmin && !uploadStatus) {
       e.preventDefault();
       e.stopPropagation();
       setIsDragOver(true);
@@ -125,7 +132,7 @@ export default function FileItem({
   };
 
   const handleDrop = (e: React.DragEvent) => {
-    if (file.isFolder && isAdmin) {
+    if (file.isFolder && isAdmin && !uploadStatus) {
       e.preventDefault();
       e.stopPropagation();
       setIsDragOver(false);
@@ -149,14 +156,16 @@ export default function FileItem({
     !imageError;
 
   const compactClass = density === "compact" && view === "list";
+  const isUploading = uploadStatus === "uploading";
+  const isError = uploadStatus === "error";
 
   return (
     <motion.div
       variants={itemVariants}
       initial="hidden"
       animate="visible"
-      whileHover="hover"
-      className={cn(isGallery && "mb-4")}
+      whileHover={!isUploading ? "hover" : undefined}
+      className={cn(isGallery && "mb-4", isUploading && "opacity-80")}
       onMouseEnter={onMouseEnter}
     >
       <div
@@ -174,16 +183,17 @@ export default function FileItem({
             "flex flex-col items-center justify-center text-center p-2 sm:p-4",
           isGallery && "p-0",
           isDragOver && "ring-2 ring-primary ring-inset bg-primary/10",
+          isError && "ring-2 ring-destructive/50 bg-destructive/5"
         )}
-        onClick={onClick}
-        onContextMenu={(e: React.MouseEvent<HTMLDivElement>) => {
+        onClick={!isUploading ? onClick : undefined}
+        onContextMenu={!isUploading ? (e: React.MouseEvent<HTMLDivElement>) => {
           e.preventDefault();
           onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
-        }}
-        onTouchStart={handleTouchStart}
+        } : undefined}
+        onTouchStart={!isUploading ? handleTouchStart : undefined}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        draggable={isAdmin}
+        draggable={isAdmin && !isUploading}
         onDragStart={onDragStart}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -225,6 +235,11 @@ export default function FileItem({
                   }}
                   unoptimized
                 />
+                {file.isProtected && (
+                  <div className="absolute bottom-2 right-2 flex items-center justify-center p-1.5 bg-background/60 backdrop-blur-sm rounded-full ring-2 ring-background/20 z-20">
+                    <Lock size={12} className="text-primary" />
+                  </div>
+                )}
               </div>
             ) : view === "grid" && hasImage ? (
               <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-md overflow-hidden flex items-center justify-center bg-muted/20">
@@ -267,7 +282,7 @@ export default function FileItem({
               </div>
             )}
 
-            {view !== "list" && file.isProtected && (
+            {view !== "list" && file.isProtected && !isGallery && (
               <div
                 className={cn(
                   "absolute flex items-center justify-center p-1.5 bg-background/60 backdrop-blur-sm rounded-full ring-2 ring-background/20 z-20",
@@ -308,15 +323,14 @@ export default function FileItem({
               )}
               <span className="truncate">{file.name}</span>
 
-              {/* Status Badges */}
               {view === "list" && (
                 <div className="flex gap-1 ml-2">
-                  {isNew && (
+                  {isNew && !isUploading && (
                     <span className="bg-green-500/10 text-green-500 text-[10px] px-1.5 py-0.5 rounded-full border border-green-500/20 whitespace-nowrap">
                       New
                     </span>
                   )}
-                  {isShared && (
+                  {isShared && !isUploading && (
                     <span className="bg-blue-500/10 text-blue-500 text-[10px] px-1.5 py-0.5 rounded-full border border-blue-500/20 flex items-center gap-0.5">
                       <LinkIcon size={8} /> Link
                     </span>
@@ -325,43 +339,62 @@ export default function FileItem({
               )}
             </div>
 
-            {view === "list" && !file.isFolder && !compactClass && (
-              <p className="text-xs text-muted-foreground mt-1 text-left">
-                {file.size ? formatBytes(parseInt(file.size)) : "-"} •{" "}
-                {new Date(file.modifiedTime).toLocaleDateString("id-ID", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
-              </p>
-            )}
-            {(view === "grid" || view === "gallery") && !file.isFolder && (
-              <div className="flex flex-col items-center gap-1">
-                <div className="flex gap-1 mt-1">
-                  {isNew && (
-                    <span className="bg-green-500/10 text-green-500 text-[9px] px-1 rounded-full border border-green-500/20">
-                      New
-                    </span>
-                  )}
-                  {isShared && (
-                    <span className="bg-blue-500/10 text-blue-500 text-[9px] px-1 rounded-full border border-blue-500/20">
-                      Link
-                    </span>
-                  )}
+            {/* Upload Progress Indicator */}
+            {isUploading || isError ? (
+                <div className="w-full mt-2">
+                    <div className="flex justify-between items-center text-[10px] text-muted-foreground mb-1">
+                        <span>{isError ? "Gagal" : "Mengupload..."}</span>
+                        <span>{isError ? <XCircle size={10} className="text-destructive"/> : `${uploadProgress}%`}</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                        <div 
+                            className={cn("h-full transition-all duration-300", isError ? "bg-destructive" : "bg-primary")}
+                            style={{ width: `${uploadProgress}%` }}
+                        />
+                    </div>
+                    {isError && <p className="text-[10px] text-destructive mt-1 truncate">{uploadError}</p>}
                 </div>
-                <p
-                  className={cn(
-                    "text-xs text-muted-foreground mt-0.5",
-                    view === "grid" ? "text-center" : "text-left",
-                  )}
-                >
-                  {file.size ? formatBytes(parseInt(file.size)) : "-"}
-                </p>
-              </div>
+            ) : (
+                <>
+                    {view === "list" && !file.isFolder && !compactClass && (
+                    <p className="text-xs text-muted-foreground mt-1 text-left">
+                        {file.size ? formatBytes(parseInt(file.size)) : "-"} •{" "}
+                        {new Date(file.modifiedTime).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        })}
+                    </p>
+                    )}
+                    {(view === "grid" || view === "gallery") && !file.isFolder && (
+                    <div className="flex flex-col items-center gap-1">
+                        <div className="flex gap-1 mt-1">
+                        {isNew && (
+                            <span className="bg-green-500/10 text-green-500 text-[9px] px-1 rounded-full border border-green-500/20">
+                            New
+                            </span>
+                        )}
+                        {isShared && (
+                            <span className="bg-blue-500/10 text-blue-500 text-[9px] px-1 rounded-full border border-blue-500/20">
+                            Link
+                            </span>
+                        )}
+                        </div>
+                        <p
+                        className={cn(
+                            "text-xs text-muted-foreground mt-0.5",
+                            view === "grid" ? "text-center" : "text-left",
+                        )}
+                        >
+                        {file.size ? formatBytes(parseInt(file.size)) : "-"}
+                        </p>
+                    </div>
+                    )}
+                </>
             )}
           </div>
 
-          {view === "list" && !isBulkMode && (
+          {view === "list" && !isBulkMode && !isUploading && (
             <div
               className={cn(
                 "flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 focus-within:opacity-100",
@@ -396,7 +429,7 @@ export default function FileItem({
             </div>
           )}
 
-          {isBulkMode && (
+          {isBulkMode && !isUploading && (
             <input
               type="checkbox"
               checked={isSelected}
