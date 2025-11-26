@@ -79,13 +79,9 @@ interface VideoAudioPreviewProps {
   subtitleTracks?: SubtitleTrack[];
 }
 
-const VideoAudioPreview: React.FC<VideoAudioPreviewProps> = ({
-  src,
-  type,
-  poster,
-  mimeType,
-  subtitleTracks,
-}) => {
+const VideoAudioPreview: React.FC<
+  VideoAudioPreviewProps & { onEnded?: () => void }
+> = ({ src, type, poster, mimeType, subtitleTracks, onEnded }) => {
   const ref = useRef<HTMLVideoElement | HTMLAudioElement>(null);
   const playerRef = useRef<Plyr | null>(null);
 
@@ -95,8 +91,13 @@ const VideoAudioPreview: React.FC<VideoAudioPreviewProps> = ({
         const Plyr = p.default;
         const options = {
           debug: false,
+          autoplay: false,
         };
         playerRef.current = new Plyr(ref.current as HTMLElement, options);
+
+        if (onEnded) {
+          playerRef.current.on("ended", onEnded as () => void);
+        }
       });
     }
     return () => {
@@ -104,7 +105,7 @@ const VideoAudioPreview: React.FC<VideoAudioPreviewProps> = ({
         playerRef.current.destroy();
       }
     };
-  }, []);
+  }, [onEnded]);
 
   const Tag = type === "video" ? "video" : "audio";
   const posterUrl = poster ? poster.replace(/=s\d+/, "=s1280") : undefined;
@@ -292,6 +293,12 @@ export default function FileDetail({
   const [showArchivePreview, setShowArchivePreview] = useState(false);
   const [showImageEditor, setShowImageEditor] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+
+  const handleVideoEnded = () => {
+    if (nextFileUrl) {
+      router.push(nextFileUrl);
+    }
+  };
 
   const shareToken = useMemo(
     () => searchParams.get("share_token"),
@@ -494,6 +501,7 @@ export default function FileDetail({
             poster={file.thumbnailLink}
             mimeType={mimeType}
             subtitleTracks={subtitleTracks}
+            onEnded={handleVideoEnded}
           />
         );
       case "audio":

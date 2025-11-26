@@ -61,31 +61,40 @@ export async function GET(request: NextRequest) {
   const searchType = searchParams.get("searchType") || "name";
   const mimeType = searchParams.get("mimeType");
   const modifiedTime = searchParams.get("modifiedTime");
-  if (!rawSearchTerm) {
+  const minSize = searchParams.get("minSize");
+
+  if (!rawSearchTerm && !mimeType && !modifiedTime && !minSize) {
     return NextResponse.json(
-      { error: "Search term is required." },
+      { error: "Search criteria is required." },
       { status: 400 },
     );
   }
 
-  if (!folderId) {
-    return NextResponse.json(
-      { error: "Folder ID is required for a scoped search." },
-      { status: 400 },
-    );
-  }
-
-  const sanitizedSearchTerm = sanitizeString(rawSearchTerm);
+  const sanitizedSearchTerm = rawSearchTerm ? sanitizeString(rawSearchTerm) : "";
   const searchTerm = sanitizedSearchTerm.replace(/'/g, "''");
+  
   try {
     const accessToken = await getAccessToken();
     const driveUrl = "https://www.googleapis.com/drive/v3/files";
     const queryField = searchType === "fullText" ? "fullText" : "name";
-    let driveQuery = `${queryField} contains '${searchTerm}' and trashed=false`;
-    driveQuery += ` and '${folderId}' in parents`;
+    
+    let driveQuery = "trashed=false";
+    if (searchTerm) {
+        driveQuery += ` and ${queryField} contains '${searchTerm}'`;
+    }
+    
+    if (folderId) {
+        driveQuery += ` and '${folderId}' in parents`;
+    }
 
     driveQuery += getMimeQuery(mimeType);
     driveQuery += getDateQuery(modifiedTime);
+    
+    if (minSize) {
+        const bytes = parseInt(minSize) * 1024 * 1024;
+        driveQuery += ` and size > ${bytes}`;
+    }
+
     const params = new URLSearchParams({
       q: driveQuery,
       fields:

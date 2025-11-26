@@ -20,6 +20,7 @@ import {
   Github,
   Trash2,
   Bell,
+  PanelLeft,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import Search from "@/components/Search";
@@ -184,6 +185,7 @@ export default function Header() {
     user,
     notifications,
     toggleNotificationCenter,
+    toggleSidebar,
   } = useAppStore();
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -328,18 +330,27 @@ export default function Header() {
             : "border-b border-transparent"
         }`}
       >
-        <div className="container mx-auto flex items-center justify-between gap-4 px-4 max-w-7xl h-16">
-          <h1
-            onClick={handleLogoClick}
-            className={`text-2xl font-bold flex items-center shrink-0 ${
-              !shareToken ? "cursor-pointer" : "cursor-default"
-            }`}
-            title={!shareToken ? "Kembali ke Beranda" : "Zee Index"}
-          >
-            <i className="fab fa-google-drive text-blue-500 mr-3"></i>Zee Index
-          </h1>
+        <div className="container max-w-full px-4 flex items-center justify-between gap-4 h-16">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleSidebar}
+              className="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground"
+            >
+              <PanelLeft size={20} />
+            </button>
+            <h1
+              onClick={handleLogoClick}
+              className={`text-xl font-bold flex items-center shrink-0 ${
+                !shareToken ? "cursor-pointer" : "cursor-default"
+              }`}
+              title={!shareToken ? "Kembali ke Beranda" : "Zee Index"}
+            >
+              <i className="fab fa-google-drive text-blue-500 mr-3"></i>
+              <span className="hidden sm:inline">Zee Index</span>
+            </h1>
+          </div>
 
-          <div className="flex-1 min-w-0 max-w-md hidden sm:block">
+          <div className="flex-1 min-w-0 max-w-xl hidden sm:block mx-4">
             <Suspense
               fallback={
                 <div className="w-full h-10 bg-muted rounded-lg animate-pulse" />
@@ -459,7 +470,7 @@ export default function Header() {
       </header>
 
       {isSearchVisible && (
-        <div className="mt-4 sm:hidden">
+        <div className="mt-4 sm:hidden px-4">
           <Suspense fallback={null}>
             <Search onSearchClose={() => setIsSearchVisible(false)} />
           </Suspense>

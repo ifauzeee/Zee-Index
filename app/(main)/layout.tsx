@@ -12,6 +12,8 @@ import CommandPalette from "@/components/CommandPalette";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 import KeyboardShortcutsModal from "@/components/KeyboardShortcutsModal";
 import NotificationCenter from "@/components/NotificationCenter";
+import Sidebar from "@/components/Sidebar";
+import { cn } from "@/lib/utils";
 
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 const DetailsPanel = dynamic(() => import("@/components/DetailsPanel"), {
@@ -58,6 +60,7 @@ export default function MainLayout({
     setDetailsFile,
     fetchConfig,
     user,
+    isSidebarOpen,
   } = useAppStore();
   const { status } = useSession();
 
@@ -87,8 +90,19 @@ export default function MainLayout({
         className={`bg-background text-foreground min-h-screen flex flex-col`}
       >
         <Header />
-        <div className="container mx-auto px-4 max-w-7xl flex-grow">
-          <main className="min-h-[50vh] mb-12">{children}</main>
+        <div className="flex flex-1 container max-w-full px-0">
+          <Sidebar />
+          <div
+            className={cn(
+              "flex-1 flex flex-col transition-all duration-300 ease-in-out",
+              isSidebarOpen ? "lg:ml-64" : "ml-0"
+            )}
+          >
+            <div className="container mx-auto px-4 max-w-7xl flex-grow py-4">
+              <main className="min-h-[50vh] mb-12">{children}</main>
+            </div>
+            <AppFooter />
+          </div>
         </div>
 
         <div
@@ -101,8 +115,6 @@ export default function MainLayout({
             ))}
           </AnimatePresence>
         </div>
-
-        <AppFooter />
       </div>
       <BulkActionBar />
       <GlobalAudioPlayer />
