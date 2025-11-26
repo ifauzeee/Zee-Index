@@ -1,7 +1,7 @@
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from "@/lib/store";
 import { formatBytes, getIcon, cn } from "@/lib/utils";
-import React, { useRef, useState, useMemo } from "react";
+import React, { useRef, useState, useMemo, memo } from "react";
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
 import {
@@ -39,7 +39,7 @@ interface FileItemProps {
   uploadError?: string;
 }
 
-export default function FileItem({
+function FileItem({
   file,
   onClick,
   onContextMenu,
@@ -142,7 +142,12 @@ export default function FileItem({
 
   const getThumbnailSrc = () => {
     if (file.thumbnailLink) {
-      return file.thumbnailLink.replace(/=s\d+/, "=s800");
+      let size = "s800";
+      if (view === "list") size = "s64";
+      else if (view === "grid") size = "s320";
+      else if (view === "gallery") size = "s1280";
+      
+      return file.thumbnailLink.replace(/=s\d+/, `=${size}`);
     }
     let url = `/api/download?fileId=${file.id}`;
     if (shareToken) url += `&share_token=${shareToken}`;
@@ -228,6 +233,7 @@ export default function FileItem({
                     "object-cover block transition-opacity duration-300",
                     isImageLoading ? "opacity-0" : "opacity-100",
                   )}
+                  loading="lazy"
                   onLoad={() => setIsImageLoading(false)}
                   onError={() => {
                     setIsImageLoading(false);
@@ -249,6 +255,7 @@ export default function FileItem({
                   fill
                   className="object-cover"
                   sizes="(max-width: 640px) 80px, 96px"
+                  loading="lazy"
                   referrerPolicy="no-referrer"
                   unoptimized={true}
                   onError={() => setImageError(true)}
@@ -339,7 +346,6 @@ export default function FileItem({
               )}
             </div>
 
-            {/* Upload Progress Indicator */}
             {isUploading || isError ? (
                 <div className="w-full mt-2">
                     <div className="flex justify-between items-center text-[10px] text-muted-foreground mb-1">
@@ -449,3 +455,20 @@ export default function FileItem({
     </motion.div>
   );
 }
+
+const arePropsEqual = (prevProps: FileItemProps, nextProps: FileItemProps) => {
+  return (
+    prevProps.file.id === nextProps.file.id &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isActive === nextProps.isActive &&
+    prevProps.isBulkMode === nextProps.isBulkMode &&
+    prevProps.density === nextProps.density &&
+    prevProps.isShared === nextProps.isShared &&
+    prevProps.uploadProgress === nextProps.uploadProgress &&
+    prevProps.uploadStatus === nextProps.uploadStatus &&
+    prevProps.file.name === nextProps.file.name &&
+    prevProps.file.isFavorite === nextProps.file.isFavorite
+  );
+};
+
+export default memo(FileItem, arePropsEqual);

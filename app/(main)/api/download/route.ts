@@ -5,8 +5,17 @@ import { kv } from "@/lib/kv";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { logActivity } from "@/lib/activityLogger";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 export async function GET(request: NextRequest) {
+  const { success } = await checkRateLimit(request, "download");
+  if (!success) {
+    return NextResponse.json(
+      { error: "Terlalu banyak permintaan unduhan. Silakan tunggu sebentar." },
+      { status: 429 },
+    );
+  }
+
   const session = await getServerSession(authOptions);
   const { searchParams } = new URL(request.url);
   const fileId = searchParams.get("fileId");
