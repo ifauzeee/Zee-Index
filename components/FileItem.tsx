@@ -225,11 +225,6 @@ export default function FileItem({
                   }}
                   unoptimized
                 />
-                {file.isProtected && (
-                  <div className="absolute bottom-2 right-2 flex items-center justify-center p-1.5 bg-background/60 backdrop-blur-sm rounded-full ring-2 ring-background/20 z-20">
-                    <Lock size={12} className="text-primary" />
-                  </div>
-                )}
               </div>
             ) : view === "grid" && hasImage ? (
               <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-md overflow-hidden flex items-center justify-center bg-muted/20">
@@ -272,8 +267,13 @@ export default function FileItem({
               </div>
             )}
 
-            {view !== "list" && file.isProtected && !isGallery && (
-              <div className="absolute -bottom-1 -right-1 flex items-center justify-center p-1.5 bg-background/60 backdrop-blur-sm rounded-full ring-2 ring-background/20">
+            {view !== "list" && file.isProtected && (
+              <div
+                className={cn(
+                  "absolute flex items-center justify-center p-1.5 bg-background/60 backdrop-blur-sm rounded-full ring-2 ring-background/20 z-20",
+                  isGallery ? "bottom-2 right-2" : "-bottom-1 -right-1",
+                )}
+              >
                 <Lock size={12} className="text-primary" />
               </div>
             )}
