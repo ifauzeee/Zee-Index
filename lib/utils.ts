@@ -79,7 +79,11 @@ export function getFileType(file: { mimeType: string; name: string }): string {
   if (mimeType.startsWith("audio/")) return "audio";
   if (mimeType.startsWith("image/")) return "image";
   if (mimeType === "application/pdf") return "pdf";
+  
   if (mimeType === "text/markdown" || name.endsWith(".md")) return "markdown";
+  
+  if (mimeType === "text/plain" || name.endsWith(".txt")) return "text";
+
   if (
     mimeType.startsWith("application/zip") ||
     name.endsWith(".zip") ||
@@ -125,7 +129,6 @@ export function getFileType(file: { mimeType: string; name: string }): string {
     "swift",
     "kt",
     "rs",
-    "txt",
   ];
   const fileExtension = name.split(".").pop();
   if (fileExtension && codeExtensions.includes(fileExtension)) {

@@ -29,6 +29,8 @@ import {
   Archive,
   History,
   Edit,
+  FileText,
+  Eye,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
@@ -137,12 +139,12 @@ const ImagePreview: React.FC<{ src: string }> = ({ src }) => (
   <Image src={src} layout="fill" objectFit="contain" alt="File preview" />
 );
 
-const OfficePreview: React.FC<{ src: string }> = ({ src }) => (
+const GoogleDrivePreview: React.FC<{ fileId: string }> = ({ fileId }) => (
   <iframe
-    src={`https://docs.google.com/gview?url=${encodeURIComponent(
-      src,
-    )}&embedded=true`}
-    className="w-full h-full border-0"
+    src={`https://drive.google.com/file/d/${fileId}/preview`}
+    className="w-full h-full border-0 rounded-lg bg-muted/20"
+    allow="autoplay"
+    title="Preview"
   />
 );
 
@@ -275,15 +277,18 @@ export default function FileDetail({
   const { addToast, user, triggerRefresh, hideAuthor } = useAppStore();
   const { data: session } = useSession();
   const [showBackButton, setShowBackButton] = useState(true);
-  const [markdownContent, setMarkdownContent] = useState<string | null>(null);
+  
+  const [textContent, setTextContent] = useState<string | null>(null);
   const [editableContent, setEditableContent] = useState<string | null>(null);
+  
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isFetchingEditableContent, setIsFetchingEditableContent] =
     useState(false);
+  
   const [showTextPreview, setShowTextPreview] = useState(false);
+  const [showDocPreview, setShowDocPreview] = useState(false);
   const [showArchivePreview, setShowArchivePreview] = useState(false);
-
   const [showImageEditor, setShowImageEditor] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
@@ -297,9 +302,12 @@ export default function FileDetail({
 
   const fileType = getFileType(file);
   const fileSize = parseInt(file.size || "0", 10);
+
   const isDefaultPreview =
     (fileType === "markdown" && !showTextPreview) ||
+    (fileType === "text" && !showTextPreview) ||
     (fileType === "code" && !showTextPreview) ||
+    ((fileType === "office" || fileType === "pdf") && !showDocPreview) ||
     fileType === "archive" ||
     fileType === "other";
 
@@ -348,7 +356,6 @@ export default function FileDetail({
         }
 
         const expirationTime = decodedToken.exp * 1000;
-
         const currentTime = Date.now();
         const timeUntilExpiration = expirationTime - currentTime;
 
@@ -397,8 +404,13 @@ export default function FileDetail({
   }, [file.id, shareToken]);
 
   const isEditable =
-    isAdmin && (fileType === "code" || fileType === "markdown");
-  const isTextPreviewable = fileType === "code" || fileType === "markdown";
+    isAdmin &&
+    (fileType === "code" || fileType === "markdown" || fileType === "text");
+  
+  const isTextPreviewable =
+    fileType === "code" || fileType === "markdown" || fileType === "text";
+  
+  const isDocPreviewable = fileType === "office" || fileType === "pdf";
 
   useEffect(() => {
     if (isEditing && isEditable && editableContent === null) {
@@ -413,14 +425,18 @@ export default function FileDetail({
         .finally(() => setIsFetchingEditableContent(false));
     }
 
-    if (fileType === "markdown" && !isEditing && showTextPreview) {
+    if (
+      (fileType === "markdown" || fileType === "text") &&
+      !isEditing &&
+      showTextPreview
+    ) {
       setIsFetchingEditableContent(true);
       fetch(directLink)
         .then((res) => {
           if (!res.ok) throw new Error("Gagal mengambil konten file");
           return res.text();
         })
-        .then((text) => setMarkdownContent(text))
+        .then((text) => setTextContent(text))
         .catch((err) => addToast({ message: err.message, type: "error" }))
         .finally(() => setIsFetchingEditableContent(false));
     }
@@ -449,8 +465,8 @@ export default function FileDetail({
       addToast({ message: "Perubahan berhasil disimpan!", type: "success" });
       setIsEditing(false);
       triggerRefresh();
-      if (fileType === "markdown") {
-        setMarkdownContent(editableContent);
+      if (fileType === "markdown" || fileType === "text") {
+        setTextContent(editableContent);
       }
     } catch (error: unknown) {
       addToast({
@@ -490,17 +506,33 @@ export default function FileDetail({
       case "image":
         return <ImagePreview src={directLink} />;
       case "office":
-        return <OfficePreview src={directLink} />;
+      case "pdf":
+        if (showDocPreview) {
+          return <GoogleDrivePreview fileId={file.id} />;
+        }
+        break;
       case "ebook":
         return <EbookPreview src={directLink} />;
       case "markdown":
         if (showTextPreview) {
-          if (markdownContent === null) return <LoadingPreview />;
+          if (textContent === null) return <LoadingPreview />;
           return (
             <div className="prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg w-full h-full overflow-y-auto p-8">
               <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
-                {markdownContent}
+                {textContent}
               </ReactMarkdown>
+            </div>
+          );
+        }
+        break;
+      case "text":
+        if (showTextPreview) {
+          if (textContent === null) return <LoadingPreview />;
+          return (
+            <div className="w-full h-full overflow-y-auto p-8 bg-background">
+              <pre className="whitespace-pre-wrap font-mono text-sm text-foreground">
+                {textContent}
+              </pre>
             </div>
           );
         }
@@ -728,7 +760,16 @@ export default function FileDetail({
                   onClick={() => setShowTextPreview(true)}
                   className="flex-1 flex items-center justify-center px-4 py-3 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors font-semibold text-lg"
                 >
-                  <i className="fas fa-eye mr-3"></i>Lihat Teks
+                  <Eye className="mr-3" size={20} /> Lihat Teks
+                </button>
+              )}
+
+              {isDocPreviewable && !showDocPreview && (
+                <button
+                  onClick={() => setShowDocPreview(true)}
+                  className="flex-1 flex items-center justify-center px-4 py-3 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors font-semibold text-lg"
+                >
+                  <FileText className="mr-3" size={20} /> Lihat Dokumen
                 </button>
               )}
 
