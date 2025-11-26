@@ -115,7 +115,7 @@ function FileItem({
       if (view === "list") size = "s64";
       else if (view === "grid") size = "s320";
       else if (view === "gallery") size = "s1280";
-      
+
       return file.thumbnailLink.replace(/=s\d+/, `=${size}`);
     }
     let url = `/api/download?fileId=${file.id}`;
@@ -157,13 +157,17 @@ function FileItem({
             "flex flex-col items-center justify-center text-center p-2 sm:p-4",
           isGallery && "p-0",
           isDragOver && "ring-2 ring-primary ring-inset bg-primary/10",
-          isError && "ring-2 ring-destructive/50 bg-destructive/5"
+          isError && "ring-2 ring-destructive/50 bg-destructive/5",
         )}
         onClick={!isUploading ? onClick : undefined}
-        onContextMenu={!isUploading ? (e: React.MouseEvent<HTMLDivElement>) => {
-          e.preventDefault();
-          onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
-        } : undefined}
+        onContextMenu={
+          !isUploading
+            ? (e: React.MouseEvent<HTMLDivElement>) => {
+                e.preventDefault();
+                onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
+              }
+            : undefined
+        }
         draggable={isAdmin && !isUploading}
         onDragStart={onDragStart}
         onDragOver={handleDragOver}
@@ -313,56 +317,69 @@ function FileItem({
             </div>
 
             {isUploading || isError ? (
-                <div className="w-full mt-2">
-                    <div className="flex justify-between items-center text-[10px] text-muted-foreground mb-1">
-                        <span>{isError ? "Gagal" : "Mengupload..."}</span>
-                        <span>{isError ? <XCircle size={10} className="text-destructive"/> : `${uploadProgress}%`}</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                        <div 
-                            className={cn("h-full transition-all duration-300", isError ? "bg-destructive" : "bg-primary")}
-                            style={{ width: `${uploadProgress}%` }}
-                        />
-                    </div>
-                    {isError && <p className="text-[10px] text-destructive mt-1 truncate">{uploadError}</p>}
+              <div className="w-full mt-2">
+                <div className="flex justify-between items-center text-[10px] text-muted-foreground mb-1">
+                  <span>{isError ? "Gagal" : "Mengupload..."}</span>
+                  <span>
+                    {isError ? (
+                      <XCircle size={10} className="text-destructive" />
+                    ) : (
+                      `${uploadProgress}%`
+                    )}
+                  </span>
                 </div>
+                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={cn(
+                      "h-full transition-all duration-300",
+                      isError ? "bg-destructive" : "bg-primary",
+                    )}
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                {isError && (
+                  <p className="text-[10px] text-destructive mt-1 truncate">
+                    {uploadError}
+                  </p>
+                )}
+              </div>
             ) : (
-                <>
-                    {view === "list" && !file.isFolder && !compactClass && (
-                    <p className="text-xs text-muted-foreground mt-1 text-left">
-                        {file.size ? formatBytes(parseInt(file.size)) : "-"} •{" "}
-                        {new Date(file.modifiedTime).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                        })}
-                    </p>
-                    )}
-                    {(view === "grid" || view === "gallery") && !file.isFolder && (
-                    <div className="flex flex-col items-center gap-1">
-                        <div className="flex gap-1 mt-1">
-                        {isNew && (
-                            <span className="bg-green-500/10 text-green-500 text-[9px] px-1 rounded-full border border-green-500/20">
-                            New
-                            </span>
-                        )}
-                        {isShared && (
-                            <span className="bg-blue-500/10 text-blue-500 text-[9px] px-1 rounded-full border border-blue-500/20">
-                            Link
-                            </span>
-                        )}
-                        </div>
-                        <p
-                        className={cn(
-                            "text-xs text-muted-foreground mt-0.5",
-                            view === "grid" ? "text-center" : "text-left",
-                        )}
-                        >
-                        {file.size ? formatBytes(parseInt(file.size)) : "-"}
-                        </p>
+              <>
+                {view === "list" && !file.isFolder && !compactClass && (
+                  <p className="text-xs text-muted-foreground mt-1 text-left">
+                    {file.size ? formatBytes(parseInt(file.size)) : "-"} •{" "}
+                    {new Date(file.modifiedTime).toLocaleDateString("id-ID", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
+                )}
+                {(view === "grid" || view === "gallery") && !file.isFolder && (
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex gap-1 mt-1">
+                      {isNew && (
+                        <span className="bg-green-500/10 text-green-500 text-[9px] px-1 rounded-full border border-green-500/20">
+                          New
+                        </span>
+                      )}
+                      {isShared && (
+                        <span className="bg-blue-500/10 text-blue-500 text-[9px] px-1 rounded-full border border-blue-500/20">
+                          Link
+                        </span>
+                      )}
                     </div>
-                    )}
-                </>
+                    <p
+                      className={cn(
+                        "text-xs text-muted-foreground mt-0.5",
+                        view === "grid" ? "text-center" : "text-left",
+                      )}
+                    >
+                      {file.size ? formatBytes(parseInt(file.size)) : "-"}
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </div>
 

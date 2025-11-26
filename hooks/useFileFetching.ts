@@ -1,7 +1,6 @@
-import { useEffect, useCallback, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
-import type { DriveFile } from "@/lib/googleDrive";
 
 interface UseFileFetchingProps {
   initialFolderId?: string;

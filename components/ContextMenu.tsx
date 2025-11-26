@@ -10,7 +10,6 @@ import {
   Eye,
   Archive,
   Edit3,
-  X,
 } from "lucide-react";
 import { formatBytes, cn } from "@/lib/utils";
 import { useEffect, useState } from "react";

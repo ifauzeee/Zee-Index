@@ -57,7 +57,7 @@ export function useUpload({
     rootId: string,
   ): Promise<string> => {
     const parts = path.split("/").filter(Boolean);
-    parts.pop(); // Hapus nama file, sisakan folder
+    parts.pop();
     if (parts.length === 0) return rootId;
 
     let currentParentId = rootId;
@@ -194,7 +194,7 @@ export function useUpload({
           );
           await uploadFileChunked(entry.file, targetId);
         } catch (e) {
-          console.error("Skip file karena gagal create folder:", entry.path);
+          console.error("Skip file karena gagal create folder:", entry.path, e);
         }
       }
 

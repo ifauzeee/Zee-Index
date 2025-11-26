@@ -69,7 +69,7 @@ export default function Sidebar() {
       if (found) current = found;
     }
 
-    let target =
+    const target =
       node.id === rootFolderId
         ? newTree
         : current.children?.find((c) => c.id === node.id);

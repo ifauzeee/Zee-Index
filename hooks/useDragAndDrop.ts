@@ -98,7 +98,7 @@ export function useDragAndDrop({
       let data;
       try {
         data = JSON.parse(e.dataTransfer.getData("application/json"));
-      } catch (err) {
+      } catch {
         return;
       }
 
@@ -120,7 +120,7 @@ export function useDragAndDrop({
       let data;
       try {
         data = JSON.parse(e.dataTransfer.getData("application/json"));
-      } catch (err) {
+      } catch {
         return;
       }
 

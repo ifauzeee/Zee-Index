@@ -4,7 +4,6 @@ export interface FileEntry {
 }
 
 async function traverseFileTree(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   item: any,
   path: string = "",
 ): Promise<FileEntry[]> {
@@ -20,7 +19,6 @@ async function traverseFileTree(
     const entries: FileEntry[] = [];
     const readEntries = async (): Promise<FileEntry[]> => {
       return new Promise((resolve) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         dirReader.readEntries(async (results: any[]) => {
           if (results.length === 0) {
             resolve(entries);
