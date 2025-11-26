@@ -13,6 +13,7 @@ import {
   ImageOff,
   Link as LinkIcon,
   XCircle,
+  MoreVertical,
 } from "lucide-react";
 
 interface FileItemProps {
@@ -130,6 +131,7 @@ function FileItem({
 
   const handleContextMenuEvent = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if ((e.nativeEvent as any).pointerType !== "touch") {
       onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
     }
@@ -468,10 +470,11 @@ function FileItem({
             )}
           </div>
 
+          {/* Desktop Actions */}
           {view === "list" && !isBulkMode && !isUploading && (
             <div
               className={cn(
-                "flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 focus-within:opacity-100",
+                "hidden md:flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 focus-within:opacity-100",
                 compactClass && "scale-90 origin-right",
               )}
             >
@@ -501,6 +504,19 @@ function FileItem({
                 <Info size={16} />
               </button>
             </div>
+          )}
+
+          {/* Mobile Actions */}
+          {view === "list" && !isBulkMode && !isUploading && (
+            <button
+              className="md:hidden p-2 text-muted-foreground hover:text-foreground ml-auto"
+              onClick={(e) => {
+                e.stopPropagation();
+                onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
+              }}
+            >
+              <MoreVertical size={20} />
+            </button>
           )}
 
           {isBulkMode && !isUploading && (

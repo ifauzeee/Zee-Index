@@ -172,23 +172,26 @@ export default function ContextMenu({
   );
 
   return (
-    <div className="fixed inset-0 z-50" onClick={onClose}>
-      {/* Mobile Backdrop */}
+    <div className="fixed inset-0 z-[100]" onClick={onClose}>
       {isMobile && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
         />
       )}
 
       <motion.div
         className={cn(
-          "bg-background border shadow-xl z-50 overflow-hidden",
+          "bg-background border shadow-xl overflow-hidden",
           isMobile
-            ? "fixed bottom-0 left-0 w-full rounded-t-xl border-t"
-            : "absolute w-60 rounded-lg border",
+            ? "fixed bottom-0 left-0 w-full rounded-t-xl border-t z-[101] pb-safe"
+            : "absolute w-60 rounded-lg border z-50",
         )}
         style={!isMobile ? { top: y, left: x } : undefined}
         initial={isMobile ? { y: "100%" } : { opacity: 0, scale: 0.95 }}
@@ -206,12 +209,16 @@ export default function ContextMenu({
             <div className="w-12 h-1.5 bg-muted rounded-full" />
           </div>
         )}
-        {menuContent}
+        
+        <div className="max-h-[80vh] overflow-y-auto">
+          {menuContent}
+        </div>
+
         {isMobile && (
-          <div className="p-4 pt-0">
+          <div className="p-4 pt-0 border-t mt-2">
             <button
               onClick={onClose}
-              className="w-full py-3 mt-2 bg-secondary text-secondary-foreground rounded-lg font-medium"
+              className="w-full py-3 mt-2 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
             >
               Batal
             </button>
