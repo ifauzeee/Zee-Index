@@ -80,7 +80,6 @@ interface AppState {
   toasts: Toast[];
   addToast: (toast: Omit<Toast, "id">) => void;
   removeToast: (id: string) => void;
-
   notifications: NotificationItem[];
   isNotificationOpen: boolean;
   toggleNotificationCenter: () => void;
@@ -118,16 +117,26 @@ interface AppState {
   setDetailsFile: (file: DriveFile | null) => void;
 
   activeAudioFile: DriveFile | null;
+  audioQueue: DriveFile[];
   isAudioPlaying: boolean;
-  playAudio: (file: DriveFile) => void;
+  playAudio: (file: DriveFile, queue?: DriveFile[]) => void;
   toggleAudioPlay: () => void;
   closeAudio: () => void;
+  playNextTrack: () => void;
+  playPrevTrack: () => void;
+  addToQueue: (files: DriveFile[]) => void;
+  removeFromQueue: (fileId: string) => void;
 
   hideAuthor: boolean | null;
   disableGuestLogin: boolean | null;
   isConfigLoading: boolean;
   fetchConfig: () => Promise<void>;
   setConfig: (config: Partial<AppConfig>) => Promise<void>;
+
+  fileTags: Record<string, string[]>;
+  fetchTags: (fileId: string) => Promise<void>;
+  addTag: (fileId: string, tag: string) => Promise<void>;
+  removeTag: (fileId: string, tag: string) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()(
@@ -458,11 +467,49 @@ export const useAppStore = create<AppState>()(
       setDetailsFile: (file) => set({ detailsFile: file }),
 
       activeAudioFile: null,
+      audioQueue: [],
       isAudioPlaying: false,
-      playAudio: (file) => set({ activeAudioFile: file, isAudioPlaying: true }),
+      playAudio: (file, queue = []) =>
+        set({
+          activeAudioFile: file,
+          isAudioPlaying: true,
+          audioQueue: queue.length > 0 ? queue : [file],
+        }),
+      addToQueue: (files) =>
+        set((state) => {
+          const newFiles = files.filter(
+            (f) => !state.audioQueue.find((q) => q.id === f.id),
+          );
+          return { audioQueue: [...state.audioQueue, ...newFiles] };
+        }),
+      removeFromQueue: (fileId) =>
+        set((state) => ({
+          audioQueue: state.audioQueue.filter((f) => f.id !== fileId),
+        })),
+      playNextTrack: () => {
+        const { activeAudioFile, audioQueue } = get();
+        if (!activeAudioFile || audioQueue.length === 0) return;
+        const currentIndex = audioQueue.findIndex(
+          (f) => f.id === activeAudioFile.id,
+        );
+        if (currentIndex < audioQueue.length - 1) {
+          set({ activeAudioFile: audioQueue[currentIndex + 1] });
+        }
+      },
+      playPrevTrack: () => {
+        const { activeAudioFile, audioQueue } = get();
+        if (!activeAudioFile || audioQueue.length === 0) return;
+        const currentIndex = audioQueue.findIndex(
+          (f) => f.id === activeAudioFile.id,
+        );
+        if (currentIndex > 0) {
+          set({ activeAudioFile: audioQueue[currentIndex - 1] });
+        }
+      },
       toggleAudioPlay: () =>
         set((state) => ({ isAudioPlaying: !state.isAudioPlaying })),
-      closeAudio: () => set({ activeAudioFile: null, isAudioPlaying: false }),
+      closeAudio: () =>
+        set({ activeAudioFile: null, isAudioPlaying: false, audioQueue: [] }),
 
       hideAuthor: null,
       disableGuestLogin: null,
@@ -503,6 +550,55 @@ export const useAppStore = create<AppState>()(
           });
         }
       },
+
+      fileTags: {},
+      fetchTags: async (fileId) => {
+        try {
+          const response = await fetch(`/api/tags?fileId=${fileId}`);
+          if (response.ok) {
+            const tags = await response.json();
+            set((state) => ({
+              fileTags: { ...state.fileTags, [fileId]: tags },
+            }));
+          }
+        } catch (error) {
+          console.error("Failed to fetch tags", error);
+        }
+      },
+      addTag: async (fileId, tag) => {
+        try {
+          const response = await fetch("/api/tags", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fileId, tag }),
+          });
+          if (response.ok) {
+            const newTags = await response.json();
+            set((state) => ({
+              fileTags: { ...state.fileTags, [fileId]: newTags },
+            }));
+          }
+        } catch (error) {
+          console.error("Failed to add tag", error);
+        }
+      },
+      removeTag: async (fileId, tag) => {
+        try {
+          const response = await fetch("/api/tags", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fileId, tag }),
+          });
+          if (response.ok) {
+            const newTags = await response.json();
+            set((state) => ({
+              fileTags: { ...state.fileTags, [fileId]: newTags },
+            }));
+          }
+        } catch (error) {
+          console.error("Failed to remove tag", error);
+        }
+      },
     }),
     {
       name: "zee-index-storage",
@@ -513,6 +609,8 @@ export const useAppStore = create<AppState>()(
         sort: state.sort,
         folderTokens: state.folderTokens,
         notifications: state.notifications,
+        audioQueue: state.audioQueue,
+        activeAudioFile: state.activeAudioFile,
       }),
     },
   ),

@@ -9,6 +9,8 @@ import {
   LucideIcon,
   Folder,
   FileText,
+  Sheet,
+  Presentation,
 } from "lucide-react";
 
 export function cn(...inputs: ClassValue[]) {
@@ -37,8 +39,17 @@ export function getIcon(mimeType: string): LucideIcon {
     mimeType.startsWith("application/x-tar")
   )
     return Archive;
-  if (mimeType.startsWith("text/plain") || mimeType.startsWith("text/markdown"))
+  if (
+    mimeType.startsWith("text/plain") ||
+    mimeType.startsWith("text/markdown") ||
+    mimeType.includes("document") ||
+    mimeType.includes("wordprocessing")
+  )
     return FileText;
+  if (mimeType.includes("spreadsheet") || mimeType.includes("sheet"))
+    return Sheet;
+  if (mimeType.includes("presentation")) return Presentation;
+
   return FileIcon;
 }
 
@@ -93,6 +104,7 @@ export function getFileType(file: { mimeType: string; name: string }): string {
     return "office";
   if (mimeType === "application/epub+zip" || name.endsWith(".epub"))
     return "ebook";
+
   const codeExtensions = [
     "js",
     "ts",
@@ -121,4 +133,35 @@ export function getFileType(file: { mimeType: string; name: string }): string {
   }
 
   return "other";
+}
+
+export function getGoogleDriveLink(fileId: string): string {
+  return `https://drive.google.com/file/d/${fileId}/view`;
+}
+
+export function getGoogleEditorLink(
+  fileId: string,
+  mimeType: string,
+): string | null {
+  if (
+    mimeType.includes("document") ||
+    mimeType.includes("wordprocessingml") ||
+    mimeType === "application/vnd.google-apps.document"
+  ) {
+    return `https://docs.google.com/document/d/${fileId}/edit`;
+  }
+  if (
+    mimeType.includes("spreadsheet") ||
+    mimeType.includes("sheet") ||
+    mimeType === "application/vnd.google-apps.spreadsheet"
+  ) {
+    return `https://docs.google.com/spreadsheets/d/${fileId}/edit`;
+  }
+  if (
+    mimeType.includes("presentation") ||
+    mimeType === "application/vnd.google-apps.presentation"
+  ) {
+    return `https://docs.google.com/presentation/d/${fileId}/edit`;
+  }
+  return null;
 }

@@ -1,11 +1,6 @@
 "use client";
-import React, {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useCallback,
-} from "react";
+
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -41,29 +36,6 @@ import ArchivePreviewModal from "./ArchivePreviewModal";
 import ImageEditorModal from "./ImageEditorModal";
 import FileRevisionsModal from "./FileRevisionsModal";
 
-interface PdfViewport {
-  height: number;
-  width: number;
-}
-
-interface PdfPage {
-  getViewport: (params: { scale: number }) => PdfViewport;
-  render: (params: {
-    canvasContext: CanvasRenderingContext2D;
-    viewport: PdfViewport;
-  }) => { promise: Promise<void> };
-}
-
-interface PdfDocument {
-  numPages: number;
-  getPage: (num: number) => Promise<PdfPage>;
-}
-
-interface PdfJsLib {
-  GlobalWorkerOptions: { workerSrc: string };
-  getDocument: (src: string) => { promise: Promise<PdfDocument> };
-}
-
 interface EPubRendition {
   display: () => Promise<void>;
 }
@@ -80,7 +52,6 @@ interface EPubLib {
   (src: string): EPubBook;
 }
 
-declare const pdfjsLib: PdfJsLib;
 declare const ePub: EPubLib;
 
 interface SubtitleTrack {
@@ -94,13 +65,6 @@ interface SubtitleTrack {
 const LoadingPreview: React.FC = () => (
   <div className="flex items-center justify-center h-full text-primary">
     <Loader2 className="animate-spin text-4xl" />
-  </div>
-);
-
-const ErrorPreview: React.FC<{ message: string }> = ({ message }) => (
-  <div className="flex flex-col items-center justify-center h-full gap-4 text-red-500">
-    <i className="fas fa-exclamation-triangle text-6xl"></i>
-    <p>{message}</p>
   </div>
 );
 
@@ -173,69 +137,6 @@ const ImagePreview: React.FC<{ src: string }> = ({ src }) => (
   <Image src={src} layout="fill" objectFit="contain" alt="File preview" />
 );
 
-const PdfPreview: React.FC<{ src: string }> = ({ src }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isCancelled = false;
-    const loadPdf = async () => {
-      if (!containerRef.current) return;
-      try {
-        if (typeof pdfjsLib === "undefined") {
-          throw new Error("PDF.js library is not loaded.");
-        }
-        if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-          pdfjsLib.GlobalWorkerOptions.workerSrc = `https://mozilla.github.io/pdf.js/build/pdf.worker.mjs`;
-        }
-
-        const loadingTask = pdfjsLib.getDocument(src);
-        const pdfDoc = await loadingTask.promise;
-        if (isCancelled) return;
-
-        for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-          if (isCancelled) return;
-          const page = await pdfDoc.getPage(pageNum);
-          const viewport = page.getViewport({ scale: 1.5 });
-
-          const canvas = document.createElement("canvas");
-          canvas.className = "mb-4 mx-auto shadow-lg";
-          const context = canvas.getContext("2d");
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
-
-          if (containerRef.current) {
-            containerRef.current.appendChild(canvas);
-          } else {
-            return;
-          }
-
-          const renderContext = { canvasContext: context!, viewport: viewport };
-          await page.render(renderContext).promise;
-        }
-        setIsLoading(false);
-      } catch (err: unknown) {
-        if (!isCancelled) {
-          setError(err instanceof Error ? err.message : "Gagal memuat PDF.");
-          setIsLoading(false);
-        }
-      }
-    };
-    loadPdf();
-    return () => {
-      isCancelled = true;
-    };
-  }, [src]);
-
-  return (
-    <div ref={containerRef} className="w-full h-full overflow-auto p-4">
-      {isLoading && <LoadingPreview />}
-      {error && <ErrorPreview message={error} />}
-    </div>
-  );
-};
-
 const OfficePreview: React.FC<{ src: string }> = ({ src }) => (
   <iframe
     src={`https://docs.google.com/gview?url=${encodeURIComponent(
@@ -281,7 +182,11 @@ const EbookPreview: React.FC<{ src: string }> = ({ src }) => {
   return (
     <div className="w-full h-full">
       {isLoading && <LoadingPreview />}
-      {error && <ErrorPreview message={error} />}
+      {error && (
+        <div className="flex flex-col items-center justify-center h-full text-red-500">
+          <p>{error}</p>
+        </div>
+      )}
       <div
         ref={containerRef}
         className={isLoading || error ? "hidden" : "w-full h-full"}
@@ -316,7 +221,6 @@ const CodePreview: React.FC<{ src: string; fileName: string }> = ({
 
   useEffect(() => {
     if (content) {
-      // File: prism.d.ts
       import("prismjs/plugins/line-numbers/prism-line-numbers.min.js")
         .then(() => {
           Prism.highlightAll();
@@ -326,7 +230,12 @@ const CodePreview: React.FC<{ src: string; fileName: string }> = ({
   }, [content]);
 
   if (isLoading) return <LoadingPreview />;
-  if (error) return <ErrorPreview message={error} />;
+  if (error)
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-red-500">
+        <p>{error}</p>
+      </div>
+    );
 
   const language = getLanguageFromFilename(fileName);
 
@@ -398,7 +307,7 @@ export default function FileDetail({
   const isArchivePreviewable =
     isArchive && fileSize <= ARCHIVE_PREVIEW_LIMIT_BYTES;
 
-  const validateShareToken = useCallback(
+  const validateShareToken = React.useCallback(
     async (token: string) => {
       try {
         const res = await fetch("/api/share/status", {
@@ -580,8 +489,6 @@ export default function FileDetail({
         );
       case "image":
         return <ImagePreview src={directLink} />;
-      case "pdf":
-        return <PdfPreview src={directLink} />;
       case "office":
         return <OfficePreview src={directLink} />;
       case "ebook":
