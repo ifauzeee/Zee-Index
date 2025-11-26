@@ -49,6 +49,7 @@ export default function FileList({
     fetchShareLinks,
     setSelectedFiles,
     setBulkMode,
+    toggleFavorite,
   } = useAppStore();
 
   const lastSelectedId = useRef<string | null>(null);
@@ -85,6 +86,11 @@ export default function FileList({
 
     lastSelectedId.current = file.id;
     onItemClick(file);
+  };
+
+  const handleToggleFavoriteWrapper = (e: React.MouseEvent, file: DriveFile) => {
+    e.stopPropagation();
+    toggleFavorite(file.id, true);
   };
 
   const uploadGhostFiles = Object.values(uploads).map(
@@ -156,6 +162,7 @@ export default function FileList({
           onShare={(e) => onShareClick(e, file)}
           onShowDetails={(e) => onDetailsClick(e, file)}
           onDownload={(e) => onDownloadClick(e, file)}
+          onToggleFavorite={(e) => handleToggleFavoriteWrapper(e, file)}
           isAdmin={isAdmin}
           onDragStart={(e) => onDragStart(e, file)}
           onFileDrop={onFileDrop}

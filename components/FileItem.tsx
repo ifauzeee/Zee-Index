@@ -28,6 +28,7 @@ interface FileItemProps {
   onShare: (e: React.MouseEvent) => void;
   onShowDetails: (e: React.MouseEvent) => void;
   onDownload: (e: React.MouseEvent) => void;
+  onToggleFavorite?: (e: React.MouseEvent) => void;
   isAdmin: boolean;
   onDragStart: (e: React.DragEvent) => void;
   onFileDrop: (e: React.DragEvent, targetFolder: DriveFile) => void;
@@ -49,6 +50,7 @@ function FileItem({
   onShare,
   onShowDetails,
   onDownload,
+  onToggleFavorite,
   isAdmin,
   onDragStart,
   onFileDrop,
@@ -354,10 +356,19 @@ function FileItem({
               title={file.name}
             >
               {file.isFavorite && (
-                <Star
-                  size={12}
-                  className="text-yellow-400 fill-yellow-400 shrink-0"
-                />
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleFavorite?.(e);
+                  }}
+                  className="hover:bg-muted p-0.5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  title="Hapus dari favorit"
+                >
+                  <Star
+                    size={12}
+                    className="text-yellow-400 fill-yellow-400 shrink-0"
+                  />
+                </button>
               )}
               {view === "list" && file.isProtected && (
                 <Lock size={12} className="text-muted-foreground shrink-0" />
