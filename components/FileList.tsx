@@ -88,7 +88,10 @@ export default function FileList({
     onItemClick(file);
   };
 
-  const handleToggleFavoriteWrapper = (e: React.MouseEvent, file: DriveFile) => {
+  const handleToggleFavoriteWrapper = (
+    e: React.MouseEvent,
+    file: DriveFile,
+  ) => {
     e.stopPropagation();
     toggleFavorite(file.id, true);
   };
