@@ -1,7 +1,7 @@
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from "@/lib/store";
 import { formatBytes, getIcon, cn } from "@/lib/utils";
-import React, { useRef, useState, useMemo, memo } from "react";
+import React, { useRef, useState, useMemo, memo, useEffect } from "react";
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
 import {
@@ -70,6 +70,16 @@ function FileItem({
   const [isDragOver, setIsDragOver] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const isNew = useMemo(() => {
     const created = new Date(file.createdTime).getTime();
@@ -111,7 +121,7 @@ function FileItem({
     if (longPressFired.current) {
       if (e.cancelable) e.preventDefault();
       e.stopPropagation();
-      
+
       setTimeout(() => {
         longPressFired.current = false;
       }, 200);
@@ -127,13 +137,13 @@ function FileItem({
 
   const handleInteractionClick = (e: React.MouseEvent) => {
     if (isUploading) return;
-    
+
     if (longPressFired.current) {
       e.preventDefault();
       e.stopPropagation();
       return;
     }
-    
+
     onClick();
   };
 
@@ -234,7 +244,7 @@ function FileItem({
         onTouchStart={!isUploading ? handleTouchStart : undefined}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        draggable={isAdmin && !isUploading}
+        draggable={isAdmin && !isUploading && !isMobile}
         onDragStart={onDragStart}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -356,7 +366,7 @@ function FileItem({
               title={file.name}
             >
               {file.isFavorite && (
-                <button 
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onToggleFavorite?.(e);
