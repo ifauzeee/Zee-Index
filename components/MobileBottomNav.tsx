@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Search, Star, ShieldCheck, HardDrive } from "lucide-react";
+import { Home, Star, ShieldCheck, HardDrive } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
@@ -14,7 +14,6 @@ export default function MobileBottomNav() {
 
   const navItems = [
     { label: "Beranda", icon: Home, path: "/" },
-    { label: "Cari", icon: Search, path: "/search" },
     { label: "Favorit", icon: Star, path: "/favorites" },
     { label: "Storage", icon: HardDrive, path: "/storage" },
   ];
