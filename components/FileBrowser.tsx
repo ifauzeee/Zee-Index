@@ -14,7 +14,7 @@ import { useAppStore } from "@/lib/store";
 import FileBrowserLoading from "./FileBrowserLoading";
 import FileList from "@/components/FileList";
 import AuthModal from "./AuthModal";
-import { Loader2, X, UploadCloud } from "lucide-react";
+import { Loader2, X, UploadCloud, Lock } from "lucide-react";
 import ContextMenu from "./ContextMenu";
 import RenameModal from "./RenameModal";
 import DeleteConfirm from "./DeleteConfirm";
@@ -397,6 +397,8 @@ export default function FileBrowser({
     );
   };
 
+  const isLockedAndNoAccess = authModal.isOpen || (authModalInfo !== null);
+
   if (isLoading || (sessionStatus === "loading" && !shareToken))
     return <FileBrowserLoading />;
 
@@ -605,39 +607,51 @@ export default function FileBrowser({
       />
 
       <main className="min-h-[50vh] mb-12">
-        <>
-          {readmeFile && <FolderReadme fileId={readmeFile.id} />}
-
-          <FileList
-            files={sortedFiles}
-            activeFileId={activeFileId}
-            onItemClick={handleItemClick}
-            onItemContextMenu={handleContextMenuWrapper}
-            onShareClick={handleQuickShare}
-            onDetailsClick={(e, file) => {
-              e.stopPropagation();
-              setDetailsFile(file);
-            }}
-            onDownloadClick={handleQuickDownload}
-            isAdmin={isAdmin}
-            onDragStart={handleDragStart}
-            onFileDrop={onDropOnFolder}
-            onPrefetchFolder={handlePrefetchFolder}
-          />
-          <div
-            ref={loaderRef}
-            className="flex justify-center items-center p-4 h-20"
-          >
-            {isFetchingNextPage && (
-              <Loader2 className="animate-spin text-primary" />
-            )}
-            {!isFetchingNextPage && !nextPageToken && files.length > 0 && (
-              <span className="text-sm text-muted-foreground">
-                Akhir dari daftar
-              </span>
-            )}
+        {isLockedAndNoAccess ? (
+          <div className="flex flex-col items-center justify-center min-h-[50vh] text-muted-foreground animate-in fade-in duration-300">
+            <div className="p-6 bg-muted/30 rounded-full mb-4">
+              <Lock size={48} className="opacity-50" />
+            </div>
+            <h3 className="text-lg font-semibold">Akses Terbatas</h3>
+            <p className="text-sm mt-2">
+              Silakan masukkan kredensial untuk mengakses folder ini.
+            </p>
           </div>
-        </>
+        ) : (
+          <>
+            {readmeFile && <FolderReadme fileId={readmeFile.id} />}
+
+            <FileList
+              files={sortedFiles}
+              activeFileId={activeFileId}
+              onItemClick={handleItemClick}
+              onItemContextMenu={handleContextMenuWrapper}
+              onShareClick={handleQuickShare}
+              onDetailsClick={(e, file) => {
+                e.stopPropagation();
+                setDetailsFile(file);
+              }}
+              onDownloadClick={handleQuickDownload}
+              isAdmin={isAdmin}
+              onDragStart={handleDragStart}
+              onFileDrop={onDropOnFolder}
+              onPrefetchFolder={handlePrefetchFolder}
+            />
+            <div
+              ref={loaderRef}
+              className="flex justify-center items-center p-4 h-20"
+            >
+              {isFetchingNextPage && (
+                <Loader2 className="animate-spin text-primary" />
+              )}
+              {!isFetchingNextPage && !nextPageToken && files.length > 0 && (
+                <span className="text-sm text-muted-foreground">
+                  Akhir dari daftar
+                </span>
+              )}
+            </div>
+          </>
+        )}
       </main>
 
       <FileBrowserUploadProgress uploads={uploads} />
