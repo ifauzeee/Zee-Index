@@ -34,21 +34,22 @@ export default function NotificationCenter() {
     <AnimatePresence>
       {isNotificationOpen && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop: Dihapus backdrop-blur, diganti opacity biasa agar ringan */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             onClick={toggleNotificationCenter}
-            className="fixed inset-0 z-[9998] bg-black/20 backdrop-blur-[1px]"
+            className="fixed inset-0 z-[9998] bg-black/50"
           />
 
-          {/* Panel */}
+          {/* Panel: Menggunakan type 'tween' bukan 'spring' agar animasi stabil */}
           <motion.div
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            transition={{ type: "tween", ease: "easeInOut", duration: 0.3 }}
             className="fixed top-0 right-0 h-full w-full sm:w-96 bg-background border-l border-border shadow-2xl z-[9999] flex flex-col"
           >
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/10">
