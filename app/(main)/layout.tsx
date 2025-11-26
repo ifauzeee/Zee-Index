@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useAppStore } from "@/lib/store";
 import BulkActionBar from "@/components/BulkActionBar";
@@ -14,6 +14,7 @@ import KeyboardShortcutsModal from "@/components/KeyboardShortcutsModal";
 import NotificationCenter from "@/components/NotificationCenter";
 import Sidebar from "@/components/Sidebar";
 import { cn } from "@/lib/utils";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 const DetailsPanel = dynamic(() => import("@/components/DetailsPanel"), {
@@ -24,7 +25,7 @@ const AppFooter = () => {
   const { dataUsage } = useAppStore();
   const currentYear = new Date().getFullYear();
   return (
-    <footer className="text-center py-6 text-sm text-muted-foreground border-t bg-background">
+    <footer className="text-center py-6 text-sm text-muted-foreground border-t bg-background mb-16 lg:mb-0 w-full overflow-hidden">
       <p className="mb-2">
         <i className="fas fa-server mr-2"></i>Total Penggunaan Data:{" "}
         <span id="data-usage-value">{dataUsage.value}</span>
@@ -61,8 +62,11 @@ export default function MainLayout({
     fetchConfig,
     user,
     isSidebarOpen,
+    setSidebarOpen,
   } = useAppStore();
   const { status } = useSession();
+
+  const touchStartRef = useRef<number | null>(null);
 
   useEffect(() => {
     fetchConfig();
@@ -83,31 +87,52 @@ export default function MainLayout({
     document.documentElement.style.colorScheme = theme;
   }, [theme]);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    
+    if (touchStartRef.current < 50 && touchEnd - touchStartRef.current > 100) {
+      setSidebarOpen(true);
+    }
+    
+    touchStartRef.current = null;
+  };
+
   return (
-    <>
+    <div 
+      onTouchStart={handleTouchStart} 
+      onTouchEnd={handleTouchEnd}
+      className="min-h-screen w-full overflow-x-hidden relative"
+    >
       <div
         id="app-container"
-        className={`bg-background text-foreground min-h-screen flex flex-col`}
+        className={`bg-background text-foreground min-h-screen flex flex-col w-full max-w-[100vw] overflow-x-hidden`}
       >
         <Header />
-        <div className="flex flex-1 container max-w-full px-0">
+        <div className="flex flex-1 container max-w-full px-0 overflow-x-hidden relative">
           <Sidebar />
           <div
             className={cn(
-              "flex-1 flex flex-col transition-all duration-300 ease-in-out",
+              "flex-1 flex flex-col transition-all duration-300 ease-in-out min-w-0 w-full max-w-full",
               isSidebarOpen ? "lg:ml-64" : "ml-0",
             )}
           >
-            <div className="container mx-auto px-4 max-w-7xl flex-grow py-4">
-              <main className="min-h-[50vh] mb-12">{children}</main>
+            <div className="container mx-auto px-4 max-w-7xl flex-grow py-4 pb-24 lg:pb-4 min-w-0 overflow-x-hidden">
+              <main className="min-h-[50vh] mb-12 w-full">{children}</main>
             </div>
             <AppFooter />
           </div>
         </div>
 
+        <MobileBottomNav />
+
         <div
           id="toast-container"
-          className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3"
+          className="fixed bottom-24 lg:bottom-6 right-6 z-[9999] flex flex-col gap-3 max-w-[90vw]"
         >
           <AnimatePresence>
             {toasts.map((toast) => (
@@ -130,6 +155,6 @@ export default function MainLayout({
           />
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }

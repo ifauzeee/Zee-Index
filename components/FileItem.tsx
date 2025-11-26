@@ -13,6 +13,7 @@ import {
   ImageOff,
   Link as LinkIcon,
   XCircle,
+  MoreVertical,
 } from "lucide-react";
 
 interface FileItemProps {
@@ -136,6 +137,12 @@ function FileItem({
     }
   };
 
+  const handleMoreClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    onContextMenu({ clientX: rect.left, clientY: rect.top }, file);
+  };
+
   const handleInteractionClick = (e: React.MouseEvent) => {
     if (isUploading) return;
 
@@ -217,12 +224,12 @@ function FileItem({
       animate="visible"
       whileHover={!isUploading && !isMobile ? "hover" : undefined}
       whileTap={!isUploading && isMobile ? { scale: 0.98 } : undefined}
-      className={cn(isGallery && "mb-4", isUploading && "opacity-80")}
+      className={cn(isGallery && "mb-4", isUploading && "opacity-80", "w-full max-w-full")}
       onMouseEnter={onMouseEnter}
     >
       <div
         className={cn(
-          "group relative rounded-lg transition-all duration-200 ease-out cursor-pointer overflow-hidden",
+          "group relative rounded-lg transition-all duration-200 ease-out cursor-pointer overflow-hidden w-full",
           "select-none",
           "touch-pan-y",
           "[-webkit-tap-highlight-color:transparent]",
@@ -254,7 +261,7 @@ function FileItem({
       >
         <div
           className={cn(
-            "flex w-full",
+            "flex w-full min-w-0",
             view === "list"
               ? "items-center gap-3"
               : view === "grid"
@@ -262,7 +269,7 @@ function FileItem({
                 : "flex-col",
           )}
         >
-          <div className={cn("relative", isGallery && "w-full min-h-[150px]")}>
+          <div className={cn("relative shrink-0", isGallery && "w-full min-h-[150px]")}>
             {isGallery && hasImage ? (
               <div className="relative w-full bg-muted/20">
                 {isImageLoading && (
@@ -351,14 +358,14 @@ function FileItem({
 
           <div
             className={cn(
-              "flex-1 min-w-0",
+              "flex-1 min-w-0 max-w-full",
               view === "grid" && "mt-2 w-full text-center",
               isGallery && "p-3",
             )}
           >
             <div
               className={cn(
-                "font-medium flex items-center gap-1.5",
+                "font-medium flex items-center gap-1.5 min-w-0",
                 view === "list"
                   ? "text-sm justify-start"
                   : view === "grid"
@@ -373,7 +380,7 @@ function FileItem({
                     e.stopPropagation();
                     onToggleFavorite?.(e);
                   }}
-                  className="hover:bg-muted p-0.5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="hover:bg-muted p-0.5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 shrink-0"
                   title="Hapus dari favorit"
                 >
                   <Star
@@ -385,10 +392,19 @@ function FileItem({
               {view === "list" && file.isProtected && (
                 <Lock size={12} className="text-muted-foreground shrink-0" />
               )}
-              <span className="truncate">{file.name}</span>
+              
+              {view === "list" ? (
+                <div className="flex-1 min-w-0 overflow-x-auto whitespace-nowrap no-scrollbar mask-gradient-right">
+                  <span className="inline-block">{file.name}</span>
+                </div>
+              ) : (
+                <span className="line-clamp-2 break-words w-full leading-tight">
+                  {file.name}
+                </span>
+              )}
 
               {view === "list" && (
-                <div className="flex gap-1 ml-2">
+                <div className="flex gap-1 ml-2 shrink-0">
                   {isNew && !isUploading && (
                     <span className="bg-green-500/10 text-green-500 text-[10px] px-1.5 py-0.5 rounded-full border border-green-500/20 whitespace-nowrap">
                       New
@@ -433,7 +449,7 @@ function FileItem({
             ) : (
               <>
                 {view === "list" && !file.isFolder && !compactClass && (
-                  <p className="text-xs text-muted-foreground mt-1 text-left">
+                  <p className="text-xs text-muted-foreground mt-1 text-left truncate">
                     {file.size ? formatBytes(parseInt(file.size)) : "-"} •{" "}
                     {new Date(file.modifiedTime).toLocaleDateString("id-ID", {
                       day: "numeric",
@@ -458,7 +474,7 @@ function FileItem({
                     </div>
                     <p
                       className={cn(
-                        "text-xs text-muted-foreground mt-0.5",
+                        "text-xs text-muted-foreground mt-0.5 truncate w-full",
                         view === "grid" ? "text-center" : "text-left",
                       )}
                     >
@@ -470,39 +486,51 @@ function FileItem({
             )}
           </div>
 
-          {view === "list" && !isBulkMode && !isUploading && (
-            <div
-              className={cn(
-                "hidden md:flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 focus-within:opacity-100",
-                compactClass && "scale-90 origin-right",
-              )}
-            >
-              {isAdmin && (
-                <button
-                  onClick={onShare}
-                  title="Bagikan"
-                  className="p-2 rounded-full hover:bg-muted"
-                >
-                  <Share2 size={16} />
-                </button>
-              )}
-              {!file.isFolder && (
-                <button
-                  onClick={onDownload}
-                  title="Unduh"
-                  className="p-2 rounded-full hover:bg-muted"
-                >
-                  <Download size={16} />
-                </button>
-              )}
-              <button
-                onClick={onShowDetails}
-                title="Lihat Detail"
-                className="p-2 rounded-full hover:bg-muted"
+          {!isBulkMode && !isUploading && (
+            <>
+              <div
+                className={cn(
+                  "hidden md:flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 focus-within:opacity-100 shrink-0",
+                  compactClass && "scale-90 origin-right",
+                )}
               >
-                <Info size={16} />
+                {isAdmin && (
+                  <button
+                    onClick={onShare}
+                    title="Bagikan"
+                    className="p-2 rounded-full hover:bg-muted"
+                  >
+                    <Share2 size={16} />
+                  </button>
+                )}
+                {!file.isFolder && (
+                  <button
+                    onClick={onDownload}
+                    title="Unduh"
+                    className="p-2 rounded-full hover:bg-muted"
+                  >
+                    <Download size={16} />
+                  </button>
+                )}
+                <button
+                  onClick={onShowDetails}
+                  title="Lihat Detail"
+                  className="p-2 rounded-full hover:bg-muted"
+                >
+                  <Info size={16} />
+                </button>
+              </div>
+
+              <button
+                className={cn(
+                  "md:hidden p-2 text-muted-foreground active:text-foreground active:bg-accent/50 rounded-full transition-colors ml-auto shrink-0",
+                  view !== "list" && "absolute top-1 right-1 bg-background/50 backdrop-blur-sm"
+                )}
+                onClick={handleMoreClick}
+              >
+                <MoreVertical size={18} />
               </button>
-            </div>
+            </>
           )}
 
           {isBulkMode && !isUploading && (

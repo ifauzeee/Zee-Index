@@ -96,7 +96,7 @@ export default function GlobalAudioPlayer() {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:w-96 z-[10000] flex flex-col gap-2"
+        className="fixed bottom-20 lg:bottom-4 left-4 right-4 md:left-auto md:right-6 md:w-96 z-[9990] flex flex-col gap-2"
       >
         {showQueue && (
           <motion.div

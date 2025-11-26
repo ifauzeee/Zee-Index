@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ChevronRight,
   ChevronDown,
@@ -39,6 +39,8 @@ export default function Sidebar() {
     children: [],
     isExpanded: true,
   });
+
+  const touchStartRef = useRef<number | null>(null);
 
   const fetchSubfolders = async (parentId: string) => {
     let url = `/api/files?folderId=${parentId}`;
@@ -100,6 +102,20 @@ export default function Sidebar() {
     };
     initRoot();
   }, [rootFolderId]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    
+    if (touchStartRef.current - touchEnd > 50) {
+      setSidebarOpen(false);
+    }
+    touchStartRef.current = null;
+  };
 
   const renderNode = (node: FolderNode, parents: string[] = []) => {
     const isActive = currentFolderId === node.id;
@@ -166,7 +182,11 @@ export default function Sidebar() {
   };
 
   const sidebarContent = (
-    <div className="h-full flex flex-col bg-card border-r border-border w-64">
+    <div 
+      className="h-full flex flex-col bg-card border-r border-border w-64"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <div className="p-4 border-b border-border flex items-center justify-between">
         <h2 className="font-semibold text-sm text-muted-foreground tracking-wider">
           NAVIGASI

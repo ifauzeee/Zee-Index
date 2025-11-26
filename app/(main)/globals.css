@@ -70,11 +70,13 @@
   * {
     @apply border-border;
   }
-  body {
+  html, body {
     @apply bg-background text-foreground;
-    font-feature-settings:
-      "rlig" 1,
-      "calt" 1;
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+    position: relative;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 
   body.mobile-menu-open {
@@ -85,6 +87,12 @@
 body.bulk-action-bar-visible {
   padding-bottom: 80px;
   transition: padding-bottom 0.3s ease-in-out;
+}
+
+@media (max-width: 1024px) {
+  body.bulk-action-bar-visible {
+    padding-bottom: 140px;
+  }
 }
 
 * {
@@ -127,8 +135,25 @@ body.bulk-action-bar-visible {
 }
 
 .transition-colors {
-  transition-property:
-    color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mask-gradient-right {
+  mask-image: linear-gradient(to right, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
