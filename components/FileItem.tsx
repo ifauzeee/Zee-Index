@@ -75,13 +75,17 @@ function FileItem({
 
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     longPressFired.current = false;
+    
+    if (timerRef.current) clearTimeout(timerRef.current);
+
     timerRef.current = setTimeout(() => {
       longPressFired.current = true;
       if (navigator.vibrate) {
         navigator.vibrate(50);
       }
-      onContextMenu(e.touches[0], file);
-    }, 250);
+      const touch = e.touches[0];
+      onContextMenu({ clientX: touch.clientX, clientY: touch.clientY }, file);
+    }, 500); 
   };
 
   const handleTouchMove = () => {
@@ -97,7 +101,7 @@ function FileItem({
       timerRef.current = null;
     }
     if (longPressFired.current) {
-      e.preventDefault();
+      e.preventDefault(); 
       longPressFired.current = false;
     }
   };
