@@ -33,7 +33,7 @@ const overlayVariants = {
 
 const navContainerVariants = {
   open: {
-    transition: { staggerChildren: 0.07, delayChildren: 0.2 },
+    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
   },
   closed: {
     transition: { staggerChildren: 0.05, staggerDirection: -1 },
@@ -45,16 +45,15 @@ const navItemVariants = {
     y: 0,
     opacity: 1,
     transition: {
-      type: "spring",
-      stiffness: 260,
-      damping: 20,
+      duration: 0.2,
+      ease: "easeOut"
     },
   },
   closed: {
-    y: 20,
+    y: 10,
     opacity: 0,
     transition: {
-      duration: 0.2,
+      duration: 0.1,
     },
   },
 };
@@ -90,19 +89,20 @@ const MobileNav: FC<MobileNavProps> = ({
 }) => {
   return (
     <motion.div
-      className="fixed inset-0 z-40 bg-black/50 sm:hidden"
+      className="fixed inset-0 z-40 bg-black/60 sm:hidden"
       variants={overlayVariants}
       initial="closed"
       animate="open"
       exit="closed"
       onClick={onClose}
+      transition={{ duration: 0.2 }}
     >
       <motion.nav
-        className="fixed inset-y-0 left-0 w-full max-w-xs bg-background flex flex-col justify-center p-8"
+        className="fixed inset-y-0 left-0 w-full max-w-xs bg-background flex flex-col justify-center p-8 shadow-xl"
         initial={{ x: "-100%" }}
         animate={{ x: "0%" }}
         exit={{ x: "-100%" }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        transition={{ type: "tween", duration: 0.25, ease: "easeOut" }}
         onClick={(e) => e.stopPropagation()}
       >
         <motion.div
@@ -195,12 +195,14 @@ export default function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      const scrolled = window.scrollY > 10;
+      if (scrolled !== isScrolled) {
+        setIsScrolled(scrolled);
+      }
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [isScrolled]);
 
   const menuItems: MenuItem[] = [
     { id: "favorites", href: "/favorites", icon: Star, label: "Favorit" },
@@ -324,10 +326,10 @@ export default function Header() {
   return (
     <>
       <header
-        className={`sticky top-0 z-30 w-full transition-all duration-200 ${
+        className={`sticky top-0 z-30 w-full transition-colors duration-200 ${
           isScrolled
-            ? "border-b border-border bg-card/95 shadow-sm"
-            : "border-b border-transparent"
+            ? "border-b border-border bg-background shadow-sm"
+            : "border-b border-transparent bg-background"
         }`}
       >
         <div className="container max-w-full px-4 flex items-center justify-between gap-4 h-16">
@@ -380,16 +382,16 @@ export default function Header() {
                       </a>
                     ) : (
                       "onClick" in item &&
-                        typeof item.onClick === "function" && (
-                          <button
-                            key={item.id}
-                            onClick={item.onClick}
-                            title={item.label}
-                            className="p-2 rounded-lg hover:bg-accent"
-                          >
-                            <Icon size={20} />
-                          </button>
-                        )
+                      typeof item.onClick === "function" && (
+                        <button
+                          key={item.id}
+                          onClick={item.onClick}
+                          title={item.label}
+                          className="p-2 rounded-lg hover:bg-accent"
+                        >
+                          <Icon size={20} />
+                        </button>
+                      )
                     );
                   })}
                 {authButton}

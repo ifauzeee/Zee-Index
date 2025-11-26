@@ -95,7 +95,7 @@ export default function GlobalAudioPlayer() {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        transition={{ type: "tween", duration: 0.3, ease: "easeOut" }}
         className="fixed bottom-20 lg:bottom-4 left-4 right-4 md:left-auto md:right-6 md:w-96 z-[9990] flex flex-col gap-2"
       >
         {showQueue && (
@@ -103,9 +103,10 @@ export default function GlobalAudioPlayer() {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-card/95 backdrop-blur-md border border-border shadow-2xl rounded-xl overflow-hidden max-h-64 flex flex-col"
+            transition={{ type: "tween", duration: 0.2 }}
+            className="bg-card border border-border shadow-2xl rounded-xl overflow-hidden max-h-64 flex flex-col"
           >
-            <div className="p-3 border-b font-semibold text-sm flex justify-between items-center">
+            <div className="p-3 border-b font-semibold text-sm flex justify-between items-center bg-muted/10">
               <span>Antrean Putar ({audioQueue.length})</span>
               <button onClick={() => setShowQueue(false)}>
                 <X size={16} />
@@ -141,7 +142,7 @@ export default function GlobalAudioPlayer() {
           </motion.div>
         )}
 
-        <div className="bg-card/95 backdrop-blur-md border border-border shadow-2xl rounded-xl overflow-hidden">
+        <div className="bg-card border border-border shadow-2xl rounded-xl overflow-hidden">
           <audio
             ref={audioRef}
             src={getAudioSrc(activeAudioFile.id)}

@@ -23,7 +23,7 @@ export default function MobileBottomNav() {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-t border-border lg:hidden pb-safe">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border lg:hidden pb-safe shadow-lg">
       <div className="flex justify-around items-center h-16">
         {navItems.map((item) => {
           const isActive = pathname === item.path;
@@ -34,7 +34,7 @@ export default function MobileBottomNav() {
               key={item.path}
               onClick={() => router.push(item.path)}
               className={cn(
-                "flex flex-col items-center justify-center w-full h-full space-y-1",
+                "flex flex-col items-center justify-center w-full h-full space-y-1 active:scale-95 transition-transform duration-100",
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"

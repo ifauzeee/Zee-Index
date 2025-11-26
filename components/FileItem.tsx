@@ -161,11 +161,11 @@ function FileItem({
       opacity: 1,
       y: 0,
       scale: 1,
-      transition: { duration: 0.2 },
+      transition: { duration: 0.15, ease: "easeOut" },
     },
     hover: {
       scale: 1.02,
-      transition: { duration: 0.1 },
+      transition: { duration: 0.1, ease: "linear" },
     },
   };
 
@@ -229,7 +229,7 @@ function FileItem({
     >
       <div
         className={cn(
-          "group relative rounded-lg transition-all duration-200 ease-out cursor-pointer overflow-hidden w-full",
+          "group relative rounded-lg transition-all duration-100 ease-out cursor-pointer overflow-hidden w-full",
           "select-none",
           "touch-pan-y",
           "[-webkit-tap-highlight-color:transparent]",
@@ -273,7 +273,7 @@ function FileItem({
             {isGallery && hasImage ? (
               <div className="relative w-full bg-muted/20">
                 {isImageLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-muted/30 animate-pulse z-10">
+                  <div className="absolute inset-0 flex items-center justify-center bg-muted/30 z-10">
                     <Icon size={32} className="opacity-20" />
                   </div>
                 )}
@@ -285,7 +285,7 @@ function FileItem({
                   sizes="100vw"
                   style={{ width: "100%", height: "auto" }}
                   className={cn(
-                    "object-cover block transition-opacity duration-300",
+                    "object-cover block transition-opacity duration-200",
                     isImageLoading ? "opacity-0" : "opacity-100",
                   )}
                   loading="lazy"
@@ -297,7 +297,7 @@ function FileItem({
                   unoptimized
                 />
                 {file.isProtected && (
-                  <div className="absolute bottom-2 right-2 flex items-center justify-center p-1.5 bg-background/60 backdrop-blur-sm rounded-full ring-2 ring-background/20 z-20">
+                  <div className="absolute bottom-2 right-2 flex items-center justify-center p-1.5 bg-background/60 rounded-full ring-2 ring-background/20 z-20">
                     <Lock size={12} className="text-primary" />
                   </div>
                 )}
@@ -347,7 +347,7 @@ function FileItem({
             {view !== "list" && file.isProtected && !isGallery && (
               <div
                 className={cn(
-                  "absolute flex items-center justify-center p-1.5 bg-background/60 backdrop-blur-sm rounded-full ring-2 ring-background/20 z-20",
+                  "absolute flex items-center justify-center p-1.5 bg-background/60 rounded-full ring-2 ring-background/20 z-20",
                   isGallery ? "bottom-2 right-2" : "-bottom-1 -right-1",
                 )}
               >
@@ -524,7 +524,7 @@ function FileItem({
               <button
                 className={cn(
                   "md:hidden p-2 text-muted-foreground active:text-foreground active:bg-accent/50 rounded-full transition-colors ml-auto shrink-0",
-                  view !== "list" && "absolute top-1 right-1 bg-background/50 backdrop-blur-sm"
+                  view !== "list" && "absolute top-1 right-1 bg-background/50"
                 )}
                 onClick={handleMoreClick}
               >

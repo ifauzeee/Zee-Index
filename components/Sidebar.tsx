@@ -169,6 +169,7 @@ export default function Sidebar() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
               className="overflow-hidden"
             >
               {node.children.map((child) =>
@@ -200,7 +201,6 @@ export default function Sidebar() {
       </div>
 
       <div className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-        {/* Quick Links */}
         <div className="mb-4 space-y-1">
           <button
             onClick={() => router.push("/")}
@@ -253,35 +253,34 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Desktop Sidebar */}
       <div
         className={cn(
-          "hidden lg:block fixed left-0 top-16 bottom-0 z-20 transition-all duration-300 ease-in-out",
+          "hidden lg:block fixed left-0 top-16 bottom-0 z-20 transition-transform duration-300 ease-out",
           isSidebarOpen
-            ? "w-64 translate-x-0"
-            : "w-0 -translate-x-full opacity-0",
+            ? "translate-x-0"
+            : "-translate-x-full",
         )}
+        style={{ width: "16rem" }}
       >
         {sidebarContent}
       </div>
 
-      {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {isSidebarOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+            className="lg:hidden fixed inset-0 bg-black/50 z-40"
           />
         )}
       </AnimatePresence>
 
-      {/* Mobile Sidebar Panel */}
       <div
         className={cn(
-          "lg:hidden fixed inset-y-0 left-0 z-50 w-64 bg-background shadow-xl transition-transform duration-300 ease-in-out",
+          "lg:hidden fixed inset-y-0 left-0 z-50 w-64 bg-background shadow-xl transition-transform duration-300 ease-out",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >

@@ -171,7 +171,7 @@ export default function ContextMenu({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/60"
         />
 
         <motion.div
@@ -184,7 +184,7 @@ export default function ContextMenu({
           initial={isDesktop ? { opacity: 0, scale: 0.95 } : { y: "100%" }}
           animate={isDesktop ? { opacity: 1, scale: 1 } : { y: 0 }}
           exit={isDesktop ? { opacity: 0, scale: 0.95 } : { y: "100%" }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          transition={{ type: "tween", duration: 0.2, ease: "easeOut" }}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex md:hidden items-center justify-center pt-3 pb-2 relative cursor-grab active:cursor-grabbing">

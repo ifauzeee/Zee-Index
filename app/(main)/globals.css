@@ -77,16 +77,25 @@
     width: 100%;
     position: relative;
     font-feature-settings: "rlig" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body.mobile-menu-open {
     overflow: hidden !important;
   }
+  
+  /* Performance Optimizations */
+  * {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
 }
 
 body.bulk-action-bar-visible {
   padding-bottom: 80px;
-  transition: padding-bottom 0.3s ease-in-out;
+  transition: padding-bottom 0.2s ease-out;
 }
 
 @media (max-width: 1024px) {
@@ -137,7 +146,7 @@ body.bulk-action-bar-visible {
 .transition-colors {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+  transition-duration: 100ms;
 }
 
 .pb-safe {
