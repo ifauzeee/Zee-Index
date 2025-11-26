@@ -19,6 +19,7 @@ import {
   formatDuration,
   cn,
   getIcon,
+  getLanguageFromFilename,
 } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -277,15 +278,15 @@ export default function FileDetail({
   const { addToast, user, triggerRefresh, hideAuthor } = useAppStore();
   const { data: session } = useSession();
   const [showBackButton, setShowBackButton] = useState(true);
-  
+
   const [textContent, setTextContent] = useState<string | null>(null);
   const [editableContent, setEditableContent] = useState<string | null>(null);
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isFetchingEditableContent, setIsFetchingEditableContent] =
     useState(false);
-  
+
   const [showTextPreview, setShowTextPreview] = useState(false);
   const [showDocPreview, setShowDocPreview] = useState(false);
   const [showArchivePreview, setShowArchivePreview] = useState(false);
@@ -406,10 +407,10 @@ export default function FileDetail({
   const isEditable =
     isAdmin &&
     (fileType === "code" || fileType === "markdown" || fileType === "text");
-  
+
   const isTextPreviewable =
     fileType === "code" || fileType === "markdown" || fileType === "text";
-  
+
   const isDocPreviewable = fileType === "office" || fileType === "pdf";
 
   useEffect(() => {
@@ -831,31 +832,3 @@ const ListItem = ({ label, value }: { label: string; value: string }) => (
     <span className="text-right break-all">{value}</span>
   </li>
 );
-
-function getLanguageFromFilename(name: string): string {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  const langMap: Record<string, string> = {
-    js: "javascript",
-    ts: "typescript",
-    jsx: "jsx",
-    tsx: "tsx",
-    json: "json",
-    py: "python",
-    css: "css",
-    html: "html",
-    md: "markdown",
-    txt: "text",
-    sh: "bash",
-    java: "java",
-    c: "c",
-    cpp: "cpp",
-    cs: "csharp",
-    go: "go",
-    rb: "ruby",
-    php: "php",
-    swift: "swift",
-    kt: "kotlin",
-    rs: "rust",
-  };
-  return langMap[ext] || "clike";
-}

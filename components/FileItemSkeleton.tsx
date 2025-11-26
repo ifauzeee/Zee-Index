@@ -3,6 +3,7 @@ import React from "react";
 import { useAppStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import Masonry from "react-masonry-css";
+import { MASONRY_BREAKPOINTS } from "@/lib/utils";
 
 const SkeletonItem = ({ view }: { view: "list" | "grid" | "gallery" }) => {
   if (view === "list") {
@@ -17,7 +18,6 @@ const SkeletonItem = ({ view }: { view: "list" | "grid" | "gallery" }) => {
     );
   }
 
-  // Tinggi acak untuk simulasi Masonry yang lebih realistis
   const randomHeight =
     view === "gallery"
       ? Math.floor(Math.random() * (350 - 150 + 1) + 150)
@@ -47,16 +47,6 @@ const FileBrowserLoading = () => {
     visible: { opacity: 1 },
   };
 
-  // Konfigurasi breakpoint kolom (Harus sama persis dengan FileList.tsx)
-  const breakpointColumnsObj = {
-    default: 5,
-    1536: 5, // 2xl
-    1280: 4, // xl
-    1024: 3, // lg
-    768: 2, // md
-    640: 1, // sm
-  };
-
   if (view === "gallery") {
     return (
       <motion.div
@@ -65,7 +55,7 @@ const FileBrowserLoading = () => {
         animate="visible"
       >
         <Masonry
-          breakpointCols={breakpointColumnsObj}
+          breakpointCols={MASONRY_BREAKPOINTS}
           className="flex w-auto -ml-4"
           columnClassName="pl-4 bg-clip-padding"
         >

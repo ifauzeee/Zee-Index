@@ -609,8 +609,6 @@ export const useAppStore = create<AppState>()(
         sort: state.sort,
         folderTokens: state.folderTokens,
         notifications: state.notifications,
-        audioQueue: state.audioQueue,
-        activeAudioFile: state.activeAudioFile,
       }),
     },
   ),

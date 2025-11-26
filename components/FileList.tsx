@@ -6,6 +6,7 @@ import React, { useEffect } from "react";
 import EmptyState from "./EmptyState";
 import { FolderSearch } from "lucide-react";
 import Masonry from "react-masonry-css";
+import { MASONRY_BREAKPOINTS } from "@/lib/utils";
 
 interface FileListProps {
   files: DriveFile[];
@@ -73,8 +74,6 @@ export default function FileList({
   };
 
   const renderFileItem = (file: DriveFile) => {
-    // Check if link is shared (only for collection links or exact match items if logic permits)
-    // For simplicity, checking if file ID exists in any single-item share link
     const isShared = shareLinks.some(
       (link) => !link.isCollection && link.path.includes(file.id),
     );
@@ -106,14 +105,6 @@ export default function FileList({
   };
 
   if (view === "gallery") {
-    const breakpointColumnsObj = {
-      default: 5,
-      1536: 5,
-      1280: 4,
-      1024: 3,
-      768: 2,
-      640: 1,
-    };
     return (
       <motion.div
         variants={containerVariants}
@@ -121,7 +112,7 @@ export default function FileList({
         animate="visible"
       >
         <Masonry
-          breakpointCols={breakpointColumnsObj}
+          breakpointCols={MASONRY_BREAKPOINTS}
           className="flex w-auto -ml-4"
           columnClassName="pl-4 bg-clip-padding"
         >

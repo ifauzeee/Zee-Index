@@ -79,9 +79,9 @@ export function getFileType(file: { mimeType: string; name: string }): string {
   if (mimeType.startsWith("audio/")) return "audio";
   if (mimeType.startsWith("image/")) return "image";
   if (mimeType === "application/pdf") return "pdf";
-  
+
   if (mimeType === "text/markdown" || name.endsWith(".md")) return "markdown";
-  
+
   if (mimeType === "text/plain" || name.endsWith(".txt")) return "text";
 
   if (
@@ -168,3 +168,40 @@ export function getGoogleEditorLink(
   }
   return null;
 }
+
+export function getLanguageFromFilename(name: string): string {
+  const ext = name.split(".").pop()?.toLowerCase() || "";
+  const langMap: Record<string, string> = {
+    js: "javascript",
+    ts: "typescript",
+    jsx: "jsx",
+    tsx: "tsx",
+    json: "json",
+    py: "python",
+    css: "css",
+    html: "html",
+    md: "markdown",
+    txt: "text",
+    sh: "bash",
+    java: "java",
+    c: "c",
+    cpp: "cpp",
+    cs: "csharp",
+    go: "go",
+    rb: "ruby",
+    php: "php",
+    swift: "swift",
+    kt: "kotlin",
+    rs: "rust",
+  };
+  return langMap[ext] || "clike";
+}
+
+export const MASONRY_BREAKPOINTS = {
+  default: 5,
+  1536: 5, 
+  1280: 4, 
+  1024: 3,
+  768: 2, 
+  640: 1, 
+};
