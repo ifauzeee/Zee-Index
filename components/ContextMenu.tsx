@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Pencil,
   Trash2,
@@ -10,9 +10,10 @@ import {
   Eye,
   Archive,
   Edit3,
+  X,
 } from "lucide-react";
 import { formatBytes, cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import React from "react";
 
 interface ContextMenuProps {
   x: number;
@@ -55,16 +56,8 @@ export default function ContextMenu({
   isImage,
   onEditImage,
 }: ContextMenuProps) {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const isDesktop = typeof window !== "undefined" && window.innerWidth >= 768;
+  const desktopStyle = isDesktop ? { top: y, left: x } : undefined;
 
   const menuContent = (
     <ul className="py-1">
@@ -172,59 +165,52 @@ export default function ContextMenu({
   );
 
   return (
-    <div className="fixed inset-0 z-[100]" onClick={onClose}>
-      {isMobile && (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[9999]" onClick={onClose}>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
         />
-      )}
 
-      <motion.div
-        className={cn(
-          "bg-background border shadow-xl overflow-hidden",
-          isMobile
-            ? "fixed bottom-0 left-0 w-full rounded-t-xl border-t z-[101] pb-safe"
-            : "absolute w-60 rounded-lg border z-50",
-        )}
-        style={!isMobile ? { top: y, left: x } : undefined}
-        initial={isMobile ? { y: "100%" } : { opacity: 0, scale: 0.95 }}
-        animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1 }}
-        exit={isMobile ? { y: "100%" } : { opacity: 0, scale: 0.95 }}
-        transition={{
-          type: isMobile ? "spring" : "tween",
-          duration: 0.2,
-          damping: 25,
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {isMobile && (
-          <div className="flex items-center justify-center pt-3 pb-1">
+        <motion.div
+          className={cn(
+            "bg-background border shadow-2xl overflow-hidden z-[10000]",
+            "fixed bottom-0 left-0 w-full rounded-t-2xl border-t",
+            "md:fixed md:w-64 md:rounded-lg md:border md:bottom-auto md:left-auto"
+          )}
+          style={desktopStyle}
+          initial={{ y: "100%", opacity: 0, scale: 0.95 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: "100%", opacity: 0, scale: 0.95 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex md:hidden items-center justify-center pt-3 pb-2 relative">
             <div className="w-12 h-1.5 bg-muted rounded-full" />
-          </div>
-        )}
-        
-        <div className="max-h-[80vh] overflow-y-auto">
-          {menuContent}
-        </div>
-
-        {isMobile && (
-          <div className="p-4 pt-0 border-t mt-2">
             <button
               onClick={onClose}
-              className="w-full py-3 mt-2 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+              className="absolute right-4 top-3 text-muted-foreground p-1"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="max-h-[80vh] overflow-y-auto overscroll-contain">
+            {menuContent}
+          </div>
+
+          <div className="p-4 pt-2 border-t mt-2 md:hidden">
+            <button
+              onClick={onClose}
+              className="w-full py-3 bg-secondary text-secondary-foreground rounded-xl font-semibold active:scale-95 transition-transform"
             >
               Batal
             </button>
           </div>
-        )}
-      </motion.div>
-    </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
   );
 }

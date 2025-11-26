@@ -13,7 +13,6 @@ import {
   ImageOff,
   Link as LinkIcon,
   XCircle,
-  MoreVertical,
 } from "lucide-react";
 
 interface FileItemProps {
@@ -103,7 +102,7 @@ function FileItem({
 
       const touch = e.touches[0];
       onContextMenu({ clientX: touch.clientX, clientY: touch.clientY }, file);
-    }, 600);
+    }, 500);
   };
 
   const handleTouchMove = () => {
@@ -216,7 +215,8 @@ function FileItem({
       variants={itemVariants}
       initial="hidden"
       animate="visible"
-      whileHover={!isUploading ? "hover" : undefined}
+      whileHover={!isUploading && !isMobile ? "hover" : undefined}
+      whileTap={!isUploading && isMobile ? { scale: 0.98 } : undefined}
       className={cn(isGallery && "mb-4", isUploading && "opacity-80")}
       onMouseEnter={onMouseEnter}
     >
@@ -470,7 +470,6 @@ function FileItem({
             )}
           </div>
 
-          {/* Desktop Actions */}
           {view === "list" && !isBulkMode && !isUploading && (
             <div
               className={cn(
@@ -504,19 +503,6 @@ function FileItem({
                 <Info size={16} />
               </button>
             </div>
-          )}
-
-          {/* Mobile Actions */}
-          {view === "list" && !isBulkMode && !isUploading && (
-            <button
-              className="md:hidden p-2 text-muted-foreground hover:text-foreground ml-auto"
-              onClick={(e) => {
-                e.stopPropagation();
-                onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
-              }}
-            >
-              <MoreVertical size={20} />
-            </button>
           )}
 
           {isBulkMode && !isUploading && (
