@@ -1,7 +1,7 @@
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from "@/lib/store";
 import { formatBytes, getIcon, cn } from "@/lib/utils";
-import React, { useState, useMemo, memo } from "react";
+import React, { useRef, useState, useMemo, memo } from "react";
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
 import {
@@ -61,6 +61,10 @@ function FileItem({
 }: FileItemProps) {
   const { view, shareToken } = useAppStore();
   const Icon = getIcon(file.mimeType);
+
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const longPressFired = useRef(false);
+
   const [isDragOver, setIsDragOver] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
@@ -70,6 +74,50 @@ function FileItem({
     const now = Date.now();
     return now - created < 24 * 60 * 60 * 1000;
   }, [file.createdTime]);
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length > 1) return;
+
+    longPressFired.current = false;
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    timerRef.current = setTimeout(() => {
+      longPressFired.current = true;
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+
+      const touch = e.touches[0];
+      onContextMenu({ clientX: touch.clientX, clientY: touch.clientY }, file);
+    }, 600);
+  };
+
+  const handleTouchMove = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
+    if (longPressFired.current) {
+      if (e.cancelable) e.preventDefault();
+      longPressFired.current = false;
+    }
+  };
+
+  const handleContextMenuEvent = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if ((e.nativeEvent as any).pointerType !== "touch") {
+      onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
+    }
+  };
 
   const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20, scale: 0.95 },
@@ -145,6 +193,10 @@ function FileItem({
       <div
         className={cn(
           "group relative rounded-lg transition-all duration-200 ease-out cursor-pointer overflow-hidden",
+          "select-none",
+          "touch-pan-y",
+          "[-webkit-tap-highlight-color:transparent]",
+          "[-webkit-touch-callout:none]",
           isSelected && "bg-accent/80 ring-2 ring-primary",
           isActive && !isBulkMode && "ring-2 ring-primary/50",
           view === "list"
@@ -160,14 +212,10 @@ function FileItem({
           isError && "ring-2 ring-destructive/50 bg-destructive/5",
         )}
         onClick={!isUploading ? onClick : undefined}
-        onContextMenu={
-          !isUploading
-            ? (e: React.MouseEvent<HTMLDivElement>) => {
-                e.preventDefault();
-                onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
-              }
-            : undefined
-        }
+        onContextMenu={!isUploading ? handleContextMenuEvent : undefined}
+        onTouchStart={!isUploading ? handleTouchStart : undefined}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         draggable={isAdmin && !isUploading}
         onDragStart={onDragStart}
         onDragOver={handleDragOver}
