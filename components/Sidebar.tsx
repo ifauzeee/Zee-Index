@@ -52,7 +52,7 @@ export default function Sidebar() {
       .map((f: any) => ({
         id: f.id,
         name: f.name,
-        hasChildren: true, 
+        hasChildren: true,
         children: [],
         isExpanded: false,
         isLoading: false,
@@ -76,7 +76,10 @@ export default function Sidebar() {
 
     if (!target) return;
 
-    if (!target.isExpanded && (!target.children || target.children.length === 0)) {
+    if (
+      !target.isExpanded &&
+      (!target.children || target.children.length === 0)
+    ) {
       target.isLoading = true;
       setTree({ ...newTree });
       const children = await fetchSubfolders(node.id);
@@ -107,7 +110,7 @@ export default function Sidebar() {
         <div
           className={cn(
             "flex items-center gap-1 py-1.5 px-2 cursor-pointer hover:bg-accent/50 text-sm rounded-md transition-colors select-none",
-            isActive && "bg-accent text-accent-foreground font-medium"
+            isActive && "bg-accent text-accent-foreground font-medium",
           )}
           style={{ paddingLeft: `${paddingLeft}px` }}
           onClick={() => {
@@ -137,7 +140,9 @@ export default function Sidebar() {
             size={16}
             className={cn(
               "shrink-0",
-              isActive ? "text-primary fill-primary/20" : "text-muted-foreground"
+              isActive
+                ? "text-primary fill-primary/20"
+                : "text-muted-foreground",
             )}
           />
           <span className="truncate">{node.name}</span>
@@ -151,7 +156,7 @@ export default function Sidebar() {
               className="overflow-hidden"
             >
               {node.children.map((child) =>
-                renderNode(child, [...parents, node.id])
+                renderNode(child, [...parents, node.id]),
               )}
             </motion.div>
           )}
@@ -181,7 +186,7 @@ export default function Sidebar() {
             onClick={() => router.push("/")}
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
-              currentFolderId === rootFolderId && "bg-accent font-medium"
+              currentFolderId === rootFolderId && "bg-accent font-medium",
             )}
           >
             <Home size={18} /> Beranda
@@ -232,7 +237,9 @@ export default function Sidebar() {
       <div
         className={cn(
           "hidden lg:block fixed left-0 top-16 bottom-0 z-20 transition-all duration-300 ease-in-out",
-          isSidebarOpen ? "w-64 translate-x-0" : "w-0 -translate-x-full opacity-0"
+          isSidebarOpen
+            ? "w-64 translate-x-0"
+            : "w-0 -translate-x-full opacity-0",
         )}
       >
         {sidebarContent}
@@ -255,7 +262,7 @@ export default function Sidebar() {
       <div
         className={cn(
           "lg:hidden fixed inset-y-0 left-0 z-50 w-64 bg-background shadow-xl transition-transform duration-300 ease-in-out",
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         {sidebarContent}

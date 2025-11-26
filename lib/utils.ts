@@ -199,9 +199,9 @@ export function getLanguageFromFilename(name: string): string {
 
 export const MASONRY_BREAKPOINTS = {
   default: 5,
-  1536: 5, 
-  1280: 4, 
+  1536: 5,
+  1280: 4,
   1024: 3,
-  768: 2, 
-  640: 1, 
+  768: 2,
+  640: 1,
 };

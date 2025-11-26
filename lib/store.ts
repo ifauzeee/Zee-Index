@@ -68,14 +68,14 @@ interface AppState {
   setSort: (key: SortKey) => void;
   refreshKey: number;
   triggerRefresh: () => void;
-  
+
   isBulkMode: boolean;
   selectedFiles: DriveFile[];
   toggleSelection: (file: DriveFile) => void;
   setSelectedFiles: (files: DriveFile[]) => void;
   setBulkMode: (isActive: boolean) => void;
   clearSelection: () => void;
-  
+
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
   setSidebarOpen: (isOpen: boolean) => void;
@@ -169,7 +169,7 @@ export const useAppStore = create<AppState>()(
       refreshKey: 0,
       triggerRefresh: () =>
         set((state) => ({ refreshKey: state.refreshKey + 1 })),
-      
+
       isBulkMode: false,
       selectedFiles: [],
       setBulkMode: (isActive) => {
@@ -191,7 +191,8 @@ export const useAppStore = create<AppState>()(
       clearSelection: () => set({ selectedFiles: [], isBulkMode: false }),
 
       isSidebarOpen: true,
-      toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+      toggleSidebar: () =>
+        set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
       setSidebarOpen: (isOpen) => set({ isSidebarOpen: isOpen }),
 
       shareToken: null,

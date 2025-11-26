@@ -396,7 +396,7 @@ export default function FileBrowser({
     );
   };
 
-  const isLockedAndNoAccess = authModal.isOpen || (authModalInfo !== null);
+  const isLockedAndNoAccess = authModal.isOpen || authModalInfo !== null;
 
   if (isLoading || (sessionStatus === "loading" && !shareToken))
     return <FileBrowserLoading />;

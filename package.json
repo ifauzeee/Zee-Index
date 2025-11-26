@@ -6,7 +6,7 @@
     "dev": "dotenv -- next dev",
     "build": "next build",
     "start": "dotenv -- next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "format:check": "prettier --check .",
     "format:fix": "prettier --write .",

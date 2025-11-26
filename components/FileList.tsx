@@ -23,7 +23,7 @@ interface FileListProps {
   onDragStart: (e: React.DragEvent, file: DriveFile) => void;
   onFileDrop: (e: React.DragEvent, targetFolder: DriveFile) => void;
   onPrefetchFolder?: (folderId: string) => void;
-  uploads?: Record<string, any>; 
+  uploads?: Record<string, any>;
 }
 
 export default function FileList({
@@ -68,16 +68,16 @@ export default function FileList({
         const start = Math.min(currentIndex, lastIndex);
         const end = Math.max(currentIndex, lastIndex);
         const newSelection = files.slice(start, end + 1);
-        
+
         if (!isBulkMode) setBulkMode(true);
-        
+
         const combinedSelection = [...selectedFiles];
-        newSelection.forEach(f => {
-            if (!combinedSelection.find(s => s.id === f.id)) {
-                combinedSelection.push(f);
-            }
+        newSelection.forEach((f) => {
+          if (!combinedSelection.find((s) => s.id === f.id)) {
+            combinedSelection.push(f);
+          }
         });
-        
+
         setSelectedFiles(combinedSelection);
         return;
       }
@@ -87,21 +87,24 @@ export default function FileList({
     onItemClick(file);
   };
 
-  const uploadGhostFiles = Object.values(uploads).map((upload: any) => ({
-    id: `upload-${upload.name}`,
-    name: upload.name,
-    mimeType: 'application/octet-stream',
-    size: '0',
-    modifiedTime: new Date().toISOString(),
-    createdTime: new Date().toISOString(),
-    webViewLink: '',
-    hasThumbnail: false,
-    isFolder: false,
-    trashed: false,
-    uploadProgress: upload.progress,
-    uploadStatus: upload.status,
-    uploadError: upload.error
-  } as any));
+  const uploadGhostFiles = Object.values(uploads).map(
+    (upload: any) =>
+      ({
+        id: `upload-${upload.name}`,
+        name: upload.name,
+        mimeType: "application/octet-stream",
+        size: "0",
+        modifiedTime: new Date().toISOString(),
+        createdTime: new Date().toISOString(),
+        webViewLink: "",
+        hasThumbnail: false,
+        isFolder: false,
+        trashed: false,
+        uploadProgress: upload.progress,
+        uploadStatus: upload.status,
+        uploadError: upload.error,
+      }) as any,
+  );
 
   const allItems = [...uploadGhostFiles, ...files];
 
@@ -125,16 +128,27 @@ export default function FileList({
     },
   };
 
-  const renderFileItem = (file: DriveFile & { uploadProgress?: number, uploadStatus?: string, uploadError?: string }) => {
-    const isShared = !file.uploadStatus && shareLinks.some(
-      (link) => !link.isCollection && link.path.includes(file.id),
-    );
+  const renderFileItem = (
+    file: DriveFile & {
+      uploadProgress?: number;
+      uploadStatus?: string;
+      uploadError?: string;
+    },
+  ) => {
+    const isShared =
+      !file.uploadStatus &&
+      shareLinks.some(
+        (link) => !link.isCollection && link.path.includes(file.id),
+      );
 
     return (
-      <div key={file.id} onClick={(e) => !file.uploadStatus && handleItemClickWrapper(file, e)}>
+      <div
+        key={file.id}
+        onClick={(e) => !file.uploadStatus && handleItemClickWrapper(file, e)}
+      >
         <FileItem
           file={file}
-          onClick={() => {}} 
+          onClick={() => {}}
           onContextMenu={(event) => onItemContextMenu(event, file)}
           isSelected={selectedFiles.some((f) => f.id === file.id)}
           isActive={!isBulkMode && activeFileId === file.id}

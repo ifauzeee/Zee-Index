@@ -189,13 +189,17 @@ export default function ContextMenu({
           "bg-background border shadow-xl z-50 overflow-hidden",
           isMobile
             ? "fixed bottom-0 left-0 w-full rounded-t-xl border-t"
-            : "absolute w-60 rounded-lg border"
+            : "absolute w-60 rounded-lg border",
         )}
         style={!isMobile ? { top: y, left: x } : undefined}
         initial={isMobile ? { y: "100%" } : { opacity: 0, scale: 0.95 }}
         animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1 }}
         exit={isMobile ? { y: "100%" } : { opacity: 0, scale: 0.95 }}
-        transition={{ type: isMobile ? "spring" : "tween", duration: 0.2, damping: 25 }}
+        transition={{
+          type: isMobile ? "spring" : "tween",
+          duration: 0.2,
+          damping: 25,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {isMobile && (
@@ -205,9 +209,14 @@ export default function ContextMenu({
         )}
         {menuContent}
         {isMobile && (
-            <div className="p-4 pt-0">
-                <button onClick={onClose} className="w-full py-3 mt-2 bg-secondary text-secondary-foreground rounded-lg font-medium">Batal</button>
-            </div>
+          <div className="p-4 pt-0">
+            <button
+              onClick={onClose}
+              className="w-full py-3 mt-2 bg-secondary text-secondary-foreground rounded-lg font-medium"
+            >
+              Batal
+            </button>
+          </div>
         )}
       </motion.div>
     </div>

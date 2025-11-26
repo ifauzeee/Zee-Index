@@ -70,29 +70,31 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const sanitizedSearchTerm = rawSearchTerm ? sanitizeString(rawSearchTerm) : "";
+  const sanitizedSearchTerm = rawSearchTerm
+    ? sanitizeString(rawSearchTerm)
+    : "";
   const searchTerm = sanitizedSearchTerm.replace(/'/g, "''");
-  
+
   try {
     const accessToken = await getAccessToken();
     const driveUrl = "https://www.googleapis.com/drive/v3/files";
     const queryField = searchType === "fullText" ? "fullText" : "name";
-    
+
     let driveQuery = "trashed=false";
     if (searchTerm) {
-        driveQuery += ` and ${queryField} contains '${searchTerm}'`;
+      driveQuery += ` and ${queryField} contains '${searchTerm}'`;
     }
-    
+
     if (folderId) {
-        driveQuery += ` and '${folderId}' in parents`;
+      driveQuery += ` and '${folderId}' in parents`;
     }
 
     driveQuery += getMimeQuery(mimeType);
     driveQuery += getDateQuery(modifiedTime);
-    
+
     if (minSize) {
-        const bytes = parseInt(minSize) * 1024 * 1024;
-        driveQuery += ` and size > ${bytes}`;
+      const bytes = parseInt(minSize) * 1024 * 1024;
+      driveQuery += ` and size > ${bytes}`;
     }
 
     const params = new URLSearchParams({

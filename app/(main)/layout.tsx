@@ -95,7 +95,7 @@ export default function MainLayout({
           <div
             className={cn(
               "flex-1 flex flex-col transition-all duration-300 ease-in-out",
-              isSidebarOpen ? "lg:ml-64" : "ml-0"
+              isSidebarOpen ? "lg:ml-64" : "ml-0",
             )}
           >
             <div className="container mx-auto px-4 max-w-7xl flex-grow py-4">

@@ -3,7 +3,16 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAppStore } from "@/lib/store";
-import { X, Globe, FileText, ScanText, Filter, Calendar, HardDrive, File } from "lucide-react";
+import {
+  X,
+  Globe,
+  FileText,
+  ScanText,
+  Filter,
+  Calendar,
+  HardDrive,
+  File,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface SearchProps {
@@ -21,20 +30,25 @@ export default function Search({ onSearchClose }: SearchProps) {
   const [isGlobalSearch, setIsGlobalSearch] = useState(!currentFolderId);
   const inputRef = useRef<HTMLInputElement>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  
+
   const [mimeType, setMimeType] = useState("any");
   const [modifiedTime, setModifiedTime] = useState("any");
-  const [minSize, setMinSize] = useState(""); 
+  const [minSize, setMinSize] = useState("");
 
   const performSearch = useCallback(
     (term: string) => {
-      if (term.trim() || mimeType !== "any" || modifiedTime !== "any" || minSize) {
+      if (
+        term.trim() ||
+        mimeType !== "any" ||
+        modifiedTime !== "any" ||
+        minSize
+      ) {
         const params = new URLSearchParams();
         params.set("q", term.trim());
         params.set("searchType", searchType);
         params.set("mimeType", mimeType);
         params.set("modifiedTime", modifiedTime);
-        if(minSize) params.set("minSize", minSize);
+        if (minSize) params.set("minSize", minSize);
 
         if (!isGlobalSearch && currentFolderId) {
           params.set("folderId", currentFolderId);
@@ -61,7 +75,7 @@ export default function Search({ onSearchClose }: SearchProps) {
       pathname,
       mimeType,
       modifiedTime,
-      minSize
+      minSize,
     ],
   );
 
@@ -199,45 +213,56 @@ export default function Search({ onSearchClose }: SearchProps) {
             className="absolute top-full left-0 right-0 z-10 mt-2 p-4 bg-card border rounded-lg shadow-lg grid grid-cols-1 md:grid-cols-3 gap-4"
           >
             <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><File size={12}/> Tipe File</label>
-                <select
-                    value={mimeType}
-                    onChange={(e) => setMimeType(e.target.value)}
-                    className="w-full px-3 py-1.5 border rounded-md bg-background text-sm focus:ring-1 focus:ring-primary"
-                >
-                    <option value="any">Semua</option>
-                    <option value="image">Gambar</option>
-                    <option value="video">Video</option>
-                    <option value="audio">Audio</option>
-                    <option value="pdf">PDF</option>
-                    <option value="folder">Folder</option>
-                </select>
+              <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                <File size={12} /> Tipe File
+              </label>
+              <select
+                value={mimeType}
+                onChange={(e) => setMimeType(e.target.value)}
+                className="w-full px-3 py-1.5 border rounded-md bg-background text-sm focus:ring-1 focus:ring-primary"
+              >
+                <option value="any">Semua</option>
+                <option value="image">Gambar</option>
+                <option value="video">Video</option>
+                <option value="audio">Audio</option>
+                <option value="pdf">PDF</option>
+                <option value="folder">Folder</option>
+              </select>
             </div>
             <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Calendar size={12}/> Waktu Diubah</label>
-                <select
-                    value={modifiedTime}
-                    onChange={(e) => setModifiedTime(e.target.value)}
-                    className="w-full px-3 py-1.5 border rounded-md bg-background text-sm focus:ring-1 focus:ring-primary"
-                >
-                    <option value="any">Kapan Saja</option>
-                    <option value="today">Hari Ini</option>
-                    <option value="week">Minggu Ini</option>
-                    <option value="month">Bulan Ini</option>
-                </select>
+              <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                <Calendar size={12} /> Waktu Diubah
+              </label>
+              <select
+                value={modifiedTime}
+                onChange={(e) => setModifiedTime(e.target.value)}
+                className="w-full px-3 py-1.5 border rounded-md bg-background text-sm focus:ring-1 focus:ring-primary"
+              >
+                <option value="any">Kapan Saja</option>
+                <option value="today">Hari Ini</option>
+                <option value="week">Minggu Ini</option>
+                <option value="month">Bulan Ini</option>
+              </select>
             </div>
             <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><HardDrive size={12}/> Min Size (MB)</label>
-                <input 
-                    type="number"
-                    placeholder="Contoh: 100"
-                    value={minSize}
-                    onChange={(e) => setMinSize(e.target.value)}
-                    className="w-full px-3 py-1.5 border rounded-md bg-background text-sm focus:ring-1 focus:ring-primary"
-                />
+              <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                <HardDrive size={12} /> Min Size (MB)
+              </label>
+              <input
+                type="number"
+                placeholder="Contoh: 100"
+                value={minSize}
+                onChange={(e) => setMinSize(e.target.value)}
+                className="w-full px-3 py-1.5 border rounded-md bg-background text-sm focus:ring-1 focus:ring-primary"
+              />
             </div>
             <div className="md:col-span-3 flex justify-end">
-                <button type="submit" className="bg-primary text-primary-foreground px-4 py-1.5 rounded-md text-sm font-medium">Terapkan Filter</button>
+              <button
+                type="submit"
+                className="bg-primary text-primary-foreground px-4 py-1.5 rounded-md text-sm font-medium"
+              >
+                Terapkan Filter
+              </button>
             </div>
           </motion.div>
         )}
