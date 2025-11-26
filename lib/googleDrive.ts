@@ -83,6 +83,14 @@ export async function getAccessToken(): Promise<string> {
   if (!response.ok) {
     const errorData = await response.json();
     console.error(errorData);
+
+    if (errorData.error === "invalid_grant") {
+      await kv.del("zee-index:credentials");
+      throw new Error(
+        "Sesi Google Drive kadaluarsa. Silakan lakukan Setup ulang di /setup",
+      );
+    }
+
     throw new Error(errorData.error_description || "Otentikasi Gagal");
   }
 

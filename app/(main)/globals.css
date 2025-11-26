@@ -70,13 +70,16 @@
   * {
     @apply border-border;
   }
-  html, body {
+  html,
+  body {
     @apply bg-background text-foreground;
     overflow-x: hidden;
     max-width: 100vw;
     width: 100%;
     position: relative;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -85,7 +88,7 @@
   body.mobile-menu-open {
     overflow: hidden !important;
   }
-  
+
   /* Performance Optimizations */
   * {
     backface-visibility: hidden;
@@ -144,7 +147,8 @@ body.bulk-action-bar-visible {
 }
 
 .transition-colors {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property:
+    color, background-color, border-color, text-decoration-color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 100ms;
 }

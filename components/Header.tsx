@@ -46,7 +46,7 @@ const navItemVariants = {
     opacity: 1,
     transition: {
       duration: 0.2,
-      ease: "easeOut"
+      ease: "easeOut",
     },
   },
   closed: {
@@ -382,16 +382,16 @@ export default function Header() {
                       </a>
                     ) : (
                       "onClick" in item &&
-                      typeof item.onClick === "function" && (
-                        <button
-                          key={item.id}
-                          onClick={item.onClick}
-                          title={item.label}
-                          className="p-2 rounded-lg hover:bg-accent"
-                        >
-                          <Icon size={20} />
-                        </button>
-                      )
+                        typeof item.onClick === "function" && (
+                          <button
+                            key={item.id}
+                            onClick={item.onClick}
+                            title={item.label}
+                            className="p-2 rounded-lg hover:bg-accent"
+                          >
+                            <Icon size={20} />
+                          </button>
+                        )
                     );
                   })}
                 {authButton}

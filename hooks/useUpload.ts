@@ -15,7 +15,7 @@ interface UseUploadProps {
   triggerRefresh: () => void;
 }
 
-const CHUNK_SIZE = 4 * 1024 * 1024;
+const CHUNK_SIZE = 2 * 1024 * 1024;
 
 export function useUpload({
   currentFolderId,

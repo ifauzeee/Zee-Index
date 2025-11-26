@@ -110,7 +110,7 @@ export default function Sidebar() {
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (!touchStartRef.current) return;
     const touchEnd = e.changedTouches[0].clientX;
-    
+
     if (touchStartRef.current - touchEnd > 50) {
       setSidebarOpen(false);
     }
@@ -183,7 +183,7 @@ export default function Sidebar() {
   };
 
   const sidebarContent = (
-    <div 
+    <div
       className="h-full flex flex-col bg-card border-r border-border w-64"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -256,9 +256,7 @@ export default function Sidebar() {
       <div
         className={cn(
           "hidden lg:block fixed left-0 top-16 bottom-0 z-20 transition-transform duration-300 ease-out",
-          isSidebarOpen
-            ? "translate-x-0"
-            : "-translate-x-full",
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
         style={{ width: "16rem" }}
       >

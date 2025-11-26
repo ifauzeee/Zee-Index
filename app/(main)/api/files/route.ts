@@ -75,15 +75,26 @@ export async function GET(request: Request) {
 
     if (!forceRefresh) {
       try {
-        const cachedData: {
-          files: DriveFile[];
-          nextPageToken: string | null;
-        } | null = await kv.get(cacheKey);
-        if (cachedData) {
+        const cachedDataPromise = kv.get(cacheKey);
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject("timeout"), 1500),
+        );
+
+        const cachedData:
+          | {
+              files: DriveFile[];
+              nextPageToken: string | null;
+            }
+          | unknown = await Promise.race([cachedDataPromise, timeoutPromise]);
+
+        if (cachedData && typeof cachedData === "object") {
           return NextResponse.json(cachedData);
         }
       } catch (e) {
-        console.error("Gagal membaca cache KV:", e);
+        console.warn(
+          "Cache miss or KV error/timeout, fetching from Drive...",
+          e,
+        );
       }
     }
 

@@ -37,7 +37,7 @@ export default function MobileBottomNav() {
                 "flex flex-col items-center justify-center w-full h-full space-y-1 active:scale-95 transition-transform duration-100",
                 isActive
                   ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />

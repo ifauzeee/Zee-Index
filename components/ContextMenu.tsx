@@ -10,7 +10,6 @@ import {
   Eye,
   Archive,
   Edit3,
-  X,
 } from "lucide-react";
 import { formatBytes, cn } from "@/lib/utils";
 import React from "react";
@@ -178,7 +177,7 @@ export default function ContextMenu({
           className={cn(
             "bg-background border shadow-2xl overflow-hidden z-[10000]",
             "fixed bottom-0 left-0 w-full rounded-t-2xl border-t",
-            "md:fixed md:w-64 md:rounded-lg md:border md:bottom-auto md:left-auto"
+            "md:fixed md:w-64 md:rounded-lg md:border md:bottom-auto md:left-auto",
           )}
           style={desktopStyle}
           initial={isDesktop ? { opacity: 0, scale: 0.95 } : { y: "100%" }}

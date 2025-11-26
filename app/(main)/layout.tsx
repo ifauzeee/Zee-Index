@@ -94,17 +94,17 @@ export default function MainLayout({
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (!touchStartRef.current) return;
     const touchEnd = e.changedTouches[0].clientX;
-    
+
     if (touchStartRef.current < 50 && touchEnd - touchStartRef.current > 100) {
       setSidebarOpen(true);
     }
-    
+
     touchStartRef.current = null;
   };
 
   return (
-    <div 
-      onTouchStart={handleTouchStart} 
+    <div
+      onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       className="min-h-screen w-full overflow-x-hidden relative"
     >

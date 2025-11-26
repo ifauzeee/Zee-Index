@@ -224,7 +224,11 @@ function FileItem({
       animate="visible"
       whileHover={!isUploading && !isMobile ? "hover" : undefined}
       whileTap={!isUploading && isMobile ? { scale: 0.98 } : undefined}
-      className={cn(isGallery && "mb-4", isUploading && "opacity-80", "w-full max-w-full")}
+      className={cn(
+        isGallery && "mb-4",
+        isUploading && "opacity-80",
+        "w-full max-w-full",
+      )}
       onMouseEnter={onMouseEnter}
     >
       <div
@@ -269,7 +273,12 @@ function FileItem({
                 : "flex-col",
           )}
         >
-          <div className={cn("relative shrink-0", isGallery && "w-full min-h-[150px]")}>
+          <div
+            className={cn(
+              "relative shrink-0",
+              isGallery && "w-full min-h-[150px]",
+            )}
+          >
             {isGallery && hasImage ? (
               <div className="relative w-full bg-muted/20">
                 {isImageLoading && (
@@ -392,7 +401,7 @@ function FileItem({
               {view === "list" && file.isProtected && (
                 <Lock size={12} className="text-muted-foreground shrink-0" />
               )}
-              
+
               {view === "list" ? (
                 <div className="flex-1 min-w-0 overflow-x-auto whitespace-nowrap no-scrollbar mask-gradient-right">
                   <span className="inline-block">{file.name}</span>
@@ -524,7 +533,7 @@ function FileItem({
               <button
                 className={cn(
                   "md:hidden p-2 text-muted-foreground active:text-foreground active:bg-accent/50 rounded-full transition-colors ml-auto shrink-0",
-                  view !== "list" && "absolute top-1 right-1 bg-background/50"
+                  view !== "list" && "absolute top-1 right-1 bg-background/50",
                 )}
                 onClick={handleMoreClick}
               >

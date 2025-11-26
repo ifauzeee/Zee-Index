@@ -21,22 +21,25 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "*.googleusercontent.com",
-        port: "",
-        pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "drive.google.com",
-        port: "",
-        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
       },
       {
         protocol: "https",
         hostname: "images.unsplash.com",
-        port: "",
-        pathname: "/**",
       },
     ],
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "5mb",
+    },
   },
 };
 
