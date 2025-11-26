@@ -331,7 +331,7 @@ export default function Header() {
         }`}
       >
         <div className="container max-w-full px-4 flex items-center justify-between gap-4 h-16">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={toggleSidebar}
               className="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground"
@@ -345,8 +345,8 @@ export default function Header() {
               }`}
               title={!shareToken ? "Kembali ke Beranda" : "Zee Index"}
             >
-              <i className="fab fa-google-drive text-blue-500 mr-3"></i>
-              <span className="hidden sm:inline">Zee Index</span>
+              <i className="fab fa-google-drive text-blue-500 mr-3 text-2xl"></i>
+              <span>Zee Index</span>
             </h1>
           </div>
 
