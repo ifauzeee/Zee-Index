@@ -108,7 +108,11 @@ function FileItem({
 
     if (longPressFired.current) {
       if (e.cancelable) e.preventDefault();
-      longPressFired.current = false;
+      e.stopPropagation();
+      
+      setTimeout(() => {
+        longPressFired.current = false;
+      }, 200);
     }
   };
 
@@ -117,6 +121,18 @@ function FileItem({
     if ((e.nativeEvent as any).pointerType !== "touch") {
       onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
     }
+  };
+
+  const handleInteractionClick = (e: React.MouseEvent) => {
+    if (isUploading) return;
+    
+    if (longPressFired.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    
+    onClick();
   };
 
   const itemVariants: Variants = {
@@ -211,7 +227,7 @@ function FileItem({
           isDragOver && "ring-2 ring-primary ring-inset bg-primary/10",
           isError && "ring-2 ring-destructive/50 bg-destructive/5",
         )}
-        onClick={!isUploading ? onClick : undefined}
+        onClick={handleInteractionClick}
         onContextMenu={!isUploading ? handleContextMenuEvent : undefined}
         onTouchStart={!isUploading ? handleTouchStart : undefined}
         onTouchMove={handleTouchMove}
