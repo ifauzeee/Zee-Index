@@ -57,9 +57,6 @@ interface AppConfig {
 }
 
 interface AppState {
-  theme: "light" | "dark";
-  toggleTheme: () => void;
-  setTheme: (theme: "light" | "dark") => void;
   view: ViewMode;
   setView: (view: ViewMode) => void;
   density: DensityMode;
@@ -149,10 +146,6 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
-      theme: "dark",
-      setTheme: (theme) => set({ theme }),
-      toggleTheme: () =>
-        set((state) => ({ theme: state.theme === "dark" ? "light" : "dark" })),
       view: "list",
       setView: (view) => set({ view }),
       density: "comfortable",
@@ -618,7 +611,6 @@ export const useAppStore = create<AppState>()(
     {
       name: "zee-index-storage",
       partialize: (state) => ({
-        theme: state.theme,
         view: state.view,
         density: state.density,
         sort: state.sort,

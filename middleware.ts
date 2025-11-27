@@ -2,53 +2,49 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+const PUBLIC_PATHS = new Set([
+  "/login",
+  "/icon.png",
+  "/verify-2fa",
+  "/setup",
+  "/manifest.webmanifest",
+  "/sw.js",
+  "/workbox-",
+]);
+
+const PUBLIC_API_PREFIXES = [
+  "/api/auth",
+  "/api/config/public",
+  "/api/setup",
+];
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
+  
   const isConfigured = !!process.env.GOOGLE_REFRESH_TOKEN;
+  
+  if (!isConfigured) {
+    if (pathname.startsWith("/setup") || pathname.startsWith("/api/setup") || pathname === "/icon.png") {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL("/setup", request.url));
+  }
 
   if (isConfigured && pathname.startsWith("/setup")) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
   if (
-    !isConfigured &&
-    !pathname.startsWith("/setup") &&
-    !pathname.startsWith("/api/setup")
+    PUBLIC_PATHS.has(pathname) || 
+    PUBLIC_API_PREFIXES.some(p => pathname.startsWith(p)) ||
+    pathname.startsWith("/_next") || 
+    pathname.startsWith("/static") ||
+    pathname.includes("workbox")
   ) {
-    const allowedPaths = ["/login", "/api/auth", "/icon.png"];
-    const isAllowed = allowedPaths.some((p) => pathname.startsWith(p));
-    if (!isAllowed) {
-      return NextResponse.redirect(new URL("/setup", request.url));
-    }
+    return NextResponse.next();
   }
 
-  const publicPaths = [
-    "/login",
-    "/api/auth/callback/google",
-    "/api/auth/callback/guest",
-    "/api/auth/signin",
-    "/api/auth/error",
-    "/api/auth/providers",
-    "/api/auth/session",
-    "/api/auth/csrf",
-    "/icon.png",
-    "/verify-2fa",
-    "/api/config/public",
-    "/folder",
-    "/share",
-    "/api/files",
-    "/api/download",
-    "/api/share/items",
-    "/api/folderpath",
-    "/api/share/status",
-    "/setup",
-    "/api/setup/finish",
-  ];
-
-  const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
-
-  if (isPublicPath) {
+  if (request.nextUrl.searchParams.has("share_token")) {
     return NextResponse.next();
   }
 
@@ -58,29 +54,28 @@ export async function middleware(request: NextRequest) {
   });
 
   if (!token) {
+    const isPublicRoute = ["/folder", "/share", "/request"].some(p => pathname.startsWith(p));
+    
+    if (isPublicRoute) return NextResponse.next();
+
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  if (token && token.isGuest) {
-    if (pathname.startsWith("/admin")) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      loginUrl.searchParams.set("error", "GuestAccessDenied");
-      return NextResponse.redirect(loginUrl);
-    }
+  if (token.isGuest && pathname.startsWith("/admin")) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("error", "GuestAccessDenied");
+    return NextResponse.redirect(loginUrl);
   }
 
-  if (token && token.twoFactorRequired) {
-    if (pathname !== "/verify-2fa") {
-      const verifyUrl = new URL("/verify-2fa", request.url);
-      verifyUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(verifyUrl);
-    }
+  if (token.twoFactorRequired && pathname !== "/verify-2fa") {
+    const verifyUrl = new URL("/verify-2fa", request.url);
+    verifyUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(verifyUrl);
   }
 
-  if (token && !token.twoFactorRequired && pathname === "/verify-2fa") {
+  if (!token.twoFactorRequired && pathname === "/verify-2fa") {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
@@ -88,5 +83,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico).*)",
+  ],
 };

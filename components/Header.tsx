@@ -3,6 +3,9 @@
 import { useState, useEffect, Suspense, FC } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut, signIn } from "next-auth/react";
+import { useTheme } from "next-themes";
+import Image from "next/image";
+import GoogleDrivePng from "@/app/google-drive_2991248.png";
 import {
   Sun,
   Moon,
@@ -178,8 +181,6 @@ export default function Header() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const {
-    theme,
-    toggleTheme,
     triggerRefresh,
     shareToken,
     user,
@@ -187,6 +188,7 @@ export default function Header() {
     toggleNotificationCenter,
     toggleSidebar,
   } = useAppStore();
+  const { theme, setTheme } = useTheme();
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -215,7 +217,7 @@ export default function Header() {
     { id: "storage", href: "/storage", icon: HardDrive, label: "Penyimpanan" },
     {
       id: "theme",
-      onClick: toggleTheme,
+      onClick: () => setTheme(theme === "dark" ? "light" : "dark"),
       icon: theme === "light" ? Moon : Sun,
       label: `Ganti Tema`,
     },
@@ -326,7 +328,7 @@ export default function Header() {
   return (
     <>
       <header
-        className={`sticky top-0 z-30 w-full transition-colors duration-200 ${
+        className={`top-0 z-30 w-full transition-colors duration-200 ${
           isScrolled
             ? "border-b border-border bg-background shadow-sm"
             : "border-b border-transparent bg-background"
@@ -347,7 +349,7 @@ export default function Header() {
               }`}
               title={!shareToken ? "Kembali ke Beranda" : "Zee Index"}
             >
-              <i className="fab fa-google-drive text-blue-500 mr-3 text-2xl"></i>
+              <Image src={GoogleDrivePng} alt="Google Drive Logo" className="w-8 h-8 mr-3" />
               <span>Zee Index</span>
             </h1>
           </div>

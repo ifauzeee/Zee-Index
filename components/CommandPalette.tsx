@@ -3,6 +3,7 @@ import * as React from "react";
 import { Command } from "cmdk";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
+import { useTheme } from "next-themes";
 import {
   LayoutDashboard,
   HardDrive,
@@ -20,7 +21,8 @@ import { signOut } from "next-auth/react";
 export default function CommandPalette() {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
-  const { toggleTheme, theme, user } = useAppStore();
+  const { user } = useAppStore(); 
+  const { theme, setTheme } = useTheme();
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -118,7 +120,7 @@ export default function CommandPalette() {
         >
           <Command.Item
             value="ganti tema theme dark mode light mode"
-            onSelect={() => runCommand(() => toggleTheme())}
+            onSelect={() => runCommand(() => setTheme(theme === "dark" ? "light" : "dark"))}
             className={itemClass}
           >
             {theme === "dark" ? (

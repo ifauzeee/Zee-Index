@@ -938,7 +938,8 @@ export default function FileDetail({
               download
               className="flex-1 flex items-center justify-center px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-semibold"
             >
-              <i className="fas fa-download mr-3"></i>Unduh
+              <Download size={18} className="mr-3" />
+              Unduh
             </a>
           </div>
         </div>

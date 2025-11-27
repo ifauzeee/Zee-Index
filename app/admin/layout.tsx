@@ -6,6 +6,7 @@ import { useAppStore } from "@/lib/store";
 import BulkActionBar from "@/components/BulkActionBar";
 import Toast from "@/components/Toast";
 import { AnimatePresence } from "framer-motion";
+import { HardDrive } from "lucide-react";
 import { Analytics } from "@vercel/analytics/next";
 import { useSession } from "next-auth/react";
 
@@ -19,7 +20,7 @@ const AppFooter = () => {
   return (
     <footer className="text-center py-6 text-sm text-muted-foreground border-t bg-background">
       <p className="mb-2">
-        <i className="fas fa-server mr-2"></i>Total Penggunaan Data:{" "}
+        <HardDrive size={14} className="inline mr-2" />Total Penggunaan Data:{" "}
         <span id="data-usage-value">{dataUsage.value}</span>
       </p>
       <p>
@@ -43,7 +44,6 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const {
-    theme,
     refreshKey,
     toasts,
     removeToast,
@@ -64,10 +64,6 @@ export default function MainLayout({
     }
   }, [status, fetchUser, fetchDataUsage, fetchConfig, refreshKey]);
 
-  useEffect(() => {
-    document.documentElement.className = theme;
-    document.documentElement.style.colorScheme = theme;
-  }, [theme]);
   return (
     <>
       <div

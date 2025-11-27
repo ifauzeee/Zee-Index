@@ -14,5 +14,6 @@ yarn-error.log*
 next-env.d.ts
 .DS_Store
 *.pem
-cat.py
-all_project_code.txt
+public/sw.js
+public/workbox-*.js
+public/swe-worker-*.js

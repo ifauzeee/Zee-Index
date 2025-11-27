@@ -1,9 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Providers } from "./providers";
 import "./(main)/globals.css";
-import "@fortawesome/fontawesome-free/css/all.min.css";
 import "plyr/dist/plyr.css";
-import ThemeInitializer from "@/components/ThemeInitializer";
 
 export const viewport: Viewport = {
   themeColor: "#09090b",
@@ -35,9 +33,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" suppressHydrationWarning>
-      <head>
-        <ThemeInitializer />
-      </head>
+      <head />
       <body>
         <Providers>{children}</Providers>
       </body>

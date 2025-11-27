@@ -12,6 +12,11 @@ import { authOptions } from "@/lib/authOptions";
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
 
+interface CachedFolderData {
+  files: DriveFile[];
+  nextPageToken: string | null;
+}
+
 const CACHE_TTL_SECONDS = 300;
 
 async function validateShareToken(request: Request): Promise<boolean> {
@@ -75,26 +80,18 @@ export async function GET(request: Request) {
 
     if (!forceRefresh) {
       try {
-        const cachedDataPromise = kv.get(cacheKey);
-        const timeoutPromise = new Promise((_, reject) =>
+        const cachedDataPromise = kv.get<CachedFolderData>(cacheKey); 
+        const timeoutPromise = new Promise<never>((_, reject) =>
           setTimeout(() => reject("timeout"), 1500),
         );
 
-        const cachedData:
-          | {
-              files: DriveFile[];
-              nextPageToken: string | null;
-            }
-          | unknown = await Promise.race([cachedDataPromise, timeoutPromise]);
+        const cachedData = await Promise.race([cachedDataPromise, timeoutPromise]);
 
-        if (cachedData && typeof cachedData === "object") {
+        if (cachedData && typeof cachedData === "object" && "files" in cachedData) {
           return NextResponse.json(cachedData);
         }
       } catch (e) {
-        console.warn(
-          "Cache miss or KV error/timeout, fetching from Drive...",
-          e,
-        );
+        console.warn("Cache miss or KV error/timeout, fetching from Drive...", e);
       }
     }
 

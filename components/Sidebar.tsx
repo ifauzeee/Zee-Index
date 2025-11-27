@@ -255,7 +255,7 @@ export default function Sidebar() {
     <>
       <div
         className={cn(
-          "hidden lg:block fixed left-0 top-16 bottom-0 z-20 transition-transform duration-300 ease-out",
+          "hidden lg:block fixed left-0 top-0 bottom-0 z-20 transition-transform duration-300 ease-out",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
         style={{ width: "16rem" }}

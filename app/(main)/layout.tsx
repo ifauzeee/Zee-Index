@@ -14,6 +14,7 @@ import KeyboardShortcutsModal from "@/components/KeyboardShortcutsModal";
 import NotificationCenter from "@/components/NotificationCenter";
 import Sidebar from "@/components/Sidebar";
 import { cn } from "@/lib/utils";
+import { HardDrive } from "lucide-react";
 import MobileBottomNav from "@/components/MobileBottomNav";
 
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
@@ -27,7 +28,7 @@ const AppFooter = () => {
   return (
     <footer className="text-center py-6 text-sm text-muted-foreground border-t bg-background mb-16 lg:mb-0 w-full overflow-hidden">
       <p className="mb-2">
-        <i className="fas fa-server mr-2"></i>Total Penggunaan Data:{" "}
+        <HardDrive size={14} className="inline mr-2" />Total Penggunaan Data:{" "}
         <span id="data-usage-value">{dataUsage.value}</span>
       </p>
       <p>
@@ -51,7 +52,6 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const {
-    theme,
     refreshKey,
     toasts,
     removeToast,
@@ -81,11 +81,6 @@ export default function MainLayout({
       fetchDataUsage();
     }
   }, [user, fetchDataUsage, refreshKey]);
-
-  useEffect(() => {
-    document.documentElement.className = theme;
-    document.documentElement.style.colorScheme = theme;
-  }, [theme]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartRef.current = e.targetTouches[0].clientX;

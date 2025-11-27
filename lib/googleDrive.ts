@@ -37,7 +37,7 @@ export interface DriveRevision {
 }
 
 interface DriveListResponse {
-  files?: unknown[];
+  files?: DriveFile[];
   nextPageToken?: string | null;
   error?: { message: string };
 }
@@ -257,13 +257,12 @@ export async function listFilesFromDrive(
   }
 
   const data: DriveListResponse = await response.json();
-  const processedFiles: DriveFile[] = (data.files || []).map((file) => {
-    const driveFile = file as DriveFile;
-    return {
-      ...driveFile,
-      isFolder: driveFile.mimeType === "application/vnd.google-apps.folder",
-    };
-  });
+
+  const processedFiles: DriveFile[] = (data.files || []).map((file) => ({
+    ...file,
+    isFolder: file.mimeType === "application/vnd.google-apps.folder",
+  }));
+
   return {
     files: processedFiles,
     nextPageToken: data.nextPageToken || null,

@@ -252,6 +252,5 @@ export function useUpload({
     handleDropUpload,
     handleFileSelect,
     droppedFiles: null,
-    handleFileUpload: () => {},
   };
 }
