@@ -26,7 +26,11 @@ export default function MobileBottomNav() {
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border lg:hidden pb-safe shadow-lg">
       <div className="flex justify-around items-center h-16">
         {navItems.map((item) => {
-          const isActive = pathname === item.path;
+          const isHome = item.path === "/";
+          const isActive = isHome
+            ? pathname === "/" || pathname.startsWith("/folder")
+            : pathname.startsWith(item.path);
+            
           const Icon = item.icon;
 
           return (
