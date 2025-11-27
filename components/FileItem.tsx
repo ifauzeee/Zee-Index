@@ -71,8 +71,16 @@ function FileItem({
   const [isDragOver, setIsDragOver] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
+  
+  const [isDesktop, setIsDesktop] = useState(false);
 
-  const isMobileView = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+  useEffect(() => {
+    const checkDesktop = () => {
+      const hasMouse = window.matchMedia("(pointer: fine)").matches;
+      setIsDesktop(hasMouse);
+    };
+    checkDesktop();
+  }, []);
 
   const isNew = useMemo(() => {
     const created = new Date(file.createdTime).getTime();
@@ -237,8 +245,8 @@ function FileItem({
       variants={itemVariants}
       initial="hidden"
       animate="visible"
-      whileHover={!isUploading && !isMobileView ? "hover" : undefined}
-      whileTap={!isUploading && isMobileView ? { scale: 0.98 } : undefined}
+      whileHover={!isUploading && isDesktop ? "hover" : undefined}
+      whileTap={!isUploading && !isDesktop ? { scale: 0.98 } : undefined}
       className={cn(
         isGallery && "mb-4",
         isUploading && "opacity-80",
@@ -250,7 +258,7 @@ function FileItem({
       <div
         className={cn(
           "group relative rounded-lg transition-all duration-100 ease-out cursor-pointer overflow-hidden w-full",
-          "select-none touch-pan-y [-webkit-tap-highlight-color:transparent] [-webkit-touch-callout:none]",
+          "select-none touch-pan-y touch-action-manipulation [-webkit-tap-highlight-color:transparent] [-webkit-touch-callout:none]",
           isSelected && "bg-accent/80 ring-2 ring-primary",
           isActive && !isBulkMode && "ring-2 ring-primary/50",
           view === "list"
@@ -271,7 +279,7 @@ function FileItem({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onTouchCancel={handleTouchCancel}
-        draggable={isAdmin && !isUploading && !isMobileView}
+        draggable={isAdmin && !isUploading && isDesktop}
         onDragStart={onDragStart}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
