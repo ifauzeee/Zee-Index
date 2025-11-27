@@ -66,7 +66,8 @@ function FileItem({
   const Icon = getIcon(file.mimeType);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const longPressFired = useRef(false);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const longPressTriggeredRef = useRef(false);
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -91,24 +92,30 @@ function FileItem({
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     if (e.touches.length > 1) return;
 
-    longPressFired.current = false;
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    longPressTriggeredRef.current = false;
 
     if (timerRef.current) clearTimeout(timerRef.current);
 
-    const touch = e.touches[0];
-    const clientX = touch.clientX;
-    const clientY = touch.clientY;
-
     timerRef.current = setTimeout(() => {
-      longPressFired.current = true;
-      onContextMenu({ clientX, clientY }, file);
+      longPressTriggeredRef.current = true;
+      onContextMenu({ clientX: touch.clientX, clientY: touch.clientY }, file);
     }, 500);
   };
 
-  const handleTouchMove = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!timerRef.current || !touchStartRef.current) return;
+
+    const touch = e.touches[0];
+    const moveX = Math.abs(touch.clientX - touchStartRef.current.x);
+    const moveY = Math.abs(touch.clientY - touchStartRef.current.y);
+
+    if (moveX > 10 || moveY > 10) {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
     }
   };
 
@@ -118,21 +125,29 @@ function FileItem({
       timerRef.current = null;
     }
 
-    if (longPressFired.current) {
-      if (e.cancelable) e.preventDefault();
-      e.stopPropagation();
-      setTimeout(() => {
-        longPressFired.current = false;
-      }, 200);
+    if (longPressTriggeredRef.current) {
+      if (e.cancelable) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     }
+
+    touchStartRef.current = null;
+    setTimeout(() => {
+      longPressTriggeredRef.current = false;
+    }, 200);
   };
 
   const handleContextMenuEvent = (e: React.MouseEvent) => {
+    if (isMobile || (e.nativeEvent as any).pointerType === "touch") {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    
     e.preventDefault();
     e.stopPropagation();
-    if ((e.nativeEvent as any).pointerType !== "touch") {
-      onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
-    }
+    onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
   };
 
   const handleMoreClick = (e: React.MouseEvent) => {
@@ -144,7 +159,7 @@ function FileItem({
   const handleInteractionClick = (e: React.MouseEvent) => {
     if (isUploading) return;
 
-    if (longPressFired.current) {
+    if (longPressTriggeredRef.current) {
       e.preventDefault();
       e.stopPropagation();
       return;
