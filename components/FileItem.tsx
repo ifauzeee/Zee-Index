@@ -1,7 +1,7 @@
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from "@/lib/store";
 import { formatBytes, getIcon, cn } from "@/lib/utils";
-import React, { useRef, useState, useMemo, memo, useEffect } from "react";
+import React, { useState, useMemo, memo, useEffect } from "react";
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
 import {
@@ -13,6 +13,7 @@ import {
   ImageOff,
   Link as LinkIcon,
   XCircle,
+  MoreVertical,
 } from "lucide-react";
 
 interface FileItemProps {
@@ -64,10 +65,6 @@ function FileItem({
   const { view, shareToken } = useAppStore();
   const Icon = getIcon(file.mimeType);
 
-  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const startPosRef = useRef<{ x: number; y: number } | null>(null);
-  const isLongPressRef = useRef(false);
-
   const [isDragOver, setIsDragOver] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
@@ -104,73 +101,18 @@ function FileItem({
     return url;
   }, [file.thumbnailLink, file.id, view, shareToken]);
 
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0) return;
-
-    isLongPressRef.current = false;
-    startPosRef.current = { x: e.clientX, y: e.clientY };
-
-    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-
-    longPressTimerRef.current = setTimeout(() => {
-      isLongPressRef.current = true;
-      
-      if (typeof navigator !== "undefined" && navigator.vibrate) {
-        try { navigator.vibrate(50); } catch (err) {}
-      }
-
-      onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
-    }, 500);
-  };
-
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!longPressTimerRef.current || !startPosRef.current) return;
-
-    const dist = Math.hypot(e.clientX - startPosRef.current.x, e.clientY - startPosRef.current.y);
-
-    if (dist > 10) {
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-        longPressTimerRef.current = null;
-      }
-    }
-  };
-
-  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-    startPosRef.current = null;
-  };
-
-  const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-    startPosRef.current = null;
-    isLongPressRef.current = false;
-  };
-
-  const handleClick = (e: React.MouseEvent) => {
-    if (uploadStatus === "uploading") return;
-
-    if (isLongPressRef.current) {
-      e.preventDefault();
-      e.stopPropagation();
-      setTimeout(() => { isLongPressRef.current = false; }, 100);
-      return;
-    }
-    
-    onClick();
-  };
-
   const handleContextMenuEvent = (e: React.MouseEvent) => {
     e.preventDefault();
-    if ((e.nativeEvent as any).pointerType !== 'touch') {
-        onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
-    }
+    e.stopPropagation();
+    onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
+  };
+
+  const handleMenuClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const rect = (e.target as Element).getBoundingClientRect();
+    onContextMenu({ clientX: rect.left, clientY: rect.bottom }, file);
   };
 
   const itemVariants: Variants = {
@@ -248,13 +190,8 @@ function FileItem({
           isDragOver && "ring-2 ring-primary ring-inset bg-primary/10",
           isError && "ring-2 ring-destructive/50 bg-destructive/5",
         )}
-        onClick={handleClick}
-        onContextMenu={handleContextMenuEvent}
-        onPointerDown={!isUploading ? handlePointerDown : undefined}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerCancel}
-        onPointerLeave={handlePointerCancel}
+        onClick={() => !isUploading && onClick()}
+        onContextMenu={!isUploading ? handleContextMenuEvent : undefined}
         draggable={canDrag}
         onDragStart={onDragStart}
         onDragOver={handleDragOver}
@@ -495,6 +432,7 @@ function FileItem({
             )}
           </div>
 
+          {/* Desktop Hover Actions */}
           {!isBulkMode && !isUploading && (
             <div
               className={cn(
@@ -528,6 +466,19 @@ function FileItem({
                 <Info size={16} />
               </button>
             </div>
+          )}
+
+          {/* Mobile/Tablet 3-Dots Menu (Replaces Long Press) */}
+          {!isBulkMode && !isUploading && (
+            <button
+                onClick={handleMenuClick}
+                className={cn(
+                    "md:hidden p-2 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0",
+                    view === "grid" || view === "gallery" ? "absolute top-1 right-1 bg-background/80 backdrop-blur-sm shadow-sm z-20" : "ml-auto"
+                )}
+            >
+                <MoreVertical size={18} />
+            </button>
           )}
 
           {isBulkMode && !isUploading && (
