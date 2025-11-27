@@ -14,7 +14,7 @@ import { useAppStore } from "@/lib/store";
 import FileBrowserLoading from "./FileBrowserLoading";
 import FileList from "@/components/FileList";
 import AuthModal from "./AuthModal";
-import { Loader2, X, UploadCloud, Lock } from "lucide-react";
+import { Loader2, UploadCloud, Lock } from "lucide-react";
 import ContextMenu from "./ContextMenu";
 import RenameModal from "./RenameModal";
 import DeleteConfirm from "./DeleteConfirm";
@@ -437,7 +437,6 @@ export default function FileBrowser({
             x={contextMenu.x}
             y={contextMenu.y}
             onClose={() => setContextMenu(null)}
-            fileSize={parseInt(contextMenu.file.size || "0", 10)}
             isImage={getFileType(contextMenu.file) === "image"}
             onEditImage={() => {
               setImageEditorFile(contextMenu.file);
@@ -527,21 +526,22 @@ export default function FileBrowser({
         )}
         {previewFile && (
           <motion.div
-            className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-[100] bg-black flex flex-col"
             onClick={() => setPreviewFile(null)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
-            <motion.div
-              className="relative w-full h-full max-w-6xl max-h-[90vh] bg-background rounded-lg shadow-xl overflow-hidden"
+            <div
+              className="relative w-full h-full overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <button
-                onClick={() => setPreviewFile(null)}
-                className="absolute top-3 right-3 z-50 p-2 bg-background/50 rounded-full text-foreground hover:bg-background"
-              >
-                <X size={24} />
-              </button>
-              <FileDetail file={previewFile} isModal={true} />
-            </motion.div>
+              <FileDetail
+                file={previewFile}
+                isModal={true}
+                onCloseModal={() => setPreviewFile(null)}
+              />
+            </div>
           </motion.div>
         )}
         {archivePreview && (
@@ -653,8 +653,6 @@ export default function FileBrowser({
           </>
         )}
       </main>
-
-      {/* Floating Progress Bar Removed - integrated into FileList */}
 
       <ImageGallery
         isOpen={gallery.isOpen}

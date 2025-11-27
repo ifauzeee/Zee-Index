@@ -33,7 +33,6 @@ interface ContextMenuProps {
   isArchive: boolean;
   onArchivePreview: () => void;
   isArchivePreviewable: boolean;
-  fileSize: number;
   isImage: boolean;
   onEditImage: () => void;
 }
@@ -54,7 +53,6 @@ export default function ContextMenu({
   isArchive,
   onArchivePreview,
   isArchivePreviewable,
-  fileSize,
   isImage,
   onEditImage,
 }: ContextMenuProps) {
@@ -90,115 +88,100 @@ export default function ContextMenu({
       }
 
       setPosition({ top: newTop, left: newLeft });
-    } else {
-      setPosition({ top: y, left: x });
     }
   }, [x, y, isDesktop]);
 
-  const desktopStyle = isDesktop ? { top: position.top, left: position.left } : undefined;
+  const desktopStyle = isDesktop
+    ? { top: position.top, left: position.left }
+    : undefined;
+
+  const MenuItem = ({
+    onClick,
+    icon: Icon,
+    label,
+    variant = "default",
+    disabled = false,
+    className = "",
+  }: {
+    onClick?: () => void;
+    icon: React.ElementType;
+    label: string | React.ReactNode;
+    variant?: "default" | "danger" | "warning";
+    disabled?: boolean;
+    className?: string;
+  }) => (
+    <li>
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        className={cn(
+          "w-full text-left flex items-center gap-4 md:gap-2 px-6 md:px-4 py-4 md:py-2 text-base md:text-sm font-medium transition-colors active:bg-accent disabled:opacity-50 disabled:cursor-not-allowed",
+          variant === "danger"
+            ? "text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10"
+            : variant === "warning"
+              ? "text-yellow-600 dark:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/10"
+              : "text-foreground hover:bg-accent/50",
+          className,
+        )}
+      >
+        <Icon
+          size={isDesktop ? 16 : 22}
+          className={cn(
+            "shrink-0",
+            variant === "danger" ? "text-red-500" : "text-muted-foreground",
+            variant === "warning" && "text-yellow-500",
+          )}
+        />
+        {label}
+      </button>
+    </li>
+  );
 
   const menuContent = (
-    <ul className="py-2 md:py-1">
-      <li>
-        <button
-          onClick={onPreview}
-          className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
-        >
-          <Eye size={18} /> Pratinjau / Buka
-        </button>
-      </li>
+    <ul className="py-2 md:py-1 space-y-0.5 md:space-y-0">
+      <MenuItem onClick={onPreview} icon={Eye} label="Pratinjau / Buka" />
 
       {isImage && (
-        <li>
-          <button
-            onClick={onEditImage}
-            className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
-          >
-            <Edit3 size={18} /> Edit Gambar
-          </button>
-        </li>
+        <MenuItem onClick={onEditImage} icon={Edit3} label="Edit Gambar" />
       )}
 
-      <li>
-        <button
-          onClick={onShowDetails}
-          className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
-        >
-          <Info size={18} /> Lihat Detail
-        </button>
-      </li>
+      <MenuItem onClick={onShowDetails} icon={Info} label="Lihat Detail" />
 
       {isArchive && (
-        <li>
-          <button
-            onClick={isArchivePreviewable ? onArchivePreview : undefined}
-            disabled={!isArchivePreviewable}
-            title={
-              !isArchivePreviewable
-                ? `File terlalu besar (> 100 MB). Ukuran: ${formatBytes(fileSize)}`
-                : "Lihat Isi Arsip"
-            }
-            className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:bg-accent"
-          >
-            <Archive size={18} /> Lihat Isi Arsip
-          </button>
-        </li>
+        <MenuItem
+          onClick={isArchivePreviewable ? onArchivePreview : undefined}
+          disabled={!isArchivePreviewable}
+          icon={Archive}
+          label={
+            !isArchivePreviewable
+              ? `Terlalu besar (> ${formatBytes(ARCHIVE_PREVIEW_LIMIT_BYTES)})`
+              : "Lihat Isi Arsip"
+          }
+        />
       )}
 
-      <li className="border-t my-1 border-border"></li>
-      <li>
-        <button
-          onClick={onToggleFavorite}
-          className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
-        >
-          <Star
-            size={18}
-            className={isFavorite ? "text-yellow-500 fill-yellow-500" : ""}
-          />
-          {isFavorite ? "Hapus dari Favorit" : "Tambah ke Favorit"}
-        </button>
-      </li>
-      <li>
-        <button
-          onClick={onShare}
-          className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
-        >
-          <Share2 size={18} /> Bagikan
-        </button>
-      </li>
-      <li>
-        <button
-          onClick={onCopy}
-          className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
-        >
-          <Copy size={18} /> Buat Salinan
-        </button>
-      </li>
-      <li>
-        <button
-          onClick={onMove}
-          className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
-        >
-          <Move size={18} /> Pindahkan
-        </button>
-      </li>
-      <li>
-        <button
-          onClick={onRename}
-          className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
-        >
-          <Pencil size={18} /> Ubah Nama
-        </button>
-      </li>
-      <li className="border-t my-1 border-border"></li>
-      <li>
-        <button
-          onClick={onDelete}
-          className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-red-500 hover:bg-accent flex items-center gap-3 md:gap-2 font-medium active:bg-accent"
-        >
-          <Trash2 size={18} /> Hapus
-        </button>
-      </li>
+      <li className="border-t my-2 border-border/50"></li>
+
+      <MenuItem
+        onClick={onToggleFavorite}
+        icon={Star}
+        variant={isFavorite ? "warning" : "default"}
+        label={isFavorite ? "Hapus Favorit" : "Tambah Favorit"}
+      />
+
+      <MenuItem onClick={onShare} icon={Share2} label="Bagikan" />
+      <MenuItem onClick={onCopy} icon={Copy} label="Buat Salinan" />
+      <MenuItem onClick={onMove} icon={Move} label="Pindahkan" />
+      <MenuItem onClick={onRename} icon={Pencil} label="Ubah Nama" />
+
+      <li className="border-t my-2 border-border/50"></li>
+
+      <MenuItem
+        onClick={onDelete}
+        icon={Trash2}
+        label="Hapus"
+        variant="danger"
+      />
     </ul>
   );
 
@@ -215,9 +198,9 @@ export default function ContextMenu({
         <motion.div
           ref={menuRef}
           className={cn(
-            "bg-background border shadow-2xl overflow-hidden z-[10000]",
-            "fixed bottom-0 left-0 w-full rounded-t-2xl border-t pb-safe",
-            "md:fixed md:w-64 md:rounded-lg md:border md:bottom-auto md:left-auto md:pb-0"
+            "bg-background/95 backdrop-blur-md border shadow-2xl z-[10000] overflow-hidden",
+            "fixed bottom-0 left-0 w-full rounded-t-3xl border-t pb-safe",
+            "md:fixed md:w-64 md:rounded-xl md:border md:bottom-auto md:left-auto md:pb-0",
           )}
           style={desktopStyle}
           initial={isDesktop ? { opacity: 0, scale: 0.95 } : { y: "100%" }}
@@ -226,18 +209,21 @@ export default function ContextMenu({
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex md:hidden items-center justify-center pt-3 pb-1">
-            <div className="w-12 h-1.5 bg-muted rounded-full" />
+          <div
+            className="flex md:hidden items-center justify-center pt-4 pb-2"
+            onClick={onClose}
+          >
+            <div className="w-12 h-1.5 bg-muted-foreground/20 rounded-full" />
           </div>
 
-          <div className="max-h-[85vh] overflow-y-auto overscroll-contain">
+          <div className="max-h-[80vh] overflow-y-auto overscroll-contain">
             {menuContent}
           </div>
 
-          <div className="p-4 pt-2 border-t mt-1 md:hidden">
+          <div className="p-4 pt-2 mt-2 md:hidden bg-background">
             <button
               onClick={onClose}
-              className="w-full py-3 bg-secondary/50 text-secondary-foreground rounded-xl font-semibold active:scale-95 transition-transform"
+              className="w-full py-3.5 bg-muted/50 text-foreground rounded-2xl font-semibold active:scale-95 transition-transform"
             >
               Batal
             </button>
@@ -250,3 +236,5 @@ export default function ContextMenu({
   if (!mounted) return null;
   return createPortal(content, document.body);
 }
+
+const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024;

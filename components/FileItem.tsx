@@ -4,14 +4,7 @@ import { formatBytes, getIcon, cn } from "@/lib/utils";
 import React, { useState, useMemo, memo, useEffect } from "react";
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
-import {
-  Lock,
-  Star,
-  Share2,
-  Download,
-  Info,
-  MoreVertical,
-} from "lucide-react";
+import { Lock, Star, Share2, Download, Info, MoreVertical } from "lucide-react";
 
 interface FileItemProps {
   file: DriveFile & { isFavorite?: boolean };
@@ -48,16 +41,13 @@ function FileItem({
   onShare,
   onShowDetails,
   onDownload,
-  onToggleFavorite,
   isAdmin,
   onDragStart,
   onFileDrop,
   onMouseEnter,
   density = "comfortable",
-  isShared = false,
   uploadProgress,
   uploadStatus,
-  uploadError,
 }: FileItemProps) {
   const { view, shareToken } = useAppStore();
   const Icon = getIcon(file.mimeType);

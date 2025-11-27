@@ -30,7 +30,7 @@ export default function MobileBottomNav() {
           const isActive = isHome
             ? pathname === "/" || pathname.startsWith("/folder")
             : pathname.startsWith(item.path);
-            
+
           const Icon = item.icon;
 
           return (

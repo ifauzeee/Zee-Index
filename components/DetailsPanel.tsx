@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useAnimation, PanInfo } from "framer-motion";
 import { X, Plus, Tag as TagIcon, ExternalLink } from "lucide-react";
 import type { DriveFile } from "@/lib/googleDrive";
 import {
@@ -21,9 +21,9 @@ interface DetailsPanelProps {
 }
 
 const ListItem = ({ label, value }: { label: string; value: string }) => (
-  <li className="flex justify-between items-start gap-4">
-    <span className="font-medium text-muted-foreground">{label}</span>
-    <span className="text-right break-all">{value}</span>
+  <li className="flex justify-between items-start gap-4 py-1">
+    <span className="font-medium text-muted-foreground text-sm">{label}</span>
+    <span className="text-right break-all text-sm font-medium">{value}</span>
   </li>
 );
 
@@ -38,6 +38,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
 
   const [newTag, setNewTag] = useState("");
   const [isAddingTag, setIsAddingTag] = useState(false);
+  const controls = useAnimation();
 
   const isAdmin = user?.role === "ADMIN";
   const canShowAuthor = isAdmin || !hideAuthor;
@@ -60,110 +61,131 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
   };
 
   const iconString = renderToString(
-    <Icon size={128} className="text-primary/10" />,
+    <Icon size={128} className="text-primary/20" />,
   );
+
+  const onDragEnd = async (
+    event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo,
+  ) => {
+    if (info.offset.y > 150) {
+      await controls.start({ y: "100%" });
+      onClose();
+    } else {
+      controls.start({ y: 0 });
+    }
+  };
 
   return (
     <motion.div
-      className="fixed inset-0 bg-black/60 z-40"
+      className="fixed inset-0 bg-black/60 z-[60] lg:z-40 backdrop-blur-sm"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={onClose}
     >
       <motion.div
-        className="fixed bottom-0 left-0 right-0 w-full max-h-[85vh] rounded-t-xl shadow-2xl flex flex-col bg-background
-                   lg:absolute lg:right-0 lg:top-0 lg:h-full lg:max-h-full lg:w-full lg:max-w-sm lg:rounded-t-none lg:border-l"
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        variants={{
-          initial: { y: "100%", x: "0%" },
-          animate: { y: "0%", x: "0%" },
-          exit: { y: "100%", x: "0%" },
-          lgInitial: { x: "100%", y: "0%" },
-          lgAnimate: { x: "0%", y: "0%" },
-          lgExit: { x: "100%", y: "0%" },
-        }}
-        initial="initial"
-        animate="animate"
-        exit="exit"
+        className="fixed bottom-0 left-0 right-0 w-full h-[92vh] lg:h-full lg:max-h-full lg:w-full lg:max-w-sm lg:right-0 lg:top-0 lg:border-l bg-background rounded-t-2xl lg:rounded-none shadow-2xl flex flex-col overflow-hidden"
+        initial={window.innerWidth < 1024 ? { y: "100%" } : { x: "100%" }}
+        animate={window.innerWidth < 1024 ? { y: 0 } : { x: 0 }}
+        exit={window.innerWidth < 1024 ? { y: "100%" } : { x: "100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+        drag={window.innerWidth < 1024 ? "y" : false}
+        dragConstraints={{ top: 0 }}
+        dragElastic={0.05}
+        onDragEnd={onDragEnd}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="absolute left-1/2 top-3 -translate-x-1/2 w-12 h-1.5 bg-muted rounded-full lg:hidden" />
-        <header className="flex items-center justify-between p-4 pt-8 lg:pt-4 border-b">
-          <h3 className="text-lg font-semibold">Detail Item</h3>
+        <div className="w-full flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing lg:hidden bg-background z-10 shrink-0">
+          <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full" />
+        </div>
+
+        <header className="flex items-center justify-between px-6 py-4 border-b shrink-0 bg-background z-10">
+          <h3 className="text-lg font-bold truncate pr-4">Detail Item</h3>
           <button
             onClick={onClose}
-            className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent"
+            className="p-2 rounded-full bg-muted/50 hover:bg-muted text-foreground transition-colors"
           >
             <X size={20} />
           </button>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          <div className="flex flex-col items-center justify-center">
-            {file.thumbnailLink && !file.isFolder ? (
-              <Image
-                src={file.thumbnailLink}
-                alt={file.name}
-                width={128}
-                height={128}
-                className="rounded-lg object-cover"
-              />
-            ) : (
-              <div
-                className="w-32 h-32 flex items-center justify-center"
-                dangerouslySetInnerHTML={{ __html: iconString }}
-              />
-            )}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 space-y-8 no-scrollbar pb-safe">
+          <div className="flex flex-col items-center justify-center py-4">
+            <div className="relative shadow-lg rounded-2xl overflow-hidden bg-muted/10">
+              {file.thumbnailLink && !file.isFolder ? (
+                <Image
+                  src={file.thumbnailLink.replace("=s220", "=s800")}
+                  alt={file.name}
+                  width={200}
+                  height={200}
+                  className="object-cover w-48 h-48 sm:w-64 sm:h-64"
+                  unoptimized
+                />
+              ) : (
+                <div
+                  className="w-48 h-48 flex items-center justify-center bg-muted/20"
+                  dangerouslySetInnerHTML={{ __html: iconString }}
+                />
+              )}
+            </div>
             <p
-              className="text-center font-semibold mt-4 break-words w-full"
+              className="text-center font-bold mt-4 text-lg break-words w-full px-4 leading-snug"
               title={file.name}
             >
               {file.name}
             </p>
           </div>
 
-          {editorLink ? (
-            <a
-              href={editorLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              <ExternalLink size={16} /> Buka di Google Docs
-            </a>
-          ) : (
-            <a
-              href={driveViewerLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-2.5 bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors font-medium"
-            >
-              <ExternalLink size={16} /> Buka di Google Drive
-            </a>
-          )}
+          <div className="px-2">
+            {editorLink ? (
+              <a
+                href={editorLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-3.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold shadow-sm active:scale-95"
+              >
+                <ExternalLink size={18} /> Buka di Google Docs
+              </a>
+            ) : (
+              <a
+                href={driveViewerLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-3.5 bg-secondary text-secondary-foreground rounded-xl hover:bg-secondary/80 transition-all font-semibold shadow-sm active:scale-95"
+              >
+                <ExternalLink size={18} /> Buka di Google Drive
+              </a>
+            )}
+          </div>
 
-          <div className="space-y-2">
-            <h4 className="text-base font-semibold flex items-center gap-2">
-              <TagIcon size={16} /> Tags
+          <div className="space-y-3 bg-card border rounded-xl p-4 shadow-sm">
+            <h4 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground uppercase tracking-wider">
+              <TagIcon size={14} /> Tags
             </h4>
             <div className="flex flex-wrap gap-2">
-              {fileTags[file.id]?.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground text-xs"
-                >
-                  {tag}
-                  {isAdmin && (
-                    <button
-                      onClick={() => removeTag(file.id, tag)}
-                      className="hover:text-destructive ml-1"
-                    >
-                      <X size={12} />
-                    </button>
-                  )}
+              {fileTags[file.id]?.length > 0 ? (
+                fileTags[file.id]?.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium"
+                  >
+                    {tag}
+                    {isAdmin && (
+                      <button
+                        onClick={() => removeTag(file.id, tag)}
+                        className="hover:text-destructive/80 transition-colors"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </span>
+                ))
+              ) : (
+                <span className="text-sm text-muted-foreground italic">
+                  Tidak ada tag
                 </span>
-              ))}
+              )}
             </div>
             {isAdmin && (
               <form onSubmit={handleAddTag} className="flex gap-2 mt-2">
@@ -172,21 +194,21 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
                   placeholder="Tambah tag..."
-                  className="flex-1 px-3 py-1.5 text-sm rounded-md border bg-transparent focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="flex-1 px-3 py-2 text-sm rounded-lg border bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
                 <button
                   type="submit"
                   disabled={isAddingTag || !newTag.trim()}
-                  className="p-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
+                  className="p-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
                 >
-                  <Plus size={16} />
+                  <Plus size={18} />
                 </button>
               </form>
             )}
           </div>
 
-          <div className="space-y-3 text-sm text-foreground">
-            <h4 className="text-base font-semibold mb-2 border-b pb-2">
+          <div className="bg-card border rounded-xl p-4 shadow-sm space-y-1">
+            <h4 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider border-b pb-2">
               Informasi File
             </h4>
             <ListItem
@@ -209,14 +231,14 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
             <ListItem
               label="Diubah"
               value={new Date(file.modifiedTime).toLocaleString("id-ID", {
-                dateStyle: "long",
+                dateStyle: "medium",
                 timeStyle: "short",
               })}
             />
             <ListItem
               label="Dibuat"
               value={new Date(file.createdTime).toLocaleString("id-ID", {
-                dateStyle: "long",
+                dateStyle: "medium",
                 timeStyle: "short",
               })}
             />
@@ -230,14 +252,14 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
               />
             )}
             {file.md5Checksum && (
-              <li className="flex flex-col justify-between items-start gap-2 pt-2 border-t border-border">
-                <span className="font-medium text-muted-foreground shrink-0">
-                  MD5
+              <div className="pt-2 mt-2 border-t">
+                <span className="block text-xs font-medium text-muted-foreground mb-1">
+                  MD5 Checksum
                 </span>
-                <span className="font-mono text-xs break-all text-left">
+                <span className="block font-mono text-xs break-all bg-muted/50 p-2 rounded select-all text-muted-foreground">
                   {file.md5Checksum}
                 </span>
-              </li>
+              </div>
             )}
           </div>
         </div>
