@@ -95,14 +95,13 @@ function FileItem({
 
     if (timerRef.current) clearTimeout(timerRef.current);
 
+    const touch = e.touches[0];
+    const clientX = touch.clientX;
+    const clientY = touch.clientY;
+
     timerRef.current = setTimeout(() => {
       longPressFired.current = true;
-      if (navigator.vibrate) {
-        navigator.vibrate(50);
-      }
-
-      const touch = e.touches[0];
-      onContextMenu({ clientX: touch.clientX, clientY: touch.clientY }, file);
+      onContextMenu({ clientX, clientY }, file);
     }, 500);
   };
 
@@ -122,7 +121,6 @@ function FileItem({
     if (longPressFired.current) {
       if (e.cancelable) e.preventDefault();
       e.stopPropagation();
-
       setTimeout(() => {
         longPressFired.current = false;
       }, 200);
