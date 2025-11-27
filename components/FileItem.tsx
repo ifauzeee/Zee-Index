@@ -13,7 +13,6 @@ import {
   ImageOff,
   Link as LinkIcon,
   XCircle,
-  MoreVertical,
 } from "lucide-react";
 
 interface FileItemProps {
@@ -75,9 +74,10 @@ function FileItem({
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
     checkMobile();
-    
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
@@ -113,8 +113,10 @@ function FileItem({
 
     timerRef.current = setTimeout(() => {
       longPressTriggeredRef.current = true;
-      if (typeof navigator !== 'undefined' && navigator.vibrate) {
-        try { navigator.vibrate(15); } catch (e) {} 
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        try {
+          navigator.vibrate(15);
+        } catch (e) {}
       }
       onContextMenu({ clientX: touch.clientX, clientY: touch.clientY }, file);
     }, 500);
@@ -160,16 +162,10 @@ function FileItem({
       e.stopPropagation();
       return;
     }
-    
+
     e.preventDefault();
     e.stopPropagation();
     onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
-  };
-
-  const handleMoreClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const rect = (e.target as HTMLElement).getBoundingClientRect();
-    onContextMenu({ clientX: rect.left, clientY: rect.top }, file);
   };
 
   const handleInteractionClick = (e: React.MouseEvent) => {
@@ -240,7 +236,7 @@ function FileItem({
         isGallery && "mb-4",
         isUploading && "opacity-80",
         "w-full max-w-full",
-        "will-change-transform" 
+        "will-change-transform",
       )}
       onMouseEnter={onMouseEnter}
     >
@@ -508,50 +504,38 @@ function FileItem({
           </div>
 
           {!isBulkMode && !isUploading && (
-            <>
-              <div
-                className={cn(
-                  "hidden md:flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 focus-within:opacity-100 shrink-0",
-                  compactClass && "scale-90 origin-right",
-                )}
-              >
-                {isAdmin && (
-                  <button
-                    onClick={onShare}
-                    title="Bagikan"
-                    className="p-2 rounded-full hover:bg-muted"
-                  >
-                    <Share2 size={16} />
-                  </button>
-                )}
-                {!file.isFolder && (
-                  <button
-                    onClick={onDownload}
-                    title="Unduh"
-                    className="p-2 rounded-full hover:bg-muted"
-                  >
-                    <Download size={16} />
-                  </button>
-                )}
+            <div
+              className={cn(
+                "hidden md:flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 focus-within:opacity-100 shrink-0",
+                compactClass && "scale-90 origin-right",
+              )}
+            >
+              {isAdmin && (
                 <button
-                  onClick={onShowDetails}
-                  title="Lihat Detail"
+                  onClick={onShare}
+                  title="Bagikan"
                   className="p-2 rounded-full hover:bg-muted"
                 >
-                  <Info size={16} />
+                  <Share2 size={16} />
                 </button>
-              </div>
-
+              )}
+              {!file.isFolder && (
+                <button
+                  onClick={onDownload}
+                  title="Unduh"
+                  className="p-2 rounded-full hover:bg-muted"
+                >
+                  <Download size={16} />
+                </button>
+              )}
               <button
-                className={cn(
-                  "md:hidden p-2 text-muted-foreground active:text-foreground active:bg-accent/50 rounded-full transition-colors ml-auto shrink-0",
-                  view !== "list" && "absolute top-1 right-1 bg-background/50",
-                )}
-                onClick={handleMoreClick}
+                onClick={onShowDetails}
+                title="Lihat Detail"
+                className="p-2 rounded-full hover:bg-muted"
               >
-                <MoreVertical size={18} />
+                <Info size={16} />
               </button>
-            </>
+            </div>
           )}
 
           {isBulkMode && !isUploading && (
