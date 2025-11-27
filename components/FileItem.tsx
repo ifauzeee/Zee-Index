@@ -68,17 +68,15 @@ function FileItem({
   const [isDragOver, setIsDragOver] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
-  
-  const [isDesktopMouse, setIsDesktopMouse] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
-    const checkPointer = () => {
-      const hasFinePointer = window.matchMedia("(pointer: fine)").matches;
-      setIsDesktopMouse(hasFinePointer);
+    const checkMatch = () => {
+      setIsDesktop(window.matchMedia("(pointer: fine)").matches);
     };
-    checkPointer();
-    window.addEventListener("resize", checkPointer);
-    return () => window.removeEventListener("resize", checkPointer);
+    checkMatch();
+    window.addEventListener("resize", checkMatch);
+    return () => window.removeEventListener("resize", checkMatch);
   }, []);
 
   const isNew = useMemo(() => {
@@ -109,10 +107,9 @@ function FileItem({
 
   const handleMenuClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    e.stopPropagation(); 
+    e.stopPropagation();
     
-    const rect = (e.currentTarget as Element).getBoundingClientRect();
-    onContextMenu({ clientX: rect.left - 100, clientY: rect.bottom + 10 }, file);
+    onContextMenu({ clientX: 0, clientY: 0 }, file);
   };
 
   const itemVariants: Variants = {
@@ -155,20 +152,19 @@ function FileItem({
   const isUploading = uploadStatus === "uploading";
   const isError = uploadStatus === "error";
 
-  const canDrag = isAdmin && !isUploading && isDesktopMouse;
+  const canDrag = isAdmin && !isUploading && isDesktop;
 
   return (
     <motion.div
       variants={itemVariants}
       initial="hidden"
       animate="visible"
-      whileHover={!isUploading && isDesktopMouse ? "hover" : undefined}
-      whileTap={!isUploading && !isDesktopMouse ? { scale: 0.98 } : undefined}
+      whileHover={!isUploading && isDesktop ? "hover" : undefined}
+      whileTap={!isUploading ? { scale: 0.98 } : undefined}
       className={cn(
         isGallery && "mb-4",
         isUploading && "opacity-80",
-        "w-full max-w-full",
-        "will-change-transform",
+        "w-full max-w-full will-change-transform",
       )}
       onMouseEnter={onMouseEnter}
     >
@@ -192,7 +188,6 @@ function FileItem({
         )}
         onClick={() => !isUploading && onClick()}
         onContextMenu={!isUploading ? handleContextMenuEvent : undefined}
-        
         draggable={canDrag}
         onDragStart={onDragStart}
         onDragOver={handleDragOver}
@@ -209,7 +204,6 @@ function FileItem({
                 : "flex-col",
           )}
         >
-          {/* Thumbnail Area */}
           <div
             className={cn(
               "relative shrink-0",
@@ -243,11 +237,6 @@ function FileItem({
                   }}
                   unoptimized
                 />
-                {file.isProtected && (
-                  <div className="absolute bottom-2 right-2 flex items-center justify-center p-1.5 bg-background/60 rounded-full ring-2 ring-background/20 z-20">
-                    <Lock size={12} className="text-primary" />
-                  </div>
-                )}
               </div>
             ) : view === "grid" && hasImage ? (
               <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-md overflow-hidden flex items-center justify-center bg-muted/20">
@@ -283,28 +272,16 @@ function FileItem({
                           ? 20
                           : 28,
                 })}
-                {isGallery && imageError && (
-                  <span className="text-xs text-muted-foreground mt-2">
-                    <ImageOff size={16} className="inline mr-1" />
-                    Gagal muat
-                  </span>
-                )}
               </div>
             )}
 
             {view !== "list" && file.isProtected && !isGallery && (
-              <div
-                className={cn(
-                  "absolute flex items-center justify-center p-1.5 bg-background/60 rounded-full ring-2 ring-background/20 z-20",
-                  isGallery ? "bottom-2 right-2" : "-bottom-1 -right-1",
-                )}
-              >
+              <div className="absolute -bottom-1 -right-1 flex items-center justify-center p-1.5 bg-background/60 rounded-full ring-2 ring-background/20 z-20">
                 <Lock size={12} className="text-primary" />
               </div>
             )}
           </div>
 
-          {/* File Info Area */}
           <div
             className={cn(
               "flex-1 min-w-0 max-w-full",
@@ -321,121 +298,48 @@ function FileItem({
                     ? "text-xs sm:text-sm justify-center"
                     : "text-sm",
               )}
-              title={file.name}
             >
               {file.isFavorite && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleFavorite?.(e);
-                  }}
-                  className="hover:bg-muted p-0.5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 shrink-0"
-                  title="Hapus dari favorit"
-                >
-                  <Star
-                    size={12}
-                    className="text-yellow-400 fill-yellow-400 shrink-0"
-                  />
-                </button>
+                <Star size={12} className="text-yellow-400 fill-yellow-400 shrink-0" />
               )}
               {view === "list" && file.isProtected && (
                 <Lock size={12} className="text-muted-foreground shrink-0" />
               )}
 
               {view === "list" ? (
-                <div className="flex-1 min-w-0 overflow-x-auto whitespace-nowrap no-scrollbar mask-gradient-right">
-                  <span className="inline-block">{file.name}</span>
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <p className="truncate block">{file.name}</p>
                 </div>
               ) : (
-                <span className="line-clamp-2 break-words w-full leading-tight">
+                <p className="line-clamp-2 break-words w-full leading-tight">
                   {file.name}
-                </span>
-              )}
-
-              {view === "list" && (
-                <div className="flex gap-1 ml-2 shrink-0">
-                  {isNew && !isUploading && (
-                    <span className="bg-green-500/10 text-green-500 text-[10px] px-1.5 py-0.5 rounded-full border border-green-500/20 whitespace-nowrap">
-                      New
-                    </span>
-                  )}
-                  {isShared && !isUploading && (
-                    <span className="bg-blue-500/10 text-blue-500 text-[10px] px-1.5 py-0.5 rounded-full border border-blue-500/20 flex items-center gap-0.5">
-                      <LinkIcon size={8} /> Link
-                    </span>
-                  )}
-                </div>
+                </p>
               )}
             </div>
 
-            {isUploading || isError ? (
-              <div className="w-full mt-2">
-                <div className="flex justify-between items-center text-[10px] text-muted-foreground mb-1">
-                  <span>{isError ? "Gagal" : "Mengupload..."}</span>
-                  <span>
-                    {isError ? (
-                      <XCircle size={10} className="text-destructive" />
-                    ) : (
-                      `${uploadProgress}%`
-                    )}
-                  </span>
-                </div>
-                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={cn(
-                      "h-full transition-all duration-300",
-                      isError ? "bg-destructive" : "bg-primary",
-                    )}
-                    style={{ width: `${uploadProgress}%` }}
-                  />
-                </div>
-                {isError && (
-                  <p className="text-[10px] text-destructive mt-1 truncate">
-                    {uploadError}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <>
-                {view === "list" && !file.isFolder && !compactClass && (
-                  <p className="text-xs text-muted-foreground mt-1 text-left truncate">
-                    {file.size ? formatBytes(parseInt(file.size)) : "-"} •{" "}
-                    {new Date(file.modifiedTime).toLocaleDateString("id-ID", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </p>
-                )}
-                {(view === "grid" || view === "gallery") && !file.isFolder && (
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="flex gap-1 mt-1">
-                      {isNew && (
-                        <span className="bg-green-500/10 text-green-500 text-[9px] px-1 rounded-full border border-green-500/20">
-                          New
-                        </span>
-                      )}
-                      {isShared && (
-                        <span className="bg-blue-500/10 text-blue-500 text-[9px] px-1 rounded-full border border-blue-500/20">
-                          Link
-                        </span>
-                      )}
-                    </div>
-                    <p
-                      className={cn(
-                        "text-xs text-muted-foreground mt-0.5 truncate w-full",
-                        view === "grid" ? "text-center" : "text-left",
-                      )}
-                    >
-                      {file.size ? formatBytes(parseInt(file.size)) : "-"}
-                    </p>
-                  </div>
-                )}
-              </>
+            {view === "list" && !file.isFolder && !compactClass && !isUploading && (
+              <p className="text-xs text-muted-foreground mt-1 text-left truncate">
+                {file.size ? formatBytes(parseInt(file.size)) : "-"} •{" "}
+                {new Date(file.modifiedTime).toLocaleDateString("id-ID", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </p>
+            )}
+            
+            {(isUploading || isError) && (
+               <div className="w-full mt-2">
+                 <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+                    <div 
+                        className={cn("h-full", isError ? "bg-red-500" : "bg-primary")} 
+                        style={{ width: `${uploadProgress}%`}} 
+                    />
+                 </div>
+               </div>
             )}
           </div>
 
-          {/* Desktop Hover Actions */}
           {!isBulkMode && !isUploading && (
             <div
               className={cn(
@@ -444,45 +348,33 @@ function FileItem({
               )}
             >
               {isAdmin && (
-                <button
-                  onClick={onShare}
-                  title="Bagikan"
-                  className="p-2 rounded-full hover:bg-muted"
-                >
+                <button onClick={onShare} title="Bagikan" className="p-2 rounded-full hover:bg-muted">
                   <Share2 size={16} />
                 </button>
               )}
               {!file.isFolder && (
-                <button
-                  onClick={onDownload}
-                  title="Unduh"
-                  className="p-2 rounded-full hover:bg-muted"
-                >
+                <button onClick={onDownload} title="Unduh" className="p-2 rounded-full hover:bg-muted">
                   <Download size={16} />
                 </button>
               )}
-              <button
-                onClick={onShowDetails}
-                title="Lihat Detail"
-                className="p-2 rounded-full hover:bg-muted"
-              >
+              <button onClick={onShowDetails} title="Lihat Detail" className="p-2 rounded-full hover:bg-muted">
                 <Info size={16} />
               </button>
             </div>
           )}
 
-          {/* Mobile/Tablet 3-Dots Menu */}
-          {/* Tombol ini selalu muncul (tidak ada cek isBulkMode) dan punya Z-Index tinggi */}
           {!isUploading && (
             <button
-                onClick={handleMenuClick}
-                className={cn(
-                    "md:hidden p-3 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0 z-30 active:bg-accent",
-                    view === "grid" || view === "gallery" ? "absolute top-0 right-0 bg-background/60 backdrop-blur-sm shadow-sm" : "ml-auto"
-                )}
-                aria-label="Opsi lainnya"
+              onClick={handleMenuClick}
+              className={cn(
+                "md:hidden p-2.5 -m-1 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0 z-30 active:bg-accent active:text-primary",
+                (view === "grid" || view === "gallery") 
+                  ? "absolute top-1 right-1 bg-background/70 backdrop-blur-sm shadow-sm border border-black/5" 
+                  : "ml-auto"
+              )}
+              aria-label="Opsi lainnya"
             >
-                <MoreVertical size={18} />
+              <MoreVertical size={18} />
             </button>
           )}
 

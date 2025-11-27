@@ -1,3 +1,5 @@
+"use client";
+
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Pencil,
@@ -12,7 +14,7 @@ import {
   Edit3,
 } from "lucide-react";
 import { formatBytes, cn } from "@/lib/utils";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 interface ContextMenuProps {
   x: number;
@@ -55,15 +57,25 @@ export default function ContextMenu({
   isImage,
   onEditImage,
 }: ContextMenuProps) {
-  const isDesktop = typeof window !== "undefined" && window.innerWidth >= 768;
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const checkScreen = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
+
   const desktopStyle = isDesktop ? { top: y, left: x } : undefined;
 
   const menuContent = (
-    <ul className="py-1">
+    <ul className="py-2 md:py-1">
       <li>
         <button
           onClick={onPreview}
-          className="w-full text-left px-4 py-3 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
+          className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
         >
           <Eye size={18} /> Pratinjau / Buka
         </button>
@@ -73,7 +85,7 @@ export default function ContextMenu({
         <li>
           <button
             onClick={onEditImage}
-            className="w-full text-left px-4 py-3 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
+            className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
           >
             <Edit3 size={18} /> Edit Gambar
           </button>
@@ -83,7 +95,7 @@ export default function ContextMenu({
       <li>
         <button
           onClick={onShowDetails}
-          className="w-full text-left px-4 py-3 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
+          className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
         >
           <Info size={18} /> Lihat Detail
         </button>
@@ -99,7 +111,7 @@ export default function ContextMenu({
                 ? `File terlalu besar (> 100 MB). Ukuran: ${formatBytes(fileSize)}`
                 : "Lihat Isi Arsip"
             }
-            className="w-full text-left px-4 py-3 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:bg-accent"
+            className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:bg-accent"
           >
             <Archive size={18} /> Lihat Isi Arsip
           </button>
@@ -110,7 +122,7 @@ export default function ContextMenu({
       <li>
         <button
           onClick={onToggleFavorite}
-          className="w-full text-left px-4 py-3 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
+          className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
         >
           <Star
             size={18}
@@ -122,7 +134,7 @@ export default function ContextMenu({
       <li>
         <button
           onClick={onShare}
-          className="w-full text-left px-4 py-3 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
+          className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
         >
           <Share2 size={18} /> Bagikan
         </button>
@@ -130,7 +142,7 @@ export default function ContextMenu({
       <li>
         <button
           onClick={onCopy}
-          className="w-full text-left px-4 py-3 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
+          className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
         >
           <Copy size={18} /> Buat Salinan
         </button>
@@ -138,7 +150,7 @@ export default function ContextMenu({
       <li>
         <button
           onClick={onMove}
-          className="w-full text-left px-4 py-3 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
+          className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
         >
           <Move size={18} /> Pindahkan
         </button>
@@ -146,7 +158,7 @@ export default function ContextMenu({
       <li>
         <button
           onClick={onRename}
-          className="w-full text-left px-4 py-3 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
+          className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-foreground hover:bg-accent flex items-center gap-3 md:gap-2 active:bg-accent"
         >
           <Pencil size={18} /> Ubah Nama
         </button>
@@ -155,7 +167,7 @@ export default function ContextMenu({
       <li>
         <button
           onClick={onDelete}
-          className="w-full text-left px-4 py-3 md:py-2 text-sm text-red-500 hover:bg-accent flex items-center gap-3 md:gap-2 font-medium active:bg-accent"
+          className="w-full text-left px-4 py-3.5 md:py-2 text-sm text-red-500 hover:bg-accent flex items-center gap-3 md:gap-2 font-medium active:bg-accent"
         >
           <Trash2 size={18} /> Hapus
         </button>
@@ -170,34 +182,34 @@ export default function ContextMenu({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/60"
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         />
 
         <motion.div
           className={cn(
             "bg-background border shadow-2xl overflow-hidden z-[10000]",
-            "fixed bottom-0 left-0 w-full rounded-t-2xl border-t",
-            "md:fixed md:w-64 md:rounded-lg md:border md:bottom-auto md:left-auto",
+            "fixed bottom-0 left-0 w-full rounded-t-2xl border-t pb-safe",
+            "md:fixed md:w-64 md:rounded-lg md:border md:bottom-auto md:left-auto md:pb-0"
           )}
           style={desktopStyle}
           initial={isDesktop ? { opacity: 0, scale: 0.95 } : { y: "100%" }}
           animate={isDesktop ? { opacity: 1, scale: 1 } : { y: 0 }}
           exit={isDesktop ? { opacity: 0, scale: 0.95 } : { y: "100%" }}
-          transition={{ type: "tween", duration: 0.2, ease: "easeOut" }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex md:hidden items-center justify-center pt-3 pb-2 relative cursor-grab active:cursor-grabbing">
-            <div className="w-12 h-1.5 bg-muted-foreground/20 rounded-full" />
+          <div className="flex md:hidden items-center justify-center pt-3 pb-1">
+            <div className="w-12 h-1.5 bg-muted rounded-full" />
           </div>
 
-          <div className="max-h-[80vh] overflow-y-auto overscroll-contain">
+          <div className="max-h-[85vh] overflow-y-auto overscroll-contain">
             {menuContent}
           </div>
 
-          <div className="p-4 pt-2 border-t mt-2 md:hidden pb-8">
+          <div className="p-4 pt-2 border-t mt-1 md:hidden">
             <button
               onClick={onClose}
-              className="w-full py-3 bg-secondary text-secondary-foreground rounded-xl font-semibold active:scale-95 transition-transform"
+              className="w-full py-3 bg-secondary/50 text-secondary-foreground rounded-xl font-semibold active:scale-95 transition-transform"
             >
               Batal
             </button>
