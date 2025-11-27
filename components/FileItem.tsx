@@ -109,10 +109,10 @@ function FileItem({
 
   const handleMenuClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    e.stopPropagation();
+    e.stopPropagation(); 
     
-    const rect = (e.target as Element).getBoundingClientRect();
-    onContextMenu({ clientX: rect.left, clientY: rect.bottom }, file);
+    const rect = (e.currentTarget as Element).getBoundingClientRect();
+    onContextMenu({ clientX: rect.left - 100, clientY: rect.bottom + 10 }, file);
   };
 
   const itemVariants: Variants = {
@@ -192,6 +192,7 @@ function FileItem({
         )}
         onClick={() => !isUploading && onClick()}
         onContextMenu={!isUploading ? handleContextMenuEvent : undefined}
+        
         draggable={canDrag}
         onDragStart={onDragStart}
         onDragOver={handleDragOver}
@@ -208,6 +209,7 @@ function FileItem({
                 : "flex-col",
           )}
         >
+          {/* Thumbnail Area */}
           <div
             className={cn(
               "relative shrink-0",
@@ -302,6 +304,7 @@ function FileItem({
             )}
           </div>
 
+          {/* File Info Area */}
           <div
             className={cn(
               "flex-1 min-w-0 max-w-full",
@@ -468,14 +471,16 @@ function FileItem({
             </div>
           )}
 
-          {/* Mobile/Tablet 3-Dots Menu (Replaces Long Press) */}
-          {!isBulkMode && !isUploading && (
+          {/* Mobile/Tablet 3-Dots Menu */}
+          {/* Tombol ini selalu muncul (tidak ada cek isBulkMode) dan punya Z-Index tinggi */}
+          {!isUploading && (
             <button
                 onClick={handleMenuClick}
                 className={cn(
-                    "md:hidden p-2 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0",
-                    view === "grid" || view === "gallery" ? "absolute top-1 right-1 bg-background/80 backdrop-blur-sm shadow-sm z-20" : "ml-auto"
+                    "md:hidden p-3 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0 z-30 active:bg-accent",
+                    view === "grid" || view === "gallery" ? "absolute top-0 right-0 bg-background/60 backdrop-blur-sm shadow-sm" : "ml-auto"
                 )}
+                aria-label="Opsi lainnya"
             >
                 <MoreVertical size={18} />
             </button>
@@ -487,7 +492,7 @@ function FileItem({
               checked={isSelected}
               readOnly
               className={cn(
-                "absolute h-5 w-5 pointer-events-none",
+                "absolute h-5 w-5 pointer-events-none z-10",
                 view === "list"
                   ? "right-4 top-1/2 -translate-y-1/2"
                   : "top-2 right-2",
