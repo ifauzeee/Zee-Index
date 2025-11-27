@@ -19,6 +19,8 @@ import {
   cn,
   getIcon,
   getLanguageFromFilename,
+  getGoogleEditorLink,
+  getGoogleDriveLink,
 } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -34,6 +36,9 @@ import {
   X,
   Plus,
   Download,
+  Link as LinkIcon,
+  ExternalLink,
+  Tag as TagIcon,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
@@ -539,6 +544,12 @@ export default function FileDetail({
     }
   };
 
+  const handleCopyDirectLink = () => {
+    const fullUrl = `${window.location.origin}${directLink}`;
+    navigator.clipboard.writeText(fullUrl);
+    addToast({ message: "Link langsung berhasil disalin!", type: "success" });
+  };
+
   const renderPreview = () => {
     const mimeType =
       file.mimeType === "application/octet-stream" && file.name.endsWith(".mkv")
@@ -933,6 +944,14 @@ export default function FileDetail({
           </ul>
 
           <div className="flex flex-col sm:flex-row gap-4 mt-6">
+            <button
+              onClick={handleCopyDirectLink}
+              className="flex-1 flex items-center justify-center px-4 py-3 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 font-semibold transition-colors"
+            >
+              <LinkIcon size={18} className="mr-3" />
+              Copy Link
+            </button>
+
             <a
               href={directLink}
               download
