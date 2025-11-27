@@ -10,8 +10,6 @@ import {
   Share2,
   Download,
   Info,
-  Link as LinkIcon,
-  XCircle,
   MoreVertical,
 } from "lucide-react";
 
@@ -63,7 +61,6 @@ function FileItem({
 }: FileItemProps) {
   const { view, shareToken } = useAppStore();
   const Icon = getIcon(file.mimeType);
-
   const [isDragOver, setIsDragOver] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
@@ -77,12 +74,6 @@ function FileItem({
     window.addEventListener("resize", checkMatch);
     return () => window.removeEventListener("resize", checkMatch);
   }, []);
-
-  const isNew = useMemo(() => {
-    const created = new Date(file.createdTime).getTime();
-    const now = Date.now();
-    return now - created < 24 * 60 * 60 * 1000;
-  }, [file.createdTime]);
 
   const thumbnailSrc = useMemo(() => {
     if (file.thumbnailLink) {
@@ -107,7 +98,8 @@ function FileItem({
   const handleMenuClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onContextMenu({ clientX: 0, clientY: 0 }, file);
+    const rect = (e.currentTarget as Element).getBoundingClientRect();
+    onContextMenu({ clientX: rect.left, clientY: rect.bottom + 5 }, file);
   };
 
   const itemVariants: Variants = {
@@ -387,7 +379,7 @@ function FileItem({
               onClick={handleMenuClick}
               className={cn(
                 "md:hidden p-2.5 -m-1 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0 z-30 active:bg-accent active:text-primary",
-                (view === "grid" || view === "gallery")
+                view === "grid" || view === "gallery"
                   ? "absolute top-1 right-1 bg-background/70 backdrop-blur-sm shadow-sm border border-black/5"
                   : "ml-auto",
               )}

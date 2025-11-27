@@ -14,7 +14,8 @@ import {
   Edit3,
 } from "lucide-react";
 import { formatBytes, cn } from "@/lib/utils";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 
 interface ContextMenuProps {
   x: number;
@@ -58,8 +59,12 @@ export default function ContextMenu({
   onEditImage,
 }: ContextMenuProps) {
   const [isDesktop, setIsDesktop] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ top: y, left: x });
 
   useEffect(() => {
+    setMounted(true);
     const checkScreen = () => {
       setIsDesktop(window.innerWidth >= 768);
     };
@@ -68,7 +73,29 @@ export default function ContextMenu({
     return () => window.removeEventListener("resize", checkScreen);
   }, []);
 
-  const desktopStyle = isDesktop ? { top: y, left: x } : undefined;
+  useEffect(() => {
+    if (isDesktop && menuRef.current) {
+      const { innerWidth, innerHeight } = window;
+      const { offsetWidth, offsetHeight } = menuRef.current;
+
+      let newLeft = x;
+      let newTop = y;
+
+      if (x + offsetWidth > innerWidth) {
+        newLeft = x - offsetWidth;
+      }
+
+      if (y + offsetHeight > innerHeight) {
+        newTop = y - offsetHeight;
+      }
+
+      setPosition({ top: newTop, left: newLeft });
+    } else {
+      setPosition({ top: y, left: x });
+    }
+  }, [x, y, isDesktop]);
+
+  const desktopStyle = isDesktop ? { top: position.top, left: position.left } : undefined;
 
   const menuContent = (
     <ul className="py-2 md:py-1">
@@ -175,7 +202,7 @@ export default function ContextMenu({
     </ul>
   );
 
-  return (
+  const content = (
     <AnimatePresence>
       <div className="fixed inset-0 z-[9999]" onClick={onClose}>
         <motion.div
@@ -186,6 +213,7 @@ export default function ContextMenu({
         />
 
         <motion.div
+          ref={menuRef}
           className={cn(
             "bg-background border shadow-2xl overflow-hidden z-[10000]",
             "fixed bottom-0 left-0 w-full rounded-t-2xl border-t pb-safe",
@@ -218,4 +246,7 @@ export default function ContextMenu({
       </div>
     </AnimatePresence>
   );
+
+  if (!mounted) return null;
+  return createPortal(content, document.body);
 }
