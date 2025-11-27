@@ -71,16 +71,6 @@ function FileItem({
   const [isDragOver, setIsDragOver] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   const isNew = useMemo(() => {
     const created = new Date(file.createdTime).getTime();
@@ -113,11 +103,13 @@ function FileItem({
 
     timerRef.current = setTimeout(() => {
       longPressTriggeredRef.current = true;
+      
       if (typeof navigator !== "undefined" && navigator.vibrate) {
         try {
-          navigator.vibrate(15);
+          navigator.vibrate(50);
         } catch (e) {}
       }
+
       onContextMenu({ clientX: touch.clientX, clientY: touch.clientY }, file);
     }, 500);
   };
@@ -129,7 +121,7 @@ function FileItem({
     const moveX = Math.abs(touch.clientX - touchStartRef.current.x);
     const moveY = Math.abs(touch.clientY - touchStartRef.current.y);
 
-    if (moveX > 10 || moveY > 10) {
+    if (moveX > 25 || moveY > 25) {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
@@ -151,13 +143,25 @@ function FileItem({
     }
 
     touchStartRef.current = null;
+    
     setTimeout(() => {
       longPressTriggeredRef.current = false;
     }, 200);
   };
 
+  const handleTouchCancel = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    touchStartRef.current = null;
+    longPressTriggeredRef.current = false;
+  };
+
   const handleContextMenuEvent = (e: React.MouseEvent) => {
-    if (isMobile || (e.nativeEvent as any).pointerType === "touch") {
+    const isTouch = (e.nativeEvent as any).pointerType === 'touch' || 'ontouchstart' in window;
+
+    if (isTouch) {
       e.preventDefault();
       e.stopPropagation();
       return;
@@ -170,6 +174,7 @@ function FileItem({
 
   const handleInteractionClick = (e: React.MouseEvent) => {
     if (isUploading) return;
+    
     if (longPressTriggeredRef.current) {
       e.preventDefault();
       e.stopPropagation();
@@ -225,13 +230,15 @@ function FileItem({
   const isUploading = uploadStatus === "uploading";
   const isError = uploadStatus === "error";
 
+  const isMobileView = typeof window !== 'undefined' && window.matchMedia("(pointer: coarse)").matches;
+
   return (
     <motion.div
       variants={itemVariants}
       initial="hidden"
       animate="visible"
-      whileHover={!isUploading && !isMobile ? "hover" : undefined}
-      whileTap={!isUploading && isMobile ? { scale: 0.98 } : undefined}
+      whileHover={!isUploading && !isMobileView ? "hover" : undefined}
+      whileTap={!isUploading && isMobileView ? { scale: 0.98 } : undefined}
       className={cn(
         isGallery && "mb-4",
         isUploading && "opacity-80",
@@ -263,7 +270,8 @@ function FileItem({
         onTouchStart={!isUploading ? handleTouchStart : undefined}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        draggable={isAdmin && !isUploading && !isMobile}
+        onTouchCancel={handleTouchCancel}
+        draggable={isAdmin && !isUploading && !isMobileView}
         onDragStart={onDragStart}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
