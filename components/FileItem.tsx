@@ -10,7 +10,6 @@ import {
   Share2,
   Download,
   Info,
-  ImageOff,
   Link as LinkIcon,
   XCircle,
   MoreVertical,
@@ -108,7 +107,6 @@ function FileItem({
   const handleMenuClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
     onContextMenu({ clientX: 0, clientY: 0 }, file);
   };
 
@@ -300,7 +298,10 @@ function FileItem({
               )}
             >
               {file.isFavorite && (
-                <Star size={12} className="text-yellow-400 fill-yellow-400 shrink-0" />
+                <Star
+                  size={12}
+                  className="text-yellow-400 fill-yellow-400 shrink-0"
+                />
               )}
               {view === "list" && file.isProtected && (
                 <Lock size={12} className="text-muted-foreground shrink-0" />
@@ -317,26 +318,32 @@ function FileItem({
               )}
             </div>
 
-            {view === "list" && !file.isFolder && !compactClass && !isUploading && (
-              <p className="text-xs text-muted-foreground mt-1 text-left truncate">
-                {file.size ? formatBytes(parseInt(file.size)) : "-"} •{" "}
-                {new Date(file.modifiedTime).toLocaleDateString("id-ID", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
-              </p>
-            )}
-            
+            {view === "list" &&
+              !file.isFolder &&
+              !compactClass &&
+              !isUploading && (
+                <p className="text-xs text-muted-foreground mt-1 text-left truncate">
+                  {file.size ? formatBytes(parseInt(file.size)) : "-"} •{" "}
+                  {new Date(file.modifiedTime).toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </p>
+              )}
+
             {(isUploading || isError) && (
-               <div className="w-full mt-2">
-                 <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
-                    <div 
-                        className={cn("h-full", isError ? "bg-red-500" : "bg-primary")} 
-                        style={{ width: `${uploadProgress}%`}} 
-                    />
-                 </div>
-               </div>
+              <div className="w-full mt-2">
+                <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={cn(
+                      "h-full",
+                      isError ? "bg-red-500" : "bg-primary",
+                    )}
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
             )}
           </div>
 
@@ -348,16 +355,28 @@ function FileItem({
               )}
             >
               {isAdmin && (
-                <button onClick={onShare} title="Bagikan" className="p-2 rounded-full hover:bg-muted">
+                <button
+                  onClick={onShare}
+                  title="Bagikan"
+                  className="p-2 rounded-full hover:bg-muted"
+                >
                   <Share2 size={16} />
                 </button>
               )}
               {!file.isFolder && (
-                <button onClick={onDownload} title="Unduh" className="p-2 rounded-full hover:bg-muted">
+                <button
+                  onClick={onDownload}
+                  title="Unduh"
+                  className="p-2 rounded-full hover:bg-muted"
+                >
                   <Download size={16} />
                 </button>
               )}
-              <button onClick={onShowDetails} title="Lihat Detail" className="p-2 rounded-full hover:bg-muted">
+              <button
+                onClick={onShowDetails}
+                title="Lihat Detail"
+                className="p-2 rounded-full hover:bg-muted"
+              >
                 <Info size={16} />
               </button>
             </div>
@@ -368,9 +387,9 @@ function FileItem({
               onClick={handleMenuClick}
               className={cn(
                 "md:hidden p-2.5 -m-1 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0 z-30 active:bg-accent active:text-primary",
-                (view === "grid" || view === "gallery") 
-                  ? "absolute top-1 right-1 bg-background/70 backdrop-blur-sm shadow-sm border border-black/5" 
-                  : "ml-auto"
+                (view === "grid" || view === "gallery")
+                  ? "absolute top-1 right-1 bg-background/70 backdrop-blur-sm shadow-sm border border-black/5"
+                  : "ml-auto",
               )}
               aria-label="Opsi lainnya"
             >
@@ -410,7 +429,8 @@ const arePropsEqual = (prevProps: FileItemProps, nextProps: FileItemProps) => {
     prevProps.uploadProgress === nextProps.uploadProgress &&
     prevProps.uploadStatus === nextProps.uploadStatus &&
     prevProps.file.name === nextProps.file.name &&
-    prevProps.file.isFavorite === nextProps.file.isFavorite
+    prevProps.file.isFavorite === nextProps.file.isFavorite &&
+    prevProps.isAdmin === nextProps.isAdmin
   );
 };
 
