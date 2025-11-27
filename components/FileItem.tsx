@@ -72,6 +72,8 @@ function FileItem({
   const [imageError, setImageError] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
 
+  const isMobileView = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+
   const isNew = useMemo(() => {
     const created = new Date(file.createdTime).getTime();
     const now = Date.now();
@@ -229,8 +231,6 @@ function FileItem({
   const compactClass = density === "compact" && view === "list";
   const isUploading = uploadStatus === "uploading";
   const isError = uploadStatus === "error";
-
-  const isMobileView = typeof window !== 'undefined' && window.matchMedia("(pointer: coarse)").matches;
 
   return (
     <motion.div
