@@ -64,22 +64,24 @@ function FileItem({
   const { view, shareToken } = useAppStore();
   const Icon = getIcon(file.mimeType);
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const longPressTriggeredRef = useRef(false);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const startPosRef = useRef<{ x: number; y: number } | null>(null);
+  const isLongPressRef = useRef(false);
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
   
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [isDesktopMouse, setIsDesktopMouse] = useState(false);
 
   useEffect(() => {
-    const checkDesktop = () => {
-      const hasMouse = window.matchMedia("(pointer: fine)").matches;
-      setIsDesktop(hasMouse);
+    const checkPointer = () => {
+      const hasFinePointer = window.matchMedia("(pointer: fine)").matches;
+      setIsDesktopMouse(hasFinePointer);
     };
-    checkDesktop();
+    checkPointer();
+    window.addEventListener("resize", checkPointer);
+    return () => window.removeEventListener("resize", checkPointer);
   }, []);
 
   const isNew = useMemo(() => {
@@ -102,108 +104,79 @@ function FileItem({
     return url;
   }, [file.thumbnailLink, file.id, view, shareToken]);
 
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (e.touches.length > 1) return;
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
 
-    const touch = e.touches[0];
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-    longPressTriggeredRef.current = false;
+    isLongPressRef.current = false;
+    startPosRef.current = { x: e.clientX, y: e.clientY };
 
-    if (timerRef.current) clearTimeout(timerRef.current);
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
 
-    timerRef.current = setTimeout(() => {
-      longPressTriggeredRef.current = true;
+    longPressTimerRef.current = setTimeout(() => {
+      isLongPressRef.current = true;
       
       if (typeof navigator !== "undefined" && navigator.vibrate) {
-        try {
-          navigator.vibrate(50);
-        } catch (e) {}
+        try { navigator.vibrate(50); } catch (err) {}
       }
 
-      onContextMenu({ clientX: touch.clientX, clientY: touch.clientY }, file);
+      onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
     }, 500);
   };
 
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!timerRef.current || !touchStartRef.current) return;
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!longPressTimerRef.current || !startPosRef.current) return;
 
-    const touch = e.touches[0];
-    const moveX = Math.abs(touch.clientX - touchStartRef.current.x);
-    const moveY = Math.abs(touch.clientY - touchStartRef.current.y);
+    const dist = Math.hypot(e.clientX - startPosRef.current.x, e.clientY - startPosRef.current.y);
 
-    if (moveX > 25 || moveY > 25) {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
+    if (dist > 10) {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
       }
     }
   };
 
-  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
     }
+    startPosRef.current = null;
+  };
 
-    if (longPressTriggeredRef.current) {
-      if (e.cancelable) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
+  const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
     }
+    startPosRef.current = null;
+    isLongPressRef.current = false;
+  };
 
-    touchStartRef.current = null;
+  const handleClick = (e: React.MouseEvent) => {
+    if (uploadStatus === "uploading") return;
+
+    if (isLongPressRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      setTimeout(() => { isLongPressRef.current = false; }, 100);
+      return;
+    }
     
-    setTimeout(() => {
-      longPressTriggeredRef.current = false;
-    }, 200);
-  };
-
-  const handleTouchCancel = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    touchStartRef.current = null;
-    longPressTriggeredRef.current = false;
+    onClick();
   };
 
   const handleContextMenuEvent = (e: React.MouseEvent) => {
-    const isTouch = (e.nativeEvent as any).pointerType === 'touch' || 'ontouchstart' in window;
-
-    if (isTouch) {
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
-
     e.preventDefault();
-    e.stopPropagation();
-    onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
-  };
-
-  const handleInteractionClick = (e: React.MouseEvent) => {
-    if (isUploading) return;
-    
-    if (longPressTriggeredRef.current) {
-      e.preventDefault();
-      e.stopPropagation();
-      return;
+    if ((e.nativeEvent as any).pointerType !== 'touch') {
+        onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
     }
-    onClick();
   };
 
   const itemVariants: Variants = {
     hidden: { opacity: 0, y: 10 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.2 },
-    },
-    hover: {
-      scale: 1.02,
-      transition: { duration: 0.1 },
-    },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.2 } },
+    hover: { scale: 1.02, transition: { duration: 0.1 } },
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -240,13 +213,15 @@ function FileItem({
   const isUploading = uploadStatus === "uploading";
   const isError = uploadStatus === "error";
 
+  const canDrag = isAdmin && !isUploading && isDesktopMouse;
+
   return (
     <motion.div
       variants={itemVariants}
       initial="hidden"
       animate="visible"
-      whileHover={!isUploading && isDesktop ? "hover" : undefined}
-      whileTap={!isUploading && !isDesktop ? { scale: 0.98 } : undefined}
+      whileHover={!isUploading && isDesktopMouse ? "hover" : undefined}
+      whileTap={!isUploading && !isDesktopMouse ? { scale: 0.98 } : undefined}
       className={cn(
         isGallery && "mb-4",
         isUploading && "opacity-80",
@@ -258,7 +233,7 @@ function FileItem({
       <div
         className={cn(
           "group relative rounded-lg transition-all duration-100 ease-out cursor-pointer overflow-hidden w-full",
-          "select-none touch-pan-y touch-action-manipulation [-webkit-tap-highlight-color:transparent] [-webkit-touch-callout:none]",
+          "select-none touch-pan-y touch-action-manipulation",
           isSelected && "bg-accent/80 ring-2 ring-primary",
           isActive && !isBulkMode && "ring-2 ring-primary/50",
           view === "list"
@@ -273,13 +248,14 @@ function FileItem({
           isDragOver && "ring-2 ring-primary ring-inset bg-primary/10",
           isError && "ring-2 ring-destructive/50 bg-destructive/5",
         )}
-        onClick={handleInteractionClick}
-        onContextMenu={!isUploading ? handleContextMenuEvent : undefined}
-        onTouchStart={!isUploading ? handleTouchStart : undefined}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onTouchCancel={handleTouchCancel}
-        draggable={isAdmin && !isUploading && isDesktop}
+        onClick={handleClick}
+        onContextMenu={handleContextMenuEvent}
+        onPointerDown={!isUploading ? handlePointerDown : undefined}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
+        onPointerLeave={handlePointerCancel}
+        draggable={canDrag}
         onDragStart={onDragStart}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
