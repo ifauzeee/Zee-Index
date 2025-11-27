@@ -83,6 +83,11 @@ export async function GET(request: NextRequest) {
       `inline; filename="${fileDetails.name}"`,
     );
 
+    responseHeaders.set("Cache-Control", "no-cache, no-store, must-revalidate");
+    responseHeaders.set("Pragma", "no-cache");
+    responseHeaders.set("Expires", "0");
+    responseHeaders.set("X-Accel-Buffering", "no");
+
     if (googleResponse.headers.get("Content-Range")) {
       responseHeaders.set(
         "Content-Range",
