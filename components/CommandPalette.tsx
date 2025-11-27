@@ -21,7 +21,7 @@ import { signOut } from "next-auth/react";
 export default function CommandPalette() {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
-  const { user } = useAppStore(); 
+  const { user } = useAppStore();
   const { theme, setTheme } = useTheme();
 
   React.useEffect(() => {
@@ -120,7 +120,9 @@ export default function CommandPalette() {
         >
           <Command.Item
             value="ganti tema theme dark mode light mode"
-            onSelect={() => runCommand(() => setTheme(theme === "dark" ? "light" : "dark"))}
+            onSelect={() =>
+              runCommand(() => setTheme(theme === "dark" ? "light" : "dark"))
+            }
             className={itemClass}
           >
             {theme === "dark" ? (

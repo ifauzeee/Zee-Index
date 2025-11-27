@@ -47,6 +47,13 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
   const driveViewerLink = getGoogleDriveLink(file.id);
 
   useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  useEffect(() => {
     fetchTags(file.id);
   }, [file.id, fetchTags]);
 

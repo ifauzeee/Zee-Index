@@ -20,7 +20,8 @@ const AppFooter = () => {
   return (
     <footer className="text-center py-6 text-sm text-muted-foreground border-t bg-background">
       <p className="mb-2">
-        <HardDrive size={14} className="inline mr-2" />Total Penggunaan Data:{" "}
+        <HardDrive size={14} className="inline mr-2" />
+        Total Penggunaan Data:{" "}
         <span id="data-usage-value">{dataUsage.value}</span>
       </p>
       <p>

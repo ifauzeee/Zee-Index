@@ -101,7 +101,7 @@ const MobileNav: FC<MobileNavProps> = ({
       transition={{ duration: 0.2 }}
     >
       <motion.nav
-        className="fixed inset-y-0 left-0 w-full max-w-xs bg-background flex flex-col justify-center p-8 shadow-xl"
+        className="fixed inset-y-0 left-0 w-full max-w-xs bg-background flex flex-col p-6 shadow-xl overflow-y-auto"
         initial={{ x: "-100%" }}
         animate={{ x: "0%" }}
         exit={{ x: "-100%" }}
@@ -109,7 +109,7 @@ const MobileNav: FC<MobileNavProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <motion.div
-          className="flex flex-col gap-5 text-lg"
+          className="flex flex-col gap-5 text-lg mt-4"
           variants={navContainerVariants}
           initial="closed"
           animate="open"
@@ -132,7 +132,7 @@ const MobileNav: FC<MobileNavProps> = ({
             .map((item) => {
               const Icon = item.icon;
               const commonClasses =
-                "flex items-center gap-4 hover:text-primary transition-colors font-medium";
+                "flex items-center gap-4 hover:text-primary transition-colors font-medium py-1";
               return (
                 <motion.div key={item.id} variants={navItemVariants}>
                   {"href" in item && item.href ? (
@@ -167,7 +167,7 @@ const MobileNav: FC<MobileNavProps> = ({
 
           <motion.div
             variants={navItemVariants}
-            className="pt-5 mt-5 border-t border-muted"
+            className="pt-5 mt-2 border-t border-muted"
           >
             {authButton}
           </motion.div>
@@ -292,29 +292,29 @@ export default function Header() {
         <button
           onClick={handleGuestLogout}
           title="Logout (Tamu)"
-          className="flex items-center gap-2 sm:gap-4 hover:text-primary transition-colors text-muted-foreground"
+          className="flex items-center gap-2 sm:gap-4 hover:text-primary transition-colors text-muted-foreground w-full py-2"
         >
           <LogOut size={24} />
-          <span className="sm:hidden">Logout (Tamu)</span>
+          <span>Logout (Tamu)</span>
         </button>
       ) : (
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           title="Logout"
-          className="flex items-center gap-2 sm:gap-4 hover:text-primary transition-colors"
+          className="flex items-center gap-2 sm:gap-4 hover:text-primary transition-colors w-full py-2"
         >
           <LogOut size={24} />
-          <span className="sm:hidden">Logout</span>
+          <span>Logout</span>
         </button>
       )
     ) : (
       <button
         onClick={handleLoginClick}
         title="Login"
-        className="flex items-center gap-2 sm:gap-4 hover:text-primary transition-colors"
+        className="flex items-center gap-2 sm:gap-4 hover:text-primary transition-colors w-full py-2"
       >
         <LogIn size={24} />
-        <span className="sm:hidden">Login</span>
+        <span>Login</span>
       </button>
     );
 
@@ -349,7 +349,11 @@ export default function Header() {
               }`}
               title={!shareToken ? "Kembali ke Beranda" : "Zee Index"}
             >
-              <Image src={GoogleDrivePng} alt="Google Drive Logo" className="w-8 h-8 mr-3" />
+              <Image
+                src={GoogleDrivePng}
+                alt="Google Drive Logo"
+                className="w-8 h-8 mr-3 dark:invert"
+              />
               <span>Zee Index</span>
             </h1>
           </div>

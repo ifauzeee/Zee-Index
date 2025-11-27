@@ -42,6 +42,24 @@ export default function Sidebar() {
 
   const touchStartRef = useRef<number | null>(null);
 
+  useEffect(() => {
+    const handleBodyScroll = () => {
+      if (window.innerWidth < 1024 && isSidebarOpen) {
+        document.body.classList.add("mobile-menu-open");
+      } else {
+        document.body.classList.remove("mobile-menu-open");
+      }
+    };
+
+    handleBodyScroll();
+    window.addEventListener("resize", handleBodyScroll);
+
+    return () => {
+      window.removeEventListener("resize", handleBodyScroll);
+      document.body.classList.remove("mobile-menu-open");
+    };
+  }, [isSidebarOpen]);
+
   const fetchSubfolders = async (parentId: string) => {
     let url = `/api/files?folderId=${parentId}`;
     if (shareToken) url += `&share_token=${shareToken}`;
@@ -200,10 +218,13 @@ export default function Sidebar() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
+      <div className="flex-1 overflow-y-auto py-4 px-2 space-y-1 overscroll-contain">
         <div className="mb-4 space-y-1">
           <button
-            onClick={() => router.push("/")}
+            onClick={() => {
+              router.push("/");
+              if (window.innerWidth < 1024) setSidebarOpen(false);
+            }}
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
               currentFolderId === rootFolderId && "bg-accent font-medium",
@@ -212,13 +233,19 @@ export default function Sidebar() {
             <Home size={18} /> Beranda
           </button>
           <button
-            onClick={() => router.push("/favorites")}
+            onClick={() => {
+              router.push("/favorites");
+              if (window.innerWidth < 1024) setSidebarOpen(false);
+            }}
             className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
           >
             <Star size={18} /> Favorit
           </button>
           <button
-            onClick={() => router.push("/storage")}
+            onClick={() => {
+              router.push("/storage");
+              if (window.innerWidth < 1024) setSidebarOpen(false);
+            }}
             className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
           >
             <HardDrive size={18} /> Penyimpanan
@@ -226,13 +253,19 @@ export default function Sidebar() {
           {user?.role === "ADMIN" && (
             <>
               <button
-                onClick={() => router.push("/trash")}
+                onClick={() => {
+                  router.push("/trash");
+                  if (window.innerWidth < 1024) setSidebarOpen(false);
+                }}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
               >
                 <Trash2 size={18} /> Sampah
               </button>
               <button
-                onClick={() => router.push("/admin")}
+                onClick={() => {
+                  router.push("/admin");
+                  if (window.innerWidth < 1024) setSidebarOpen(false);
+                }}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
               >
                 <ShieldCheck size={18} /> Admin
@@ -270,8 +303,11 @@ export default function Sidebar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden fixed inset-0 bg-black/50 z-40"
+            className="lg:hidden fixed inset-0 bg-black/50 z-40 touch-none"
+            onClick={(e) => {
+              e.preventDefault();
+              setSidebarOpen(false);
+            }}
           />
         )}
       </AnimatePresence>

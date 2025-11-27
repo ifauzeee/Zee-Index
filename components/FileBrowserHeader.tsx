@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useRef } from "react";
 import {
   Share2,
@@ -128,10 +130,10 @@ export default function FileBrowserHeader({
         )}
       >
         {showAdminActions && (
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar p-1 pr-4 -ml-1 w-full md:w-auto">
             <button
               onClick={onUploadClick}
-              className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-primary transition-colors shadow-sm flex items-center justify-center"
+              className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-primary transition-colors shadow-sm flex items-center justify-center shrink-0"
               title="Upload atau Buat Folder"
             >
               <Upload size={18} />
@@ -139,7 +141,7 @@ export default function FileBrowserHeader({
 
             <button
               onClick={onRequestFileClick}
-              className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-purple-500 transition-colors shadow-sm flex items-center justify-center"
+              className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-purple-500 transition-colors shadow-sm flex items-center justify-center shrink-0"
               title="Buat Link Terima File"
             >
               <UploadCloud size={18} />
@@ -147,18 +149,18 @@ export default function FileBrowserHeader({
 
             <button
               onClick={onShareFolderClick}
-              className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-blue-500 transition-colors shadow-sm flex items-center justify-center"
+              className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-blue-500 transition-colors shadow-sm flex items-center justify-center shrink-0"
               title="Bagikan Folder Ini"
             >
               <Share2 size={18} />
             </button>
 
-            <div className="w-px h-6 bg-border mx-1 hidden sm:block"></div>
+            <div className="w-px h-6 bg-border mx-1 hidden sm:block shrink-0"></div>
 
             <button
               onClick={onDetailsClick}
               disabled={!activeFileId}
-              className="p-2 rounded-lg bg-card border hover:bg-accent transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="p-2 rounded-lg bg-card border hover:bg-accent transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hidden sm:flex items-center justify-center shrink-0"
               title="Lihat Detail"
             >
               <Info size={18} />
@@ -167,7 +169,7 @@ export default function FileBrowserHeader({
             <button
               onClick={onToggleBulkMode}
               className={cn(
-                "p-2 rounded-lg border transition-colors shadow-sm flex items-center justify-center",
+                "p-2 rounded-lg border transition-colors shadow-sm flex items-center justify-center shrink-0",
                 isBulkMode
                   ? "bg-blue-600 text-white border-blue-600"
                   : "bg-card hover:bg-accent border-border",

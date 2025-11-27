@@ -12,19 +12,19 @@ const PUBLIC_PATHS = new Set([
   "/workbox-",
 ]);
 
-const PUBLIC_API_PREFIXES = [
-  "/api/auth",
-  "/api/config/public",
-  "/api/setup",
-];
+const PUBLIC_API_PREFIXES = ["/api/auth", "/api/config/public", "/api/setup"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+
   const isConfigured = !!process.env.GOOGLE_REFRESH_TOKEN;
-  
+
   if (!isConfigured) {
-    if (pathname.startsWith("/setup") || pathname.startsWith("/api/setup") || pathname === "/icon.png") {
+    if (
+      pathname.startsWith("/setup") ||
+      pathname.startsWith("/api/setup") ||
+      pathname === "/icon.png"
+    ) {
       return NextResponse.next();
     }
     return NextResponse.redirect(new URL("/setup", request.url));
@@ -35,9 +35,9 @@ export async function middleware(request: NextRequest) {
   }
 
   if (
-    PUBLIC_PATHS.has(pathname) || 
-    PUBLIC_API_PREFIXES.some(p => pathname.startsWith(p)) ||
-    pathname.startsWith("/_next") || 
+    PUBLIC_PATHS.has(pathname) ||
+    PUBLIC_API_PREFIXES.some((p) => pathname.startsWith(p)) ||
+    pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
     pathname.includes("workbox")
   ) {
@@ -54,8 +54,10 @@ export async function middleware(request: NextRequest) {
   });
 
   if (!token) {
-    const isPublicRoute = ["/folder", "/share", "/request"].some(p => pathname.startsWith(p));
-    
+    const isPublicRoute = ["/folder", "/share", "/request"].some((p) =>
+      pathname.startsWith(p),
+    );
+
     if (isPublicRoute) return NextResponse.next();
 
     const loginUrl = new URL("/login", request.url);
@@ -83,7 +85,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

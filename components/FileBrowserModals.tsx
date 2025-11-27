@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { UploadCloud } from "lucide-react";
 import AuthModal from "./AuthModal";
@@ -15,6 +16,7 @@ import ArchivePreviewModal from "./ArchivePreviewModal";
 import FileRevisionsModal from "./FileRevisionsModal";
 import type { DriveFile } from "@/lib/googleDrive";
 import type { ActionState, ContextMenuState } from "@/hooks/useFileActions";
+import FileList from "@/components/FileList";
 
 interface FileBrowserModalsProps {
   authModal: { isOpen: boolean; folderId: string; folderName: string };
@@ -61,17 +63,76 @@ interface FileBrowserModalsProps {
 
 export default function FileBrowserModals(props: FileBrowserModalsProps) {
   const {
-    authModal, isAuthLoading, onCloseAuth, onAuthSubmit,
-    isFileRequestModalOpen, setIsFileRequestModalOpen, currentFolderId, folderName,
-    imageEditorFile, setImageEditorFile,
-    contextMenu, setContextMenu, actionState, setActionState,
-    handleRename, handleDelete, handleShare, handleMove, handleToggleFavorite, handleCopy, handleArchivePreview,
-    previewFile, setPreviewFile, archivePreview, setArchivePreview,
+    authModal = { isOpen: false, folderId: "", folderName: "" },
+    isAuthLoading,
+    onCloseAuth,
+    onAuthSubmit,
+    isFileRequestModalOpen,
+    setIsFileRequestModalOpen,
+    currentFolderId,
+    folderName,
+    imageEditorFile,
+    setImageEditorFile,
+    contextMenu,
+    setContextMenu,
+    actionState = { type: null, file: null },
+    setActionState,
+    handleRename,
+    handleDelete,
+    handleShare,
+    handleMove,
+    handleToggleFavorite,
+    handleCopy,
+    handleArchivePreview,
+    previewFile,
+    setPreviewFile,
+    archivePreview,
+    setArchivePreview,
     setDetailsFile,
-    isUploadModalOpen, setIsUploadModalOpen, droppedFiles, handleFileSelect, handleDragOver, handleDragLeave, handleDropUpload, isDragging,
-    isAdmin, getSharePath, favorites, showHistory, setShowHistory
+    isUploadModalOpen,
+    setIsUploadModalOpen,
+    droppedFiles,
+    handleFileSelect,
+    handleDragOver,
+    handleDragLeave,
+    handleDropUpload,
+    isDragging,
+    isAdmin,
+    getSharePath,
+    favorites,
+    showHistory,
+    setShowHistory,
   } = props;
   const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024;
+
+  useEffect(() => {
+    if (
+      authModal.isOpen ||
+      isFileRequestModalOpen ||
+      imageEditorFile ||
+      previewFile ||
+      archivePreview ||
+      showHistory ||
+      isUploadModalOpen ||
+      actionState.type !== null
+    ) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [
+    authModal.isOpen,
+    isFileRequestModalOpen,
+    imageEditorFile,
+    previewFile,
+    archivePreview,
+    showHistory,
+    isUploadModalOpen,
+    actionState.type,
+  ]);
 
   return (
     <AnimatePresence>
@@ -133,12 +194,19 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
             if (!contextMenu.file.isFolder) setPreviewFile(contextMenu.file);
             setContextMenu(null);
           }}
-          isArchive={contextMenu.file.mimeType === "application/zip" || contextMenu.file.mimeType.includes("compressed") || contextMenu.file.mimeType.includes("tar")}
+          isArchive={
+            contextMenu.file.mimeType === "application/zip" ||
+            contextMenu.file.mimeType.includes("compressed") ||
+            contextMenu.file.mimeType.includes("tar")
+          }
           isArchivePreviewable={
-            (contextMenu.file.mimeType === "application/zip" || contextMenu.file.mimeType.includes("compressed")) &&
-            parseInt(contextMenu.file.size || "0", 10) <= ARCHIVE_PREVIEW_LIMIT_BYTES
+            (contextMenu.file.mimeType === "application/zip" ||
+              contextMenu.file.mimeType.includes("compressed")) &&
+            parseInt(contextMenu.file.size || "0", 10) <=
+              ARCHIVE_PREVIEW_LIMIT_BYTES
           }
           onArchivePreview={handleArchivePreview}
+          isFolder={contextMenu.file.isFolder}
         />
       )}
       {actionState.type === "rename" && actionState.file && (
@@ -227,9 +295,7 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
             <p className="mt-4 text-2xl font-semibold text-foreground">
               Lepas untuk Mengunggah
             </p>
-            <p className="text-muted-foreground">
-              Ke folder ini
-            </p>
+            <p className="text-muted-foreground">Ke folder ini</p>
           </div>
         </motion.div>
       )}

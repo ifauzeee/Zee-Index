@@ -150,19 +150,20 @@ function FileItem({
     >
       <div
         className={cn(
-          "group relative rounded-lg transition-all duration-100 ease-out cursor-pointer overflow-hidden w-full",
+          "group relative rounded-lg transition-all duration-200 ease-in-out cursor-pointer overflow-hidden w-full border",
           "select-none touch-pan-y touch-action-manipulation",
-          isSelected && "bg-accent/80 ring-2 ring-primary",
-          isActive && !isBulkMode && "ring-2 ring-primary/50",
+          isSelected
+            ? "bg-primary/10 border-primary"
+            : "bg-card border-border hover:shadow-md hover:bg-accent/50",
+          isActive && !isBulkMode && "ring-1 ring-primary",
           view === "list"
-            ? cn(
-                "flex items-center bg-card border border-border shadow-sm hover:shadow-md hover:bg-accent/50",
-                compactClass ? "p-1.5 min-h-[40px]" : "p-3 min-h-[68px]",
-              )
-            : "bg-card border border-border shadow-sm hover:shadow-md w-full",
+            ? compactClass
+              ? "p-1.5 min-h-[40px]"
+              : "p-3 min-h-[68px]"
+            : "w-full",
           view === "grid" &&
             "flex flex-col items-center justify-center text-center p-2 sm:p-4",
-          isGallery && "p-0",
+          isGallery && "p-0 border-none",
           isDragOver && "ring-2 ring-primary ring-inset bg-primary/10",
           isError && "ring-2 ring-destructive/50 bg-destructive/5",
         )}
@@ -290,7 +291,12 @@ function FileItem({
               )}
 
               {view === "list" ? (
-                <div className="flex-1 min-w-0 overflow-hidden">
+                <div
+                  className={cn(
+                    "flex-1 min-w-0 overflow-hidden",
+                    isBulkMode && "pr-10",
+                  )}
+                >
                   <p className="truncate block">{file.name}</p>
                 </div>
               ) : (
@@ -364,7 +370,7 @@ function FileItem({
             </div>
           )}
 
-          {!isUploading && (
+          {!isUploading && !isBulkMode && (
             <button
               onClick={handleMenuClick}
               className={cn(
@@ -389,7 +395,7 @@ function FileItem({
                 view === "list"
                   ? "right-4 top-1/2 -translate-y-1/2"
                   : "top-2 right-2",
-                "rounded border-primary text-primary focus:ring-primary",
+                "rounded border-primary text-primary focus:ring-primary accent-primary",
               )}
               onClick={(e) => e.stopPropagation()}
             />

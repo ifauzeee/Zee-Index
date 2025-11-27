@@ -17,7 +17,7 @@ interface FileBrowserContentProps {
   activeFileId: string | null;
   isAdmin: boolean;
   uploads: any;
-  
+
   onItemClick: (file: DriveFile) => void;
   onContextMenu: (e: any, file: DriveFile) => void;
   onShareClick: (e: React.MouseEvent, file: DriveFile) => void;
@@ -26,7 +26,7 @@ interface FileBrowserContentProps {
   onDragStart: (e: React.DragEvent, file: DriveFile) => void;
   onFileDrop: (e: React.DragEvent, target: DriveFile) => void;
   onPrefetchFolder: (id: string) => void;
-  
+
   isFetchingNextPage: boolean;
   nextPageToken: string | null;
   fetchNextPage: () => void;
@@ -34,11 +34,26 @@ interface FileBrowserContentProps {
 
 export default function FileBrowserContent(props: FileBrowserContentProps) {
   const {
-    isLoading, sessionStatus, shareToken, isLocked,
-    readmeFile, sortedFiles, activeFileId, isAdmin, uploads,
-    onItemClick, onContextMenu, onShareClick, onDetailsClick, onDownloadClick,
-    onDragStart, onFileDrop, onPrefetchFolder,
-    isFetchingNextPage, nextPageToken, fetchNextPage
+    isLoading,
+    sessionStatus,
+    shareToken,
+    isLocked,
+    readmeFile,
+    sortedFiles,
+    activeFileId,
+    isAdmin,
+    uploads,
+    onItemClick,
+    onContextMenu,
+    onShareClick,
+    onDetailsClick,
+    onDownloadClick,
+    onDragStart,
+    onFileDrop,
+    onPrefetchFolder,
+    isFetchingNextPage,
+    nextPageToken,
+    fetchNextPage,
   } = props;
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
@@ -91,7 +106,10 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
         uploads={uploads}
       />
 
-      <div ref={loaderRef} className="flex justify-center items-center p-4 h-20">
+      <div
+        ref={loaderRef}
+        className="flex justify-center items-center p-4 h-20"
+      >
         {isFetchingNextPage && (
           <Loader2 className="animate-spin text-primary" />
         )}

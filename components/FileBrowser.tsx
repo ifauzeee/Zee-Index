@@ -39,23 +39,51 @@ export default function FileBrowser({
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [isFileRequestModalOpen, setIsFileRequestModalOpen] = useState(false);
-  const [imageEditorFile, setImageEditorFile] = useState<DriveFile | null>(null);
+  const [imageEditorFile, setImageEditorFile] = useState<DriveFile | null>(
+    null,
+  );
   const [showHistory, setShowHistory] = useState(false);
 
   const {
-    sort, isBulkMode, setBulkMode, toggleSelection,
-    view, setView, refreshKey, addToast, folderTokens, setFolderToken,
-    user, fetchUser, shareToken, setShareToken,
-    favorites, fetchFavorites, detailsFile, setDetailsFile,
-    setCurrentFolderId, playAudio,
+    sort,
+    isBulkMode,
+    setBulkMode,
+    toggleSelection,
+    view,
+    setView,
+    refreshKey,
+    addToast,
+    folderTokens,
+    setFolderToken,
+    user,
+    fetchUser,
+    shareToken,
+    setShareToken,
+    favorites,
+    fetchFavorites,
+    detailsFile,
+    setDetailsFile,
+    setCurrentFolderId,
+    playAudio,
   } = useAppStore();
 
   const {
-    files, history, isLoading, isFetchingNextPage, fetchNextPage,
-    nextPageToken, currentFolderId, authModalInfo,
+    files,
+    history,
+    isLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    nextPageToken,
+    currentFolderId,
+    authModalInfo,
   } = useFileFetching({
-    initialFolderId, initialFolderPath, shareToken, folderTokens,
-    addToast, router, refreshKey,
+    initialFolderId,
+    initialFolderPath,
+    shareToken,
+    folderTokens,
+    addToast,
+    router,
+    refreshKey,
   });
 
   useEffect(() => {
@@ -66,34 +94,64 @@ export default function FileBrowser({
   const isAdmin = user?.role === "ADMIN" && !isGuest;
 
   const {
-    uploads, isUploadModalOpen, droppedFiles, isDragging,
-    setIsUploadModalOpen, handleDragOver, handleDragLeave,
-    handleDropUpload, handleFileSelect,
+    uploads,
+    isUploadModalOpen,
+    droppedFiles,
+    isDragging,
+    setIsUploadModalOpen,
+    handleDragOver,
+    handleDragLeave,
+    handleDropUpload,
+    handleFileSelect,
   } = useUpload({
-    currentFolderId, isAdmin, triggerRefresh: useAppStore.getState().triggerRefresh,
+    currentFolderId,
+    isAdmin,
+    triggerRefresh: useAppStore.getState().triggerRefresh,
   });
 
   const {
-    dragOverBreadcrumb, handleDragStart, onDropOnFolder,
-    onDropOnBreadcrumb, handleBreadcrumbDragOver, handleBreadcrumbDragLeave,
+    dragOverBreadcrumb,
+    handleDragStart,
+    onDropOnFolder,
+    onDropOnBreadcrumb,
+    handleBreadcrumbDragOver,
+    handleBreadcrumbDragLeave,
   } = useDragAndDrop({
-    isAdmin, isBulkMode, selectedFiles: useAppStore.getState().selectedFiles,
-    currentFolderId, triggerRefresh: useAppStore.getState().triggerRefresh,
-    clearSelection: useAppStore.getState().clearSelection, addToast,
+    isAdmin,
+    isBulkMode,
+    selectedFiles: useAppStore.getState().selectedFiles,
+    currentFolderId,
+    triggerRefresh: useAppStore.getState().triggerRefresh,
+    clearSelection: useAppStore.getState().clearSelection,
+    addToast,
   });
 
   const {
-    contextMenu, setContextMenu, actionState, setActionState,
-    previewFile, setPreviewFile, archivePreview, setArchivePreview,
-    handleArchivePreview, handleContextMenu, getSharePath,
-    handleShare, handleToggleFavorite, handleCopy, handleRename,
-    handleDelete, handleMove,
+    contextMenu,
+    setContextMenu,
+    actionState,
+    setActionState,
+    previewFile,
+    setPreviewFile,
+    archivePreview,
+    setArchivePreview,
+    handleArchivePreview,
+    handleContextMenu,
+    getSharePath,
+    handleShare,
+    handleToggleFavorite,
+    handleCopy,
+    handleRename,
+    handleDelete,
+    handleMove,
   } = useFileActions(currentFolderId);
 
   const gallery = useGallery(files);
 
   const readmeFile = useMemo(() => {
-    return files.find((f) => f.name.toLowerCase() === "readme.md" && !f.trashed);
+    return files.find(
+      (f) => f.name.toLowerCase() === "readme.md" && !f.trashed,
+    );
   }, [files]);
 
   const sortedFiles = useMemo(() => {
@@ -107,7 +165,9 @@ export default function FileBrowser({
         if (sort.key === "size")
           return (Number(a.size || 0) - Number(b.size || 0)) * isAsc;
         return (
-          (new Date(a.modifiedTime).getTime() - new Date(b.modifiedTime).getTime()) * isAsc
+          (new Date(a.modifiedTime).getTime() -
+            new Date(b.modifiedTime).getTime()) *
+          isAsc
         );
       });
   }, [files, sort, favorites]);
@@ -197,7 +257,13 @@ export default function FileBrowser({
       if (shareToken) fetchUrl.searchParams.append("share_token", shareToken);
 
       queryClient.prefetchInfiniteQuery({
-        queryKey: ["files", folderId, shareToken, folderTokens[folderId], refreshKey],
+        queryKey: [
+          "files",
+          folderId,
+          shareToken,
+          folderTokens[folderId],
+          refreshKey,
+        ],
         queryFn: async () => {
           const headers = new Headers();
           if (folderTokens[folderId]) {
@@ -238,8 +304,12 @@ export default function FileBrowser({
   };
 
   const handleBreadcrumbClick = (folderId: string) => {
-    if (shareToken && folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) return;
-    let folderUrl = folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID ? "/" : `/folder/${folderId}`;
+    if (shareToken && folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID)
+      return;
+    let folderUrl =
+      folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID
+        ? "/"
+        : `/folder/${folderId}`;
     if (shareToken) folderUrl += `?share_token=${shareToken}`;
     router.push(folderUrl);
   };
@@ -300,7 +370,10 @@ export default function FileBrowser({
           onItemClick={handleItemClick}
           onContextMenu={handleContextMenuWrapper}
           onShareClick={handleQuickShare}
-          onDetailsClick={(e, file) => { e.stopPropagation(); setDetailsFile(file); }}
+          onDetailsClick={(e, file) => {
+            e.stopPropagation();
+            setDetailsFile(file);
+          }}
           onDownloadClick={handleQuickDownload}
           onDragStart={handleDragStart}
           onFileDrop={onDropOnFolder}
@@ -314,7 +387,9 @@ export default function FileBrowser({
       <FileBrowserModals
         authModal={authModal}
         isAuthLoading={isAuthLoading}
-        onCloseAuth={() => setAuthModal({ isOpen: false, folderId: "", folderName: "" })}
+        onCloseAuth={() =>
+          setAuthModal({ isOpen: false, folderId: "", folderName: "" })
+        }
         onAuthSubmit={handleAuthSubmit}
         isFileRequestModalOpen={isFileRequestModalOpen}
         setIsFileRequestModalOpen={setIsFileRequestModalOpen}
