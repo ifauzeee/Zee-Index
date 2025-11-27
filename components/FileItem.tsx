@@ -75,10 +75,9 @@ function FileItem({
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
+    
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
@@ -88,6 +87,20 @@ function FileItem({
     const now = Date.now();
     return now - created < 24 * 60 * 60 * 1000;
   }, [file.createdTime]);
+
+  const thumbnailSrc = useMemo(() => {
+    if (file.thumbnailLink) {
+      let size = "s800";
+      if (view === "list") size = "s64";
+      else if (view === "grid") size = "s320";
+      else if (view === "gallery") size = "s1280";
+
+      return file.thumbnailLink.replace(/=s\d+/, `=${size}`);
+    }
+    let url = `/api/download?fileId=${file.id}`;
+    if (shareToken) url += `&share_token=${shareToken}`;
+    return url;
+  }, [file.thumbnailLink, file.id, view, shareToken]);
 
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     if (e.touches.length > 1) return;
@@ -100,6 +113,9 @@ function FileItem({
 
     timerRef.current = setTimeout(() => {
       longPressTriggeredRef.current = true;
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        try { navigator.vibrate(15); } catch (e) {} 
+      }
       onContextMenu({ clientX: touch.clientX, clientY: touch.clientY }, file);
     }, 500);
   };
@@ -158,27 +174,24 @@ function FileItem({
 
   const handleInteractionClick = (e: React.MouseEvent) => {
     if (isUploading) return;
-
     if (longPressTriggeredRef.current) {
       e.preventDefault();
       e.stopPropagation();
       return;
     }
-
     onClick();
   };
 
   const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20, scale: 0.95 },
+    hidden: { opacity: 0, y: 10 },
     visible: {
       opacity: 1,
       y: 0,
-      scale: 1,
-      transition: { duration: 0.15, ease: "easeOut" },
+      transition: { duration: 0.2 },
     },
     hover: {
       scale: 1.02,
-      transition: { duration: 0.1, ease: "linear" },
+      transition: { duration: 0.1 },
     },
   };
 
@@ -206,20 +219,6 @@ function FileItem({
     }
   };
 
-  const getThumbnailSrc = () => {
-    if (file.thumbnailLink) {
-      let size = "s800";
-      if (view === "list") size = "s64";
-      else if (view === "grid") size = "s320";
-      else if (view === "gallery") size = "s1280";
-
-      return file.thumbnailLink.replace(/=s\d+/, `=${size}`);
-    }
-    let url = `/api/download?fileId=${file.id}`;
-    if (shareToken) url += `&share_token=${shareToken}`;
-    return url;
-  };
-
   const isGallery = view === "gallery";
   const hasImage =
     (file.mimeType.startsWith("image/") || file.thumbnailLink) &&
@@ -241,16 +240,14 @@ function FileItem({
         isGallery && "mb-4",
         isUploading && "opacity-80",
         "w-full max-w-full",
+        "will-change-transform" 
       )}
       onMouseEnter={onMouseEnter}
     >
       <div
         className={cn(
           "group relative rounded-lg transition-all duration-100 ease-out cursor-pointer overflow-hidden w-full",
-          "select-none",
-          "touch-pan-y",
-          "[-webkit-tap-highlight-color:transparent]",
-          "[-webkit-touch-callout:none]",
+          "select-none touch-pan-y [-webkit-tap-highlight-color:transparent] [-webkit-touch-callout:none]",
           isSelected && "bg-accent/80 ring-2 ring-primary",
           isActive && !isBulkMode && "ring-2 ring-primary/50",
           view === "list"
@@ -300,7 +297,7 @@ function FileItem({
                   </div>
                 )}
                 <Image
-                  src={getThumbnailSrc()}
+                  src={thumbnailSrc}
                   alt={file.name}
                   width={0}
                   height={0}
@@ -311,6 +308,7 @@ function FileItem({
                     isImageLoading ? "opacity-0" : "opacity-100",
                   )}
                   loading="lazy"
+                  decoding="async"
                   onLoad={() => setIsImageLoading(false)}
                   onError={() => {
                     setIsImageLoading(false);
@@ -327,12 +325,13 @@ function FileItem({
             ) : view === "grid" && hasImage ? (
               <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-md overflow-hidden flex items-center justify-center bg-muted/20">
                 <Image
-                  src={file.thumbnailLink || getThumbnailSrc()}
+                  src={thumbnailSrc}
                   alt={file.name}
                   fill
                   className="object-cover"
-                  sizes="(max-width: 640px) 80px, 96px"
+                  sizes="(max-width: 640px) 80px, 150px"
                   loading="lazy"
+                  decoding="async"
                   referrerPolicy="no-referrer"
                   unoptimized={true}
                   onError={() => setImageError(true)}
