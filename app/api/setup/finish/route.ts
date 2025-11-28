@@ -23,7 +23,6 @@ export async function POST(req: Request) {
     const tokenData = await tokenResponse.json();
 
     if (!tokenResponse.ok) {
-      console.error("API Error:", tokenData);
       return NextResponse.json(
         { error: tokenData.error_description || "Gagal menukar token" },
         { status: 400 }
@@ -79,14 +78,13 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ 
-        success: true, 
-        restartNeeded,
-        message: "Token berhasil disimpan." 
+    return NextResponse.json({
+      success: true,
+      restartNeeded,
+      message: "Token berhasil disimpan."
     });
 
   } catch (error: any) {
-    console.error("Setup Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

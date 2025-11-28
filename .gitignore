@@ -19,3 +19,4 @@ public/workbox-*.js
 public/swe-worker-*.js
 all_project_code.txt
 cat.py
+.vercel

@@ -59,7 +59,6 @@ export async function GET(request: NextRequest) {
     const range = request.headers.get("range");
     const headers = new Headers();
     headers.set("Authorization", `Bearer ${accessToken}`);
-
     if (range) {
       headers.set("Range", range);
     }
@@ -78,9 +77,15 @@ export async function GET(request: NextRequest) {
 
     const responseHeaders = new Headers();
     responseHeaders.set("Content-Type", fileDetails.mimeType);
+
+    const encodedFileName = encodeURIComponent(fileDetails.name).replace(
+      /['()]/g,
+      escape,
+    );
+
     responseHeaders.set(
       "Content-Disposition",
-      `inline; filename="${fileDetails.name}"`,
+      `inline; filename="${encodedFileName}"; filename*=UTF-8''${encodedFileName}`,
     );
 
     responseHeaders.set("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -103,11 +108,11 @@ export async function GET(request: NextRequest) {
     responseHeaders.set("Accept-Ranges", "bytes");
 
     if (!range) {
-      await logActivity("DOWNLOAD", {
+      logActivity("DOWNLOAD", {
         itemName: fileDetails.name,
         itemSize: fileDetails.size,
         userEmail: session?.user?.email,
-      });
+      }).catch((e) => console.error("Gagal mencatat log aktivitas:", e));
     }
 
     return new Response(googleResponse.body, {

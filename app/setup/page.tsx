@@ -38,7 +38,7 @@ export default function SetupPage() {
 
     const scope = "https://www.googleapis.com/auth/drive.readonly";
     const redirectUri = `${window.location.origin}/setup`;
-    
+
     localStorage.setItem("zee_setup_temp", JSON.stringify(formData));
 
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${formData.clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
@@ -63,10 +63,10 @@ export default function SetupPage() {
       if (res.ok) {
         localStorage.removeItem("zee_setup_temp");
         if (data.restartNeeded) {
-            alert("Setup Berhasil! Token telah disimpan ke .env.\n\nServer akan dimatikan otomatis atau silakan restart manual.");
+          alert("Setup Berhasil! Token telah disimpan ke .env.\n\nServer akan dimatikan otomatis atau silakan restart manual.");
         } else {
-            alert("Setup Berhasil! Mengalihkan ke beranda...");
-            router.push("/");
+          alert("Setup Berhasil! Mengalihkan ke beranda...");
+          router.push("/");
         }
       } else {
         alert(`Gagal: ${data.error}`);
