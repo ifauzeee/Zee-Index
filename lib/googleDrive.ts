@@ -36,6 +36,13 @@ export interface DriveRevision {
   lastModifyingUser?: { displayName: string };
 }
 
+export interface SharedDrive {
+  id: string;
+  name: string;
+  kind: string;
+  backgroundImageLink?: string;
+}
+
 interface DriveListResponse {
   files?: DriveFile[];
   nextPageToken?: string | null;
@@ -148,6 +155,23 @@ async function fetchWithRetry(
   throw new Error("Gagal melakukan fetch setelah beberapa kali percobaan.");
 }
 
+export async function listSharedDrives(): Promise<SharedDrive[]> {
+  const accessToken = await getAccessToken();
+  const url = "https://www.googleapis.com/drive/v3/drives?pageSize=100";
+
+  const response = await fetchWithRetry(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = await response.json();
+  return data.drives || [];
+}
+
 export async function getAllDescendantFolders(
   accessToken: string,
   rootFolderId: string,
@@ -179,6 +203,8 @@ export async function getAllDescendantFolders(
         q: `'${folderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
         fields: "nextPageToken, files(id)",
         pageSize: "1000",
+        supportsAllDrives: "true",
+        includeItemsFromAllDrives: "true",
       });
       if (pageToken) params.set("pageToken", pageToken);
 
@@ -236,6 +262,8 @@ export async function listFilesFromDrive(
       "nextPageToken, files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents, trashed)",
     orderBy: "folder, name",
     pageSize: String(pageSize),
+    supportsAllDrives: "true",
+    includeItemsFromAllDrives: "true",
   });
   if (pageToken) {
     params.append("pageToken", pageToken);
@@ -287,6 +315,7 @@ export async function getFileDetailsFromDrive(
   const params = new URLSearchParams({
     fields:
       "id, name, mimeType, size, modifiedTime, createdTime, webViewLink, webContentLink, thumbnailLink, hasThumbnail, parents, owners(displayName, emailAddress), lastModifyingUser(displayName), md5Checksum, imageMediaMetadata(width, height), videoMediaMetadata(width, height, durationMillis), trashed",
+    supportsAllDrives: "true",
   });
 
   const response = await fetchWithRetry(`${driveUrl}?${params.toString()}`, {
@@ -295,10 +324,6 @@ export async function getFileDetailsFromDrive(
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    console.error(
-      `[getFileDetails Error] ID: ${fileId} | Status: ${response.status} | Msg: ${errorText}`,
-    );
     return null;
   }
 
@@ -332,16 +357,26 @@ export async function getFolderPath(
   }
 
   const accessToken = await getAccessToken();
-  const path = [];
+  const path: { id: string; name: string }[] = [];
   let currentId = folderId;
   const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
+  const rootName = process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Home";
 
-  if (folderId === rootId) {
-    path.unshift({ id: rootId, name: "Home" });
-  } else {
-    while (currentId && currentId !== rootId) {
-      const driveUrl = `https://www.googleapis.com/drive/v3/files/${currentId}`;
-      const params = new URLSearchParams({ fields: "id, name, parents" });
+  // Loop untuk menelusuri parent ke atas
+  while (currentId) {
+    // Jika kita sampai di Root Folder yang dikonfigurasi, tambahkan dan berhenti.
+    if (currentId === rootId) {
+      path.unshift({ id: rootId, name: rootName });
+      break;
+    }
+
+    const driveUrl = `https://www.googleapis.com/drive/v3/files/${currentId}`;
+    const params = new URLSearchParams({
+      fields: "id, name, parents",
+      supportsAllDrives: "true",
+    });
+
+    try {
       const response = await fetchWithRetry(
         `${driveUrl}?${params.toString()}`,
         {
@@ -356,12 +391,21 @@ export async function getFolderPath(
 
       const data: { id: string; name: string; parents?: string[] } =
         await response.json();
+
+      // Tambahkan folder saat ini ke path
       path.unshift({ id: data.id, name: data.name });
+
+      // Cek parent selanjutnya
       if (data.parents && data.parents.length > 0) {
         currentId = data.parents[0];
       } else {
+        // Tidak ada parent lagi (misal: Root dari Shared Drive)
+        // Kita berhenti di sini tanpa menambahkan Root ID aplikasi
         break;
       }
+    } catch (e) {
+      console.error("Error fetching folder path segment:", e);
+      break;
     }
   }
 
@@ -399,6 +443,8 @@ export async function getStorageDetails() {
     pageSize: "50",
     fields:
       "files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, hasThumbnail, parents, trashed)",
+    supportsAllDrives: "true",
+    includeItemsFromAllDrives: "true",
   });
 
   const largestFilesResponse = await fetchWithRetry(
@@ -487,6 +533,8 @@ export async function searchFilesInFolder(
     fields:
       "files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents)",
     pageSize: "1000",
+    supportsAllDrives: "true",
+    includeItemsFromAllDrives: "true",
   });
 
   const response = await fetchWithRetry(
@@ -514,6 +562,8 @@ export async function listTrashedFiles() {
       "files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents, trashed)",
     pageSize: "100",
     orderBy: "modifiedTime desc",
+    supportsAllDrives: "true",
+    includeItemsFromAllDrives: "true",
   });
 
   const response = await fetchWithRetry(

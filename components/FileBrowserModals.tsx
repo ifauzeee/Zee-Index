@@ -2,7 +2,6 @@
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { UploadCloud } from "lucide-react";
-import AuthModal from "./AuthModal";
 import FileRequestModal from "./FileRequestModal";
 import ImageEditorModal from "./ImageEditorModal";
 import ContextMenu from "./ContextMenu";
@@ -23,6 +22,7 @@ interface FileBrowserModalsProps {
   isAuthLoading: boolean;
   onCloseAuth: () => void;
   onAuthSubmit: (id: string, pass: string) => void;
+
   isFileRequestModalOpen: boolean;
   setIsFileRequestModalOpen: (open: boolean) => void;
   currentFolderId: string;
@@ -66,9 +66,6 @@ interface FileBrowserModalsProps {
 export default function FileBrowserModals(props: FileBrowserModalsProps) {
   const {
     authModal = { isOpen: false, folderId: "", folderName: "" },
-    isAuthLoading,
-    onCloseAuth,
-    onAuthSubmit,
     isFileRequestModalOpen,
     setIsFileRequestModalOpen,
     currentFolderId,
@@ -140,14 +137,6 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
 
   return (
     <AnimatePresence>
-      {authModal.isOpen && (
-        <AuthModal
-          folderName={authModal.folderName}
-          isLoading={isAuthLoading}
-          onClose={onCloseAuth}
-          onSubmit={onAuthSubmit}
-        />
-      )}
       {isFileRequestModalOpen && (
         <FileRequestModal
           folderId={currentFolderId}

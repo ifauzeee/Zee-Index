@@ -31,11 +31,12 @@ export default function FileBrowser({
   const { status: sessionStatus } = useSession();
   const queryClient = useQueryClient();
 
-  const [authModal, setAuthModal] = useState<{
-    isOpen: boolean;
+  const [authTarget, setAuthTarget] = useState<{
+    isLocked: boolean;
     folderId: string;
     folderName: string;
-  }>({ isOpen: false, folderId: "", folderName: "" });
+  }>({ isLocked: false, folderId: "", folderName: "" });
+
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [isFileRequestModalOpen, setIsFileRequestModalOpen] = useState(false);
@@ -189,11 +190,13 @@ export default function FileBrowser({
 
   useEffect(() => {
     if (authModalInfo) {
-      setAuthModal({
-        isOpen: true,
+      setAuthTarget({
+        isLocked: true,
         folderId: authModalInfo.folderId,
         folderName: authModalInfo.folderName,
       });
+    } else {
+      setAuthTarget({ isLocked: false, folderId: "", folderName: "" });
     }
   }, [authModalInfo]);
 
@@ -203,14 +206,19 @@ export default function FileBrowser({
       const response = await fetch("/api/auth/folder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ folderId: authModal.folderId, id, password }),
+        body: JSON.stringify({ folderId: authTarget.folderId, id, password }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Kredensial salah.");
-      setFolderToken(authModal.folderId, data.token);
+
+      setFolderToken(authTarget.folderId, data.token);
       addToast({ message: "Akses diberikan!", type: "success" });
-      setAuthModal({ isOpen: false, folderId: "", folderName: "" });
-      router.push(`/folder/${authModal.folderId}`);
+
+      setAuthTarget({ isLocked: false, folderId: "", folderName: "" });
+
+      queryClient.invalidateQueries({
+        queryKey: ["files", authTarget.folderId],
+      });
     } catch (err: any) {
       addToast({ message: err.message, type: "error" });
     } finally {
@@ -235,14 +243,6 @@ export default function FileBrowser({
     }
     let destinationUrl = "";
     if (file.isFolder) {
-      if (file.isProtected && !folderTokens[file.id]) {
-        setAuthModal({
-          isOpen: true,
-          folderId: file.id,
-          folderName: file.name,
-        });
-        return;
-      }
       destinationUrl = `/folder/${file.id}`;
     } else {
       destinationUrl = `/folder/${currentFolderId}/file/${file.id}/${createSlug(
@@ -369,7 +369,10 @@ export default function FileBrowser({
           isLoading={isLoading}
           sessionStatus={sessionStatus}
           shareToken={shareToken}
-          isLocked={authModal.isOpen || authModalInfo !== null}
+          isLocked={authTarget.isLocked}
+          lockedFolderName={authTarget.folderName}
+          onAuthSubmit={handleAuthSubmit}
+          isAuthLoading={isAuthLoading}
           readmeFile={readmeFile}
           sortedFiles={sortedFiles}
           activeFileId={activeFileId}
@@ -393,12 +396,10 @@ export default function FileBrowser({
       </main>
 
       <FileBrowserModals
-        authModal={authModal}
+        authModal={{ isOpen: false, folderId: "", folderName: "" }}
         isAuthLoading={isAuthLoading}
-        onCloseAuth={() =>
-          setAuthModal({ isOpen: false, folderId: "", folderName: "" })
-        }
-        onAuthSubmit={handleAuthSubmit}
+        onCloseAuth={() => {}}
+        onAuthSubmit={() => {}}
         isFileRequestModalOpen={isFileRequestModalOpen}
         setIsFileRequestModalOpen={setIsFileRequestModalOpen}
         currentFolderId={currentFolderId}

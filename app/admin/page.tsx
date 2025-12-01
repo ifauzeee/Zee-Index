@@ -19,6 +19,7 @@ import {
   Eye,
   Activity,
   UploadCloud,
+  HardDrive,
 } from "lucide-react";
 import Loading from "@/components/Loading";
 import { cn } from "@/lib/utils";
@@ -33,11 +34,11 @@ import TodayDownloadsChart from "@/components/charts/TodayDownloadsChart";
 import DayOfWeekChart from "@/components/charts/DayOfWeekChart";
 import SecurityConfig from "@/components/SecurityConfig";
 import UserFolderAccessManager from "@/components/UserFolderAccessManager";
+import ManualDrivesManager from "@/components/ManualDrivesManager";
 
-// Utility untuk menyembunyikan scrollbar tapi tetap bisa discroll
 const scrollbarHideStyles = {
-  msOverflowStyle: "none" as const /* IE and Edge */,
-  scrollbarWidth: "none" as const /* Firefox */,
+  msOverflowStyle: "none" as const,
+  scrollbarWidth: "none" as const,
 };
 
 const DeleteConfirmationModal: FC<{
@@ -228,6 +229,7 @@ export default function AdminPage() {
 
   const tabItems = [
     { value: "summary", label: "Ringkasan", icon: Activity },
+    { value: "drives", label: "Shared Drives", icon: HardDrive },
     { value: "links", label: "Tautan", icon: LinkIcon },
     { value: "users", label: "Admin", icon: Users },
     { value: "user-access", label: "Akses", icon: ShieldCheck },
@@ -243,7 +245,6 @@ export default function AdminPage() {
         transition={{ duration: 0.5 }}
         className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 max-w-7xl"
       >
-        {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => router.back()}
@@ -261,7 +262,6 @@ export default function AdminPage() {
         </div>
 
         <Tabs defaultValue="summary" className="w-full">
-          {/* Scrollable Mobile-First Navigation */}
           <div
             className="w-full overflow-x-auto pb-4 mb-2 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar"
             style={scrollbarHideStyles}
@@ -281,7 +281,6 @@ export default function AdminPage() {
           </div>
 
           <TabsContent value="summary" className="mt-2 space-y-6">
-            {/* Summary Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm flex flex-col items-center sm:items-start text-center sm:text-left">
                 <div className="p-3 bg-blue-500/10 rounded-full text-blue-600 mb-3">
@@ -326,7 +325,6 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Charts Section */}
             <div>
               <h2 className="text-xl font-semibold mb-4 px-1">Statistik</h2>
               {isLoadingStats ? (
@@ -484,6 +482,10 @@ export default function AdminPage() {
             <UserFolderAccessManager />
           </TabsContent>
 
+          <TabsContent value="drives" className="mt-2">
+            <ManualDrivesManager />
+          </TabsContent>
+
           <TabsContent value="links" className="mt-2 space-y-6">
             {shareLinks.length === 0 && fileRequests.length === 0 ? (
               <div className="text-center py-20 bg-card border rounded-xl border-dashed">
@@ -492,7 +494,6 @@ export default function AdminPage() {
               </div>
             ) : (
               <>
-                {/* File Requests Section */}
                 {fileRequests.length > 0 && (
                   <div className="space-y-3">
                     <h3 className="text-lg font-semibold flex items-center gap-2 px-1">
@@ -573,7 +574,6 @@ export default function AdminPage() {
                   </div>
                 )}
 
-                {/* Share Links Section */}
                 {shareLinks.length > 0 && (
                   <div className="space-y-3">
                     <h3 className="text-lg font-semibold flex items-center gap-2 px-1 mt-6">

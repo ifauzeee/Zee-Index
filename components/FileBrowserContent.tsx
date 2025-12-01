@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
-import { Lock, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import FileList from "@/components/FileList";
 import FileBrowserLoading from "./FileBrowserLoading";
 import FolderReadme from "./FolderReadme";
 import PinnedSection from "./PinnedSection";
+import AuthForm from "./AuthForm";
 import type { DriveFile } from "@/lib/googleDrive";
 
 interface FileBrowserContentProps {
@@ -13,6 +14,9 @@ interface FileBrowserContentProps {
   sessionStatus: string;
   shareToken: string | null;
   isLocked: boolean;
+  lockedFolderName?: string;
+  onAuthSubmit: (id: string, pass: string) => void;
+  isAuthLoading: boolean;
   readmeFile: DriveFile | undefined;
   sortedFiles: DriveFile[];
   activeFileId: string | null;
@@ -39,6 +43,9 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
     sessionStatus,
     shareToken,
     isLocked,
+    lockedFolderName,
+    onAuthSubmit,
+    isAuthLoading,
     readmeFile,
     sortedFiles,
     activeFileId,
@@ -76,14 +83,12 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
 
   if (isLocked) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] text-muted-foreground animate-in fade-in duration-300">
-        <div className="p-6 bg-muted/30 rounded-full mb-4">
-          <Lock size={48} className="opacity-50" />
-        </div>
-        <h3 className="text-lg font-semibold">Akses Terbatas</h3>
-        <p className="text-sm mt-2">
-          Silakan masukkan kredensial untuk mengakses folder ini.
-        </p>
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] w-full animate-in fade-in duration-500">
+        <AuthForm
+          folderName={lockedFolderName || "Folder Terkunci"}
+          isLoading={isAuthLoading}
+          onSubmit={onAuthSubmit}
+        />
       </div>
     );
   }

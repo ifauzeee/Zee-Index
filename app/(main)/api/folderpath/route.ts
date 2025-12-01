@@ -24,10 +24,6 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
-    return NextResponse.json([]);
-  }
-
   try {
     const path = await getFolderPath(folderId);
     return NextResponse.json(path);
