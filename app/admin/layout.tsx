@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useAppStore } from "@/lib/store";
 import BulkActionBar from "@/components/BulkActionBar";
@@ -71,7 +71,9 @@ export default function MainLayout({
         id="app-container"
         className={`bg-background text-foreground min-h-screen flex flex-col`}
       >
-        <Header />
+        <Suspense fallback={<div className="h-16 bg-background" />}>
+          <Header />
+        </Suspense>
         <div className="container mx-auto px-4 max-w-7xl flex-grow">
           <main className="min-h-[50vh] mb-12">{children}</main>
         </div>

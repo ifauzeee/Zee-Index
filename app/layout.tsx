@@ -3,6 +3,8 @@ import { Providers } from "./providers";
 import "./(main)/globals.css";
 import "plyr/dist/plyr.css";
 
+export const preferredRegion = "sin1";
+
 export const viewport: Viewport = {
   themeColor: "#09090b",
   width: "device-width",

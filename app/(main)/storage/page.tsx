@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, createElement } from "react";
+import { useState, useEffect, createElement, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -12,7 +12,6 @@ interface BreakdownItem {
   type: string;
   count: number;
   size: number;
-  // Index signature diperlukan oleh Recharts untuk data internal
   [key: string]: string | number;
 }
 
@@ -66,7 +65,6 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
 };
 
 const CustomContent = (props: CustomContentProps) => {
-  // Variabel root dan depth dihapus karena tidak digunakan
   const { x, y, width, height, index, name, value } = props;
 
   return (
@@ -112,7 +110,7 @@ const CustomContent = (props: CustomContentProps) => {
   );
 };
 
-export default function StoragePage() {
+function StoragePageContent() {
   const [data, setData] = useState<StorageDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -153,7 +151,6 @@ export default function StoragePage() {
   if (error)
     return <div className="text-center py-20 text-red-500">{error}</div>;
   if (!data) return null;
-
   const usagePercentage = data.limit > 0 ? (data.usage / data.limit) * 100 : 0;
 
   return (
@@ -194,8 +191,7 @@ export default function StoragePage() {
                 data={data.breakdown}
                 dataKey="size"
                 nameKey="type"
-                // @ts-expect-error: Recharts content types can be tricky, casting as explicit component
-                content={<CustomContent />}
+                content={<CustomContent {...({} as any)} />}
                 aspectRatio={4 / 3}
               >
                 <Tooltip content={<CustomTooltip />} />
@@ -278,5 +274,13 @@ export default function StoragePage() {
         </div>
       </div>
     </motion.div>
+  );
+}
+
+export default function StoragePage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <StoragePageContent />
+    </Suspense>
   );
 }

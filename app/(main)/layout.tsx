@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useAppStore } from "@/lib/store";
 import BulkActionBar from "@/components/BulkActionBar";
@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { HardDrive } from "lucide-react";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import { usePathname, useSearchParams } from "next/navigation";
+import Loading from "@/components/Loading";
 
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 const DetailsPanel = dynamic(() => import("@/components/DetailsPanel"), {
@@ -48,11 +49,7 @@ const AppFooter = () => {
   );
 };
 
-export default function MainLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function MainLayoutContent({ children }: { children: React.ReactNode }) {
   const {
     refreshKey,
     toasts,
@@ -162,5 +159,13 @@ export default function MainLayout({
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function MainLayout(props: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<Loading />}>
+      <MainLayoutContent {...props} />
+    </Suspense>
   );
 }
