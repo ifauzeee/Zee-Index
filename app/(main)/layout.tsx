@@ -27,13 +27,26 @@ const DetailsPanel = dynamic(() => import("@/components/DetailsPanel"), {
 const AppFooter = () => {
   const { dataUsage } = useAppStore();
   const currentYear = new Date().getFullYear();
+
+  let displayValue = dataUsage.value;
+  if (dataUsage.status === "loading") {
+    displayValue = "...";
+  } else if (dataUsage.status === "error") {
+    displayValue = dataUsage.value !== "Memuat..." ? dataUsage.value : "Gagal";
+  }
+
   return (
     <footer className="text-center py-6 text-sm text-muted-foreground border-t bg-background mb-16 lg:mb-0 w-full overflow-hidden">
-      <p className="mb-2">
-        <HardDrive size={14} className="inline mr-2" />
-        Total Penggunaan Data:{" "}
-        <span id="data-usage-value">{dataUsage.value}</span>
-      </p>
+      <div className="mb-2 flex items-center justify-center gap-2">
+        <HardDrive size={14} />
+        <span>Total Penggunaan Data:</span>
+        <span
+          id="data-usage-value"
+          className={`font-medium text-foreground ${dataUsage.status === "loading" ? "animate-pulse" : ""}`}
+        >
+          {displayValue}
+        </span>
+      </div>
       <p>
         &copy; {currentYear} All rights reserved -{" "}
         <a
@@ -81,10 +94,10 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
   }, [status, fetchUser, fetchConfig, refreshKey]);
 
   useEffect(() => {
-    if (user && !user.isGuest) {
+    if (status === "authenticated" && user && !user.isGuest) {
       fetchDataUsage();
     }
-  }, [user, fetchDataUsage, refreshKey]);
+  }, [status, user, fetchDataUsage, refreshKey]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartRef.current = e.targetTouches[0].clientX;
@@ -120,7 +133,6 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
           <div
             className={cn(
               "flex-1 flex flex-col transition-all duration-300 ease-in-out min-w-0 w-full max-w-full",
-
               !isShareMode && isSidebarOpen ? "lg:ml-64" : "ml-0",
             )}
           >

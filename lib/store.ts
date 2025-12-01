@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { DriveFile } from "./googleDrive";
+import { formatBytes } from "@/lib/utils";
 
 export interface Toast {
   id: string;
@@ -353,23 +354,34 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           dataUsage: { ...state.dataUsage, status: "loading" },
         }));
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
         try {
-          const response = await fetch("/api/datausage");
+          const response = await fetch("/api/datausage", {
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+
           if (!response.ok) throw new Error("Gagal mengambil data penggunaan.");
           const data = await response.json();
-          const formattedUsage = `${(
-            data.totalUsage /
-            1024 /
-            1024 /
-            1024
-          ).toFixed(2)} GB`;
+
+          const formattedUsage = formatBytes(data.totalUsage);
+
           set({ dataUsage: { status: "success", value: formattedUsage } });
         } catch (error: unknown) {
-          set({ dataUsage: { status: "error", value: "Gagal memuat" } });
-          get().addToast({
-            message: error instanceof Error ? error.message : "Error",
-            type: "error",
-          });
+          clearTimeout(timeoutId);
+          set((state) => ({
+            dataUsage: {
+              status: "error",
+              value:
+                state.dataUsage.value !== "Memuat..."
+                  ? state.dataUsage.value
+                  : "Gagal",
+            },
+          }));
+          console.error("Failed to fetch data usage", error);
         }
       },
       adminEmails: [],

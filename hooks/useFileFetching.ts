@@ -39,9 +39,7 @@ const fetchFilesApi = async ({
   const response = await fetch(url.toString(), { headers });
   if (!response.ok) {
     const errorData = await response.json();
-    // Tangkap error 401 Protected secara spesifik
     if (response.status === 401 && errorData.protected) {
-      // Throw object khusus agar bisa dideteksi di retry logic
       throw { isProtected: true, folderId, error: errorData.error };
     }
     throw new Error(errorData.error || "Gagal mengambil data file.");
@@ -59,9 +57,8 @@ const fetchFolderPathApi = async (
   if (shareToken) url.searchParams.append("share_token", shareToken);
 
   const response = await fetch(url.toString());
-  // Jika error folder path, kita biarkan tapi jangan sampai loop
   if (!response.ok) {
-    if (response.status === 401) return []; // Return empty path on auth error
+    if (response.status === 401) return [];
     throw new Error("Gagal memuat path folder.");
   }
   return response.json();
@@ -79,13 +76,11 @@ export function useFileFetching({
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
   const currentFolderId = initialFolderId || rootFolderId;
 
-  // 1. Query untuk Breadcrumb Path
   const { data: historyData } = useQuery({
     queryKey: ["folderPath", currentFolderId, shareToken],
     queryFn: () => fetchFolderPathApi(currentFolderId, shareToken),
     enabled: !!currentFolderId && currentFolderId !== rootFolderId,
     initialData: initialFolderPath,
-    // FIX: Jangan retry jika gagal ambil path (misal karena protected)
     retry: false,
     refetchOnWindowFocus: false,
   });
@@ -102,7 +97,6 @@ export function useFileFetching({
     return Array.isArray(historyData) ? historyData : [];
   }, [historyData, currentFolderId, rootFolderId]);
 
-  // 2. Query Utama untuk List File
   const {
     data,
     fetchNextPage,
@@ -116,7 +110,7 @@ export function useFileFetching({
       "files",
       currentFolderId,
       shareToken,
-      folderTokens[currentFolderId], // Query key berubah jika token ada
+      folderTokens[currentFolderId],
       refreshKey,
     ],
     queryFn: ({ pageParam }) =>
@@ -129,17 +123,11 @@ export function useFileFetching({
       }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextPageToken || undefined,
-
-    // FIX: Logic Retry yang Lebih Ketat
     retry: (failureCount, error: any) => {
-      // JANGAN retry jika errornya adalah Protected Folder (401)
       if (error?.isProtected) return false;
-      // Default retry 2 kali untuk error jaringan biasa
       return failureCount < 2;
     },
-    // FIX: Matikan refetch otomatis untuk mencegah loop saat user diam
     refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
   });
 
   const files = useMemo(() => {
@@ -150,10 +138,7 @@ export function useFileFetching({
     if (error) {
       const err = error as any;
 
-      // Jika error protected, jangan tampilkan toast error umum,
-      // biarkan AuthModal yang menangani.
       if (err.isProtected) {
-        // Silent
       } else {
         addToast({
           message: err.message || "Gagal memuat data.",

@@ -38,7 +38,9 @@ export default function Sidebar() {
   const router = useRouter();
   const { isSidebarOpen, setSidebarOpen, currentFolderId, user, shareToken } =
     useAppStore();
-  const [isMounted, setIsMounted] = useState(false);
+
+  const [mounted, setMounted] = useState(false);
+
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
 
   const [tree, setTree] = useState<FolderNode>({
@@ -54,6 +56,10 @@ export default function Sidebar() {
   const touchStartRef = useRef<number | null>(null);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     const fetchDbDrives = async () => {
       try {
         const res = await fetch("/api/admin/manual-drives");
@@ -65,8 +71,8 @@ export default function Sidebar() {
         console.error("Failed fetching DB drives", e);
       }
     };
-    if (isMounted) fetchDbDrives();
-  }, [isMounted]);
+    if (mounted) fetchDbDrives();
+  }, [mounted]);
 
   const allManualDrives = useMemo<ManualDrive[]>(() => {
     const envDrivesStr = process.env.NEXT_PUBLIC_MANUAL_DRIVES || "";
@@ -92,11 +98,8 @@ export default function Sidebar() {
   }, [dbDrives]);
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    if (!mounted) return;
 
-  useEffect(() => {
-    if (!isMounted) return;
     if (shareToken) {
       document.body.classList.remove("mobile-menu-open");
       return;
@@ -114,7 +117,7 @@ export default function Sidebar() {
       window.removeEventListener("resize", handleBodyScroll);
       document.body.classList.remove("mobile-menu-open");
     };
-  }, [isSidebarOpen, shareToken, isMounted]);
+  }, [isSidebarOpen, shareToken, mounted]);
 
   const fetchSubfolders = async (parentId: string) => {
     const url = `/api/files?folderId=${parentId}`;
@@ -167,8 +170,8 @@ export default function Sidebar() {
         setTree((prev) => ({ ...prev, children }));
       }
     };
-    if (isMounted) initRoot();
-  }, [rootFolderId, isMounted]);
+    if (mounted) initRoot();
+  }, [rootFolderId, mounted]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartRef.current = e.targetTouches[0].clientX;
@@ -288,12 +291,10 @@ export default function Sidebar() {
                     <span className="truncate">{drive.name}</span>
                   </div>
                   {drive.isProtected && (
-                    <div title="Terproteksi Password">
-                      <Lock
-                        size={12}
-                        className="text-amber-500 shrink-0 opacity-70"
-                      />
-                    </div>
+                    <Lock
+                      size={12}
+                      className="text-amber-500 shrink-0 opacity-70"
+                    />
                   )}
                 </button>
               ))}
@@ -390,7 +391,12 @@ export default function Sidebar() {
     </div>
   );
 
-  if (!isMounted) return null;
+  if (!mounted) {
+    return (
+      <div className="hidden lg:block fixed inset-y-0 left-0 z-20 w-64 bg-card border-r border-border"></div>
+    );
+  }
+
   if (shareToken) return null;
 
   return (

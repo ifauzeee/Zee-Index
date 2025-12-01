@@ -176,7 +176,7 @@ export async function getAllDescendantFolders(
   accessToken: string,
   rootFolderId: string,
 ): Promise<string[]> {
-  const cacheKey = `zee-index:folder-tree:${rootFolderId}`;
+  const cacheKey = `zee-index:folder-tree-v2:${rootFolderId}`;
   try {
     const cachedTree: string[] | null = await kv.get(cacheKey);
     if (cachedTree) {
@@ -300,7 +300,7 @@ export async function listFilesFromDrive(
 export async function getFileDetailsFromDrive(
   fileId: string,
 ): Promise<DriveFile | null> {
-  const cacheKey = `gdrive:file-details:${fileId}`;
+  const cacheKey = `gdrive:file-details-v2:${fileId}`;
   try {
     const cachedDetails: DriveFile | null = await kv.get(cacheKey);
     if (cachedDetails) {
@@ -345,7 +345,7 @@ export async function getFileDetailsFromDrive(
 export async function getFolderPath(
   folderId: string,
 ): Promise<{ id: string; name: string }[]> {
-  const cacheKey = `zee-index:folder-path:${folderId}`;
+  const cacheKey = `zee-index:folder-path-v2:${folderId}`;
   try {
     const cachedPath: { id: string; name: string }[] | null =
       await kv.get(cacheKey);
@@ -362,9 +362,10 @@ export async function getFolderPath(
   const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
   const rootName = process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Home";
 
-  // Loop untuk menelusuri parent ke atas
-  while (currentId) {
-    // Jika kita sampai di Root Folder yang dikonfigurasi, tambahkan dan berhenti.
+  let iterations = 0;
+  while (currentId && iterations < 20) {
+    iterations++;
+
     if (currentId === rootId) {
       path.unshift({ id: rootId, name: rootName });
       break;
@@ -392,15 +393,11 @@ export async function getFolderPath(
       const data: { id: string; name: string; parents?: string[] } =
         await response.json();
 
-      // Tambahkan folder saat ini ke path
       path.unshift({ id: data.id, name: data.name });
 
-      // Cek parent selanjutnya
       if (data.parents && data.parents.length > 0) {
         currentId = data.parents[0];
       } else {
-        // Tidak ada parent lagi (misal: Root dari Shared Drive)
-        // Kita berhenti di sini tanpa menambahkan Root ID aplikasi
         break;
       }
     } catch (e) {
@@ -420,7 +417,9 @@ export async function getFolderPath(
 
 export async function getStorageDetails() {
   const accessToken = await getAccessToken();
+  const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
   const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3";
+
   const aboutResponse = await fetchWithRetry(
     `${GOOGLE_DRIVE_API_URL}/about?fields=storageQuota`,
     {
@@ -434,13 +433,17 @@ export async function getStorageDetails() {
   }
   const aboutData: { storageQuota: { usage: string; limit: string } } =
     await aboutResponse.json();
-  const usage = parseInt(aboutData.storageQuota.usage, 10);
-  const limit = parseInt(aboutData.storageQuota.limit, 10);
+  const globalUsage = parseInt(aboutData.storageQuota.usage, 10);
+
+  const envLimitGB = process.env.STORAGE_LIMIT_GB;
+  const limit = envLimitGB
+    ? parseInt(envLimitGB) * 1024 * 1024 * 1024
+    : parseInt(aboutData.storageQuota.limit, 10);
 
   const largestFilesParams = new URLSearchParams({
     q: "trashed=false and mimeType != 'application/vnd.google-apps.folder'",
     orderBy: "quotaBytesUsed desc",
-    pageSize: "50",
+    pageSize: "1000",
     fields:
       "files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, hasThumbnail, parents, trashed)",
     supportsAllDrives: "true",
@@ -460,10 +463,35 @@ export async function getStorageDetails() {
   }
 
   const largestFilesData = await largestFilesResponse.json();
-  const allFiles = (largestFilesData.files || []).map((file: DriveFile) => ({
+  let rawFiles = (largestFilesData.files || []) as DriveFile[];
+
+  if (rootFolderId) {
+    const descendantFolderIds = await getAllDescendantFolders(
+      accessToken,
+      rootFolderId,
+    );
+    const validParentIds = new Set(descendantFolderIds);
+    validParentIds.add(rootFolderId);
+
+    rawFiles = rawFiles.filter((file) => {
+      if (file.parents && file.parents.length > 0) {
+        return file.parents.some((parent) => validParentIds.has(parent));
+      }
+      return false;
+    });
+  }
+
+  const allFiles = rawFiles.map((file) => ({
     ...file,
     isFolder: file.mimeType === "application/vnd.google-apps.folder",
   }));
+
+  const localUsage = allFiles.reduce(
+    (acc, file) => acc + parseInt(file.size || "0", 10),
+    0,
+  );
+
+  const finalUsage = rootFolderId ? localUsage : globalUsage;
 
   const breakdownMap: Record<string, { size: number; count: number }> = {};
   allFiles.forEach((file: DriveFile) => {
@@ -507,7 +535,7 @@ export async function getStorageDetails() {
     .sort((a, b) => b.size - a.size);
 
   return {
-    usage,
+    usage: finalUsage,
     limit,
     breakdown,
     largestFiles: allFiles.slice(0, 10),

@@ -15,12 +15,11 @@ export default function AuthForm({
   isLoading,
   onSubmit,
 }: AuthFormProps) {
-  const [id, setId] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(id, password);
+    onSubmit("admin", password);
   };
 
   return (
@@ -50,7 +49,7 @@ export default function AuthForm({
           </span>{" "}
           dilindungi.
           <br />
-          Silakan masukkan kredensial untuk melanjutkan.
+          Silakan masukkan kata sandi untuk melanjutkan.
         </p>
       </motion.div>
 
@@ -67,23 +66,8 @@ export default function AuthForm({
         transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
         className="flex-1 w-full max-w-sm"
       >
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">
-              ID Pengguna
-            </label>
-            <input
-              type="text"
-              value={id}
-              onChange={(e) => setId(e.target.value)}
-              placeholder="Masukkan ID..."
-              className="w-full px-5 py-3.5 rounded-2xl border bg-background/50 focus:bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-muted-foreground/30 shadow-sm"
-              required
-              autoFocus
-            />
-          </div>
-
-          <div className="space-y-1.5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          <div className="space-y-2">
             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">
               Kata Sandi
             </label>
@@ -91,16 +75,17 @@ export default function AuthForm({
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Masukkan Password..."
-              className="w-full px-5 py-3.5 rounded-2xl border bg-background/50 focus:bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-muted-foreground/30 shadow-sm"
+              placeholder="Masukkan Kata Sandi..."
+              className="w-full px-5 py-4 rounded-2xl border bg-background/50 focus:bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-muted-foreground/30 shadow-sm text-lg"
               required
+              autoFocus
             />
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="group w-full mt-4 flex items-center justify-center gap-3 px-6 py-3.5 bg-primary text-primary-foreground rounded-2xl hover:bg-primary/90 transition-all font-semibold disabled:opacity-70 shadow-lg shadow-primary/25 active:scale-[0.98]"
+            className="group w-full mt-2 flex items-center justify-center gap-3 px-6 py-4 bg-primary text-primary-foreground rounded-2xl hover:bg-primary/90 transition-all font-semibold disabled:opacity-70 shadow-lg shadow-primary/25 active:scale-[0.98] text-base"
           >
             {isLoading ? (
               <>
