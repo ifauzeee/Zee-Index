@@ -48,6 +48,7 @@
     "react-masonry-css": "^1.0.16",
     "recharts": "^3.3.0",
     "rehype-sanitize": "^6.0.0",
+    "remark-gfm": "^4.0.1",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "yet-another-react-lightbox": "^3.25.0",

@@ -41,6 +41,7 @@ import {
   Tag as TagIcon,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import ArchivePreviewModal from "./ArchivePreviewModal";
 import ImageEditorModal from "./ImageEditorModal";
@@ -587,7 +588,10 @@ export default function FileDetail({
         if (showTextPreview && textContent !== null)
           return (
             <div className="prose dark:prose-invert prose-sm w-full h-full overflow-y-auto p-4 md:p-8 bg-background">
-              <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeSanitize]}
+              >
                 {textContent}
               </ReactMarkdown>
             </div>
