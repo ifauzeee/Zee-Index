@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
-import remarkGfm from "remark-gfm"; 
+import remarkGfm from "remark-gfm";
 import { BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/lib/store";
@@ -71,8 +71,8 @@ export default function FolderReadme({ fileId }: FolderReadmeProps) {
           >
             <div className="p-6 prose dark:prose-invert prose-sm max-w-none">
               {/* TAMBAHKAN remarkPlugins DI BAWAH INI */}
-              <ReactMarkdown 
-                remarkPlugins={[remarkGfm]} 
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeSanitize]}
               >
                 {content}

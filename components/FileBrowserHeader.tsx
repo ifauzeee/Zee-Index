@@ -14,15 +14,15 @@ import {
   ChevronRight,
   AlignJustify,
   StretchHorizontal,
-  ArrowDownUp
+  ArrowDownUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 interface FileBrowserHeaderProps {
@@ -43,8 +43,8 @@ interface FileBrowserHeaderProps {
   onDetailsClick: (e?: React.MouseEvent) => void;
   activeFileId: string | null;
   onRequestFileClick: () => void;
-  sort: { key: string; order: 'asc' | 'desc' };
-  onSortChange: (key: 'name' | 'size' | 'modifiedTime') => void;
+  sort: { key: string; order: "asc" | "desc" };
+  onSortChange: (key: "name" | "size" | "modifiedTime") => void;
 }
 
 export default function FileBrowserHeader({
@@ -99,11 +99,17 @@ export default function FileBrowserHeader({
         {history.map((folder, index) => {
           const isLast = index === history.length - 1;
           const isRoot = index === 0;
+          const isClickable = !(shareToken && isRoot);
 
           return (
             <div key={folder.id} className="flex items-center shrink-0">
               <button
-                onClick={() => onBreadcrumbClick(folder.id)}
+                onClick={() => {
+                  if (isClickable) {
+                    onBreadcrumbClick(folder.id);
+                  }
+                }}
+                disabled={!isClickable}
                 onDragOver={(e) => onBreadcrumbDragOver(e, folder.id)}
                 onDragLeave={onBreadcrumbDragLeave}
                 onDrop={(e) => onBreadcrumbDrop(e, folder)}
@@ -111,7 +117,9 @@ export default function FileBrowserHeader({
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all border",
                   isLast
                     ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                    : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-foreground",
+                    : isClickable
+                      ? "bg-card text-muted-foreground border-border hover:bg-accent hover:text-foreground"
+                      : "bg-transparent text-muted-foreground border-transparent cursor-default opacity-70",
                   dragOverBreadcrumb === folder.id &&
                     "ring-2 ring-primary ring-offset-2",
                 )}
@@ -170,19 +178,28 @@ export default function FileBrowserHeader({
             <div className="w-px h-6 bg-border mx-1 hidden sm:block shrink-0"></div>
 
             <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <button className="p-2 rounded-lg bg-card border hover:bg-accent transition-colors shadow-sm flex items-center justify-center shrink-0 gap-2 px-3" title="Urutkan file">
-                        <ArrowDownUp size={16} />
-                        <span className="text-sm font-medium">
-                            {sortLabels[sort.key as keyof typeof sortLabels]}
-                        </span>
-                    </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onSortChange('name')}>Nama</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onSortChange('modifiedTime')}>Tanggal</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onSortChange('size')}>Ukuran</DropdownMenuItem>
-                </DropdownMenuContent>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="p-2 rounded-lg bg-card border hover:bg-accent transition-colors shadow-sm flex items-center justify-center shrink-0 gap-2 px-3"
+                  title="Urutkan file"
+                >
+                  <ArrowDownUp size={16} />
+                  <span className="text-sm font-medium">
+                    {sortLabels[sort.key as keyof typeof sortLabels]}
+                  </span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onSortChange("name")}>
+                  Nama
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onSortChange("modifiedTime")}>
+                  Tanggal
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onSortChange("size")}>
+                  Ukuran
+                </DropdownMenuItem>
+              </DropdownMenuContent>
             </DropdownMenu>
 
             <button

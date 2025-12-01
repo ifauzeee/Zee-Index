@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { jwtVerify } from "jose";
 
 const PUBLIC_PATHS = new Set([
   "/login",
@@ -44,8 +45,29 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (request.nextUrl.searchParams.has("share_token")) {
-    return NextResponse.next();
+  const shareToken = request.nextUrl.searchParams.get("share_token");
+  if (shareToken) {
+    try {
+      const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY);
+      const { payload } = await jwtVerify(shareToken, secret);
+
+      if (payload.loginRequired) {
+        const token = await getToken({
+          req: request,
+          secret: process.env.NEXTAUTH_SECRET,
+        });
+
+        if (!token) {
+          const loginUrl = new URL("/login", request.url);
+          loginUrl.searchParams.set("callbackUrl", request.url);
+          loginUrl.searchParams.set("error", "GuestAccessDenied");
+          return NextResponse.redirect(loginUrl);
+        }
+      }
+      return NextResponse.next();
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   const token = await getToken({

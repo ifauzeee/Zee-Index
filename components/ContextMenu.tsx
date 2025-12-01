@@ -153,7 +153,7 @@ export default function ContextMenu({
         <MenuItem onClick={onPreview} icon={Eye} label="Pratinjau / Buka" />
       )}
 
-      {isImage && (
+      {isImage && isAdmin && (
         <MenuItem onClick={onEditImage} icon={Edit3} label="Edit Gambar" />
       )}
 
@@ -175,36 +175,42 @@ export default function ContextMenu({
       {isFolder && isAdmin && (
         <>
           <li className="border-t my-2 border-border/50"></li>
-          <MenuItem 
-            onClick={onTogglePin} 
-            icon={isPinned ? PinOff : Pin} 
-            label={isPinned ? "Lepas Pin" : "Sematkan Folder"} 
+          <MenuItem
+            onClick={onTogglePin}
+            icon={isPinned ? PinOff : Pin}
+            label={isPinned ? "Lepas Pin" : "Sematkan Folder"}
           />
         </>
       )}
 
       <li className="border-t my-2 border-border/50"></li>
 
-      <MenuItem
-        onClick={onToggleFavorite}
-        icon={Star}
-        variant={isFavorite ? "warning" : "default"}
-        label={isFavorite ? "Hapus Favorit" : "Tambah Favorit"}
-      />
+      {isAdmin && (
+        <MenuItem
+          onClick={onToggleFavorite}
+          icon={Star}
+          variant={isFavorite ? "warning" : "default"}
+          label={isFavorite ? "Hapus Favorit" : "Tambah Favorit"}
+        />
+      )}
 
-      <MenuItem onClick={onShare} icon={Share2} label="Bagikan" />
-      <MenuItem onClick={onCopy} icon={Copy} label="Buat Salinan" />
-      <MenuItem onClick={onMove} icon={Move} label="Pindahkan" />
-      <MenuItem onClick={onRename} icon={Pencil} label="Ubah Nama" />
+      {isAdmin && (
+        <>
+          <MenuItem onClick={onShare} icon={Share2} label="Bagikan" />
+          <MenuItem onClick={onCopy} icon={Copy} label="Buat Salinan" />
+          <MenuItem onClick={onMove} icon={Move} label="Pindahkan" />
+          <MenuItem onClick={onRename} icon={Pencil} label="Ubah Nama" />
 
-      <li className="border-t my-2 border-border/50"></li>
+          <li className="border-t my-2 border-border/50"></li>
 
-      <MenuItem
-        onClick={onDelete}
-        icon={Trash2}
-        label="Hapus"
-        variant="danger"
-      />
+          <MenuItem
+            onClick={onDelete}
+            icon={Trash2}
+            label="Hapus"
+            variant="danger"
+          />
+        </>
+      )}
     </ul>
   );
 

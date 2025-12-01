@@ -539,24 +539,21 @@ export async function restoreTrash(fileId: string | string[]) {
   const accessToken = await getAccessToken();
   const ids = Array.isArray(fileId) ? fileId : [fileId];
 
-  const restorePromises = ids.map(id => {
-    return fetch(
-      `https://www.googleapis.com/drive/v3/files/${id}`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ trashed: false }),
+  const restorePromises = ids.map((id) => {
+    return fetch(`https://www.googleapis.com/drive/v3/files/${id}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({ trashed: false }),
+    });
   });
 
   const results = await Promise.all(restorePromises);
-  results.forEach(res => {
+  results.forEach((res) => {
     if (!res.ok) {
-        console.error(`Failed to restore a file: ${res.statusText}`);
+      console.error(`Failed to restore a file: ${res.statusText}`);
     }
   });
 }
@@ -564,21 +561,18 @@ export async function restoreTrash(fileId: string | string[]) {
 export async function deleteForever(fileId: string | string[]) {
   const accessToken = await getAccessToken();
   const ids = Array.isArray(fileId) ? fileId : [fileId];
-  
-  const deletePromises = ids.map(id => {
-      return fetch(
-      `https://www.googleapis.com/drive/v3/files/${id}`,
-      {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${accessToken}` },
-      },
-    );
+
+  const deletePromises = ids.map((id) => {
+    return fetch(`https://www.googleapis.com/drive/v3/files/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
   });
 
   const results = await Promise.all(deletePromises);
-  results.forEach(res => {
+  results.forEach((res) => {
     if (!res.ok) {
-        console.error(`Failed to delete a file forever: ${res.statusText}`);
+      console.error(`Failed to delete a file forever: ${res.statusText}`);
     }
   });
 }

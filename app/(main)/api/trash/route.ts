@@ -33,7 +33,10 @@ export async function POST(req: NextRequest) {
     const { fileId, fileIds } = await req.json();
     const idsToProcess = fileIds || fileId;
     if (!idsToProcess) {
-        return NextResponse.json({ error: "File ID or IDs are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "File ID or IDs are required" },
+        { status: 400 },
+      );
     }
     await restoreTrash(idsToProcess);
     return NextResponse.json({ success: true });
@@ -52,7 +55,10 @@ export async function DELETE(req: NextRequest) {
     const { fileId, fileIds } = await req.json();
     const idsToProcess = fileIds || fileId;
     if (!idsToProcess) {
-        return NextResponse.json({ error: "File ID or IDs are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "File ID or IDs are required" },
+        { status: 400 },
+      );
     }
     await deleteForever(idsToProcess);
     return NextResponse.json({ success: true });

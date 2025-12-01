@@ -87,9 +87,8 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       restartNeeded,
-      message: "Token berhasil disimpan."
+      message: "Token berhasil disimpan.",
     });
-
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense, FC } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut, signIn } from "next-auth/react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
@@ -12,16 +12,12 @@ import {
   RefreshCw,
   Send,
   Coffee,
-  HardDrive,
   Search as SearchIcon,
   Menu,
   LogIn,
   LogOut,
   ArrowLeft,
-  ShieldCheck,
-  Star,
   Github,
-  Trash2,
   Bell,
   PanelLeft,
 } from "lucide-react";
@@ -76,7 +72,6 @@ interface MobileNavProps {
   publicShareLinkItems: string[];
   authButton: React.ReactNode;
   shareToken: string | null;
-  user: { role?: string } | null;
   onClose: () => void;
   createLink: (href: string) => string;
 }
@@ -86,7 +81,6 @@ const MobileNav: FC<MobileNavProps> = ({
   publicShareLinkItems,
   authButton,
   shareToken,
-  user,
   onClose,
   createLink,
 }) => {
@@ -118,14 +112,6 @@ const MobileNav: FC<MobileNavProps> = ({
             .filter((item) => {
               if (shareToken) {
                 return publicShareLinkItems.includes(item.id);
-              }
-              if (
-                user?.role !== "ADMIN" &&
-                (item.id === "admin" ||
-                  item.id === "storage" ||
-                  item.id === "trash")
-              ) {
-                return false;
               }
               return true;
             })
@@ -179,11 +165,11 @@ const MobileNav: FC<MobileNavProps> = ({
 
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session, status } = useSession();
   const {
     triggerRefresh,
     shareToken,
-    user,
     notifications,
     toggleNotificationCenter,
     toggleSidebar,
@@ -193,6 +179,7 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
+  const isSharePage = pathname?.startsWith("/share");
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   useEffect(() => {
@@ -207,14 +194,6 @@ export default function Header() {
   }, [isScrolled]);
 
   const menuItems: MenuItem[] = [
-    { id: "favorites", href: "/favorites", icon: Star, label: "Favorit" },
-    ...(user?.role === "ADMIN"
-      ? [
-          { id: "admin", href: "/admin", icon: ShieldCheck, label: "Admin" },
-          { id: "trash", href: "/trash", icon: Trash2, label: "Sampah" },
-        ]
-      : []),
-    { id: "storage", href: "/storage", icon: HardDrive, label: "Penyimpanan" },
     {
       id: "theme",
       onClick: () => setTheme(theme === "dark" ? "light" : "dark"),
@@ -254,7 +233,6 @@ export default function Header() {
   ];
 
   const publicShareLinkItems = [
-    "storage",
     "theme",
     "refresh",
     "github",
@@ -332,14 +310,16 @@ export default function Header() {
             : "border-b border-transparent bg-background"
         }`}
       >
-        <div className="container max-w-full px-4 flex items-center justify-between gap-4 h-16">
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={toggleSidebar}
-              className="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground"
-            >
-              <PanelLeft size={20} />
-            </button>
+        <div className="container max-w-full px-4 h-16 relative flex items-center justify-center">
+          <div className="absolute left-4 flex items-center gap-3 shrink-0 z-20">
+            {!isSharePage && !shareToken && (
+              <button
+                onClick={toggleSidebar}
+                className="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground"
+              >
+                <PanelLeft size={20} />
+              </button>
+            )}
             <h1
               onClick={handleLogoClick}
               className={`text-xl font-bold flex items-center shrink-0 ${
@@ -352,11 +332,11 @@ export default function Header() {
                 alt="Google Drive Logo"
                 className="w-8 h-8 mr-3 dark:invert"
               />
-              <span>Zee Index</span>
+              <span className="hidden sm:inline">Zee Index</span>
             </h1>
           </div>
 
-          <div className="flex-1 min-w-0 max-w-xl hidden sm:block mx-4">
+          <div className="hidden sm:block w-full max-w-xl px-4 z-10 relative">
             <Suspense
               fallback={
                 <div className="w-full h-10 bg-muted rounded-lg animate-pulse" />
@@ -366,17 +346,59 @@ export default function Header() {
             </Suspense>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2">
-            {shareToken ? (
-              <>
-                {menuItems
-                  .filter((item) => publicShareLinkItems.includes(item.id))
-                  .map((item) => {
+          <div className="absolute right-4 flex items-center gap-2 z-20">
+            <div className="hidden sm:flex items-center gap-2">
+              {shareToken ? (
+                <>
+                  {menuItems
+                    .filter((item) => publicShareLinkItems.includes(item.id))
+                    .map((item) => {
+                      const Icon = item.icon;
+                      return "href" in item && item.href ? (
+                        <a
+                          key={item.id}
+                          href={item.target ? item.href : createLink(item.href)}
+                          target={item.target}
+                          rel={item.rel}
+                          title={item.label}
+                          className="p-2 rounded-lg hover:bg-accent"
+                        >
+                          <Icon size={20} />
+                        </a>
+                      ) : (
+                        "onClick" in item &&
+                          typeof item.onClick === "function" && (
+                            <button
+                              key={item.id}
+                              onClick={item.onClick}
+                              title={item.label}
+                              className="p-2 rounded-lg hover:bg-accent"
+                            >
+                              <Icon size={20} />
+                            </button>
+                          )
+                      );
+                    })}
+                  {authButton}
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={toggleNotificationCenter}
+                    className="p-2 rounded-lg hover:bg-accent relative"
+                    title="Notifikasi"
+                  >
+                    <Bell size={20} />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-background"></span>
+                    )}
+                  </button>
+                  {menuItems.map((item) => {
                     const Icon = item.icon;
                     return "href" in item && item.href ? (
                       <a
                         key={item.id}
-                        href={item.target ? item.href : createLink(item.href)}
+                        href={item.href}
                         target={item.target}
                         rel={item.rel}
                         title={item.label}
@@ -398,85 +420,46 @@ export default function Header() {
                         )
                     );
                   })}
-                {authButton}
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={toggleNotificationCenter}
-                  className="p-2 rounded-lg hover:bg-accent relative"
-                  title="Notifikasi"
-                >
-                  <Bell size={20} />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-background"></span>
-                  )}
-                </button>
-                {menuItems.map((item) => {
-                  const Icon = item.icon;
-                  return "href" in item && item.href ? (
-                    <a
-                      key={item.id}
-                      href={item.href}
-                      target={item.target}
-                      rel={item.rel}
-                      title={item.label}
-                      className="p-2 rounded-lg hover:bg-accent"
-                    >
-                      <Icon size={20} />
-                    </a>
-                  ) : (
-                    "onClick" in item && typeof item.onClick === "function" && (
-                      <button
-                        key={item.id}
-                        onClick={item.onClick}
-                        title={item.label}
-                        className="p-2 rounded-lg hover:bg-accent"
-                      >
-                        <Icon size={20} />
-                      </button>
-                    )
-                  );
-                })}
-                {authButton}
-              </>
-            )}
-          </div>
+                  {authButton}
+                </>
+              )}
+            </div>
 
-          <div className="flex items-center gap-2 sm:hidden">
-            <button
-              onClick={toggleNotificationCenter}
-              className="p-2 rounded-lg hover:bg-accent relative z-50"
-            >
-              <Bell size={20} />
-              {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-background"></span>
-              )}
-            </button>
-            <button
-              onClick={() => setIsSearchVisible(!isSearchVisible)}
-              title="Cari"
-              className="p-2 rounded-lg hover:bg-accent z-50"
-            >
-              {isSearchVisible ? (
-                <ArrowLeft size={20} />
-              ) : (
-                <SearchIcon size={20} />
-              )}
-            </button>
-            <button
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="p-2 rounded-lg hover:bg-accent z-50"
-              title="Menu"
-            >
-              <Menu size={20} />
-            </button>
+            <div className="flex items-center gap-2 sm:hidden">
+              <button
+                onClick={toggleNotificationCenter}
+                className="p-2 rounded-lg hover:bg-accent relative z-50"
+              >
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-background"></span>
+                )}
+              </button>
+              <button
+                onClick={() => setIsSearchVisible(!isSearchVisible)}
+                title="Cari"
+                className="p-2 rounded-lg hover:bg-accent z-50"
+              >
+                {isSearchVisible ? (
+                  <ArrowLeft size={20} />
+                ) : (
+                  <SearchIcon size={20} />
+                )}
+              </button>
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="p-2 rounded-lg hover:bg-accent z-50"
+                title="Menu"
+              >
+                <Menu size={20} />
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       {isSearchVisible && (
-        <div className="mt-4 sm:hidden px-4">
+        <div className="mt-4 sm:hidden px-4 pb-4 border-b border-border bg-background">
           <Suspense fallback={null}>
             <Search onSearchClose={() => setIsSearchVisible(false)} />
           </Suspense>
@@ -490,7 +473,6 @@ export default function Header() {
             publicShareLinkItems={publicShareLinkItems}
             authButton={authButton}
             shareToken={shareToken}
-            user={user}
             onClose={() => setIsMobileMenuOpen(false)}
             createLink={createLink}
           />

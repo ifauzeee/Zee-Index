@@ -16,6 +16,7 @@ import Sidebar from "@/components/Sidebar";
 import { cn } from "@/lib/utils";
 import { HardDrive } from "lucide-react";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import { usePathname, useSearchParams } from "next/navigation";
 
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 const DetailsPanel = dynamic(() => import("@/components/DetailsPanel"), {
@@ -66,6 +67,11 @@ export default function MainLayout({
     setSidebarOpen,
   } = useAppStore();
   const { status } = useSession();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const isShareMode =
+    pathname?.startsWith("/share") || searchParams.has("share_token");
 
   const touchStartRef = useRef<number | null>(null);
 
@@ -92,7 +98,9 @@ export default function MainLayout({
     const touchEnd = e.changedTouches[0].clientX;
 
     if (touchStartRef.current < 50 && touchEnd - touchStartRef.current > 100) {
-      setSidebarOpen(true);
+      if (!isShareMode) {
+        setSidebarOpen(true);
+      }
     }
 
     touchStartRef.current = null;
@@ -110,11 +118,13 @@ export default function MainLayout({
       >
         <Header />
         <div className="flex flex-1 container max-w-full px-0 overflow-x-hidden relative">
-          <Sidebar />
+          {!isShareMode && <Sidebar />}
+
           <div
             className={cn(
               "flex-1 flex flex-col transition-all duration-300 ease-in-out min-w-0 w-full max-w-full",
-              isSidebarOpen ? "lg:ml-64" : "ml-0",
+
+              !isShareMode && isSidebarOpen ? "lg:ml-64" : "ml-0",
             )}
           >
             <div className="container mx-auto px-4 max-w-7xl flex-grow py-4 pb-24 lg:pb-4 min-w-0 overflow-x-hidden">
@@ -124,7 +134,7 @@ export default function MainLayout({
           </div>
         </div>
 
-        <MobileBottomNav />
+        {!isShareMode && <MobileBottomNav />}
 
         <div
           id="toast-container"

@@ -43,6 +43,11 @@ export default function Sidebar() {
   const touchStartRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (shareToken) {
+      document.body.classList.remove("mobile-menu-open");
+      return;
+    }
+
     const handleBodyScroll = () => {
       if (window.innerWidth < 1024 && isSidebarOpen) {
         document.body.classList.add("mobile-menu-open");
@@ -58,11 +63,10 @@ export default function Sidebar() {
       window.removeEventListener("resize", handleBodyScroll);
       document.body.classList.remove("mobile-menu-open");
     };
-  }, [isSidebarOpen]);
+  }, [isSidebarOpen, shareToken]);
 
   const fetchSubfolders = async (parentId: string) => {
-    let url = `/api/files?folderId=${parentId}`;
-    if (shareToken) url += `&share_token=${shareToken}`;
+    const url = `/api/files?folderId=${parentId}`;
 
     const res = await fetch(url);
     if (!res.ok) return [];
@@ -148,9 +152,7 @@ export default function Sidebar() {
           )}
           style={{ paddingLeft: `${paddingLeft}px` }}
           onClick={() => {
-            if (shareToken && node.id === rootFolderId) return;
-            let url = node.id === rootFolderId ? "/" : `/folder/${node.id}`;
-            if (shareToken) url += `?share_token=${shareToken}`;
+            const url = node.id === rootFolderId ? "/" : `/folder/${node.id}`;
             router.push(url);
             if (window.innerWidth < 1024) setSidebarOpen(false);
           }}
@@ -283,6 +285,10 @@ export default function Sidebar() {
       </div>
     </div>
   );
+
+  if (shareToken) {
+    return null;
+  }
 
   return (
     <>

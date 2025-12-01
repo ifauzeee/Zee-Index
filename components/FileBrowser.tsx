@@ -245,7 +245,9 @@ export default function FileBrowser({
       }
       destinationUrl = `/folder/${file.id}`;
     } else {
-      destinationUrl = `/folder/${currentFolderId}/file/${file.id}/${createSlug(file.name)}`;
+      destinationUrl = `/folder/${currentFolderId}/file/${file.id}/${createSlug(
+        file.name,
+      )}`;
     }
     if (shareToken) {
       destinationUrl += `?share_token=${shareToken}`;
@@ -284,24 +286,25 @@ export default function FileBrowser({
 
   const handleContextMenuWrapper = useCallback(
     (event: any, file: DriveFile) => {
-      if (isBulkMode || shareToken || !isAdmin) return;
-      if (!user) return;
+      if (isBulkMode || shareToken) return;
       setActiveFileId(file.id);
       handleContextMenu(event, file);
     },
-    [isBulkMode, shareToken, user, isAdmin, handleContextMenu],
+    [isBulkMode, shareToken, handleContextMenu],
   );
 
   const handleQuickShare = (e: React.MouseEvent, file: DriveFile) => {
     e.stopPropagation();
-    if (user?.role !== "ADMIN") return;
+    if (!isAdmin) return;
     handleShare(file);
   };
 
   const handleQuickDownload = (e: React.MouseEvent, file: DriveFile) => {
     e.stopPropagation();
     window.open(
-      `/api/download?fileId=${file.id}${shareToken ? `&share_token=${shareToken}` : ""}`,
+      `/api/download?fileId=${file.id}${
+        shareToken ? `&share_token=${shareToken}` : ""
+      }`,
       "_blank",
     );
   };

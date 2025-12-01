@@ -129,15 +129,15 @@ export default function FileList({
     );
   }
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0,
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0,
+      },
     },
-  },
-};
+  };
 
   const renderFileItem = (
     file: DriveFile & {

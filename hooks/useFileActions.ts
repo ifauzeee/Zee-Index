@@ -14,7 +14,15 @@ export type ContextMenuState = {
 } | null;
 
 export function useFileActions(currentFolderId: string) {
-  const { addToast, triggerRefresh, favorites, toggleFavorite, pinnedFolders, addPin, removePin } = useAppStore();
+  const {
+    addToast,
+    triggerRefresh,
+    favorites,
+    toggleFavorite,
+    pinnedFolders,
+    addPin,
+    removePin,
+  } = useAppStore();
   const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
   const [actionState, setActionState] = useState<ActionState>({
     type: null,
@@ -152,7 +160,7 @@ export function useFileActions(currentFolderId: string) {
   const handleTogglePin = async () => {
     if (!contextMenu?.file) return;
     const { id } = contextMenu.file;
-    const isPinned = pinnedFolders.some(f => f.id === id);
+    const isPinned = pinnedFolders.some((f) => f.id === id);
 
     if (isPinned) {
       await removePin(id);
@@ -163,7 +171,7 @@ export function useFileActions(currentFolderId: string) {
   };
 
   const isFilePinned = (fileId: string) => {
-    return pinnedFolders.some(f => f.id === fileId);
+    return pinnedFolders.some((f) => f.id === fileId);
   };
 
   return {

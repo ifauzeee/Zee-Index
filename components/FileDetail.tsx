@@ -19,8 +19,6 @@ import {
   cn,
   getIcon,
   getLanguageFromFilename,
-  getGoogleEditorLink,
-  getGoogleDriveLink,
 } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -37,8 +35,6 @@ import {
   Plus,
   Download,
   Link as LinkIcon,
-  ExternalLink,
-  Tag as TagIcon,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";

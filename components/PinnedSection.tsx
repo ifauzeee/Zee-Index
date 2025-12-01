@@ -8,7 +8,8 @@ import { motion } from "framer-motion";
 import type { DriveFile } from "@/lib/googleDrive";
 
 export default function PinnedSection() {
-  const { pinnedFolders, fetchPinnedFolders, currentFolderId, shareToken } = useAppStore();
+  const { pinnedFolders, fetchPinnedFolders, currentFolderId, shareToken } =
+    useAppStore();
   const router = useRouter();
   const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
 
@@ -27,7 +28,7 @@ export default function PinnedSection() {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       className="mb-6"
@@ -36,7 +37,7 @@ export default function PinnedSection() {
         <Pin size={14} className="text-primary" />
         <span>Tersemat</span>
       </div>
-      
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
         {pinnedFolders.map((folder) => (
           <div
@@ -55,7 +56,10 @@ export default function PinnedSection() {
                 Folder Tersemat
               </p>
             </div>
-            <ChevronRight size={14} className="text-muted-foreground/30 group-hover:text-primary/50" />
+            <ChevronRight
+              size={14}
+              className="text-muted-foreground/30 group-hover:text-primary/50"
+            />
           </div>
         ))}
       </div>

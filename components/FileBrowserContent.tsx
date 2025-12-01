@@ -91,7 +91,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
   return (
     <>
       <PinnedSection />
-      
+
       {readmeFile && <FolderReadme fileId={readmeFile.id} />}
 
       <FileList

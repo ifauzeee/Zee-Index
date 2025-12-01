@@ -636,8 +636,11 @@ export const useAppStore = create<AppState>()(
             get().addToast({ message: "Folder disematkan!", type: "success" });
             get().fetchPinnedFolders();
           }
-        } catch (e) {
-          get().addToast({ message: "Gagal menyematkan folder", type: "error" });
+        } catch {
+          get().addToast({
+            message: "Gagal menyematkan folder",
+            type: "error",
+          });
         }
       },
       removePin: async (folderId) => {
@@ -650,11 +653,13 @@ export const useAppStore = create<AppState>()(
           if (response.ok) {
             get().addToast({ message: "Pin dilepas!", type: "success" });
             set((state) => ({
-                pinnedFolders: state.pinnedFolders.filter(f => f.id !== folderId)
+              pinnedFolders: state.pinnedFolders.filter(
+                (f) => f.id !== folderId,
+              ),
             }));
             get().fetchPinnedFolders();
           }
-        } catch (e) {
+        } catch {
           get().addToast({ message: "Gagal melepas pin", type: "error" });
         }
       },

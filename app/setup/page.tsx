@@ -36,7 +36,7 @@ export default function SetupPage() {
       return;
     }
 
-    const scope = "https://www.googleapis.com/auth/drive"; 
+    const scope = "https://www.googleapis.com/auth/drive";
     const redirectUri = `${window.location.origin}/setup`;
 
     localStorage.setItem("zee_setup_temp", JSON.stringify(formData));
@@ -63,7 +63,9 @@ export default function SetupPage() {
       if (res.ok) {
         localStorage.removeItem("zee_setup_temp");
         if (data.restartNeeded) {
-          alert("Setup Berhasil! Token telah disimpan ke .env.\n\nServer akan dimatikan otomatis atau silakan restart manual.");
+          alert(
+            "Setup Berhasil! Token telah disimpan ke .env.\n\nServer akan dimatikan otomatis atau silakan restart manual.",
+          );
         } else {
           alert("Setup Berhasil! Mengalihkan ke beranda...");
           router.push("/");
@@ -71,7 +73,7 @@ export default function SetupPage() {
       } else {
         alert(`Gagal: ${data.error}`);
       }
-    } catch (error) {
+    } catch {
       alert("Terjadi kesalahan koneksi.");
     } finally {
       setLoading(false);
@@ -86,31 +88,43 @@ export default function SetupPage() {
         {step === 1 ? (
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-bold uppercase text-muted-foreground mb-1 block">Google Client ID</label>
+              <label className="text-xs font-bold uppercase text-muted-foreground mb-1 block">
+                Google Client ID
+              </label>
               <input
                 placeholder="...apps.googleusercontent.com"
                 className="w-full p-3 border rounded-lg bg-background focus:ring-2 focus:ring-blue-500 outline-none transition"
                 value={formData.clientId}
-                onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, clientId: e.target.value })
+                }
               />
             </div>
             <div>
-              <label className="text-xs font-bold uppercase text-muted-foreground mb-1 block">Google Client Secret</label>
+              <label className="text-xs font-bold uppercase text-muted-foreground mb-1 block">
+                Google Client Secret
+              </label>
               <input
                 type="password"
                 placeholder="GOCSPX-..."
                 className="w-full p-3 border rounded-lg bg-background focus:ring-2 focus:ring-blue-500 outline-none transition"
                 value={formData.clientSecret}
-                onChange={(e) => setFormData({ ...formData, clientSecret: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, clientSecret: e.target.value })
+                }
               />
             </div>
             <div>
-              <label className="text-xs font-bold uppercase text-muted-foreground mb-1 block">Root Folder ID</label>
+              <label className="text-xs font-bold uppercase text-muted-foreground mb-1 block">
+                Root Folder ID
+              </label>
               <input
                 placeholder="ID Folder Google Drive..."
                 className="w-full p-3 border rounded-lg bg-background focus:ring-2 focus:ring-blue-500 outline-none transition"
                 value={formData.rootFolderId}
-                onChange={(e) => setFormData({ ...formData, rootFolderId: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, rootFolderId: e.target.value })
+                }
               />
             </div>
             <button
@@ -128,7 +142,8 @@ export default function SetupPage() {
             <div>
               <h2 className="text-xl font-semibold">Otorisasi Berhasil!</h2>
               <p className="text-sm text-muted-foreground mt-2">
-                Klik tombol di bawah untuk menukar kode, menyimpan token ke database, dan memperbarui file .env secara otomatis.
+                Klik tombol di bawah untuk menukar kode, menyimpan token ke
+                database, dan memperbarui file .env secara otomatis.
               </p>
             </div>
             <button

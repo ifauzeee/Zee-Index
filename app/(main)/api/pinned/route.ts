@@ -25,13 +25,17 @@ export async function GET() {
     const results = await Promise.all(promises);
 
     const pinnedFolders = results.filter(
-      (file): file is DriveFile => file !== null && !file.trashed && file.isFolder
+      (file): file is DriveFile =>
+        file !== null && !file.trashed && file.isFolder,
     );
 
     return NextResponse.json(pinnedFolders);
   } catch (error) {
     console.error("Pinned folders API Error:", error);
-    return NextResponse.json({ error: "Failed to fetch pinned folders" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch pinned folders" },
+      { status: 500 },
+    );
   }
 }
 
@@ -51,9 +55,15 @@ export async function POST(req: NextRequest) {
     const { folderId } = validation.data;
     await kv.sadd(PINNED_KEY, folderId);
 
-    return NextResponse.json({ success: true, message: "Folder berhasil disematkan." });
-  } catch (error) {
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({
+      success: true,
+      message: "Folder berhasil disematkan.",
+    });
+  } catch {
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -66,13 +76,20 @@ export async function DELETE(req: NextRequest) {
   try {
     const body = await req.json();
     const { folderId } = body;
-    
-    if (!folderId) return NextResponse.json({ error: "Folder ID required" }, { status: 400 });
+
+    if (!folderId)
+      return NextResponse.json(
+        { error: "Folder ID required" },
+        { status: 400 },
+      );
 
     await kv.srem(PINNED_KEY, folderId);
 
     return NextResponse.json({ success: true, message: "Pin folder dilepas." });
-  } catch (error) {
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }
