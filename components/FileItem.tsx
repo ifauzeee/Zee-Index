@@ -93,10 +93,10 @@ function FileItem({
   };
 
   const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.2 } },
-    hover: { scale: 1.02, transition: { duration: 0.1 } },
-  };
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.1 } },
+  hover: { scale: 1.01, transition: { duration: 0.1 } },
+};
 
   const handleDragOver = (e: React.DragEvent) => {
     if (file.isFolder && isAdmin && !uploadStatus) {

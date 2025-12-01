@@ -17,7 +17,7 @@ interface CachedFolderData {
   nextPageToken: string | null;
 }
 
-const CACHE_TTL_SECONDS = 300;
+const CACHE_TTL_SECONDS = 3600;
 
 async function validateShareToken(request: Request): Promise<boolean> {
   const { searchParams } = new URL(request.url);
