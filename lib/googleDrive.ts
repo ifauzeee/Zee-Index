@@ -44,7 +44,7 @@ interface DriveListResponse {
 
 const ACCESS_TOKEN_KEY = "google:access-token";
 
-async function invalidateAccessToken() {
+export async function invalidateAccessToken() {
   await kv.del(ACCESS_TOKEN_KEY);
 }
 
@@ -535,32 +535,52 @@ export async function listTrashedFiles() {
   });
 }
 
-export async function restoreTrash(fileId: string) {
+export async function restoreTrash(fileId: string | string[]) {
   const accessToken = await getAccessToken();
-  const response = await fetch(
-    `https://www.googleapis.com/drive/v3/files/${fileId}`,
-    {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+  const ids = Array.isArray(fileId) ? fileId : [fileId];
+
+  const restorePromises = ids.map(id => {
+    return fetch(
+      `https://www.googleapis.com/drive/v3/files/${id}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ trashed: false }),
       },
-      body: JSON.stringify({ trashed: false }),
-    },
-  );
-  if (!response.ok) throw new Error("Failed to restore file");
+    );
+  });
+
+  const results = await Promise.all(restorePromises);
+  results.forEach(res => {
+    if (!res.ok) {
+        console.error(`Failed to restore a file: ${res.statusText}`);
+    }
+  });
 }
 
-export async function deleteForever(fileId: string) {
+export async function deleteForever(fileId: string | string[]) {
   const accessToken = await getAccessToken();
-  const response = await fetch(
-    `https://www.googleapis.com/drive/v3/files/${fileId}`,
-    {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${accessToken}` },
-    },
-  );
-  if (!response.ok) throw new Error("Failed to delete file forever");
+  const ids = Array.isArray(fileId) ? fileId : [fileId];
+  
+  const deletePromises = ids.map(id => {
+      return fetch(
+      `https://www.googleapis.com/drive/v3/files/${id}`,
+      {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+    );
+  });
+
+  const results = await Promise.all(deletePromises);
+  results.forEach(res => {
+    if (!res.ok) {
+        console.error(`Failed to delete a file forever: ${res.statusText}`);
+    }
+  });
 }
 
 export async function listFileRevisions(

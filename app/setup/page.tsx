@@ -36,7 +36,7 @@ export default function SetupPage() {
       return;
     }
 
-    const scope = "https://www.googleapis.com/auth/drive.readonly";
+    const scope = "https://www.googleapis.com/auth/drive"; 
     const redirectUri = `${window.location.origin}/setup`;
 
     localStorage.setItem("zee_setup_temp", JSON.stringify(formData));

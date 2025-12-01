@@ -292,19 +292,17 @@ export default function Header() {
         <button
           onClick={handleGuestLogout}
           title="Logout (Tamu)"
-          className="flex items-center gap-2 sm:gap-4 hover:text-primary transition-colors text-muted-foreground w-full py-2"
+          className="p-2 rounded-lg hover:bg-accent text-muted-foreground"
         >
-          <LogOut size={24} />
-          <span>Logout (Tamu)</span>
+          <LogOut size={20} />
         </button>
       ) : (
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           title="Logout"
-          className="flex items-center gap-2 sm:gap-4 hover:text-primary transition-colors w-full py-2"
+          className="p-2 rounded-lg hover:bg-accent"
         >
-          <LogOut size={24} />
-          <span>Logout</span>
+          <LogOut size={20} />
         </button>
       )
     ) : (

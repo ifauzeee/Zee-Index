@@ -5,6 +5,7 @@ import { Lock, Loader2 } from "lucide-react";
 import FileList from "@/components/FileList";
 import FileBrowserLoading from "./FileBrowserLoading";
 import FolderReadme from "./FolderReadme";
+import PinnedSection from "./PinnedSection";
 import type { DriveFile } from "@/lib/googleDrive";
 
 interface FileBrowserContentProps {
@@ -89,6 +90,8 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
 
   return (
     <>
+      <PinnedSection />
+      
       {readmeFile && <FolderReadme fileId={readmeFile.id} />}
 
       <FileList

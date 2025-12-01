@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { kv } from "@vercel/kv";
 import fs from "fs";
 import path from "path";
+import { invalidateAccessToken } from "@/lib/googleDrive";
 
 export async function POST(req: Request) {
   try {
@@ -25,14 +26,17 @@ export async function POST(req: Request) {
     if (!tokenResponse.ok) {
       return NextResponse.json(
         { error: tokenData.error_description || "Gagal menukar token" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!tokenData.refresh_token) {
       return NextResponse.json(
-        { error: "Refresh Token tidak diterima. Pastikan akses di-revoke dulu atau gunakan prompt=consent." },
-        { status: 400 }
+        {
+          error:
+            "Refresh Token tidak diterima. Pastikan akses di-revoke dulu atau gunakan prompt=consent.",
+        },
+        { status: 400 },
       );
     }
 
@@ -42,6 +46,8 @@ export async function POST(req: Request) {
       refreshToken: tokenData.refresh_token,
       rootFolderId,
     });
+
+    await invalidateAccessToken();
 
     const isDev = process.env.NODE_ENV === "development";
     let restartNeeded = false;

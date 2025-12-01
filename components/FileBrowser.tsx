@@ -46,6 +46,7 @@ export default function FileBrowser({
 
   const {
     sort,
+    setSort,
     isBulkMode,
     setBulkMode,
     toggleSelection,
@@ -144,6 +145,8 @@ export default function FileBrowser({
     handleRename,
     handleDelete,
     handleMove,
+    handleTogglePin,
+    isFilePinned,
   } = useFileActions(currentFolderId);
 
   const gallery = useGallery(files);
@@ -354,6 +357,8 @@ export default function FileBrowser({
           const file = files.find((f) => f.id === activeFileId);
           if (file) setDetailsFile(file);
         }}
+        sort={sort}
+        onSortChange={setSort}
       />
 
       <main className="min-h-[50vh] mb-12">
@@ -427,6 +432,8 @@ export default function FileBrowser({
         favorites={favorites}
         showHistory={showHistory}
         setShowHistory={setShowHistory}
+        handleTogglePin={handleTogglePin}
+        isFilePinned={isFilePinned}
       />
 
       <ImageGallery

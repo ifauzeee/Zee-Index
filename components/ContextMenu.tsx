@@ -12,6 +12,8 @@ import {
   Eye,
   Archive,
   Edit3,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { formatBytes, cn } from "@/lib/utils";
 import React, { useEffect, useState, useRef } from "react";
@@ -36,6 +38,9 @@ interface ContextMenuProps {
   isImage: boolean;
   onEditImage: () => void;
   isFolder: boolean;
+  isPinned: boolean;
+  onTogglePin: () => void;
+  isAdmin: boolean;
 }
 
 export default function ContextMenu({
@@ -57,6 +62,9 @@ export default function ContextMenu({
   isImage,
   onEditImage,
   isFolder,
+  isPinned,
+  onTogglePin,
+  isAdmin,
 }: ContextMenuProps) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -162,6 +170,17 @@ export default function ContextMenu({
               : "Lihat Isi Arsip"
           }
         />
+      )}
+
+      {isFolder && isAdmin && (
+        <>
+          <li className="border-t my-2 border-border/50"></li>
+          <MenuItem 
+            onClick={onTogglePin} 
+            icon={isPinned ? PinOff : Pin} 
+            label={isPinned ? "Lepas Pin" : "Sematkan Folder"} 
+          />
+        </>
       )}
 
       <li className="border-t my-2 border-border/50"></li>

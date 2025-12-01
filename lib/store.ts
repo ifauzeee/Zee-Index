@@ -141,6 +141,11 @@ interface AppState {
   fetchTags: (fileId: string) => Promise<void>;
   addTag: (fileId: string, tag: string) => Promise<void>;
   removeTag: (fileId: string, tag: string) => Promise<void>;
+
+  pinnedFolders: DriveFile[];
+  fetchPinnedFolders: () => Promise<void>;
+  addPin: (folderId: string) => Promise<void>;
+  removePin: (folderId: string) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()(
@@ -605,6 +610,52 @@ export const useAppStore = create<AppState>()(
           }
         } catch (error) {
           console.error("Failed to remove tag", error);
+        }
+      },
+
+      pinnedFolders: [],
+      fetchPinnedFolders: async () => {
+        try {
+          const response = await fetch("/api/pinned");
+          if (response.ok) {
+            const data = await response.json();
+            set({ pinnedFolders: data });
+          }
+        } catch (error) {
+          console.error("Failed to fetch pinned folders", error);
+        }
+      },
+      addPin: async (folderId) => {
+        try {
+          const response = await fetch("/api/pinned", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folderId }),
+          });
+          if (response.ok) {
+            get().addToast({ message: "Folder disematkan!", type: "success" });
+            get().fetchPinnedFolders();
+          }
+        } catch (e) {
+          get().addToast({ message: "Gagal menyematkan folder", type: "error" });
+        }
+      },
+      removePin: async (folderId) => {
+        try {
+          const response = await fetch("/api/pinned", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folderId }),
+          });
+          if (response.ok) {
+            get().addToast({ message: "Pin dilepas!", type: "success" });
+            set((state) => ({
+                pinnedFolders: state.pinnedFolders.filter(f => f.id !== folderId)
+            }));
+            get().fetchPinnedFolders();
+          }
+        } catch (e) {
+          get().addToast({ message: "Gagal melepas pin", type: "error" });
         }
       },
     }),

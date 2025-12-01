@@ -59,6 +59,8 @@ interface FileBrowserModalsProps {
   favorites: string[];
   showHistory: boolean;
   setShowHistory: (show: boolean) => void;
+  handleTogglePin: () => void;
+  isFilePinned: (id: string) => boolean;
 }
 
 export default function FileBrowserModals(props: FileBrowserModalsProps) {
@@ -102,6 +104,8 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
     favorites,
     showHistory,
     setShowHistory,
+    handleTogglePin,
+    isFilePinned,
   } = props;
   const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024;
 
@@ -207,6 +211,9 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
           }
           onArchivePreview={handleArchivePreview}
           isFolder={contextMenu.file.isFolder}
+          isPinned={isFilePinned(contextMenu.file.id)}
+          onTogglePin={handleTogglePin}
+          isAdmin={isAdmin}
         />
       )}
       {actionState.type === "rename" && actionState.file && (

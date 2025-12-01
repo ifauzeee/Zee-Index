@@ -30,8 +30,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
   try {
-    const { fileId } = await req.json();
-    await restoreTrash(fileId);
+    const { fileId, fileIds } = await req.json();
+    const idsToProcess = fileIds || fileId;
+    if (!idsToProcess) {
+        return NextResponse.json({ error: "File ID or IDs are required" }, { status: 400 });
+    }
+    await restoreTrash(idsToProcess);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Trash Restore Error:", error);
@@ -45,8 +49,12 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
   try {
-    const { fileId } = await req.json();
-    await deleteForever(fileId);
+    const { fileId, fileIds } = await req.json();
+    const idsToProcess = fileIds || fileId;
+    if (!idsToProcess) {
+        return NextResponse.json({ error: "File ID or IDs are required" }, { status: 400 });
+    }
+    await deleteForever(idsToProcess);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Trash Delete Error:", error);
