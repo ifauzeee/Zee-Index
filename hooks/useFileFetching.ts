@@ -127,7 +127,8 @@ export function useFileFetching({
       if (error?.isProtected) return false;
       return failureCount < 2;
     },
-    refetchOnWindowFocus: false,
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
   });
 
   const files = useMemo(() => {

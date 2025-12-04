@@ -20,3 +20,7 @@ public/swe-worker-*.js
 all_project_code.txt
 cat.py
 .vercel
+
+all_project_code.md
+
+project-dump.md

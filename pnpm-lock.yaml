@@ -43,6 +43,9 @@ importers:
       "@vercel/kv":
         specifier: ^3.0.0
         version: 3.0.0
+      "@vidstack/react":
+        specifier: ^1.12.13
+        version: 1.12.13(@types/react@18.3.27)(react@18.3.1)
       bcryptjs:
         specifier: ^3.0.2
         version: 3.0.3
@@ -70,6 +73,9 @@ importers:
       lucide-react:
         specifier: ^0.424.0
         version: 0.424.0(react@18.3.1)
+      media-icons:
+        specifier: ^1.1.5
+        version: 1.1.5
       next:
         specifier: ^14.2.32
         version: 14.2.33(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -2937,6 +2943,16 @@ packages:
       }
     engines: { node: ">=14.6" }
 
+  "@vidstack/react@1.12.13":
+    resolution:
+      {
+        integrity: sha512-zyNydy1+HtoK6cJ8EmqFNkPPGHIFMrr2KH+ef3654EqXx4IcJ8A5LCNMXBuALQE8IMxtk040JMoR9OKyeXjBOQ==,
+      }
+    engines: { node: ">=18" }
+    peerDependencies:
+      "@types/react": ^18.0.0 || ^19.0.0
+      react: ^18.0.0 || ^19.0.0
+
   "@webassemblyjs/ast@1.14.1":
     resolution:
       {
@@ -5347,6 +5363,20 @@ packages:
       {
         integrity: sha512-0H44vDimn51F0YwvxSJSm0eCDOJTRlmN0R1yBh4HLj9wiV1Dn0QoXGbvFAWj2hSItVTlCmBF1hqKlIyUBVFLPg==,
       }
+
+  media-captions@1.0.4:
+    resolution:
+      {
+        integrity: sha512-cyDNmuZvvO4H27rcBq2Eudxo9IZRDCOX/I7VEyqbxsEiD2Ei7UYUhG/Sc5fvMZjmathgz3fEK7iAKqvpY+Ux1w==,
+      }
+    engines: { node: ">=16" }
+
+  media-icons@1.1.5:
+    resolution:
+      {
+        integrity: sha512-zu3CjKRs63ybLLWPomRRgTDyYiSrk2bRRgw97ZmN3FGXuo9qUUhBSfYwnjmvSdLG2JOJfAwzDz99bPATSY81DQ==,
+      }
+    engines: { node: ">=16" }
 
   merge-stream@2.0.0:
     resolution:
@@ -9783,6 +9813,13 @@ snapshots:
     dependencies:
       "@upstash/redis": 1.35.6
 
+  "@vidstack/react@1.12.13(@types/react@18.3.27)(react@18.3.1)":
+    dependencies:
+      "@floating-ui/dom": 1.7.4
+      "@types/react": 18.3.27
+      media-captions: 1.0.4
+      react: 18.3.1
+
   "@webassemblyjs/ast@1.14.1":
     dependencies:
       "@webassemblyjs/helper-numbers": 1.13.2
@@ -11398,6 +11435,10 @@ snapshots:
   mdast-util-to-string@4.0.0:
     dependencies:
       "@types/mdast": 4.0.4
+
+  media-captions@1.0.4: {}
+
+  media-icons@1.1.5: {}
 
   merge-stream@2.0.0: {}
 
