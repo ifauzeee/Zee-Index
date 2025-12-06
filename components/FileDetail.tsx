@@ -17,6 +17,7 @@ import {
   Eye,
   Info,
   X,
+  Maximize2,
 } from "lucide-react";
 
 import { useAppStore } from "@/lib/store";
@@ -424,6 +425,16 @@ export default function FileDetail({
                   subtitleTracks={subtitleTracks}
                   onEnded={() => nextFileUrl && router.push(nextFileUrl)}
                 />
+              </div>
+            ) : fileType === "image" ? (
+              <div
+                className="w-full h-full rounded-xl overflow-hidden relative shadow-sm border bg-muted/5 cursor-zoom-in group/image"
+                onClick={() => setInternalPreviewOpen(true)}
+              >
+                <ImagePreview src={directLink} />
+                <div className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full opacity-0 group-hover/image:opacity-100 transition-opacity">
+                  <Maximize2 size={20} />
+                </div>
               </div>
             ) : (
               <FileIconPlaceholder

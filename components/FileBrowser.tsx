@@ -238,9 +238,7 @@ export default function FileBrowser({
       playAudio(file);
       return;
     }
-    if (gallery.openGallery(file.id)) {
-      return;
-    }
+    
     let destinationUrl = "";
     if (file.isFolder) {
       destinationUrl = `/folder/${file.id}`;
