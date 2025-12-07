@@ -33,8 +33,22 @@ export async function GET() {
     return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
   }
   try {
-    const folders = await kv.hgetall(PROTECTED_FOLDERS_KEY);
-    return NextResponse.json(folders || {});
+    const folders = (await kv.hgetall(PROTECTED_FOLDERS_KEY)) as Record<
+      string,
+      any
+    >;
+
+    const sanitizedFolders: Record<string, any> = {};
+    if (folders) {
+      Object.keys(folders).forEach((key) => {
+        sanitizedFolders[key] = {
+          id: folders[key].id,
+          password: "***REDACTED***",
+        };
+      });
+    }
+
+    return NextResponse.json(sanitizedFolders);
   } catch {
     return NextResponse.json(
       { error: "Gagal mengambil data." },

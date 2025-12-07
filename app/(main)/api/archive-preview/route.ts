@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { getAccessToken } from "@/lib/googleDrive";
 import JSZip, { JSZipObject } from "jszip";
+import { isAccessRestricted } from "@/lib/securityUtils";
 
 interface JSZipFileWithData extends JSZipObject {
   _data: {
@@ -24,6 +25,11 @@ export async function GET(request: NextRequest) {
       { error: "Parameter fileId tidak ditemukan." },
       { status: 400 },
     );
+  }
+
+  const isRestricted = await isAccessRestricted(fileId);
+  if (isRestricted) {
+    return NextResponse.json({ error: "Access Denied" }, { status: 403 });
   }
 
   try {

@@ -4,6 +4,8 @@ import { isProtected } from "@/lib/auth";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { validateShareToken } from "@/lib/auth";
+import { isAccessRestricted } from "@/lib/securityUtils";
+import { jwtVerify } from "jose";
 
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
 const getMimeQuery = (mimeType?: string | null) => {
@@ -115,15 +117,48 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    const processedFiles = (data.files || []).map((file: DriveFile) => ({
-      ...file,
-      isFolder: file.mimeType === "application/vnd.google-apps.folder",
-      isProtected:
-        file.mimeType === "application/vnd.google-apps.folder" &&
-        isProtected(file.id),
-    }));
+
+    const isAdmin = session?.user?.role === "ADMIN";
+    const authHeader = request.headers.get("Authorization");
+    const token = authHeader?.split(" ")[1];
+    const allowedTokens: string[] = [];
+
+    if (token) {
+      try {
+        const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
+        const { payload } = await jwtVerify(token, secret);
+        if (payload.folderId) {
+          allowedTokens.push(payload.folderId as string);
+        }
+      } catch (e) {
+      }
+    }
+
+    const processedFilesPromise = (data.files || []).map(
+      async (file: DriveFile) => {
+        const isFolder = file.mimeType === "application/vnd.google-apps.folder";
+        const protectedFolder = isFolder ? await isProtected(file.id) : false;
+
+        return {
+          ...file,
+          isFolder,
+          isProtected: protectedFolder,
+        };
+      },
+    );
+
+    const processedFiles = await Promise.all(processedFilesPromise);
+
+    const filteredFiles = await Promise.all(
+      processedFiles.map(async (file) => {
+        if (isAdmin) return file;
+        const restricted = await isAccessRestricted(file.id, allowedTokens);
+        return restricted ? null : file;
+      }),
+    );
+
     return NextResponse.json({
-      files: processedFiles,
+      files: filteredFiles.filter((f) => f !== null),
       nextPageToken: data.nextPageToken,
     });
   } catch (error: unknown) {

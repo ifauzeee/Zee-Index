@@ -3,6 +3,7 @@ import { getAccessToken } from "@/lib/googleDrive";
 import JSZip from "jszip";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
+import { isAccessRestricted } from "@/lib/securityUtils";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -22,6 +23,11 @@ export async function POST(request: Request) {
     const accessToken = await getAccessToken();
     const zip = new JSZip();
     for (const fileId of fileIds) {
+      if (session?.user?.role !== "ADMIN") {
+        const isRestricted = await isAccessRestricted(fileId);
+        if (isRestricted) continue;
+      }
+
       const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
       const detailsUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=name`;
       const detailsResponse = await fetch(detailsUrl, {

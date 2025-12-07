@@ -3,6 +3,7 @@ import { getFileDetailsFromDrive } from "@/lib/googleDrive";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { validateShareToken } from "@/lib/auth";
+import { isAccessRestricted } from "@/lib/securityUtils";
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -22,6 +23,15 @@ export async function GET(request: NextRequest) {
       { error: "Parameter fileId tidak ditemukan." },
       { status: 400 },
     );
+  }
+
+  const isAdmin = session?.user?.role === "ADMIN";
+
+  if (!isAdmin) {
+    const isRestricted = await isAccessRestricted(fileId);
+    if (isRestricted) {
+      return NextResponse.json({ error: "Access Denied" }, { status: 403 });
+    }
   }
 
   try {

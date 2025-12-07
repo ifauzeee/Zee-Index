@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { logActivity } from "@/lib/activityLogger";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { isAccessRestricted } from "@/lib/securityUtils";
 
 export async function GET(request: NextRequest) {
   const { success } = await checkRateLimit(request, "download");
@@ -43,6 +44,49 @@ export async function GET(request: NextRequest) {
       { error: "Parameter fileId tidak ditemukan." },
       { status: 400 },
     );
+  }
+
+  const userRole = session?.user?.role;
+
+  if (userRole !== "ADMIN") {
+    const isRestricted = await isAccessRestricted(fileId);
+
+    if (isRestricted) {
+      const authHeader = request.headers.get("Authorization");
+      const token = authHeader?.split(" ")[1];
+
+      let accessGranted = false;
+
+      if (token) {
+        try {
+          const secret = new TextEncoder().encode(
+            process.env.SHARE_SECRET_KEY!,
+          );
+          const { payload } = await jwtVerify(token, secret);
+          const folderId = payload.folderId as string;
+          if (folderId) {
+            const stillRestricted = await isAccessRestricted(fileId, [
+              folderId,
+            ]);
+            if (!stillRestricted) {
+              accessGranted = true;
+            }
+          }
+        } catch (e) {
+          console.error("Token verification failed:", e);
+        }
+      }
+
+      if (!accessGranted) {
+        console.warn(
+          `[SECURITY] Percobaan akses file terproteksi: ${fileId} oleh ${session?.user?.email || "Guest"}`,
+        );
+        return NextResponse.json(
+          { error: "Access Denied: File is protected." },
+          { status: 403 },
+        );
+      }
+    }
   }
 
   try {
