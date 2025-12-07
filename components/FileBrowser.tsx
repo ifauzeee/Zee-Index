@@ -272,7 +272,13 @@ export default function FileBrowser({
             headers.append("Authorization", `Bearer ${folderTokens[folderId]}`);
           }
           const res = await fetch(fetchUrl.toString(), { headers });
-          if (!res.ok) throw new Error("Failed to prefetch");
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            if (res.status === 401 && errorData.protected) {
+               throw { isProtected: true, folderId, error: errorData.error };
+            }
+            throw new Error(errorData.error || "Failed to prefetch");
+          }
           return res.json();
         },
         initialPageParam: null as string | null,

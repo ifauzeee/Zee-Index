@@ -138,8 +138,6 @@ export async function GET(request: Request) {
     } else {
       filteredFiles = [];
       for (const file of driveResponse.files) {
-        const isFolder = file.mimeType === "application/vnd.google-apps.folder";
-        
         const isPriv = isPrivateFolder(file.id);
         if (isPriv) {
            if (userEmail) {

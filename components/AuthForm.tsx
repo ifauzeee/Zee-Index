@@ -5,7 +5,6 @@ import { Loader2, Lock, ArrowRight, ShieldQuestion, CheckCircle2, LogIn } from "
 import { motion } from "framer-motion";
 import { useAppStore } from "@/lib/store";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 interface AuthFormProps {
   folderId?: string;
@@ -24,7 +23,6 @@ export default function AuthForm({
   const { user, addToast } = useAppStore();
   const [isRequesting, setIsRequesting] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
-  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,8 +69,7 @@ export default function AuthForm({
           addToast({ message: "Akses diberikan! Memuat folder...", type: "success" });
           window.location.reload(); 
         }
-      } catch (e) {
-      }
+      } catch {}
     }, 5000);
 
     return () => clearInterval(interval);
