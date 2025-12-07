@@ -15,6 +15,7 @@ interface FileBrowserContentProps {
   shareToken: string | null;
   isLocked: boolean;
   lockedFolderName?: string;
+  lockedFolderId?: string;
   onAuthSubmit: (id: string, pass: string) => void;
   isAuthLoading: boolean;
   readmeFile: DriveFile | undefined;
@@ -44,6 +45,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
     shareToken,
     isLocked,
     lockedFolderName,
+    lockedFolderId,
     onAuthSubmit,
     isAuthLoading,
     readmeFile,
@@ -85,6 +87,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] w-full animate-in fade-in duration-500">
         <AuthForm
+          folderId={lockedFolderId}
           folderName={lockedFolderName || "Folder Terkunci"}
           isLoading={isAuthLoading}
           onSubmit={onAuthSubmit}

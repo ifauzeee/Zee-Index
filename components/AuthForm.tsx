@@ -1,26 +1,64 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Lock, ArrowRight } from "lucide-react";
+import { Loader2, Lock, ArrowRight, ShieldQuestion, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAppStore } from "@/lib/store";
 
 interface AuthFormProps {
+  folderId?: string;
   folderName: string;
   isLoading: boolean;
   onSubmit: (id: string, pass: string) => void;
 }
 
 export default function AuthForm({
+  folderId,
   folderName,
   isLoading,
   onSubmit,
 }: AuthFormProps) {
   const [password, setPassword] = useState("");
+  const { user, addToast } = useAppStore();
+  const [isRequesting, setIsRequesting] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit("admin", password);
   };
+
+  const handleRequestAccess = async () => {
+    if (!user || user.isGuest) return;
+    
+    setIsRequesting(true);
+    try {
+      const res = await fetch("/api/request-access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folderId: folderId || "", folderName }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error);
+
+      setRequestSent(true);
+      addToast({
+        message: "Permintaan akses berhasil dikirim ke Admin.",
+        type: "success",
+      });
+    } catch (error: any) {
+      addToast({
+        message: error.message || "Gagal mengirim permintaan.",
+        type: "error",
+      });
+    } finally {
+      setIsRequesting(false);
+    }
+  };
+
+  const canRequestAccess = user && !user.isGuest;
 
   return (
     <div className="w-full max-w-5xl flex flex-col md:flex-row items-center justify-center gap-12 md:gap-24 p-6">
@@ -100,6 +138,30 @@ export default function AuthForm({
             )}
           </button>
         </form>
+
+        {canRequestAccess && (
+          <div className="mt-6 pt-6 border-t border-border/50 text-center">
+            {requestSent ? (
+              <div className="flex items-center justify-center gap-2 text-green-600 bg-green-500/10 py-3 rounded-xl animate-in fade-in zoom-in">
+                <CheckCircle2 size={18} />
+                <span className="text-sm font-medium">Permintaan Terkirim</span>
+              </div>
+            ) : (
+              <button
+                onClick={handleRequestAccess}
+                disabled={isRequesting}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
+              >
+                {isRequesting ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <ShieldQuestion size={14} />
+                )}
+                <span>Minta Akses ke Admin</span>
+              </button>
+            )}
+          </div>
+        )}
       </motion.div>
     </div>
   );

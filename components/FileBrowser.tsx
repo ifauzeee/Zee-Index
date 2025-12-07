@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -374,6 +373,7 @@ export default function FileBrowser({
           shareToken={shareToken}
           isLocked={isLockedImmediate}
           lockedFolderName={authTarget.folderName}
+          lockedFolderId={authTarget.folderId}
           onAuthSubmit={handleAuthSubmit}
           isAuthLoading={isAuthLoading}
           readmeFile={readmeFile}
