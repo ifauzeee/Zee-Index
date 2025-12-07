@@ -238,7 +238,7 @@ export default function FileBrowser({
       playAudio(file);
       return;
     }
-    
+
     let destinationUrl = "";
     if (file.isFolder) {
       destinationUrl = `/folder/${file.id}`;

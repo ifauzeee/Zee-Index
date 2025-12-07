@@ -93,7 +93,6 @@ export async function GET(request: NextRequest) {
 
     driveQuery += getMimeQuery(mimeType);
     driveQuery += getDateQuery(modifiedTime);
-
     if (minSize) {
       const bytes = parseInt(minSize) * 1024 * 1024;
       driveQuery += ` and size > ${bytes}`;
@@ -130,8 +129,7 @@ export async function GET(request: NextRequest) {
         if (payload.folderId) {
           allowedTokens.push(payload.folderId as string);
         }
-      } catch (e) {
-      }
+      } catch {}
     }
 
     const processedFilesPromise = (data.files || []).map(

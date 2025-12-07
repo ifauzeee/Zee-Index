@@ -19,15 +19,15 @@ export async function isProtected(folderId: string): Promise<boolean> {
   try {
     const targetId = folderId.trim();
     const protectedFolders = await kv.hgetall("zee-index:protected-folders");
-    
+
     if (!protectedFolders) return false;
 
     if (protectedFolders[targetId]) return true;
 
     const keys = Object.keys(protectedFolders);
-    return keys.some(key => key.trim() === targetId);
-  } catch (e) {
-    return true; 
+    return keys.some((key) => key.trim() === targetId);
+  } catch {
+    return true;
   }
 }
 
@@ -38,16 +38,18 @@ export async function getProtectedFolderCredentials(
   try {
     const targetId = folderId.trim();
     const protectedFolders = await kv.hgetall("zee-index:protected-folders");
-    
+
     if (!protectedFolders) return null;
 
-    const foundKey = Object.keys(protectedFolders).find(key => key.trim() === targetId);
-    
+    const foundKey = Object.keys(protectedFolders).find(
+      (key) => key.trim() === targetId,
+    );
+
     if (foundKey) {
-       return protectedFolders[foundKey] as { id: string; password: string };
+      return protectedFolders[foundKey] as { id: string; password: string };
     }
     return null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -61,7 +63,7 @@ export async function verifyFolderToken(
     const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
     const { payload } = await jwtVerify(token, secret);
     return payload.folderId === requestedFolderId?.trim();
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -75,7 +77,7 @@ export async function hasUserAccess(
     const cleanId = folderId.trim();
     const result = await kv.sismember(`folder:access:${cleanId}`, email);
     return result === 1;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

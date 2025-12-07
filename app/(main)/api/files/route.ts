@@ -61,8 +61,9 @@ export async function GET(request: Request) {
     const userRole = session?.user?.role;
     const userEmail = session?.user?.email;
     const { searchParams } = new URL(request.url);
-    
-    const rawFolderId = searchParams.get("folderId") || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
+
+    const rawFolderId =
+      searchParams.get("folderId") || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
     const folderId = rawFolderId?.trim();
 
     const pageToken = searchParams.get("pageToken");
@@ -117,8 +118,7 @@ export async function GET(request: Request) {
         ) {
           return NextResponse.json(cachedData);
         }
-      } catch (e) {
-      }
+      } catch {}
     }
 
     const allProtectedFolders = !canSeeAll
@@ -176,11 +176,11 @@ export async function GET(request: Request) {
       error instanceof Error
         ? error.message
         : "Terjadi kesalahan tidak dikenal.";
-    
+
     if (!(error as any).isProtected) {
-       console.error("[API /api/files ERROR]:", error);
+      console.error("[API /api/files ERROR]:", error);
     }
-    
+
     return NextResponse.json(
       {
         error: "Terjadi kesalahan internal pada server.",

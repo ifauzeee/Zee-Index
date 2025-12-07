@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { getAccessToken } from "@/lib/googleDrive";
-import { SearchX } from "lucide-react";
 
 const createSlug = (name: string) =>
   encodeURIComponent((name || "view").replace(/\s+/g, "-").toLowerCase());
@@ -27,7 +26,7 @@ export default async function FindPathPage({
           Authorization: `Bearer ${accessToken}`,
         },
         cache: "no-store",
-      }
+      },
     );
 
     if (!response.ok) {
@@ -47,7 +46,7 @@ export default async function FindPathPage({
         const parentId =
           file.parents?.[0] || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
         const slug = createSlug(file.name);
-        
+
         redirect(`/folder/${parentId}/file/${file.id}/${slug}`);
       } else {
         redirect(`/api/download?fileId=${file.id}`);

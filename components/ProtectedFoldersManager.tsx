@@ -120,7 +120,7 @@ export default function ProtectedFoldersManager() {
                 className="w-full pl-10 pr-4 py-2 rounded-lg border bg-transparent"
               />
             </div>
-            
+
             <div className="relative">
               <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <input

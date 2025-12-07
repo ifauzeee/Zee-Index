@@ -5,7 +5,7 @@ const PROTECTED_FOLDERS_KEY = "zee-index:protected-folders";
 
 export async function isAccessRestricted(
   fileId: string,
-  allowedTokens: string[] = []
+  allowedTokens: string[] = [],
 ): Promise<boolean> {
   const protectedConfigs = (await kv.hgetall(PROTECTED_FOLDERS_KEY)) || {};
   const protectedFolderIds = Object.keys(protectedConfigs);

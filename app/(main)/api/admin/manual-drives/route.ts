@@ -9,7 +9,10 @@ const MANUAL_DRIVES_KEY = "zee-index:manual-drives";
 const PROTECTED_FOLDERS_KEY = "zee-index:protected-folders";
 
 const driveSchema = z.object({
-  id: z.string().min(1, "ID Folder diperlukan.").transform(val => val.trim()),
+  id: z
+    .string()
+    .min(1, "ID Folder diperlukan.")
+    .transform((val) => val.trim()),
   name: z.string().min(1, "Nama Folder diperlukan."),
   password: z.string().optional(),
 });
