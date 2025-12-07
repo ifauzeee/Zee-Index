@@ -127,8 +127,14 @@ export function useFileFetching({
       if (error?.isProtected) return false;
       return failureCount < 2;
     },
-    refetchInterval: 5000,
-    refetchOnWindowFocus: true,
+    refetchInterval: (query) => {
+      if (query.state.status === "error") return false;
+      return 5000;
+    },
+    refetchOnWindowFocus: (query) => {
+      if (query.state.status === "error") return false;
+      return true;
+    },
   });
 
   const files = useMemo(() => {
@@ -140,15 +146,16 @@ export function useFileFetching({
       const err = error as any;
 
       if (err.isProtected) {
-      } else {
-        addToast({
-          message: err.message || "Gagal memuat data.",
-          type: "error",
-        });
+        return;
+      } 
+      
+      addToast({
+        message: err.message || "Gagal memuat data.",
+        type: "error",
+      });
 
-        if (err.message?.includes("Sesi Anda telah berakhir")) {
-          router.push("/login?error=SessionExpired");
-        }
+      if (err.message?.includes("Sesi Anda telah berakhir")) {
+        router.push("/login?error=SessionExpired");
       }
     }
   }, [error, addToast, router]);

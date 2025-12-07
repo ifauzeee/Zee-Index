@@ -15,11 +15,11 @@ const folderSchema = z.object({
   folderId: z
     .string()
     .min(5, "Folder ID tidak valid.")
-    .transform((val) => sanitizeString(val)),
+    .transform((val) => sanitizeString(val).trim()),
   id: z
     .string()
-    .min(1, "ID Pengguna tidak boleh kosong.")
-    .transform((val) => sanitizeString(val)),
+    .optional()
+    .transform((val) => (val ? sanitizeString(val) : "admin")),
   password: z.string().min(1, "Password tidak boleh kosong."),
 });
 
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     await kv.hset(PROTECTED_FOLDERS_KEY, {
-      [folderId]: { id, password: hashedPassword },
+      [folderId]: { id: id || "admin", password: hashedPassword },
     });
     return NextResponse.json({
       success: true,
@@ -107,7 +107,7 @@ export async function DELETE(request: NextRequest) {
         { status: 400 },
       );
     }
-    await kv.hdel(PROTECTED_FOLDERS_KEY, folderId);
+    await kv.hdel(PROTECTED_FOLDERS_KEY, folderId.trim());
     return NextResponse.json({
       success: true,
       message: `Perlindungan untuk folder ${folderId} telah dihapus.`,

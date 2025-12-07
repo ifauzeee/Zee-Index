@@ -7,7 +7,6 @@ import {
   Trash2,
   ShieldPlus,
   KeyRound,
-  User,
   FolderInput,
 } from "lucide-react";
 
@@ -23,7 +22,6 @@ export default function ProtectedFoldersManager() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newFolder, setNewFolder] = useState({
     folderId: "",
-    id: "",
     password: "",
   });
 
@@ -60,12 +58,12 @@ export default function ProtectedFoldersManager() {
       const response = await fetch("/api/admin/protected-folders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newFolder),
+        body: JSON.stringify({ ...newFolder, id: "admin" }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
       addToast({ message: result.message, type: "success" });
-      setNewFolder({ folderId: "", id: "", password: "" });
+      setNewFolder({ folderId: "", password: "" });
       fetchFolders();
     } catch (err: unknown) {
       addToast({
@@ -110,7 +108,7 @@ export default function ProtectedFoldersManager() {
       <div className="bg-card border rounded-lg p-6 space-y-6">
         <form onSubmit={handleAddFolder} className="space-y-4">
           <h4 className="text-base font-medium">Tambah atau Perbarui Folder</h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative">
               <FolderInput className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <input
@@ -122,24 +120,14 @@ export default function ProtectedFoldersManager() {
                 className="w-full pl-10 pr-4 py-2 rounded-lg border bg-transparent"
               />
             </div>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <input
-                name="id"
-                value={newFolder.id}
-                onChange={handleInputChange}
-                placeholder="ID Pengguna (e.g., user1)"
-                required
-                className="w-full pl-10 pr-4 py-2 rounded-lg border bg-transparent"
-              />
-            </div>
+            
             <div className="relative">
               <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <input
                 name="password"
                 value={newFolder.password}
                 onChange={handleInputChange}
-                placeholder="Kata Sandi"
+                placeholder="Kata Sandi Baru"
                 required
                 className="w-full pl-10 pr-4 py-2 rounded-lg border bg-transparent"
               />
@@ -173,7 +161,7 @@ export default function ProtectedFoldersManager() {
             </p>
           ) : (
             <ul className="space-y-2">
-              {Object.entries(folders).map(([folderId, config]) => (
+              {Object.entries(folders).map(([folderId]) => (
                 <li
                   key={folderId}
                   className="flex justify-between items-center bg-accent/50 p-3 rounded-md"
@@ -181,7 +169,7 @@ export default function ProtectedFoldersManager() {
                   <div>
                     <p className="font-mono text-sm font-medium">{folderId}</p>
                     <p className="text-xs text-muted-foreground">
-                      ID Pengguna: {config.id}
+                      Status: Terkunci
                     </p>
                   </div>
                   <button

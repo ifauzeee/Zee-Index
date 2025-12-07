@@ -33,7 +33,6 @@ async function validateShareToken(request: Request): Promise<boolean> {
     }
     const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);
     if (isBlocked) {
-      console.warn(`Akses ditolak untuk token yang diblokir: ${payload.jti}`);
       return false;
     }
 
@@ -62,8 +61,10 @@ export async function GET(request: Request) {
     const userRole = session?.user?.role;
     const userEmail = session?.user?.email;
     const { searchParams } = new URL(request.url);
-    const folderId =
-      searchParams.get("folderId") || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
+    
+    const rawFolderId = searchParams.get("folderId") || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
+    const folderId = rawFolderId?.trim();
+
     const pageToken = searchParams.get("pageToken");
     const forceRefresh = searchParams.get("refresh") === "true";
 
@@ -72,6 +73,25 @@ export async function GET(request: Request) {
         { error: "Folder ID tidak ditemukan." },
         { status: 400 },
       );
+    }
+
+    const canSeeAll = userRole === "ADMIN";
+    const isFolderProtected = await isProtected(folderId);
+
+    if (!canSeeAll && isFolderProtected) {
+      const authHeader = request.headers.get("Authorization");
+      const token = authHeader?.split(" ")[1];
+      const isTokenValid = await verifyFolderToken(token || "", folderId);
+
+      if (!isTokenValid) {
+        return NextResponse.json(
+          {
+            error: "Authentication required for this folder.",
+            protected: true,
+          },
+          { status: 401 },
+        );
+      }
     }
 
     const cacheKey = `folder:content:${folderId}:${
@@ -98,29 +118,6 @@ export async function GET(request: Request) {
           return NextResponse.json(cachedData);
         }
       } catch (e) {
-        console.warn(
-          "Cache miss or KV error/timeout, fetching from Drive...",
-          e,
-        );
-      }
-    }
-
-    const canSeeAll = userRole === "ADMIN";
-
-    const isFolderProtected = await isProtected(folderId);
-    if (!canSeeAll && isFolderProtected) {
-      const authHeader = request.headers.get("Authorization");
-      const token = authHeader?.split(" ")[1];
-      const isTokenValid = await verifyFolderToken(token || "", folderId);
-
-      if (!isTokenValid) {
-        return NextResponse.json(
-          {
-            error: "Authentication required for this folder.",
-            protected: true,
-          },
-          { status: 401 },
-        );
       }
     }
 
@@ -179,7 +176,11 @@ export async function GET(request: Request) {
       error instanceof Error
         ? error.message
         : "Terjadi kesalahan tidak dikenal.";
-    console.error("[API /api/files ERROR]:", error);
+    
+    if (!(error as any).isProtected) {
+       console.error("[API /api/files ERROR]:", error);
+    }
+    
     return NextResponse.json(
       {
         error: "Terjadi kesalahan internal pada server.",

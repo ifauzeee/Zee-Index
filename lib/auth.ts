@@ -10,30 +10,44 @@ const privateFolderIds = (process.env.PRIVATE_FOLDER_IDS || "")
   .filter((id) => id);
 
 export function isPrivateFolder(folderId: string): boolean {
-  return privateFolderIds.includes(folderId);
+  if (!folderId) return false;
+  return privateFolderIds.includes(folderId.trim());
 }
 
 export async function isProtected(folderId: string): Promise<boolean> {
+  if (!folderId) return false;
   try {
+    const targetId = folderId.trim();
     const protectedFolders = await kv.hgetall("zee-index:protected-folders");
-    return protectedFolders ? !!protectedFolders[folderId] : false;
+    
+    if (!protectedFolders) return false;
+
+    if (protectedFolders[targetId]) return true;
+
+    const keys = Object.keys(protectedFolders);
+    return keys.some(key => key.trim() === targetId);
   } catch (e) {
-    console.error("Gagal memeriksa folder terproteksi dari KV:", e);
-    return true;
+    return true; 
   }
 }
 
 export async function getProtectedFolderCredentials(
   folderId: string,
 ): Promise<{ id: string; password: string } | null> {
+  if (!folderId) return null;
   try {
-    const credentials = await kv.hget<{ id: string; password: string }>(
-      `zee-index:protected-folders`,
-      folderId,
-    );
-    return credentials;
+    const targetId = folderId.trim();
+    const protectedFolders = await kv.hgetall("zee-index:protected-folders");
+    
+    if (!protectedFolders) return null;
+
+    const foundKey = Object.keys(protectedFolders).find(key => key.trim() === targetId);
+    
+    if (foundKey) {
+       return protectedFolders[foundKey] as { id: string; password: string };
+    }
+    return null;
   } catch (error) {
-    console.error("Gagal mengambil kredensial folder:", error);
     return null;
   }
 }
@@ -46,9 +60,8 @@ export async function verifyFolderToken(
   try {
     const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
     const { payload } = await jwtVerify(token, secret);
-    return payload.folderId === requestedFolderId;
+    return payload.folderId === requestedFolderId?.trim();
   } catch (error) {
-    console.error("Verifikasi token folder gagal:", error);
     return false;
   }
 }
@@ -57,11 +70,12 @@ export async function hasUserAccess(
   email: string,
   folderId: string,
 ): Promise<boolean> {
+  if (!folderId || !email) return false;
   try {
-    const result = await kv.sismember(`folder:access:${folderId}`, email);
+    const cleanId = folderId.trim();
+    const result = await kv.sismember(`folder:access:${cleanId}`, email);
     return result === 1;
   } catch (error) {
-    console.error("Gagal memeriksa akses folder pengguna:", error);
     return false;
   }
 }
@@ -82,7 +96,6 @@ export async function validateShareToken(
     }
     const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);
     if (isBlocked) {
-      console.warn(`Akses ditolak untuk token yang diblokir: ${payload.jti}`);
       return false;
     }
 

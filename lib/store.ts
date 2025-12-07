@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { DriveFile } from "./googleDrive";
 import { formatBytes } from "@/lib/utils";
 
 export interface Toast {
@@ -68,9 +67,9 @@ interface AppState {
   triggerRefresh: () => void;
 
   isBulkMode: boolean;
-  selectedFiles: DriveFile[];
-  toggleSelection: (file: DriveFile) => void;
-  setSelectedFiles: (files: DriveFile[]) => void;
+  selectedFiles: any[];
+  toggleSelection: (file: any) => void;
+  setSelectedFiles: (files: any[]) => void;
   setBulkMode: (isActive: boolean) => void;
   clearSelection: () => void;
 
@@ -118,18 +117,18 @@ interface AppState {
     fileId: string,
     isCurrentlyFavorite: boolean,
   ) => Promise<void>;
-  detailsFile: DriveFile | null;
-  setDetailsFile: (file: DriveFile | null) => void;
+  detailsFile: any | null;
+  setDetailsFile: (file: any | null) => void;
 
-  activeAudioFile: DriveFile | null;
-  audioQueue: DriveFile[];
+  activeAudioFile: any | null;
+  audioQueue: any[];
   isAudioPlaying: boolean;
-  playAudio: (file: DriveFile, queue?: DriveFile[]) => void;
+  playAudio: (file: any, queue?: any[]) => void;
   toggleAudioPlay: () => void;
   closeAudio: () => void;
   playNextTrack: () => void;
   playPrevTrack: () => void;
-  addToQueue: (files: DriveFile[]) => void;
+  addToQueue: (files: any[]) => void;
   removeFromQueue: (fileId: string) => void;
 
   hideAuthor: boolean | null;
@@ -143,7 +142,7 @@ interface AppState {
   addTag: (fileId: string, tag: string) => Promise<void>;
   removeTag: (fileId: string, tag: string) => Promise<void>;
 
-  pinnedFolders: DriveFile[];
+  pinnedFolders: any[];
   fetchPinnedFolders: () => Promise<void>;
   addPin: (folderId: string) => Promise<void>;
   removePin: (folderId: string) => Promise<void>;
@@ -453,7 +452,7 @@ export const useAppStore = create<AppState>()(
         try {
           const response = await fetch("/api/favorites");
           if (!response.ok) return;
-          const files: DriveFile[] = await response.json();
+          const files: any[] = await response.json();
           set({ favorites: files.map((f) => f.id) });
         } catch (error) {
           console.error("Gagal mengambil data favorit:", error);
@@ -682,7 +681,6 @@ export const useAppStore = create<AppState>()(
         view: state.view,
         density: state.density,
         sort: state.sort,
-        folderTokens: state.folderTokens,
         notifications: state.notifications,
         isSidebarOpen: state.isSidebarOpen,
       }),
