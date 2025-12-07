@@ -79,7 +79,12 @@ export async function GET(request: Request) {
     const canSeeAll = userRole === "ADMIN";
     const isFolderProtected = await isProtected(folderId);
 
-    if (!canSeeAll && isFolderProtected) {
+    let hasDirectAccess = false;
+    if (userEmail) {
+      hasDirectAccess = await hasUserAccess(userEmail, folderId);
+    }
+
+    if (!canSeeAll && isFolderProtected && !hasDirectAccess) {
       const authHeader = request.headers.get("Authorization");
       const token = authHeader?.split(" ")[1];
       const isTokenValid = await verifyFolderToken(token || "", folderId);
@@ -127,37 +132,34 @@ export async function GET(request: Request) {
 
     const driveResponse = await listFilesFromDrive(folderId, pageToken);
     let filteredFiles: DriveFile[];
+    
     if (canSeeAll) {
       filteredFiles = driveResponse.files;
     } else {
       filteredFiles = [];
       for (const file of driveResponse.files) {
         const isFolder = file.mimeType === "application/vnd.google-apps.folder";
-        if (!isFolder) {
-          filteredFiles.push(file);
-          continue;
-        }
-
+        
         const isPriv = isPrivateFolder(file.id);
-        if (!isPriv) {
-          filteredFiles.push(file);
-          continue;
+        if (isPriv) {
+           if (userEmail) {
+             const hasAccess = await hasUserAccess(userEmail, file.id);
+             if (hasAccess) filteredFiles.push(file);
+           }
+           continue; 
         }
 
-        if (userEmail) {
-          const hasAccess = await hasUserAccess(userEmail, file.id);
-          if (hasAccess) {
-            filteredFiles.push(file);
-          }
-        }
+        filteredFiles.push(file);
       }
     }
 
-    const processedFiles = filteredFiles.map((file) => ({
-      ...file,
-      isFolder: file.mimeType === "application/vnd.google-apps.folder",
-      isProtected: !canSeeAll && !!allProtectedFolders[file.id],
-    }));
+    const processedFiles = filteredFiles.map((file) => {
+      return {
+        ...file,
+        isFolder: file.mimeType === "application/vnd.google-apps.folder",
+        isProtected: !canSeeAll && !!allProtectedFolders[file.id],
+      };
+    });
 
     const responseData = {
       files: processedFiles,
@@ -185,8 +187,10 @@ export async function GET(request: Request) {
       {
         error: "Terjadi kesalahan internal pada server.",
         details: errorMessage,
+        protected: (error as any).isProtected || false,
+        folderId: (error as any).folderId,
       },
-      { status: 500 },
+      { status: (error as any).isProtected ? 401 : 500 },
     );
   }
 }

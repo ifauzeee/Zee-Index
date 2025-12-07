@@ -43,34 +43,30 @@ const iconMap: Record<string, React.ElementType> = {
 
 const LogDetail: FC<{ log: ActivityLog }> = ({ log }) => {
   return (
-    <ul className="text-xs text-muted-foreground space-y-1 pl-2">
+    <ul className="text-xs text-muted-foreground space-y-1 pl-2 mt-2 border-l-2 border-border/50">
       {log.itemName && (
         <li>
-          <strong>Item:</strong> {log.itemName}
+          <strong className="text-foreground">Item:</strong> <span className="break-all">{log.itemName}</span>
         </li>
       )}
       {log.userEmail && (
         <li>
-          <strong>Oleh:</strong> {log.userEmail}
+          <strong className="text-foreground">Oleh:</strong> {log.userEmail}
         </li>
       )}
       {log.targetUser && (
         <li>
-          <strong>Target:</strong> {log.targetUser}
+          <strong className="text-foreground">Target:</strong> {log.targetUser}
         </li>
       )}
       {log.status && (
-        <li
-          className={
-            log.status === "failure" ? "text-red-500" : "text-green-500"
-          }
-        >
+        <li className={log.status === "failure" ? "text-red-500" : "text-green-500"}>
           <strong>Status:</strong> {log.status}
         </li>
       )}
       {log.error && (
-        <li className="text-red-500">
-          <strong>Error:</strong> {log.error}
+        <li className="text-red-500 mt-1 p-2 bg-red-500/5 rounded-md border border-red-500/20">
+          <strong>Error:</strong> <span className="break-words whitespace-pre-wrap">{log.error}</span>
         </li>
       )}
     </ul>
@@ -157,7 +153,16 @@ export default function ActivityLogDashboard() {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-6">Log Aktivitas</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-semibold">Log Aktivitas</h2>
+        <button 
+          onClick={() => fetchLogs(currentPage)}
+          className="p-2 hover:bg-accent rounded-full transition-colors"
+          title="Refresh Log"
+        >
+          <Loader2 size={20} className={isLoading ? "animate-spin" : "opacity-0"} />
+        </button>
+      </div>
 
       <div className="flex flex-col sm:flex-row gap-4 mb-4">
         <select
@@ -186,7 +191,7 @@ export default function ActivityLogDashboard() {
         </div>
       </div>
 
-      <div className="bg-card border rounded-lg">
+      <div className="bg-card border rounded-lg overflow-hidden">
         {isLoading ? (
           <div className="flex justify-center items-center h-48">
             <Loader2 className="animate-spin text-muted-foreground" />
@@ -215,15 +220,15 @@ export default function ActivityLogDashboard() {
                   className="p-4 hover:bg-accent/50"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="p-2 bg-primary/10 rounded-full text-primary mt-1">
+                    <div className="p-2 bg-primary/10 rounded-full text-primary mt-1 shrink-0">
                       <Icon size={18} />
                     </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-center">
-                        <p className="font-semibold">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center gap-2 flex-wrap">
+                        <p className="font-semibold text-sm sm:text-base break-words">
                           {log.type.replace(/_/g, " ")}
                         </p>
-                        <p className="text-xs text-muted-foreground font-mono">
+                        <p className="text-xs text-muted-foreground font-mono shrink-0">
                           {format(
                             new Date(log.timestamp),
                             "dd MMM yyyy, HH:mm:ss",
@@ -240,11 +245,11 @@ export default function ActivityLogDashboard() {
           </div>
         )}
         {totalPages > 1 && !isLoading && (
-          <div className="p-4 border-t border-border flex justify-between items-center">
+          <div className="p-4 border-t border-border flex justify-between items-center bg-muted/20">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-1 text-sm font-medium rounded-md hover:bg-accent disabled:opacity-50 flex items-center gap-1"
+              className="px-3 py-1 text-sm font-medium rounded-md hover:bg-accent disabled:opacity-50 flex items-center gap-1 transition-colors"
             >
               <ChevronLeft size={16} />
               Sebelumnya
@@ -255,7 +260,7 @@ export default function ActivityLogDashboard() {
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 text-sm font-medium rounded-md hover:bg-accent disabled:opacity-50 flex items-center gap-1"
+              className="px-3 py-1 text-sm font-medium rounded-md hover:bg-accent disabled:opacity-50 flex items-center gap-1 transition-colors"
             >
               Berikutnya
               <ChevronRight size={16} />

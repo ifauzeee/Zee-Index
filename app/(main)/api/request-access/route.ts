@@ -25,42 +25,41 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const requestData = {
+      folderId,
+      folderName,
+      email: session.user.email,
+      name: session.user.name,
+      timestamp: Date.now(),
+    };
+
+    await kv.sadd("zee-index:access-requests:v3", JSON.stringify(requestData));
+
     const adminEmails = await kv.smembers("zee-index:admins");
 
-    if (!adminEmails || adminEmails.length === 0) {
-      return NextResponse.json(
-        { error: "Tidak ada admin yang terkonfigurasi." },
-        { status: 404 }
-      );
+    if (adminEmails && adminEmails.length > 0) {
+      const emailHtml = `
+        <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
+          <h2>🔐 Permintaan Akses Baru</h2>
+          <ul style="list-style: none; padding: 0;">
+            <li><strong>User:</strong> ${session.user.email}</li>
+            <li><strong>Folder:</strong> ${folderName}</li>
+          </ul>
+          <p>Buka Dashboard Admin untuk menyetujui.</p>
+        </div>
+      `;
+
+      await sendMail({
+        to: adminEmails,
+        subject: `[Request Access] ${folderName}`,
+        html: emailHtml,
+      });
     }
-
-    const requesterEmail = session.user.email;
-    const requesterName = session.user.name || requesterEmail;
-
-    const emailHtml = `
-      <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
-        <h2>🔐 Permintaan Akses Folder</h2>
-        <p>Seorang pengguna meminta akses ke folder terkunci.</p>
-        <hr style="border: 0; border-top: 1px solid #eaeaea; margin: 20px 0;" />
-        <ul style="list-style: none; padding: 0;">
-          <li style="margin-bottom: 10px;"><strong>Pengguna:</strong> ${requesterName} (${requesterEmail})</li>
-          <li style="margin-bottom: 10px;"><strong>Folder:</strong> ${folderName}</li>
-          <li style="margin-bottom: 10px;"><strong>ID Folder:</strong> ${folderId}</li>
-        </ul>
-        <p>Buka <strong>Admin Dashboard</strong> untuk mengelola akses atau berikan password secara manual.</p>
-      </div>
-    `;
-
-    await sendMail({
-      to: adminEmails,
-      subject: `[Request Access] ${folderName} - oleh ${requesterName}`,
-      html: emailHtml,
-    });
 
     await logActivity("LOGIN_FAILURE", {
       itemName: folderName,
-      userEmail: requesterEmail,
-      status: "failure",
+      userEmail: session.user.email,
+      status: "failure", 
       error: `REQUEST_ACCESS: Meminta akses ke folder ${folderId}`,
     });
 

@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, Lock, ArrowRight, ShieldQuestion, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Loader2, Lock, ArrowRight, ShieldQuestion, CheckCircle2, LogIn } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAppStore } from "@/lib/store";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 interface AuthFormProps {
   folderId?: string;
@@ -22,6 +24,7 @@ export default function AuthForm({
   const { user, addToast } = useAppStore();
   const [isRequesting, setIsRequesting] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +61,24 @@ export default function AuthForm({
     }
   };
 
-  const canRequestAccess = user && !user.isGuest;
+  useEffect(() => {
+    if (!requestSent || !folderId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/files?folderId=${folderId}`);
+        if (res.ok) {
+          addToast({ message: "Akses diberikan! Memuat folder...", type: "success" });
+          window.location.reload(); 
+        }
+      } catch (e) {
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [requestSent, folderId, addToast]);
+
+  const isLoggedIn = user && !user.isGuest;
 
   return (
     <div className="w-full max-w-5xl flex flex-col md:flex-row items-center justify-center gap-12 md:gap-24 p-6">
@@ -139,12 +159,17 @@ export default function AuthForm({
           </button>
         </form>
 
-        {canRequestAccess && (
-          <div className="mt-6 pt-6 border-t border-border/50 text-center">
-            {requestSent ? (
-              <div className="flex items-center justify-center gap-2 text-green-600 bg-green-500/10 py-3 rounded-xl animate-in fade-in zoom-in">
-                <CheckCircle2 size={18} />
-                <span className="text-sm font-medium">Permintaan Terkirim</span>
+        <div className="mt-6 pt-6 border-t border-border/50 text-center">
+          {isLoggedIn ? (
+            requestSent ? (
+              <div className="flex flex-col items-center gap-2 animate-in fade-in zoom-in">
+                <div className="flex items-center justify-center gap-2 text-green-600 bg-green-500/10 py-3 px-4 rounded-xl w-full">
+                  <CheckCircle2 size={18} />
+                  <span className="text-sm font-medium">Permintaan Terkirim</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 animate-pulse">
+                  Menunggu persetujuan admin... Halaman akan refresh otomatis.
+                </p>
               </div>
             ) : (
               <button
@@ -159,9 +184,20 @@ export default function AuthForm({
                 )}
                 <span>Minta Akses ke Admin</span>
               </button>
-            )}
-          </div>
-        )}
+            )
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+                <span className="text-xs text-muted-foreground">Ingin meminta akses?</span>
+                <button
+                    onClick={() => signIn("google")}
+                    className="text-sm font-medium text-primary hover:underline flex items-center gap-1.5"
+                >
+                    <LogIn size={14} /> Login untuk Request
+                </button>
+            </div>
+          )}
+        </div>
+
       </motion.div>
     </div>
   );
