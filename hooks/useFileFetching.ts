@@ -94,8 +94,19 @@ export function useFileFetching({
         },
       ];
     }
-    return Array.isArray(historyData) ? historyData : [];
-  }, [historyData, currentFolderId, rootFolderId]);
+
+    const rawPath = Array.isArray(historyData) ? historyData : [];
+
+    const protectedIndex = rawPath.findIndex(
+      (folder) => folderTokens[folder.id],
+    );
+
+    if (protectedIndex !== -1) {
+      return rawPath.slice(protectedIndex);
+    }
+
+    return rawPath;
+  }, [historyData, currentFolderId, rootFolderId, folderTokens]);
 
   const {
     data,
@@ -147,8 +158,8 @@ export function useFileFetching({
 
       if (err.isProtected) {
         return;
-      } 
-      
+      }
+
       addToast({
         message: err.message || "Gagal memuat data.",
         type: "error",
@@ -163,14 +174,17 @@ export function useFileFetching({
   const authModalInfo = useMemo(() => {
     const err = error as any;
     if (err?.isProtected) {
+      const matchedFolder = history.find((f) => f.id === err.folderId);
+      const folderName = matchedFolder ? matchedFolder.name : "Folder Terkunci";
+
       return {
         isOpen: true,
         folderId: err.folderId,
-        folderName: "Folder Terkunci",
+        folderName: folderName,
       };
     }
     return null;
-  }, [error]);
+  }, [error, history]);
 
   return {
     files,

@@ -318,6 +318,9 @@ export default function FileBrowser({
     router.push(folderUrl);
   };
 
+  const isLockedImmediate = !!authModalInfo || authTarget.isLocked;
+  const shouldShowHeader = !isLockedImmediate && !isLoading;
+
   return (
     <motion.div
       className="relative"
@@ -325,49 +328,51 @@ export default function FileBrowser({
       onDragLeave={handleDragLeave}
       onDrop={handleDropUpload}
     >
-      <FileBrowserHeader
-        history={history}
-        shareToken={shareToken}
-        isAdmin={isAdmin}
-        isBulkMode={isBulkMode}
-        view={view}
-        dragOverBreadcrumb={dragOverBreadcrumb}
-        activeFileId={activeFileId}
-        onBreadcrumbClick={handleBreadcrumbClick}
-        onBreadcrumbDragOver={handleBreadcrumbDragOver}
-        onBreadcrumbDragLeave={handleBreadcrumbDragLeave}
-        onBreadcrumbDrop={(e, folder) => onDropOnBreadcrumb(e, folder)}
-        onUploadClick={() => setIsUploadModalOpen(true)}
-        onShareFolderClick={() =>
-          handleShare({
-            id: currentFolderId,
-            name: history[history.length - 1]?.name || "Folder",
-            isFolder: true,
-            mimeType: "application/vnd.google-apps.folder",
-            modifiedTime: "",
-            createdTime: "",
-            hasThumbnail: false,
-            webViewLink: "",
-            trashed: false,
-          })
-        }
-        onRequestFileClick={() => setIsFileRequestModalOpen(true)}
-        onToggleBulkMode={() => setBulkMode(!isBulkMode)}
-        onSetView={setView}
-        onDetailsClick={() => {
-          const file = files.find((f) => f.id === activeFileId);
-          if (file) setDetailsFile(file);
-        }}
-        sort={sort}
-        onSortChange={setSort}
-      />
+      {shouldShowHeader && (
+        <FileBrowserHeader
+          history={history}
+          shareToken={shareToken}
+          isAdmin={isAdmin}
+          isBulkMode={isBulkMode}
+          view={view}
+          dragOverBreadcrumb={dragOverBreadcrumb}
+          activeFileId={activeFileId}
+          onBreadcrumbClick={handleBreadcrumbClick}
+          onBreadcrumbDragOver={handleBreadcrumbDragOver}
+          onBreadcrumbDragLeave={handleBreadcrumbDragLeave}
+          onBreadcrumbDrop={(e, folder) => onDropOnBreadcrumb(e, folder)}
+          onUploadClick={() => setIsUploadModalOpen(true)}
+          onShareFolderClick={() =>
+            handleShare({
+              id: currentFolderId,
+              name: history[history.length - 1]?.name || "Folder",
+              isFolder: true,
+              mimeType: "application/vnd.google-apps.folder",
+              modifiedTime: "",
+              createdTime: "",
+              hasThumbnail: false,
+              webViewLink: "",
+              trashed: false,
+            })
+          }
+          onRequestFileClick={() => setIsFileRequestModalOpen(true)}
+          onToggleBulkMode={() => setBulkMode(!isBulkMode)}
+          onSetView={setView}
+          onDetailsClick={() => {
+            const file = files.find((f) => f.id === activeFileId);
+            if (file) setDetailsFile(file);
+          }}
+          sort={sort}
+          onSortChange={setSort}
+        />
+      )}
 
       <main className="min-h-[50vh] mb-12">
         <FileBrowserContent
           isLoading={isLoading}
           sessionStatus={sessionStatus}
           shareToken={shareToken}
-          isLocked={authTarget.isLocked}
+          isLocked={isLockedImmediate}
           lockedFolderName={authTarget.folderName}
           onAuthSubmit={handleAuthSubmit}
           isAuthLoading={isAuthLoading}
