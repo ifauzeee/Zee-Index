@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useLayoutEffect, useEffect } from "react";
+import { useState } from "react";
 import { Loader2, Lock, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
-
-const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 interface AuthFormProps {
   folderName: string;
@@ -18,17 +16,6 @@ export default function AuthForm({
   onSubmit,
 }: AuthFormProps) {
   const [password, setPassword] = useState("");
-
-  useIsomorphicLayoutEffect(() => {
-    const originalUrl = window.location.href;
-    const maskedUrl = `/protected?item=${encodeURIComponent(folderName)}`;
-
-    window.history.replaceState(null, "", maskedUrl);
-
-    return () => {
-      window.history.replaceState(null, "", originalUrl);
-    };
-  }, [folderName]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
