@@ -96,13 +96,24 @@ export function useFileFetching({
     }
 
     const rawPath = Array.isArray(historyData) ? historyData : [];
-
     const protectedIndex = rawPath.findIndex(
       (folder) => folderTokens[folder.id],
     );
 
     if (protectedIndex !== -1) {
-      return rawPath.slice(protectedIndex);
+      const slicedPath = rawPath.slice(protectedIndex);
+
+      if (slicedPath.length > 0 && slicedPath[0].id !== rootFolderId) {
+        return [
+          {
+            id: rootFolderId,
+            name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Home",
+          },
+          ...slicedPath,
+        ];
+      }
+
+      return slicedPath;
     }
 
     return rawPath;
@@ -174,8 +185,8 @@ export function useFileFetching({
   const authModalInfo = useMemo(() => {
     const err = error as any;
     if (err?.isProtected) {
-      const matchedFolder = history.find((f) => f.id === err.folderId);
-      const folderName = matchedFolder ? matchedFolder.name : "Folder Terkunci";
+      const folderName =
+        history.find((f) => f.id === err.folderId)?.name || "Folder Terkunci";
 
       return {
         isOpen: true,
