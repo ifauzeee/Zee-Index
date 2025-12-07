@@ -2,7 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { User } from "lucide-react";
+import { User, LockKeyhole } from "lucide-react";
 import Image from "next/image";
 import GoogleDrivePng from "@/app/google-drive_2991248.png";
 
@@ -17,32 +17,22 @@ function CustomLoginPage() {
     if (errorType) {
       switch (errorType) {
         case "InvalidOrExpiredShareLink":
-          setError(
-            "Tautan berbagi yang Anda gunakan tidak valid atau telah kedaluwarsa.",
-          );
+          setError("Tautan berbagi yang Anda gunakan tidak valid atau telah kedaluwarsa.");
           break;
         case "SessionExpired":
-          setError(
-            "Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.",
-          );
+          setError("Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.");
           break;
         case "RootAccessDenied":
-          setError(
-            "Anda tidak dapat mengakses halaman utama melalui tautan berbagi. Silakan gunakan tautan asli yang Anda terima.",
-          );
+          setError("Anda tidak dapat mengakses halaman utama melalui tautan berbagi. Silakan gunakan tautan asli yang Anda terima.");
           break;
         case "ShareLinkRevoked":
           setError("Akses untuk tautan ini telah dicabut oleh administrator.");
           break;
         case "GuestAccessDenied":
-          setError(
-            "Akses tamu tidak diizinkan untuk halaman ini. Silakan login menggunakan akun Google.",
-          );
+          setError("Akses tamu tidak diizinkan untuk halaman ini. Silakan login menggunakan akun Google.");
           break;
         case "GuestLogout":
-          setError(
-            "Anda telah logout dari sesi tamu. Selamat datang kembali kapan saja!",
-          );
+          setError("Anda telah logout dari sesi tamu. Selamat datang kembali kapan saja!");
           break;
         default:
           setError("Terjadi kesalahan. Silakan coba lagi.");
@@ -55,11 +45,19 @@ function CustomLoginPage() {
     const fetchPublicConfig = async () => {
       try {
         setIsLoadingConfig(true);
-        const response = await fetch("/api/config/public");
+        const response = await fetch("/api/config/public", {
+          cache: "no-store",
+          headers: { Pragma: "no-cache" },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch config");
+        }
+
         const data = await response.json();
-        setIsGuestLoginDisabled(data.disableGuestLogin);
+        setIsGuestLoginDisabled(data.disableGuestLogin === true);
       } catch (err) {
-        console.error("Gagal memuat config publik:", err);
+        console.error("Config fetch error:", err);
         setIsGuestLoginDisabled(true);
       } finally {
         setIsLoadingConfig(false);
@@ -110,7 +108,7 @@ function CustomLoginPage() {
 
           {error && (
             <div
-              className="bg-destructive/10 border-l-4 border-destructive text-destructive-foreground p-4 rounded-md"
+              className="bg-destructive/10 border-l-4 border-destructive text-destructive-foreground p-4 rounded-md animate-in fade-in slide-in-from-top-2"
               role="alert"
             >
               <p className="font-bold">Akses Gagal</p>
@@ -121,7 +119,7 @@ function CustomLoginPage() {
           <div className="pt-4 space-y-3">
             <button
               onClick={handleGoogleSignIn}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-card border rounded-lg hover:bg-accent transition-colors font-semibold"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-card border rounded-lg hover:bg-accent transition-colors font-semibold shadow-sm"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -151,10 +149,26 @@ function CustomLoginPage() {
                 })
               }
               disabled={isLoadingConfig || isGuestLoginDisabled}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-muted/50 border rounded-lg hover:bg-accent transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`w-full flex items-center justify-center gap-3 px-4 py-3 border rounded-lg transition-colors font-semibold 
+                ${
+                  isLoadingConfig || isGuestLoginDisabled
+                    ? "bg-muted text-muted-foreground cursor-not-allowed opacity-70"
+                    : "bg-muted/50 hover:bg-accent cursor-pointer"
+                }`}
             >
-              <User size={20} />
-              Lanjutkan sebagai Tamu
+              {isLoadingConfig ? (
+                <span className="animate-pulse">Memuat...</span>
+              ) : isGuestLoginDisabled ? (
+                <>
+                  <LockKeyhole size={20} />
+                  <span>Akses Tamu Nonaktif</span>
+                </>
+              ) : (
+                <>
+                  <User size={20} />
+                  <span>Lanjutkan sebagai Tamu</span>
+                </>
+              )}
             </button>
           </div>
 
