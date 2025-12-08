@@ -189,48 +189,55 @@ export default function Sidebar() {
     touchStartRef.current = null;
   };
 
-  const renderNode = (node: FolderNode, parents: string[] = []) => {
+  const renderNode = (node: FolderNode, parents: string[] = [], depth: number = 0) => {
     const isActive = !isCurrentFolderShortcut && currentFolderId === node.id;
-    const paddingLeft = (parents.length + 1) * 12;
+    
     return (
-      <div key={node.id}>
+      <div key={node.id} className="relative">
         <div
           className={cn(
-            "flex items-center gap-1 py-1.5 px-2 cursor-pointer hover:bg-accent/50 text-sm rounded-md transition-colors select-none",
+            "flex items-center gap-1.5 py-1.5 px-2 cursor-pointer hover:bg-accent/50 text-sm rounded-md transition-colors select-none relative group my-0.5",
             isActive && "bg-accent text-accent-foreground font-medium",
           )}
-          style={{ paddingLeft: `${paddingLeft}px` }}
+          style={{ paddingLeft: `${depth * 16 + 8}px` }}
           onClick={() => {
             const url = node.id === rootFolderId ? "/" : `/folder/${node.id}`;
             router.push(url);
             if (window.innerWidth < 1024) setSidebarOpen(false);
           }}
         >
+          {depth > 0 && (
+            <div 
+              className="absolute left-0 top-0 bottom-0 border-l border-border/40 w-px"
+              style={{ left: `${(depth * 16) - 4}px` }} 
+            />
+          )}
+          
           <div
             onClick={(e) => {
               e.stopPropagation();
               toggleNode(node, parents);
             }}
-            className="p-0.5 rounded-sm hover:bg-muted"
+            className="p-0.5 rounded-sm hover:bg-muted text-muted-foreground transition-colors"
           >
             {node.isLoading ? (
-              <Loader2 size={14} className="animate-spin" />
+              <Loader2 size={12} className="animate-spin" />
             ) : node.isExpanded ? (
-              <ChevronDown size={14} />
+              <ChevronDown size={12} />
             ) : (
-              <ChevronRight size={14} />
+              <ChevronRight size={12} />
             )}
           </div>
           <Folder
-            size={16}
+            size={14}
             className={cn(
-              "shrink-0",
+              "shrink-0 transition-colors",
               isActive
                 ? "text-primary fill-primary/20"
-                : "text-muted-foreground",
+                : "text-muted-foreground group-hover:text-primary",
             )}
           />
-          <span className="truncate">{node.name}</span>
+          <span className="truncate text-[13px] leading-none pt-0.5">{node.name}</span>
         </div>
         <AnimatePresence>
           {node.isExpanded && node.children && (
@@ -239,10 +246,16 @@ export default function Sidebar() {
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="overflow-hidden"
+              className="overflow-hidden relative"
             >
+              {depth >= 0 && node.children.length > 0 && (
+                 <div 
+                    className="absolute top-0 bottom-2 border-l border-border/40"
+                    style={{ left: `${(depth * 16) + 12 + 8}px` }}
+                 />
+              )}
               {node.children.map((child) =>
-                renderNode(child, [...parents, node.id]),
+                renderNode(child, [...parents, node.id], depth + 1),
               )}
             </motion.div>
           )}
@@ -258,9 +271,9 @@ export default function Sidebar() {
       <div className="mb-4 space-y-1 border-t border-border pt-4 mt-2">
         <button
           onClick={() => setIsDrivesExpanded(!isDrivesExpanded)}
-          className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center justify-between w-full px-3 py-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider"
         >
-          <span>SHARED DRIVES</span>
+          <span>Shared Drives</span>
           {isDrivesExpanded ? (
             <ChevronDown size={14} />
           ) : (
@@ -274,7 +287,7 @@ export default function Sidebar() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden space-y-1"
+              className="overflow-hidden space-y-0.5"
             >
               {allManualDrives.map((drive) => (
                 <button
@@ -290,12 +303,12 @@ export default function Sidebar() {
                   )}
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <HardDrive size={16} />
-                    <span className="truncate">{drive.name}</span>
+                    <HardDrive size={14} className={currentFolderId === drive.id ? "text-primary" : "text-muted-foreground"} />
+                    <span className="truncate text-[13px]">{drive.name}</span>
                   </div>
                   {drive.isProtected && (
                     <Lock
-                      size={12}
+                      size={10}
                       className="text-amber-500 shrink-0 opacity-70"
                     />
                   )}
@@ -310,12 +323,12 @@ export default function Sidebar() {
 
   const sidebarContent = (
     <div
-      className="h-full flex flex-col bg-card border-r border-border w-64"
+      className="h-full flex flex-col bg-card/50 backdrop-blur-xl border-r border-border w-64"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="p-4 border-b border-border flex items-center justify-between">
-        <h2 className="font-semibold text-sm text-muted-foreground tracking-wider">
+      <div className="p-4 border-b border-border flex items-center justify-between shrink-0 h-16">
+        <h2 className="font-bold text-sm text-foreground tracking-wide flex items-center gap-2">
           NAVIGASI
         </h2>
         <button
@@ -326,8 +339,8 @@ export default function Sidebar() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-4 px-2 space-y-1 overscroll-contain">
-        <div className="mb-4 space-y-1">
+      <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1 overscroll-contain no-scrollbar">
+        <div className="mb-4 space-y-0.5">
           <button
             onClick={() => {
               router.push("/");
@@ -335,10 +348,10 @@ export default function Sidebar() {
             }}
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
-              currentFolderId === rootFolderId && "bg-accent font-medium",
+              currentFolderId === rootFolderId && "bg-accent font-medium text-primary",
             )}
           >
-            <Home size={18} /> Beranda
+            <Home size={16} /> Beranda
           </button>
           <button
             onClick={() => {
@@ -347,7 +360,7 @@ export default function Sidebar() {
             }}
             className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
           >
-            <Star size={18} /> Favorit
+            <Star size={16} /> Favorit
           </button>
           <button
             onClick={() => {
@@ -356,7 +369,7 @@ export default function Sidebar() {
             }}
             className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
           >
-            <HardDrive size={18} /> Penyimpanan
+            <HardDrive size={16} /> Penyimpanan
           </button>
           {user?.role === "ADMIN" && (
             <>
@@ -367,7 +380,7 @@ export default function Sidebar() {
                 }}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
               >
-                <Trash2 size={18} /> Sampah
+                <Trash2 size={16} /> Sampah
               </button>
               <button
                 onClick={() => {
@@ -376,7 +389,7 @@ export default function Sidebar() {
                 }}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
               >
-                <ShieldCheck size={18} /> Admin
+                <ShieldCheck size={16} /> Admin
               </button>
             </>
           )}
@@ -384,9 +397,9 @@ export default function Sidebar() {
 
         {renderManualDrives()}
 
-        <div className="border-t border-border my-2 pt-2">
-          <p className="px-3 text-xs font-medium text-muted-foreground mb-2">
-            FOLDER SAYA
+        <div className="border-t border-border my-2 pt-4">
+          <p className="px-3 text-xs font-bold text-muted-foreground mb-2 uppercase tracking-wider">
+            Explorer
           </p>
           {renderNode(tree)}
         </div>
