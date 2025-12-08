@@ -49,7 +49,7 @@ export const authOptions: AuthOptions = {
           if (!config || config.disableGuestLogin !== false) {
             return null;
           }
-        } catch (e) {
+        } catch {
           return null;
         }
 

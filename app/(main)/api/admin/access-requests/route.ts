@@ -28,7 +28,7 @@ export async function GET() {
           }
 
           return null;
-        } catch (e) {
+        } catch {
           return null;
         }
       })
@@ -37,7 +37,7 @@ export async function GET() {
     parsedRequests.sort((a: any, b: any) => b.timestamp - a.timestamp);
     
     return NextResponse.json(parsedRequests);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
   }
 }
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
             parsed.folderId === requestData.folderId && 
             parsed.email === requestData.email && 
             parsed.timestamp === requestData.timestamp) {
-            targetToRemove = r; 
+             targetToRemove = r; 
             break;
         }
     }
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     } catch {}
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Action failed" }, { status: 500 });
   }
 }

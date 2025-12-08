@@ -184,7 +184,6 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
   } = useAppStore();
 
   const [newTag, setNewTag] = useState("");
-  const [isAddingTag, setIsAddingTag] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const controls = useAnimation();
   const headerRef = useRef<HTMLDivElement>(null);
@@ -212,10 +211,8 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
   const handleAddTag = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newTag.trim()) {
-      setIsAddingTag(true);
       await addTag(file.id, newTag.trim());
       setNewTag("");
-      setIsAddingTag(false);
     }
   };
 
