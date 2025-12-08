@@ -64,7 +64,11 @@ export async function GET(request: Request) {
 
     const rawFolderId =
       searchParams.get("folderId") || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
-    const folderId = rawFolderId?.trim();
+    
+    let folderId = "";
+    if (rawFolderId) {
+        folderId = decodeURIComponent(rawFolderId).split("&")[0].split("?")[0].trim();
+    }
 
     const pageToken = searchParams.get("pageToken");
     const forceRefresh = searchParams.get("refresh") === "true";
@@ -167,7 +171,7 @@ export async function GET(request: Request) {
     try {
       await kv.set(cacheKey, responseData, { ex: CACHE_TTL_SECONDS });
     } catch (e) {
-      console.error("Gagal menulis cache KV:", e);
+      console.error(e);
     }
 
     return NextResponse.json(responseData);
@@ -178,7 +182,7 @@ export async function GET(request: Request) {
         : "Terjadi kesalahan tidak dikenal.";
 
     if (!(error as any).isProtected) {
-      console.error("[API /api/files ERROR]:", error);
+      console.error(error);
     }
 
     return NextResponse.json(

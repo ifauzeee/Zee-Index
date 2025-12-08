@@ -6,10 +6,12 @@ export default async function FolderPage({
 }: {
   params: { folderId: string };
 }) {
-  const folderPath = await getFolderPath(params.folderId);
+  const cleanFolderId = decodeURIComponent(params.folderId).split("&")[0].split("?")[0].trim();
+
+  const folderPath = await getFolderPath(cleanFolderId);
   return (
     <FileBrowser
-      initialFolderId={params.folderId}
+      initialFolderId={cleanFolderId}
       initialFolderPath={folderPath}
     />
   );

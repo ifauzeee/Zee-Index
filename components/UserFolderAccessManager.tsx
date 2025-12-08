@@ -8,7 +8,6 @@ import {
   ShieldPlus,
   User,
   FolderInput,
-  Bell,
   Check,
   X,
   Mail,
@@ -16,7 +15,6 @@ import {
   SearchX,
   UserCheck,
   Clock,
-  ShieldAlert,
   ShieldCheck 
 } from "lucide-react";
 import { format } from "date-fns";
