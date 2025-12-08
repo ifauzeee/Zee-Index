@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/authOptions";
 import { kv } from "@vercel/kv";
 import { logActivity } from "@/lib/activityLogger";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (session?.user?.role !== "ADMIN") {
@@ -14,12 +16,19 @@ export async function GET() {
     const requests = await kv.smembers("zee-index:access-requests:v3");
     
     const parsedRequests = requests
-      .map((r: string) => {
+      .map((r: any) => {
         try {
-          if (r === "[object Object]") return null;
-          return JSON.parse(r);
+          if (typeof r === 'object' && r !== null) {
+            return r;
+          }
+
+          if (typeof r === 'string') {
+             if (r === "[object Object]") return null;
+             return JSON.parse(r);
+          }
+
+          return null;
         } catch (e) {
-          console.error("Failed to parse request JSON:", r, e);
           return null;
         }
       })
@@ -29,7 +38,6 @@ export async function GET() {
     
     return NextResponse.json(parsedRequests);
   } catch (error) {
-    console.error("Failed to fetch access requests:", error);
     return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
   }
 }
@@ -44,17 +52,27 @@ export async function POST(req: NextRequest) {
     const { action, requestData } = await req.json();
     
     const allRequests = await kv.smembers("zee-index:access-requests:v3");
-    const targetString = allRequests.find((r) => {
-      try {
-        if (r === "[object Object]") return false;
-        const parsed = JSON.parse(r);
-        return parsed.folderId === requestData.folderId && 
-               parsed.email === requestData.email && 
-               parsed.timestamp === requestData.timestamp;
-      } catch {
-        return false;
-      }
-    });
+    
+    let targetToRemove = null;
+
+    for (const r of allRequests) {
+        let parsed: any = r;
+        
+        if (typeof r === 'string') {
+            try {
+                if (r === "[object Object]") continue;
+                parsed = JSON.parse(r);
+            } catch { continue; }
+        }
+        
+        if (parsed && 
+            parsed.folderId === requestData.folderId && 
+            parsed.email === requestData.email && 
+            parsed.timestamp === requestData.timestamp) {
+            targetToRemove = r; 
+            break;
+        }
+    }
 
     if (action === "approve") {
       await kv.sadd("zee-index:user-access:folders", requestData.folderId);
@@ -68,13 +86,20 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (targetString) {
-        await kv.srem("zee-index:access-requests:v3", targetString);
+    if (targetToRemove) {
+        await kv.srem("zee-index:access-requests:v3", targetToRemove);
+    } else {
+        try {
+            await kv.srem("zee-index:access-requests:v3", requestData);
+        } catch {}
     }
+
+    try {
+       await kv.srem("zee-index:access-requests:v3", "[object Object]");
+    } catch {}
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Access Request Action Error:", error);
     return NextResponse.json({ error: "Action failed" }, { status: 500 });
   }
 }
