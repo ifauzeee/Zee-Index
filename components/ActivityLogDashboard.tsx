@@ -152,9 +152,14 @@ export default function ActivityLogDashboard() {
   }, [logs, filterType, searchQuery]);
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold">Log Aktivitas</h2>
+    <div className="p-6"> 
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h2 className="text-2xl font-semibold">Log Aktivitas</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Riwayat tindakan pengguna dan sistem
+          </p>
+        </div>
         <button 
           onClick={() => fetchLogs(currentPage)}
           className="p-2 hover:bg-accent rounded-full transition-colors"
@@ -164,7 +169,7 @@ export default function ActivityLogDashboard() {
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 mb-4">
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <select
           value={filterType}
           onChange={(e) =>
@@ -191,7 +196,7 @@ export default function ActivityLogDashboard() {
         </div>
       </div>
 
-      <div className="bg-card border rounded-lg overflow-hidden">
+      <div className="bg-card border rounded-lg overflow-hidden shadow-sm">
         {isLoading ? (
           <div className="flex justify-center items-center h-48">
             <Loader2 className="animate-spin text-muted-foreground" />

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAppStore } from "@/lib/store";
-import { Loader2, Palette, Type, Image as ImageIcon, Globe, Save } from "lucide-react";
+import { Loader2, Palette, Type, Image as ImageIcon, Globe, Save, RotateCcw } from "lucide-react";
 
 export default function BrandingConfig() {
   const {
@@ -20,7 +20,7 @@ export default function BrandingConfig() {
     appName: "",
     logoUrl: "",
     faviconUrl: "",
-    primaryColor: "#000000"
+    primaryColor: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -33,13 +33,18 @@ export default function BrandingConfig() {
       appName: appName || "Zee Index",
       logoUrl: logoUrl || "",
       faviconUrl: faviconUrl || "",
-      primaryColor: primaryColor || "#020817"
+      primaryColor: primaryColor || ""
     });
   }, [appName, logoUrl, faviconUrl, primaryColor]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormState(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleResetColor = () => {
+    setFormState(prev => ({ ...prev, primaryColor: "" }));
+    addToast({ message: "Warna di-reset ke default (Simpan untuk menerapkan)", type: "info" });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,7 +63,6 @@ export default function BrandingConfig() {
       <div className="bg-card border rounded-lg p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           
-          {/* App Name */}
           <div className="space-y-2">
             <label className="text-sm font-medium flex items-center gap-2">
               <Type size={16} className="text-primary" /> Nama Aplikasi
@@ -73,33 +77,41 @@ export default function BrandingConfig() {
             <p className="text-xs text-muted-foreground">Muncul di tab browser dan header.</p>
           </div>
 
-          {/* Primary Color */}
           <div className="space-y-2">
             <label className="text-sm font-medium flex items-center gap-2">
               <Palette size={16} className="text-primary" /> Warna Utama (Primary Theme)
             </label>
             <div className="flex gap-4 items-center">
-              <input
-                type="color"
-                name="primaryColor"
-                value={formState.primaryColor}
-                onChange={handleChange}
-                className="h-10 w-20 cursor-pointer rounded border p-1 bg-background"
-              />
+              <div className="relative">
+                <input
+                  type="color"
+                  name="primaryColor"
+                  value={formState.primaryColor || "#000000"}
+                  onChange={handleChange}
+                  className="h-10 w-20 cursor-pointer rounded border p-1 bg-background"
+                />
+              </div>
               <input
                 type="text"
                 name="primaryColor"
                 value={formState.primaryColor}
                 onChange={handleChange}
                 className="flex-1 px-3 py-2 bg-background border rounded-md focus:ring-2 focus:ring-primary outline-none uppercase"
-                placeholder="#000000"
+                placeholder="Default (Kosong)"
               />
+              <button
+                type="button"
+                onClick={handleResetColor}
+                className="p-2.5 bg-secondary hover:bg-secondary/80 rounded-md transition-colors"
+                title="Reset ke Default"
+              >
+                <RotateCcw size={18} />
+              </button>
             </div>
             <p className="text-xs text-muted-foreground">Mengubah warna tombol, link aktif, dan aksen UI.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Logo URL */}
             <div className="space-y-2">
               <label className="text-sm font-medium flex items-center gap-2">
                 <ImageIcon size={16} className="text-primary" /> Logo URL (Header)
@@ -114,7 +126,6 @@ export default function BrandingConfig() {
               <p className="text-xs text-muted-foreground">Format gambar (PNG/SVG). Kosongkan untuk default.</p>
             </div>
 
-            {/* Favicon URL */}
             <div className="space-y-2">
               <label className="text-sm font-medium flex items-center gap-2">
                 <Globe size={16} className="text-primary" /> Favicon URL
