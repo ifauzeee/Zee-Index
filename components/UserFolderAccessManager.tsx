@@ -15,7 +15,7 @@ import {
   SearchX,
   UserCheck,
   Clock,
-  ShieldCheck 
+  ShieldCheck,
 } from "lucide-react";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
@@ -50,7 +50,7 @@ export default function UserFolderAccessManager() {
     try {
       const [permRes, reqRes] = await Promise.all([
         fetch("/api/admin/user-access"),
-        fetch("/api/admin/access-requests")
+        fetch("/api/admin/access-requests"),
       ]);
 
       if (permRes.ok) setPermissions(await permRes.json());
@@ -82,7 +82,7 @@ export default function UserFolderAccessManager() {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
-      
+
       addToast({ message: result.message, type: "success" });
       setNewAccess({ folderId: "", email: "" });
       fetchData();
@@ -102,7 +102,7 @@ export default function UserFolderAccessManager() {
         body: JSON.stringify({ folderId, email }),
       });
       if (!response.ok) throw new Error("Gagal menghapus");
-      
+
       addToast({ message: "Akses dicabut.", type: "success" });
       fetchData();
     } catch (err: any) {
@@ -110,7 +110,10 @@ export default function UserFolderAccessManager() {
     }
   };
 
-  const handleRequestAction = async (request: AccessRequest, action: "approve" | "reject") => {
+  const handleRequestAction = async (
+    request: AccessRequest,
+    action: "approve" | "reject",
+  ) => {
     const uniqueId = `${request.folderId}-${request.email}`;
     setIsProcessing(uniqueId);
     try {
@@ -120,12 +123,13 @@ export default function UserFolderAccessManager() {
         body: JSON.stringify({ action, requestData: request }),
       });
       if (!res.ok) throw new Error("Gagal memproses");
-      
-      addToast({ 
-        message: action === "approve" ? "Akses diberikan" : "Permintaan ditolak", 
-        type: action === "approve" ? "success" : "info" 
+
+      addToast({
+        message:
+          action === "approve" ? "Akses diberikan" : "Permintaan ditolak",
+        type: action === "approve" ? "success" : "info",
       });
-      
+
       await fetchData();
     } catch (err: any) {
       addToast({ message: err.message, type: "error" });
@@ -145,8 +149,8 @@ export default function UserFolderAccessManager() {
           <ShieldCheck className="text-primary" />
           <h2 className="text-xl font-semibold">Manajemen Akses</h2>
         </div>
-        <button 
-          onClick={fetchData} 
+        <button
+          onClick={fetchData}
           disabled={isLoading}
           className="p-2 hover:bg-accent rounded-full transition-colors"
         >
@@ -182,7 +186,10 @@ export default function UserFolderAccessManager() {
                 const isItemProcessing = isProcessing === uniqueId;
 
                 return (
-                  <div key={idx} className="p-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center hover:bg-muted/30 transition-colors">
+                  <div
+                    key={idx}
+                    className="p-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center hover:bg-muted/30 transition-colors"
+                  >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
                         <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-lg">
@@ -196,33 +203,44 @@ export default function UserFolderAccessManager() {
                             </span>
                           </h4>
                           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                            <Clock size={12} /> {format(req.timestamp, "dd MMM yyyy, HH:mm", { locale: localeId })}
+                            <Clock size={12} />{" "}
+                            {format(req.timestamp, "dd MMM yyyy, HH:mm", {
+                              locale: localeId,
+                            })}
                           </p>
                         </div>
                       </div>
-                      
+
                       <div className="mt-3 flex items-center gap-2 text-sm bg-accent/50 p-3 rounded-lg border border-border/50">
-                        <FolderInput size={16} className="text-muted-foreground" />
+                        <FolderInput
+                          size={16}
+                          className="text-muted-foreground"
+                        />
                         <span>Meminta akses ke:</span>
-                        <span className="font-mono font-bold text-primary truncate max-w-[200px]">{req.folderName}</span>
-                        <span className="text-xs text-muted-foreground font-mono">({req.folderId})</span>
+                        <span className="font-mono font-bold text-primary truncate max-w-[200px]">
+                          {req.folderName}
+                        </span>
+                        <span className="text-xs text-muted-foreground font-mono">
+                          ({req.folderId})
+                        </span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3 w-full sm:w-auto">
                       {isItemProcessing ? (
                         <div className="flex items-center gap-2 text-muted-foreground px-4">
-                          <Loader2 className="animate-spin" size={18} /> Memproses...
+                          <Loader2 className="animate-spin" size={18} />{" "}
+                          Memproses...
                         </div>
                       ) : (
                         <>
-                          <button 
+                          <button
                             onClick={() => handleRequestAction(req, "reject")}
                             className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-background border hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-900/20 rounded-lg text-sm font-medium transition-all active:scale-95"
                           >
                             <X size={16} /> Tolak
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleRequestAction(req, "approve")}
                             className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 text-white hover:bg-green-700 shadow-md hover:shadow-lg rounded-lg text-sm font-medium transition-all active:scale-95"
                           >
@@ -243,7 +261,10 @@ export default function UserFolderAccessManager() {
             <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
               <ShieldPlus size={16} /> Tambah Akses Manual
             </h4>
-            <form onSubmit={handleAddAccess} className="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <form
+              onSubmit={handleAddAccess}
+              className="grid grid-cols-1 md:grid-cols-12 gap-4"
+            >
               <div className="md:col-span-5 relative">
                 <FolderInput className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
@@ -272,7 +293,11 @@ export default function UserFolderAccessManager() {
                 disabled={isProcessing === "add"}
                 className="md:col-span-2 w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-2.5 rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
               >
-                {isProcessing === "add" ? <Loader2 className="animate-spin" size={18} /> : "Tambah"}
+                {isProcessing === "add" ? (
+                  <Loader2 className="animate-spin" size={18} />
+                ) : (
+                  "Tambah"
+                )}
               </button>
             </form>
           </div>
@@ -281,11 +306,13 @@ export default function UserFolderAccessManager() {
             <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
               <UserCheck size={16} /> Daftar Izin Aktif
             </h4>
-            
+
             {flatPermissions.length === 0 ? (
               <div className="text-center py-10 border rounded-xl border-dashed">
                 <SearchX className="mx-auto h-10 w-10 text-muted-foreground/50 mb-2" />
-                <p className="text-muted-foreground text-sm">Belum ada izin akses yang dikonfigurasi.</p>
+                <p className="text-muted-foreground text-sm">
+                  Belum ada izin akses yang dikonfigurasi.
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

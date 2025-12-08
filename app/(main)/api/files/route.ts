@@ -64,10 +64,13 @@ export async function GET(request: Request) {
 
     const rawFolderId =
       searchParams.get("folderId") || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
-    
+
     let folderId = "";
     if (rawFolderId) {
-        folderId = decodeURIComponent(rawFolderId).split("&")[0].split("?")[0].trim();
+      folderId = decodeURIComponent(rawFolderId)
+        .split("&")[0]
+        .split("?")[0]
+        .trim();
     }
 
     const pageToken = searchParams.get("pageToken");
@@ -136,7 +139,7 @@ export async function GET(request: Request) {
 
     const driveResponse = await listFilesFromDrive(folderId, pageToken);
     let filteredFiles: DriveFile[];
-    
+
     if (canSeeAll) {
       filteredFiles = driveResponse.files;
     } else {
@@ -144,11 +147,11 @@ export async function GET(request: Request) {
       for (const file of driveResponse.files) {
         const isPriv = isPrivateFolder(file.id);
         if (isPriv) {
-           if (userEmail) {
-             const hasAccess = await hasUserAccess(userEmail, file.id);
-             if (hasAccess) filteredFiles.push(file);
-           }
-           continue; 
+          if (userEmail) {
+            const hasAccess = await hasUserAccess(userEmail, file.id);
+            if (hasAccess) filteredFiles.push(file);
+          }
+          continue;
         }
 
         filteredFiles.push(file);

@@ -2,7 +2,16 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
-import { Loader2, Trash2, ShieldPlus, KeyRound, FolderInput, Lock, FolderKey, AlertTriangle } from "lucide-react";
+import {
+  Loader2,
+  Trash2,
+  ShieldPlus,
+  KeyRound,
+  FolderInput,
+  Lock,
+  FolderKey,
+  AlertTriangle,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ProtectedFolder {
@@ -31,7 +40,9 @@ export default function ProtectedFoldersManager() {
     }
   }, [addToast]);
 
-  useEffect(() => { fetchFolders(); }, [fetchFolders]);
+  useEffect(() => {
+    fetchFolders();
+  }, [fetchFolders]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -81,10 +92,14 @@ export default function ProtectedFoldersManager() {
   return (
     <>
       <div>
-        <h2 className="text-2xl font-semibold mb-6">Manajemen Folder Terproteksi</h2>
+        <h2 className="text-2xl font-semibold mb-6">
+          Manajemen Folder Terproteksi
+        </h2>
         <div className="bg-card border rounded-lg p-6 space-y-6">
           <form onSubmit={handleAddFolder} className="space-y-4">
-            <h4 className="text-base font-medium">Tambah atau Perbarui Folder</h4>
+            <h4 className="text-base font-medium">
+              Tambah atau Perbarui Folder
+            </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative">
                 <FolderInput className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -114,19 +129,29 @@ export default function ProtectedFoldersManager() {
               disabled={isSubmitting}
               className="p-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:bg-primary/50 flex items-center gap-2"
             >
-              {isSubmitting ? <Loader2 className="animate-spin" /> : <ShieldPlus />}
-              <span>{isSubmitting ? "Menyimpan..." : "Simpan Perlindungan"}</span>
+              {isSubmitting ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <ShieldPlus />
+              )}
+              <span>
+                {isSubmitting ? "Menyimpan..." : "Simpan Perlindungan"}
+              </span>
             </button>
           </form>
 
           <div className="border-t pt-4 mt-4">
-            <h4 className="text-base font-medium mb-3">Daftar Folder Terproteksi</h4>
+            <h4 className="text-base font-medium mb-3">
+              Daftar Folder Terproteksi
+            </h4>
             {isLoading ? (
               <div className="flex justify-center items-center h-24">
                 <Loader2 className="animate-spin text-muted-foreground" />
               </div>
             ) : Object.keys(folders).length === 0 ? (
-              <p className="text-sm text-muted-foreground italic">Belum ada folder yang dilindungi.</p>
+              <p className="text-sm text-muted-foreground italic">
+                Belum ada folder yang dilindungi.
+              </p>
             ) : (
               <ul className="grid gap-3 sm:grid-cols-2">
                 {Object.entries(folders).map(([folderId]) => (
@@ -146,7 +171,9 @@ export default function ProtectedFoldersManager() {
                         <Trash2 size={16} />
                       </button>
                     </div>
-                    <p className="font-mono text-xs font-semibold text-foreground break-all mb-1">{folderId}</p>
+                    <p className="font-mono text-xs font-semibold text-foreground break-all mb-1">
+                      {folderId}
+                    </p>
                     <div className="flex items-center gap-1.5 text-xs text-green-600 font-medium bg-green-500/10 w-fit px-2 py-0.5 rounded-full">
                       <Lock size={10} /> Terkunci Aman
                     </div>
@@ -178,9 +205,16 @@ export default function ProtectedFoldersManager() {
                 <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <AlertTriangle className="h-8 w-8 text-amber-600" />
                 </div>
-                <h3 className="text-lg font-bold text-foreground">Hapus Proteksi?</h3>
+                <h3 className="text-lg font-bold text-foreground">
+                  Hapus Proteksi?
+                </h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Folder <span className="font-mono bg-muted px-1 rounded">{folderToDelete}</span> akan menjadi terbuka untuk umum (kecuali jika dibatasi dari Google Drive).
+                  Folder{" "}
+                  <span className="font-mono bg-muted px-1 rounded">
+                    {folderToDelete}
+                  </span>{" "}
+                  akan menjadi terbuka untuk umum (kecuali jika dibatasi dari
+                  Google Drive).
                 </p>
               </div>
               <div className="mt-6 grid grid-cols-2 gap-3">

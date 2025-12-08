@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Lock, ArrowRight, ShieldQuestion, CheckCircle2, LogIn } from "lucide-react";
+import {
+  Loader2,
+  Lock,
+  ArrowRight,
+  ShieldQuestion,
+  CheckCircle2,
+  LogIn,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { useAppStore } from "@/lib/store";
 import { signIn } from "next-auth/react";
@@ -31,7 +38,7 @@ export default function AuthForm({
 
   const handleRequestAccess = async () => {
     if (!user || user.isGuest) return;
-    
+
     setIsRequesting(true);
     try {
       const res = await fetch("/api/request-access", {
@@ -66,8 +73,11 @@ export default function AuthForm({
       try {
         const res = await fetch(`/api/files?folderId=${folderId}`);
         if (res.ok) {
-          addToast({ message: "Akses diberikan! Memuat folder...", type: "success" });
-          window.location.reload(); 
+          addToast({
+            message: "Akses diberikan! Memuat folder...",
+            type: "success",
+          });
+          window.location.reload();
         }
       } catch {}
     }, 5000);
@@ -162,7 +172,9 @@ export default function AuthForm({
               <div className="flex flex-col items-center gap-2 animate-in fade-in zoom-in">
                 <div className="flex items-center justify-center gap-2 text-green-600 bg-green-500/10 py-3 px-4 rounded-xl w-full">
                   <CheckCircle2 size={18} />
-                  <span className="text-sm font-medium">Permintaan Terkirim</span>
+                  <span className="text-sm font-medium">
+                    Permintaan Terkirim
+                  </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 animate-pulse">
                   Menunggu persetujuan admin... Halaman akan refresh otomatis.
@@ -184,17 +196,18 @@ export default function AuthForm({
             )
           ) : (
             <div className="flex flex-col items-center gap-2">
-                <span className="text-xs text-muted-foreground">Ingin meminta akses?</span>
-                <button
-                    onClick={() => signIn("google")}
-                    className="text-sm font-medium text-primary hover:underline flex items-center gap-1.5"
-                >
-                    <LogIn size={14} /> Login untuk Request
-                </button>
+              <span className="text-xs text-muted-foreground">
+                Ingin meminta akses?
+              </span>
+              <button
+                onClick={() => signIn("google")}
+                className="text-sm font-medium text-primary hover:underline flex items-center gap-1.5"
+              >
+                <LogIn size={14} /> Login untuk Request
+              </button>
             </div>
           )}
         </div>
-
       </motion.div>
     </div>
   );

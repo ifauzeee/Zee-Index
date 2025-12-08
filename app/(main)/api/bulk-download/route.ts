@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
     const accessToken = await getAccessToken();
     const zip = new JSZip();
-    
+
     for (const fileId of fileIds) {
       if (session?.user?.role !== "ADMIN") {
         const isRestricted = await isAccessRestricted(fileId);
@@ -38,20 +38,20 @@ export async function POST(request: Request) {
 
       const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
       const detailsUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=name`;
-      
+
       const detailsResponse = await fetch(detailsUrl, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      
+
       if (!detailsResponse.ok) continue;
-      
+
       const fileDetails = await detailsResponse.json();
       const fileName = fileDetails.name || fileId;
-      
+
       const fileResponse = await fetch(driveUrl, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      
+
       if (fileResponse.ok) {
         const fileBuffer = await fileResponse.arrayBuffer();
         zip.file(fileName, fileBuffer);

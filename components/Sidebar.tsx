@@ -189,9 +189,13 @@ export default function Sidebar() {
     touchStartRef.current = null;
   };
 
-  const renderNode = (node: FolderNode, parents: string[] = [], depth: number = 0) => {
+  const renderNode = (
+    node: FolderNode,
+    parents: string[] = [],
+    depth: number = 0,
+  ) => {
     const isActive = !isCurrentFolderShortcut && currentFolderId === node.id;
-    
+
     return (
       <div key={node.id} className="relative">
         <div
@@ -207,12 +211,12 @@ export default function Sidebar() {
           }}
         >
           {depth > 0 && (
-            <div 
+            <div
               className="absolute left-0 top-0 bottom-0 border-l border-border/40 w-px"
-              style={{ left: `${(depth * 16) - 4}px` }} 
+              style={{ left: `${depth * 16 - 4}px` }}
             />
           )}
-          
+
           <div
             onClick={(e) => {
               e.stopPropagation();
@@ -237,7 +241,9 @@ export default function Sidebar() {
                 : "text-muted-foreground group-hover:text-primary",
             )}
           />
-          <span className="truncate text-[13px] leading-none pt-0.5">{node.name}</span>
+          <span className="truncate text-[13px] leading-none pt-0.5">
+            {node.name}
+          </span>
         </div>
         <AnimatePresence>
           {node.isExpanded && node.children && (
@@ -249,10 +255,10 @@ export default function Sidebar() {
               className="overflow-hidden relative"
             >
               {depth >= 0 && node.children.length > 0 && (
-                 <div 
-                    className="absolute top-0 bottom-2 border-l border-border/40"
-                    style={{ left: `${(depth * 16) + 12 + 8}px` }}
-                 />
+                <div
+                  className="absolute top-0 bottom-2 border-l border-border/40"
+                  style={{ left: `${depth * 16 + 12 + 8}px` }}
+                />
               )}
               {node.children.map((child) =>
                 renderNode(child, [...parents, node.id], depth + 1),
@@ -303,7 +309,14 @@ export default function Sidebar() {
                   )}
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <HardDrive size={14} className={currentFolderId === drive.id ? "text-primary" : "text-muted-foreground"} />
+                    <HardDrive
+                      size={14}
+                      className={
+                        currentFolderId === drive.id
+                          ? "text-primary"
+                          : "text-muted-foreground"
+                      }
+                    />
                     <span className="truncate text-[13px]">{drive.name}</span>
                   </div>
                   {drive.isProtected && (
@@ -348,7 +361,8 @@ export default function Sidebar() {
             }}
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
-              currentFolderId === rootFolderId && "bg-accent font-medium text-primary",
+              currentFolderId === rootFolderId &&
+                "bg-accent font-medium text-primary",
             )}
           >
             <Home size={16} /> Beranda

@@ -163,7 +163,9 @@ export async function GET(request: NextRequest) {
       }),
     );
 
-    return NextResponse.json({ files: filteredFiles.filter((f) => f !== null) });
+    return NextResponse.json({
+      files: filteredFiles.filter((f) => f !== null),
+    });
   } catch (error: unknown) {
     const errorMessage =
       error instanceof Error

@@ -6,7 +6,10 @@ export default async function FolderPage({
 }: {
   params: { folderId: string };
 }) {
-  const cleanFolderId = decodeURIComponent(params.folderId).split("&")[0].split("?")[0].trim();
+  const cleanFolderId = decodeURIComponent(params.folderId)
+    .split("&")[0]
+    .split("?")[0]
+    .trim();
 
   const folderPath = await getFolderPath(cleanFolderId);
   return (

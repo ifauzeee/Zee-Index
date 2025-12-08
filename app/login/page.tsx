@@ -17,22 +17,32 @@ function CustomLoginPage() {
     if (errorType) {
       switch (errorType) {
         case "InvalidOrExpiredShareLink":
-          setError("Tautan berbagi yang Anda gunakan tidak valid atau telah kedaluwarsa.");
+          setError(
+            "Tautan berbagi yang Anda gunakan tidak valid atau telah kedaluwarsa.",
+          );
           break;
         case "SessionExpired":
-          setError("Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.");
+          setError(
+            "Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.",
+          );
           break;
         case "RootAccessDenied":
-          setError("Anda tidak dapat mengakses halaman utama melalui tautan berbagi. Silakan gunakan tautan asli yang Anda terima.");
+          setError(
+            "Anda tidak dapat mengakses halaman utama melalui tautan berbagi. Silakan gunakan tautan asli yang Anda terima.",
+          );
           break;
         case "ShareLinkRevoked":
           setError("Akses untuk tautan ini telah dicabut oleh administrator.");
           break;
         case "GuestAccessDenied":
-          setError("Akses tamu tidak diizinkan untuk halaman ini. Silakan login menggunakan akun Google.");
+          setError(
+            "Akses tamu tidak diizinkan untuk halaman ini. Silakan login menggunakan akun Google.",
+          );
           break;
         case "GuestLogout":
-          setError("Anda telah logout dari sesi tamu. Selamat datang kembali kapan saja!");
+          setError(
+            "Anda telah logout dari sesi tamu. Selamat datang kembali kapan saja!",
+          );
           break;
         default:
           setError("Terjadi kesalahan. Silakan coba lagi.");

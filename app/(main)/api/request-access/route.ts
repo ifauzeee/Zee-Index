@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     if (!session || !session.user || session.user.isGuest) {
       return NextResponse.json(
         { error: "Fitur ini hanya untuk pengguna terdaftar." },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     if (!folderId || !folderName) {
       return NextResponse.json(
         { error: "Folder ID dan Nama diperlukan." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     await logActivity("LOGIN_FAILURE", {
       itemName: folderName,
       userEmail: session.user.email,
-      status: "failure", 
+      status: "failure",
       error: `REQUEST_ACCESS: Meminta akses ke folder ${folderId}`,
     });
 
@@ -67,12 +67,11 @@ export async function POST(req: NextRequest) {
       success: true,
       message: "Permintaan akses dikirim ke Admin.",
     });
-
   } catch (error: any) {
     console.error("Request Access Error:", error);
     return NextResponse.json(
       { error: "Gagal memproses permintaan." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

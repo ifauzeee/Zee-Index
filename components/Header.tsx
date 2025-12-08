@@ -174,7 +174,7 @@ export default function Header() {
     toggleNotificationCenter,
     toggleSidebar,
     appName,
-    logoUrl
+    logoUrl,
   } = useAppStore();
   const { theme, setTheme } = useTheme();
   const [isSearchVisible, setIsSearchVisible] = useState(false);
@@ -330,10 +330,10 @@ export default function Header() {
               title={!shareToken ? "Kembali ke Beranda" : appName}
             >
               {logoUrl ? (
-                <img 
-                  src={logoUrl} 
-                  alt="Logo" 
-                  className="w-8 h-8 mr-3 object-contain" 
+                <img
+                  src={logoUrl}
+                  alt="Logo"
+                  className="w-8 h-8 mr-3 object-contain"
                 />
               ) : (
                 <Image
@@ -377,16 +377,16 @@ export default function Header() {
                         </a>
                       ) : (
                         "onClick" in item &&
-                        typeof item.onClick === "function" && (
-                          <button
-                            key={item.id}
-                            onClick={item.onClick}
-                            title={item.label}
-                            className="p-2 rounded-lg hover:bg-accent"
-                          >
-                            <Icon size={20} />
-                          </button>
-                        )
+                          typeof item.onClick === "function" && (
+                            <button
+                              key={item.id}
+                              onClick={item.onClick}
+                              title={item.label}
+                              className="p-2 rounded-lg hover:bg-accent"
+                            >
+                              <Icon size={20} />
+                            </button>
+                          )
                       );
                     })}
                   {authButton}

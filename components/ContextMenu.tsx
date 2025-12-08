@@ -129,8 +129,8 @@ export default function ContextMenu({
           variant === "danger"
             ? "text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10"
             : variant === "warning"
-            ? "text-yellow-600 dark:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/10"
-            : "text-foreground hover:bg-accent/50",
+              ? "text-yellow-600 dark:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/10"
+              : "text-foreground hover:bg-accent/50",
           className,
         )}
       >

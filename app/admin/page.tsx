@@ -575,9 +575,7 @@ export default function AdminPage() {
                                   <span
                                     className={cn(
                                       "w-2 h-2 rounded-full shrink-0 mt-2",
-                                      isExpired
-                                        ? "bg-red-500"
-                                        : "bg-green-500",
+                                      isExpired ? "bg-red-500" : "bg-green-500",
                                     )}
                                     title={isExpired ? "Expired" : "Active"}
                                   />

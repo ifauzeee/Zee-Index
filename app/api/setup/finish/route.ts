@@ -10,12 +10,16 @@ export async function POST(req: Request) {
     const isConfigured = await isAppConfigured();
     if (isConfigured) {
       return NextResponse.json(
-        { error: "Setup has already been completed. Reset database to re-configure." },
-        { status: 403 }
+        {
+          error:
+            "Setup has already been completed. Reset database to re-configure.",
+        },
+        { status: 403 },
       );
     }
 
-    const { clientId, clientSecret, authCode, redirectUri, rootFolderId } = await req.json();
+    const { clientId, clientSecret, authCode, redirectUri, rootFolderId } =
+      await req.json();
 
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
@@ -41,7 +45,8 @@ export async function POST(req: Request) {
     if (!tokenData.refresh_token) {
       return NextResponse.json(
         {
-          error: "Refresh Token tidak diterima. Pastikan akses di-revoke dulu atau gunakan prompt=consent.",
+          error:
+            "Refresh Token tidak diterima. Pastikan akses di-revoke dulu atau gunakan prompt=consent.",
         },
         { status: 400 },
       );

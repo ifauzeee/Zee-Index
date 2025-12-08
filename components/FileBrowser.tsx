@@ -275,7 +275,7 @@ export default function FileBrowser({
           if (!res.ok) {
             const errorData = await res.json().catch(() => ({}));
             if (res.status === 401 && errorData.protected) {
-               throw { isProtected: true, folderId, error: errorData.error };
+              throw { isProtected: true, folderId, error: errorData.error };
             }
             throw new Error(errorData.error || "Failed to prefetch");
           }

@@ -25,10 +25,13 @@ export async function isAccessRestricted(
       if (protectedFolderIds.includes(parentId)) {
         if (!allowedTokens.includes(parentId)) return true;
       }
-      
+
       if (parentId !== process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
-         const isParentRestricted = await isAccessRestricted(parentId, allowedTokens);
-         if (isParentRestricted) return true;
+        const isParentRestricted = await isAccessRestricted(
+          parentId,
+          allowedTokens,
+        );
+        if (isParentRestricted) return true;
       }
     }
 

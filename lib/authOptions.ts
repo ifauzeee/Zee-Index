@@ -44,7 +44,8 @@ export const authOptions: AuthOptions = {
       credentials: {},
       async authorize(): Promise<User | null> {
         try {
-          const config: { disableGuestLogin?: boolean } | null = await kv.get(CONFIG_KEY);
+          const config: { disableGuestLogin?: boolean } | null =
+            await kv.get(CONFIG_KEY);
 
           if (!config || config.disableGuestLogin !== false) {
             return null;

@@ -189,7 +189,7 @@ function FileItem({
       >
         <div
           className={cn(
-            "flex w-full min-w-0 pointer-events-none", 
+            "flex w-full min-w-0 pointer-events-none",
             view === "list"
               ? "items-center gap-3"
               : view === "grid"
@@ -199,7 +199,7 @@ function FileItem({
         >
           <div
             className={cn(
-              "relative shrink-0 pointer-events-auto", 
+              "relative shrink-0 pointer-events-auto",
               isGallery && "w-full min-h-[150px]",
             )}
           >
@@ -367,7 +367,10 @@ function FileItem({
             >
               {isAdmin && (
                 <button
-                  onClick={(e) => { e.stopPropagation(); onShare(e); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onShare(e);
+                  }}
                   title="Bagikan"
                   className="p-2 rounded-full hover:bg-muted select-none"
                 >
@@ -376,7 +379,10 @@ function FileItem({
               )}
               {!file.isFolder && (
                 <button
-                  onClick={(e) => { e.stopPropagation(); onDownload(e); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDownload(e);
+                  }}
                   title="Unduh"
                   className="p-2 rounded-full hover:bg-muted select-none"
                 >
@@ -384,7 +390,10 @@ function FileItem({
                 </button>
               )}
               <button
-                onClick={(e) => { e.stopPropagation(); onShowDetails(e); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShowDetails(e);
+                }}
                 title="Lihat Detail"
                 className="p-2 rounded-full hover:bg-muted select-none"
               >

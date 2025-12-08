@@ -34,13 +34,13 @@ export async function GET() {
   try {
     const config: AppConfig | null = await kv.get(CONFIG_KEY);
     return NextResponse.json(
-      config || { 
-        hideAuthor: false, 
+      config || {
+        hideAuthor: false,
         disableGuestLogin: false,
         appName: "Zee Index",
         logoUrl: "",
         faviconUrl: "",
-        primaryColor: "" 
+        primaryColor: "",
       },
     );
   } catch (error) {

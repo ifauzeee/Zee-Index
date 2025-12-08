@@ -46,7 +46,8 @@ const LogDetail: FC<{ log: ActivityLog }> = ({ log }) => {
     <ul className="text-xs text-muted-foreground space-y-1 pl-2 mt-2 border-l-2 border-border/50">
       {log.itemName && (
         <li>
-          <strong className="text-foreground">Item:</strong> <span className="break-all">{log.itemName}</span>
+          <strong className="text-foreground">Item:</strong>{" "}
+          <span className="break-all">{log.itemName}</span>
         </li>
       )}
       {log.userEmail && (
@@ -60,13 +61,18 @@ const LogDetail: FC<{ log: ActivityLog }> = ({ log }) => {
         </li>
       )}
       {log.status && (
-        <li className={log.status === "failure" ? "text-red-500" : "text-green-500"}>
+        <li
+          className={
+            log.status === "failure" ? "text-red-500" : "text-green-500"
+          }
+        >
           <strong>Status:</strong> {log.status}
         </li>
       )}
       {log.error && (
         <li className="text-red-500 mt-1 p-2 bg-red-500/5 rounded-md border border-red-500/20">
-          <strong>Error:</strong> <span className="break-words whitespace-pre-wrap">{log.error}</span>
+          <strong>Error:</strong>{" "}
+          <span className="break-words whitespace-pre-wrap">{log.error}</span>
         </li>
       )}
     </ul>
@@ -152,7 +158,7 @@ export default function ActivityLogDashboard() {
   }, [logs, filterType, searchQuery]);
 
   return (
-    <div className="p-6"> 
+    <div className="p-6">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h2 className="text-2xl font-semibold">Log Aktivitas</h2>
@@ -160,12 +166,15 @@ export default function ActivityLogDashboard() {
             Riwayat tindakan pengguna dan sistem
           </p>
         </div>
-        <button 
+        <button
           onClick={() => fetchLogs(currentPage)}
           className="p-2 hover:bg-accent rounded-full transition-colors"
           title="Refresh Log"
         >
-          <Loader2 size={20} className={isLoading ? "animate-spin" : "opacity-0"} />
+          <Loader2
+            size={20}
+            className={isLoading ? "animate-spin" : "opacity-0"}
+          />
         </button>
       </div>
 
