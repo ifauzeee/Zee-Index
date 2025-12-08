@@ -5,6 +5,12 @@ import Image from "next/image";
 import { Loader2, Download, Eye } from "lucide-react";
 import { getIcon, getLanguageFromFilename } from "@/lib/utils";
 import Prism from "prismjs";
+import dynamic from "next/dynamic";
+
+const PDFViewer = dynamic(() => import("./PDFViewer"), {
+  loading: () => <LoadingPreview />,
+  ssr: false,
+});
 
 interface EPubRendition {
   display: () => Promise<void>;
@@ -165,6 +171,11 @@ export const DefaultPreview: React.FC<{
   downloadUrl: string;
 }> = ({ mimeType, fileName, downloadUrl }) => {
   const IconComponent = getIcon(mimeType);
+
+  if (mimeType === "application/pdf") {
+    return <PDFViewer src={downloadUrl} />;
+  }
+
   return (
     <div className="flex flex-col items-center justify-center h-full p-6 text-center animate-in fade-in zoom-in duration-300">
       <div className="mb-8 transform transition-transform duration-500 hover:scale-105">

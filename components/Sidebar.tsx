@@ -38,7 +38,6 @@ export default function Sidebar() {
   const router = useRouter();
   const { isSidebarOpen, setSidebarOpen, currentFolderId, user, shareToken } =
     useAppStore();
-
   const [mounted, setMounted] = useState(false);
 
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
@@ -96,6 +95,10 @@ export default function Sidebar() {
 
     return [...filteredEnv, ...dbDrives];
   }, [dbDrives]);
+
+  const isCurrentFolderShortcut = useMemo(() => {
+    return allManualDrives.some((d) => d.id === currentFolderId);
+  }, [allManualDrives, currentFolderId]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -187,7 +190,7 @@ export default function Sidebar() {
   };
 
   const renderNode = (node: FolderNode, parents: string[] = []) => {
-    const isActive = currentFolderId === node.id;
+    const isActive = !isCurrentFolderShortcut && currentFolderId === node.id;
     const paddingLeft = (parents.length + 1) * 12;
     return (
       <div key={node.id}>

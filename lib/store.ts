@@ -119,7 +119,6 @@ interface AppState {
   ) => Promise<void>;
   detailsFile: any | null;
   setDetailsFile: (file: any | null) => void;
-
   activeAudioFile: any | null;
   audioQueue: any[];
   isAudioPlaying: boolean;
@@ -683,6 +682,8 @@ export const useAppStore = create<AppState>()(
         sort: state.sort,
         notifications: state.notifications,
         isSidebarOpen: state.isSidebarOpen,
+        audioQueue: state.audioQueue,
+        activeAudioFile: state.activeAudioFile,
       }),
     },
   ),

@@ -11,9 +11,9 @@ const PROTECTED_FOLDERS_KEY = "zee-index:protected-folders";
 const driveSchema = z.object({
   id: z
     .string()
-    .min(1, "ID Folder diperlukan.")
+    .min(1)
     .transform((val) => val.trim()),
-  name: z.string().min(1, "Nama Folder diperlukan."),
+  name: z.string().min(1),
   password: z.string().optional(),
 });
 
@@ -52,7 +52,6 @@ export async function POST(req: NextRequest) {
     }
 
     const { id, name, password } = validation.data;
-
     const currentDrives: any[] = (await kv.get(MANUAL_DRIVES_KEY)) || [];
 
     if (currentDrives.some((d) => d.id === id)) {
@@ -75,6 +74,8 @@ export async function POST(req: NextRequest) {
     const updatedDrives = [...currentDrives, newDrive];
 
     await kv.set(MANUAL_DRIVES_KEY, updatedDrives);
+
+    await kv.del(`zee-index:folder-path-v6:${id}`);
 
     return NextResponse.json({ success: true, drives: updatedDrives });
   } catch (error) {
@@ -100,8 +101,9 @@ export async function DELETE(req: NextRequest) {
     const updatedDrives = currentDrives.filter((d) => d.id !== id);
 
     await kv.set(MANUAL_DRIVES_KEY, updatedDrives);
-
     await kv.hdel(PROTECTED_FOLDERS_KEY, id);
+
+    await kv.del(`zee-index:folder-path-v6:${id}`);
 
     return NextResponse.json({ success: true, drives: updatedDrives });
   } catch (error) {

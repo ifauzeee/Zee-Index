@@ -25,6 +25,7 @@ export interface DriveFile {
     durationMillis: string;
   };
   trashed: boolean;
+  sharedWithMeTime?: string;
 }
 
 export interface DriveRevision {
@@ -170,6 +171,28 @@ export async function listSharedDrives(): Promise<SharedDrive[]> {
 
   const data = await response.json();
   return data.drives || [];
+}
+
+export async function listSharedWithMeFolders(): Promise<DriveFile[]> {
+  const accessToken = await getAccessToken();
+  const url = "https://www.googleapis.com/drive/v3/files";
+  const params = new URLSearchParams({
+    q: "sharedWithMe = true and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+    fields: "files(id, name, mimeType, owners)",
+    pageSize: "100",
+  });
+
+  const response = await fetchWithRetry(`${url}?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = await response.json();
+  return data.files || [];
 }
 
 export async function getAllDescendantFolders(
@@ -492,7 +515,6 @@ export async function getStorageDetails() {
   );
 
   const finalUsage = rootFolderId ? localUsage : globalUsage;
-
   const breakdownMap: Record<string, { size: number; count: number }> = {};
   allFiles.forEach((file: DriveFile) => {
     let type = "Lainnya";

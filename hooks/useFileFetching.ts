@@ -77,12 +77,14 @@ export function useFileFetching({
   const currentFolderId = initialFolderId || rootFolderId;
 
   const { data: historyData } = useQuery({
-    queryKey: ["folderPath", currentFolderId, shareToken],
+    queryKey: ["folderPath", currentFolderId, shareToken, refreshKey],
     queryFn: () => fetchFolderPathApi(currentFolderId, shareToken),
     enabled: !!currentFolderId && currentFolderId !== rootFolderId,
     initialData: initialFolderPath,
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const history = useMemo(() => {
