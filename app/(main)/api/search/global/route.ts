@@ -9,6 +9,8 @@ import { isProtected } from "@/lib/auth";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { validateShareToken } from "@/lib/auth";
+import { isAccessRestricted } from "@/lib/securityUtils";
+import { jwtVerify } from "jose";
 
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
 const getMimeQuery = (mimeType?: string | null) => {
@@ -49,6 +51,7 @@ const getDateQuery = (modifiedTime?: string | null) => {
 };
 
 export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   const isShareAuth = await validateShareToken(request);
@@ -66,6 +69,7 @@ export async function GET(request: NextRequest) {
   const mimeType = searchParams.get("mimeType");
   const modifiedTime = searchParams.get("modifiedTime");
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
+
   if (!rawSearchTerm) {
     return NextResponse.json(
       { error: "Search term is required." },
@@ -81,6 +85,7 @@ export async function GET(request: NextRequest) {
 
   const sanitizedSearchTerm = sanitizeString(rawSearchTerm);
   const searchTerm = sanitizedSearchTerm.replace(/'/g, "''");
+
   try {
     const accessToken = await getAccessToken();
     const descendantFolderIds = await getAllDescendantFolders(
@@ -90,6 +95,7 @@ export async function GET(request: NextRequest) {
     const queryField = searchType === "fullText" ? "fullText" : "name";
     const mimeQuery = getMimeQuery(mimeType);
     const dateQuery = getDateQuery(modifiedTime);
+
     const searchPromises = descendantFolderIds.map((folderId) =>
       searchFilesInFolder(
         accessToken,
@@ -118,16 +124,46 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const processedFiles = Array.from(uniqueFiles.values()).map(
-      (file: DriveFile) => ({
-        ...file,
-        isFolder: file.mimeType === "application/vnd.google-apps.folder",
-        isProtected:
-          file.mimeType === "application/vnd.google-apps.folder" &&
-          isProtected(file.id),
+    const isAdmin = session?.user?.role === "ADMIN";
+
+    const authHeader = request.headers.get("Authorization");
+    const token = authHeader?.split(" ")[1];
+    const allowedTokens: string[] = [];
+
+    if (token) {
+      try {
+        const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
+        const { payload } = await jwtVerify(token, secret);
+        if (payload.folderId) {
+          allowedTokens.push(payload.folderId as string);
+        }
+      } catch {}
+    }
+
+    const processedFilesPromise = Array.from(uniqueFiles.values()).map(
+      async (file: DriveFile) => {
+        const isFolder = file.mimeType === "application/vnd.google-apps.folder";
+        const protectedFolder = isFolder ? await isProtected(file.id) : false;
+
+        return {
+          ...file,
+          isFolder,
+          isProtected: protectedFolder,
+        };
+      },
+    );
+
+    const processedFiles = await Promise.all(processedFilesPromise);
+
+    const filteredFiles = await Promise.all(
+      processedFiles.map(async (file) => {
+        if (isAdmin) return file;
+        const restricted = await isAccessRestricted(file.id, allowedTokens);
+        return restricted ? null : file;
       }),
     );
-    return NextResponse.json({ files: processedFiles });
+
+    return NextResponse.json({ files: filteredFiles.filter((f) => f !== null) });
   } catch (error: unknown) {
     const errorMessage =
       error instanceof Error
