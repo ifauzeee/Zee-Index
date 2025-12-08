@@ -125,12 +125,12 @@ export default function ContextMenu({
         onClick={onClick}
         disabled={disabled}
         className={cn(
-          "w-full text-left flex items-center gap-4 md:gap-2 px-6 md:px-4 py-4 md:py-2 text-base md:text-sm font-medium transition-colors active:bg-accent disabled:opacity-50 disabled:cursor-not-allowed",
+          "w-full text-left flex items-center gap-4 md:gap-2 px-6 md:px-4 py-4 md:py-2 text-base md:text-sm font-medium transition-colors active:bg-accent disabled:opacity-50 disabled:cursor-not-allowed select-none outline-none focus:outline-none focus:bg-accent/50",
           variant === "danger"
             ? "text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10"
             : variant === "warning"
-              ? "text-yellow-600 dark:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/10"
-              : "text-foreground hover:bg-accent/50",
+            ? "text-yellow-600 dark:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/10"
+            : "text-foreground hover:bg-accent/50",
           className,
         )}
       >
@@ -216,27 +216,28 @@ export default function ContextMenu({
 
   const content = (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[9999]" onClick={onClose}>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        />
-
+      <div
+        className="fixed inset-0 z-[9999] select-none"
+        onClick={onClose}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          onClose();
+        }}
+      >
         <motion.div
           ref={menuRef}
           className={cn(
-            "bg-background/95 backdrop-blur-md border shadow-2xl z-[10000] overflow-hidden",
+            "bg-background/95 backdrop-blur-md border shadow-2xl z-[10000] overflow-hidden select-none",
             "fixed bottom-0 left-0 w-full rounded-t-3xl border-t pb-safe",
             "md:fixed md:w-64 md:rounded-xl md:border md:bottom-auto md:left-auto md:pb-0",
           )}
           style={desktopStyle}
-          initial={isDesktop ? { opacity: 0, scale: 0.95 } : { y: "100%" }}
+          initial={isDesktop ? { opacity: 0, scale: 0.98 } : { y: "100%" }}
           animate={isDesktop ? { opacity: 1, scale: 1 } : { y: 0 }}
-          exit={isDesktop ? { opacity: 0, scale: 0.95 } : { y: "100%" }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          exit={isDesktop ? { opacity: 0, scale: 0.98 } : { y: "100%" }}
+          transition={{ duration: 0.15, ease: "easeOut" }}
           onClick={(e) => e.stopPropagation()}
+          onDoubleClick={(e) => e.preventDefault()}
         >
           <div
             className="flex md:hidden items-center justify-center pt-4 pb-2"

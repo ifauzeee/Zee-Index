@@ -92,6 +92,12 @@ function FileItem({
     onContextMenu({ clientX: rect.left, clientY: rect.bottom + 5 }, file);
   };
 
+  const preventSelection = (e: React.MouseEvent) => {
+    if (e.detail > 1) {
+      e.preventDefault();
+    }
+  };
+
   const itemVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { duration: 0.1 } },
@@ -151,7 +157,7 @@ function FileItem({
       <div
         className={cn(
           "group relative rounded-lg transition-all duration-200 ease-in-out cursor-pointer overflow-hidden w-full border",
-          "select-none touch-pan-y touch-action-manipulation",
+          "select-none touch-pan-y touch-action-manipulation outline-none focus:outline-none focus:ring-0",
           isSelected
             ? "bg-primary/10 border-primary"
             : "bg-card border-border hover:shadow-md hover:bg-accent/50",
@@ -167,7 +173,13 @@ function FileItem({
           isDragOver && "ring-2 ring-primary ring-inset bg-primary/10",
           isError && "ring-2 ring-destructive/50 bg-destructive/5",
         )}
+        style={{ WebkitTapHighlightColor: "transparent" }}
         onClick={() => !isUploading && onClick()}
+        onMouseDown={preventSelection}
+        onDoubleClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
         onContextMenu={!isUploading ? handleContextMenuEvent : undefined}
         draggable={canDrag}
         onDragStart={onDragStart}
@@ -177,7 +189,7 @@ function FileItem({
       >
         <div
           className={cn(
-            "flex w-full min-w-0",
+            "flex w-full min-w-0 pointer-events-none", 
             view === "list"
               ? "items-center gap-3"
               : view === "grid"
@@ -187,7 +199,7 @@ function FileItem({
         >
           <div
             className={cn(
-              "relative shrink-0",
+              "relative shrink-0 pointer-events-auto", 
               isGallery && "w-full min-h-[150px]",
             )}
           >
@@ -206,7 +218,7 @@ function FileItem({
                   sizes="100vw"
                   style={{ width: "100%", height: "auto" }}
                   className={cn(
-                    "object-cover block transition-opacity duration-200",
+                    "object-cover block transition-opacity duration-200 select-none",
                     isImageLoading ? "opacity-0" : "opacity-100",
                   )}
                   loading="lazy"
@@ -225,7 +237,7 @@ function FileItem({
                   src={thumbnailSrc}
                   alt={file.name}
                   fill
-                  className="object-cover"
+                  className="object-cover select-none"
                   sizes="(max-width: 640px) 80px, 150px"
                   loading="lazy"
                   decoding="async"
@@ -237,7 +249,7 @@ function FileItem({
             ) : (
               <div
                 className={cn(
-                  "text-3xl text-primary shrink-0 flex items-center justify-center",
+                  "text-3xl text-primary shrink-0 flex items-center justify-center select-none",
                   view === "grid" && "text-4xl mb-2",
                   isGallery &&
                     "py-8 text-6xl bg-accent/10 w-full flex flex-col gap-2",
@@ -297,10 +309,18 @@ function FileItem({
                     isBulkMode && "pr-10",
                   )}
                 >
-                  <p className="truncate block">{file.name}</p>
+                  <p
+                    className="truncate block select-none"
+                    onMouseDown={preventSelection}
+                  >
+                    {file.name}
+                  </p>
                 </div>
               ) : (
-                <p className="line-clamp-2 break-words w-full leading-tight">
+                <p
+                  className="line-clamp-2 break-words w-full leading-tight select-none"
+                  onMouseDown={preventSelection}
+                >
                   {file.name}
                 </p>
               )}
@@ -310,7 +330,10 @@ function FileItem({
               !file.isFolder &&
               !compactClass &&
               !isUploading && (
-                <p className="text-xs text-muted-foreground mt-1 text-left truncate">
+                <p
+                  className="text-xs text-muted-foreground mt-1 text-left truncate select-none"
+                  onMouseDown={preventSelection}
+                >
                   {file.size ? formatBytes(parseInt(file.size)) : "-"} •{" "}
                   {new Date(file.modifiedTime).toLocaleDateString("id-ID", {
                     day: "numeric",
@@ -338,32 +361,32 @@ function FileItem({
           {!isBulkMode && !isUploading && (
             <div
               className={cn(
-                "hidden md:flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 focus-within:opacity-100 shrink-0",
+                "hidden md:flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 focus-within:opacity-100 shrink-0 pointer-events-auto",
                 compactClass && "scale-90 origin-right",
               )}
             >
               {isAdmin && (
                 <button
-                  onClick={onShare}
+                  onClick={(e) => { e.stopPropagation(); onShare(e); }}
                   title="Bagikan"
-                  className="p-2 rounded-full hover:bg-muted"
+                  className="p-2 rounded-full hover:bg-muted select-none"
                 >
                   <Share2 size={16} />
                 </button>
               )}
               {!file.isFolder && (
                 <button
-                  onClick={onDownload}
+                  onClick={(e) => { e.stopPropagation(); onDownload(e); }}
                   title="Unduh"
-                  className="p-2 rounded-full hover:bg-muted"
+                  className="p-2 rounded-full hover:bg-muted select-none"
                 >
                   <Download size={16} />
                 </button>
               )}
               <button
-                onClick={onShowDetails}
+                onClick={(e) => { e.stopPropagation(); onShowDetails(e); }}
                 title="Lihat Detail"
-                className="p-2 rounded-full hover:bg-muted"
+                className="p-2 rounded-full hover:bg-muted select-none"
               >
                 <Info size={16} />
               </button>
@@ -374,7 +397,7 @@ function FileItem({
             <button
               onClick={handleMenuClick}
               className={cn(
-                "md:hidden p-2.5 -m-1 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0 z-30 active:bg-accent active:text-primary",
+                "md:hidden p-2.5 -m-1 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0 z-30 active:bg-accent active:text-primary pointer-events-auto select-none",
                 view === "grid" || view === "gallery"
                   ? "absolute top-1 right-1 bg-background/70 backdrop-blur-sm shadow-sm border border-black/5"
                   : "ml-auto",
@@ -391,7 +414,7 @@ function FileItem({
               checked={isSelected}
               readOnly
               className={cn(
-                "absolute h-5 w-5 pointer-events-none z-10",
+                "absolute h-5 w-5 pointer-events-auto z-10",
                 view === "list"
                   ? "right-4 top-1/2 -translate-y-1/2"
                   : "top-2 right-2",
