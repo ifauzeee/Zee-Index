@@ -21,18 +21,20 @@ export async function isAccessRestricted(
     const file = await getFileDetailsFromDrive(fileId);
     if (!file || !file.parents || file.parents.length === 0) return false;
 
-    const parentId = file.parents[0];
-
-    if (protectedFolderIds.includes(parentId)) {
-      if (allowedTokens.includes(parentId)) return false;
-      return true;
+    for (const parentId of file.parents) {
+      if (protectedFolderIds.includes(parentId)) {
+        if (!allowedTokens.includes(parentId)) return true;
+      }
+      
+      if (parentId !== process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
+         const isParentRestricted = await isAccessRestricted(parentId, allowedTokens);
+         if (isParentRestricted) return true;
+      }
     }
 
-    if (parentId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) return false;
-
-    return await isAccessRestricted(parentId, allowedTokens);
+    return false;
   } catch (error) {
-    console.error("Security Check Error:", error);
+    console.error(error);
     return true;
   }
 }

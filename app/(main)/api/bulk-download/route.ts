@@ -20,8 +20,16 @@ export async function POST(request: Request) {
       );
     }
 
+    if (fileIds.length > 20) {
+      return NextResponse.json(
+        { error: "Maksimal 20 file per unduhan sekaligus." },
+        { status: 400 },
+      );
+    }
+
     const accessToken = await getAccessToken();
     const zip = new JSZip();
+    
     for (const fileId of fileIds) {
       if (session?.user?.role !== "ADMIN") {
         const isRestricted = await isAccessRestricted(fileId);
@@ -30,15 +38,20 @@ export async function POST(request: Request) {
 
       const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
       const detailsUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=name`;
+      
       const detailsResponse = await fetch(detailsUrl, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
+      
       if (!detailsResponse.ok) continue;
+      
       const fileDetails = await detailsResponse.json();
       const fileName = fileDetails.name || fileId;
+      
       const fileResponse = await fetch(driveUrl, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
+      
       if (fileResponse.ok) {
         const fileBuffer = await fileResponse.arrayBuffer();
         zip.file(fileName, fileBuffer);
@@ -56,7 +69,7 @@ export async function POST(request: Request) {
       error instanceof Error
         ? error.message
         : "Terjadi kesalahan tidak dikenal.";
-    console.error("Bulk Download API Error:", errorMessage);
+    console.error(errorMessage);
     return NextResponse.json(
       { error: "Internal Server Error." },
       { status: 500 },

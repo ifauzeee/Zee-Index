@@ -23,11 +23,10 @@ async function ensureInitialAdmins() {
           ADMIN_EMAILS_KEY,
           ...(adminsToAdd as [string, ...string[]]),
         );
-        console.log("Initial admins have been synced to Vercel KV.");
       }
     }
   } catch (error) {
-    console.error("Failed to sync initial admins to KV:", error);
+    console.error(error);
   }
 }
 
@@ -45,15 +44,13 @@ export const authOptions: AuthOptions = {
       credentials: {},
       async authorize(): Promise<User | null> {
         try {
-          const config: { disableGuestLogin?: boolean } | null =
-            await kv.get(CONFIG_KEY);
+          const config: { disableGuestLogin?: boolean } | null = await kv.get(CONFIG_KEY);
 
-          if (config?.disableGuestLogin) {
-            console.warn("Guest login attempt blocked by admin configuration.");
+          if (!config || config.disableGuestLogin !== false) {
             return null;
           }
         } catch (e) {
-          console.error("Failed to check guest login config from KV:", e);
+          return null;
         }
 
         return {
