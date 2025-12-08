@@ -21,12 +21,10 @@ export async function GET() {
           if (typeof r === 'object' && r !== null) {
             return r;
           }
-
           if (typeof r === 'string') {
              if (r === "[object Object]") return null;
              return JSON.parse(r);
           }
-
           return null;
         } catch {
           return null;
@@ -57,7 +55,6 @@ export async function POST(req: NextRequest) {
 
     for (const r of allRequests) {
         let parsed: any = r;
-        
         if (typeof r === 'string') {
             try {
                 if (r === "[object Object]") continue;
