@@ -54,6 +54,10 @@ type DensityMode = "comfortable" | "compact";
 interface AppConfig {
   hideAuthor: boolean;
   disableGuestLogin: boolean;
+  appName: string;
+  logoUrl: string;
+  faviconUrl: string;
+  primaryColor: string;
 }
 
 interface AppState {
@@ -132,6 +136,10 @@ interface AppState {
 
   hideAuthor: boolean | null;
   disableGuestLogin: boolean | null;
+  appName: string;
+  logoUrl: string;
+  faviconUrl: string;
+  primaryColor: string;
   isConfigLoading: boolean;
   fetchConfig: () => Promise<void>;
   setConfig: (config: Partial<AppConfig>) => Promise<void>;
@@ -536,15 +544,23 @@ export const useAppStore = create<AppState>()(
 
       hideAuthor: null,
       disableGuestLogin: null,
+      appName: "Zee Index",
+      logoUrl: "",
+      faviconUrl: "",
+      primaryColor: "",
       isConfigLoading: false,
       fetchConfig: async () => {
         set({ isConfigLoading: true });
         try {
-          const response = await fetch("/api/config/public");
+          const response = await fetch("/api/admin/config");
           const config: AppConfig = await response.json();
           set({
             hideAuthor: config.hideAuthor || false,
             disableGuestLogin: config.disableGuestLogin || false,
+            appName: config.appName || "Zee Index",
+            logoUrl: config.logoUrl || "",
+            faviconUrl: config.faviconUrl || "",
+            primaryColor: config.primaryColor || "",
           });
         } catch (error) {
           console.error("Gagal fetch config:", error);
@@ -562,10 +578,11 @@ export const useAppStore = create<AppState>()(
           });
           const result = await response.json();
           if (!response.ok) throw new Error(result.error);
-          set({
-            hideAuthor: result.config.hideAuthor,
-            disableGuestLogin: result.config.disableGuestLogin,
-          });
+
+          set((state) => ({
+            ...state,
+            ...result.config,
+          }));
         } catch (error: unknown) {
           get().addToast({
             message: error instanceof Error ? error.message : "Error",
@@ -684,6 +701,10 @@ export const useAppStore = create<AppState>()(
         isSidebarOpen: state.isSidebarOpen,
         audioQueue: state.audioQueue,
         activeAudioFile: state.activeAudioFile,
+        appName: state.appName,
+        logoUrl: state.logoUrl,
+        faviconUrl: state.faviconUrl,
+        primaryColor: state.primaryColor,
       }),
     },
   ),

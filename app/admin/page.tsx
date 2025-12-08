@@ -23,6 +23,7 @@ import {
   KeyRound,
   FolderLock,
   Network,
+  Palette,
 } from "lucide-react";
 import Loading from "@/components/Loading";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,7 @@ import DayOfWeekChart from "@/components/charts/DayOfWeekChart";
 import SecurityConfig from "@/components/SecurityConfig";
 import UserFolderAccessManager from "@/components/UserFolderAccessManager";
 import ManualDrivesManager from "@/components/ManualDrivesManager";
+import BrandingConfig from "@/components/BrandingConfig";
 
 const scrollbarHideStyles = {
   msOverflowStyle: "none" as const,
@@ -234,6 +236,7 @@ export default function AdminPage() {
     { value: "summary", label: "Ringkasan", icon: Activity },
     { value: "users", label: "Admin", icon: Users },
     { value: "security", label: "Keamanan & Kontrol", icon: ShieldCheck },
+    { value: "branding", label: "Branding", icon: Palette },
     { value: "logs", label: "Logs", icon: Clock },
   ];
 
@@ -395,9 +398,7 @@ export default function AdminPage() {
             </div>
           </TabsContent>
 
-          {/* TAB KEAMANAN: Gabungan dari Security, User Access, Drives, & Links */}
           <TabsContent value="security" className="mt-2 space-y-10">
-            {/* Bagian 1: Konfigurasi Keamanan Umum */}
             <section className="space-y-6">
               <div className="flex items-center gap-2 border-b pb-2 mb-4">
                 <ShieldCheck className="text-primary" />
@@ -412,13 +413,12 @@ export default function AdminPage() {
               </div>
             </section>
 
-            {/* Bagian 2: Proteksi Folder & Akses User */}
             <section className="space-y-6">
               <div className="flex items-center gap-2 border-b pb-2 mb-4">
                 <FolderLock className="text-amber-500" />
                 <h3 className="text-lg font-bold">Proteksi & Akses</h3>
               </div>
-              
+
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 <div>
                   <ProtectedFoldersManager />
@@ -429,7 +429,6 @@ export default function AdminPage() {
               </div>
             </section>
 
-            {/* Bagian 3: Shared Drives */}
             <section className="space-y-6">
               <div className="flex items-center gap-2 border-b pb-2 mb-4">
                 <HardDrive className="text-blue-500" />
@@ -438,7 +437,6 @@ export default function AdminPage() {
               <ManualDrivesManager />
             </section>
 
-            {/* Bagian 4: Manajemen Tautan (Share Links & Requests) */}
             <section className="space-y-6">
               <div className="flex items-center gap-2 border-b pb-2 mb-4">
                 <Network className="text-purple-500" />
@@ -454,7 +452,6 @@ export default function AdminPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* File Requests Column */}
                   {fileRequests.length > 0 && (
                     <div className="space-y-3">
                       <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-2">
@@ -517,6 +514,7 @@ export default function AdminPage() {
                                   <span className="text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded">
                                     Folder: {req.folderName}
                                   </span>
+
                                   <button
                                     onClick={() =>
                                       handleDeleteClick(req, "request")
@@ -534,7 +532,6 @@ export default function AdminPage() {
                     </div>
                   )}
 
-                  {/* Share Links Column */}
                   {shareLinks.length > 0 && (
                     <div className="space-y-3">
                       <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-2">
@@ -628,6 +625,10 @@ export default function AdminPage() {
                 </div>
               )}
             </section>
+          </TabsContent>
+
+          <TabsContent value="branding" className="mt-2">
+            <BrandingConfig />
           </TabsContent>
 
           <TabsContent value="users" className="mt-2">

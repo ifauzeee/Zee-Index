@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Providers } from "./providers";
 import "./(main)/globals.css";
 import "plyr/dist/plyr.css";
+import GlobalBranding from "@/components/GlobalBranding";
 
 export const preferredRegion = "sin1";
 
@@ -37,7 +38,10 @@ export default function RootLayout({
     <html lang="id" suppressHydrationWarning>
       <head />
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <GlobalBranding />
+          {children}
+        </Providers>
       </body>
     </html>
   );

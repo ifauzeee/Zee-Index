@@ -173,6 +173,8 @@ export default function Header() {
     notifications,
     toggleNotificationCenter,
     toggleSidebar,
+    appName,
+    logoUrl
   } = useAppStore();
   const { theme, setTheme } = useTheme();
   const [isSearchVisible, setIsSearchVisible] = useState(false);
@@ -325,14 +327,22 @@ export default function Header() {
               className={`text-xl font-bold flex items-center shrink-0 ${
                 !shareToken ? "cursor-pointer" : "cursor-default"
               }`}
-              title={!shareToken ? "Kembali ke Beranda" : "Zee Index"}
+              title={!shareToken ? "Kembali ke Beranda" : appName}
             >
-              <Image
-                src={GoogleDrivePng}
-                alt="Google Drive Logo"
-                className="w-8 h-8 mr-3 dark:invert"
-              />
-              <span className="hidden sm:inline">Zee Index</span>
+              {logoUrl ? (
+                <img 
+                  src={logoUrl} 
+                  alt="Logo" 
+                  className="w-8 h-8 mr-3 object-contain" 
+                />
+              ) : (
+                <Image
+                  src={GoogleDrivePng}
+                  alt="Google Drive Logo"
+                  className="w-8 h-8 mr-3 dark:invert"
+                />
+              )}
+              <span className="hidden sm:inline">{appName || "Zee Index"}</span>
             </h1>
           </div>
 
@@ -367,16 +377,16 @@ export default function Header() {
                         </a>
                       ) : (
                         "onClick" in item &&
-                          typeof item.onClick === "function" && (
-                            <button
-                              key={item.id}
-                              onClick={item.onClick}
-                              title={item.label}
-                              className="p-2 rounded-lg hover:bg-accent"
-                            >
-                              <Icon size={20} />
-                            </button>
-                          )
+                        typeof item.onClick === "function" && (
+                          <button
+                            key={item.id}
+                            onClick={item.onClick}
+                            title={item.label}
+                            className="p-2 rounded-lg hover:bg-accent"
+                          >
+                            <Icon size={20} />
+                          </button>
+                        )
                       );
                     })}
                   {authButton}

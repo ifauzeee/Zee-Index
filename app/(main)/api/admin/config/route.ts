@@ -11,11 +11,19 @@ const CONFIG_KEY = "zee-index:config";
 interface AppConfig {
   hideAuthor?: boolean;
   disableGuestLogin?: boolean;
+  appName?: string;
+  logoUrl?: string;
+  faviconUrl?: string;
+  primaryColor?: string;
 }
 
 const configSchema = z.object({
   hideAuthor: z.boolean().optional(),
   disableGuestLogin: z.boolean().optional(),
+  appName: z.string().optional(),
+  logoUrl: z.string().optional(),
+  faviconUrl: z.string().optional(),
+  primaryColor: z.string().optional(),
 });
 
 async function isAdmin(session: Session | null): Promise<boolean> {
@@ -26,7 +34,14 @@ export async function GET() {
   try {
     const config: AppConfig | null = await kv.get(CONFIG_KEY);
     return NextResponse.json(
-      config || { hideAuthor: false, disableGuestLogin: false },
+      config || { 
+        hideAuthor: false, 
+        disableGuestLogin: false,
+        appName: "Zee Index",
+        logoUrl: "",
+        faviconUrl: "",
+        primaryColor: "" 
+      },
     );
   } catch (error) {
     console.error("Gagal mengambil konfigurasi:", error);
