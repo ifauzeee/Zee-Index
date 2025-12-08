@@ -1,146 +1,209 @@
 <div align="center">
   <a href="https://github.com/ifauzeee/Zee-Index">
-    <img src="app/(main)/home.png" alt="Zee-Index Logo" width="100%">
+    <img src="https://cdn-icons-png.freepik.com/512/2991/2991248.png" alt="Zee-Index Logo" width="130" height="130">
   </a>
-  <h1 align="center">Zee-Index</h1>
+
+  <h1 align="center">⚡ Zee-Index</h1>
+
   <p align="center">
-    <strong>The Ultimate Self-Hosted Google Drive Explorer</strong>
+    <strong>The Ultimate Self-Hosted Google Drive CMS, Explorer & Streaming Platform.</strong>
   </p>
+
   <p align="center">
-    Transform your Google Drive into a high-performance, secure, and beautiful file-sharing platform.<br>
-    Built with Next.js 14, Vercel KV, and Tailwind CSS.
+    Transform your Google Drive into a professional portfolio website, media gallery, or file repository.<br>
+    Features <strong>Shared Drive</strong> management, instant streaming, no UI limitations, and enterprise-grade security.
   </p>
-  <p align="center">
-    <a href="https://zee-index.vercel.app/">View Live Demo</a>
-    ·
-    <a href="https://github.com/ifauzeee/Zee-Index/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/ifauzeee/Zee-Index/pulls">Request Feature</a>
-  </p>
+
   <div align="center">
-    <img src="https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js" alt="Next.js" />
-    <img src="https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
-    <img src="https://img.shields.io/badge/Vercel-KV-black?style=for-the-badge&logo=vercel" alt="Vercel KV" />
-    <img src="https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=for-the-badge&logo=tailwind-css" alt="Tailwind" />
-    <img src="https://img.shields.io/badge/License-AGPLv3-red?style=for-the-badge" alt="License" />
+    <a href="https://zee-index.vercel.app/">🔴 Live Demo</a>
+    ·
+    <a href="https://github.com/ifauzeee/Zee-Index/issues">🐛 Report Bug</a>
+    ·
+    <a href="https://github.com/ifauzeee/Zee-Index/pulls">✨ Request Feature</a>
+  </div>
+
+  <br />
+
+  <div align="center">
+    <img src="https://img.shields.io/badge/Next.js_14-App_Router-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js" />
+    <img src="https://img.shields.io/badge/Vercel_KV-Redis-red?style=for-the-badge&logo=redis&logoColor=white" alt="Vercel KV" />
+    <img src="https://img.shields.io/badge/TypeScript-Strict_Mode-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/Tailwind_CSS-Glassmorphism-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" />
+    <img src="https://img.shields.io/badge/PWA-Installable-purple?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA" />
   </div>
 </div>
+
 <br />
----
-## ✨ Why Zee-Index?
-Zee-Index allows you to expose your Google Drive files as a fast, static-like website without revealing your personal Google account access. It's perfect for sharing file collections, hosting public archives, or personal cloud storage access.
-
-### 🚀 Key Features
-
-| Category           | Features                                                                                                                  |
-| :----------------- | :------------------------------------------------------------------------------------------------------------------------ |
-| **⚡ Performance** | **Next.js 14 App Router** with aggressive **Redis Caching (Vercel KV)** for instant page loads.                           |
-| **🎨 UI / UX**     | Modern **Glassmorphism** design, **Dark/Light Mode**, Responsive Grid/List views, and **PWA** support.                    |
-| **🔐 Security**    | **2FA (Two-Factor Auth)**, Password-protected folders, Private folders, and **Role-based Access (Admin/User/Guest)**.     |
-| **📂 Management**  | **Full CRUD**: Upload, Rename, Move, Delete, and Copy files directly from the UI.                                         |
-| **👁️ Previews**    | Built-in players for **Video/Audio**, and viewers for **PDF, Office Docs, eBooks, Code, & Markdown**.                     |
-| **🔗 Sharing**     | Create **Time-bound Share Links**, **File Request** links (public upload), and passwordless access tokens.                |
-| **🛠️ Setup**       | **Zero-Code Setup Wizard**: Configure your Google Drive credentials via a beautiful UI, no complex `.env` editing needed. |
 
 ---
 
-## 🛠️ Installation & Deployment
+## 📚 Table of Contents
 
-### Option 1: One-Click Deploy (Recommended)
-
-Deploy directly to Vercel. The **Setup Wizard** will handle the Google Drive connection for you after deployment.
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fifauzeee%2FZee-Index&env=GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,NEXT_PUBLIC_ROOT_FOLDER_ID,NEXT_PUBLIC_ROOT_FOLDER_NAME,NEXTAUTH_SECRET,SHARE_SECRET_KEY,KV_URL,KV_REST_API_URL,KV_REST_API_TOKEN,KV_REST_API_READ_ONLY_TOKEN)
-
-**Post-Deployment Steps:**
-
-1. Open your deployed Vercel URL.
-2. You will be redirected to the **/setup** page.
-3. Enter your Google Client ID & Secret (see [Google Cloud Setup](#google-cloud-setup)).
-4. Click **"Authorize with Google"**.
-5. Done! Your index is live.
-
-### Option 2: Local Development
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/ifauzeee/Zee-Index.git
-   cd Zee-Index
-   ```
-2. **Install dependencies**
-   ```bash
-   pnpm install
-   ```
-3. **Set up Environment Variables**
-   ```bash
-   cp .env.example .env.local
-   ```
-4. **Run the development server**
-   ```bash
-   pnpm dev
-   ```
+- [Key Features (Deep Dive)](#-key-features-deep-dive)
+  - [🗂️ Multi-Drive Management](#️-multi-drive-management-shared-drives)
+  - [🛡️ Security & Protection](#️-security--protection-system)
+  - [🎬 Multimedia & Streaming](#-multimedia--streaming)
+  - [⚡ System & Maintenance](#-system--maintenance-features)
+- [📱 PWA Installation](#-app-installation-pwa)
+- [⌨️ Keyboard Shortcuts](#️-keyboard-shortcuts-power-user)
+- [🚀 Deployment Guide](#-complete-deployment-guide)
+  - [Step 1: Google Cloud Setup](#step-1-google-cloud-api-setup)
+  - [Step 2: Deploy to Vercel](#step-2-deploy-to-vercel)
+  - [Step 3: Setup Wizard](#step-3-setup-wizard-auto-config)
+- [⚙️ Environment Configuration](#️-environment-configuration-env)
+- [⚠️ Security FAQ & Troubleshooting](#️-security-faq--troubleshooting-important)
+- [📜 License](#-license)
 
 ---
 
-## ☁️ Google Cloud Setup
+## 🔥 Key Features (Deep Dive)
 
-To use Zee-Index, you need a Google Cloud Project with Drive API enabled.
+### 🗂️ Multi-Drive Management (Shared Drives)
+Seamlessly consolidate multiple drive sources into one unified, elegant sidebar.
+*   **Mount Unlimited Drives:** Add Team Drives, Shared Drives, or folders belonging to other accounts as shortcuts.
+*   **Folder Aliases:** Rename long or complex drive folder names to something readable (e.g., *backup-2024-xyz* -> "Work Backup").
+*   **UI Management:** No code changes needed. Admins can add/remove drive shortcuts directly from the Dashboard.
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/).
-2. Create a new project.
-3. Enable **Google Drive API**.
-4. Go to **Credentials** → **Create Credentials** → **OAuth Client ID**.
-5. Application type: **Web application**.
-6. **Authorized Redirect URIs**:
-   - Local: `http://localhost:3000/setup`
-   - Vercel: `https://your-project-name.vercel.app/setup`
-7. Copy **Client ID** and **Client Secret**.
+### 🛡️ Security & Protection System
+*   **Folder Locking (Password):** Secure sensitive folders.
+    *   *Smart Storage:* Passwords are hashed (*Bcrypt*) in the database, never stored as plain text.
+    *   *Auto-lock:* Folder access sessions automatically expire after a set time.
+*   **2FA (Google Authenticator):** A second layer of security for Admin logins using TOTP.
+*   **Rate Limiting:** Integrated anti-abuse system (Upstash Ratelimit) to prevent DDOS attacks or excessive downloading.
+*   **Guest Control:** Completely disable guest access if you want the site to be strictly private.
 
----
+### 🎬 Multimedia & Streaming
+*   **Global Audio Dock:** A persistent audio player floating at the bottom. Music **keeps playing** even when navigating between different pages or folders. Supports playlist/queuing.
+*   **Smart Video Player:** Adaptive streaming player featuring:
+    *   **Auto Subtitles:** Detects `.srt` or `.vtt` files with matching filenames.
+    *   **Resume Playback:** Remembers where you left off.
+    *   **Quality Controls** and download options.
+*   **E-Book Reader:** Native `.epub` reader with a book-like experience (page/scroll modes).
+*   **In-Browser Editor:**
+    *   **Code Editor:** Text editor with syntax highlighting for 20+ programming languages.
+    *   **Image Editor:** Crop, rotate, and zoom images, then save (overwrite) directly back to Google Drive.
 
-## ⚙️ Environment Variables
-
-| Variable                     | Description                                                       |
-| :--------------------------- | :---------------------------------------------------------------- |
-| `GOOGLE_CLIENT_ID`           | From Google Cloud Console.                                        |
-| `GOOGLE_CLIENT_SECRET`       | From Google Cloud Console.                                        |
-| `NEXT_PUBLIC_ROOT_FOLDER_ID` | The ID of the folder you want to share/index.                     |
-| `NEXTAUTH_SECRET`            | Random string for session encryption (`openssl rand -base64 32`). |
-| `SHARE_SECRET_KEY`           | Random string for signing share links.                            |
-| `KV_URL`                     | Vercel KV / Upstash Redis URL.                                    |
-| `ADMIN_EMAILS`               | (Optional) Comma-separated admin emails (e.g., `me@gmail.com`).   |
-
-> **Note:** `GOOGLE_REFRESH_TOKEN` is handled automatically by the Setup Wizard and stored in Vercel KV.
-
----
-
-## 🛡️ Admin & Security Guide
-
-### 👑 Becoming an Admin
-
-Add your email to `ADMIN_EMAILS`. Logged-in admins see the **Admin Dashboard** icon.
-
-### 🔐 Protected Folders
-
-Admin Dashboard → Security → Add Folder ID + Password.
-
-### 📡 File Requests (Public Uploads)
-
-Admin Dashboard → Generate public upload link → files go directly to your Drive.
+### ⚡ System & Maintenance Features
+*   **File Requests (Public Upload):** Generate a time-bound upload link. Allows external users to upload files without needing an account.
+*   **Automation (Cron Jobs):**
+    *   *Storage Check:* Sends email alerts to the admin when Drive storage exceeds 90%.
+    *   *Weekly Report:* Admin receives a weekly summary (number of files uploaded, downloaded, bandwidth, etc.).
+*   **Bulk Actions:** Zip Download (on-the-fly), Mass Delete, and Mass Move.
 
 ---
 
-## 🤝 Contributing
+## 📱 App Installation (PWA)
 
-Contributions are welcome! Fork → Branch → Commit → PR.
+Zee-Index is a **Progressive Web App (PWA)**. You can install it as a native-like application on your device.
+
+*   **Desktop (Chrome/Edge):** Click the "Install" icon on the right side of the browser URL bar.
+*   **iOS (iPhone/iPad):** Open in Safari -> Tap *Share* -> Select *"Add to Home Screen"*.
+*   **Android:** Open in Chrome -> Tap the three-dot menu -> Select *"Install App"*.
+
+---
+
+## ⌨️ Keyboard Shortcuts (Power User)
+
+Navigate Zee-Index just like your desktop File Explorer. Press `Shift` + `?` anytime to view this list.
+
+| Key | Function | Description |
+| :--- | :--- | :--- |
+| <kbd>Cmd/Ctrl</kbd> + <kbd>K</kbd> | **Command Palette** | Open global command menu for fast navigation/search. |
+| <kbd>/</kbd> | **Search** | Instantly focus the file search bar. |
+| <kbd>Space</kbd> | **Quick Look** | Open file preview without leaving the current view. |
+| <kbd>Delete</kbd> | **Delete** | Move selected file/folder to trash. |
+| <kbd>F2</kbd> | **Rename** | Rename the currently selected file. |
+| <kbd>Esc</kbd> | **Escape** | Close modals, clear selection, or exit preview. |
+| <kbd>Shift</kbd> + <kbd>Click</kbd> | **Multi Select** | Select multiple files in a range. |
+
+---
+
+## 🚀 Complete Deployment Guide
+
+### Step 1: Google Cloud API Setup
+This is required to allow Zee-Index to communicate with your Google Drive.
+
+1.  Open [Google Cloud Console](https://console.cloud.google.com/). Create a **New Project**.
+2.  Go to **APIs & Services > Library**. Search for **Google Drive API** and click **Enable**.
+3.  Go to **Credentials > Create Credentials > OAuth Client ID**.
+    *   **Application Type:** Web Application.
+    *   **Name:** `Zee-Index Production`.
+    *   **Authorized Redirect URIs:** 
+        *   (Local) `http://localhost:3000/setup`
+        *   (Prod) `https://YOUR-VERCEL-DOMAIN.vercel.app/setup` (Add this later after Vercel deployment).
+4.  Copy the **Client ID** and **Client Secret**.
+
+### Step 2: Deploy to Vercel
+Deploy automatically without touching a single line of code.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fifauzeee%2FZee-Index&env=GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,NEXT_PUBLIC_ROOT_FOLDER_ID,NEXTAUTH_SECRET,SHARE_SECRET_KEY,ADMIN_EMAILS,KV_REST_API_URL,KV_REST_API_TOKEN,SMTP_HOST,SMTP_USER,SMTP_PASS,EMAIL_FROM)
+
+**Crucial Step:** When setting up the project in Vercel, ensure you click **"Create"** under the **Storage (Database)** section to set up **KV (Redis)**.
+
+### Step 3: Setup Wizard (Auto-Config)
+1.  After deployment succeeds, open your website URL.
+2.  The page will automatically redirect to `/setup`.
+3.  Enter your **Client ID** and **Client Secret** again to verify.
+4.  Click **Authorize**. Sign in with your main Google Drive account.
+5.  Grant permissions. **Done!** The refresh token is now securely stored in the database.
+
+---
+
+## ⚙️ Environment Configuration (.env)
+
+Besides the basics, here are the configurations for advanced features (Notifications):
+
+| Variable | Description | Example |
+| :--- | :--- | :--- |
+| `GOOGLE_CLIENT_ID` | Required. Google Auth. | `...apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET` | Required. Google Auth. | `GOCSPX-...` |
+| `NEXT_PUBLIC_ROOT_FOLDER_ID` | Required. Main Root Folder ID. | `1xZ...` |
+| `NEXTAUTH_SECRET` | Required. Session encryption. | Random String. |
+| `SHARE_SECRET_KEY` | Required. Signed URL key. | Random String. |
+| `KV_...` | Required. Redis DB. | (Auto-filled by Vercel) |
+| `ADMIN_EMAILS` | Admin email list (comma-separated). | `me@gmail.com,admin@site.com` |
+| **Email SMTP** | **(Optional) For Weekly Reports** | |
+| `SMTP_HOST` | SMTP Host. | `smtp.gmail.com` |
+| `SMTP_PORT` | SMTP Port. | `465` (SSL) or `587` (TLS) |
+| `SMTP_USER` | Sender Email. | `bot@zeedrive.com` |
+| `SMTP_PASS` | Password/App Password. | `xxxx xxxx xxxx xxxx` |
+| `CRON_SECRET` | Vercel Cron Job Token. | Random String. |
+
+---
+
+## ⚠️ Security FAQ & Troubleshooting (Important!)
+
+**Q: When I access a Protected Folder URL, the Folder ID is visible in the browser Address Bar. Is this safe?**
+
+*   Example: `https://zee-index.app/folder/1xZ3KKvKMPg5...`
+*   **Concern:** Can't someone copy `1xZ3KKvKMPg5...` and try to open it directly via `drive.google.com`?
+
+**Answer:**
+This is by design and safe, provided you follow the setup below:
+
+1.  **Dual Layer Protection:** Zee-Index is purely a *frontend/interface* layer. Security relies on the **Google Drive Permission Settings**.
+    *   **MANDATORY:** Ensure the folders you protect in Zee-Index have their permission set to **"Restricted"** in Google Drive (not "Anyone with the link").
+    *   If Restricted: Even if someone knows the ID, they **cannot open it** directly in Google Drive ("Access Denied").
+    *   Zee-Index can open it because the server uses your authenticated Admin credentials to fetch the data.
+
+2.  **Why isn't the URL masked/hidden? (Technical Reason):**
+    We previously attempted to mask folder IDs (e.g., rewriting the URL to `/protected-folder`). This feature was removed (refer to commit `a04023c`) due to a critical issue:
+    *   When a user is on the Password Entry page and hits **Refresh (F5)**, the Next.js server would return a **404 Not Found** error because the "masked" route does not physically exist on the server.
+    *   To ensure application stability and reliable routing, we retain the original dynamic routing structure.
+
+**Q: I forgot the Folder Password?**
+*   Log in as Admin -> Go to **Dashboard** -> **Security Tab**. There, you can reset or remove the password for any protected folder.
 
 ---
 
 ## 📜 License
 
-Distributed under the **AGPL-3.0** License. See `LICENSE`.
+This project is licensed under the **AGPL-3.0 License**.
 
----
+Copyright © 2024 **Zee-Index**. Built with the spirit of Open Source.
+
+<br />
 
 <div align="center">
-<p>Made with ❤️ by <a href="https://github.com/ifauzeee">Muhammad Ibnu Fauzi</a></p>
+  <p>Crafted with ❤️, ☕, and Next.js Magic by <a href="https://github.com/ifauzeee">Muhammad Ibnu Fauzi</a></p>
 </div>
