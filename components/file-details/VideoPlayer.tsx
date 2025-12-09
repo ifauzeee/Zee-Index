@@ -48,6 +48,7 @@ export default function VideoPlayer({
   const [formatError, setFormatError] = useState(false);
   const [lastTime, setLastTime] = useState(0);
   const [currentSrc, setCurrentSrc] = useState(src);
+  const [retryCount, setRetryCount] = useState(0);
 
   const displayMimeType =
     mimeType.includes("matroska") || title.toLowerCase().endsWith(".mkv")
@@ -59,19 +60,8 @@ export default function VideoPlayer({
     setNetworkError(false);
     setFormatError(false);
     setLastTime(0);
+    setRetryCount(0);
   }, [src]);
-
-  const handleError = (detail: MediaErrorDetail) => {
-    if (playerRef.current && playerRef.current.currentTime > 0) {
-      setLastTime(playerRef.current.currentTime);
-    }
-
-    if (detail.code === 4) {
-      setFormatError(true);
-    } else if (detail.code === 2 || detail.code === 3) {
-      setNetworkError(true);
-    }
-  };
 
   const handleRetry = () => {
     setNetworkError(false);
@@ -81,9 +71,31 @@ export default function VideoPlayer({
     setCurrentSrc(retrySrc);
   };
 
+  const handleError = (detail: MediaErrorDetail) => {
+    if (playerRef.current && playerRef.current.currentTime > 0) {
+      setLastTime(playerRef.current.currentTime);
+    }
+
+    if (detail.code === 4) {
+      setFormatError(true);
+    } else if (detail.code === 2 || detail.code === 3) {
+      if (retryCount < 3) {
+        setRetryCount((prev) => prev + 1);
+        console.log(`Auto-retrying video... Attempt ${retryCount + 1}/3`);
+        setTimeout(() => {
+          handleRetry();
+        }, 1000);
+      } else {
+        setNetworkError(true);
+      }
+    }
+  };
+
   const handleCanPlay = () => {
     setNetworkError(false);
     setFormatError(false);
+    setRetryCount(0);
+
     if (lastTime > 0 && playerRef.current) {
       const player = playerRef.current;
       if (Math.abs(player.currentTime - lastTime) > 1) {
@@ -101,7 +113,15 @@ export default function VideoPlayer({
         src={{ src: currentSrc, type: displayMimeType as any }}
         poster={poster?.replace("=s220", "=s1280")}
         aspectRatio={type === "video" ? "16/9" : undefined}
-        onEnded={onEnded}
+        onEnded={() => {
+          if (playerRef.current) {
+            const { currentTime, duration } = playerRef.current;
+            if (duration > 0 && Math.abs(duration - currentTime) > 1) {
+              return;
+            }
+          }
+          onEnded?.();
+        }}
         onError={handleError}
         onCanPlay={handleCanPlay}
         className="w-full h-full ring-media-focus"
