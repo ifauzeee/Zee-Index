@@ -86,14 +86,14 @@ export default function FileBrowserHeader({
         "flex gap-4 py-4 transition-all duration-300",
         showAdminActions
           ? "flex-col"
-          : "flex-col md:flex-row md:items-center md:justify-between",
+          : "flex-row items-center justify-between",
       )}
     >
       <nav
         ref={navRef}
         className={cn(
           "flex items-center gap-1 overflow-x-auto whitespace-nowrap no-scrollbar px-1 py-1 mask-gradient-right",
-          showAdminActions ? "w-full" : "w-full md:flex-1",
+          showAdminActions ? "w-full" : "flex-1 min-w-0 pr-4",
         )}
       >
         {history.map((folder, index) => {
@@ -121,7 +121,7 @@ export default function FileBrowserHeader({
                       ? "bg-card text-muted-foreground border-border hover:bg-accent hover:text-foreground"
                       : "bg-transparent text-muted-foreground border-transparent cursor-default opacity-70",
                   dragOverBreadcrumb === folder.id &&
-                    "ring-2 ring-primary ring-offset-2",
+                  "ring-2 ring-primary ring-offset-2",
                 )}
               >
                 {isRoot && <Home size={14} />}

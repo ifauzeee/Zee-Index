@@ -306,11 +306,10 @@ export default function Header() {
   return (
     <>
       <header
-        className={`top-0 z-30 w-full transition-colors duration-200 ${
-          isScrolled
+        className={`top-0 z-30 w-full transition-colors duration-200 ${isScrolled
             ? "border-b border-border bg-background shadow-sm"
             : "border-b border-transparent bg-background"
-        }`}
+          }`}
       >
         <div className="container max-w-full px-4 h-16 relative flex items-center justify-center">
           <div className="absolute left-4 flex items-center gap-3 shrink-0 z-20">
@@ -324,9 +323,8 @@ export default function Header() {
             )}
             <h1
               onClick={handleLogoClick}
-              className={`text-xl font-bold flex items-center shrink-0 ${
-                !shareToken ? "cursor-pointer" : "cursor-default"
-              }`}
+              className={`text-xl font-bold flex items-center shrink-0 ${!shareToken ? "cursor-pointer" : "cursor-default"
+                }`}
               title={!shareToken ? "Kembali ke Beranda" : appName}
             >
               {logoUrl ? (
@@ -342,7 +340,7 @@ export default function Header() {
                   className="w-8 h-8 mr-3 dark:invert"
                 />
               )}
-              <span className="hidden sm:inline">{appName || "Zee Index"}</span>
+              <span className="font-bold">{appName || "Zee Index"}</span>
             </h1>
           </div>
 
@@ -377,16 +375,16 @@ export default function Header() {
                         </a>
                       ) : (
                         "onClick" in item &&
-                          typeof item.onClick === "function" && (
-                            <button
-                              key={item.id}
-                              onClick={item.onClick}
-                              title={item.label}
-                              className="p-2 rounded-lg hover:bg-accent"
-                            >
-                              <Icon size={20} />
-                            </button>
-                          )
+                        typeof item.onClick === "function" && (
+                          <button
+                            key={item.id}
+                            onClick={item.onClick}
+                            title={item.label}
+                            className="p-2 rounded-lg hover:bg-accent"
+                          >
+                            <Icon size={20} />
+                          </button>
+                        )
                       );
                     })}
                   {authButton}
@@ -418,16 +416,16 @@ export default function Header() {
                       </a>
                     ) : (
                       "onClick" in item &&
-                        typeof item.onClick === "function" && (
-                          <button
-                            key={item.id}
-                            onClick={item.onClick}
-                            title={item.label}
-                            className="p-2 rounded-lg hover:bg-accent"
-                          >
-                            <Icon size={20} />
-                          </button>
-                        )
+                      typeof item.onClick === "function" && (
+                        <button
+                          key={item.id}
+                          onClick={item.onClick}
+                          title={item.label}
+                          className="p-2 rounded-lg hover:bg-accent"
+                        >
+                          <Icon size={20} />
+                        </button>
+                      )
                     );
                   })}
                   {authButton}

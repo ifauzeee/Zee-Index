@@ -155,7 +155,7 @@ export default function Search({ onSearchClose }: SearchProps) {
 
         <input
           ref={inputRef}
-          type="search"
+          type="text"
           placeholder={placeholderText}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}

@@ -104,7 +104,13 @@ export default function Sidebar() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    const checkMobile = () => {
+      const isMobileDevice = window.innerWidth < 1024;
+      setIsMobile(isMobileDevice);
+      if (isMobileDevice) {
+        setSidebarOpen(false);
+      }
+    };
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
