@@ -13,6 +13,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig = {
+  output: "standalone",
   eslint: {
     ignoreDuringBuilds: true,
   },

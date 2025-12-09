@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  zee-index:
+    container_name: zee-index
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
