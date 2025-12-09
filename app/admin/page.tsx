@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo, FC } from "react";
 import { useAppStore, ShareLink, FileRequestLink } from "@/lib/store";
+import { useConfirm } from "@/components/providers/ModalProvider";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -46,51 +47,7 @@ const scrollbarHideStyles = {
   scrollbarWidth: "none" as const,
 };
 
-const DeleteConfirmationModal: FC<{
-  onConfirm: () => void;
-  onCancel: () => void;
-}> = ({ onConfirm, onCancel }) => (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-    onClick={onCancel}
-  >
-    <motion.div
-      initial={{ scale: 0.95, opacity: 0, y: 20 }}
-      animate={{ scale: 1, opacity: 1, y: 0 }}
-      exit={{ scale: 0.95, opacity: 0, y: 20 }}
-      className="bg-card border rounded-xl shadow-2xl p-6 w-full max-w-sm"
-      onClick={(e: React.MouseEvent) => e.stopPropagation()}
-    >
-      <div className="text-center">
-        <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-          <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-500" />
-        </div>
-        <h3 className="text-lg font-bold text-foreground">Hapus Tautan?</h3>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Tindakan ini akan membatalkan tautan secara permanen. Pengguna tidak
-          akan bisa mengaksesnya lagi.
-        </p>
-      </div>
-      <div className="mt-6 grid grid-cols-2 gap-3">
-        <button
-          onClick={onCancel}
-          className="px-4 py-2.5 text-sm font-medium rounded-lg border bg-background hover:bg-accent transition-colors"
-        >
-          Batal
-        </button>
-        <button
-          onClick={onConfirm}
-          className="px-4 py-2.5 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors shadow-sm"
-        >
-          Ya, Hapus
-        </button>
-      </div>
-    </motion.div>
-  </motion.div>
-);
+
 
 export default function AdminPage() {
   const {
@@ -109,13 +66,12 @@ export default function AdminPage() {
     addAdminEmail,
     removeAdminEmail,
   } = useAppStore();
+  const { confirm } = useConfirm();
   const { status, data: session } = useSession();
   const router = useRouter();
-  const [linkToDelete, setLinkToDelete] = useState<{
-    type: "share" | "request";
-    item: ShareLink | FileRequestLink;
-  } | null>(null);
+  // linkToDelete state removed
   const [newAdminEmail, setNewAdminEmail] = useState("");
+
   const [isSubmittingAdmin, setIsSubmittingAdmin] = useState(false);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
@@ -173,21 +129,25 @@ export default function AdminPage() {
     addToast({ message: "Tautan disalin ke clipboard!", type: "success" });
   };
 
-  const handleDeleteClick = (
+  const handleDelete = async (
     item: ShareLink | FileRequestLink,
     type: "share" | "request",
   ) => {
-    setLinkToDelete({ type, item });
-  };
-
-  const confirmDelete = async () => {
-    if (linkToDelete) {
-      if (linkToDelete.type === "share") {
-        await removeShareLink(linkToDelete.item as ShareLink);
+    if (
+      await confirm(
+        "Tindakan ini akan membatalkan tautan secara permanen. Pengguna tidak akan bisa mengaksesnya lagi.",
+        {
+          title: "Hapus Tautan?",
+          variant: "destructive",
+          confirmText: "Ya, Hapus",
+        },
+      )
+    ) {
+      if (type === "share") {
+        await removeShareLink(item as ShareLink);
       } else {
-        await removeFileRequest((linkToDelete.item as FileRequestLink).token);
+        await removeFileRequest((item as FileRequestLink).token);
       }
-      setLinkToDelete(null);
     }
   };
 
@@ -202,7 +162,10 @@ export default function AdminPage() {
 
   const handleRemoveAdmin = async (email: string) => {
     if (
-      window.confirm(`Anda yakin ingin menghapus ${email} dari daftar admin?`)
+      await confirm(`Anda yakin ingin menghapus ${email} dari daftar admin?`, {
+        title: "Hapus Admin",
+        variant: "destructive",
+      })
     ) {
       await removeAdminEmail(email);
     }
@@ -517,7 +480,7 @@ export default function AdminPage() {
 
                                   <button
                                     onClick={() =>
-                                      handleDeleteClick(req, "request")
+                                      handleDelete(req, "request")
                                     }
                                     className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium"
                                   >
@@ -606,7 +569,7 @@ export default function AdminPage() {
                                   </p>
                                   <button
                                     onClick={() =>
-                                      handleDeleteClick(link, "share")
+                                      handleDelete(link, "share")
                                     }
                                     className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg transition-colors text-xs font-medium flex items-center gap-1.5"
                                   >
@@ -707,14 +670,6 @@ export default function AdminPage() {
         </Tabs>
       </motion.div>
 
-      <AnimatePresence>
-        {linkToDelete && (
-          <DeleteConfirmationModal
-            onCancel={() => setLinkToDelete(null)}
-            onConfirm={confirmDelete}
-          />
-        )}
-      </AnimatePresence>
     </>
   );
 }

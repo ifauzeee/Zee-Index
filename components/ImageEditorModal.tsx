@@ -5,6 +5,7 @@ import Cropper from "react-easy-crop";
 import { X, RotateCw, Loader2, Save } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import type { DriveFile } from "@/lib/googleDrive";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface ImageEditorModalProps {
   file: DriveFile;
@@ -85,6 +86,8 @@ export default function ImageEditorModal({
     null,
   );
   const [isSaving, setIsSaving] = useState(false);
+
+  useScrollLock(true);
 
   const onCropComplete = useCallback(
     (_: unknown, croppedAreaPixels: CropArea) => {

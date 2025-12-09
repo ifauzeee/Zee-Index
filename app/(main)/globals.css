@@ -89,7 +89,8 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  body.mobile-menu-open {
+  body.mobile-menu-open,
+  body.scroll-locked {
     overflow: hidden !important;
   }
 

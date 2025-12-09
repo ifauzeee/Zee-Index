@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAlert } from "@/components/providers/ModalProvider";
 
 export default function SetupPage() {
   const router = useRouter();
+  const { alert } = useAlert();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -30,9 +32,11 @@ export default function SetupPage() {
     }
   }, [step]);
 
-  const handleAuthorize = () => {
+  const handleAuthorize = async () => {
     if (!formData.clientId || !formData.clientSecret) {
-      alert("Mohon isi Client ID dan Client Secret");
+      await alert("Mohon isi Client ID dan Client Secret", {
+        title: "Input Tidak Lengkap",
+      });
       return;
     }
 
@@ -63,18 +67,27 @@ export default function SetupPage() {
       if (res.ok) {
         localStorage.removeItem("zee_setup_temp");
         if (data.restartNeeded) {
-          alert(
+          await alert(
             "Setup Berhasil! Token telah disimpan ke .env.\n\nServer akan dimatikan otomatis atau silakan restart manual.",
+            { title: "Setup Selesai" },
           );
         } else {
-          alert("Setup Berhasil! Mengalihkan ke beranda...");
+          await alert("Setup Berhasil! Mengalihkan ke beranda...", {
+            title: "Sukses",
+          });
           router.push("/");
         }
       } else {
-        alert(`Gagal: ${data.error}`);
+        await alert(`Gagal: ${data.error}`, {
+          title: "Setup Gagal",
+          variant: "destructive",
+        });
       }
     } catch {
-      alert("Terjadi kesalahan koneksi.");
+      await alert("Terjadi kesalahan koneksi.", {
+        title: "Error",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

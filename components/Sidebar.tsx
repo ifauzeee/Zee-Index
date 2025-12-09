@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface FolderNode {
   id: string;
@@ -100,27 +101,16 @@ export default function Sidebar() {
     return allManualDrives.some((d) => d.id === currentFolderId);
   }, [allManualDrives, currentFolderId]);
 
-  useEffect(() => {
-    if (!mounted) return;
+  const [isMobile, setIsMobile] = useState(false);
 
-    if (shareToken) {
-      document.body.classList.remove("mobile-menu-open");
-      return;
-    }
-    const handleBodyScroll = () => {
-      if (window.innerWidth < 1024 && isSidebarOpen) {
-        document.body.classList.add("mobile-menu-open");
-      } else {
-        document.body.classList.remove("mobile-menu-open");
-      }
-    };
-    handleBodyScroll();
-    window.addEventListener("resize", handleBodyScroll);
-    return () => {
-      window.removeEventListener("resize", handleBodyScroll);
-      document.body.classList.remove("mobile-menu-open");
-    };
-  }, [isSidebarOpen, shareToken, mounted]);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useScrollLock(isSidebarOpen && isMobile && !shareToken);
 
   const fetchSubfolders = async (parentId: string) => {
     const url = `/api/files?folderId=${parentId}`;
@@ -305,7 +295,7 @@ export default function Sidebar() {
                   className={cn(
                     "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors group",
                     currentFolderId === drive.id &&
-                      "bg-accent font-medium text-primary",
+                    "bg-accent font-medium text-primary",
                   )}
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
@@ -362,7 +352,7 @@ export default function Sidebar() {
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
               currentFolderId === rootFolderId &&
-                "bg-accent font-medium text-primary",
+              "bg-accent font-medium text-primary",
             )}
           >
             <Home size={16} /> Beranda

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { X, History, Download, Clock, User, Loader2 } from "lucide-react";
 import { formatBytes } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface DriveRevision {
   id: string;
@@ -28,6 +29,8 @@ export default function FileRevisionsModal({
   const [revisions, setRevisions] = useState<DriveRevision[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { addToast } = useAppStore();
+
+  useScrollLock(true);
 
   useEffect(() => {
     const fetchRevisions = async () => {

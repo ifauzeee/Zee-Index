@@ -4,6 +4,7 @@ import { SessionProvider } from "next-auth/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { ModalProvider } from "@/components/providers/ModalProvider";
 
 type Props = {
   children?: React.ReactNode;
@@ -31,7 +32,7 @@ export function Providers({ children }: Props) {
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <ModalProvider>{children}</ModalProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </SessionProvider>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { KeyRound, X, User } from "lucide-react";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface AuthModalProps {
   folderName: string;
@@ -32,6 +33,8 @@ export default function AuthModal({
 }: AuthModalProps) {
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
+
+  useScrollLock(true);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

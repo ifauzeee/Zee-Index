@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Keyboard, Command, Search, Delete, Edit2 } from "lucide-react";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 export default function KeyboardShortcutsModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,6 +25,8 @@ export default function KeyboardShortcutsModal() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  useScrollLock(isOpen);
 
   if (!isOpen) return null;
 

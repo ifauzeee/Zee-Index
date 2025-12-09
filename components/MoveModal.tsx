@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import type { DriveFile } from "@/lib/googleDrive";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface MoveModalProps {
   fileToMove: DriveFile;
@@ -36,6 +37,8 @@ export default function MoveModal({
   const [isLoading, setIsLoading] = useState(true);
   const [isMoving, setIsMoving] = useState(false);
   const { addToast } = useAppStore();
+
+  useScrollLock(true);
 
   const fetchFolders = useCallback(
     async (folderId: string) => {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useAppStore } from "@/lib/store";
+import { useConfirm } from "@/components/providers/ModalProvider";
 import { motion } from "framer-motion";
 import { Trash2, Loader2, FileX, ArrowDownUp } from "lucide-react";
 import { formatBytes } from "@/lib/utils";
@@ -22,6 +23,7 @@ type SortOrder = "asc" | "desc";
 
 export default function TrashPage() {
   const { user, addToast, fetchUser } = useAppStore();
+  const { confirm } = useConfirm();
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -120,9 +122,10 @@ export default function TrashPage() {
     const isDelete = action === "delete";
     if (
       isDelete &&
-      !confirm(
+      !(await confirm(
         `Hapus ${selectedFiles.length} item secara permanen? Aksi ini tidak dapat dibatalkan.`,
-      )
+        { title: "Hapus Permanen?", variant: "destructive" },
+      ))
     )
       return;
 

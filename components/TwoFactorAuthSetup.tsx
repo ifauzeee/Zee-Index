@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, ShieldCheck, ShieldOff } from "lucide-react";
 import Image from "next/image";
 import { useAppStore } from "@/lib/store";
+import { useConfirm } from "@/components/providers/ModalProvider";
 
 export default function TwoFactorAuthSetup() {
   const [isEnabled, setIsEnabled] = useState<boolean | null>(null);
@@ -15,6 +16,7 @@ export default function TwoFactorAuthSetup() {
   const [error, setError] = useState("");
   const { addToast } = useAppStore();
   const { data: session } = useSession();
+  const { confirm } = useConfirm();
 
   const checkStatus = useCallback(async () => {
     setIsLoading(true);
@@ -81,9 +83,10 @@ export default function TwoFactorAuthSetup() {
 
   const handleDisable = async () => {
     if (
-      !window.confirm(
+      !(await confirm(
         "Apakah Anda yakin ingin menonaktifkan Autentikasi Dua Faktor?",
-      )
+        { variant: "destructive", title: "Nonaktifkan 2FA" },
+      ))
     )
       return;
     setIsLoading(true);

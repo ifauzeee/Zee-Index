@@ -38,6 +38,7 @@ import {
 import { renderToString } from "react-dom/server";
 import Image from "next/image";
 import { useAppStore } from "@/lib/store";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface DetailsPanelProps {
   file: DriveFile;
@@ -195,17 +196,17 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
   const editorLink = getGoogleEditorLink(file.id, file.mimeType);
   const driveViewerLink = getGoogleDriveLink(file.id);
 
+  useScrollLock(true);
+
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
     window.addEventListener("resize", checkMobile);
-    document.body.style.overflow = "hidden";
 
     fetchTags(file.id);
 
     return () => {
       window.removeEventListener("resize", checkMobile);
-      document.body.style.overflow = "";
     };
   }, [file.id, fetchTags]);
 
@@ -266,14 +267,14 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
         initial="hidden"
         animate="visible"
         exit="exit"
-        drag={isMobile ? "y" : "x"}
-        dragConstraints={isMobile ? { top: 0 } : { left: 0 }}
+        drag={isMobile ? "y" : false}
+        dragConstraints={isMobile ? { top: 0 } : undefined}
         dragElastic={0.1}
         onDragEnd={onDragEnd}
         className={cn(
-          "fixed z-[61] lg:z-50 bg-background/85 backdrop-blur-xl border-border shadow-2xl flex flex-col",
+          "fixed z-[61] lg:z-50 bg-background/95 backdrop-blur-xl border-border shadow-2xl flex flex-col",
           "bottom-0 left-0 right-0 w-full h-[90vh] rounded-t-[2rem] border-t",
-          "lg:top-0 lg:right-0 lg:bottom-0 lg:left-auto lg:w-[450px] lg:h-full lg:rounded-none lg:border-l lg:border-t-0",
+          "lg:inset-0 lg:w-full lg:h-full lg:rounded-none lg:border-0",
         )}
         onClick={(e) => e.stopPropagation()}
       >
@@ -305,213 +306,270 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
           </motion.button>
         </div>
 
-        <motion.div
-          variants={contentVariants}
-          initial="hidden"
-          animate="visible"
-          className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar pb-24 lg:pb-8"
-        >
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+          {/* Left Column - Preview (Desktop Only) */}
           <motion.div
-            variants={itemVariants}
-            className="flex flex-col items-center gap-6 pt-2"
+            variants={contentVariants}
+            initial="hidden"
+            animate="visible"
+            className="hidden lg:flex lg:flex-col lg:items-center lg:justify-center lg:w-1/2 lg:p-12 lg:border-r lg:border-border/40"
           >
-            <div className="relative group">
-              <div className="absolute -inset-6 bg-primary/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            <motion.div
+              variants={itemVariants}
+              className="flex flex-col items-center gap-6"
+            >
+              <div className="relative group">
 
-              <motion.div
-                whileHover={{ scale: 1.02, rotate: 1 }}
-                transition={{ type: "spring", stiffness: 300 }}
-                className="relative w-40 h-40 sm:w-48 sm:h-48 rounded-[2rem] shadow-2xl bg-card border border-border/50 flex items-center justify-center overflow-hidden z-10"
-              >
-                {file.thumbnailLink && !file.isFolder ? (
-                  <Image
-                    src={file.thumbnailLink.replace("=s220", "=s800")}
-                    alt={file.name}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
-                    unoptimized
-                  />
-                ) : (
-                  <div dangerouslySetInnerHTML={{ __html: iconString }} />
-                )}
-              </motion.div>
-            </div>
+                <motion.div
+                  whileHover={{ scale: 1.02, rotate: 1 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                  className="relative w-64 h-64 xl:w-80 xl:h-80 rounded-[2.5rem] shadow-2xl bg-card border border-border/50 flex items-center justify-center overflow-hidden z-10"
+                >
+                  {file.thumbnailLink && !file.isFolder ? (
+                    <Image
+                      src={file.thumbnailLink.replace("=s220", "=s800")}
+                      alt={file.name}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                      unoptimized
+                    />
+                  ) : (
+                    <div dangerouslySetInnerHTML={{ __html: iconString }} />
+                  )}
+                </motion.div>
+              </div>
 
-            <div className="text-center w-full px-2 space-y-2">
-              <motion.h3
-                layout
-                className="font-bold text-xl leading-snug break-words select-all"
-                title={file.name}
-              >
-                {file.name}
-              </motion.h3>
-              <span className="text-xs font-medium text-muted-foreground font-mono bg-muted/50 px-3 py-1 rounded-full inline-block border border-border/50">
-                {file.mimeType}
-              </span>
-            </div>
+              <div className="text-center w-full px-4 space-y-3">
+                <motion.h3
+                  layout
+                  className="font-bold text-2xl leading-snug break-words select-all"
+                  title={file.name}
+                >
+                  {file.name}
+                </motion.h3>
+                <span className="text-sm font-medium text-muted-foreground font-mono bg-muted/50 px-4 py-2 rounded-full inline-block border border-border/50">
+                  {file.mimeType}
+                </span>
+              </div>
+            </motion.div>
           </motion.div>
 
+          {/* Right Column - Details */}
           <motion.div
-            variants={itemVariants}
-            className="grid grid-cols-2 gap-3"
+            variants={contentVariants}
+            initial="hidden"
+            animate="visible"
+            className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar pb-24 lg:pb-8 lg:w-1/2"
           >
-            <motion.a
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              href={editorLink || driveViewerLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-primary/5 text-primary font-semibold text-sm hover:bg-primary/10 transition-colors border border-primary/10"
+            <motion.div
+              variants={itemVariants}
+              className="flex flex-col items-center gap-6 pt-2 lg:hidden"
             >
-              <ExternalLink size={20} />
-              {editorLink ? "Edit File" : "Buka Drive"}
-            </motion.a>
-            <motion.a
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              href={`/api/download?fileId=${file.id}`}
-              download
-              className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-secondary text-secondary-foreground font-semibold text-sm hover:bg-secondary/80 transition-colors border border-border/50"
+              <div className="relative group">
+
+                <motion.div
+                  whileHover={{ scale: 1.02, rotate: 1 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                  className="relative w-40 h-40 sm:w-48 sm:h-48 rounded-[2rem] shadow-2xl bg-card border border-border/50 flex items-center justify-center overflow-hidden z-10"
+                >
+                  {file.thumbnailLink && !file.isFolder ? (
+                    <Image
+                      src={file.thumbnailLink.replace("=s220", "=s800")}
+                      alt={file.name}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                      unoptimized
+                    />
+                  ) : (
+                    <div dangerouslySetInnerHTML={{ __html: iconString }} />
+                  )}
+                </motion.div>
+              </div>
+
+              <div className="text-center w-full px-2 space-y-2">
+                <motion.h3
+                  layout
+                  className="font-bold text-xl leading-snug break-words select-all"
+                  title={file.name}
+                >
+                  {file.name}
+                </motion.h3>
+                <span className="text-xs font-medium text-muted-foreground font-mono bg-muted/50 px-3 py-1 rounded-full inline-block border border-border/50">
+                  {file.mimeType}
+                </span>
+              </div>
+            </motion.div>
+
+            <motion.div
+              variants={itemVariants}
+              className="grid grid-cols-2 gap-3"
             >
-              <Download size={20} />
-              Unduh
-            </motion.a>
-          </motion.div>
+              <motion.a
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                href={editorLink || driveViewerLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-primary/5 text-primary font-semibold text-sm hover:bg-primary/10 transition-colors border border-primary/10"
+              >
+                <ExternalLink size={20} />
+                {editorLink ? "Edit File" : "Buka Drive"}
+              </motion.a>
+              <motion.a
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                href={`/api/download?fileId=${file.id}`}
+                download
+                className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-secondary text-secondary-foreground font-semibold text-sm hover:bg-secondary/80 transition-colors border border-border/50"
+              >
+                <Download size={20} />
+                Unduh
+              </motion.a>
+            </motion.div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <QuickStat
-              icon={HardDrive}
-              label="Ukuran"
-              value={file.size ? formatBytes(Number(file.size)) : "-"}
-            />
-            {metadata?.width && (
+            <div className="grid grid-cols-3 gap-3">
               <QuickStat
-                icon={Maximize2}
-                label="Dimensi"
-                value={`${metadata.width} x ${metadata.height}`}
+                icon={HardDrive}
+                label="Ukuran"
+                value={file.size ? formatBytes(Number(file.size)) : "-"}
               />
-            )}
-            {durationMillis && (
               <QuickStat
-                icon={Clock}
-                label="Durasi"
-                value={formatDuration(durationMillis / 1000)}
-              />
-            )}
-            <QuickStat
-              icon={FileType}
-              label="Ekstensi"
-              value={file.name.split(".").pop()?.toUpperCase() || "FILE"}
-            />
-          </div>
-
-          <motion.div
-            variants={itemVariants}
-            className="space-y-4 bg-card/30 rounded-2xl p-2 border border-border/30"
-          >
-            <div className="flex items-center gap-2 px-2 pb-2 border-b border-border/30">
-              <History size={16} className="text-primary" />
-              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Properti File
-              </h4>
-            </div>
-            <div className="px-1 flex flex-col">
-              <DetailRow
                 icon={Calendar}
                 label="Diubah"
-                value={new Date(file.modifiedTime).toLocaleString("id-ID", {
-                  dateStyle: "medium",
-                  timeStyle: "short",
+                value={new Date(file.modifiedTime).toLocaleDateString("id-ID", {
+                  day: "numeric",
+                  month: "short",
                 })}
               />
-              <DetailRow
-                icon={Calendar}
-                label="Dibuat"
-                value={new Date(file.createdTime).toLocaleString("id-ID", {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                })}
+              <QuickStat
+                icon={FileType}
+                label="Ekstensi"
+                value={file.name.split(".").pop()?.toUpperCase() || "FILE"}
               />
-              {canShowAuthor && file.owners?.[0] && (
-                <DetailRow
-                  icon={User}
-                  label="Pemilik"
-                  value={file.owners[0].displayName}
+              {metadata?.width && (
+                <QuickStat
+                  icon={Maximize2}
+                  label="Dimensi"
+                  value={`${metadata.width} x ${metadata.height}`}
                 />
               )}
-              {canShowAuthor && file.lastModifyingUser && (
-                <DetailRow
-                  icon={Edit3}
-                  label="Editor"
-                  value={file.lastModifyingUser.displayName}
+              {durationMillis && (
+                <QuickStat
+                  icon={Clock}
+                  label="Durasi"
+                  value={formatDuration(durationMillis / 1000)}
                 />
-              )}
-              {file.md5Checksum && (
-                <div className="pt-4 px-2">
-                  <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-                    <Hash size={14} />
-                    <span className="text-xs font-bold uppercase">
-                      MD5 Checksum
-                    </span>
-                  </div>
-                  <div className="p-3 bg-muted/50 rounded-xl border border-border/50 font-mono text-[10px] break-all select-all text-muted-foreground hover:text-foreground transition-colors cursor-text hover:bg-muted">
-                    {file.md5Checksum}
-                  </div>
-                </div>
               )}
             </div>
-          </motion.div>
 
-          <motion.div variants={itemVariants} className="space-y-3">
-            <div className="flex items-center justify-between px-1">
-              <h4 className="text-xs font-bold flex items-center gap-2 text-muted-foreground uppercase tracking-wider">
-                <TagIcon size={14} /> Label
-              </h4>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <AnimatePresence>
-                {fileTags[file.id]?.map((tag) => (
-                  <motion.span
-                    key={tag}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20 hover:bg-primary/20 transition-colors"
+            <motion.div
+              variants={itemVariants}
+              className="space-y-4 bg-card/30 rounded-2xl p-2 border border-border/30"
+            >
+              <div className="flex items-center gap-2 px-2 pb-2 border-b border-border/30">
+                <History size={16} className="text-primary" />
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Properti File
+                </h4>
+              </div>
+              <div className="px-1 flex flex-col">
+                <DetailRow
+                  icon={Calendar}
+                  label="Diubah"
+                  value={new Date(file.modifiedTime).toLocaleString("id-ID", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                />
+                <DetailRow
+                  icon={Calendar}
+                  label="Dibuat"
+                  value={new Date(file.createdTime).toLocaleString("id-ID", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                />
+                {canShowAuthor && file.owners?.[0] && (
+                  <DetailRow
+                    icon={User}
+                    label="Pemilik"
+                    value={file.owners[0].displayName}
+                  />
+                )}
+                {canShowAuthor && file.lastModifyingUser && (
+                  <DetailRow
+                    icon={Edit3}
+                    label="Editor"
+                    value={file.lastModifyingUser.displayName}
+                  />
+                )}
+                {file.md5Checksum && (
+                  <div className="pt-4 px-2">
+                    <div className="flex items-center gap-2 mb-2 text-muted-foreground">
+                      <Hash size={14} />
+                      <span className="text-xs font-bold uppercase">
+                        MD5 Checksum
+                      </span>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-xl border border-border/50 font-mono text-[10px] break-all select-all text-muted-foreground hover:text-foreground transition-colors cursor-text hover:bg-muted">
+                      {file.md5Checksum}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <h4 className="text-xs font-bold flex items-center gap-2 text-muted-foreground uppercase tracking-wider">
+                  <TagIcon size={14} /> Label
+                </h4>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <AnimatePresence>
+                  {fileTags[file.id]?.map((tag) => (
+                    <motion.span
+                      key={tag}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0 }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20 hover:bg-primary/20 transition-colors"
+                    >
+                      {tag}
+                      {isAdmin && (
+                        <button
+                          onClick={() => removeTag(file.id, tag)}
+                          className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </motion.span>
+                  ))}
+                </AnimatePresence>
+
+                {isAdmin && (
+                  <form
+                    onSubmit={handleAddTag}
+                    className="flex items-center bg-muted/50 rounded-full px-3 py-1.5 border border-transparent focus-within:border-primary/50 focus-within:bg-background transition-all group"
                   >
-                    {tag}
-                    {isAdmin && (
-                      <button
-                        onClick={() => removeTag(file.id, tag)}
-                        className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
-                      >
-                        <X size={12} />
-                      </button>
-                    )}
-                  </motion.span>
-                ))}
-              </AnimatePresence>
-
-              {isAdmin && (
-                <form
-                  onSubmit={handleAddTag}
-                  className="flex items-center bg-muted/50 rounded-full px-3 py-1.5 border border-transparent focus-within:border-primary/50 focus-within:bg-background transition-all group"
-                >
-                  <Plus
-                    size={14}
-                    className="text-muted-foreground mr-2 group-focus-within:text-primary transition-colors"
-                  />
-                  <input
-                    type="text"
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    placeholder="Tag baru..."
-                    className="bg-transparent text-xs outline-none w-24 placeholder:text-muted-foreground/50"
-                  />
-                </form>
-              )}
-            </div>
+                    <Plus
+                      size={14}
+                      className="text-muted-foreground mr-2 group-focus-within:text-primary transition-colors"
+                    />
+                    <input
+                      type="text"
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      placeholder="Tag baru..."
+                      className="bg-transparent text-xs outline-none w-24 placeholder:text-muted-foreground/50"
+                    />
+                  </form>
+                )}
+              </div>
+            </motion.div>
           </motion.div>
-        </motion.div>
+        </div>
 
         <motion.div
           initial={{ y: 20, opacity: 0 }}

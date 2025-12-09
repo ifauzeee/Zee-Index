@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
+import { useConfirm } from "@/components/providers/ModalProvider";
 import {
   Loader2,
   Trash2,
@@ -36,6 +37,7 @@ interface AccessRequest {
 
 export default function UserFolderAccessManager() {
   const { addToast } = useAppStore();
+  const { confirm } = useConfirm();
   const [permissions, setPermissions] = useState<Record<string, string[]>>({});
   const [requests, setRequests] = useState<AccessRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -94,7 +96,13 @@ export default function UserFolderAccessManager() {
   };
 
   const handleRemoveAccess = async (folderId: string, email: string) => {
-    if (!confirm(`Hapus akses ${email} dari folder ${folderId}?`)) return;
+    if (
+      !(await confirm(`Hapus akses ${email} dari folder ${folderId}?`, {
+        title: "Konfirmasi Hapus Akses",
+        variant: "destructive",
+      }))
+    )
+      return;
     try {
       const response = await fetch("/api/admin/user-access", {
         method: "DELETE",

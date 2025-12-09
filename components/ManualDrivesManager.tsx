@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useAppStore } from "@/lib/store";
+import { useConfirm } from "@/components/providers/ModalProvider";
 import {
   Loader2,
   Trash2,
@@ -34,6 +35,7 @@ interface ScannedDrive {
 
 export default function ManualDrivesManager() {
   const { addToast } = useAppStore();
+  const { confirm } = useConfirm();
   const [dbDrives, setDbDrives] = useState<ManualDrive[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -111,9 +113,14 @@ export default function ManualDrivesManager() {
   const addDrive = async (id: string, name: string, password?: string) => {
     if (envDrives.some((d) => d.id === id)) {
       if (
-        !confirm(
+        !(await confirm(
           "ID ini sudah ada di file .env. Apakah Anda ingin menimpanya dengan konfigurasi Database?",
-        )
+          {
+            title: "Konfirmasi Overwrite",
+            confirmText: "Ya, Timpa",
+            cancelText: "Batal",
+          },
+        ))
       ) {
         return;
       }
@@ -141,7 +148,14 @@ export default function ManualDrivesManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Hapus shortcut drive ini dari Database?")) return;
+    if (
+      !(await confirm("Hapus shortcut drive ini dari Database?", {
+        variant: "destructive",
+        confirmText: "Hapus",
+        title: "Konfirmasi Hapus",
+      }))
+    )
+      return;
     try {
       const res = await fetch("/api/admin/manual-drives", {
         method: "DELETE",

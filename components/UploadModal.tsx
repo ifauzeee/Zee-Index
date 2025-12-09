@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, UploadCloud, FolderPlus, FilePlus, Loader2 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import { FileEntry } from "@/lib/fileParser";
 
 interface UploadModalProps {
@@ -32,6 +33,8 @@ export default function UploadModal({
   const [newFolderName, setNewFolderName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
+
+  useScrollLock(isOpen);
 
   const handleCreateFolder = async (e: React.FormEvent) => {
     e.preventDefault();
