@@ -6,7 +6,7 @@ import { useAppStore } from "@/lib/store";
 import BulkActionBar from "@/components/BulkActionBar";
 import Toast from "@/components/Toast";
 import { AnimatePresence } from "framer-motion";
-import { Analytics } from "@vercel/analytics/next";
+
 import { useSession } from "next-auth/react";
 import CommandPalette from "@/components/CommandPalette";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
@@ -161,7 +161,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
       <CommandPalette />
       <KeyboardShortcutsModal />
       <NotificationCenter />
-      <Analytics />
+
       <AnimatePresence>
         {detailsFile && (
           <DetailsPanel

@@ -7,7 +7,7 @@ import BulkActionBar from "@/components/BulkActionBar";
 import Toast from "@/components/Toast";
 import { AnimatePresence } from "framer-motion";
 import { HardDrive } from "lucide-react";
-import { Analytics } from "@vercel/analytics/next";
+
 import { useSession } from "next-auth/react";
 
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
@@ -92,7 +92,7 @@ export default function MainLayout({
         <AppFooter />
       </div>
       <BulkActionBar />
-      <Analytics />
+
       <AnimatePresence>
         {detailsFile && (
           <DetailsPanel
