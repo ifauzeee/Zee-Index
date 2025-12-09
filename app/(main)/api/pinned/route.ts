@@ -21,7 +21,13 @@ export async function GET() {
       return NextResponse.json([]);
     }
 
-    const promises = pinnedIds.map((id) => getFileDetailsFromDrive(id));
+    const promises = pinnedIds.map(async (id) => {
+      const detail = await getFileDetailsFromDrive(id);
+      if (!detail) {
+        await kv.srem(PINNED_KEY, id);
+      }
+      return detail;
+    });
     const results = await Promise.all(promises);
 
     const pinnedFolders = results.filter(

@@ -76,7 +76,7 @@ export async function GET(request: Request) {
     const pageToken = searchParams.get("pageToken");
     const forceRefresh = searchParams.get("refresh") === "true";
 
-    if (!folderId) {
+    if (!folderId || folderId === "undefined") {
       return NextResponse.json(
         { error: "Folder ID tidak ditemukan." },
         { status: 400 },
@@ -107,9 +107,8 @@ export async function GET(request: Request) {
       }
     }
 
-    const cacheKey = `folder:content:${folderId}:${
-      userRole || "GUEST"
-    }:${pageToken || "page1"}`;
+    const cacheKey = `folder:content:${folderId}:${userRole || "GUEST"
+      }:${pageToken || "page1"}`;
 
     if (!forceRefresh) {
       try {
@@ -130,7 +129,7 @@ export async function GET(request: Request) {
         ) {
           return NextResponse.json(cachedData);
         }
-      } catch {}
+      } catch { }
     }
 
     const allProtectedFolders = !canSeeAll

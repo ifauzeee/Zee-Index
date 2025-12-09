@@ -159,6 +159,7 @@ export function useFileFetching({
       if (query.state.status === "error") return false;
       return true;
     },
+    enabled: !!currentFolderId && currentFolderId !== "undefined",
   });
 
   const files = useMemo(() => {

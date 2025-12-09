@@ -9,9 +9,17 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN npm install -g pnpm && pnpm add sharp
 
+
+RUN npm install -g pnpm
 ENV NEXT_TELEMETRY_DISABLED 1
+
+ARG NEXT_PUBLIC_ROOT_FOLDER_ID
+ARG NEXT_PUBLIC_ROOT_FOLDER_NAME
+
+ENV NEXT_PUBLIC_ROOT_FOLDER_ID=$NEXT_PUBLIC_ROOT_FOLDER_ID
+ENV NEXT_PUBLIC_ROOT_FOLDER_NAME=$NEXT_PUBLIC_ROOT_FOLDER_NAME
+
 RUN pnpm run build
 
 FROM node:20-alpine AS runner

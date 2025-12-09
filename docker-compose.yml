@@ -6,6 +6,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_ROOT_FOLDER_ID: ${NEXT_PUBLIC_ROOT_FOLDER_ID}
+        NEXT_PUBLIC_ROOT_FOLDER_NAME: ${NEXT_PUBLIC_ROOT_FOLDER_NAME}
     restart: always
     ports:
       - "3000:3000"

@@ -19,9 +19,13 @@ export async function GET() {
       return NextResponse.json([]);
     }
 
-    const detailPromises = validFavoriteIds.map((id) =>
-      getFileDetailsFromDrive(id),
-    );
+    const detailPromises = validFavoriteIds.map(async (id) => {
+      const detail = await getFileDetailsFromDrive(id);
+      if (!detail) {
+        await kv.srem(userFavoritesKey, id);
+      }
+      return detail;
+    });
 
     const results = await Promise.all(detailPromises);
 
