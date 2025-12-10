@@ -29,7 +29,6 @@ export default function FileBrowser({
   const searchParams = useSearchParams();
   const { status: sessionStatus } = useSession();
   const queryClient = useQueryClient();
-
   const [authTarget, setAuthTarget] = useState<{
     isLocked: boolean;
     folderId: string;
@@ -304,12 +303,15 @@ export default function FileBrowser({
 
   const handleQuickDownload = (e: React.MouseEvent, file: DriveFile) => {
     e.stopPropagation();
-    window.open(
-      `/api/download?fileId=${file.id}${
-        shareToken ? `&share_token=${shareToken}` : ""
-      }`,
-      "_blank",
-    );
+    let url = `/api/download?fileId=${file.id}`;
+    if (shareToken) {
+      url += `&share_token=${shareToken}`;
+    }
+    const parentId = file.parents?.[0];
+    if (parentId && folderTokens[parentId]) {
+      url += `&access_token=${folderTokens[parentId]}`;
+    }
+    window.open(url, "_blank");
   };
 
   const handleBreadcrumbClick = (folderId: string) => {
@@ -407,8 +409,8 @@ export default function FileBrowser({
       <FileBrowserModals
         authModal={{ isOpen: false, folderId: "", folderName: "" }}
         isAuthLoading={isAuthLoading}
-        onCloseAuth={() => {}}
-        onAuthSubmit={() => {}}
+        onCloseAuth={() => { }}
+        onAuthSubmit={() => { }}
         isFileRequestModalOpen={isFileRequestModalOpen}
         setIsFileRequestModalOpen={setIsFileRequestModalOpen}
         currentFolderId={currentFolderId}

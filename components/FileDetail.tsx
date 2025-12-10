@@ -75,6 +75,7 @@ export default function FileDetail({
     fetchTags,
     addTag,
     removeTag,
+    folderTokens,
   } = useAppStore();
 
   const [internalPreviewOpen, setInternalPreviewOpen] = useState(false);
@@ -99,11 +100,18 @@ export default function FileDetail({
   const isAdmin = user?.role === "ADMIN" || session?.user?.role === "ADMIN";
   const canShowAuthor = isAdmin || !hideAuthor;
   const fileType = getFileType(file);
+
   const directLink = useMemo(() => {
     let url = `/api/download?fileId=${file.id}`;
-    if (shareToken) url += `&share_token=${shareToken}`;
+    if (shareToken) {
+      url += `&share_token=${shareToken}`;
+    }
+    const parentId = file.parents?.[0];
+    if (parentId && folderTokens[parentId]) {
+      url += `&access_token=${folderTokens[parentId]}`;
+    }
     return url;
-  }, [file.id, shareToken]);
+  }, [file.id, shareToken, file.parents, folderTokens]);
 
   const ARCHIVE_PREVIEW_LIMIT = 100 * 1024 * 1024;
   const isArchivePreviewable =

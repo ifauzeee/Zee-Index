@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const fileId = searchParams.get("fileId");
   const shareToken = searchParams.get("share_token");
+  const accessTokenParam = searchParams.get("access_token");
 
   let isShareTokenValid = false;
   if (shareToken) {
@@ -33,10 +34,6 @@ export async function GET(request: NextRequest) {
     } catch (error) {
       console.error("Verifikasi share token gagal:", error);
     }
-  }
-
-  if (!session && !isShareTokenValid) {
-    return NextResponse.json({ error: "Akses ditolak." }, { status: 401 });
   }
 
   if (!fileId) {
@@ -53,10 +50,9 @@ export async function GET(request: NextRequest) {
 
     if (isRestricted) {
       const authHeader = request.headers.get("Authorization");
-      const token = authHeader?.split(" ")[1];
+      const token = authHeader?.split(" ")[1] || accessTokenParam;
 
       let accessGranted = false;
-
       if (token) {
         try {
           const secret = new TextEncoder().encode(
@@ -85,6 +81,10 @@ export async function GET(request: NextRequest) {
           { error: "Access Denied: File is protected." },
           { status: 403 },
         );
+      }
+    } else {
+      if (!session && !isShareTokenValid) {
+        return NextResponse.json({ error: "Akses ditolak." }, { status: 401 });
       }
     }
   }

@@ -49,7 +49,7 @@ function FileItem({
   uploadProgress,
   uploadStatus,
 }: FileItemProps) {
-  const { view, shareToken } = useAppStore();
+  const { view, shareToken, folderTokens } = useAppStore();
   const Icon = getIcon(file.mimeType);
   const [isDragOver, setIsDragOver] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -75,9 +75,15 @@ function FileItem({
       return file.thumbnailLink.replace(/=s\d+/, `=${size}`);
     }
     let url = `/api/download?fileId=${file.id}`;
-    if (shareToken) url += `&share_token=${shareToken}`;
+    if (shareToken) {
+      url += `&share_token=${shareToken}`;
+    }
+    const parentId = file.parents?.[0];
+    if (parentId && folderTokens[parentId]) {
+      url += `&access_token=${folderTokens[parentId]}`;
+    }
     return url;
-  }, [file.thumbnailLink, file.id, view, shareToken]);
+  }, [file.thumbnailLink, file.id, view, shareToken, file.parents, folderTokens]);
 
   const handleContextMenuEvent = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -168,7 +174,7 @@ function FileItem({
               : "p-3 min-h-[68px]"
             : "w-full",
           view === "grid" &&
-            "flex flex-col items-center justify-center text-center p-2 sm:p-4",
+          "flex flex-col items-center justify-center text-center p-2 sm:p-4",
           isGallery && "p-0 border-none",
           isDragOver && "ring-2 ring-primary ring-inset bg-primary/10",
           isError && "ring-2 ring-destructive/50 bg-destructive/5",
@@ -252,7 +258,7 @@ function FileItem({
                   "text-3xl text-primary shrink-0 flex items-center justify-center select-none",
                   view === "grid" && "text-4xl mb-2",
                   isGallery &&
-                    "py-8 text-6xl bg-accent/10 w-full flex flex-col gap-2",
+                  "py-8 text-6xl bg-accent/10 w-full flex flex-col gap-2",
                 )}
               >
                 {React.createElement(Icon, {

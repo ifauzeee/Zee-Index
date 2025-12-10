@@ -23,12 +23,16 @@ export default function ImageGallery({
   isOpen,
   onClose,
 }: ImageGalleryProps) {
-  const { shareToken } = useAppStore();
+  const { shareToken, folderTokens } = useAppStore();
 
   const slides = images.map((file) => {
     let src = `/api/download?fileId=${file.id}`;
     if (shareToken) {
       src += `&share_token=${shareToken}`;
+    }
+    const parentId = file.parents?.[0];
+    if (parentId && folderTokens[parentId]) {
+      src += `&access_token=${folderTokens[parentId]}`;
     }
 
     return {
