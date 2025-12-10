@@ -107,8 +107,9 @@ export async function GET(request: Request) {
       }
     }
 
-    const cacheKey = `folder:content:${folderId}:${userRole || "GUEST"
-      }:${pageToken || "page1"}`;
+    const cacheKey = `folder:content:${folderId}:${
+      userRole || "GUEST"
+    }:${pageToken || "page1"}`;
 
     if (!forceRefresh) {
       try {
@@ -129,7 +130,7 @@ export async function GET(request: Request) {
         ) {
           return NextResponse.json(cachedData);
         }
-      } catch { }
+      } catch {}
     }
 
     const allProtectedFolders = !canSeeAll

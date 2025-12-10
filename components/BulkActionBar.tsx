@@ -45,7 +45,6 @@ export default function BulkActionBar() {
       try {
         return decodeURIComponent(utf8Match[1]);
       } catch {
-        // Fallback to basic match if decoding fails
       }
     }
     const basicMatch = header.match(/filename="([^"]+)"/);
@@ -141,7 +140,7 @@ export default function BulkActionBar() {
         message:
           error instanceof Error
             ? error.message
-            : "Terjadi kesalahan tidak dikenal.",
+            : "An unknown error occurred.",
         type: "error",
       });
     } finally {
@@ -165,7 +164,7 @@ export default function BulkActionBar() {
       });
       const result = await response.json();
       if (!response.ok && response.status !== 207)
-        throw new Error(result.error || "Gagal memindahkan item.");
+        throw new Error(result.error || "Failed to move items.");
 
       addToast({
         message: result.message,
@@ -178,7 +177,7 @@ export default function BulkActionBar() {
         message:
           error instanceof Error
             ? error.message
-            : "Terjadi kesalahan tidak dikenal.",
+            : "An unknown error occurred.",
         type: "error",
       });
     } finally {
@@ -224,7 +223,7 @@ export default function BulkActionBar() {
                 className="p-2 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:bg-green-400 flex items-center gap-2 transition-colors"
               >
                 <Share2 size={18} />
-                <span className="hidden sm:inline">Bagikan</span>
+                <span className="hidden sm:inline">Share</span>
               </button>
 
               <button
@@ -247,7 +246,7 @@ sm:inline"
                 className="p-2 rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:bg-destructive/50 flex items-center gap-2 transition-colors"
               >
                 <Trash2 size={18} />
-                <span className="hidden sm:inline">Hapus</span>
+                <span className="hidden sm:inline">Delete</span>
               </button>
 
               <button

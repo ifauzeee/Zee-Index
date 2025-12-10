@@ -338,7 +338,7 @@ export default function Sidebar() {
     >
       <div className="p-4 border-b border-border flex items-center justify-between shrink-0 h-16">
         <h2 className="font-bold text-sm text-foreground tracking-wide flex items-center gap-2">
-          NAVIGASI
+          NAVIGATION
         </h2>
         <button
           onClick={() => setSidebarOpen(false)}
@@ -361,7 +361,7 @@ export default function Sidebar() {
               "bg-accent font-medium text-primary",
             )}
           >
-            <Home size={16} /> Beranda
+            <Home size={16} /> Home
           </button>
           <button
             onClick={() => {
@@ -370,7 +370,7 @@ export default function Sidebar() {
             }}
             className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
           >
-            <Star size={16} /> Favorit
+            <Star size={16} /> Favorites
           </button>
           <button
             onClick={() => {
@@ -379,7 +379,7 @@ export default function Sidebar() {
             }}
             className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
           >
-            <HardDrive size={16} /> Penyimpanan
+            <HardDrive size={16} /> Storage
           </button>
           {user?.role === "ADMIN" && (
             <>
@@ -390,7 +390,7 @@ export default function Sidebar() {
                 }}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
               >
-                <Trash2 size={16} /> Sampah
+                <Trash2 size={16} /> Trash
               </button>
               <button
                 onClick={() => {

@@ -8,23 +8,19 @@ export default function GlobalBranding() {
   const { primaryColor, appName, faviconUrl } = useAppStore();
 
   useEffect(() => {
-    // 1. Update Warna Primer (CSS Variable)
     if (primaryColor) {
       const hsl = hexToHsl(primaryColor);
       document.documentElement.style.setProperty("--primary", hsl);
-      // Update ring color juga agar konsisten
       document.documentElement.style.setProperty("--ring", hsl);
     } else {
       document.documentElement.style.removeProperty("--primary");
       document.documentElement.style.removeProperty("--ring");
     }
 
-    // 2. Update Judul Dokumen
     if (appName) {
       document.title = appName;
     }
 
-    // 3. Update Favicon
     if (faviconUrl) {
       let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
       if (!link) {

@@ -1,5 +1,3 @@
-// FILE: app/(main)/api/pinned/route.ts
-
 import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";

@@ -44,7 +44,7 @@ export default function RenameModal({
         >
           <X size={20} />
         </button>
-        <h3 className="text-lg font-semibold mb-4">Ubah Nama File</h3>
+        <h3 className="text-lg font-semibold mb-4">Rename File</h3>
         <form onSubmit={handleSubmit}>
           <input
             type="text"
@@ -60,14 +60,14 @@ export default function RenameModal({
               onClick={onClose}
               className="px-4 py-2 rounded-md hover:bg-accent"
             >
-              Batal
+              Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading || !newName || newName === currentName}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:bg-primary/50"
             >
-              {isLoading ? "Menyimpan..." : "Simpan"}
+              {isLoading ? "Saving..." : "Save"}
             </button>
           </div>
         </form>

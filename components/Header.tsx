@@ -325,7 +325,7 @@ export default function Header() {
               onClick={handleLogoClick}
               className={`text-xl font-bold flex items-center shrink-0 ${!shareToken ? "cursor-pointer" : "cursor-default"
                 }`}
-              title={!shareToken ? "Kembali ke Beranda" : appName}
+              title={!shareToken ? "Back to Home" : appName}
             >
               {logoUrl ? (
                 <img

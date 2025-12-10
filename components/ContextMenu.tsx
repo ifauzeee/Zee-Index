@@ -150,14 +150,14 @@ export default function ContextMenu({
   const menuContent = (
     <ul className="py-2 md:py-1 space-y-0.5 md:space-y-0">
       {!isFolder && (
-        <MenuItem onClick={onPreview} icon={Eye} label="Pratinjau / Buka" />
+        <MenuItem onClick={onPreview} icon={Eye} label="Preview / Open" />
       )}
 
       {isImage && isAdmin && (
-        <MenuItem onClick={onEditImage} icon={Edit3} label="Edit Gambar" />
+        <MenuItem onClick={onEditImage} icon={Edit3} label="Edit Image" />
       )}
 
-      <MenuItem onClick={onShowDetails} icon={Info} label="Lihat Detail" />
+      <MenuItem onClick={onShowDetails} icon={Info} label="View Details" />
 
       {isArchive && (
         <MenuItem
@@ -167,7 +167,7 @@ export default function ContextMenu({
           label={
             !isArchivePreviewable
               ? `Terlalu besar (> ${formatBytes(ARCHIVE_PREVIEW_LIMIT_BYTES)})`
-              : "Lihat Isi Arsip"
+              : "View Archive Contents"
           }
         />
       )}
@@ -178,7 +178,7 @@ export default function ContextMenu({
           <MenuItem
             onClick={onTogglePin}
             icon={isPinned ? PinOff : Pin}
-            label={isPinned ? "Lepas Pin" : "Sematkan Folder"}
+            label={isPinned ? "Unpin" : "Pin Folder"}
           />
         </>
       )}
@@ -190,23 +190,23 @@ export default function ContextMenu({
           onClick={onToggleFavorite}
           icon={Star}
           variant={isFavorite ? "warning" : "default"}
-          label={isFavorite ? "Hapus Favorit" : "Tambah Favorit"}
+          label={isFavorite ? "Remove Favorite" : "Add Favorite"}
         />
       )}
 
       {isAdmin && (
         <>
-          <MenuItem onClick={onShare} icon={Share2} label="Bagikan" />
-          <MenuItem onClick={onCopy} icon={Copy} label="Buat Salinan" />
-          <MenuItem onClick={onMove} icon={Move} label="Pindahkan" />
-          <MenuItem onClick={onRename} icon={Pencil} label="Ubah Nama" />
+          <MenuItem onClick={onShare} icon={Share2} label="Share" />
+          <MenuItem onClick={onCopy} icon={Copy} label="Make a Copy" />
+          <MenuItem onClick={onMove} icon={Move} label="Move" />
+          <MenuItem onClick={onRename} icon={Pencil} label="Rename" />
 
           <li className="border-t my-2 border-border/50"></li>
 
           <MenuItem
             onClick={onDelete}
             icon={Trash2}
-            label="Hapus"
+            label="Delete"
             variant="danger"
           />
         </>
@@ -255,7 +255,7 @@ export default function ContextMenu({
               onClick={onClose}
               className="w-full py-3.5 bg-muted/50 text-foreground rounded-2xl font-semibold active:scale-95 transition-transform"
             >
-              Batal
+              Cancel
             </button>
           </div>
         </motion.div>

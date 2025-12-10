@@ -76,7 +76,7 @@ export default function CommandPalette() {
             className={itemClass}
           >
             <Home className="mr-2 h-4 w-4" />
-            <span>Beranda</span>
+            <span>Home</span>
           </Command.Item>
 
           <Command.Item

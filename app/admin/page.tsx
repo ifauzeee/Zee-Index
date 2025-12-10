@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo, FC } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useAppStore, ShareLink, FileRequestLink } from "@/lib/store";
 import { useConfirm } from "@/components/providers/ModalProvider";
 import { format } from "date-fns";
@@ -47,8 +47,6 @@ const scrollbarHideStyles = {
   scrollbarWidth: "none" as const,
 };
 
-
-
 export default function AdminPage() {
   const {
     user,
@@ -69,7 +67,6 @@ export default function AdminPage() {
   const { confirm } = useConfirm();
   const { status, data: session } = useSession();
   const router = useRouter();
-  // linkToDelete state removed
   const [newAdminEmail, setNewAdminEmail] = useState("");
 
   const [isSubmittingAdmin, setIsSubmittingAdmin] = useState(false);
@@ -126,7 +123,7 @@ export default function AdminPage() {
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
-    addToast({ message: "Tautan disalin ke clipboard!", type: "success" });
+    addToast({ message: "Link copied to clipboard!", type: "success" });
   };
 
   const handleDelete = async (
@@ -135,11 +132,11 @@ export default function AdminPage() {
   ) => {
     if (
       await confirm(
-        "Tindakan ini akan membatalkan tautan secara permanen. Pengguna tidak akan bisa mengaksesnya lagi.",
+        "This action will permanently revoke the link. Users will no longer be able to access it.",
         {
-          title: "Hapus Tautan?",
+          title: "Delete Link?",
           variant: "destructive",
-          confirmText: "Ya, Hapus",
+          confirmText: "Yes, Delete",
         },
       )
     ) {
@@ -162,8 +159,8 @@ export default function AdminPage() {
 
   const handleRemoveAdmin = async (email: string) => {
     if (
-      await confirm(`Anda yakin ingin menghapus ${email} dari daftar admin?`, {
-        title: "Hapus Admin",
+      await confirm(`Are you sure you want to remove ${email} from the admin list?`, {
+        title: "Remove Admin",
         variant: "destructive",
       })
     ) {
@@ -181,24 +178,24 @@ export default function AdminPage() {
         <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6">
           <AlertCircle className="h-10 w-10 text-red-600" />
         </div>
-        <h1 className="text-2xl font-bold mb-2">Akses Ditolak</h1>
+        <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
         <p className="text-muted-foreground max-w-md">
-          Anda tidak memiliki izin Administrator untuk melihat halaman ini.
+          You do not have Administrator permission to view this page.
         </p>
         <button
           onClick={() => router.push("/")}
           className="mt-6 px-6 py-2 bg-primary text-primary-foreground rounded-full font-medium"
         >
-          Kembali ke Beranda
+          Back to Home
         </button>
       </div>
     );
   }
 
   const tabItems = [
-    { value: "summary", label: "Ringkasan", icon: Activity },
+    { value: "summary", label: "Summary", icon: Activity },
     { value: "users", label: "Admin", icon: Users },
-    { value: "security", label: "Keamanan & Kontrol", icon: ShieldCheck },
+    { value: "security", label: "Security & Control", icon: ShieldCheck },
     { value: "branding", label: "Branding", icon: Palette },
     { value: "logs", label: "Logs", icon: Clock },
   ];
@@ -222,7 +219,7 @@ export default function AdminPage() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
             <p className="text-sm text-muted-foreground">
-              Kelola file dan pengguna
+              Manage files and users
             </p>
           </div>
         </div>
@@ -292,7 +289,7 @@ export default function AdminPage() {
             </div>
 
             <div>
-              <h2 className="text-xl font-semibold mb-4 px-1">Statistik</h2>
+              <h2 className="text-xl font-semibold mb-4 px-1">Statistics</h2>
               {isLoadingStats ? (
                 <div className="bg-card border rounded-xl p-6 h-64 flex items-center justify-center text-muted-foreground">
                   <Loader2 className="h-8 w-8 animate-spin" />
@@ -301,7 +298,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                   <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm">
                     <h3 className="text-base font-semibold mb-4">
-                      Unduhan Hari Ini
+                      Today's Downloads
                     </h3>
                     <TodayDownloadsChart data={stats.downloadsToday} />
                   </div>
@@ -309,7 +306,7 @@ export default function AdminPage() {
                   <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm">
                     <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
                       <Activity size={18} className="text-primary" /> Top User
-                      (90 Hari)
+                      (90 Days)
                     </h3>
                     <div className="space-y-4">
                       {stats.topUsers?.length > 0 ? (
@@ -340,7 +337,7 @@ export default function AdminPage() {
                         ))
                       ) : (
                         <p className="text-muted-foreground text-sm text-center py-8">
-                          Belum ada data.
+                          No data yet.
                         </p>
                       )}
                     </div>
@@ -348,14 +345,14 @@ export default function AdminPage() {
 
                   <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm xl:col-span-2">
                     <h3 className="text-base font-semibold mb-4">
-                      Tren Mingguan
+                      Weekly Trend
                     </h3>
                     <DayOfWeekChart data={stats.downloadsByDayOfWeek} />
                   </div>
                 </div>
               ) : (
                 <div className="bg-card border rounded-xl p-6 text-center text-muted-foreground">
-                  Gagal memuat data.
+                  Failed to load data.
                 </div>
               )}
             </div>
@@ -365,12 +362,12 @@ export default function AdminPage() {
             <section className="space-y-6">
               <div className="flex items-center gap-2 border-b pb-2 mb-4">
                 <ShieldCheck className="text-primary" />
-                <h3 className="text-lg font-bold">Konfigurasi Dasar</h3>
+                <h3 className="text-lg font-bold">Basic Configuration</h3>
               </div>
               <SecurityConfig />
               <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm">
                 <h4 className="text-base font-semibold mb-4">
-                  Autentikasi 2 Faktor (2FA)
+                  Two-Factor Authentication (2FA)
                 </h4>
                 <TwoFactorAuthSetup />
               </div>
@@ -379,7 +376,7 @@ export default function AdminPage() {
             <section className="space-y-6">
               <div className="flex items-center gap-2 border-b pb-2 mb-4">
                 <FolderLock className="text-amber-500" />
-                <h3 className="text-lg font-bold">Proteksi & Akses</h3>
+                <h3 className="text-lg font-bold">Protection & Access</h3>
               </div>
 
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -403,14 +400,14 @@ export default function AdminPage() {
             <section className="space-y-6">
               <div className="flex items-center gap-2 border-b pb-2 mb-4">
                 <Network className="text-purple-500" />
-                <h3 className="text-lg font-bold">Manajemen Tautan Aktif</h3>
+                <h3 className="text-lg font-bold">Active Link Management</h3>
               </div>
 
               {shareLinks.length === 0 && fileRequests.length === 0 ? (
                 <div className="text-center py-12 bg-card border rounded-xl border-dashed">
                   <LinkIcon className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
                   <p className="text-muted-foreground">
-                    Belum ada tautan berbagi atau request file aktif.
+                    No active share links or file requests yet.
                   </p>
                 </div>
               ) : (
@@ -479,12 +476,10 @@ export default function AdminPage() {
                                   </span>
 
                                   <button
-                                    onClick={() =>
-                                      handleDelete(req, "request")
-                                    }
+                                    onClick={() => handleDelete(req, "request")}
                                     className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium"
                                   >
-                                    <Trash2 size={16} /> Hapus
+                                    <Trash2 size={16} /> Delete
                                   </button>
                                 </div>
                               </div>
@@ -498,7 +493,7 @@ export default function AdminPage() {
                   {shareLinks.length > 0 && (
                     <div className="space-y-3">
                       <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-2">
-                        <LinkIcon size={16} /> Link Berbagi
+                        <LinkIcon size={16} /> Share Links
                       </h4>
                       <AnimatePresence>
                         {shareLinks.map((link) => {
@@ -568,12 +563,10 @@ export default function AdminPage() {
                                     )}
                                   </p>
                                   <button
-                                    onClick={() =>
-                                      handleDelete(link, "share")
-                                    }
+                                    onClick={() => handleDelete(link, "share")}
                                     className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg transition-colors text-xs font-medium flex items-center gap-1.5"
                                   >
-                                    <Trash2 size={14} /> Hapus
+                                    <Trash2 size={14} /> Delete
                                   </button>
                                 </div>
                               </div>
@@ -595,7 +588,7 @@ export default function AdminPage() {
           <TabsContent value="users" className="mt-2">
             <div className="bg-card border rounded-xl shadow-sm overflow-hidden">
               <div className="p-4 sm:p-6 border-b">
-                <h2 className="text-lg font-semibold mb-4">Tambah Admin</h2>
+                <h2 className="text-lg font-semibold mb-4">Add Admin</h2>
                 <form
                   onSubmit={handleAddAdmin}
                   className="flex flex-col sm:flex-row gap-3"
@@ -621,14 +614,14 @@ export default function AdminPage() {
                     ) : (
                       <UserPlus size={18} />
                     )}
-                    <span>Tambah</span>
+                    <span>Add</span>
                   </button>
                 </form>
               </div>
 
               <div className="p-4 sm:p-6">
                 <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wider">
-                  Daftar Admin
+                  Admin List
                 </h3>
                 {isFetchingAdmins ? (
                   <div className="flex justify-center py-8">
@@ -669,7 +662,6 @@ export default function AdminPage() {
           </TabsContent>
         </Tabs>
       </motion.div>
-
     </>
   );
 }

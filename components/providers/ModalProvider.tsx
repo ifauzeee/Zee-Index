@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import React, {
+    createContext,
+    useContext,
+    useState,
+    useCallback,
+    ReactNode,
+} from "react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -18,7 +24,7 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 
 interface ConfirmOptions {
     title?: string;
@@ -60,7 +66,6 @@ export const useModal = () => {
     return context;
 };
 
-// Aliases for easier migration
 export const useConfirm = useModal;
 export const useAlert = useModal;
 export const usePrompt = useModal;
@@ -88,16 +93,19 @@ export const ModalProvider = ({ children }: { children: ReactNode }) => {
         inputValue: string;
     } | null>(null);
 
-    const confirm = useCallback((message: string, options: ConfirmOptions = {}) => {
-        return new Promise<boolean>((resolve) => {
-            setConfirmState({
-                isOpen: true,
-                resolve,
-                message,
-                options,
+    const confirm = useCallback(
+        (message: string, options: ConfirmOptions = {}) => {
+            return new Promise<boolean>((resolve) => {
+                setConfirmState({
+                    isOpen: true,
+                    resolve,
+                    message,
+                    options,
+                });
             });
-        });
-    }, []);
+        },
+        [],
+    );
 
     const alert = useCallback((message: string, options: AlertOptions = {}) => {
         return new Promise<void>((resolve) => {
@@ -105,9 +113,9 @@ export const ModalProvider = ({ children }: { children: ReactNode }) => {
                 isOpen: true,
                 resolve,
                 message,
-                options
-            })
-        })
+                options,
+            });
+        });
     }, []);
 
     const prompt = useCallback((message: string, options: PromptOptions = {}) => {
@@ -117,9 +125,9 @@ export const ModalProvider = ({ children }: { children: ReactNode }) => {
                 resolve,
                 message,
                 options,
-                inputValue: options.initialValue || ""
-            })
-        })
+                inputValue: options.initialValue || "",
+            });
+        });
     }, []);
 
     const handleConfirmClose = (result: boolean) => {
@@ -134,29 +142,35 @@ export const ModalProvider = ({ children }: { children: ReactNode }) => {
             alertState.resolve();
             setAlertState(null);
         }
-    }
+    };
 
     const handlePromptClose = (result: string | null) => {
         if (promptState) {
             promptState.resolve(result);
             setPromptState(null);
         }
-    }
+    };
 
     return (
         <ModalContext.Provider value={{ confirm, alert, prompt }}>
             {children}
 
-            {/* Confirm Dialog */}
             {confirmState && (
-                <AlertDialog open={confirmState.isOpen} onOpenChange={(open) => !open && handleConfirmClose(false)}>
+                <AlertDialog
+                    open={confirmState.isOpen}
+                    onOpenChange={(open) => !open && handleConfirmClose(false)}
+                >
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>{confirmState.options.title || "Konfirmasi"}</AlertDialogTitle>
+                            <AlertDialogTitle>
+                                {confirmState.options.title || "Konfirmasi"}
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
                                 {confirmState.message}
                                 {confirmState.options.description && (
-                                    <span className="block mt-2">{confirmState.options.description}</span>
+                                    <span className="block mt-2">
+                                        {confirmState.options.description}
+                                    </span>
                                 )}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
@@ -166,7 +180,11 @@ export const ModalProvider = ({ children }: { children: ReactNode }) => {
                             </AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={() => handleConfirmClose(true)}
-                                className={confirmState.options.variant === "destructive" ? "bg-red-600 hover:bg-red-700 focus:ring-red-600" : ""}
+                                className={
+                                    confirmState.options.variant === "destructive"
+                                        ? "bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                                        : ""
+                                }
                             >
                                 {confirmState.options.confirmText || "Ya, Lanjutkan"}
                             </AlertDialogAction>
@@ -175,23 +193,33 @@ export const ModalProvider = ({ children }: { children: ReactNode }) => {
                 </AlertDialog>
             )}
 
-            {/* Alert Dialog */}
             {alertState && (
-                <AlertDialog open={alertState.isOpen} onOpenChange={() => handleAlertClose()}>
+                <AlertDialog
+                    open={alertState.isOpen}
+                    onOpenChange={() => handleAlertClose()}
+                >
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>{alertState.options.title || "Pemberitahuan"}</AlertDialogTitle>
+                            <AlertDialogTitle>
+                                {alertState.options.title || "Pemberitahuan"}
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
                                 {alertState.message}
                                 {alertState.options.description && (
-                                    <span className="block mt-2">{alertState.options.description}</span>
+                                    <span className="block mt-2">
+                                        {alertState.options.description}
+                                    </span>
                                 )}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogAction
                                 onClick={() => handleAlertClose()}
-                                className={alertState.options.variant === "destructive" ? "bg-red-600 hover:bg-red-700 focus:ring-red-600" : ""}
+                                className={
+                                    alertState.options.variant === "destructive"
+                                        ? "bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                                        : ""
+                                }
                             >
                                 {alertState.options.confirmText || "OK"}
                             </AlertDialogAction>
@@ -200,16 +228,20 @@ export const ModalProvider = ({ children }: { children: ReactNode }) => {
                 </AlertDialog>
             )}
 
-            {/* Prompt Dialog */}
             {promptState && (
-                <Dialog open={promptState.isOpen} onOpenChange={(open) => !open && handlePromptClose(null)}>
+                <Dialog
+                    open={promptState.isOpen}
+                    onOpenChange={(open) => !open && handlePromptClose(null)}
+                >
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
                             <DialogTitle>{promptState.options.title || "Input"}</DialogTitle>
                             <DialogDescription>
                                 {promptState.message}
                                 {promptState.options.description && (
-                                    <span className="block mt-2">{promptState.options.description}</span>
+                                    <span className="block mt-2">
+                                        {promptState.options.description}
+                                    </span>
                                 )}
                             </DialogDescription>
                         </DialogHeader>
@@ -219,7 +251,9 @@ export const ModalProvider = ({ children }: { children: ReactNode }) => {
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 placeholder={promptState.options.placeholder}
                                 value={promptState.inputValue}
-                                onChange={(e) => setPromptState({ ...promptState, inputValue: e.target.value })}
+                                onChange={(e) =>
+                                    setPromptState({ ...promptState, inputValue: e.target.value })
+                                }
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter") {
                                         handlePromptClose(promptState.inputValue);

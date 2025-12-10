@@ -37,7 +37,6 @@ export default function NotificationCenter() {
     <AnimatePresence>
       {isNotificationOpen && (
         <>
-          {/* Backdrop: Dihapus backdrop-blur, diganti opacity biasa agar ringan */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -47,7 +46,6 @@ export default function NotificationCenter() {
             className="fixed inset-0 z-[9998] bg-black/50"
           />
 
-          {/* Panel: Menggunakan type 'tween' bukan 'spring' agar animasi stabil */}
           <motion.div
             initial={{ x: "100%" }}
             animate={{ x: 0 }}

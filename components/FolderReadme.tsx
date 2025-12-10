@@ -70,7 +70,6 @@ export default function FolderReadme({ fileId }: FolderReadmeProps) {
             transition={{ duration: 0.2 }}
           >
             <div className="p-6 prose dark:prose-invert prose-sm max-w-none">
-              {/* TAMBAHKAN remarkPlugins DI BAWAH INI */}
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeSanitize]}

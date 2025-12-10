@@ -268,7 +268,7 @@ export const useAppStore = create<AppState>()(
         try {
           const response = await fetch("/api/share/list");
           if (!response.ok) {
-            throw new Error("Gagal mengambil daftar tautan berbagi.");
+            throw new Error("Failed to fetch share link list.");
           }
           const links: ShareLink[] = await response.json();
           links.sort(
@@ -307,9 +307,9 @@ export const useAppStore = create<AppState>()(
           });
           const result = await response.json();
           if (!response.ok)
-            throw new Error(result.error || "Gagal menghapus tautan.");
+            throw new Error(result.error || "Failed to delete link.");
           get().addToast({
-            message: "Tautan berhasil dihapus.",
+            message: "Link successfully deleted.",
             type: "success",
           });
         } catch (error: unknown) {
@@ -325,7 +325,7 @@ export const useAppStore = create<AppState>()(
       fetchFileRequests: async () => {
         try {
           const response = await fetch("/api/file-request");
-          if (!response.ok) throw new Error("Gagal mengambil data request.");
+          if (!response.ok) throw new Error("Failed to fetch request data.");
           const requests: FileRequestLink[] = await response.json();
           requests.sort((a, b) => b.expiresAt - a.expiresAt);
           set({ fileRequests: requests });
@@ -344,18 +344,18 @@ export const useAppStore = create<AppState>()(
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token }),
           });
-          if (!response.ok) throw new Error("Gagal menghapus");
-          get().addToast({ message: "Link request dihapus", type: "success" });
+          if (!response.ok) throw new Error("Failed to delete");
+          get().addToast({ message: "Request link deleted", type: "success" });
         } catch {
           set({ fileRequests: original });
           get().addToast({
-            message: "Gagal menghapus link request",
+            message: "Failed to delete request link",
             type: "error",
           });
         }
       },
 
-      dataUsage: { status: "idle", value: "Memuat..." },
+      dataUsage: { status: "idle", value: "Loading..." },
       fetchDataUsage: async () => {
         set((state) => ({
           dataUsage: { ...state.dataUsage, status: "loading" },
@@ -370,7 +370,7 @@ export const useAppStore = create<AppState>()(
           });
           clearTimeout(timeoutId);
 
-          if (!response.ok) throw new Error("Gagal mengambil data penggunaan.");
+          if (!response.ok) throw new Error("Failed to fetch usage data.");
           const data = await response.json();
 
           const formattedUsage = formatBytes(data.totalUsage);
@@ -382,9 +382,9 @@ export const useAppStore = create<AppState>()(
             dataUsage: {
               status: "error",
               value:
-                state.dataUsage.value !== "Memuat..."
+                state.dataUsage.value !== "Loading..."
                   ? state.dataUsage.value
-                  : "Gagal",
+                  : "Failed",
             },
           }));
           console.error("Failed to fetch data usage", error);
@@ -396,7 +396,7 @@ export const useAppStore = create<AppState>()(
         set({ isFetchingAdmins: true });
         try {
           const response = await fetch("/api/admin/users");
-          if (!response.ok) throw new Error("Gagal mengambil daftar admin");
+          if (!response.ok) throw new Error("Failed to fetch admin list");
           const emails = await response.json();
           set({ adminEmails: emails });
         } catch (error: unknown) {
@@ -417,7 +417,7 @@ export const useAppStore = create<AppState>()(
           });
           const result = await response.json();
           if (!response.ok)
-            throw new Error(result.error || "Gagal menambahkan admin.");
+            throw new Error(result.error || "Failed to add admin.");
           set((state) => ({
             adminEmails: [...state.adminEmails, email].sort(),
           }));
@@ -444,7 +444,7 @@ export const useAppStore = create<AppState>()(
           });
           const result = await response.json();
           if (!response.ok)
-            throw new Error(result.error || "Gagal menghapus admin.");
+            throw new Error(result.error || "Failed to remove admin.");
           get().addToast({ message: result.message, type: "success" });
         } catch (error: unknown) {
           get().addToast({
@@ -462,7 +462,7 @@ export const useAppStore = create<AppState>()(
           const files: any[] = await response.json();
           set({ favorites: files.map((f) => f.id) });
         } catch (error) {
-          console.error("Gagal mengambil data favorit:", error);
+          console.error("Failed to fetch favorites:", error);
         }
       },
       toggleFavorite: async (fileId, isCurrentlyFavorite) => {
@@ -483,7 +483,7 @@ export const useAppStore = create<AppState>()(
           });
           const result = await response.json();
           if (!response.ok) {
-            throw new Error(result.error || "Gagal memperbarui favorit.");
+            throw new Error(result.error || "Failed to update favorites.");
           }
           get().addToast({ message: result.message, type: "success" });
         } catch (error: unknown) {
@@ -563,7 +563,7 @@ export const useAppStore = create<AppState>()(
             primaryColor: config.primaryColor || "",
           });
         } catch (error) {
-          console.error("Gagal fetch config:", error);
+          console.error("Failed to fetch config:", error);
           set({ hideAuthor: true, disableGuestLogin: true });
         } finally {
           set({ isConfigLoading: false });
@@ -660,12 +660,12 @@ export const useAppStore = create<AppState>()(
             body: JSON.stringify({ folderId }),
           });
           if (response.ok) {
-            get().addToast({ message: "Folder disematkan!", type: "success" });
+            get().addToast({ message: "Folder pinned!", type: "success" });
             get().fetchPinnedFolders();
           }
         } catch {
           get().addToast({
-            message: "Gagal menyematkan folder",
+            message: "Failed to pin folder",
             type: "error",
           });
         }
@@ -678,7 +678,7 @@ export const useAppStore = create<AppState>()(
             body: JSON.stringify({ folderId }),
           });
           if (response.ok) {
-            get().addToast({ message: "Pin dilepas!", type: "success" });
+            get().addToast({ message: "Pin removed!", type: "success" });
             set((state) => ({
               pinnedFolders: state.pinnedFolders.filter(
                 (f) => f.id !== folderId,
@@ -687,7 +687,7 @@ export const useAppStore = create<AppState>()(
             get().fetchPinnedFolders();
           }
         } catch {
-          get().addToast({ message: "Gagal melepas pin", type: "error" });
+          get().addToast({ message: "Failed to remove pin", type: "error" });
         }
       },
     }),

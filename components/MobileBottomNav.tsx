@@ -13,8 +13,8 @@ export default function MobileBottomNav() {
   if (shareToken) return null;
 
   const navItems = [
-    { label: "Beranda", icon: Home, path: "/" },
-    { label: "Favorit", icon: Star, path: "/favorites" },
+    { label: "Home", icon: Home, path: "/" },
+    { label: "Favorites", icon: Star, path: "/favorites" },
     { label: "Storage", icon: HardDrive, path: "/storage" },
   ];
 

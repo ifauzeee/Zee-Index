@@ -66,8 +66,6 @@ export const authOptions: AuthOptions = {
 
         if (!isValid) return null;
 
-        const is2FAEnabled = await kv.get(`2fa:enabled:${email}`);
-
         return {
           id: email,
           name: email.split("@")[0],
@@ -95,7 +93,7 @@ export const authOptions: AuthOptions = {
 
         return {
           id: "guest-user",
-          name: "Pengguna Tamu",
+          name: "Guest User",
           email: "guest@example.com",
           role: "GUEST",
           isGuest: true,
@@ -148,7 +146,7 @@ export const authOptions: AuthOptions = {
         session.user.email = token.email as string;
         session.user.isGuest = token.isGuest;
         if (token.isGuest) {
-          session.user.name = "Pengguna Tamu";
+          session.user.name = "Guest User";
         }
       }
       return session;

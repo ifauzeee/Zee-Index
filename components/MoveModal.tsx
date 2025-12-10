@@ -30,7 +30,7 @@ export default function MoveModal({
   const [folderStack, setFolderStack] = useState([
     {
       id: process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!,
-      name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Beranda",
+      name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Home",
     },
   ]);
   const [subfolders, setSubfolders] = useState<DriveFile[]>([]);
@@ -47,7 +47,7 @@ export default function MoveModal({
         const url = new URL("/api/files", window.location.origin);
         url.searchParams.append("folderId", folderId);
         const response = await fetch(url.toString());
-        if (!response.ok) throw new Error("Gagal memuat folder");
+        if (!response.ok) throw new Error("Failed to load folders");
         const data = await response.json();
         setSubfolders(data.files.filter((f: DriveFile) => f.isFolder));
       } catch (err: unknown) {
@@ -111,10 +111,10 @@ export default function MoveModal({
             <X size={20} />
           </button>
           <h3 className="text-lg font-semibold mb-2">
-            Pindahkan &quot;{fileToMove.name}&quot;
+            Move &quot;{fileToMove.name}&quot;
           </h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Pilih folder tujuan:
+            Select destination folder:
           </p>
 
           <div className="border rounded-md p-2 flex items-center mb-4">
@@ -154,7 +154,7 @@ export default function MoveModal({
               </ul>
             ) : (
               <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-                <p>Tidak ada subfolder</p>
+                <p>No subfolders</p>
               </div>
             )}
           </div>
@@ -165,7 +165,7 @@ export default function MoveModal({
               onClick={onClose}
               className="px-4 py-2 rounded-md hover:bg-accent"
             >
-              Batal
+              Cancel
             </button>
             <button
               type="button"
@@ -173,7 +173,7 @@ export default function MoveModal({
               onClick={handleMoveConfirm}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:bg-primary/50"
             >
-              {isMoving ? "Memindahkan..." : `Pindahkan ke Sini`}
+              {isMoving ? "Moving..." : `Move Here`}
             </button>
           </div>
         </motion.div>

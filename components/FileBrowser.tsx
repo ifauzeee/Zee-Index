@@ -409,8 +409,8 @@ export default function FileBrowser({
       <FileBrowserModals
         authModal={{ isOpen: false, folderId: "", folderName: "" }}
         isAuthLoading={isAuthLoading}
-        onCloseAuth={() => { }}
-        onAuthSubmit={() => { }}
+        onCloseAuth={() => {}}
+        onAuthSubmit={() => {}}
         isFileRequestModalOpen={isFileRequestModalOpen}
         setIsFileRequestModalOpen={setIsFileRequestModalOpen}
         currentFolderId={currentFolderId}

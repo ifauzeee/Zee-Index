@@ -67,7 +67,7 @@ export function useFileActions(currentFolderId: string) {
     }
     const fileToCopy = contextMenu.file;
     setContextMenu(null);
-    addToast({ message: `Menyalin "${fileToCopy.name}"...`, type: "info" });
+    addToast({ message: `Copying "${fileToCopy.name}"...`, type: "info" });
     try {
       const response = await fetch("/api/files/copy", {
         method: "POST",
@@ -76,8 +76,8 @@ export function useFileActions(currentFolderId: string) {
       });
       const result = await response.json();
       if (!response.ok)
-        throw new Error(result.error || "Gagal membuat salinan.");
-      addToast({ message: "File berhasil disalin!", type: "success" });
+        throw new Error(result.error || "Failed to create copy.");
+      addToast({ message: "File successfully copied!", type: "success" });
       triggerRefresh();
     } catch (err: any) {
       addToast({ message: err.message, type: "error" });
@@ -96,9 +96,9 @@ export function useFileActions(currentFolderId: string) {
         body: JSON.stringify({ fileId: actionState.file.id, newName }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Gagal mengubah nama");
+      if (!response.ok) throw new Error(data.error || "Failed to rename");
       triggerRefresh();
-      addToast({ message: "Nama berhasil diubah!", type: "success" });
+      addToast({ message: "Name successfully changed!", type: "success" });
       setActionState({ type: null, file: null });
     } catch (err: any) {
       addToast({ message: err.message, type: "error" });
@@ -116,9 +116,9 @@ export function useFileActions(currentFolderId: string) {
         body: JSON.stringify({ fileId: fileToDelete.id }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Gagal menghapus file");
+      if (!response.ok) throw new Error(data.error || "Failed to delete file");
       triggerRefresh();
-      addToast({ message: "File berhasil dihapus!", type: "success" });
+      addToast({ message: "File successfully deleted!", type: "success" });
     } catch (err: any) {
       addToast({ message: err.message, type: "error" });
     }
@@ -141,9 +141,9 @@ export function useFileActions(currentFolderId: string) {
         }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Gagal memindahkan file");
+      if (!response.ok) throw new Error(data.error || "Failed to move file");
       triggerRefresh();
-      addToast({ message: "File berhasil dipindahkan!", type: "success" });
+      addToast({ message: "File successfully moved!", type: "success" });
       setActionState({ type: null, file: null });
     } catch (err: any) {
       addToast({ message: err.message, type: "error" });

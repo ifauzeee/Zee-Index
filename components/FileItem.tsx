@@ -83,7 +83,14 @@ function FileItem({
       url += `&access_token=${folderTokens[parentId]}`;
     }
     return url;
-  }, [file.thumbnailLink, file.id, view, shareToken, file.parents, folderTokens]);
+  }, [
+    file.thumbnailLink,
+    file.id,
+    view,
+    shareToken,
+    file.parents,
+    folderTokens,
+  ]);
 
   const handleContextMenuEvent = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -174,7 +181,7 @@ function FileItem({
               : "p-3 min-h-[68px]"
             : "w-full",
           view === "grid" &&
-          "flex flex-col items-center justify-center text-center p-2 sm:p-4",
+            "flex flex-col items-center justify-center text-center p-2 sm:p-4",
           isGallery && "p-0 border-none",
           isDragOver && "ring-2 ring-primary ring-inset bg-primary/10",
           isError && "ring-2 ring-destructive/50 bg-destructive/5",
@@ -258,7 +265,7 @@ function FileItem({
                   "text-3xl text-primary shrink-0 flex items-center justify-center select-none",
                   view === "grid" && "text-4xl mb-2",
                   isGallery &&
-                  "py-8 text-6xl bg-accent/10 w-full flex flex-col gap-2",
+                    "py-8 text-6xl bg-accent/10 w-full flex flex-col gap-2",
                 )}
               >
                 {React.createElement(Icon, {

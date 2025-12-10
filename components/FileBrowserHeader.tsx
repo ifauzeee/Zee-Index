@@ -72,7 +72,7 @@ export default function FileBrowserHeader({
   const { density, setDensity } = useAppStore();
 
   const showAdminActions = !shareToken && isAdmin;
-  const sortLabels = { name: "Nama", modifiedTime: "Tanggal", size: "Ukuran" };
+  const sortLabels = { name: "Name", modifiedTime: "Date", size: "Size" };
 
   useEffect(() => {
     if (navRef.current) {
@@ -84,9 +84,7 @@ export default function FileBrowserHeader({
     <div
       className={cn(
         "flex gap-4 py-4 transition-all duration-300",
-        showAdminActions
-          ? "flex-col"
-          : "flex-row items-center justify-between",
+        showAdminActions ? "flex-col" : "flex-row items-center justify-between",
       )}
     >
       <nav
@@ -121,7 +119,7 @@ export default function FileBrowserHeader({
                       ? "bg-card text-muted-foreground border-border hover:bg-accent hover:text-foreground"
                       : "bg-transparent text-muted-foreground border-transparent cursor-default opacity-70",
                   dragOverBreadcrumb === folder.id &&
-                  "ring-2 ring-primary ring-offset-2",
+                    "ring-2 ring-primary ring-offset-2",
                 )}
               >
                 {isRoot && <Home size={14} />}
@@ -154,7 +152,7 @@ export default function FileBrowserHeader({
             <button
               onClick={onUploadClick}
               className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-primary transition-colors shadow-sm flex items-center justify-center shrink-0"
-              title="Upload atau Buat Folder"
+              title="Upload or Create Folder"
             >
               <Upload size={18} />
             </button>
@@ -162,7 +160,7 @@ export default function FileBrowserHeader({
             <button
               onClick={onRequestFileClick}
               className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-purple-500 transition-colors shadow-sm flex items-center justify-center shrink-0"
-              title="Buat Link Terima File"
+              title="Create File Request Link"
             >
               <UploadCloud size={18} />
             </button>
@@ -170,7 +168,7 @@ export default function FileBrowserHeader({
             <button
               onClick={onShareFolderClick}
               className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-blue-500 transition-colors shadow-sm flex items-center justify-center shrink-0"
-              title="Bagikan Folder Ini"
+              title="Share This Folder"
             >
               <Share2 size={18} />
             </button>
@@ -181,7 +179,7 @@ export default function FileBrowserHeader({
               <DropdownMenuTrigger asChild>
                 <button
                   className="p-2 rounded-lg bg-card border hover:bg-accent transition-colors shadow-sm flex items-center justify-center shrink-0 gap-2 px-3"
-                  title="Urutkan file"
+                  title="Sort files"
                 >
                   <ArrowDownUp size={16} />
                   <span className="text-sm font-medium">
@@ -191,13 +189,13 @@ export default function FileBrowserHeader({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => onSortChange("name")}>
-                  Nama
+                  Name
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onSortChange("modifiedTime")}>
-                  Tanggal
+                  Date
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onSortChange("size")}>
-                  Ukuran
+                  Size
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -206,7 +204,7 @@ export default function FileBrowserHeader({
               onClick={onDetailsClick}
               disabled={!activeFileId}
               className="p-2 rounded-lg bg-card border hover:bg-accent transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hidden sm:flex items-center justify-center shrink-0"
-              title="Lihat Detail"
+              title="View Details"
             >
               <Info size={18} />
             </button>
@@ -219,7 +217,7 @@ export default function FileBrowserHeader({
                   ? "bg-blue-600 text-white border-blue-600"
                   : "bg-card hover:bg-accent border-border",
               )}
-              title="Pilih Beberapa File"
+              title="Select Multiple Files"
             >
               <CheckSquare size={18} />
             </button>
@@ -236,7 +234,9 @@ export default function FileBrowserHeader({
                 "p-1.5 rounded-md transition-all mr-1",
                 "text-muted-foreground hover:text-foreground hover:bg-background",
               )}
-              title={density === "compact" ? "Mode Nyaman" : "Mode Kompak"}
+              title={
+                density === "compact" ? "Comfortable Mode" : "Compact Mode"
+              }
             >
               {density === "compact" ? (
                 <StretchHorizontal size={18} />
@@ -254,7 +254,7 @@ export default function FileBrowserHeader({
                 ? "bg-background text-primary shadow-sm scale-105"
                 : "text-muted-foreground hover:text-foreground",
             )}
-            title="Tampilan Daftar"
+            title="List View"
           >
             <List size={18} />
           </button>
@@ -266,7 +266,7 @@ export default function FileBrowserHeader({
                 ? "bg-background text-primary shadow-sm scale-105"
                 : "text-muted-foreground hover:text-foreground",
             )}
-            title="Tampilan Grid"
+            title="Grid View"
           >
             <Grid size={18} />
           </button>
@@ -278,7 +278,7 @@ export default function FileBrowserHeader({
                 ? "bg-background text-primary shadow-sm scale-105"
                 : "text-muted-foreground hover:text-foreground",
             )}
-            title="Tampilan Galeri"
+            title="Gallery View"
           >
             <LayoutTemplate size={18} />
           </button>

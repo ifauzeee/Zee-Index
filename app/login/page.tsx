@@ -26,50 +26,50 @@ function CustomLoginPage() {
         case "InvalidOrExpiredShareLink":
           setMessage({
             type: "error",
-            title: "Tautan Tidak Valid",
-            text: "Tautan berbagi yang Anda gunakan tidak valid atau telah kedaluwarsa.",
+            title: "Invalid Link",
+            text: "The share link you used is invalid or has expired.",
           });
           break;
         case "SessionExpired":
           setMessage({
             type: "info",
-            title: "Sesi Berakhir",
-            text: "Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.",
+            title: "Session Expired",
+            text: "Your session has expired. Please log in again to continue.",
           });
           break;
         case "RootAccessDenied":
           setMessage({
             type: "error",
-            title: "Akses Ditolak",
-            text: "Anda tidak dapat mengakses halaman utama melalui tautan berbagi. Silakan gunakan tautan asli yang Anda terima.",
+            title: "Access Denied",
+            text: "You cannot access the main page through a share link. Please use the original link you received.",
           });
           break;
         case "ShareLinkRevoked":
           setMessage({
             type: "error",
-            title: "Akses Dicabut",
-            text: "Akses untuk tautan ini telah dicabut oleh administrator.",
+            title: "Access Revoked",
+            text: "Access to this link has been revoked by the administrator.",
           });
           break;
         case "GuestAccessDenied":
           setMessage({
             type: "error",
-            title: "Akses Terbatas",
-            text: "Akses tamu tidak diizinkan untuk halaman ini. Silakan login menggunakan akun Google.",
+            title: "Limited Access",
+            text: "Guest access is not allowed for this page. Please log in using a Google account.",
           });
           break;
         case "GuestLogout":
           setMessage({
             type: "success",
-            title: "Sampai Jumpa! 👋",
-            text: "Terima kasih telah menggunakan mode tamu. Selamat datang kembali kapan saja!",
+            title: "See You! 👋",
+            text: "Thank you for using guest mode. Welcome back anytime!",
           });
           break;
         default:
           setMessage({
             type: "error",
-            title: "Terjadi Kesalahan",
-            text: "Terjadi kesalahan. Silakan coba lagi.",
+            title: "An Error Occurred",
+            text: "An error occurred. Please try again.",
           });
           break;
       }
@@ -122,17 +122,17 @@ function CustomLoginPage() {
       if (result?.error) {
         setMessage({
           type: "error",
-          title: "Login Gagal",
-          text: "Email atau password salah. Silakan coba lagi.",
+          title: "Login Failed",
+          text: "Incorrect email or password. Please try again.",
         });
       } else if (result?.ok) {
         window.location.href = callbackUrl;
       }
-    } catch (err) {
+    } catch {
       setMessage({
         type: "error",
-        title: "Terjadi Kesalahan",
-        text: "Terjadi kesalahan saat login. Silakan coba lagi.",
+        title: "An Error Occurred",
+        text: "An error occurred during login. Please try again.",
       });
     } finally {
       setIsLoggingIn(false);
@@ -170,36 +170,36 @@ function CustomLoginPage() {
               </span>
             </h1>
             <p className="text-muted-foreground mt-2">
-              Akses file Anda dengan aman dan cepat.
+              Access your files securely and quickly.
             </p>
           </div>
 
           {message && (
             <div
               className={`border-l-4 p-4 rounded-md animate-in fade-in slide-in-from-top-2 ${message.type === "error"
-                  ? "bg-red-50 dark:bg-red-950/30 border-red-500"
-                  : message.type === "success"
-                    ? "bg-green-50 dark:bg-green-950/30 border-green-500"
-                    : "bg-blue-50 dark:bg-blue-950/30 border-blue-500"
+                ? "bg-red-50 dark:bg-red-950/30 border-red-500"
+                : message.type === "success"
+                  ? "bg-green-50 dark:bg-green-950/30 border-green-500"
+                  : "bg-blue-50 dark:bg-blue-950/30 border-blue-500"
                 }`}
               role="alert"
             >
               <p
                 className={`font-bold ${message.type === "error"
-                    ? "text-red-800 dark:text-red-300"
-                    : message.type === "success"
-                      ? "text-green-800 dark:text-green-300"
-                      : "text-blue-800 dark:text-blue-300"
+                  ? "text-red-800 dark:text-red-300"
+                  : message.type === "success"
+                    ? "text-green-800 dark:text-green-300"
+                    : "text-blue-800 dark:text-blue-300"
                   }`}
               >
                 {message.title}
               </p>
               <p
                 className={`text-sm ${message.type === "error"
-                    ? "text-red-700 dark:text-red-400"
-                    : message.type === "success"
-                      ? "text-green-700 dark:text-green-400"
-                      : "text-blue-700 dark:text-blue-400"
+                  ? "text-red-700 dark:text-red-400"
+                  : message.type === "success"
+                    ? "text-green-700 dark:text-green-400"
+                    : "text-blue-700 dark:text-blue-400"
                   }`}
               >
                 {message.text}
@@ -253,12 +253,12 @@ function CustomLoginPage() {
                 {isLoggingIn ? (
                   <>
                     <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    <span>Memproses...</span>
+                    <span>Processing...</span>
                   </>
                 ) : (
                   <>
                     <LockKeyhole size={20} />
-                    <span>Login dengan Email</span>
+                    <span>Login with Email</span>
                   </>
                 )}
               </button>
@@ -270,7 +270,7 @@ function CustomLoginPage() {
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-background px-2 text-muted-foreground">
-                  Atau
+                  Or
                 </span>
               </div>
             </div>
@@ -297,7 +297,7 @@ function CustomLoginPage() {
                   fill="#EA4335"
                 />
               </svg>
-              Lanjutkan dengan Google
+              Continue with Google
             </button>
 
             <button
@@ -314,23 +314,23 @@ function CustomLoginPage() {
                 }`}
             >
               {isLoadingConfig ? (
-                <span className="animate-pulse">Memuat...</span>
+                <span className="animate-pulse">Loading...</span>
               ) : isGuestLoginDisabled ? (
                 <>
                   <LockKeyhole size={20} />
-                  <span>Akses Tamu Nonaktif</span>
+                  <span>Guest Access Disabled</span>
                 </>
               ) : (
                 <>
                   <User size={20} />
-                  <span>Lanjutkan sebagai Tamu</span>
+                  <span>Continue as Guest</span>
                 </>
               )}
             </button>
           </div>
 
           <p className="text-center text-xs text-muted-foreground pt-12">
-            © {new Date().getFullYear()} - Dibuat oleh{" "}
+            © {new Date().getFullYear()} - Created by{" "}
             <a
               href="https://ifauzeee.vercel.app/"
               target="_blank"

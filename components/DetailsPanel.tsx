@@ -307,7 +307,6 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
         </div>
 
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-          {/* Left Column - Preview (Desktop Only) */}
           <motion.div
             variants={contentVariants}
             initial="hidden"
@@ -319,7 +318,6 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
               className="flex flex-col items-center gap-6"
             >
               <div className="relative group">
-
                 <motion.div
                   whileHover={{ scale: 1.02, rotate: 1 }}
                   transition={{ type: "spring", stiffness: 300 }}
@@ -354,7 +352,6 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
             </motion.div>
           </motion.div>
 
-          {/* Right Column - Details */}
           <motion.div
             variants={contentVariants}
             initial="hidden"
@@ -366,7 +363,6 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
               className="flex flex-col items-center gap-6 pt-2 lg:hidden"
             >
               <div className="relative group">
-
                 <motion.div
                   whileHover={{ scale: 1.02, rotate: 1 }}
                   transition={{ type: "spring", stiffness: 300 }}
@@ -423,7 +419,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-secondary text-secondary-foreground font-semibold text-sm hover:bg-secondary/80 transition-colors border border-border/50"
               >
                 <Download size={20} />
-                Unduh
+                Download
               </motion.a>
             </motion.div>
 
@@ -469,7 +465,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
               <div className="flex items-center gap-2 px-2 pb-2 border-b border-border/30">
                 <History size={16} className="text-primary" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Properti File
+                  File Properties
                 </h4>
               </div>
               <div className="px-1 flex flex-col">
@@ -583,7 +579,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-foreground text-background hover:bg-foreground/90 font-bold text-sm shadow-xl shadow-foreground/5 transition-all"
           >
             <LinkIcon size={18} />
-            Salin Link Langsung
+            Copy Direct Link
           </motion.button>
         </motion.div>
       </motion.div>
