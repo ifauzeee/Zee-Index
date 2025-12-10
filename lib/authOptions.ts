@@ -39,6 +39,45 @@ export const authOptions: AuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     }),
     CredentialsProvider({
+      id: "credentials",
+      name: "Email & Password",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials): Promise<User | null> {
+        if (!credentials?.email || !credentials.password) return null;
+
+        const email = credentials.email;
+        const password = credentials.password;
+
+        const adminEmails: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
+        const isAdmin = adminEmails.includes(email);
+
+        const storedHash: string | null = await kv.get(`password:${email}`);
+
+        let isValid = false;
+        if (storedHash) {
+          const bcrypt = await import("bcryptjs");
+          isValid = await bcrypt.compare(password, storedHash);
+        } else if (isAdmin && process.env.ADMIN_PASSWORD) {
+          isValid = password === process.env.ADMIN_PASSWORD;
+        }
+
+        if (!isValid) return null;
+
+        const is2FAEnabled = await kv.get(`2fa:enabled:${email}`);
+
+        return {
+          id: email,
+          name: email.split("@")[0],
+          email: email,
+          role: isAdmin ? "ADMIN" : "USER",
+          isGuest: false,
+        };
+      },
+    }),
+    CredentialsProvider({
       id: "guest",
       name: "Guest",
       credentials: {},
@@ -76,6 +115,15 @@ export const authOptions: AuthOptions = {
         token.email = user.email;
         token.role = user.role;
         token.isGuest = user.isGuest;
+      } else if (user && user.email) {
+        token.id = user.id;
+        token.name = user.name;
+        token.email = user.email;
+        token.role = user.role;
+        token.isGuest = false;
+
+        const is2FAEnabled = await kv.get(`2fa:enabled:${user.email}`);
+        token.twoFactorRequired = !!is2FAEnabled;
       } else if (profile?.email) {
         const adminEmails: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
         if (adminEmails.includes(profile.email)) {

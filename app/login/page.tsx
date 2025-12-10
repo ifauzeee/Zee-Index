@@ -8,44 +8,69 @@ import GoogleDrivePng from "@/app/google-drive_2991248.png";
 
 function CustomLoginPage() {
   const searchParams = useSearchParams();
-  const [error, setError] = useState("");
+  const [message, setMessage] = useState<{
+    type: "error" | "info" | "success";
+    title: string;
+    text: string;
+  } | null>(null);
   const [isGuestLoginDisabled, setIsGuestLoginDisabled] = useState(true);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
     const errorType = searchParams.get("error");
     if (errorType) {
       switch (errorType) {
         case "InvalidOrExpiredShareLink":
-          setError(
-            "Tautan berbagi yang Anda gunakan tidak valid atau telah kedaluwarsa.",
-          );
+          setMessage({
+            type: "error",
+            title: "Tautan Tidak Valid",
+            text: "Tautan berbagi yang Anda gunakan tidak valid atau telah kedaluwarsa.",
+          });
           break;
         case "SessionExpired":
-          setError(
-            "Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.",
-          );
+          setMessage({
+            type: "info",
+            title: "Sesi Berakhir",
+            text: "Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.",
+          });
           break;
         case "RootAccessDenied":
-          setError(
-            "Anda tidak dapat mengakses halaman utama melalui tautan berbagi. Silakan gunakan tautan asli yang Anda terima.",
-          );
+          setMessage({
+            type: "error",
+            title: "Akses Ditolak",
+            text: "Anda tidak dapat mengakses halaman utama melalui tautan berbagi. Silakan gunakan tautan asli yang Anda terima.",
+          });
           break;
         case "ShareLinkRevoked":
-          setError("Akses untuk tautan ini telah dicabut oleh administrator.");
+          setMessage({
+            type: "error",
+            title: "Akses Dicabut",
+            text: "Akses untuk tautan ini telah dicabut oleh administrator.",
+          });
           break;
         case "GuestAccessDenied":
-          setError(
-            "Akses tamu tidak diizinkan untuk halaman ini. Silakan login menggunakan akun Google.",
-          );
+          setMessage({
+            type: "error",
+            title: "Akses Terbatas",
+            text: "Akses tamu tidak diizinkan untuk halaman ini. Silakan login menggunakan akun Google.",
+          });
           break;
         case "GuestLogout":
-          setError(
-            "Anda telah logout dari sesi tamu. Selamat datang kembali kapan saja!",
-          );
+          setMessage({
+            type: "success",
+            title: "Sampai Jumpa! 👋",
+            text: "Terima kasih telah menggunakan mode tamu. Selamat datang kembali kapan saja!",
+          });
           break;
         default:
-          setError("Terjadi kesalahan. Silakan coba lagi.");
+          setMessage({
+            type: "error",
+            title: "Terjadi Kesalahan",
+            text: "Terjadi kesalahan. Silakan coba lagi.",
+          });
           break;
       }
     }
@@ -79,6 +104,39 @@ function CustomLoginPage() {
   const handleGoogleSignIn = () => {
     const callbackUrl = searchParams.get("callbackUrl") || "/";
     signIn("google", { callbackUrl });
+  };
+
+  const handleEmailPasswordSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    setMessage(null);
+
+    try {
+      const callbackUrl = searchParams.get("callbackUrl") || "/";
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setMessage({
+          type: "error",
+          title: "Login Gagal",
+          text: "Email atau password salah. Silakan coba lagi.",
+        });
+      } else if (result?.ok) {
+        window.location.href = callbackUrl;
+      }
+    } catch (err) {
+      setMessage({
+        type: "error",
+        title: "Terjadi Kesalahan",
+        text: "Terjadi kesalahan saat login. Silakan coba lagi.",
+      });
+    } finally {
+      setIsLoggingIn(false);
+    }
   };
 
   return (
@@ -116,17 +174,107 @@ function CustomLoginPage() {
             </p>
           </div>
 
-          {error && (
+          {message && (
             <div
-              className="bg-destructive/10 border-l-4 border-destructive text-destructive-foreground p-4 rounded-md animate-in fade-in slide-in-from-top-2"
+              className={`border-l-4 p-4 rounded-md animate-in fade-in slide-in-from-top-2 ${message.type === "error"
+                  ? "bg-red-50 dark:bg-red-950/30 border-red-500"
+                  : message.type === "success"
+                    ? "bg-green-50 dark:bg-green-950/30 border-green-500"
+                    : "bg-blue-50 dark:bg-blue-950/30 border-blue-500"
+                }`}
               role="alert"
             >
-              <p className="font-bold">Akses Gagal</p>
-              <p className="text-sm">{error}</p>
+              <p
+                className={`font-bold ${message.type === "error"
+                    ? "text-red-800 dark:text-red-300"
+                    : message.type === "success"
+                      ? "text-green-800 dark:text-green-300"
+                      : "text-blue-800 dark:text-blue-300"
+                  }`}
+              >
+                {message.title}
+              </p>
+              <p
+                className={`text-sm ${message.type === "error"
+                    ? "text-red-700 dark:text-red-400"
+                    : message.type === "success"
+                      ? "text-green-700 dark:text-green-400"
+                      : "text-blue-700 dark:text-blue-400"
+                  }`}
+              >
+                {message.text}
+              </p>
             </div>
           )}
 
-          <div className="pt-4 space-y-3">
+          <div className="pt-4 space-y-4">
+            <form onSubmit={handleEmailPasswordSignIn} className="space-y-3">
+              <div className="space-y-2">
+                <label
+                  htmlFor="email"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@example.com"
+                  className="w-full px-4 py-3 bg-background border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-muted-foreground/50"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="password"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3 bg-background border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-muted-foreground/50"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoggingIn}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isLoggingIn ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    <span>Memproses...</span>
+                  </>
+                ) : (
+                  <>
+                    <LockKeyhole size={20} />
+                    <span>Login dengan Email</span>
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Atau
+                </span>
+              </div>
+            </div>
+
             <button
               onClick={handleGoogleSignIn}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-card border rounded-lg hover:bg-accent transition-colors font-semibold shadow-sm"
@@ -160,10 +308,9 @@ function CustomLoginPage() {
               }
               disabled={isLoadingConfig || isGuestLoginDisabled}
               className={`w-full flex items-center justify-center gap-3 px-4 py-3 border rounded-lg transition-colors font-semibold 
-                ${
-                  isLoadingConfig || isGuestLoginDisabled
-                    ? "bg-muted text-muted-foreground cursor-not-allowed opacity-70"
-                    : "bg-muted/50 hover:bg-accent cursor-pointer"
+                ${isLoadingConfig || isGuestLoginDisabled
+                  ? "bg-muted text-muted-foreground cursor-not-allowed opacity-70"
+                  : "bg-muted/50 hover:bg-accent cursor-pointer"
                 }`}
             >
               {isLoadingConfig ? (
