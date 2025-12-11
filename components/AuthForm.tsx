@@ -79,7 +79,7 @@ export default function AuthForm({
           });
           window.location.reload();
         }
-      } catch {}
+      } catch { }
     }, 5000);
 
     return () => clearInterval(interval);
@@ -137,6 +137,14 @@ export default function AuthForm({
               Kata Sandi
             </label>
             <input
+              type="text"
+              name="username"
+              autoComplete="username"
+              className="hidden"
+              readOnly
+              value={folderName}
+            />
+            <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -144,6 +152,7 @@ export default function AuthForm({
               className="w-full px-5 py-4 rounded-2xl border bg-background/50 focus:bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-muted-foreground/30 shadow-sm text-lg"
               required
               autoFocus
+              autoComplete="current-password"
             />
           </div>
 

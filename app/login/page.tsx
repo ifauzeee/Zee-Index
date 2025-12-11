@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { User, LockKeyhole } from "lucide-react";
 import Image from "next/image";
-import GoogleDrivePng from "@/app/google-drive_2991248.png";
+import AppIcon from "@/app/icon.png";
 
 function CustomLoginPage() {
   const searchParams = useSearchParams();
@@ -144,11 +144,11 @@ function CustomLoginPage() {
       <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-muted/40 p-12 overflow-hidden relative">
         <div className="relative w-[18rem] h-[18rem] lg:w-[22rem] lg:h-[22rem] opacity-20">
           <Image
-            src={GoogleDrivePng}
+            src={AppIcon}
             alt="Google Drive Logo"
             fill
+            sizes="(max-width: 1024px) 288px, 352px"
             className="object-contain dark:invert"
-            priority
           />
         </div>
       </div>
@@ -157,14 +157,14 @@ function CustomLoginPage() {
         <div className="w-full max-w-sm space-y-8">
           <div className="text-center lg:text-left">
             <h1 className="text-3xl font-bold flex items-center justify-center lg:justify-start">
-              <div className="relative w-9 h-9 mr-3">
-                <Image
-                  src={GoogleDrivePng}
-                  alt="Logo"
-                  fill
-                  className="object-contain dark:invert"
-                />
-              </div>
+              <Image
+                src={AppIcon}
+                alt="Logo"
+                width={36}
+                height={36}
+                priority
+                className="mr-3 object-contain dark:invert"
+              />
               <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
                 Zee Index
               </span>
@@ -219,6 +219,7 @@ function CustomLoginPage() {
                 <input
                   id="email"
                   type="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@example.com"
@@ -237,6 +238,7 @@ function CustomLoginPage() {
                 <input
                   id="password"
                   type="password"
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"

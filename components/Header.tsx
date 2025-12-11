@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut, signIn } from "next-auth/react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
-import GoogleDrivePng from "@/app/google-drive_2991248.png";
+import AppIcon from "@/app/icon.png";
 import {
   Sun,
   Moon,
@@ -307,8 +307,8 @@ export default function Header() {
     <>
       <header
         className={`top-0 z-30 w-full transition-colors duration-200 ${isScrolled
-            ? "border-b border-border bg-background shadow-sm"
-            : "border-b border-transparent bg-background"
+          ? "border-b border-border bg-background shadow-sm"
+          : "border-b border-transparent bg-background"
           }`}
       >
         <div className="container max-w-full px-4 h-16 relative flex items-center justify-center">
@@ -335,7 +335,7 @@ export default function Header() {
                 />
               ) : (
                 <Image
-                  src={GoogleDrivePng}
+                  src={AppIcon}
                   alt="Google Drive Logo"
                   className="w-8 h-8 mr-3 dark:invert"
                 />

@@ -12,6 +12,18 @@ interface UseFileFetchingProps {
   refreshKey: number;
 }
 
+
+export class ProtectedError extends Error {
+  isProtected: boolean;
+  folderId: string;
+  constructor(message: string, folderId: string) {
+    super(message);
+    this.name = "ProtectedError";
+    this.isProtected = true;
+    this.folderId = folderId;
+  }
+}
+
 const fetchFilesApi = async ({
   folderId,
   pageToken,
@@ -40,9 +52,11 @@ const fetchFilesApi = async ({
   if (!response.ok) {
     const errorData = await response.json();
     if (response.status === 401 && errorData.protected) {
-      throw { isProtected: true, folderId, error: errorData.error };
+      throw new ProtectedError(errorData.error, folderId);
     }
-    throw new Error(errorData.error || "Gagal mengambil data file.");
+    const err = new Error(errorData.error || "Gagal mengambil data file.");
+    (err as any).status = response.status;
+    throw err;
   }
 
   return response.json();
@@ -148,7 +162,8 @@ export function useFileFetching({
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextPageToken || undefined,
     retry: (failureCount, error: any) => {
-      if (error?.isProtected) return false;
+      if (error instanceof ProtectedError || error?.isProtected) return false;
+      if (error?.status === 401) return false;
       return failureCount < 2;
     },
     refetchInterval: (query) => {

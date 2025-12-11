@@ -51,17 +51,7 @@ export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
     const isShareAuth = await validateShareToken(request);
 
-    if (!session && !isShareAuth) {
-      return NextResponse.json(
-        { error: "Authentication required." },
-        { status: 401 },
-      );
-    }
-
-    const userRole = session?.user?.role;
-    const userEmail = session?.user?.email;
     const { searchParams } = new URL(request.url);
-
     const rawFolderId =
       searchParams.get("folderId") || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
 
@@ -72,6 +62,9 @@ export async function GET(request: Request) {
         .split("?")[0]
         .trim();
     }
+
+    const userRole = session?.user?.role;
+    const userEmail = session?.user?.email;
 
     const pageToken = searchParams.get("pageToken");
     const forceRefresh = searchParams.get("refresh") === "true";
@@ -85,6 +78,19 @@ export async function GET(request: Request) {
 
     const canSeeAll = userRole === "ADMIN";
     const isFolderProtected = await isProtected(folderId);
+
+    if (
+      !session &&
+      !isShareAuth &&
+      isPrivateFolder(folderId) &&
+      !isFolderProtected
+    ) {
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 },
+      );
+    }
+
 
     let hasDirectAccess = false;
     if (userEmail) {
@@ -107,9 +113,8 @@ export async function GET(request: Request) {
       }
     }
 
-    const cacheKey = `folder:content:${folderId}:${
-      userRole || "GUEST"
-    }:${pageToken || "page1"}`;
+    const cacheKey = `folder:content:${folderId}:${userRole || "GUEST"
+      }:${pageToken || "page1"}`;
 
     if (!forceRefresh) {
       try {
@@ -130,7 +135,7 @@ export async function GET(request: Request) {
         ) {
           return NextResponse.json(cachedData);
         }
-      } catch {}
+      } catch { }
     }
 
     const allProtectedFolders = !canSeeAll
