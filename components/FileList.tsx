@@ -16,6 +16,7 @@ interface FileListProps {
     file: DriveFile,
   ) => void;
   activeFileId: string | null;
+  focusedIndex?: number;
   onShareClick: (e: React.MouseEvent, file: DriveFile) => void;
   onDetailsClick: (e: React.MouseEvent, file: DriveFile) => void;
   onDownloadClick: (e: React.MouseEvent, file: DriveFile) => void;
@@ -31,6 +32,7 @@ export default function FileList({
   onItemClick,
   onItemContextMenu,
   activeFileId,
+  focusedIndex = -1,
   onShareClick,
   onDetailsClick,
   onDownloadClick,
@@ -145,21 +147,25 @@ export default function FileList({
       uploadStatus?: string;
       uploadError?: string;
     },
+    index: number,
   ) => {
     const isShared =
       !file.uploadStatus &&
       shareLinks.some(
         (link) => !link.isCollection && link.path.includes(file.id),
       );
+    const isFocused = index === focusedIndex;
 
     return (
       <div
         key={file.id}
+        data-file-index={index}
         onClick={(e) => !file.uploadStatus && handleItemClickWrapper(file, e)}
+        className={isFocused ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg" : ""}
       >
         <FileItem
           file={file}
-          onClick={() => {}}
+          onClick={() => { }}
           onContextMenu={(event) => onItemContextMenu(event, file)}
           isSelected={selectedFiles.some((f) => f.id === file.id)}
           isActive={!isBulkMode && activeFileId === file.id}

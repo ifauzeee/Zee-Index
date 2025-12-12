@@ -8,6 +8,7 @@ import FolderReadme from "./FolderReadme";
 import PinnedSection from "./PinnedSection";
 import AuthForm from "./AuthForm";
 import type { DriveFile } from "@/lib/googleDrive";
+import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 
 interface FileBrowserContentProps {
   isLoading: boolean;
@@ -66,6 +67,11 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
     fetchNextPage,
   } = props;
 
+  const { focusedIndex } = useKeyboardNavigation({
+    files: sortedFiles as Array<{ id: string; name: string; mimeType: string }>,
+    onFileOpen: (file) => onItemClick(file as DriveFile),
+  });
+
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -105,6 +111,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
       <FileList
         files={sortedFiles}
         activeFileId={activeFileId}
+        focusedIndex={focusedIndex}
         onItemClick={onItemClick}
         onItemContextMenu={onContextMenu}
         onShareClick={onShareClick}

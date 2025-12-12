@@ -16,6 +16,12 @@ export function useKeyboardNavigation({
     const pathname = usePathname();
     const [focusedIndex, setFocusedIndex] = useState(-1);
 
+    const [searchBuffer, setSearchBuffer] = useState("");
+    const searchTimeoutRef = useCallback(() => {
+        const timer = setTimeout(() => setSearchBuffer(""), 500);
+        return () => clearTimeout(timer);
+    }, []);
+
     const handleKeyDown = useCallback(
         (e: KeyboardEvent) => {
             if (
@@ -27,7 +33,6 @@ export function useKeyboardNavigation({
 
             switch (e.key) {
                 case "ArrowDown":
-                case "j":
                     e.preventDefault();
                     setFocusedIndex((prev) =>
                         prev < files.length - 1 ? prev + 1 : prev
@@ -35,7 +40,6 @@ export function useKeyboardNavigation({
                     break;
 
                 case "ArrowUp":
-                case "k":
                     e.preventDefault();
                     setFocusedIndex((prev) => (prev > 0 ? prev - 1 : 0));
                     break;
@@ -52,7 +56,9 @@ export function useKeyboardNavigation({
                     break;
 
                 case "Backspace":
-                    if (pathname !== "/" && !pathname?.startsWith("/admin")) {
+                    if (searchBuffer.length > 0) {
+                        setSearchBuffer((prev) => prev.slice(0, -1));
+                    } else if (pathname !== "/" && !pathname?.startsWith("/admin")) {
                         e.preventDefault();
                         router.back();
                     }
@@ -70,10 +76,28 @@ export function useKeyboardNavigation({
 
                 case "Escape":
                     setFocusedIndex(-1);
+                    setSearchBuffer("");
+                    break;
+
+                default:
+                    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                        const newBuffer = searchBuffer + e.key.toLowerCase();
+                        setSearchBuffer(newBuffer);
+
+                        const matchIndex = files.findIndex((file) =>
+                            file.name.toLowerCase().startsWith(newBuffer)
+                        );
+
+                        if (matchIndex !== -1) {
+                            setFocusedIndex(matchIndex);
+                        }
+
+                        searchTimeoutRef();
+                    }
                     break;
             }
         },
-        [files, focusedIndex, router, pathname, onFileOpen]
+        [files, focusedIndex, router, pathname, onFileOpen, searchBuffer, searchTimeoutRef]
     );
 
     useEffect(() => {
