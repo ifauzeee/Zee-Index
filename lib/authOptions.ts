@@ -51,14 +51,22 @@ export const authOptions: AuthOptions = {
         const email = credentials.email;
         const password = credentials.password;
 
+        // DEBUG LOGGING
+        console.log(`[Auth] Attempting login for: ${email}`);
+
         const adminEmails: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
+        const envAdminsRaw = process.env.ADMIN_EMAILS;
+        console.log(`[Auth] Env ADMIN_EMAILS present: ${!!envAdminsRaw}`);
+
         const envAdmins =
-          process.env.ADMIN_EMAILS?.split(",")
+          envAdminsRaw?.split(",")
             .map((e) => e.trim())
             .filter(Boolean) || [];
 
         const isAdmin =
           adminEmails.includes(email) || envAdmins.includes(email);
+
+        console.log(`[Auth] Is Admin: ${isAdmin} (DB: ${adminEmails.includes(email)}, Env: ${envAdmins.includes(email)})`);
 
         const storedHash: string | null = await kv.get(`password:${email}`);
 
@@ -70,9 +78,16 @@ export const authOptions: AuthOptions = {
           const bcrypt = await import("bcryptjs");
           const tempHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
           isValid = await bcrypt.compare(password, tempHash);
+        } else {
+          if (isAdmin && !process.env.ADMIN_PASSWORD) {
+            console.log("[Auth] Admin found but no ADMIN_PASSWORD env var set for fallback.");
+          }
         }
 
-        if (!isValid) return null;
+        if (!isValid) {
+          console.log("[Auth] Invalid credentials");
+          return null;
+        }
 
         return {
           id: email,
