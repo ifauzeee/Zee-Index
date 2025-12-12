@@ -16,6 +16,7 @@ import Sidebar from "@/components/Sidebar";
 import { cn } from "@/lib/utils";
 import { HardDrive } from "lucide-react";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import GlobalDropZone from "@/components/GlobalDropZone";
 import { usePathname, useSearchParams } from "next/navigation";
 import Loading from "@/components/Loading";
 
@@ -75,6 +76,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     user,
     isSidebarOpen,
     setSidebarOpen,
+    addToast,
   } = useAppStore();
   const { status } = useSession();
   const pathname = usePathname();
@@ -161,6 +163,14 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
       <CommandPalette />
       <KeyboardShortcutsModal />
       <NotificationCenter />
+      <GlobalDropZone
+        onDrop={(files) => {
+          addToast({
+            message: `${files.length} file(s) siap diupload. Gunakan tombol Upload di halaman file browse.`,
+            type: "info",
+          });
+        }}
+      />
 
       <AnimatePresence>
         {detailsFile && (
