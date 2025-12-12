@@ -86,7 +86,7 @@ export const authOptions: AuthOptions = {
           const config: { disableGuestLogin?: boolean } | null =
             await kv.get(CONFIG_KEY);
 
-          if (!config || config.disableGuestLogin !== false) {
+          if (config?.disableGuestLogin === true) {
             return null;
           }
         } catch {
