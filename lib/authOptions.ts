@@ -52,7 +52,13 @@ export const authOptions: AuthOptions = {
         const password = credentials.password;
 
         const adminEmails: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
-        const isAdmin = adminEmails.includes(email);
+        const envAdmins =
+          process.env.ADMIN_EMAILS?.split(",")
+            .map((e) => e.trim())
+            .filter(Boolean) || [];
+
+        const isAdmin =
+          adminEmails.includes(email) || envAdmins.includes(email);
 
         const storedHash: string | null = await kv.get(`password:${email}`);
 
