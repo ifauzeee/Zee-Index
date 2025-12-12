@@ -8,21 +8,29 @@ export async function isAccessRestricted(
   allowedTokens: string[] = [],
 ): Promise<boolean> {
   const protectedConfigs = (await kv.hgetall(PROTECTED_FOLDERS_KEY)) || {};
-  const protectedFolderIds = Object.keys(protectedConfigs);
+  const kvProtectedIds = Object.keys(protectedConfigs);
 
-  if (protectedFolderIds.length === 0) return false;
+  const envPrivateIds = (process.env.PRIVATE_FOLDER_IDS || "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter((id) => id);
 
-  if (protectedFolderIds.includes(fileId)) {
+  const allRestrictedIds = Array.from(new Set([...kvProtectedIds, ...envPrivateIds]));
+
+  if (allRestrictedIds.length === 0) return false;
+
+  if (allRestrictedIds.includes(fileId)) {
     if (allowedTokens.includes(fileId)) return false;
     return true;
   }
 
   try {
     const file = await getFileDetailsFromDrive(fileId);
+
     if (!file || !file.parents || file.parents.length === 0) return false;
 
     for (const parentId of file.parents) {
-      if (protectedFolderIds.includes(parentId)) {
+      if (allRestrictedIds.includes(parentId)) {
         if (!allowedTokens.includes(parentId)) return true;
       }
 
@@ -37,7 +45,7 @@ export async function isAccessRestricted(
 
     return false;
   } catch (error) {
-    console.error(error);
+    console.error("Error checking access restriction:", error);
     return true;
   }
 }

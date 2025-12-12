@@ -56,9 +56,13 @@ export const POST = withAdminSession(
         const contentRange = request.headers.get("Content-Range");
         const contentLength = request.headers.get("Content-Length");
 
-        if (!uploadUrl || !contentRange) {
+        if (
+          !uploadUrl ||
+          !uploadUrl.startsWith("https://www.googleapis.com/") ||
+          !contentRange
+        ) {
           return NextResponse.json(
-            { error: "Parameter uploadUrl atau header Content-Range hilang." },
+            { error: "Parameter uploadUrl tidak valid atau header kurang." },
             { status: 400 },
           );
         }

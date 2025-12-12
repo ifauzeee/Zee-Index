@@ -90,9 +90,12 @@ export default function Search({ onSearchClose }: SearchProps) {
       ) {
         return;
       }
-    }, 300);
+
+      performSearch(searchTerm);
+    }, 500);
+
     return () => clearTimeout(debounceTimer);
-  }, [searchTerm]);
+  }, [searchTerm, mimeType, modifiedTime, minSize, pathname, performSearch]);
 
   useEffect(() => {
     const query = searchParams.get("q");
