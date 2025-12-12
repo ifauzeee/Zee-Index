@@ -74,14 +74,15 @@ export const authOptions: AuthOptions = {
         if (storedHash) {
           const bcrypt = await import("bcryptjs");
           isValid = await bcrypt.compare(password, storedHash);
-        } else if (isAdmin && process.env.ADMIN_PASSWORD) {
+        }
+
+        // Recovery: If DB password failed (or didn't exist), try Env Password
+        if (!isValid && isAdmin && process.env.ADMIN_PASSWORD) {
+          console.log("[Auth] Checking Env Password as fallback/recovery...");
           const bcrypt = await import("bcryptjs");
           const tempHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
-          isValid = await bcrypt.compare(password, tempHash);
-        } else {
-          if (isAdmin && !process.env.ADMIN_PASSWORD) {
-            console.log("[Auth] Admin found but no ADMIN_PASSWORD env var set for fallback.");
-          }
+          const isEnvValid = await bcrypt.compare(password, tempHash);
+          if (isEnvValid) isValid = true;
         }
 
         if (!isValid) {
