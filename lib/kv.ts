@@ -10,7 +10,7 @@ class InMemoryKV {
     return this.store.get(key) ?? null;
   }
 
-  async set(key: string, value: any, opts?: any): Promise<string> {
+  async set(key: string, value: any, _opts?: any): Promise<string> {
     this.store.set(key, value);
     return "OK";
   }

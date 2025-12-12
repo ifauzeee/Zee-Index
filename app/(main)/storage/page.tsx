@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, createElement, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -12,7 +12,6 @@ import {
   Pie,
   Cell,
   Tooltip,
-  Legend,
 } from "recharts";
 import { HardDrive, FileText, AlertCircle, PieChart as PieChartIcon } from "lucide-react";
 

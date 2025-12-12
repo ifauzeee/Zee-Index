@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         if (isBlocked) throw new Error("Tautan ini telah dibatalkan.");
         isShareTokenValid = true;
       }
-    } catch (error) {
+    } catch (_error) {
       console.error("Verifikasi share token gagal");
     }
   }
