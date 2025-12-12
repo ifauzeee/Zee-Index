@@ -37,7 +37,7 @@
     "jose": "^5.4.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.424.0",
-    "next": "^14.2.32",
+    "next": "14.2.35",
     "next-auth": "^4.24.12",
     "next-themes": "^0.4.6",
     "nodemailer": "^7.0.10",
