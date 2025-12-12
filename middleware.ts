@@ -40,7 +40,8 @@ export async function middleware(request: NextRequest) {
     PUBLIC_API_PREFIXES.some((p) => pathname.startsWith(p)) ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
-    pathname.includes("workbox")
+    pathname.includes("workbox") ||
+    pathname.includes("swe-worker")
   ) {
     return NextResponse.next();
   }
