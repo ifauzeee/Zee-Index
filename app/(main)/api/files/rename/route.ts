@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { z } from "zod";
 import { invalidateFolderCache } from "@/lib/cache";
+import { logActivity } from "@/lib/activityLogger";
 
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
 
@@ -61,14 +62,20 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(
-        `Google Drive API Error: ${
-          errorData.error?.message || "Gagal mengubah nama file."
+        `Google Drive API Error: ${errorData.error?.message || "Gagal mengubah nama file."
         }`,
       );
     }
 
     await invalidateFolderCache(parentId);
     const updatedFile = await response.json();
+
+    await logActivity("RENAME", {
+      itemName: `${fileDetails.name} → ${newName}`,
+      userEmail: session?.user?.email,
+      status: "success",
+    });
+
     return NextResponse.json({ success: true, file: updatedFile });
   } catch (error: unknown) {
     const errorMessage =

@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { z } from "zod";
 import { invalidateFolderCache } from "@/lib/cache";
+import { logActivity } from "@/lib/activityLogger";
 
 const moveSchema = z.object({
   fileId: z.string().min(1),
@@ -54,6 +55,13 @@ export async function POST(request: NextRequest) {
 
     await invalidateFolderCache(currentParentId);
     await invalidateFolderCache(newParentId);
+
+    await logActivity("MOVE", {
+      itemName: data.name || fileId,
+      userEmail: session?.user?.email,
+      destinationFolder: newParentId,
+      status: "success",
+    });
 
     return NextResponse.json({ success: true, data });
   } catch (error: unknown) {

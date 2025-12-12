@@ -46,6 +46,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const validExpireFormats = /^\d+[smhdw]$/;
+    if (!validExpireFormats.test(expiresIn)) {
+      return NextResponse.json(
+        { error: "Format expiresIn tidak valid. Gunakan format seperti: 1h, 7d, 30d" },
+        { status: 400 },
+      );
+    }
+
     const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
     const jti = crypto.randomUUID();
 
@@ -95,21 +103,19 @@ export async function POST(req: NextRequest) {
     if (adminEmails.length > 0) {
       await sendMail({
         to: adminEmails,
-        subject: `[Zee Index] Tautan ${
-          isCollection ? "Koleksi" : "Berbagi"
-        } Baru Dibuat`,
+        subject: `[Zee Index] Tautan ${isCollection ? "Koleksi" : "Berbagi"
+          } Baru Dibuat`,
         html: `
     
         <p>Halo Admin,</p>
-                <p>Tautan ${
-          isCollection ? "koleksi" : "berbagi"
-        } baru telah dibuat oleh <b>${session.user.email}</b>.</p>
+                <p>Tautan ${isCollection ? "koleksi" : "berbagi"
+          } baru telah dibuat oleh <b>${session.user.email}</b>.</p>
                 <ul>
                     <li><b>Item:</b> ${shareName}</li>
                     <li><b>Path:</b> ${sharePath}</li>
                     <li><b>Kedaluwarsa pada:</b> ${new Date(
-          newShareLink.expiresAt,
-        ).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}</li>
+            newShareLink.expiresAt,
+          ).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}</li>
                     <li><b>Wajib Login:</b> ${loginRequired ? "Ya" : "Tidak"}</li>
                 </ul>
     

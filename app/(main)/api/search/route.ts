@@ -26,17 +26,22 @@ const getMimeQuery = (mimeType?: string | null) => {
 };
 
 const getDateQuery = (modifiedTime?: string | null) => {
-  const now = new Date();
+  const now = Date.now();
   let dateString = "";
 
   if (modifiedTime === "today") {
-    dateString = new Date(now.setHours(0, 0, 0, 0)).toISOString();
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    dateString = today.toISOString();
   } else if (modifiedTime === "week") {
-    const lastWeek = new Date(now.setDate(now.getDate() - 7));
-    dateString = new Date(lastWeek.setHours(0, 0, 0, 0)).toISOString();
+    const lastWeek = new Date(now - 7 * 24 * 60 * 60 * 1000);
+    lastWeek.setHours(0, 0, 0, 0);
+    dateString = lastWeek.toISOString();
   } else if (modifiedTime === "month") {
-    const lastMonth = new Date(now.setMonth(now.getMonth() - 1));
-    dateString = new Date(lastMonth.setHours(0, 0, 0, 0)).toISOString();
+    const lastMonth = new Date(now);
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+    lastMonth.setHours(0, 0, 0, 0);
+    dateString = lastMonth.toISOString();
   }
 
   if (dateString) {
@@ -87,7 +92,14 @@ export async function GET(request: NextRequest) {
       driveQuery += ` and ${queryField} contains '${searchTerm}'`;
     }
 
+    const fileIdPattern = /^[a-zA-Z0-9_-]+$/;
     if (folderId) {
+      if (!fileIdPattern.test(folderId) || folderId.length > 100) {
+        return NextResponse.json(
+          { error: "Invalid folderId format." },
+          { status: 400 },
+        );
+      }
       driveQuery += ` and '${folderId}' in parents`;
     }
 
@@ -129,7 +141,9 @@ export async function GET(request: NextRequest) {
         if (payload.folderId) {
           allowedTokens.push(payload.folderId as string);
         }
-      } catch {}
+      } catch (e) {
+        console.error("Token verification failed:", e);
+      }
     }
 
     const processedFilesPromise = (data.files || []).map(

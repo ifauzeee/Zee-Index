@@ -64,10 +64,15 @@ export async function GET() {
     }
 
     const requests = await kv.hgetall(FILE_REQUESTS_KEY);
-    const activeRequests = Object.values(requests || {});
+    const now = Date.now();
+    const allRequests = Object.values(requests || {}) as Array<{ expiresAt?: number }>;
+    const activeRequests = allRequests.filter(
+      (req) => !req.expiresAt || req.expiresAt > now
+    );
 
     return NextResponse.json(activeRequests);
-  } catch {
+  } catch (error) {
+    console.error("Get File Requests Error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },
@@ -89,7 +94,8 @@ export async function DELETE(req: NextRequest) {
     await kv.hdel(FILE_REQUESTS_KEY, token);
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    console.error("Delete File Request Error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

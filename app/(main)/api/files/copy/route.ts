@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { z } from "zod";
 import { invalidateFolderCache } from "@/lib/cache";
+import { logActivity } from "@/lib/activityLogger";
 
 const copySchema = z.object({
   fileId: z.string().min(1),
@@ -55,14 +56,20 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(
-        `Google Drive API Error: ${
-          errorData.error?.message || "Gagal membuat salinan."
+        `Google Drive API Error: ${errorData.error?.message || "Gagal membuat salinan."
         }`,
       );
     }
 
     await invalidateFolderCache(parentId);
     const copiedFile = await response.json();
+
+    await logActivity("COPY", {
+      itemName: copiedFile.name || fileId,
+      userEmail: session?.user?.email,
+      status: "success",
+    });
+
     return NextResponse.json({ success: true, file: copiedFile });
   } catch (error: unknown) {
     const errorMessage =
