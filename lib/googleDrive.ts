@@ -90,7 +90,7 @@ export async function getAccessToken(): Promise<string> {
 
   if (!response.ok) {
     const errorData = await response.json();
-    console.error(errorData);
+    console.error("OAuth token refresh failed:", errorData.error);
 
     if (errorData.error === "invalid_grant") {
       await kv.del("zee-index:credentials");
@@ -573,7 +573,8 @@ export async function searchFilesInFolder(
   dateQuery: string,
 ): Promise<DriveFile[]> {
   const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3/files";
-  let driveQuery = `${queryField} contains '${searchTerm}' and trashed=false`;
+  const sanitizedSearchTerm = searchTerm.replace(/['\\]/g, "\\$&");
+  let driveQuery = `${queryField} contains '${sanitizedSearchTerm}' and trashed=false`;
   driveQuery += ` and '${folderId}' in parents`;
   driveQuery += mimeQuery;
   driveQuery += dateQuery;

@@ -6,7 +6,14 @@ const PROTECTED_FOLDERS_KEY = "zee-index:protected-folders";
 export async function isAccessRestricted(
   fileId: string,
   allowedTokens: string[] = [],
+  depth: number = 0,
+  maxDepth: number = 20,
 ): Promise<boolean> {
+  if (depth >= maxDepth) {
+    console.error(`Max depth reached for fileId: ${fileId}`);
+    return true;
+  }
+
   const protectedConfigs = (await kv.hgetall(PROTECTED_FOLDERS_KEY)) || {};
   const kvProtectedIds = Object.keys(protectedConfigs);
 
@@ -38,6 +45,8 @@ export async function isAccessRestricted(
         const isParentRestricted = await isAccessRestricted(
           parentId,
           allowedTokens,
+          depth + 1,
+          maxDepth,
         );
         if (isParentRestricted) return true;
       }

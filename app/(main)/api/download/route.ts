@@ -26,19 +26,30 @@ export async function GET(request: NextRequest) {
   let isShareTokenValid = false;
   if (shareToken) {
     try {
-      const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
-      const { payload } = await jwtVerify(shareToken, secret);
-      const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);
-      if (isBlocked) throw new Error("Tautan ini telah dibatalkan.");
-      isShareTokenValid = true;
+      const shareSecretKey = process.env.SHARE_SECRET_KEY;
+      if (shareSecretKey && shareSecretKey.length >= 32) {
+        const secret = new TextEncoder().encode(shareSecretKey);
+        const { payload } = await jwtVerify(shareToken, secret);
+        const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);
+        if (isBlocked) throw new Error("Tautan ini telah dibatalkan.");
+        isShareTokenValid = true;
+      }
     } catch (error) {
-      console.error("Verifikasi share token gagal:", error);
+      console.error("Verifikasi share token gagal");
     }
   }
 
   if (!fileId) {
     return NextResponse.json(
       { error: "Parameter fileId tidak ditemukan." },
+      { status: 400 },
+    );
+  }
+
+  const fileIdPattern = /^[a-zA-Z0-9_-]+$/;
+  if (!fileIdPattern.test(fileId) || fileId.length > 100) {
+    return NextResponse.json(
+      { error: "Format fileId tidak valid." },
       { status: 400 },
     );
   }
@@ -124,7 +135,7 @@ export async function GET(request: NextRequest) {
 
     const encodedFileName = encodeURIComponent(fileDetails.name).replace(
       /['()]/g,
-      escape,
+      (char) => "%" + char.charCodeAt(0).toString(16).toUpperCase(),
     );
 
     responseHeaders.set(

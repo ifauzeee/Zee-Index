@@ -61,7 +61,9 @@ export const authOptions: AuthOptions = {
           const bcrypt = await import("bcryptjs");
           isValid = await bcrypt.compare(password, storedHash);
         } else if (isAdmin && process.env.ADMIN_PASSWORD) {
-          isValid = password === process.env.ADMIN_PASSWORD;
+          const bcrypt = await import("bcryptjs");
+          const tempHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+          isValid = await bcrypt.compare(password, tempHash);
         }
 
         if (!isValid) return null;
@@ -91,10 +93,11 @@ export const authOptions: AuthOptions = {
           return null;
         }
 
+        const guestId = `guest_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
         return {
-          id: "guest-user",
+          id: guestId,
           name: "Guest User",
-          email: "guest@example.com",
+          email: `${guestId}@guest.local`,
           role: "GUEST",
           isGuest: true,
         };
@@ -160,7 +163,7 @@ export const authOptions: AuthOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: process.env.NEXTAUTH_URL?.startsWith("https://"),
+        secure: process.env.NODE_ENV === "production",
       },
     },
   },

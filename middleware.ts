@@ -48,7 +48,11 @@ export async function middleware(request: NextRequest) {
   const shareToken = request.nextUrl.searchParams.get("share_token");
   if (shareToken) {
     try {
-      const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY);
+      const shareSecretKey = process.env.SHARE_SECRET_KEY;
+      if (!shareSecretKey || shareSecretKey.length < 32) {
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
+      const secret = new TextEncoder().encode(shareSecretKey);
       const { payload } = await jwtVerify(shareToken, secret);
 
       if (payload.loginRequired) {
