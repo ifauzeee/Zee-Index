@@ -203,49 +203,6 @@ export default function FileDetail({
     addToast({ message: "Link disalin!", type: "success" });
   };
 
-  const handlePlayVlc = async () => {
-    addToast({ message: "Menyiapkan stream...", type: "info" });
-
-    let finalUrl = `${window.location.origin}${directLink}`;
-
-    if (session?.user) {
-      try {
-        const res = await fetch("/api/auth/video-token", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fileId: file.id }),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          const separator = finalUrl.includes("?") ? "&" : "?";
-          finalUrl += `${separator}video_token=${data.token}`;
-        }
-      } catch (e) {
-        console.error("Failed to get video token", e);
-      }
-    }
-
-    window.location.href = `vlc://${finalUrl}`;
-
-    // DEBUG: Log URL to console
-    console.log("Opening VLC with URL:", finalUrl);
-
-    // Copy to clipboard as backup for user
-    navigator.clipboard.writeText(finalUrl);
-
-    addToast({ message: "Mencoba membuka VLC...", type: "success" });
-
-    setTimeout(() => {
-      addToast({
-        message:
-          "URL Stream disalin! Jika VLC tidak terbuka, paste manual (Ctrl+V) di VLC > Open Network Stream.",
-        type: "info",
-        duration: 6000,
-      });
-    }, 1500);
-  };
-
   const renderPreviewContent = () => {
     switch (fileType) {
       case "video":
@@ -398,7 +355,6 @@ export default function FileDetail({
                   onAddTag={(tag) => addTag(file.id, tag)}
                   onRemoveTag={(tag) => removeTag(file.id, tag)}
                   onCopyLink={handleCopyLink}
-                  onPlayVlc={handlePlayVlc}
                   isImage={fileType === "image"}
                 />
               </motion.div>
@@ -530,7 +486,6 @@ export default function FileDetail({
           onAddTag={(tag) => addTag(file.id, tag)}
           onRemoveTag={(tag) => removeTag(file.id, tag)}
           onCopyLink={handleCopyLink}
-          onPlayVlc={handlePlayVlc}
           onEditImage={() => setShowImageEditor(true)}
           onShowHistory={() => setShowHistory(true)}
           isImage={fileType === "image"}

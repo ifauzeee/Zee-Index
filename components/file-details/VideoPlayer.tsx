@@ -64,14 +64,6 @@ export default function VideoPlayer({
   const [retryCount, setRetryCount] = useState(0);
   const [isDirectMode, setIsDirectMode] = useState(false);
 
-  const handleCopyStreamInfo = () => {
-    navigator.clipboard.writeText(currentSrc);
-    addToast({
-      message: "Link streaming disalin! Paste di VLC.",
-      type: "success",
-    });
-  };
-
   const displayMimeType =
     mimeType.includes("matroska") || title.toLowerCase().endsWith(".mkv")
       ? "video/webm"
@@ -270,18 +262,8 @@ export default function VideoPlayer({
             <h3 className="text-xl font-bold mb-2">Format Tidak Didukung</h3>
             <p className="text-sm text-gray-300 mb-4 max-w-sm">
               Codec video ini (kemungkinan HEVC/x265) tidak didukung browser.
-              <br />
-              <span className="text-white font-medium mt-1 block">
-                Solusi: Gunakan VLC Media Player.
-              </span>
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              <button
-                onClick={handleCopyStreamInfo}
-                className="px-4 py-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-lg text-sm font-medium flex items-center gap-2"
-              >
-                <Copy size={16} /> Salin Link Streaming
-              </button>
               <a
                 href={currentSrc}
                 download

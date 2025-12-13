@@ -33,33 +33,21 @@ export async function isAccessRestricted(
     return true;
   }
 
-  // Optimization: Check immediate parents first before recursing
-  // If the file's direct parent is allowed, we might accept it,
-  // BUT a parent of the parent could be restricted.
-  // So we must traverse up unless we hit the root or an explicitly allowed folder.
-
   try {
     const file = await getFileDetailsFromDrive(fileId);
 
     if (!file || !file.parents || file.parents.length === 0) return false;
 
     for (const parentId of file.parents) {
-      // 1. Direct check against restricted list
       if (allRestrictedIds.includes(parentId)) {
         if (!allowedTokens.includes(parentId)) return true;
-        // If allowed, we stop checking this branch?
-        // No, because a higher level folder might also be restricted.
-        // However, in this simple model, usually unlocking the folder unlocks the tree.
-        // Assuming unlocking a folder grants access to its subtree:
         if (allowedTokens.includes(parentId)) continue;
       }
 
-      // 2. Stop recursion at Root
       if (parentId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
         continue;
       }
 
-      // 3. Recurse
       const isParentRestricted = await isAccessRestricted(
         parentId,
         allowedTokens,
