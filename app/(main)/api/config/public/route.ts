@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 
 const CONFIG_KEY = "zee-index:config";
 export async function GET() {

@@ -3,7 +3,7 @@ import { getAccessToken } from "@/lib/googleDrive";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { validateShareToken } from "@/lib/auth";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 
 export const dynamic = "force-dynamic";
 

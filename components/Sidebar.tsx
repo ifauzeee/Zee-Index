@@ -301,7 +301,7 @@ export default function Sidebar() {
                   className={cn(
                     "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors group",
                     currentFolderId === drive.id &&
-                    "bg-accent font-medium text-primary",
+                      "bg-accent font-medium text-primary",
                   )}
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
@@ -358,7 +358,7 @@ export default function Sidebar() {
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
               currentFolderId === rootFolderId &&
-              "bg-accent font-medium text-primary",
+                "bg-accent font-medium text-primary",
             )}
           >
             <Home size={16} /> Home

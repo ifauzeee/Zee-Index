@@ -1,5 +1,5 @@
 import { Ratelimit } from "@upstash/ratelimit";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 import { NextRequest } from "next/server";
 
 export const ratelimit = new Ratelimit({

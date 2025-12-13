@@ -1,7 +1,7 @@
 import { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 import { User } from "next-auth";
 
 const ADMIN_EMAILS_KEY = "zee-index:admins";
@@ -51,7 +51,6 @@ export const authOptions: AuthOptions = {
         const email = credentials.email;
         const password = credentials.password;
 
-        // DEBUG LOGGING
         console.log(`[Auth] Attempting login for: ${email}`);
 
         const adminEmails: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
@@ -79,7 +78,6 @@ export const authOptions: AuthOptions = {
           isValid = await bcrypt.compare(password, storedHash);
         }
 
-        // Recovery: If DB password failed (or didn't exist), try Env Password
         if (!isValid && isAdmin && process.env.ADMIN_PASSWORD) {
           console.log("[Auth] Checking Env Password as fallback/recovery...");
           const bcrypt = await import("bcryptjs");

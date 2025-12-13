@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 
 export async function GET() {
   const session = await getServerSession(authOptions);

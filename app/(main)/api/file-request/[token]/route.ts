@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 
 const FILE_REQUESTS_KEY = "zee-index:file-requests";
 

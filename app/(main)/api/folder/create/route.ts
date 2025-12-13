@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { z } from "zod";
 import { logActivity } from "@/lib/activityLogger";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 import { invalidateFolderCache } from "@/lib/cache";
 
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");

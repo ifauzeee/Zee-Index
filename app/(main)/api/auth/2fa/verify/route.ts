@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { authenticator } from "otplib";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 import { checkRateLimit } from "@/lib/ratelimit";
 
 export async function POST(request: NextRequest) {

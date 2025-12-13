@@ -62,7 +62,7 @@ export default function VideoPlayer({
   const [lastTime, setLastTime] = useState(0);
   const [currentSrc, setCurrentSrc] = useState(src);
   const [retryCount, setRetryCount] = useState(0);
-  const [isDirectMode, setIsDirectMode] = useState(false); // Default false for compatibility
+  const [isDirectMode, setIsDirectMode] = useState(false);
 
   const handleCopyStreamInfo = () => {
     navigator.clipboard.writeText(currentSrc);

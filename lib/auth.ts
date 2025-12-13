@@ -1,5 +1,5 @@
 import { jwtVerify } from "jose";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 import { sendMail } from "@/lib/mailer";
 import { formatBytes } from "@/lib/utils";
 

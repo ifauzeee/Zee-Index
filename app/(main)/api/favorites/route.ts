@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 import { DriveFile, getFileDetailsFromDrive } from "@/lib/googleDrive";
 
 export async function GET() {

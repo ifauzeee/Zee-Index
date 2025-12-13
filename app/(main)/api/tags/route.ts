@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 import { z } from "zod";
 
 const TAGS_KEY_PREFIX = "zee-index:tags:";

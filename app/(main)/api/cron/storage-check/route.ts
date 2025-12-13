@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getStorageDetails } from "@/lib/googleDrive";
 import { sendMail } from "@/lib/mailer";
 import { formatBytes } from "@/lib/utils";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 
 const WARNING_SENT_KEY = "zee-index:storage-warning-sent";
 

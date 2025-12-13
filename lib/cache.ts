@@ -1,4 +1,4 @@
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 
 export async function invalidateFolderCache(folderId: string) {
   try {

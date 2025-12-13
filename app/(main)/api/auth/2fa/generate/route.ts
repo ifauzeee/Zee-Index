@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { authenticator } from "otplib";
 import qrcode from "qrcode";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 
 export async function POST() {
   const session = await getServerSession(authOptions);

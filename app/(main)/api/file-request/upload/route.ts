@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getAccessToken } from "@/lib/googleDrive";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 import { logActivity } from "@/lib/activityLogger";
 
 export const maxDuration = 60;

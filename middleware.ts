@@ -80,7 +80,6 @@ export async function middleware(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  // DEBUG: Middleware Session Check
   if (pathname.includes("/admin") || pathname === "/") {
     console.log(`[MW] Path: ${pathname}`);
     console.log(`[MW] Token found: ${!!token}`);

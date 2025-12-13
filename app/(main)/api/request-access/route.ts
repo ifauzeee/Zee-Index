@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { sendMail } from "@/lib/mailer";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 import { logActivity } from "@/lib/activityLogger";
 
 export async function POST(req: NextRequest) {

@@ -208,7 +208,6 @@ export default function FileDetail({
     window.location.href = `vlc://${streamUrl}`;
     addToast({ message: "Mencoba membuka VLC...", type: "success" });
 
-    // Fallback info
     setTimeout(() => {
       addToast({
         message: "Jika gagal, gunakan tombol Salin Link.",

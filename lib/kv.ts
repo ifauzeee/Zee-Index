@@ -1,4 +1,5 @@
 import { createClient, VercelKV } from "@vercel/kv";
+export type { VercelKV };
 
 const hasKvEnv =
   !!process.env.KV_REST_API_URL &&
@@ -77,7 +78,7 @@ class InMemoryKV {
 
 export const kv = hasKvEnv
   ? createClient({
-    url: process.env.KV_REST_API_URL!,
-    token: process.env.KV_REST_API_TOKEN!,
-  })
+      url: process.env.KV_REST_API_URL!,
+      token: process.env.KV_REST_API_TOKEN!,
+    })
   : (new InMemoryKV() as unknown as VercelKV);

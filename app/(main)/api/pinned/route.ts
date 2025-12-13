@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 import { getFileDetailsFromDrive, DriveFile } from "@/lib/googleDrive";
 import { z } from "zod";
 
