@@ -12,17 +12,17 @@ interface ToastProps {
 }
 
 const ToastComponent = ({ toast, onRemove }: ToastProps) => {
-  const { id, message, type } = toast;
+  const { id, message, type, duration } = toast;
 
   useEffect(() => {
     const timer = setTimeout(() => {
       onRemove(id);
-    }, 5000);
+    }, duration || 5000);
 
     return () => {
       clearTimeout(timer);
     };
-  }, [id, onRemove]);
+  }, [id, onRemove, duration]);
 
   const icons = {
     success: <CheckCircle2 className="text-green-500" />,

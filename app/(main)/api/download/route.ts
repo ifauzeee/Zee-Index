@@ -23,6 +23,15 @@ export async function GET(request: NextRequest) {
   const shareToken = searchParams.get("share_token");
   const accessTokenParam = searchParams.get("access_token");
   const videoToken = searchParams.get("video_token");
+
+  // DEBUG LOG
+  console.log(`[DOWNLOAD_API] Request for fileId: ${fileId}`);
+  console.log(
+    `[DOWNLOAD_API] User-Agent: ${request.headers.get("user-agent")}`,
+  );
+  console.log(`[DOWNLOAD_API] Has Session: ${!!session}`);
+  console.log(`[DOWNLOAD_API] VideoToken Present: ${!!videoToken}`);
+
   let isVideoTokenValid = false;
 
   // Validate Video Token for VLC Access
@@ -31,11 +40,16 @@ export async function GET(request: NextRequest) {
       const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY);
       const { payload } = await jwtVerify(videoToken, secret);
 
+      console.log(`[DOWNLOAD_API] Token Payload:`, payload);
+
       if (payload.type === "video_access" && payload.fileId === fileId) {
         isVideoTokenValid = true;
+        console.log(`[DOWNLOAD_API] Video Token VALID`);
+      } else {
+        console.warn(`[DOWNLOAD_API] Video Token Mismatch/Invalid Type`);
       }
     } catch (e) {
-      console.warn("Invalid video token attempt");
+      console.warn("Invalid video token attempt:", e);
     }
   }
 
@@ -130,6 +144,11 @@ export async function GET(request: NextRequest) {
     const range = request.headers.get("range");
     const headers = new Headers();
     headers.set("Authorization", `Bearer ${accessToken}`);
+    // Explicitly set User-Agent to prevent Google from blocking "node-fetch" or empty UA
+    headers.set("User-Agent", "Zee-Index-Streamer/1.0");
+    // Force uncompressed response from Google so we can stream byte-range correctly
+    headers.set("Accept-Encoding", "identity");
+
     if (range) {
       headers.set("Range", range);
     }

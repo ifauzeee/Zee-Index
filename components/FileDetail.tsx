@@ -227,14 +227,23 @@ export default function FileDetail({
     }
 
     window.location.href = `vlc://${finalUrl}`;
+
+    // DEBUG: Log URL to console
+    console.log("Opening VLC with URL:", finalUrl);
+
+    // Copy to clipboard as backup for user
+    navigator.clipboard.writeText(finalUrl);
+
     addToast({ message: "Mencoba membuka VLC...", type: "success" });
 
     setTimeout(() => {
       addToast({
-        message: "Jika gagal, gunakan tombol Salin Link.",
+        message:
+          "URL Stream disalin! Jika VLC tidak terbuka, paste manual (Ctrl+V) di VLC > Open Network Stream.",
         type: "info",
+        duration: 6000,
       });
-    }, 2000);
+    }, 1500);
   };
 
   const renderPreviewContent = () => {
