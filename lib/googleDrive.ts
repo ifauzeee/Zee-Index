@@ -266,7 +266,7 @@ export async function getAllDescendantFolders(
   try {
     await kv.set(cacheKey, folderArray, { ex: 3600 });
   } catch (e) {
-    console.error(e);
+    console.warn("Failed to cache folder tree:", e);
   }
 
   return folderArray;

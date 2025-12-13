@@ -95,12 +95,19 @@ export async function GET(request: NextRequest) {
     isAdmin: session?.user?.role === "ADMIN",
   })}`;
 
+  let cachedData = null;
   try {
-    const cachedData = await kv.get(cacheKey);
-    if (cachedData) {
-      return NextResponse.json(cachedData);
-    }
+    cachedData = await kv.get(cacheKey);
+  } catch (error) {
+    console.warn("Redis Cache Error (Get):", error);
+    // Continue to fetch from source even if cache fails
+  }
 
+  if (cachedData) {
+    return NextResponse.json(cachedData);
+  }
+
+  try {
     const accessToken = await getAccessToken();
     const driveUrl = "https://www.googleapis.com/drive/v3/files";
     const queryField = searchType === "fullText" ? "fullText" : "name";
@@ -192,7 +199,11 @@ export async function GET(request: NextRequest) {
       nextPageToken: data.nextPageToken,
     };
 
-    await kv.set(cacheKey, result, { ex: CACHE_TTL });
+    try {
+      await kv.set(cacheKey, result, { ex: CACHE_TTL });
+    } catch (error) {
+      console.warn("Redis Cache Error (Set):", error);
+    }
 
     return NextResponse.json(result);
   } catch (error: unknown) {

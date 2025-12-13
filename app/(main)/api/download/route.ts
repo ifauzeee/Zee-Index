@@ -22,6 +22,22 @@ export async function GET(request: NextRequest) {
   const fileId = searchParams.get("fileId");
   const shareToken = searchParams.get("share_token");
   const accessTokenParam = searchParams.get("access_token");
+  const videoToken = searchParams.get("video_token");
+  let isVideoTokenValid = false;
+
+  // Validate Video Token for VLC Access
+  if (videoToken) {
+    try {
+      const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY);
+      const { payload } = await jwtVerify(videoToken, secret);
+
+      if (payload.type === "video_access" && payload.fileId === fileId) {
+        isVideoTokenValid = true;
+      }
+    } catch (e) {
+      console.warn("Invalid video token attempt");
+    }
+  }
 
   let isShareTokenValid = false;
   if (shareToken) {
@@ -56,7 +72,7 @@ export async function GET(request: NextRequest) {
 
   const userRole = session?.user?.role;
 
-  if (userRole !== "ADMIN") {
+  if (userRole !== "ADMIN" && !isVideoTokenValid) {
     const isRestricted = await isAccessRestricted(fileId);
 
     if (isRestricted) {
@@ -94,7 +110,7 @@ export async function GET(request: NextRequest) {
         );
       }
     } else {
-      if (!session && !isShareTokenValid) {
+      if (!session && !isShareTokenValid && !isVideoTokenValid) {
         return NextResponse.json({ error: "Akses ditolak." }, { status: 401 });
       }
     }

@@ -165,13 +165,10 @@ export function useFileFetching({
       if (error?.status === 401) return false;
       return failureCount < 2;
     },
-    refetchInterval: (query) => {
-      if (query.state.status === "error") return false;
-      return 5000;
-    },
+    refetchInterval: false, // Disable aggressive polling to save API quota
     refetchOnWindowFocus: (query) => {
       if (query.state.status === "error") return false;
-      return true;
+      return false; // Disable refetch on window focus to further save quota
     },
     enabled: !!currentFolderId && currentFolderId !== "undefined",
   });
