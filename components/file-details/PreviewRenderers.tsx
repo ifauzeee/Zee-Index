@@ -6,6 +6,7 @@ import { Loader2, Download, Eye } from "lucide-react";
 import { getIcon, getLanguageFromFilename } from "@/lib/utils";
 import Prism from "prismjs";
 import dynamic from "next/dynamic";
+import { OfficeViewer } from "./OfficeViewer";
 
 const PDFViewer = dynamic(() => import("./PDFViewer"), {
   loading: () => <LoadingPreview />,
@@ -174,6 +175,16 @@ export const DefaultPreview: React.FC<{
 
   if (mimeType === "application/pdf") {
     return <PDFViewer src={downloadUrl} />;
+  }
+
+  if (
+    mimeType.includes("officedocument") ||
+    mimeType.includes("msword") ||
+    mimeType.includes("ms-excel") ||
+    mimeType.includes("ms-powerpoint") ||
+    fileName.match(/\.(docx|xlsx|pptx|doc|xls|ppt)$/i)
+  ) {
+    return <OfficeViewer src={downloadUrl} />;
   }
 
   return (

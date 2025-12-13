@@ -6,6 +6,9 @@ import { authOptions } from "@/lib/authOptions";
 import { validateShareToken } from "@/lib/auth";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { jwtVerify } from "jose";
+import { kv } from "@vercel/kv";
+
+const CACHE_TTL = 3600;
 
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
 const getMimeQuery = (mimeType?: string | null) => {
@@ -82,7 +85,22 @@ export async function GET(request: NextRequest) {
     : "";
   const searchTerm = sanitizedSearchTerm.replace(/'/g, "''");
 
+  const cacheKey = `search:${JSON.stringify({
+    q: searchTerm,
+    folderId,
+    searchType,
+    mimeType,
+    modifiedTime,
+    minSize,
+    isAdmin: session?.user?.role === "ADMIN",
+  })}`;
+
   try {
+    const cachedData = await kv.get(cacheKey);
+    if (cachedData) {
+      return NextResponse.json(cachedData);
+    }
+
     const accessToken = await getAccessToken();
     const driveUrl = "https://www.googleapis.com/drive/v3/files";
     const queryField = searchType === "fullText" ? "fullText" : "name";
@@ -169,10 +187,14 @@ export async function GET(request: NextRequest) {
       }),
     );
 
-    return NextResponse.json({
+    const result = {
       files: filteredFiles.filter((f) => f !== null),
       nextPageToken: data.nextPageToken,
-    });
+    };
+
+    await kv.set(cacheKey, result, { ex: CACHE_TTL });
+
+    return NextResponse.json(result);
   } catch (error: unknown) {
     const errorMessage =
       error instanceof Error

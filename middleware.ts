@@ -80,15 +80,6 @@ export async function middleware(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  if (pathname.includes("/admin") || pathname === "/") {
-    console.log(`[MW] Path: ${pathname}`);
-    console.log(`[MW] Token found: ${!!token}`);
-    if (!token) {
-      console.log(`[MW] Cookies: ${request.headers.get("cookie") || "None"}`);
-      console.log(`[MW] Secret set: ${!!process.env.NEXTAUTH_SECRET}`);
-    }
-  }
-
   if (!token) {
     const isPublicRoute = ["/folder", "/share", "/request"].some((p) =>
       pathname.startsWith(p),

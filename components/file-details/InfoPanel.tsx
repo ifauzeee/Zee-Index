@@ -171,13 +171,15 @@ export default function InfoPanel({
       </div>
 
       <div className="grid grid-cols-2 gap-3 mt-8">
-        <button
-          onClick={onPlayVlc}
-          className="col-span-2 flex items-center justify-center px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors shadow-lg shadow-orange-500/20"
-        >
-          <PlayCircle size={18} className="mr-3" />
-          Putar di VLC
-        </button>
+        {file.mimeType.startsWith("video/") && (
+          <button
+            onClick={onPlayVlc}
+            className="col-span-2 flex items-center justify-center px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors shadow-lg shadow-orange-500/20"
+          >
+            <PlayCircle size={18} className="mr-3" />
+            Putar di VLC
+          </button>
+        )}
 
         <button
           onClick={onCopyLink}
