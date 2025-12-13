@@ -44,8 +44,7 @@ export default function BulkActionBar() {
     if (utf8Match && utf8Match[1]) {
       try {
         return decodeURIComponent(utf8Match[1]);
-      } catch {
-      }
+      } catch {}
     }
     const basicMatch = header.match(/filename="([^"]+)"/);
     if (basicMatch && basicMatch[1]) {
@@ -138,9 +137,7 @@ export default function BulkActionBar() {
     } catch (error: unknown) {
       addToast({
         message:
-          error instanceof Error
-            ? error.message
-            : "An unknown error occurred.",
+          error instanceof Error ? error.message : "An unknown error occurred.",
         type: "error",
       });
     } finally {
@@ -175,9 +172,7 @@ export default function BulkActionBar() {
     } catch (error: unknown) {
       addToast({
         message:
-          error instanceof Error
-            ? error.message
-            : "An unknown error occurred.",
+          error instanceof Error ? error.message : "An unknown error occurred.",
         type: "error",
       });
     } finally {

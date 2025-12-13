@@ -176,31 +176,34 @@ function CustomLoginPage() {
 
           {message && (
             <div
-              className={`border-l-4 p-4 rounded-md animate-in fade-in slide-in-from-top-2 ${message.type === "error"
-                ? "bg-red-50 dark:bg-red-950/30 border-red-500"
-                : message.type === "success"
-                  ? "bg-green-50 dark:bg-green-950/30 border-green-500"
-                  : "bg-blue-50 dark:bg-blue-950/30 border-blue-500"
-                }`}
+              className={`border-l-4 p-4 rounded-md animate-in fade-in slide-in-from-top-2 ${
+                message.type === "error"
+                  ? "bg-red-50 dark:bg-red-950/30 border-red-500"
+                  : message.type === "success"
+                    ? "bg-green-50 dark:bg-green-950/30 border-green-500"
+                    : "bg-blue-50 dark:bg-blue-950/30 border-blue-500"
+              }`}
               role="alert"
             >
               <p
-                className={`font-bold ${message.type === "error"
-                  ? "text-red-800 dark:text-red-300"
-                  : message.type === "success"
-                    ? "text-green-800 dark:text-green-300"
-                    : "text-blue-800 dark:text-blue-300"
-                  }`}
+                className={`font-bold ${
+                  message.type === "error"
+                    ? "text-red-800 dark:text-red-300"
+                    : message.type === "success"
+                      ? "text-green-800 dark:text-green-300"
+                      : "text-blue-800 dark:text-blue-300"
+                }`}
               >
                 {message.title}
               </p>
               <p
-                className={`text-sm ${message.type === "error"
-                  ? "text-red-700 dark:text-red-400"
-                  : message.type === "success"
-                    ? "text-green-700 dark:text-green-400"
-                    : "text-blue-700 dark:text-blue-400"
-                  }`}
+                className={`text-sm ${
+                  message.type === "error"
+                    ? "text-red-700 dark:text-red-400"
+                    : message.type === "success"
+                      ? "text-green-700 dark:text-green-400"
+                      : "text-blue-700 dark:text-blue-400"
+                }`}
               >
                 {message.text}
               </p>
@@ -310,9 +313,10 @@ function CustomLoginPage() {
               }
               disabled={isLoadingConfig || isGuestLoginDisabled}
               className={`w-full flex items-center justify-center gap-3 px-4 py-3 border rounded-lg transition-colors font-semibold 
-                ${isLoadingConfig || isGuestLoginDisabled
-                  ? "bg-muted text-muted-foreground cursor-not-allowed opacity-70"
-                  : "bg-muted/50 hover:bg-accent cursor-pointer"
+                ${
+                  isLoadingConfig || isGuestLoginDisabled
+                    ? "bg-muted text-muted-foreground cursor-not-allowed opacity-70"
+                    : "bg-muted/50 hover:bg-accent cursor-pointer"
                 }`}
             >
               {isLoadingConfig ? (

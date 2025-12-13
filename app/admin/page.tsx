@@ -159,10 +159,13 @@ export default function AdminPage() {
 
   const handleRemoveAdmin = async (email: string) => {
     if (
-      await confirm(`Are you sure you want to remove ${email} from the admin list?`, {
-        title: "Remove Admin",
-        variant: "destructive",
-      })
+      await confirm(
+        `Are you sure you want to remove ${email} from the admin list?`,
+        {
+          title: "Remove Admin",
+          variant: "destructive",
+        },
+      )
     ) {
       await removeAdminEmail(email);
     }

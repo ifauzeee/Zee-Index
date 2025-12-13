@@ -59,14 +59,17 @@ export const authOptions: AuthOptions = {
         console.log(`[Auth] Env ADMIN_EMAILS present: ${!!envAdminsRaw}`);
 
         const envAdmins =
-          envAdminsRaw?.split(",")
+          envAdminsRaw
+            ?.split(",")
             .map((e) => e.trim())
             .filter(Boolean) || [];
 
         const isAdmin =
           adminEmails.includes(email) || envAdmins.includes(email);
 
-        console.log(`[Auth] Is Admin: ${isAdmin} (DB: ${adminEmails.includes(email)}, Env: ${envAdmins.includes(email)})`);
+        console.log(
+          `[Auth] Is Admin: ${isAdmin} (DB: ${adminEmails.includes(email)}, Env: ${envAdmins.includes(email)})`,
+        );
 
         const storedHash: string | null = await kv.get(`password:${email}`);
 
@@ -178,5 +181,4 @@ export const authOptions: AuthOptions = {
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
-
 };

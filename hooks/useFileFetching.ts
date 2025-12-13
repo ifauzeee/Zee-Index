@@ -12,7 +12,6 @@ interface UseFileFetchingProps {
   refreshKey: number;
 }
 
-
 export class ProtectedError extends Error {
   isProtected: boolean;
   folderId: string;

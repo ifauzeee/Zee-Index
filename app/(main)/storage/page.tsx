@@ -6,14 +6,13 @@ import { motion } from "framer-motion";
 import Loading from "@/components/Loading";
 import { formatBytes, getIcon } from "@/lib/utils";
 import type { DriveFile } from "@/lib/googleDrive";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-} from "recharts";
-import { HardDrive, FileText, AlertCircle, PieChart as PieChartIcon } from "lucide-react";
+  HardDrive,
+  FileText,
+  AlertCircle,
+  PieChart as PieChartIcon,
+} from "lucide-react";
 
 interface BreakdownItem {
   type: string;
@@ -58,8 +57,18 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
           {data.type}
         </p>
         <div className="space-y-1 text-xs text-muted-foreground">
-          <p>Ukuran: <span className="text-foreground font-medium">{formatBytes(data.size)}</span></p>
-          <p>Jumlah: <span className="text-foreground font-medium">{data.count} file</span></p>
+          <p>
+            Ukuran:{" "}
+            <span className="text-foreground font-medium">
+              {formatBytes(data.size)}
+            </span>
+          </p>
+          <p>
+            Jumlah:{" "}
+            <span className="text-foreground font-medium">
+              {data.count} file
+            </span>
+          </p>
         </div>
       </div>
     );
@@ -109,7 +118,9 @@ function StoragePageContent() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-4">
         <AlertCircle size={48} className="text-red-500 mb-4" />
-        <h3 className="text-lg font-semibold text-foreground">Terjadi Kesalahan</h3>
+        <h3 className="text-lg font-semibold text-foreground">
+          Terjadi Kesalahan
+        </h3>
         <p className="text-muted-foreground mt-2">{error}</p>
       </div>
     );
@@ -117,7 +128,6 @@ function StoragePageContent() {
 
   const usagePercentage = data.limit > 0 ? (data.usage / data.limit) * 100 : 0;
   const freeSpace = Math.max(0, data.limit - data.usage);
-
 
   const chartData = data.breakdown.map((item, index) => ({
     ...item,
@@ -136,11 +146,14 @@ function StoragePageContent() {
           <HardDrive className="text-primary w-8 h-8" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Analisis Penyimpanan</h1>
-          <p className="text-muted-foreground">Detail penggunaan ruang penyimpanan Google Drive Anda.</p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Analisis Penyimpanan
+          </h1>
+          <p className="text-muted-foreground">
+            Detail penggunaan ruang penyimpanan Google Drive Anda.
+          </p>
         </div>
       </div>
-
 
       <div className="mb-10">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -152,12 +165,18 @@ function StoragePageContent() {
           <div className="flex-1 w-full space-y-4">
             <div className="flex justify-between items-end">
               <div>
-                <span className="text-4xl font-bold text-foreground">{usagePercentage.toFixed(1)}%</span>
+                <span className="text-4xl font-bold text-foreground">
+                  {usagePercentage.toFixed(1)}%
+                </span>
                 <span className="text-muted-foreground ml-2">Terpakai</span>
               </div>
               <div className="text-right">
-                <div className="text-sm text-muted-foreground">Total Kapasitas</div>
-                <div className="font-medium text-foreground">{formatBytes(data.limit)}</div>
+                <div className="text-sm text-muted-foreground">
+                  Total Kapasitas
+                </div>
+                <div className="font-medium text-foreground">
+                  {formatBytes(data.limit)}
+                </div>
               </div>
             </div>
 
@@ -173,11 +192,15 @@ function StoragePageContent() {
             <div className="flex justify-between text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-primary" />
-                <span className="text-muted-foreground">{formatBytes(data.usage)} Terpakai</span>
+                <span className="text-muted-foreground">
+                  {formatBytes(data.usage)} Terpakai
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-muted" />
-                <span className="text-muted-foreground">{formatBytes(freeSpace)} Tersedia</span>
+                <span className="text-muted-foreground">
+                  {formatBytes(freeSpace)} Tersedia
+                </span>
               </div>
             </div>
           </div>
@@ -185,8 +208,6 @@ function StoragePageContent() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-
-
         <div className="lg:col-span-5 flex flex-col gap-6">
           <div className="h-full flex flex-col">
             <h2 className="text-lg font-semibold mb-6">Distribusi Tipe File</h2>
@@ -203,8 +224,8 @@ function StoragePageContent() {
                     dataKey="size"
                     strokeWidth={0}
                   >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    {chartData.map((entry, i) => (
+                      <Cell key={`cell-${i}`} fill={entry.fill} />
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
@@ -214,7 +235,9 @@ function StoragePageContent() {
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">Total</p>
-                  <p className="text-xl font-bold">{data.breakdown.reduce((acc, item) => acc + item.count, 0)}</p>
+                  <p className="text-xl font-bold">
+                    {data.breakdown.reduce((acc, item) => acc + item.count, 0)}
+                  </p>
                   <p className="text-xs text-muted-foreground">Files</p>
                 </div>
               </div>
@@ -222,18 +245,25 @@ function StoragePageContent() {
 
             <div className="mt-2 grid grid-cols-2 gap-3">
               {chartData.map((item) => (
-                <div key={item.type} className="flex items-center justify-between text-sm p-2 rounded-lg bg-muted/30">
+                <div
+                  key={item.type}
+                  className="flex items-center justify-between text-sm p-2 rounded-lg bg-muted/30"
+                >
                   <div className="flex items-center gap-2 overflow-hidden">
-                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.fill }} />
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: item.fill }}
+                    />
                     <span className="truncate font-medium">{item.type}</span>
                   </div>
-                  <span className="text-muted-foreground shrink-0 text-xs ml-2">{formatBytes(item.size)}</span>
+                  <span className="text-muted-foreground shrink-0 text-xs ml-2">
+                    {formatBytes(item.size)}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
         </div>
-
 
         <div className="lg:col-span-7 flex flex-col gap-6">
           <div className="h-full">
@@ -246,7 +276,7 @@ function StoragePageContent() {
 
             <div className="space-y-1">
               {data.largestFiles.length > 0 ? (
-                data.largestFiles.map((file, index) => {
+                data.largestFiles.map((file) => {
                   const Icon = getIcon(file.mimeType);
                   return (
                     <div key={file.id} className="group">
@@ -256,9 +286,14 @@ function StoragePageContent() {
                             <Icon size={20} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate text-foreground">{file.name}</p>
+                            <p className="font-medium truncate text-foreground">
+                              {file.name}
+                            </p>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              Modified: {new Date(file.modifiedTime ?? "").toLocaleDateString()}
+                              Modified:{" "}
+                              {new Date(
+                                file.modifiedTime ?? "",
+                              ).toLocaleDateString()}
                             </p>
                           </div>
                           <div className="text-right shrink-0">
@@ -276,9 +311,15 @@ function StoragePageContent() {
                             <Icon size={20} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate text-foreground group-hover:text-primary transition-colors">{file.name}</p>
+                            <p className="font-medium truncate text-foreground group-hover:text-primary transition-colors">
+                              {file.name}
+                            </p>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              {new Date(file.modifiedTime ?? "").toLocaleDateString("id-ID", { dateStyle: 'medium' })}
+                              {new Date(
+                                file.modifiedTime ?? "",
+                              ).toLocaleDateString("id-ID", {
+                                dateStyle: "medium",
+                              })}
                             </p>
                           </div>
                           <div className="text-right shrink-0">
@@ -299,7 +340,6 @@ function StoragePageContent() {
             </div>
           </div>
         </div>
-
       </div>
     </motion.div>
   );

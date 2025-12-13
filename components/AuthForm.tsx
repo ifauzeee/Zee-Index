@@ -79,7 +79,7 @@ export default function AuthForm({
           });
           window.location.reload();
         }
-      } catch { }
+      } catch {}
     }, 5000);
 
     return () => clearInterval(interval);

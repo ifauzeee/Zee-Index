@@ -79,10 +79,11 @@ export default function NotificationCenter() {
                 notifications.map((notif) => (
                   <div
                     key={notif.id}
-                    className={`p-4 rounded-lg border border-border bg-card relative ${!notif.read
+                    className={`p-4 rounded-lg border border-border bg-card relative ${
+                      !notif.read
                         ? "bg-accent/10 border-l-4 border-l-primary"
                         : ""
-                      }`}
+                    }`}
                   >
                     <div className="flex gap-3 items-start">
                       <div className="mt-0.5">{iconMap[notif.type]}</div>

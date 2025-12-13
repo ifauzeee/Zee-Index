@@ -161,11 +161,15 @@ export default function FileList({
         key={file.id}
         data-file-index={index}
         onClick={(e) => !file.uploadStatus && handleItemClickWrapper(file, e)}
-        className={isFocused ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg" : ""}
+        className={
+          isFocused
+            ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg"
+            : ""
+        }
       >
         <FileItem
           file={file}
-          onClick={() => { }}
+          onClick={() => {}}
           onContextMenu={(event) => onItemContextMenu(event, file)}
           isSelected={selectedFiles.some((f) => f.id === file.id)}
           isActive={!isBulkMode && activeFileId === file.id}

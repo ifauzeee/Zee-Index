@@ -22,7 +22,9 @@ export async function isAccessRestricted(
     .map((id) => id.trim())
     .filter((id) => id);
 
-  const allRestrictedIds = Array.from(new Set([...kvProtectedIds, ...envPrivateIds]));
+  const allRestrictedIds = Array.from(
+    new Set([...kvProtectedIds, ...envPrivateIds]),
+  );
 
   if (allRestrictedIds.length === 0) return false;
 

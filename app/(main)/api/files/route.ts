@@ -91,7 +91,6 @@ export async function GET(request: Request) {
       );
     }
 
-
     let hasDirectAccess = false;
     if (userEmail) {
       hasDirectAccess = await hasUserAccess(userEmail, folderId);
@@ -113,8 +112,9 @@ export async function GET(request: Request) {
       }
     }
 
-    const cacheKey = `folder:content:${folderId}:${userRole || "GUEST"
-      }:${pageToken || "page1"}`;
+    const cacheKey = `folder:content:${folderId}:${
+      userRole || "GUEST"
+    }:${pageToken || "page1"}`;
 
     if (!forceRefresh) {
       try {
@@ -135,7 +135,7 @@ export async function GET(request: Request) {
         ) {
           return NextResponse.json(cachedData);
         }
-      } catch { }
+      } catch {}
     }
 
     const allProtectedFolders = !canSeeAll

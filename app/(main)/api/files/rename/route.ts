@@ -62,7 +62,8 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(
-        `Google Drive API Error: ${errorData.error?.message || "Gagal mengubah nama file."
+        `Google Drive API Error: ${
+          errorData.error?.message || "Gagal mengubah nama file."
         }`,
       );
     }

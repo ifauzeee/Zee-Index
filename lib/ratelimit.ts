@@ -23,7 +23,7 @@ export async function checkRateLimit(
   const forwardedFor = request.headers.get("x-forwarded-for");
   const ip = forwardedFor
     ? forwardedFor.split(",")[0].trim()
-    : request.ip ?? "127.0.0.1";
+    : (request.ip ?? "127.0.0.1");
   const limiter = type === "download" ? downloadLimiter : ratelimit;
   return await limiter.limit(ip);
 }

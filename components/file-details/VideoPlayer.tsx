@@ -9,8 +9,18 @@ import {
   DefaultAudioLayout,
 } from "@vidstack/react/player/layouts/default";
 import { motion, AnimatePresence } from "framer-motion";
-import { WifiOff, History, FileWarning, Download } from "lucide-react";
+import {
+  WifiOff,
+  History,
+  FileWarning,
+  Download,
+  ExternalLink,
+  PlayCircle,
+  ShieldAlert,
+  Copy,
+} from "lucide-react";
 import { formatDuration } from "@/lib/utils";
+import { useAppStore } from "@/lib/store";
 
 import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
@@ -32,6 +42,7 @@ interface VideoAudioPreviewProps {
   mimeType: string;
   subtitleTracks?: SubtitleTrack[];
   onEnded?: () => void;
+  webViewLink?: string;
 }
 
 export default function VideoPlayer({
@@ -42,13 +53,24 @@ export default function VideoPlayer({
   mimeType,
   subtitleTracks,
   onEnded,
+  webViewLink,
 }: VideoAudioPreviewProps) {
+  const { addToast } = useAppStore();
   const playerRef = useRef<MediaPlayerInstance>(null);
   const [networkError, setNetworkError] = useState(false);
   const [formatError, setFormatError] = useState(false);
   const [lastTime, setLastTime] = useState(0);
   const [currentSrc, setCurrentSrc] = useState(src);
   const [retryCount, setRetryCount] = useState(0);
+  const [isDirectMode, setIsDirectMode] = useState(false); // Default false for compatibility
+
+  const handleCopyStreamInfo = () => {
+    navigator.clipboard.writeText(currentSrc);
+    addToast({
+      message: "Link streaming disalin! Paste di VLC.",
+      type: "success",
+    });
+  };
 
   const displayMimeType =
     mimeType.includes("matroska") || title.toLowerCase().endsWith(".mkv")
@@ -105,6 +127,40 @@ export default function VideoPlayer({
     }
   };
 
+  const previewLink = webViewLink
+    ? webViewLink.replace("/view", "/preview")
+    : null;
+
+  if (isDirectMode && previewLink && type === "video") {
+    return (
+      <div className="relative w-full h-full bg-black flex flex-col items-center justify-center rounded-xl overflow-hidden shadow-2xl">
+        <iframe
+          src={previewLink}
+          className="w-full h-full flex-1"
+          allow="autoplay"
+          allowFullScreen
+        />
+        <div className="absolute top-2 right-2 flex gap-2 z-10">
+          <button
+            onClick={() => setIsDirectMode(false)}
+            className="px-3 py-1 bg-black/50 hover:bg-black/70 text-white rounded-lg text-xs font-medium backdrop-blur-md border border-white/10 transition-colors flex items-center gap-2"
+          >
+            <ShieldAlert size={14} /> Mode Proxy (Lambat)
+          </button>
+
+          <a
+            href={webViewLink}
+            target="_blank"
+            rel="noreferrer"
+            className="px-3 py-1 bg-black/50 hover:bg-black/70 text-white rounded-lg text-xs font-medium backdrop-blur-md border border-white/10 transition-colors flex items-center gap-2"
+          >
+            <ExternalLink size={14} /> Buka Drive
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-full bg-black flex items-center justify-center rounded-xl overflow-hidden shadow-2xl">
       <MediaPlayer
@@ -154,6 +210,29 @@ export default function VideoPlayer({
         ) : (
           <DefaultAudioLayout icons={defaultLayoutIcons} />
         )}
+        {type === "video" && (
+          <div className="absolute top-2 right-2 flex gap-2 z-20 opacity-0 hover:opacity-100 transition-opacity duration-300">
+            {webViewLink && (
+              <>
+                <button
+                  onClick={() => setIsDirectMode(true)}
+                  className="px-3 py-1 bg-black/50 hover:bg-primary/80 text-white rounded-lg text-xs font-medium backdrop-blur-md border border-white/10 transition-colors flex items-center gap-2"
+                  title="Gunakan player Google Drive langsung (Lebih Cepat)"
+                >
+                  <PlayCircle size={14} /> Mode Direct (Cepat)
+                </button>
+                <a
+                  href={webViewLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1 bg-black/50 hover:bg-black/70 text-white rounded-lg text-xs font-medium backdrop-blur-md border border-white/10 transition-colors flex items-center gap-2"
+                >
+                  <ExternalLink size={14} /> Buka Drive
+                </a>
+              </>
+            )}
+          </div>
+        )}
       </MediaPlayer>
 
       <AnimatePresence>
@@ -189,15 +268,19 @@ export default function VideoPlayer({
           >
             <FileWarning size={48} className="mb-4 text-amber-500" />
             <h3 className="text-xl font-bold mb-2">Format Tidak Didukung</h3>
-            <p className="text-sm text-gray-300 mb-4 max-w-xs">
-              Codec video ini kemungkinan HEVC tidak didukung browser.
+            <p className="text-sm text-gray-300 mb-4 max-w-sm">
+              Codec video ini (kemungkinan HEVC/x265) tidak didukung browser.
+              <br />
+              <span className="text-white font-medium mt-1 block">
+                Solusi: Gunakan VLC Media Player.
+              </span>
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap justify-center gap-3">
               <button
-                onClick={handleRetry}
-                className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-sm font-medium"
+                onClick={handleCopyStreamInfo}
+                className="px-4 py-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-lg text-sm font-medium flex items-center gap-2"
               >
-                Coba Paksa
+                <Copy size={16} /> Salin Link Streaming
               </button>
               <a
                 href={currentSrc}
@@ -207,6 +290,12 @@ export default function VideoPlayer({
                 <Download size={16} /> Unduh File
               </a>
             </div>
+            <button
+              onClick={handleRetry}
+              className="mt-4 text-xs text-white/50 hover:text-white underline"
+            >
+              Coba Paksa Putar (Mungkin Gagal)
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

@@ -8,8 +8,9 @@ import {
   X,
   Download,
   Link as LinkIcon,
-  History,
+  History as HistoryIcon,
   Edit,
+  PlayCircle,
 } from "lucide-react";
 
 interface InfoPanelProps {
@@ -21,6 +22,7 @@ interface InfoPanelProps {
   onAddTag: (tag: string) => Promise<void>;
   onRemoveTag: (tag: string) => void;
   onCopyLink: () => void;
+  onPlayVlc: () => void;
   onEditImage?: () => void;
   onShowHistory?: () => void;
   isImage: boolean;
@@ -42,6 +44,7 @@ export default function InfoPanel({
   onAddTag,
   onRemoveTag,
   onCopyLink,
+  onPlayVlc,
   onEditImage,
   onShowHistory,
   isImage,
@@ -84,7 +87,7 @@ export default function InfoPanel({
               onClick={onShowHistory}
               className="px-3 py-2 bg-secondary hover:bg-secondary/80 rounded-md text-sm font-medium flex items-center gap-2 transition-colors"
             >
-              <History size={16} /> Riwayat
+              <HistoryIcon size={16} /> Riwayat
             </button>
           )}
         </div>
@@ -167,10 +170,18 @@ export default function InfoPanel({
         )}
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 mt-8">
+      <div className="grid grid-cols-2 gap-3 mt-8">
+        <button
+          onClick={onPlayVlc}
+          className="col-span-2 flex items-center justify-center px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors shadow-lg shadow-orange-500/20"
+        >
+          <PlayCircle size={18} className="mr-3" />
+          Putar di VLC
+        </button>
+
         <button
           onClick={onCopyLink}
-          className="flex-1 flex items-center justify-center px-4 py-3 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 font-semibold transition-colors"
+          className="flex items-center justify-center px-4 py-3 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-lg font-semibold transition-colors"
         >
           <LinkIcon size={18} className="mr-3" />
           Salin Link
@@ -179,12 +190,13 @@ export default function InfoPanel({
         <a
           href={directLink}
           download
-          className="flex-1 flex items-center justify-center px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-semibold"
+          className="flex items-center justify-center px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-semibold"
         >
           <Download size={18} className="mr-3" />
           Unduh
         </a>
       </div>
+      {/* Old Google Drive Button Removed as requested */}
     </div>
   );
 }

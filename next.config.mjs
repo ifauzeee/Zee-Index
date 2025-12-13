@@ -13,7 +13,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig = {
-  output: "standalone",
+  // output: "standalone", // Disabled for local Windows build compatibility
   eslint: {
     ignoreDuringBuilds: true,
   },

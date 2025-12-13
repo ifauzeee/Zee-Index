@@ -203,6 +203,20 @@ export default function FileDetail({
     addToast({ message: "Link disalin!", type: "success" });
   };
 
+  const handlePlayVlc = () => {
+    const streamUrl = `${window.location.origin}${directLink}`;
+    window.location.href = `vlc://${streamUrl}`;
+    addToast({ message: "Mencoba membuka VLC...", type: "success" });
+
+    // Fallback info
+    setTimeout(() => {
+      addToast({
+        message: "Jika gagal, gunakan tombol Salin Link.",
+        type: "info",
+      });
+    }, 2000);
+  };
+
   const renderPreviewContent = () => {
     switch (fileType) {
       case "video":
@@ -213,6 +227,7 @@ export default function FileDetail({
             type="video"
             poster={file.thumbnailLink}
             mimeType={file.mimeType}
+            webViewLink={file.webViewLink}
             subtitleTracks={subtitleTracks}
             onEnded={() => nextFileUrl && router.push(nextFileUrl)}
           />
@@ -354,6 +369,7 @@ export default function FileDetail({
                   onAddTag={(tag) => addTag(file.id, tag)}
                   onRemoveTag={(tag) => removeTag(file.id, tag)}
                   onCopyLink={handleCopyLink}
+                  onPlayVlc={handlePlayVlc}
                   isImage={fileType === "image"}
                 />
               </motion.div>
@@ -430,6 +446,7 @@ export default function FileDetail({
                   type="video"
                   poster={file.thumbnailLink}
                   mimeType={file.mimeType}
+                  webViewLink={file.webViewLink}
                   subtitleTracks={subtitleTracks}
                   onEnded={() => nextFileUrl && router.push(nextFileUrl)}
                 />
@@ -484,6 +501,7 @@ export default function FileDetail({
           onAddTag={(tag) => addTag(file.id, tag)}
           onRemoveTag={(tag) => removeTag(file.id, tag)}
           onCopyLink={handleCopyLink}
+          onPlayVlc={handlePlayVlc}
           onEditImage={() => setShowImageEditor(true)}
           onShowHistory={() => setShowHistory(true)}
           isImage={fileType === "image"}

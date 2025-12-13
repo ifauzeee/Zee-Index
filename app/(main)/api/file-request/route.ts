@@ -65,9 +65,11 @@ export async function GET() {
 
     const requests = await kv.hgetall(FILE_REQUESTS_KEY);
     const now = Date.now();
-    const allRequests = Object.values(requests || {}) as Array<{ expiresAt?: number }>;
+    const allRequests = Object.values(requests || {}) as Array<{
+      expiresAt?: number;
+    }>;
     const activeRequests = allRequests.filter(
-      (req) => !req.expiresAt || req.expiresAt > now
+      (req) => !req.expiresAt || req.expiresAt > now,
     );
 
     return NextResponse.json(activeRequests);
