@@ -1,0 +1,7 @@
+.next/
+node_modules/
+out/
+build/
+public/
+code_context.txt
+*.py

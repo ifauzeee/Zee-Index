@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
 import { useConfirm } from "@/components/providers/ModalProvider";
 import { motion } from "framer-motion";
@@ -55,7 +55,7 @@ export default function TrashPage() {
     }
   }, [status, session, router, addToast]);
 
-  const fetchTrash = async () => {
+  const fetchTrash = useCallback(async () => {
     setIsLoadingData(true);
     try {
       const res = await fetch("/api/trash");
@@ -67,7 +67,7 @@ export default function TrashPage() {
     } finally {
       setIsLoadingData(false);
     }
-  };
+  }, [addToast]);
 
   useEffect(() => {
     if (
@@ -76,7 +76,7 @@ export default function TrashPage() {
     ) {
       fetchTrash();
     }
-  }, [status, session, user, addToast]);
+  }, [status, session, user, fetchTrash]);
 
   const sortedFiles = useMemo(() => {
     return [...files].sort((a, b) => {

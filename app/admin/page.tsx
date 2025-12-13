@@ -301,7 +301,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                   <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm">
                     <h3 className="text-base font-semibold mb-4">
-                      Today's Downloads
+                      Today&apos;s Downloads
                     </h3>
                     <TodayDownloadsChart data={stats.downloadsToday} />
                   </div>
