@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Download, Trash2, Copy, FolderInput } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/providers/ModalProvider";
 import MoveModal from "./MoveModal";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,7 @@ export function BulkActionBar() {
     isSidebarOpen,
     user,
   } = useAppStore();
+  const { confirm } = useConfirm();
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -41,15 +43,25 @@ export function BulkActionBar() {
   };
 
   const handleDelete = async () => {
-    if (!confirm(`Delete ${selectedFiles.length} items?`)) return;
+    if (
+      !(await confirm(
+        `Are you sure you want to delete ${selectedFiles.length} items?`,
+        {
+          title: "Delete Items",
+          variant: "destructive",
+          confirmText: "Delete",
+        },
+      ))
+    )
+      return;
 
     addToast({ message: "Deleting items...", type: "info" });
     setIsProcessing(true);
 
     try {
       for (const file of selectedFiles) {
-        await fetch("/api/file", {
-          method: "DELETE",
+        await fetch("/api/files/delete", {
+          method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ fileId: file.id }),
         });
