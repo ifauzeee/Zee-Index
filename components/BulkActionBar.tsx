@@ -48,7 +48,6 @@ export function BulkActionBar() {
 
       const promises = filesToZip.map(async (file) => {
         try {
-          // Use the proxy endpoint to fetch file content as blob
           const response = await fetch(`/api/download?fileId=${file.id}`);
           if (!response.ok) throw new Error("Network error");
           const blob = await response.blob();

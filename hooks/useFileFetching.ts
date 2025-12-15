@@ -165,9 +165,9 @@ export function useFileFetching({
       if (error?.status === 401) return false;
       return failureCount < 2;
     },
-    refetchInterval: false,
-    refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5,
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
     gcTime: 1000 * 60 * 10,
     enabled: !!currentFolderId && currentFolderId !== "undefined",
   });

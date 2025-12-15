@@ -87,6 +87,11 @@ export async function POST(request: NextRequest) {
       if (driveResponse.ok) {
         const fileData = await driveResponse.json();
 
+        const rolesToInvalidate = ["ADMIN", "USER", "GUEST"];
+        for (const role of rolesToInvalidate) {
+          await kv.del(`folder:content:${requestData.folderId}:${role}:page1`);
+        }
+
         await logActivity("UPLOAD", {
           itemName: fileData.name,
           itemSize: fileData.size,
