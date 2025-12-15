@@ -73,4 +73,24 @@ const nextConfig = {
   },
 };
 
-export default withPWA(nextConfig);
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(
+  withPWA(nextConfig),
+  {
+    silent: true,
+    org: "zeerepo",
+    project: "zee-index",
+  },
+  {
+    widenClientFileUpload: true,
+
+    transpileClientSDK: true,
+
+    tunnelRoute: "/monitoring",
+
+    hideSourceMaps: true,
+
+    disableLogger: true,
+  }
+);
