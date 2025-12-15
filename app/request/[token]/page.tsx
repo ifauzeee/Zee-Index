@@ -79,7 +79,7 @@ export default function PublicUploadPage() {
       if (!initRes.ok) throw new Error("Init failed");
       const { uploadUrl } = await initRes.json();
 
-      const CHUNK_SIZE = 5 * 1024 * 1024;
+      const CHUNK_SIZE = 2 * 1024 * 1024;
       let start = 0;
 
       while (start < file.size) {
