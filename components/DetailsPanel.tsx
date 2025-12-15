@@ -1,17 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import {
-  motion,
-  PanInfo,
-  useAnimation,
-  AnimatePresence,
-  Variants,
-} from "framer-motion";
+import { motion, PanInfo, useAnimation, Variants } from "framer-motion";
 import {
   X,
-  Plus,
-  Tag as TagIcon,
   ExternalLink,
   Download,
   Link as LinkIcon,
@@ -35,7 +27,6 @@ import {
   getGoogleDriveLink,
   cn,
 } from "@/lib/utils";
-import { renderToString } from "react-dom/server";
 import Image from "next/image";
 import { useAppStore } from "@/lib/store";
 import { useScrollLock } from "@/hooks/useScrollLock";
@@ -182,10 +173,8 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
     ? parseInt(file.videoMediaMetadata.durationMillis, 10)
     : undefined;
 
-  const { user, hideAuthor, fileTags, fetchTags, addTag, removeTag, addToast } =
-    useAppStore();
+  const { user, hideAuthor, addToast } = useAppStore();
 
-  const [newTag, setNewTag] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const controls = useAnimation();
   const headerRef = useRef<HTMLDivElement>(null);
@@ -199,24 +188,24 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
   useScrollLock(true);
 
   useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
     window.addEventListener("resize", checkMobile);
 
-    fetchTags(file.id);
-
     return () => {
       window.removeEventListener("resize", checkMobile);
     };
-  }, [file.id, fetchTags]);
-
-  const handleAddTag = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newTag.trim()) {
-      await addTag(file.id, newTag.trim());
-      setNewTag("");
-    }
-  };
+  }, [file.id]);
 
   const handleCopyLink = () => {
     const url = `/api/download?fileId=${file.id}`;
@@ -246,18 +235,14 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
     }
   };
 
-  const iconString = renderToString(
-    <FileIconComponent size={80} className="text-foreground/20" />,
-  );
-
   return (
     <>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[60] lg:z-40"
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 bg-black/60 z-[60] lg:z-40"
         onClick={onClose}
       />
 
@@ -272,7 +257,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
         dragElastic={0.1}
         onDragEnd={onDragEnd}
         className={cn(
-          "fixed z-[61] lg:z-50 bg-background/95 backdrop-blur-xl border-border shadow-2xl flex flex-col",
+          "fixed z-[61] lg:z-50 bg-background border-border shadow-xl flex flex-col",
           "bottom-0 left-0 right-0 w-full h-[90vh] rounded-t-[2rem] border-t",
           "lg:inset-0 lg:w-full lg:h-full lg:rounded-none lg:border-0",
         )}
@@ -321,7 +306,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 <motion.div
                   whileHover={{ scale: 1.02, rotate: 1 }}
                   transition={{ type: "spring", stiffness: 300 }}
-                  className="relative w-64 h-64 xl:w-80 xl:h-80 rounded-[2.5rem] shadow-2xl bg-card border border-border/50 flex items-center justify-center overflow-hidden z-10"
+                  className="relative w-64 h-64 xl:w-80 xl:h-80 rounded-[2.5rem] shadow-xl bg-card border border-border/50 flex items-center justify-center overflow-hidden z-10"
                 >
                   {file.thumbnailLink && !file.isFolder ? (
                     <Image
@@ -332,7 +317,10 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                       unoptimized
                     />
                   ) : (
-                    <div dangerouslySetInnerHTML={{ __html: iconString }} />
+                    <FileIconComponent
+                      size={80}
+                      className="text-foreground/20"
+                    />
                   )}
                 </motion.div>
               </div>
@@ -366,7 +354,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 <motion.div
                   whileHover={{ scale: 1.02, rotate: 1 }}
                   transition={{ type: "spring", stiffness: 300 }}
-                  className="relative w-40 h-40 sm:w-48 sm:h-48 rounded-[2rem] shadow-2xl bg-card border border-border/50 flex items-center justify-center overflow-hidden z-10"
+                  className="relative w-40 h-40 sm:w-48 sm:h-48 rounded-[2rem] shadow-xl bg-card border border-border/50 flex items-center justify-center overflow-hidden z-10"
                 >
                   {file.thumbnailLink && !file.isFolder ? (
                     <Image
@@ -377,7 +365,10 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                       unoptimized
                     />
                   ) : (
-                    <div dangerouslySetInnerHTML={{ __html: iconString }} />
+                    <FileIconComponent
+                      size={80}
+                      className="text-foreground/20"
+                    />
                   )}
                 </motion.div>
               </div>
@@ -514,64 +505,13 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 )}
               </div>
             </motion.div>
-
-            <motion.div variants={itemVariants} className="space-y-3">
-              <div className="flex items-center justify-between px-1">
-                <h4 className="text-xs font-bold flex items-center gap-2 text-muted-foreground uppercase tracking-wider">
-                  <TagIcon size={14} /> Label
-                </h4>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <AnimatePresence>
-                  {Array.isArray(fileTags[file.id]) &&
-                    fileTags[file.id].map((tag) => (
-                      <motion.span
-                        key={tag}
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        exit={{ scale: 0 }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20 hover:bg-primary/20 transition-colors"
-                      >
-                        {tag}
-                        {isAdmin && (
-                          <button
-                            onClick={() => removeTag(file.id, tag)}
-                            className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
-                          >
-                            <X size={12} />
-                          </button>
-                        )}
-                      </motion.span>
-                    ))}
-                </AnimatePresence>
-
-                {isAdmin && (
-                  <form
-                    onSubmit={handleAddTag}
-                    className="flex items-center bg-muted/50 rounded-full px-3 py-1.5 border border-transparent focus-within:border-primary/50 focus-within:bg-background transition-all group"
-                  >
-                    <Plus
-                      size={14}
-                      className="text-muted-foreground mr-2 group-focus-within:text-primary transition-colors"
-                    />
-                    <input
-                      type="text"
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
-                      placeholder="Tag baru..."
-                      className="bg-transparent text-xs outline-none w-24 placeholder:text-muted-foreground/50"
-                    />
-                  </form>
-                )}
-              </div>
-            </motion.div>
           </motion.div>
         </div>
 
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1, transition: { delay: 0.3 } }}
-          className="p-6 border-t border-border/40 bg-background/50 backdrop-blur-md"
+          className="p-6 border-t border-border/40 bg-background"
         >
           <motion.button
             whileHover={{ scale: 1.02 }}
