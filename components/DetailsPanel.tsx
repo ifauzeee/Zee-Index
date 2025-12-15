@@ -310,7 +310,9 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 >
                   {file.thumbnailLink && !file.isFolder ? (
                     <Image
-                      src={file.thumbnailLink.replace("=s220", "=s800")}
+                      src={`/api/proxy-image?url=${encodeURIComponent(
+                        file.thumbnailLink.replace("=s220", "=s800"),
+                      )}`}
                       alt={file.name}
                       fill
                       className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -358,7 +360,9 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 >
                   {file.thumbnailLink && !file.isFolder ? (
                     <Image
-                      src={file.thumbnailLink.replace("=s220", "=s800")}
+                      src={`/api/proxy-image?url=${encodeURIComponent(
+                        file.thumbnailLink.replace("=s220", "=s800"),
+                      )}`}
                       alt={file.name}
                       fill
                       className="object-cover transition-transform duration-700 group-hover:scale-110"

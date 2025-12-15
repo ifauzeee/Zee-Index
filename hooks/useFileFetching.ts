@@ -95,9 +95,9 @@ export function useFileFetching({
     enabled: !!currentFolderId && currentFolderId !== rootFolderId,
     initialData: initialFolderPath,
     retry: false,
-    refetchOnWindowFocus: true,
-    staleTime: 0,
-    gcTime: 0,
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 60, // 1 hour - Folder path structure rarely changes
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours
   });
 
   const history = useMemo(() => {
@@ -165,11 +165,10 @@ export function useFileFetching({
       if (error?.status === 401) return false;
       return failureCount < 2;
     },
-    refetchInterval: false, // Disable aggressive polling to save API quota
-    refetchOnWindowFocus: (query) => {
-      if (query.state.status === "error") return false;
-      return false; // Disable refetch on window focus to further save quota
-    },
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
     enabled: !!currentFolderId && currentFolderId !== "undefined",
   });
 
