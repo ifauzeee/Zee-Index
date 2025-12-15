@@ -17,7 +17,6 @@ import {
   ExternalLink,
   PlayCircle,
   ShieldAlert,
-  Copy,
 } from "lucide-react";
 import { formatDuration } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
@@ -55,7 +54,7 @@ export default function VideoPlayer({
   onEnded,
   webViewLink,
 }: VideoAudioPreviewProps) {
-  const { addToast } = useAppStore();
+  const {} = useAppStore();
   const playerRef = useRef<MediaPlayerInstance>(null);
   const [networkError, setNetworkError] = useState(false);
   const [formatError, setFormatError] = useState(false);

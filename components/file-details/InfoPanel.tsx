@@ -10,7 +10,6 @@ import {
   Link as LinkIcon,
   History as HistoryIcon,
   Edit,
-  PlayCircle,
 } from "lucide-react";
 
 interface InfoPanelProps {
