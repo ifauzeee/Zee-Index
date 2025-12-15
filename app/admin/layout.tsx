@@ -3,7 +3,7 @@
 import { useEffect, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useAppStore } from "@/lib/store";
-import BulkActionBar from "@/components/BulkActionBar";
+import { BulkActionBar } from "@/components/BulkActionBar";
 import Toast from "@/components/Toast";
 import { AnimatePresence } from "framer-motion";
 import { HardDrive } from "lucide-react";
