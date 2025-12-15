@@ -63,6 +63,38 @@ export default function InfoPanel({
     setIsAddingTag(false);
   };
 
+  const [pathString, setPathString] = useState<string>("/");
+  const [pathLoading, setPathLoading] = useState(false);
+
+  React.useEffect(() => {
+    const fetchPath = async () => {
+      if (!file.parents || file.parents.length === 0) {
+        setPathString("Root");
+        return;
+      }
+
+      setPathLoading(true);
+      try {
+        const parentId = file.parents[0];
+        const res = await fetch(`/api/folderpath?folderId=${parentId}`);
+        if (res.ok) {
+          const data = await res.json();
+          const path = data.map((p: any) => p.name).join(" / ");
+          setPathString(path || "Root");
+        } else {
+          setPathString("Unknown");
+        }
+      } catch (error) {
+        console.error("Failed to fetch path", error);
+        setPathString("Error");
+      } finally {
+        setPathLoading(false);
+      }
+    };
+
+    fetchPath();
+  }, [file.id, file.parents]);
+
   return (
     <div className="mt-8 lg:mt-0 lg:col-span-1 lg:overflow-y-auto">
       <h1 className="text-2xl lg:text-3xl font-bold break-words mb-6">
@@ -97,6 +129,10 @@ export default function InfoPanel({
         <ListItem
           label="Ukuran"
           value={file.size ? formatBytes(Number(file.size)) : "-"}
+        />
+        <ListItem
+          label="Location"
+          value={pathLoading ? "Memuat..." : pathString}
         />
         <ListItem label="Tipe" value={file.mimeType} />
         {metadata?.width && metadata?.height && (

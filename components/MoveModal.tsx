@@ -14,23 +14,29 @@ import type { DriveFile } from "@/lib/googleDrive";
 import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface MoveModalProps {
-  fileToMove: DriveFile;
+  fileToMove?: DriveFile;
+  filesToMove?: DriveFile[];
   onClose: () => void;
   onConfirmMove: (newParentId: string) => Promise<void>;
+  initialFolderId?: string;
 }
 
 export default function MoveModal({
   fileToMove,
+  filesToMove,
   onClose,
   onConfirmMove,
+  initialFolderId,
 }: MoveModalProps) {
   const [currentFolderId, setCurrentFolderId] = useState(
-    process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!,
+    initialFolderId || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!,
   );
   const [folderStack, setFolderStack] = useState([
     {
-      id: process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!,
-      name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Home",
+      id: initialFolderId || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!,
+      name: initialFolderId
+        ? "Current"
+        : process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Home",
     },
   ]);
   const [subfolders, setSubfolders] = useState<DriveFile[]>([]);
@@ -85,8 +91,16 @@ export default function MoveModal({
   };
 
   const currentFolderName = folderStack[folderStack.length - 1].name;
+
+  const targetFiles = filesToMove || (fileToMove ? [fileToMove] : []);
+  const itemCount = targetFiles.length;
+  const itemName =
+    itemCount === 1 ? `"${targetFiles[0].name}"` : `${itemCount} items`;
+
   const isMoveDisabled =
-    isMoving || fileToMove.parents?.includes(currentFolderId);
+    isMoving ||
+    targetFiles.some((f) => f.parents?.includes(currentFolderId)) ||
+    targetFiles.some((f) => f.id === currentFolderId);
 
   return (
     <AnimatePresence>
@@ -110,9 +124,7 @@ export default function MoveModal({
           >
             <X size={20} />
           </button>
-          <h3 className="text-lg font-semibold mb-2">
-            Move &quot;{fileToMove.name}&quot;
-          </h3>
+          <h3 className="text-lg font-semibold mb-2">Move {itemName}</h3>
           <p className="text-sm text-muted-foreground mb-4">
             Select destination folder:
           </p>

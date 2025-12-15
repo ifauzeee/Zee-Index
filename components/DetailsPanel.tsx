@@ -207,6 +207,38 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
     };
   }, [file.id]);
 
+  const [pathString, setPathString] = useState<string>("/");
+  const [pathLoading, setPathLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchPath = async () => {
+      if (!file.parents || file.parents.length === 0) {
+        setPathString("Root");
+        return;
+      }
+
+      setPathLoading(true);
+      try {
+        const parentId = file.parents[0];
+        const res = await fetch(`/api/folderpath?folderId=${parentId}`);
+        if (res.ok) {
+          const data = await res.json();
+          const path = data.map((p: any) => p.name).join(" / ");
+          setPathString(path || "Root");
+        } else {
+          setPathString("Unknown");
+        }
+      } catch (error) {
+        console.error("Failed to fetch path", error);
+        setPathString("Error");
+      } finally {
+        setPathLoading(false);
+      }
+    };
+
+    fetchPath();
+  }, [file.id, file.parents]);
+
   const handleCopyLink = () => {
     const url = `/api/download?fileId=${file.id}`;
     navigator.clipboard.writeText(`${window.location.origin}${url}`);
@@ -479,6 +511,12 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                     dateStyle: "medium",
                     timeStyle: "short",
                   })}
+                />
+                <DetailRow
+                  icon={HardDrive}
+                  label="Lokasi"
+                  value={pathLoading ? "Memuat..." : pathString}
+                  copyable={true}
                 />
                 {canShowAuthor && file.owners?.[0] && (
                   <DetailRow
