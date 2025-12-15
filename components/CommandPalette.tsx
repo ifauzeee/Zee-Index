@@ -15,6 +15,9 @@ import {
   Home,
   Github,
   Send,
+  File,
+  Folder,
+  Loader2,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -23,6 +26,10 @@ export default function CommandPalette() {
   const [open, setOpen] = React.useState(false);
   const { user } = useAppStore();
   const { theme, setTheme } = useTheme();
+
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [searchResults, setSearchResults] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -34,6 +41,39 @@ export default function CommandPalette() {
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
   }, []);
+
+  React.useEffect(() => {
+    if (!open) {
+      setSearchQuery("");
+      setSearchResults([]);
+    }
+  }, [open]);
+
+  React.useEffect(() => {
+    if (!searchQuery) {
+      setSearchResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `/api/search?q=${encodeURIComponent(searchQuery)}`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data.files || []);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const runCommand = React.useCallback((command: () => void) => {
     setOpen(false);
@@ -56,15 +96,59 @@ export default function CommandPalette() {
       >
         <Search className="mr-2 h-5 w-5 shrink-0 opacity-50" />
         <Command.Input
-          placeholder="Ketik perintah atau cari..."
+          value={searchQuery}
+          onValueChange={setSearchQuery}
+          placeholder="Ketik perintah atau cari file..."
           className="flex h-12 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
         />
+        {loading && <Loader2 className="h-4 w-4 animate-spin opacity-50" />}
       </div>
 
       <Command.List className="max-h-[300px] overflow-y-auto overflow-x-hidden p-2">
         <Command.Empty className="py-6 text-center text-sm text-muted-foreground">
-          Tidak ada hasil ditemukan.
+          {loading ? "Mencari..." : "Tidak ada hasil ditemukan."}
         </Command.Empty>
+
+        {searchResults.length > 0 && (
+          <Command.Group
+            heading="Hasil Pencarian"
+            className="overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
+          >
+            {searchResults.map((file) => (
+              <Command.Item
+                key={file.id}
+                value={`${file.name} ${file.id}`}
+                onSelect={() =>
+                  runCommand(() => {
+                    if (
+                      file.mimeType === "application/vnd.google-apps.folder"
+                    ) {
+                      router.push(`/folder/${file.id}`);
+                    } else {
+                      const parentId =
+                        file.parents?.[0] ||
+                        process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
+                      const slug = encodeURIComponent(
+                        file.name.replace(/\s+/g, "-").toLowerCase(),
+                      );
+                      router.push(
+                        `/folder/${parentId}/file/${file.id}/${slug}`,
+                      );
+                    }
+                  })
+                }
+                className={itemClass}
+              >
+                {file.mimeType === "application/vnd.google-apps.folder" ? (
+                  <Folder className="mr-2 h-4 w-4 text-blue-500" />
+                ) : (
+                  <File className="mr-2 h-4 w-4 text-gray-500" />
+                )}
+                <span className="truncate">{file.name}</span>
+              </Command.Item>
+            ))}
+          </Command.Group>
+        )}
 
         <Command.Group
           heading="Navigasi"

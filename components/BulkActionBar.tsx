@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/providers/ModalProvider";
 import MoveModal from "./MoveModal";
 import { cn } from "@/lib/utils";
+import JSZip from "jszip";
 
 export function BulkActionBar() {
   const {
@@ -23,23 +24,64 @@ export function BulkActionBar() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleDownload = async () => {
+    const filesToZip = selectedFiles.filter(
+      (f) => f.mimeType !== "application/vnd.google-apps.folder",
+    );
+
+    if (filesToZip.length === 0) {
+      addToast({ message: "No files selected to zip.", type: "error" });
+      return;
+    }
+
     addToast({
-      message: "Downloading " + selectedFiles.length + " files...",
+      message: `Zipping ${filesToZip.length} files...`,
       type: "info",
     });
+    setIsProcessing(true);
 
-    selectedFiles.forEach((file, index) => {
-      if (file.mimeType !== "application/vnd.google-apps.folder") {
-        setTimeout(() => {
-          const link = document.createElement("a");
-          link.href = `/api/download?fileId=${file.id}`;
-          link.download = file.name;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }, index * 500);
-      }
-    });
+    try {
+      const zip = new JSZip();
+      const folderName = "zee-index-archive";
+      const folder = zip.folder(folderName);
+
+      if (!folder) throw new Error("Failed to create zip folder");
+
+      const promises = filesToZip.map(async (file) => {
+        try {
+          // Use the proxy endpoint to fetch file content as blob
+          const response = await fetch(`/api/download?fileId=${file.id}`);
+          if (!response.ok) throw new Error("Network error");
+          const blob = await response.blob();
+          folder.file(file.name, blob);
+        } catch (error) {
+          console.error(`Failed to download ${file.name}`, error);
+          addToast({
+            message: `Skipped ${file.name} (failed to fetch)`,
+            type: "error",
+          });
+        }
+      });
+
+      await Promise.all(promises);
+
+      const content = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(content);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `zee-files-${Date.now()}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addToast({ message: "Download started!", type: "success" });
+      clearSelection();
+    } catch (error) {
+      console.error("Zip error:", error);
+      addToast({ message: "Failed to generate zip file.", type: "error" });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleDelete = async () => {

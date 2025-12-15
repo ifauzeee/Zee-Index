@@ -54,7 +54,7 @@ export default function VideoPlayer({
   onEnded,
   webViewLink,
 }: VideoAudioPreviewProps) {
-  const {} = useAppStore();
+  const { videoProgress, setVideoProgress, addToast } = useAppStore();
   const playerRef = useRef<MediaPlayerInstance>(null);
   const [networkError, setNetworkError] = useState(false);
   const [formatError, setFormatError] = useState(false);
@@ -62,6 +62,9 @@ export default function VideoPlayer({
   const [currentSrc, setCurrentSrc] = useState(src);
   const [retryCount, setRetryCount] = useState(0);
   const [isDirectMode, setIsDirectMode] = useState(false);
+
+  const fileIdMatch = src.match(/fileId=([^&]+)/);
+  const fileId = fileIdMatch ? fileIdMatch[1] : null;
 
   const displayMimeType =
     mimeType.includes("matroska") || title.toLowerCase().endsWith(".mkv")
@@ -115,6 +118,30 @@ export default function VideoPlayer({
         player.currentTime = lastTime;
       }
       player.play().catch((e) => console.log(e));
+    } else if (
+      fileId &&
+      videoProgress[fileId] &&
+      videoProgress[fileId] > 5 &&
+      playerRef.current
+    ) {
+      const savedTime = videoProgress[fileId];
+      const duration = playerRef.current.duration;
+
+      if (duration > 0 && savedTime < duration * 0.95) {
+        playerRef.current.currentTime = savedTime;
+        addToast({
+          message: `Resuming playback from ${formatDuration(savedTime)}`,
+          type: "info",
+        });
+      }
+    }
+  };
+
+  const handleTimeUpdate = (detail: any) => {
+    if (fileId && detail.currentTime > 5) {
+      if (Math.floor(detail.currentTime) % 5 === 0) {
+        setVideoProgress(fileId, detail.currentTime);
+      }
     }
   };
 
@@ -161,6 +188,10 @@ export default function VideoPlayer({
         poster={poster?.replace("=s220", "=s1280")}
         aspectRatio={type === "video" ? "16/9" : undefined}
         onEnded={() => {
+          if (fileId) {
+            setVideoProgress(fileId, 0);
+          }
+
           if (playerRef.current) {
             const { currentTime, duration } = playerRef.current;
             if (duration > 0 && Math.abs(duration - currentTime) > 1) {
@@ -171,6 +202,7 @@ export default function VideoPlayer({
         }}
         onError={handleError}
         onCanPlay={handleCanPlay}
+        onTimeUpdate={handleTimeUpdate}
         className="w-full h-full ring-media-focus"
         crossOrigin
         autoplay={true}

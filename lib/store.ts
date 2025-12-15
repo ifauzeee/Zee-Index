@@ -154,6 +154,9 @@ interface AppState {
   fetchPinnedFolders: () => Promise<void>;
   addPin: (folderId: string) => Promise<void>;
   removePin: (folderId: string) => Promise<void>;
+
+  videoProgress: Record<string, number>;
+  setVideoProgress: (fileId: string, time: number) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -696,6 +699,12 @@ export const useAppStore = create<AppState>()(
           get().addToast({ message: "Failed to remove pin", type: "error" });
         }
       },
+
+      videoProgress: {},
+      setVideoProgress: (fileId, time) =>
+        set((state) => ({
+          videoProgress: { ...state.videoProgress, [fileId]: time },
+        })),
     }),
     {
       name: "zee-index-storage",
@@ -711,6 +720,7 @@ export const useAppStore = create<AppState>()(
         logoUrl: state.logoUrl,
         faviconUrl: state.faviconUrl,
         primaryColor: state.primaryColor,
+        videoProgress: state.videoProgress,
       }),
     },
   ),

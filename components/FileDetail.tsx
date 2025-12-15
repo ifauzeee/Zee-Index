@@ -181,7 +181,7 @@ export default function FileDetail({
     if (editableContent === null) return;
     setIsSaving(true);
     try {
-      await fetch("/api/files/update", {
+      await fetch("/api/file/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fileId: file.id, newContent: editableContent }),

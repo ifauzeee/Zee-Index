@@ -730,3 +730,26 @@ export async function copyFile(
     parents: result.parents,
   };
 }
+
+export async function updateFileContent(fileId: string, newContent: string) {
+  const accessToken = await getAccessToken();
+  const url = `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`;
+
+  const response = await fetchWithRetry(url, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "text/plain",
+    },
+    body: newContent,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.error?.message || "Gagal memperbarui konten file.",
+    );
+  }
+
+  return response.json();
+}
