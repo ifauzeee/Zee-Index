@@ -692,3 +692,41 @@ export async function listFileRevisions(
   const data = await response.json();
   return data.revisions || [];
 }
+
+export async function copyFile(
+  fileId: string,
+  destinationFolderId: string,
+  newName?: string,
+) {
+  const accessToken = await getAccessToken();
+  const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/copy`;
+
+  const requestBody: { parents?: string[]; name?: string } = {
+    parents: [destinationFolderId],
+  };
+  if (newName) {
+    requestBody.name = newName;
+  }
+
+  const response = await fetch(driveUrl, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error?.message || "Gagal menyalin file");
+  }
+
+  const result = await response.json();
+  return {
+    id: result.id,
+    name: result.name || newName,
+    mimeType: result.mimeType,
+    parents: result.parents,
+  };
+}

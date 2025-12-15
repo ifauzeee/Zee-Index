@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from "@/lib/store";
 import FileItem from "./FileItem";
+import FileCard from "./FileBrowser/FileCard";
 import React, { useEffect, useRef } from "react";
 import EmptyState from "./EmptyState";
 import { FolderSearch } from "lucide-react";
@@ -52,6 +53,8 @@ export default function FileList({
     setSelectedFiles,
     setBulkMode,
     toggleFavorite,
+    shareToken,
+    folderTokens,
   } = useAppStore();
 
   const lastSelectedId = useRef<string | null>(null);
@@ -141,6 +144,30 @@ export default function FileList({
     },
   };
 
+  const getThumbnailSrc = (file: DriveFile) => {
+    if (file.thumbnailLink) {
+      const size =
+        view === "grid" ? "s320" : view === "gallery" ? "s1280" : "s64";
+      return file.thumbnailLink.replace(/=s\d+/, `=${size}`);
+    }
+    let url = `/api/download?fileId=${file.id}`;
+    if (shareToken) {
+      url += `&share_token=${shareToken}`;
+    }
+    const parentId = file.parents?.[0];
+    if (parentId && folderTokens[parentId]) {
+      url += `&access_token=${folderTokens[parentId]}`;
+    }
+    return url;
+  };
+
+  const handleNavigate = (folderId: string) => {
+    const folder = files.find((f) => f.id === folderId);
+    if (folder) {
+      onItemClick(folder);
+    }
+  };
+
   const renderFileItem = (
     file: DriveFile & {
       uploadProgress?: number;
@@ -155,6 +182,31 @@ export default function FileList({
         (link) => !link.isCollection && link.path.includes(file.id),
       );
     const isFocused = index === focusedIndex;
+
+    if (view === "grid") {
+      return (
+        <div
+          key={file.id}
+          data-file-index={index}
+          className={
+            isFocused
+              ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg"
+              : ""
+          }
+        >
+          <FileCard
+            file={file}
+            onNavigate={handleNavigate}
+            onClick={onItemClick}
+            onContextMenu={onItemContextMenu}
+            onShare={onShareClick}
+            onDetails={onDetailsClick}
+            onDownload={onDownloadClick}
+            thumbnailSrc={getThumbnailSrc(file)}
+          />
+        </div>
+      );
+    }
 
     return (
       <div

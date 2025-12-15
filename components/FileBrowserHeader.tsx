@@ -5,8 +5,6 @@ import {
   Share2,
   Upload,
   CheckSquare,
-  List,
-  Grid,
   Info,
   LayoutTemplate,
   UploadCloud,
@@ -18,6 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
+import ViewToggle from "@/components/FileBrowser/ViewToggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -224,15 +223,15 @@ export default function FileBrowserHeader({
           </div>
         )}
 
-        <div className="flex items-center border border-border rounded-lg p-1 bg-muted/30 shrink-0 ml-auto">
+        <div className="flex items-center gap-2 shrink-0 ml-auto">
           {view === "list" && (
             <button
               onClick={() =>
                 setDensity(density === "compact" ? "comfortable" : "compact")
               }
               className={cn(
-                "p-1.5 rounded-md transition-all mr-1",
-                "text-muted-foreground hover:text-foreground hover:bg-background",
+                "p-1.5 rounded-md transition-all",
+                "text-muted-foreground hover:text-foreground hover:bg-background border border-border",
               )}
               title={
                 density === "compact" ? "Comfortable Mode" : "Compact Mode"
@@ -245,43 +244,29 @@ export default function FileBrowserHeader({
               )}
             </button>
           )}
-          <div className="w-px h-4 bg-border mx-1"></div>
-          <button
-            onClick={() => onSetView("list")}
-            className={cn(
-              "p-1.5 rounded-md transition-all",
-              view === "list"
-                ? "bg-background text-primary shadow-sm scale-105"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-            title="List View"
-          >
-            <List size={18} />
-          </button>
-          <button
-            onClick={() => onSetView("grid")}
-            className={cn(
-              "p-1.5 rounded-md transition-all",
-              view === "grid"
-                ? "bg-background text-primary shadow-sm scale-105"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-            title="Grid View"
-          >
-            <Grid size={18} />
-          </button>
-          <button
-            onClick={() => onSetView("gallery")}
-            className={cn(
-              "p-1.5 rounded-md transition-all",
-              view === "gallery"
-                ? "bg-background text-primary shadow-sm scale-105"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-            title="Gallery View"
-          >
-            <LayoutTemplate size={18} />
-          </button>
+          <ViewToggle
+            currentView={
+              view === "gallery" ? "grid" : (view as "list" | "grid")
+            }
+            onToggle={(newView) => {
+              onSetView(newView);
+            }}
+          />
+          {view !== "gallery" && (
+            <>
+              <div className="w-px h-6 bg-border"></div>
+              <button
+                onClick={() => onSetView("gallery")}
+                className={cn(
+                  "p-1.5 rounded-md transition-all border border-border",
+                  "text-muted-foreground hover:text-foreground hover:bg-background",
+                )}
+                title="Gallery View"
+              >
+                <LayoutTemplate size={18} />
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

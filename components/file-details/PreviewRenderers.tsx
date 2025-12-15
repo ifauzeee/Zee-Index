@@ -184,7 +184,7 @@ export const DefaultPreview: React.FC<{
     mimeType.includes("ms-powerpoint") ||
     fileName.match(/\.(docx|xlsx|pptx|doc|xls|ppt)$/i)
   ) {
-    return <OfficeViewer src={downloadUrl} />;
+    return <OfficeViewer fileUrl={downloadUrl} mimeType={mimeType} />;
   }
 
   return (

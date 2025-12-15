@@ -597,7 +597,8 @@ export const useAppStore = create<AppState>()(
         try {
           const response = await fetch(`/api/tags?fileId=${fileId}`);
           if (response.ok) {
-            const tags = await response.json();
+            const data = await response.json();
+            const tags = Array.isArray(data) ? data : data.tags || [];
             set((state) => ({
               fileTags: { ...state.fileTags, [fileId]: tags },
             }));
@@ -611,13 +612,16 @@ export const useAppStore = create<AppState>()(
           const response = await fetch("/api/tags", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ fileId, tag }),
+            body: JSON.stringify({ fileId, tag, action: "add" }),
           });
           if (response.ok) {
-            const newTags = await response.json();
-            set((state) => ({
-              fileTags: { ...state.fileTags, [fileId]: newTags },
-            }));
+            const currentTags = get().fileTags[fileId] || [];
+            if (!currentTags.includes(tag)) {
+              const newTags = [...currentTags, tag];
+              set((state) => ({
+                fileTags: { ...state.fileTags, [fileId]: newTags },
+              }));
+            }
           }
         } catch (error) {
           console.error("Failed to add tag", error);
@@ -626,12 +630,13 @@ export const useAppStore = create<AppState>()(
       removeTag: async (fileId, tag) => {
         try {
           const response = await fetch("/api/tags", {
-            method: "DELETE",
+            method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ fileId, tag }),
+            body: JSON.stringify({ fileId, tag, action: "remove" }),
           });
           if (response.ok) {
-            const newTags = await response.json();
+            const currentTags = get().fileTags[fileId] || [];
+            const newTags = currentTags.filter((t) => t !== tag);
             set((state) => ({
               fileTags: { ...state.fileTags, [fileId]: newTags },
             }));

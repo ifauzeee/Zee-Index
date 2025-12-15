@@ -523,25 +523,26 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
               </div>
               <div className="flex flex-wrap gap-2">
                 <AnimatePresence>
-                  {fileTags[file.id]?.map((tag) => (
-                    <motion.span
-                      key={tag}
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0 }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20 hover:bg-primary/20 transition-colors"
-                    >
-                      {tag}
-                      {isAdmin && (
-                        <button
-                          onClick={() => removeTag(file.id, tag)}
-                          className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
-                        >
-                          <X size={12} />
-                        </button>
-                      )}
-                    </motion.span>
-                  ))}
+                  {Array.isArray(fileTags[file.id]) &&
+                    fileTags[file.id].map((tag) => (
+                      <motion.span
+                        key={tag}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0 }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20 hover:bg-primary/20 transition-colors"
+                      >
+                        {tag}
+                        {isAdmin && (
+                          <button
+                            onClick={() => removeTag(file.id, tag)}
+                            className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
+                          >
+                            <X size={12} />
+                          </button>
+                        )}
+                      </motion.span>
+                    ))}
                 </AnimatePresence>
 
                 {isAdmin && (
