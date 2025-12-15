@@ -192,6 +192,16 @@ export function useFileFetching({
       if (err.message?.includes("Sesi Anda telah berakhir")) {
         router.push("/login?error=SessionExpired");
       }
+
+      if (err.message === "ShareLinkExpired") {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete("share_token");
+        router.push(
+          `/login?error=ShareLinkExpired&callbackUrl=${encodeURIComponent(
+            currentUrl.pathname + currentUrl.search,
+          )}`,
+        );
+      }
     }
   }, [error, addToast, router]);
 

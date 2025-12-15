@@ -187,6 +187,49 @@ export default function FileBrowser({
   }, [searchParams, setShareToken]);
 
   useEffect(() => {
+    if (!shareToken) return;
+
+    try {
+      const [, payloadBase64] = shareToken.split(".");
+      if (!payloadBase64) return;
+
+      const base64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join(""),
+      );
+      const payload = JSON.parse(jsonPayload);
+
+      if (payload.exp) {
+        const expireTime = payload.exp * 1000;
+        const currentTime = Date.now();
+        const timeLeft = expireTime - currentTime;
+
+        const handleRedirect = () => {
+          const currentUrl = new URL(window.location.href);
+          currentUrl.searchParams.delete("share_token");
+          router.push(
+            `/login?error=ShareLinkExpired&callbackUrl=${encodeURIComponent(
+              currentUrl.pathname + currentUrl.search,
+            )}`,
+          );
+        };
+
+        if (timeLeft <= 0) {
+          handleRedirect();
+        } else {
+          const timeoutId = setTimeout(handleRedirect, timeLeft + 500);
+          return () => clearTimeout(timeoutId);
+        }
+      }
+    } catch (error) {
+      console.error("Auto-redirect timer error:", error);
+    }
+  }, [shareToken, router]);
+
+  useEffect(() => {
     if (authModalInfo) {
       setAuthTarget({
         isLocked: true,

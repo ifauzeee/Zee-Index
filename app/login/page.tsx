@@ -23,6 +23,13 @@ function CustomLoginPage() {
     const errorType = searchParams.get("error");
     if (errorType) {
       switch (errorType) {
+        case "ShareLinkExpired":
+          setMessage({
+            type: "error",
+            title: "Share Link Expired",
+            text: "The share link you are trying to access has expired. Please ask for a new link or log in.",
+          });
+          break;
         case "InvalidOrExpiredShareLink":
           setMessage({
             type: "error",

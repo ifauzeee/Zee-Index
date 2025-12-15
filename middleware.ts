@@ -71,7 +71,23 @@ export async function middleware(request: NextRequest) {
       }
       return NextResponse.next();
     } catch (error) {
-      console.error(error);
+      console.error("Share token verification failed:", error);
+
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json(
+          { error: "ShareLinkExpired" },
+          { status: 401 },
+        );
+      }
+
+      const urlWithoutToken = request.nextUrl.clone();
+      urlWithoutToken.searchParams.delete("share_token");
+
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("error", "ShareLinkExpired");
+      loginUrl.searchParams.set("callbackUrl", urlWithoutToken.toString());
+
+      return NextResponse.redirect(loginUrl);
     }
   }
 

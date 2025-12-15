@@ -39,7 +39,7 @@ export default function ShareButton({
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const { addToast, user, addShareLink } = useAppStore();
 
-  const [customDuration, setCustomDuration] = useState<number>(10);
+  const [customDuration, setCustomDuration] = useState<string | number>(10);
   const [customUnit, setCustomUnit] = useState<TimeUnit>("m");
   const [loginRequired, setLoginRequired] = useState(false);
 
@@ -70,8 +70,14 @@ export default function ShareButton({
 
   const generateLink = async (type: "timed" | "session") => {
     try {
+      const durationValue =
+        typeof customDuration === "string"
+          ? parseInt(customDuration, 10) || 1
+          : customDuration;
+      const finalDuration = Math.max(1, durationValue);
+
       const expiresIn =
-        type === "timed" ? `${customDuration}${customUnit}` : "365d";
+        type === "timed" ? `${finalDuration}${customUnit}` : "365d";
 
       const isCollection = items && items.length > 0;
       const sharePath = isCollection ? null : path;
@@ -161,11 +167,10 @@ export default function ShareButton({
                   <input
                     type="number"
                     value={customDuration}
-                    onChange={(e) =>
-                      setCustomDuration(
-                        Math.max(1, parseInt(e.target.value, 10) || 1),
-                      )
-                    }
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      setCustomDuration(isNaN(val) ? "" : val);
+                    }}
                     className="w-1/3 px-3 py-2 rounded-md border bg-background focus:ring-2 focus:ring-ring focus:outline-none text-sm"
                     min="1"
                   />
