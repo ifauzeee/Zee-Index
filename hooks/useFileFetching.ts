@@ -96,8 +96,8 @@ export function useFileFetching({
     initialData: initialFolderPath,
     retry: false,
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 60, // 1 hour - Folder path structure rarely changes
-    gcTime: 1000 * 60 * 60 * 24, // 24 hours
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 24,
   });
 
   const history = useMemo(() => {
@@ -167,8 +167,8 @@ export function useFileFetching({
     },
     refetchInterval: false,
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
     enabled: !!currentFolderId && currentFolderId !== "undefined",
   });
 

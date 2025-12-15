@@ -2,8 +2,9 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Folder, MoreVertical } from "lucide-react";
-import { formatBytes, getIcon } from "@/lib/utils";
+import { formatBytes, getIcon, cn } from "@/lib/utils";
 import type { DriveFile } from "@/lib/googleDrive";
+import { useAppStore } from "@/lib/store";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,7 +43,19 @@ export default function FileCard({
   const isFolder = file.mimeType === "application/vnd.google-apps.folder";
   const IconComponent = getIcon(file.mimeType);
 
+  const { isBulkMode, selectedFiles, toggleSelection, setBulkMode } =
+    useAppStore();
+  const isSelected = selectedFiles.some((f) => f.id === file.id);
+
   const handleClick = (e: React.MouseEvent) => {
+    if (isBulkMode || e.shiftKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleSelection(file);
+      if (!isBulkMode) setBulkMode(true);
+      return;
+    }
+
     if (isFolder && onNavigate) {
       e.preventDefault();
       onNavigate(file.id);
@@ -64,10 +77,25 @@ export default function FileCard({
 
   return (
     <div
-      className="group relative border rounded-lg hover:shadow-md transition-all bg-card p-3 flex flex-col gap-3 h-[200px] cursor-pointer"
+      className={cn(
+        "group relative border rounded-lg hover:shadow-md transition-all bg-card p-3 flex flex-col gap-3 h-[200px] cursor-pointer select-none",
+        isSelected && "border-primary bg-primary/5 ring-1 ring-primary",
+      )}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
     >
+      <div
+        className="absolute top-3 left-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity data-[selected=true]:opacity-100"
+        data-selected={isSelected}
+      >
+        <input
+          type="checkbox"
+          checked={isSelected}
+          readOnly
+          className="w-5 h-5 accent-primary rounded cursor-pointer"
+        />
+      </div>
+
       <div className="flex-1 w-full bg-muted/20 rounded flex items-center justify-center overflow-hidden relative">
         {isUploading ? (
           <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">

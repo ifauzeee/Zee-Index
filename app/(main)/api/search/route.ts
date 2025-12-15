@@ -100,7 +100,6 @@ export async function GET(request: NextRequest) {
     cachedData = await kv.get(cacheKey);
   } catch (error) {
     console.warn("Redis Cache Error (Get):", error);
-    // Continue to fetch from source even if cache fails
   }
 
   if (cachedData) {

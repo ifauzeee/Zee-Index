@@ -11,7 +11,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Validate that we are proxying a Google domain to prevent open relay abuse
     const targetUrl = new URL(imageUrl);
     if (
       !targetUrl.hostname.endsWith("googleusercontent.com") &&
@@ -22,7 +21,6 @@ export async function GET(request: NextRequest) {
 
     const response = await fetch(imageUrl, {
       headers: {
-        // Pass necessary headers if needed, mainly User-Agent
         "User-Agent": "Zee-Index-Proxy/1.0",
       },
     });
@@ -34,7 +32,7 @@ export async function GET(request: NextRequest) {
     }
 
     const contentType = response.headers.get("Content-Type") || "image/jpeg";
-    const cacheControl = "public, max-age=31536000, immutable"; // Cache for 1 year
+    const cacheControl = "public, max-age=31536000, immutable";
 
     return new NextResponse(response.body, {
       headers: {
@@ -42,7 +40,7 @@ export async function GET(request: NextRequest) {
         "Cache-Control": cacheControl,
       },
     });
-  } catch (error) {
+  } catch {
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
