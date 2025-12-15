@@ -17,7 +17,7 @@ export default function FolderReadme({ fileId }: FolderReadmeProps) {
   const { shareToken, addToast } = useAppStore();
   const [content, setContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     const fetchReadme = async () => {
