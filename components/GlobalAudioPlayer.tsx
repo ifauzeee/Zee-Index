@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDuration } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 export default function GlobalAudioPlayer() {
   const {
@@ -30,6 +31,8 @@ export default function GlobalAudioPlayer() {
     removeFromQueue,
     playAudio,
   } = useAppStore();
+
+  const t = useTranslations("GlobalAudioPlayer");
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [progress, setProgress] = useState(0);
@@ -107,7 +110,7 @@ export default function GlobalAudioPlayer() {
             className="bg-card border border-border shadow-2xl rounded-xl overflow-hidden max-h-64 flex flex-col"
           >
             <div className="p-3 border-b font-semibold text-sm flex justify-between items-center bg-muted/10">
-              <span>Antrean Putar ({audioQueue.length})</span>
+              <span>{t("playQueue", { count: audioQueue.length })}</span>
               <button onClick={() => setShowQueue(false)}>
                 <X size={16} />
               </button>
@@ -152,7 +155,7 @@ export default function GlobalAudioPlayer() {
             onError={() => {
               useAppStore
                 .getState()
-                .addToast({ message: "Gagal memuat audio", type: "error" });
+                .addToast({ message: t("failedToLoadAudio"), type: "error" });
             }}
           />
 

@@ -14,6 +14,7 @@ import {
   File,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface SearchProps {
   onSearchClose?: () => void;
@@ -30,6 +31,7 @@ export default function Search({ onSearchClose }: SearchProps) {
   const [isGlobalSearch, setIsGlobalSearch] = useState(!currentFolderId);
   const inputRef = useRef<HTMLInputElement>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const t = useTranslations("Search");
 
   const [mimeType, setMimeType] = useState("any");
   const [modifiedTime, setModifiedTime] = useState("any");
@@ -141,8 +143,8 @@ export default function Search({ onSearchClose }: SearchProps) {
   };
 
   const placeholderText = isGlobalSearch
-    ? "Search all files..."
-    : "Search in this folder...";
+    ? t("searchAllFiles")
+    : t("searchInFolder");
 
   return (
     <form onSubmit={handleFormSubmit} className="w-full relative">
@@ -151,7 +153,7 @@ export default function Search({ onSearchClose }: SearchProps) {
           type="button"
           onClick={() => setAdvancedOpen(!advancedOpen)}
           className="absolute inset-y-0 left-0 flex items-center justify-center w-10 text-muted-foreground hover:text-foreground"
-          title="Advanced Filter"
+          title={t("advancedFilter")}
         >
           <Filter size={18} className={advancedOpen ? "text-primary" : ""} />
         </button>
@@ -170,7 +172,7 @@ export default function Search({ onSearchClose }: SearchProps) {
             type="button"
             onClick={clearSearch}
             className="absolute inset-y-0 right-20 flex items-center justify-center w-10 text-muted-foreground hover:text-foreground"
-            title="Clear"
+            title={t("clear")}
           >
             <X size={18} />
           </button>
@@ -181,7 +183,9 @@ export default function Search({ onSearchClose }: SearchProps) {
             setSearchType((prev) => (prev === "name" ? "fullText" : "name"))
           }
           className="absolute inset-y-0 right-10 flex items-center justify-center w-10 text-muted-foreground hover:text-foreground"
-          title={searchType === "name" ? "Search by name" : "Search by content"}
+          title={
+            searchType === "name" ? t("searchByName") : t("searchByContent")
+          }
         >
           {searchType === "name" ? (
             <FileText size={18} />
@@ -194,7 +198,7 @@ export default function Search({ onSearchClose }: SearchProps) {
           onClick={() => setIsGlobalSearch(!isGlobalSearch)}
           className="absolute inset-y-0 right-0 flex items-center justify-center w-10 text-muted-foreground hover:text-foreground"
           title={
-            isGlobalSearch ? "Global Search Active" : "Enable Global Search"
+            isGlobalSearch ? t("globalSearchActive") : t("enableGlobalSearch")
           }
         >
           <Globe size={18} className={isGlobalSearch ? "text-primary" : ""} />
@@ -211,39 +215,39 @@ export default function Search({ onSearchClose }: SearchProps) {
           >
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                <File size={12} /> File Type
+                <File size={12} /> {t("fileType")}
               </label>
               <select
                 value={mimeType}
                 onChange={(e) => setMimeType(e.target.value)}
                 className="w-full px-3 py-1.5 border rounded-md bg-background text-sm focus:ring-1 focus:ring-primary"
               >
-                <option value="any">All</option>
-                <option value="image">Image</option>
-                <option value="video">Video</option>
-                <option value="audio">Audio</option>
-                <option value="pdf">PDF</option>
-                <option value="folder">Folder</option>
+                <option value="any">{t("all")}</option>
+                <option value="image">{t("image")}</option>
+                <option value="video">{t("video")}</option>
+                <option value="audio">{t("audio")}</option>
+                <option value="pdf">{t("pdf")}</option>
+                <option value="folder">{t("folder")}</option>
               </select>
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                <Calendar size={12} /> Modified Time
+                <Calendar size={12} /> {t("modifiedTime")}
               </label>
               <select
                 value={modifiedTime}
                 onChange={(e) => setModifiedTime(e.target.value)}
                 className="w-full px-3 py-1.5 border rounded-md bg-background text-sm focus:ring-1 focus:ring-primary"
               >
-                <option value="any">Anytime</option>
-                <option value="today">Today</option>
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
+                <option value="any">{t("anytime")}</option>
+                <option value="today">{t("today")}</option>
+                <option value="week">{t("week")}</option>
+                <option value="month">{t("month")}</option>
               </select>
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                <HardDrive size={12} /> Min Size (MB)
+                <HardDrive size={12} /> {t("minSize")}
               </label>
               <input
                 type="number"
@@ -258,7 +262,7 @@ export default function Search({ onSearchClose }: SearchProps) {
                 type="submit"
                 className="bg-primary text-primary-foreground px-4 py-1.5 rounded-md text-sm font-medium"
               >
-                Apply Filter
+                {t("applyFilter")}
               </button>
             </div>
           </motion.div>

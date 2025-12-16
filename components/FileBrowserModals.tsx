@@ -16,6 +16,7 @@ import FileRevisionsModal from "./FileRevisionsModal";
 import type { DriveFile } from "@/lib/googleDrive";
 import type { ActionState, ContextMenuState } from "@/hooks/useFileActions";
 import FileList from "@/components/FileList";
+import { useTranslations } from "next-intl";
 
 interface FileBrowserModalsProps {
   authModal: { isOpen: boolean; folderId: string; folderName: string };
@@ -104,6 +105,7 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
     handleTogglePin,
     isFilePinned,
   } = props;
+  const t = useTranslations("FileBrowserModals");
   const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024;
 
   useEffect(() => {
@@ -289,9 +291,9 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
           <div className="flex flex-col items-center justify-center p-12 bg-background rounded-lg shadow-2xl ring-4 ring-primary ring-dashed">
             <UploadCloud className="h-24 w-24 text-primary" />
             <p className="mt-4 text-2xl font-semibold text-foreground">
-              Lepas untuk Mengunggah
+              {t("dropToUpload")}
             </p>
-            <p className="text-muted-foreground">Ke folder ini</p>
+            <p className="text-muted-foreground">{t("toThisFolder")}</p>
           </div>
         </motion.div>
       )}

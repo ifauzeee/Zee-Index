@@ -12,6 +12,7 @@ import {
 import { motion } from "framer-motion";
 import { useAppStore } from "@/lib/store";
 import { signIn } from "next-auth/react";
+import { useTranslations } from "next-intl";
 
 interface AuthFormProps {
   folderId?: string;
@@ -30,6 +31,7 @@ export default function AuthForm({
   const { user, addToast } = useAppStore();
   const [isRequesting, setIsRequesting] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
+  const t = useTranslations("AuthForm");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,12 +55,12 @@ export default function AuthForm({
 
       setRequestSent(true);
       addToast({
-        message: "Permintaan akses berhasil dikirim ke Admin.",
+        message: t("requestSentSuccess"),
         type: "success",
       });
     } catch (error: any) {
       addToast({
-        message: error.message || "Gagal mengirim permintaan.",
+        message: error.message || t("requestFailed"),
         type: "error",
       });
     } finally {
@@ -74,7 +76,7 @@ export default function AuthForm({
         const res = await fetch(`/api/files?folderId=${folderId}`);
         if (res.ok) {
           addToast({
-            message: "Akses diberikan! Memuat folder...",
+            message: t("accessGranted"),
             type: "success",
           });
           window.location.reload();
@@ -83,7 +85,7 @@ export default function AuthForm({
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [requestSent, folderId, addToast]);
+  }, [requestSent, folderId, addToast, t]);
 
   const isLoggedIn = user && !user.isGuest;
 
@@ -104,17 +106,17 @@ export default function AuthForm({
         </div>
 
         <h3 className="text-3xl font-bold text-foreground tracking-tight">
-          Akses Terbatas
+          {t("restrictedAccess")}
         </h3>
 
         <p className="text-muted-foreground mt-4 leading-relaxed max-w-[280px] text-base">
-          Folder{" "}
+          {t("folder")}{" "}
           <span className="font-semibold text-foreground px-1 bg-muted rounded-md">
             {folderName}
           </span>{" "}
-          dilindungi.
+          {t("isProtected")}
           <br />
-          Silakan masukkan kata sandi untuk melanjutkan.
+          {t("enterPasswordPrompt")}
         </p>
       </motion.div>
 
@@ -134,7 +136,7 @@ export default function AuthForm({
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div className="space-y-2">
             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">
-              Kata Sandi
+              {t("passwordLabel")}
             </label>
             <input
               type="text"
@@ -148,7 +150,7 @@ export default function AuthForm({
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Masukkan Kata Sandi..."
+              placeholder={t("enterPasswordPlaceholder")}
               className="w-full px-5 py-4 rounded-2xl border bg-background/50 focus:bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-muted-foreground/30 shadow-sm text-lg"
               required
               autoFocus
@@ -164,11 +166,11 @@ export default function AuthForm({
             {isLoading ? (
               <>
                 <Loader2 className="animate-spin h-5 w-5" />
-                <span>Memproses...</span>
+                <span>{t("processing")}</span>
               </>
             ) : (
               <>
-                <span>Buka Folder</span>
+                <span>{t("openFolder")}</span>
                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
               </>
             )}
@@ -182,11 +184,11 @@ export default function AuthForm({
                 <div className="flex items-center justify-center gap-2 text-green-600 bg-green-500/10 py-3 px-4 rounded-xl w-full">
                   <CheckCircle2 size={18} />
                   <span className="text-sm font-medium">
-                    Permintaan Terkirim
+                    {t("requestSentTitle")}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 animate-pulse">
-                  Menunggu persetujuan admin... Halaman akan refresh otomatis.
+                  {t("waitingApproval")}
                 </p>
               </div>
             ) : (
@@ -200,19 +202,19 @@ export default function AuthForm({
                 ) : (
                   <ShieldQuestion size={14} />
                 )}
-                <span>Minta Akses ke Admin</span>
+                <span>{t("requestAccessButton")}</span>
               </button>
             )
           ) : (
             <div className="flex flex-col items-center gap-2">
               <span className="text-xs text-muted-foreground">
-                Ingin meminta akses?
+                {t("wantToRequest")}
               </span>
               <button
                 onClick={() => signIn("google")}
                 className="text-sm font-medium text-primary hover:underline flex items-center gap-1.5"
               >
-                <LogIn size={14} /> Login untuk Request
+                <LogIn size={14} /> {t("loginToRequest")}
               </button>
             </div>
           )}

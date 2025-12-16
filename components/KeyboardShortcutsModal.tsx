@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Keyboard, Command, Search, Delete, Edit2 } from "lucide-react";
 import { useScrollLock } from "@/hooks/useScrollLock";
+import { useTranslations } from "next-intl";
 
 export default function KeyboardShortcutsModal() {
+  const t = useTranslations("KeyboardShortcutsModal");
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -31,13 +33,13 @@ export default function KeyboardShortcutsModal() {
   if (!isOpen) return null;
 
   const shortcuts = [
-    { keys: ["Cmd/Ctrl", "K"], label: "Buka Command Palette", icon: Command },
-    { keys: ["Shift", "?"], label: "Buka Bantuan Shortcut", icon: Keyboard },
-    { keys: ["/"], label: "Fokus Pencarian", icon: Search },
-    { keys: ["Esc"], label: "Tutup Modal / Clear Selection", icon: X },
-    { keys: ["Space"], label: "Preview File (Quick Look)", icon: Keyboard },
-    { keys: ["Del"], label: "Hapus File (Admin)", icon: Delete },
-    { keys: ["F2"], label: "Rename File (Admin)", icon: Edit2 },
+    { keys: ["Cmd/Ctrl", "K"], label: t("openCommandPalette"), icon: Command },
+    { keys: ["Shift", "?"], label: t("openHelp"), icon: Keyboard },
+    { keys: ["/"], label: t("focusSearch"), icon: Search },
+    { keys: ["Esc"], label: t("closeModal"), icon: X },
+    { keys: ["Space"], label: t("previewFile"), icon: Keyboard },
+    { keys: ["Del"], label: t("deleteFile"), icon: Delete },
+    { keys: ["F2"], label: t("renameFile"), icon: Edit2 },
   ];
 
   return (
@@ -58,7 +60,7 @@ export default function KeyboardShortcutsModal() {
         >
           <div className="p-6 border-b border-border flex justify-between items-center">
             <h2 className="text-xl font-bold flex items-center gap-2">
-              <Keyboard className="text-primary" /> Pintasan Keyboard
+              <Keyboard className="text-primary" /> {t("keyboardShortcuts")}
             </h2>
             <button
               onClick={() => setIsOpen(false)}
@@ -88,7 +90,7 @@ export default function KeyboardShortcutsModal() {
             ))}
           </div>
           <div className="p-4 bg-muted/30 text-center text-xs text-muted-foreground">
-            Tekan <kbd className="font-bold">Esc</kbd> untuk menutup
+            {t("press")} <kbd className="font-bold">Esc</kbd> {t("toClose")}
           </div>
         </motion.div>
       </div>

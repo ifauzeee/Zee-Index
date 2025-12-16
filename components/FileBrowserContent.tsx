@@ -9,6 +9,7 @@ import PinnedSection from "./PinnedSection";
 import AuthForm from "./AuthForm";
 import type { DriveFile } from "@/lib/googleDrive";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
+import { useTranslations } from "next-intl";
 
 interface FileBrowserContentProps {
   isLoading: boolean;
@@ -66,6 +67,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
     nextPageToken,
     fetchNextPage,
   } = props;
+  const tCommon = useTranslations("Common");
 
   const { focusedIndex } = useKeyboardNavigation({
     files: sortedFiles as Array<{ id: string; name: string; mimeType: string }>,
@@ -94,7 +96,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] w-full animate-in fade-in duration-500">
         <AuthForm
           folderId={lockedFolderId}
-          folderName={lockedFolderName || "Folder Terkunci"}
+          folderName={lockedFolderName || tCommon("lockedFolder")}
           isLoading={isAuthLoading}
           onSubmit={onAuthSubmit}
         />
@@ -133,7 +135,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
         )}
         {!isFetchingNextPage && !nextPageToken && sortedFiles.length > 0 && (
           <span className="text-sm text-muted-foreground">
-            Akhir dari daftar
+            {tCommon("endOfList")}
           </span>
         )}
       </div>

@@ -9,6 +9,7 @@ import { useConfirm } from "@/components/providers/ModalProvider";
 import MoveModal from "./MoveModal";
 import { cn } from "@/lib/utils";
 import JSZip from "jszip";
+import { useTranslations } from "next-intl";
 
 export function BulkActionBar() {
   const {
@@ -19,6 +20,7 @@ export function BulkActionBar() {
     isSidebarOpen,
     user,
   } = useAppStore();
+  const t = useTranslations("BulkActionBar");
   const { confirm } = useConfirm();
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -29,12 +31,12 @@ export function BulkActionBar() {
     );
 
     if (filesToZip.length === 0) {
-      addToast({ message: "No files selected to zip.", type: "error" });
+      addToast({ message: t("noFilesToZip"), type: "error" });
       return;
     }
 
     addToast({
-      message: `Zipping ${filesToZip.length} files...`,
+      message: t("zippingFiles", { count: filesToZip.length }),
       type: "info",
     });
     setIsProcessing(true);
@@ -44,7 +46,7 @@ export function BulkActionBar() {
       const folderName = "zee-index-archive";
       const folder = zip.folder(folderName);
 
-      if (!folder) throw new Error("Failed to create zip folder");
+      if (!folder) throw new Error(t("failedToCreateZip"));
 
       const promises = filesToZip.map(async (file) => {
         try {
@@ -55,7 +57,7 @@ export function BulkActionBar() {
         } catch (error) {
           console.error(`Failed to download ${file.name}`, error);
           addToast({
-            message: `Skipped ${file.name} (failed to fetch)`,
+            message: t("skippedFile", { file: file.name }),
             type: "error",
           });
         }
@@ -73,11 +75,11 @@ export function BulkActionBar() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      addToast({ message: "Download started!", type: "success" });
+      addToast({ message: t("downloadStarted"), type: "success" });
       clearSelection();
     } catch (error) {
       console.error("Zip error:", error);
-      addToast({ message: "Failed to generate zip file.", type: "error" });
+      addToast({ message: t("failedToGenerateZip"), type: "error" });
     } finally {
       setIsProcessing(false);
     }
@@ -86,17 +88,17 @@ export function BulkActionBar() {
   const handleDelete = async () => {
     if (
       !(await confirm(
-        `Are you sure you want to delete ${selectedFiles.length} items?`,
+        t("deleteConfirmMessage", { count: selectedFiles.length }),
         {
-          title: "Delete Items",
+          title: t("deleteConfirmTitle"),
           variant: "destructive",
-          confirmText: "Delete",
+          confirmText: t("delete"),
         },
       ))
     )
       return;
 
-    addToast({ message: "Deleting items...", type: "info" });
+    addToast({ message: t("deletingItems"), type: "info" });
     setIsProcessing(true);
 
     try {
@@ -108,17 +110,18 @@ export function BulkActionBar() {
         });
       }
       clearSelection();
+      clearSelection();
       triggerRefresh();
-      addToast({ message: "Items deleted", type: "success" });
+      addToast({ message: t("itemsDeleted"), type: "success" });
     } catch {
-      addToast({ message: "Failed to delete some items", type: "error" });
+      addToast({ message: t("failedToDelete"), type: "error" });
     } finally {
       setIsProcessing(false);
     }
   };
 
   const handleCopy = async () => {
-    addToast({ message: "Copying items...", type: "info" });
+    addToast({ message: t("copyingItems"), type: "info" });
     setIsProcessing(true);
     let successCount = 0;
 
@@ -132,12 +135,15 @@ export function BulkActionBar() {
         if (response.ok) successCount++;
       }
       triggerRefresh();
-      addToast({ message: `${successCount} items copied`, type: "success" });
+      addToast({
+        message: t("itemsCopied", { count: successCount }),
+        type: "success",
+      });
       if (successCount === selectedFiles.length) {
         clearSelection();
       }
     } catch {
-      addToast({ message: "Copy failed", type: "error" });
+      addToast({ message: t("copyFailed"), type: "error" });
     } finally {
       setIsProcessing(false);
     }
@@ -145,7 +151,7 @@ export function BulkActionBar() {
 
   const handleMoveConfirm = async (newParentId: string) => {
     setIsProcessing(true);
-    addToast({ message: "Moving items...", type: "info" });
+    addToast({ message: t("movingItems"), type: "info" });
 
     try {
       const response = await fetch("/api/files/bulk-move", {
@@ -159,17 +165,17 @@ export function BulkActionBar() {
       });
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Move failed");
+      if (!response.ok) throw new Error(result.error || t("moveFailed"));
 
       addToast({
-        message: result.message || "Moved successfully",
+        message: result.message || t("movedSuccessfully"),
         type: "success",
       });
       triggerRefresh();
       clearSelection();
       setIsMoveModalOpen(false);
     } catch (error: any) {
-      addToast({ message: error.message || "Move failed", type: "error" });
+      addToast({ message: error.message || t("moveFailed"), type: "error" });
     } finally {
       setIsProcessing(false);
     }
@@ -193,7 +199,7 @@ export function BulkActionBar() {
         >
           <div className="flex items-center gap-3 border-r border-background/20 pr-4">
             <span className="font-bold text-sm whitespace-nowrap">
-              {selectedFiles.length} selected
+              {t("selected", { count: selectedFiles.length })}
             </span>
             <button
               onClick={clearSelection}
@@ -214,7 +220,7 @@ export function BulkActionBar() {
                   onClick={() => setIsMoveModalOpen(true)}
                 >
                   <FolderInput size={16} className="mr-2" />
-                  Move
+                  {t("move")}
                 </Button>
                 <Button
                   size="sm"
@@ -224,7 +230,7 @@ export function BulkActionBar() {
                   onClick={handleCopy}
                 >
                   <Copy size={16} className="mr-2" />
-                  Copy
+                  {t("copy")}
                 </Button>
               </>
             )}
@@ -235,7 +241,7 @@ export function BulkActionBar() {
               onClick={handleDownload}
             >
               <Download size={16} className="mr-2" />
-              Download
+              {t("download")}
             </Button>
             {isAdmin && (
               <Button
@@ -245,7 +251,7 @@ export function BulkActionBar() {
                 onClick={handleDelete}
               >
                 <Trash2 size={16} className="mr-2" />
-                Delete
+                {t("delete")}
               </Button>
             )}
           </div>

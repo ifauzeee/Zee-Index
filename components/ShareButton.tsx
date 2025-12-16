@@ -6,6 +6,7 @@ import { useAppStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { DriveFile } from "@/lib/googleDrive";
+import { useTranslations } from "next-intl";
 
 interface ShareButtonProps {
   path?: string;
@@ -38,6 +39,7 @@ export default function ShareButton({
 }: ShareButtonProps) {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const { addToast, user, addShareLink } = useAppStore();
+  const t = useTranslations("ShareButton");
 
   const [customDuration, setCustomDuration] = useState<string | number>(10);
   const [customUnit, setCustomUnit] = useState<TimeUnit>("m");
@@ -47,14 +49,14 @@ export default function ShareButton({
 
   useEffect(() => {
     if (controlledIsOpen && user && user.role !== "ADMIN") {
-      addToast({ message: "Fitur berbagi hanya untuk Admin.", type: "error" });
+      addToast({ message: t("shareFeatureAdminOnly"), type: "error" });
       if (onClose) onClose();
     }
-  }, [controlledIsOpen, user, addToast, onClose]);
+  }, [controlledIsOpen, user, addToast, onClose, t]);
 
   const handleOpen = () => {
     if (user?.role !== "ADMIN") {
-      addToast({ message: "Fitur berbagi hanya untuk Admin.", type: "error" });
+      addToast({ message: t("shareFeatureAdminOnly"), type: "error" });
       return;
     }
     setInternalIsOpen(true);
@@ -102,14 +104,14 @@ export default function ShareButton({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Gagal membuat tautan.");
+        throw new Error(errorData.error || t("failedToCreateLink"));
       }
 
       const { shareableUrl, newShareLink } = await response.json();
       addShareLink(newShareLink);
 
       await navigator.clipboard.writeText(shareableUrl);
-      addToast({ message: "Tautan berbagi telah disalin!", type: "success" });
+      addToast({ message: t("linkCopied"), type: "success" });
       handleClose();
     } catch (error) {
       addToast({ message: (error as Error).message, type: "error" });
@@ -122,8 +124,8 @@ export default function ShareButton({
 
   const isCollection = items && items.length > 0;
   const title = isCollection
-    ? `Bagikan ${items.length} item`
-    : `Bagikan: ${itemName}`;
+    ? t("shareCollection", { count: items.length })
+    : t("shareItem", { itemName: itemName || "" });
 
   const ModalContent = (
     <AnimatePresence>
@@ -151,17 +153,17 @@ export default function ShareButton({
               {title}
             </h3>
             <p className="text-sm text-muted-foreground mb-6">
-              Pilih jenis tautan berbagi.
+              {t("selectLinkType")}
             </p>
 
             <div className="space-y-4">
               <div className="p-4 rounded-lg border">
                 <div className="flex items-center gap-3 mb-3">
                   <Clock className="text-primary" />
-                  <h4 className="font-semibold">Tautan Berwaktu</h4>
+                  <h4 className="font-semibold">{t("timedLink")}</h4>
                 </div>
                 <p className="text-xs text-muted-foreground mb-3">
-                  Tautan akan kedaluwarsa setelah durasi yang Anda tentukan.
+                  {t("timedLinkDesc")}
                 </p>
                 <div className="flex gap-2">
                   <input
@@ -179,10 +181,10 @@ export default function ShareButton({
                     onChange={(e) => setCustomUnit(e.target.value as TimeUnit)}
                     className="w-2/3 px-3 py-2 rounded-md border bg-background focus:ring-2 focus:ring-ring focus:outline-none text-sm"
                   >
-                    <option value="s">Detik</option>
-                    <option value="m">Menit</option>
-                    <option value="h">Jam</option>
-                    <option value="d">Hari</option>
+                    <option value="s">{t("seconds")}</option>
+                    <option value="m">{t("minutes")}</option>
+                    <option value="h">{t("hours")}</option>
+                    <option value="d">{t("days")}</option>
                   </select>
                 </div>
               </div>
@@ -190,11 +192,10 @@ export default function ShareButton({
               <div className="p-4 rounded-lg border">
                 <div className="flex items-center gap-3 mb-3">
                   <Zap className="text-amber-500" />
-                  <h4 className="font-semibold">Tautan Sesi</h4>
+                  <h4 className="font-semibold">{t("sessionLink")}</h4>
                 </div>
                 <p className="text-xs text-muted-foreground mb-3">
-                  Tautan berlaku sangat lama (1 tahun), ideal untuk penggunaan
-                  pribadi.
+                  {t("sessionLinkDesc")}
                 </p>
               </div>
 
@@ -214,10 +215,9 @@ export default function ShareButton({
                   )}
                 />
                 <div>
-                  <h4 className="font-semibold">Wajibkan Login</h4>
+                  <h4 className="font-semibold">{t("requireLogin")}</h4>
                   <p className="text-xs text-muted-foreground">
-                    Pengguna harus login dengan akun Google untuk mengakses
-                    tautan ini.
+                    {t("requireLoginDesc")}
                   </p>
                 </div>
                 <input
@@ -234,13 +234,13 @@ export default function ShareButton({
                   onClick={() => generateLink("timed")}
                   className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"
                 >
-                  <Copy size={16} /> Salin Tautan Berwaktu
+                  <Copy size={16} /> {t("copyTimedLink")}
                 </button>
                 <button
                   onClick={() => generateLink("session")}
                   className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"
                 >
-                  <Copy size={16} /> Salin Tautan Sesi
+                  <Copy size={16} /> {t("copySessionLink")}
                 </button>
               </div>
             </div>

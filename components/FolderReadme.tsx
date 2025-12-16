@@ -8,6 +8,7 @@ import { BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/lib/store";
 import "prismjs/themes/prism-tomorrow.min.css";
+import { useTranslations } from "next-intl";
 
 interface FolderReadmeProps {
   fileId: string;
@@ -15,6 +16,7 @@ interface FolderReadmeProps {
 
 export default function FolderReadme({ fileId }: FolderReadmeProps) {
   const { shareToken, addToast } = useAppStore();
+  const t = useTranslations("FolderReadme");
   const [content, setContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -32,7 +34,7 @@ export default function FolderReadme({ fileId }: FolderReadmeProps) {
         setContent(text);
       } catch (error) {
         console.error(error);
-        addToast({ message: "Gagal memuat README", type: "error" });
+        addToast({ message: t("failedToLoad"), type: "error" });
       } finally {
         setIsLoading(false);
       }
@@ -41,7 +43,7 @@ export default function FolderReadme({ fileId }: FolderReadmeProps) {
     if (fileId) {
       fetchReadme();
     }
-  }, [fileId, shareToken, addToast]);
+  }, [fileId, shareToken, addToast, t]);
 
   if (isLoading) return null;
   if (!content) return null;

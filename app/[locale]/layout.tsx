@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Providers } from "./providers";
+import { Providers } from "../providers";
 import "./(main)/globals.css";
 import "plyr/dist/plyr.css";
 import GlobalBranding from "@/components/GlobalBranding";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
 
 export const preferredRegion = "sin1";
 
@@ -32,19 +34,25 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
+  params: { locale },
 }: {
   children: React.ReactNode;
+  params: { locale: string };
 }) {
+  const messages = await getMessages();
+
   return (
-    <html lang="id" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head />
       <body>
-        <Providers>
-          <GlobalBranding />
-          {children}
-        </Providers>
+        <NextIntlClientProvider messages={messages}>
+          <Providers>
+            <GlobalBranding />
+            {children}
+          </Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

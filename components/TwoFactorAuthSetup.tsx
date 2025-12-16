@@ -7,6 +7,7 @@ import { Loader2, ShieldCheck, ShieldOff } from "lucide-react";
 import Image from "next/image";
 import { useAppStore } from "@/lib/store";
 import { useConfirm } from "@/components/providers/ModalProvider";
+import { useTranslations } from "next-intl";
 
 export default function TwoFactorAuthSetup() {
   const [isEnabled, setIsEnabled] = useState<boolean | null>(null);
@@ -17,23 +18,24 @@ export default function TwoFactorAuthSetup() {
   const { addToast } = useAppStore();
   const { data: session } = useSession();
   const { confirm } = useConfirm();
+  const t = useTranslations("TwoFactorAuthSetup");
 
   const checkStatus = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/auth/2fa/status");
-      if (!response.ok) throw new Error("Gagal memeriksa status 2FA.");
+      if (!response.ok) throw new Error(t("failedToCheckStatus"));
       const data = await response.json();
       setIsEnabled(data.isEnabled);
     } catch (err: unknown) {
       addToast({
-        message: err instanceof Error ? err.message : "Error",
+        message: err instanceof Error ? err.message : t("verificationFailed"),
         type: "error",
       });
     } finally {
       setIsLoading(false);
     }
-  }, [addToast]);
+  }, [addToast, t]);
 
   useEffect(() => {
     if (session?.user) {
@@ -48,7 +50,7 @@ export default function TwoFactorAuthSetup() {
       const response = await fetch("/api/auth/2fa/generate", {
         method: "POST",
       });
-      if (!response.ok) throw new Error("Gagal membuat kode QR.");
+      if (!response.ok) throw new Error(t("failedToGenerateQR"));
       const data = await response.json();
       setQrCodeDataURL(data.qrCodeDataURL);
     } catch (err: unknown) {
@@ -69,8 +71,8 @@ export default function TwoFactorAuthSetup() {
         body: JSON.stringify({ token: verificationCode }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Verifikasi gagal.");
-      addToast({ message: "2FA berhasil diaktifkan!", type: "success" });
+      if (!response.ok) throw new Error(data.error || t("verificationFailed"));
+      addToast({ message: t("twoFAEnabled"), type: "success" });
       setIsEnabled(true);
       setQrCodeDataURL(null);
       setVerificationCode("");
@@ -83,19 +85,19 @@ export default function TwoFactorAuthSetup() {
 
   const handleDisable = async () => {
     if (
-      !(await confirm(
-        "Apakah Anda yakin ingin menonaktifkan Autentikasi Dua Faktor?",
-        { variant: "destructive", title: "Nonaktifkan 2FA" },
-      ))
+      !(await confirm(t("confirmDisable"), {
+        variant: "destructive",
+        title: t("disableTitle"),
+      }))
     )
       return;
     setIsLoading(true);
     setError("");
     try {
       const response = await fetch("/api/auth/2fa/disable", { method: "POST" });
-      if (!response.ok) throw new Error("Gagal menonaktifkan 2FA.");
+      if (!response.ok) throw new Error(t("failedToDisable"));
 
-      addToast({ message: "2FA berhasil dinonaktifkan.", type: "info" });
+      addToast({ message: t("twoFADisabled"), type: "info" });
       setIsEnabled(false);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error");
@@ -119,9 +121,9 @@ export default function TwoFactorAuthSetup() {
           <div className="flex items-center gap-3">
             <ShieldCheck className="h-8 w-8 text-green-500" />
             <div>
-              <p className="font-semibold">2FA Aktif</p>
+              <p className="font-semibold">{t("twoFAActive")}</p>
               <p className="text-sm text-muted-foreground">
-                Akun Anda dilindungi dengan autentikasi dua faktor.
+                {t("accountProtected")}
               </p>
             </div>
           </div>
@@ -130,7 +132,7 @@ export default function TwoFactorAuthSetup() {
             disabled={isLoading}
             className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 text-sm font-semibold disabled:opacity-50"
           >
-            {isLoading ? <Loader2 className="animate-spin" /> : "Nonaktifkan"}
+            {isLoading ? <Loader2 className="animate-spin" /> : t("disable")}
           </button>
         </div>
       ) : (
@@ -138,9 +140,9 @@ export default function TwoFactorAuthSetup() {
           <div className="flex items-center gap-3">
             <ShieldOff className="h-8 w-8 text-red-500" />
             <div>
-              <p className="font-semibold">2FA Tidak Aktif</p>
+              <p className="font-semibold">{t("twoFAInactive")}</p>
               <p className="text-sm text-muted-foreground">
-                Tingkatkan keamanan akun Anda dengan mengaktifkan 2FA.
+                {t("enableSecurity")}
               </p>
             </div>
           </div>
@@ -158,7 +160,7 @@ export default function TwoFactorAuthSetup() {
                 {isLoading ? (
                   <Loader2 className="animate-spin" />
                 ) : (
-                  "Aktifkan 2FA"
+                  t("enableTwoFA")
                 )}
               </motion.button>
             )}
@@ -174,10 +176,7 @@ export default function TwoFactorAuthSetup() {
                 className="mt-6 overflow-hidden"
               >
                 <div className="border-t pt-4">
-                  <p className="text-sm text-center mb-4">
-                    1. Pindai kode QR ini dengan aplikasi authenticator Anda
-                    (e.g., Google Authenticator).
-                  </p>
+                  <p className="text-sm text-center mb-4">{t("scanQR")}</p>
                   <div className="flex justify-center p-4 bg-white rounded-lg max-w-[200px] mx-auto">
                     <Image
                       src={qrCodeDataURL}
@@ -186,10 +185,7 @@ export default function TwoFactorAuthSetup() {
                       height={180}
                     />
                   </div>
-                  <p className="text-sm text-center my-4">
-                    2. Masukkan kode 6 digit yang muncul di aplikasi Anda untuk
-                    menyelesaikan proses.
-                  </p>
+                  <p className="text-sm text-center my-4">{t("enterCode")}</p>
                   <form
                     onSubmit={handleVerify}
                     className="flex items-center justify-center gap-2"
@@ -212,7 +208,7 @@ export default function TwoFactorAuthSetup() {
                       {isLoading ? (
                         <Loader2 className="animate-spin" />
                       ) : (
-                        "Verifikasi"
+                        t("verify")
                       )}
                     </button>
                   </form>

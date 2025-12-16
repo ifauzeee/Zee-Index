@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 import { Pin, Folder, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import type { DriveFile } from "@/lib/googleDrive";
+import { useTranslations } from "next-intl";
 
 export default function PinnedSection() {
   const { pinnedFolders, fetchPinnedFolders, currentFolderId, shareToken } =
     useAppStore();
+  const t = useTranslations("PinnedSection");
   const router = useRouter();
   const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
 
@@ -35,7 +37,7 @@ export default function PinnedSection() {
     >
       <div className="flex items-center gap-2 mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider px-1">
         <Pin size={14} className="text-primary" />
-        <span>Tersemat</span>
+        <span>{t("pinned")}</span>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
@@ -53,7 +55,7 @@ export default function PinnedSection() {
                 {folder.name}
               </p>
               <p className="text-[10px] text-muted-foreground truncate">
-                Folder Tersemat
+                {t("pinnedFolder")}
               </p>
             </div>
             <ChevronRight

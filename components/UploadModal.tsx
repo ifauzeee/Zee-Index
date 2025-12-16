@@ -7,6 +7,7 @@ import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { FileEntry } from "@/lib/fileParser";
+import { useTranslations } from "next-intl";
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export default function UploadModal({
   const [newFolderName, setNewFolderName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
+  const t = useTranslations("UploadModal");
 
   useScrollLock(isOpen);
 
@@ -50,16 +52,17 @@ export default function UploadModal({
         }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Gagal membuat folder");
+      if (!response.ok)
+        throw new Error(data.error || t("failedToCreateFolder"));
       addToast({
-        message: `Folder "${newFolderName}" berhasil dibuat.`,
+        message: t("folderCreated", { folderName: newFolderName }),
         type: "success",
       });
       triggerRefresh();
       setNewFolderName("");
       onClose();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Terjadi kesalahan";
+      const message = err instanceof Error ? err.message : t("occurredError");
       addToast({ message: message, type: "error" });
     } finally {
       setIsCreatingFolder(false);
@@ -89,7 +92,9 @@ export default function UploadModal({
             >
               <X size={20} />
             </button>
-            <h3 className="text-lg font-semibold mb-4">Upload File & Folder</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              {t("uploadFileFolder")}
+            </h3>
 
             <div className="space-y-6">
               <div
@@ -128,10 +133,10 @@ export default function UploadModal({
 
                 <UploadCloud className="mx-auto h-12 w-12 text-muted-foreground group-hover:text-primary transition-colors" />
                 <p className="mt-3 text-sm font-medium text-foreground">
-                  Seret file atau folder ke sini
+                  {t("dragHere")}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  atau klik tombol di bawah
+                  {t("orClickBelow")}
                 </p>
               </div>
 
@@ -140,13 +145,13 @@ export default function UploadModal({
                   onClick={() => fileInputRef.current?.click()}
                   className="flex items-center justify-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg text-sm font-medium transition-colors"
                 >
-                  <FilePlus size={16} /> Pilih File
+                  <FilePlus size={16} /> {t("selectFile")}
                 </button>
                 <button
                   onClick={() => folderInputRef.current?.click()}
                   className="flex items-center justify-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg text-sm font-medium transition-colors"
                 >
-                  <FolderPlus size={16} /> Pilih Folder
+                  <FolderPlus size={16} /> {t("selectFolder")}
                 </button>
               </div>
 
@@ -154,14 +159,14 @@ export default function UploadModal({
 
               <form onSubmit={handleCreateFolder} className="space-y-2">
                 <label className="text-sm font-medium">
-                  Buat Folder Baru di Drive
+                  {t("createFolderInDrive")}
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={newFolderName}
                     onChange={(e) => setNewFolderName(e.target.value)}
-                    placeholder="Nama Folder..."
+                    placeholder={t("folderName")}
                     className="flex-grow px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary focus:outline-none text-sm"
                   />
                   <button
@@ -172,7 +177,7 @@ export default function UploadModal({
                     {isCreatingFolder ? (
                       <Loader2 className="animate-spin" size={16} />
                     ) : (
-                      "Buat"
+                      t("create")
                     )}
                   </button>
                 </div>

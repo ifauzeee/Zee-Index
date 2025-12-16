@@ -1,30 +1,53 @@
+# Dependencies
 /node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Next.js
 /.next/
 /out/
 /build
+
+# Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-.env.local
-.env*.local
+
+# Environment variables
 .env
+.env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# Allow example file
+!.env.example
+
+# Vercel
 .vercel
+
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# OS Files
 .DS_Store
+Thumbs.db
+
+# Secrets
 *.pem
+
+# PWA
 public/sw.js
-public/workbox-*.js
-public/swe-worker-*.js
-all_project_code.txt
+public/sw.js.map
+public/workbox-*
+public/swe-worker-*
+
+# Temp / Generated / Utilities
 cat.py
-.vercel
-
-all_project_code.md
-
-project-dump.md
-
-# --- Auto-added by Context Tool ---
-code_context.txt
 scan.ps1
+*.log

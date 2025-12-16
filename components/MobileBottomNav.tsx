@@ -4,22 +4,24 @@ import { Home, Star, ShieldCheck, HardDrive } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
+import { useTranslations } from "next-intl";
 
 export default function MobileBottomNav() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, shareToken } = useAppStore();
+  const t = useTranslations("MobileBottomNav");
 
   if (shareToken) return null;
 
   const navItems = [
-    { label: "Home", icon: Home, path: "/" },
-    { label: "Favorites", icon: Star, path: "/favorites" },
-    { label: "Storage", icon: HardDrive, path: "/storage" },
+    { label: t("home"), icon: Home, path: "/" },
+    { label: t("favorites"), icon: Star, path: "/favorites" },
+    { label: t("storage"), icon: HardDrive, path: "/storage" },
   ];
 
   if (user?.role === "ADMIN") {
-    navItems.push({ label: "Admin", icon: ShieldCheck, path: "/admin" });
+    navItems.push({ label: t("admin"), icon: ShieldCheck, path: "/admin" });
   }
 
   return (

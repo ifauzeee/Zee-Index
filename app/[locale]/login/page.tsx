@@ -5,8 +5,10 @@ import { signIn } from "next-auth/react";
 import { User, LockKeyhole } from "lucide-react";
 import Image from "next/image";
 import AppIcon from "@/app/icon.png";
+import { useTranslations } from "next-intl";
 
 function CustomLoginPage() {
+  const t = useTranslations("LoginPage");
   const searchParams = useSearchParams();
   const [message, setMessage] = useState<{
     type: "error" | "info" | "success";
@@ -26,62 +28,62 @@ function CustomLoginPage() {
         case "ShareLinkExpired":
           setMessage({
             type: "error",
-            title: "Share Link Expired",
-            text: "The share link you are trying to access has expired. Please ask for a new link or log in.",
+            title: t("shareLinkExpired"),
+            text: t("shareLinkExpiredMsg"),
           });
           break;
         case "InvalidOrExpiredShareLink":
           setMessage({
             type: "error",
-            title: "Invalid Link",
-            text: "The share link you used is invalid or has expired.",
+            title: t("invalidLink"),
+            text: t("invalidLinkMsg"),
           });
           break;
         case "SessionExpired":
           setMessage({
             type: "info",
-            title: "Session Expired",
-            text: "Your session has expired. Please log in again to continue.",
+            title: t("sessionExpired"),
+            text: t("sessionExpiredMsg"),
           });
           break;
         case "RootAccessDenied":
           setMessage({
             type: "error",
-            title: "Access Denied",
-            text: "You cannot access the main page through a share link. Please use the original link you received.",
+            title: t("accessDenied"),
+            text: t("accessDeniedMsg"),
           });
           break;
         case "ShareLinkRevoked":
           setMessage({
             type: "error",
-            title: "Access Revoked",
-            text: "Access to this link has been revoked by the administrator.",
+            title: t("accessRevoked"),
+            text: t("accessRevokedMsg"),
           });
           break;
         case "GuestAccessDenied":
           setMessage({
             type: "error",
-            title: "Limited Access",
-            text: "Guest access is not allowed for this page. Please log in using a Google account.",
+            title: t("limitedAccess"),
+            text: t("guestAccessDeniedMsg"),
           });
           break;
         case "GuestLogout":
           setMessage({
             type: "success",
-            title: "See You! 👋",
-            text: "Thank you for using guest mode. Welcome back anytime!",
+            title: t("seeYou"),
+            text: t("guestLogoutMsg"),
           });
           break;
         default:
           setMessage({
             type: "error",
-            title: "An Error Occurred",
-            text: "An error occurred. Please try again.",
+            title: t("errorOccurred"),
+            text: t("errorMsg"),
           });
           break;
       }
     }
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   useEffect(() => {
     const fetchPublicConfig = async () => {
@@ -93,7 +95,7 @@ function CustomLoginPage() {
         });
 
         if (!response.ok) {
-          throw new Error("Failed to fetch config");
+          throw new Error(t("failedToFetchConfig"));
         }
 
         const data = await response.json();
@@ -106,7 +108,7 @@ function CustomLoginPage() {
       }
     };
     fetchPublicConfig();
-  }, []);
+  }, [t]);
 
   const handleGoogleSignIn = () => {
     const callbackUrl = searchParams.get("callbackUrl") || "/";
@@ -129,8 +131,8 @@ function CustomLoginPage() {
       if (result?.error) {
         setMessage({
           type: "error",
-          title: "Login Failed",
-          text: "Incorrect email or password. Please try again.",
+          title: t("loginFailed"),
+          text: t("incorrectEmailPassword"),
         });
       } else if (result?.ok) {
         window.location.href = callbackUrl;
@@ -138,8 +140,8 @@ function CustomLoginPage() {
     } catch {
       setMessage({
         type: "error",
-        title: "An Error Occurred",
-        text: "An error occurred during login. Please try again.",
+        title: t("errorOccurred"),
+        text: t("errorMsg"),
       });
     } finally {
       setIsLoggingIn(false);
@@ -172,13 +174,12 @@ function CustomLoginPage() {
                 priority
                 className="mr-3 object-contain dark:invert"
               />
+
               <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
-                Zee Index
+                {t("appTitle")}
               </span>
             </h1>
-            <p className="text-muted-foreground mt-2">
-              Access your files securely and quickly.
-            </p>
+            <p className="text-muted-foreground mt-2">{t("appSubtitle")}</p>
           </div>
 
           {message && (
@@ -224,7 +225,7 @@ function CustomLoginPage() {
                   htmlFor="email"
                   className="text-sm font-medium text-foreground"
                 >
-                  Email
+                  {t("emailLabel")}
                 </label>
                 <input
                   id="email"
@@ -232,7 +233,7 @@ function CustomLoginPage() {
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@example.com"
+                  placeholder={t("emailPlaceholder")}
                   className="w-full px-4 py-3 bg-background border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-muted-foreground/50"
                   required
                 />
@@ -243,7 +244,7 @@ function CustomLoginPage() {
                   htmlFor="password"
                   className="text-sm font-medium text-foreground"
                 >
-                  Password
+                  {t("passwordLabel")}
                 </label>
                 <input
                   id="password"
@@ -251,7 +252,7 @@ function CustomLoginPage() {
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder={t("passwordPlaceholder")}
                   className="w-full px-4 py-3 bg-background border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-muted-foreground/50"
                   required
                 />
@@ -265,12 +266,12 @@ function CustomLoginPage() {
                 {isLoggingIn ? (
                   <>
                     <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    <span>Processing...</span>
+                    <span>{t("processing")}</span>
                   </>
                 ) : (
                   <>
                     <LockKeyhole size={20} />
-                    <span>Login with Email</span>
+                    <span>{t("loginButton")}</span>
                   </>
                 )}
               </button>
@@ -282,7 +283,7 @@ function CustomLoginPage() {
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-background px-2 text-muted-foreground">
-                  Or
+                  {t("or")}
                 </span>
               </div>
             </div>
@@ -309,7 +310,7 @@ function CustomLoginPage() {
                   fill="#EA4335"
                 />
               </svg>
-              Continue with Google
+              {t("continueWithGoogle")}
             </button>
 
             <button
@@ -327,23 +328,23 @@ function CustomLoginPage() {
                 }`}
             >
               {isLoadingConfig ? (
-                <span className="animate-pulse">Loading...</span>
+                <span className="animate-pulse">{t("loading")}</span>
               ) : isGuestLoginDisabled ? (
                 <>
                   <LockKeyhole size={20} />
-                  <span>Guest Access Disabled</span>
+                  <span>{t("guestAccessDisabled")}</span>
                 </>
               ) : (
                 <>
                   <User size={20} />
-                  <span>Continue as Guest</span>
+                  <span>{t("continueAsGuest")}</span>
                 </>
               )}
             </button>
           </div>
 
           <p className="text-center text-xs text-muted-foreground pt-12">
-            © {new Date().getFullYear()} - Created by{" "}
+            © {new Date().getFullYear()} - {t("createdBy")}{" "}
             <a
               href="https://ifauzeee.vercel.app/"
               target="_blank"

@@ -1,4 +1,7 @@
 import withPWAInit from "@ducanh2912/next-pwa";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const withPWA = withPWAInit({
   dest: "public",
@@ -16,7 +19,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  output: "standalone",
+  // output: "standalone",
   images: {
     remotePatterns: [
       {
@@ -76,7 +79,7 @@ const nextConfig = {
 import { withSentryConfig } from "@sentry/nextjs";
 
 export default withSentryConfig(
-  withPWA(nextConfig),
+  withPWA(withNextIntl(nextConfig)),
   {
     silent: true,
     org: "zeerepo",
@@ -92,5 +95,5 @@ export default withSentryConfig(
     hideSourceMaps: true,
 
     disableLogger: true,
-  }
+  },
 );

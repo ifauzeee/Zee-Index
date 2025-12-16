@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import ViewToggle from "@/components/FileBrowser/ViewToggle";
+import { useTranslations } from "next-intl";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,9 +70,15 @@ export default function FileBrowserHeader({
 }: FileBrowserHeaderProps) {
   const navRef = useRef<HTMLElement>(null);
   const { density, setDensity } = useAppStore();
+  const t = useTranslations("FileBrowserHeader");
+  const tCommon = useTranslations("Common");
 
   const showAdminActions = !shareToken && isAdmin;
-  const sortLabels = { name: "Name", modifiedTime: "Date", size: "Size" };
+  const sortLabels = {
+    name: tCommon("name"),
+    modifiedTime: tCommon("date"),
+    size: tCommon("size"),
+  };
 
   useEffect(() => {
     if (navRef.current) {
@@ -151,7 +158,7 @@ export default function FileBrowserHeader({
             <button
               onClick={onUploadClick}
               className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-primary transition-colors shadow-sm flex items-center justify-center shrink-0"
-              title="Upload or Create Folder"
+              title={t("uploadOrCreate")}
             >
               <Upload size={18} />
             </button>
@@ -159,7 +166,7 @@ export default function FileBrowserHeader({
             <button
               onClick={onRequestFileClick}
               className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-purple-500 transition-colors shadow-sm flex items-center justify-center shrink-0"
-              title="Create File Request Link"
+              title={t("createFileRequest")}
             >
               <UploadCloud size={18} />
             </button>
@@ -167,7 +174,7 @@ export default function FileBrowserHeader({
             <button
               onClick={onShareFolderClick}
               className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-blue-500 transition-colors shadow-sm flex items-center justify-center shrink-0"
-              title="Share This Folder"
+              title={t("shareThisFolder")}
             >
               <Share2 size={18} />
             </button>
@@ -178,7 +185,7 @@ export default function FileBrowserHeader({
               <DropdownMenuTrigger asChild>
                 <button
                   className="p-2 rounded-lg bg-card border hover:bg-accent transition-colors shadow-sm flex items-center justify-center shrink-0 gap-2 px-3"
-                  title="Sort files"
+                  title={t("sortFiles")}
                 >
                   <ArrowDownUp size={16} />
                   <span className="text-sm font-medium">
@@ -188,13 +195,13 @@ export default function FileBrowserHeader({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => onSortChange("name")}>
-                  Name
+                  {tCommon("name")}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onSortChange("modifiedTime")}>
-                  Date
+                  {tCommon("date")}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onSortChange("size")}>
-                  Size
+                  {tCommon("size")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -203,7 +210,7 @@ export default function FileBrowserHeader({
               onClick={onDetailsClick}
               disabled={!activeFileId}
               className="p-2 rounded-lg bg-card border hover:bg-accent transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hidden sm:flex items-center justify-center shrink-0"
-              title="View Details"
+              title={t("viewDetails")}
             >
               <Info size={18} />
             </button>
@@ -216,7 +223,7 @@ export default function FileBrowserHeader({
                   ? "bg-blue-600 text-white border-blue-600"
                   : "bg-card hover:bg-accent border-border",
               )}
-              title="Select Multiple Files"
+              title={t("selectMultiple")}
             >
               <CheckSquare size={18} />
             </button>
@@ -234,7 +241,7 @@ export default function FileBrowserHeader({
                 "text-muted-foreground hover:text-foreground hover:bg-background border border-border",
               )}
               title={
-                density === "compact" ? "Comfortable Mode" : "Compact Mode"
+                density === "compact" ? t("comfortableMode") : t("compactMode")
               }
             >
               {density === "compact" ? (
@@ -261,7 +268,7 @@ export default function FileBrowserHeader({
                   "p-1.5 rounded-md transition-all border border-border",
                   "text-muted-foreground hover:text-foreground hover:bg-background",
                 )}
-                title="Gallery View"
+                title={t("galleryView")}
               >
                 <LayoutTemplate size={18} />
               </button>

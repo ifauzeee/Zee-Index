@@ -30,6 +30,7 @@ import {
 import Image from "next/image";
 import { useAppStore } from "@/lib/store";
 import { useScrollLock } from "@/hooks/useScrollLock";
+import { useTranslations, useLocale } from "next-intl";
 
 interface DetailsPanelProps {
   file: DriveFile;
@@ -174,6 +175,8 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
     : undefined;
 
   const { user, hideAuthor, addToast } = useAppStore();
+  const t = useTranslations("DetailsPanel");
+  const locale = useLocale();
 
   const [isMobile, setIsMobile] = useState(false);
   const controls = useAnimation();
@@ -242,7 +245,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
   const handleCopyLink = () => {
     const url = `/api/download?fileId=${file.id}`;
     navigator.clipboard.writeText(`${window.location.origin}${url}`);
-    addToast({ message: "Link download disalin!", type: "success" });
+    addToast({ message: t("linkCopied"), type: "success" });
   };
 
   const onDragEnd = async (
@@ -311,7 +314,9 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
             >
               <FileBox size={20} />
             </motion.div>
-            <h2 className="font-bold text-lg tracking-tight">Detail File</h2>
+            <h2 className="font-bold text-lg tracking-tight">
+              {t("fileDetails")}
+            </h2>
           </div>
           <motion.button
             whileHover={{ scale: 1.1, rotate: 90 }}
@@ -436,7 +441,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-primary/5 text-primary font-semibold text-sm hover:bg-primary/10 transition-colors border border-primary/10"
               >
                 <ExternalLink size={20} />
-                {editorLink ? "Edit File" : "Buka Drive"}
+                {editorLink ? t("editFile") : t("openDrive")}
               </motion.a>
               <motion.a
                 whileHover={{ scale: 1.02 }}
@@ -446,40 +451,43 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-secondary text-secondary-foreground font-semibold text-sm hover:bg-secondary/80 transition-colors border border-border/50"
               >
                 <Download size={20} />
-                Download
+                {t("download")}
               </motion.a>
             </motion.div>
 
             <div className="grid grid-cols-3 gap-3">
               <QuickStat
                 icon={HardDrive}
-                label="Ukuran"
+                label={t("size")}
                 value={file.size ? formatBytes(Number(file.size)) : "-"}
               />
               <QuickStat
                 icon={Calendar}
-                label="Diubah"
-                value={new Date(file.modifiedTime).toLocaleDateString("id-ID", {
-                  day: "numeric",
-                  month: "short",
-                })}
+                label={t("modified")}
+                value={new Date(file.modifiedTime).toLocaleDateString(
+                  locale === "id" ? "id-ID" : "en-US",
+                  {
+                    day: "numeric",
+                    month: "short",
+                  },
+                )}
               />
               <QuickStat
                 icon={FileType}
-                label="Ekstensi"
+                label={t("extension")}
                 value={file.name.split(".").pop()?.toUpperCase() || "FILE"}
               />
               {metadata?.width && (
                 <QuickStat
                   icon={Maximize2}
-                  label="Dimensi"
+                  label={t("dimensions")}
                   value={`${metadata.width} x ${metadata.height}`}
                 />
               )}
               {durationMillis && (
                 <QuickStat
                   icon={Clock}
-                  label="Durasi"
+                  label={t("duration")}
                   value={formatDuration(durationMillis / 1000)}
                 />
               )}
@@ -492,43 +500,49 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
               <div className="flex items-center gap-2 px-2 pb-2 border-b border-border/30">
                 <History size={16} className="text-primary" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  File Properties
+                  {t("fileProperties")}
                 </h4>
               </div>
               <div className="px-1 flex flex-col">
                 <DetailRow
                   icon={Calendar}
-                  label="Diubah"
-                  value={new Date(file.modifiedTime).toLocaleString("id-ID", {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })}
+                  label={t("modified")}
+                  value={new Date(file.modifiedTime).toLocaleString(
+                    locale === "id" ? "id-ID" : "en-US",
+                    {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    },
+                  )}
                 />
                 <DetailRow
                   icon={Calendar}
-                  label="Dibuat"
-                  value={new Date(file.createdTime).toLocaleString("id-ID", {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })}
+                  label={t("created")}
+                  value={new Date(file.createdTime).toLocaleString(
+                    locale === "id" ? "id-ID" : "en-US",
+                    {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    },
+                  )}
                 />
                 <DetailRow
                   icon={HardDrive}
-                  label="Lokasi"
-                  value={pathLoading ? "Memuat..." : pathString}
+                  label={t("location")}
+                  value={pathLoading ? t("loading") : pathString}
                   copyable={true}
                 />
                 {canShowAuthor && file.owners?.[0] && (
                   <DetailRow
                     icon={User}
-                    label="Pemilik"
+                    label={t("owner")}
                     value={file.owners[0].displayName}
                   />
                 )}
                 {canShowAuthor && file.lastModifyingUser && (
                   <DetailRow
                     icon={Edit3}
-                    label="Editor"
+                    label={t("editor")}
                     value={file.lastModifyingUser.displayName}
                   />
                 )}
@@ -537,7 +551,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                     <div className="flex items-center gap-2 mb-2 text-muted-foreground">
                       <Hash size={14} />
                       <span className="text-xs font-bold uppercase">
-                        MD5 Checksum
+                        {t("md5Checksum")}
                       </span>
                     </div>
                     <div className="p-3 bg-muted/50 rounded-xl border border-border/50 font-mono text-[10px] break-all select-all text-muted-foreground hover:text-foreground transition-colors cursor-text hover:bg-muted">
@@ -562,7 +576,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-foreground text-background hover:bg-foreground/90 font-bold text-sm shadow-xl shadow-foreground/5 transition-all"
           >
             <LinkIcon size={18} />
-            Copy Direct Link
+            {t("copyDirectLink")}
           </motion.button>
         </motion.div>
       </motion.div>

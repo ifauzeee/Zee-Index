@@ -6,6 +6,7 @@ import { X, History, Download, Clock, User, Loader2 } from "lucide-react";
 import { formatBytes } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import { useScrollLock } from "@/hooks/useScrollLock";
+import { useTranslations } from "next-intl";
 
 interface DriveRevision {
   id: string;
@@ -29,6 +30,7 @@ export default function FileRevisionsModal({
   const [revisions, setRevisions] = useState<DriveRevision[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { addToast } = useAppStore();
+  const t = useTranslations("FileRevisionsModal");
 
   useScrollLock(true);
 
@@ -40,13 +42,13 @@ export default function FileRevisionsModal({
         const data = await res.json();
         setRevisions(data.reverse());
       } catch {
-        addToast({ message: "Gagal memuat riwayat", type: "error" });
+        addToast({ message: t("failedToLoadHistory"), type: "error" });
       } finally {
         setIsLoading(false);
       }
     };
     fetchRevisions();
-  }, [fileId, addToast]);
+  }, [fileId, addToast, t]);
 
   const handleDownload = (revId: string) => {
     window.open(
@@ -73,7 +75,7 @@ export default function FileRevisionsModal({
         <div className="p-4 border-b flex justify-between items-center">
           <h3 className="font-bold flex items-center gap-2">
             <History className="text-primary" size={20} />
-            Riwayat Versi: {fileName}
+            {t("versionHistory", { fileName })}
           </h3>
           <button onClick={onClose} className="hover:bg-muted p-1 rounded-full">
             <X size={20} />
@@ -87,7 +89,7 @@ export default function FileRevisionsModal({
             </div>
           ) : revisions.length === 0 ? (
             <div className="text-center text-muted-foreground p-8">
-              Tidak ada revisi lain.
+              {t("noRevisions")}
             </div>
           ) : (
             <div className="space-y-3">
@@ -104,7 +106,7 @@ export default function FileRevisionsModal({
                     <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <User size={12} />{" "}
-                        {rev.lastModifyingUser?.displayName || "Unknown"}
+                        {rev.lastModifyingUser?.displayName || t("unknownUser")}
                       </span>
                       <span>{formatBytes(parseInt(rev.size || "0"))}</span>
                     </div>
@@ -112,7 +114,7 @@ export default function FileRevisionsModal({
                   <button
                     onClick={() => handleDownload(rev.id)}
                     className="p-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-full"
-                    title="Download Versi Ini"
+                    title={t("downloadVersion")}
                   >
                     <Download size={16} />
                   </button>

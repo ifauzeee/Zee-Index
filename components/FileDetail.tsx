@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
+import { useTranslations } from "next-intl";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import {
@@ -77,6 +78,8 @@ export default function FileDetail({
     removeTag,
     folderTokens,
   } = useAppStore();
+
+  const t = useTranslations("FileDetail");
 
   const [internalPreviewOpen, setInternalPreviewOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -186,13 +189,13 @@ export default function FileDetail({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fileId: file.id, newContent: editableContent }),
       });
-      addToast({ message: "Disimpan!", type: "success" });
+      addToast({ message: t("saved"), type: "success" });
       setIsEditing(false);
       triggerRefresh();
       if (["markdown", "text"].includes(fileType))
         setTextContent(editableContent);
     } catch {
-      addToast({ message: "Gagal menyimpan", type: "error" });
+      addToast({ message: t("failedToSave"), type: "error" });
     } finally {
       setIsSaving(false);
     }
@@ -200,7 +203,7 @@ export default function FileDetail({
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(`${window.location.origin}${directLink}`);
-    addToast({ message: "Link disalin!", type: "success" });
+    addToast({ message: t("linkCopied"), type: "success" });
   };
 
   const renderPreviewContent = () => {
@@ -374,7 +377,7 @@ export default function FileDetail({
           onClick={() => router.back()}
           className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft size={20} /> Kembali
+          <ArrowLeft size={20} /> {t("back")}
         </button>
         {showShareButton && (
           <ShareButton
@@ -394,14 +397,14 @@ export default function FileDetail({
                   disabled={isSaving}
                   className="px-3 py-1 bg-primary text-primary-foreground rounded flex items-center gap-2"
                 >
-                  <Save size={16} /> {isSaving ? "Menyimpan..." : "Simpan"}
+                  <Save size={16} /> {isSaving ? t("saving") : t("save")}
                 </button>
               )}
               <button
                 onClick={() => setIsEditing(!isEditing)}
                 className="px-3 py-1 bg-secondary rounded"
               >
-                {isEditing ? "Batal" : "Edit File"}
+                {isEditing ? t("cancel") : t("editFile")}
               </button>
             </div>
           )}

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { DriveFile } from "@/lib/googleDrive";
 import { formatBytes } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface ArchivePreviewModalProps {
   file: DriveFile;
@@ -36,6 +37,7 @@ export default function ArchivePreviewModal({
   file,
   onClose,
 }: ArchivePreviewModalProps) {
+  const t = useTranslations("ArchivePreviewModal");
   const [content, setContent] = useState<ArchiveEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,23 +49,19 @@ export default function ArchivePreviewModal({
         const response = await fetch(`/api/archive-preview?fileId=${file.id}`);
         if (!response.ok) {
           const errData = await response.json();
-          throw new Error(errData.error || "Gagal memuat isi arsip.");
+          throw new Error(errData.error || t("failedToLoadMessage"));
         }
         const data = await response.json();
         setContent(data);
       } catch (err: unknown) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Terjadi kesalahan tidak dikenal.",
-        );
+        setError(err instanceof Error ? err.message : t("unknownError"));
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchArchiveContent();
-  }, [file.id]);
+  }, [file.id, t]);
 
   return (
     <AnimatePresence>
@@ -86,7 +84,7 @@ export default function ArchivePreviewModal({
           >
             <X size={20} />
           </button>
-          <h3 className="text-lg font-semibold mb-1">Isi Arsip</h3>
+          <h3 className="text-lg font-semibold mb-1">{t("archiveContents")}</h3>
           <p
             className="text-sm text-muted-foreground mb-4 truncate"
             title={file.name}
@@ -106,18 +104,18 @@ export default function ArchivePreviewModal({
                   />
                 </div>
                 <p className="text-sm text-muted-foreground mt-4">
-                  Memproses arsip, ini mungkin perlu waktu...
+                  {t("processing")}
                 </p>
               </div>
             ) : error ? (
               <div className="flex flex-col items-center justify-center h-48 text-red-500">
                 <AlertCircle className="h-12 w-12 mb-2" />
-                <p className="font-semibold">Gagal Memuat</p>
+                <p className="font-semibold">{t("failedToLoad")}</p>
                 <p className="text-sm">{error}</p>
               </div>
             ) : content.length === 0 ? (
               <div className="flex items-center justify-center h-48 text-muted-foreground">
-                <p>Arsip ini kosong.</p>
+                <p>{t("emptyArchive")}</p>
               </div>
             ) : (
               <ul className="divide-y divide-border">

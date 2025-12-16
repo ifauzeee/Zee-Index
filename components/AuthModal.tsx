@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { KeyRound, X, User } from "lucide-react";
 import { useScrollLock } from "@/hooks/useScrollLock";
+import { useTranslations } from "next-intl";
 
 interface AuthModalProps {
   folderName: string;
@@ -31,6 +32,7 @@ export default function AuthModal({
   onClose,
   isLoading,
 }: AuthModalProps) {
+  const t = useTranslations("AuthModal");
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
 
@@ -61,10 +63,13 @@ export default function AuthModal({
         >
           <X size={20} />
         </button>
-        <h3 className="text-lg font-semibold mb-1">Akses Terbatas</h3>
+        <h3 className="text-lg font-semibold mb-1">{t("restrictedAccess")}</h3>
         <p className="text-sm text-muted-foreground mb-6">
-          Folder <span className="font-bold text-primary">{folderName}</span>{" "}
-          dilindungi.
+          {t.rich("folderProtected", {
+            folderName: () => (
+              <span className="font-bold text-primary">{folderName}</span>
+            ),
+          })}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -74,7 +79,7 @@ export default function AuthModal({
               type="text"
               value={id}
               onChange={(e) => setId(e.target.value)}
-              placeholder="ID Pengguna"
+              placeholder={t("userId")}
               className="w-full pl-10 pr-4 py-3 rounded-lg border bg-background focus:ring-2 focus:ring-ring focus:outline-none"
               required
               autoFocus
@@ -87,7 +92,7 @@ export default function AuthModal({
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Kata Sandi"
+              placeholder={t("password")}
               className="w-full pl-10 pr-4 py-3 rounded-lg border bg-background focus:ring-2 focus:ring-ring focus:outline-none"
               required
             />
@@ -100,10 +105,10 @@ export default function AuthModal({
             {isLoading ? (
               <>
                 <span className="animate-spin h-5 w-5 border-b-2 border-white rounded-full"></span>
-                Memverifikasi...
+                {t("verifying")}
               </>
             ) : (
-              "Buka Folder"
+              t("openFolder")
             )}
           </button>
         </form>

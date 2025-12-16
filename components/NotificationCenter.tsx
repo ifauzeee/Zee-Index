@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { format } from "date-fns";
-import { id as localeId } from "date-fns/locale";
+import * as locales from "date-fns/locale";
+import { useTranslations, useLocale } from "next-intl";
 
 export default function NotificationCenter() {
   const {
@@ -24,6 +25,10 @@ export default function NotificationCenter() {
     markAllNotificationsRead,
     clearNotifications,
   } = useAppStore();
+
+  const t = useTranslations("NotificationCenter");
+  const locale = useLocale();
+  const dateLocale = locale === "id" ? locales.id : locales.enUS;
 
   const iconMap = {
     success: <CheckCircle2 className="text-green-500" size={18} />,
@@ -56,7 +61,7 @@ export default function NotificationCenter() {
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/10">
               <div className="flex items-center gap-2">
                 <Bell className="text-primary" size={20} />
-                <h2 className="font-bold text-lg">Notifikasi</h2>
+                <h2 className="font-bold text-lg">{t("notifications")}</h2>
                 <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full font-bold">
                   {notifications.length}
                 </span>
@@ -73,7 +78,7 @@ export default function NotificationCenter() {
               {notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground opacity-50">
                   <Bell size={48} className="mb-4" />
-                  <p>Tidak ada notifikasi</p>
+                  <p>{t("noNotifications")}</p>
                 </div>
               ) : (
                 notifications.map((notif) => (
@@ -93,7 +98,7 @@ export default function NotificationCenter() {
                         </p>
                         <p className="text-xs text-muted-foreground mt-2">
                           {format(notif.timestamp, "dd MMM HH:mm", {
-                            locale: localeId,
+                            locale: dateLocale,
                           })}
                         </p>
                       </div>
@@ -109,13 +114,13 @@ export default function NotificationCenter() {
                   onClick={markAllNotificationsRead}
                   className="flex-1 py-2 px-4 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 text-sm font-medium flex items-center justify-center gap-2 transition-colors"
                 >
-                  <Check size={16} /> Tandai Dibaca
+                  <Check size={16} /> {t("markAsRead")}
                 </button>
                 <button
                   onClick={clearNotifications}
                   className="flex-1 py-2 px-4 rounded-lg border border-destructive/20 text-destructive hover:bg-destructive/10 text-sm font-medium flex items-center justify-center gap-2 transition-colors"
                 >
-                  <Trash2 size={16} /> Hapus Semua
+                  <Trash2 size={16} /> {t("clearAll")}
                 </button>
               </div>
             )}

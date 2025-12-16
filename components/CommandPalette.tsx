@@ -20,12 +20,14 @@ import {
   Loader2,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { useTranslations } from "next-intl";
 
 export default function CommandPalette() {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const { user } = useAppStore();
   const { theme, setTheme } = useTheme();
+  const t = useTranslations("CommandPalette");
 
   const [searchQuery, setSearchQuery] = React.useState("");
   const [searchResults, setSearchResults] = React.useState<any[]>([]);
@@ -87,7 +89,7 @@ export default function CommandPalette() {
     <Command.Dialog
       open={open}
       onOpenChange={setOpen}
-      label="Global Command Menu"
+      label={t("label")}
       className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[640px] bg-popover text-popover-foreground rounded-xl shadow-2xl border border-border z-[9999] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
     >
       <div
@@ -98,7 +100,7 @@ export default function CommandPalette() {
         <Command.Input
           value={searchQuery}
           onValueChange={setSearchQuery}
-          placeholder="Ketik perintah atau cari file..."
+          placeholder={t("placeholder")}
           className="flex h-12 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
         />
         {loading && <Loader2 className="h-4 w-4 animate-spin opacity-50" />}
@@ -106,12 +108,12 @@ export default function CommandPalette() {
 
       <Command.List className="max-h-[300px] overflow-y-auto overflow-x-hidden p-2">
         <Command.Empty className="py-6 text-center text-sm text-muted-foreground">
-          {loading ? "Mencari..." : "Tidak ada hasil ditemukan."}
+          {loading ? t("searching") : t("noResults")}
         </Command.Empty>
 
         {searchResults.length > 0 && (
           <Command.Group
-            heading="Hasil Pencarian"
+            heading={t("searchResults")}
             className="overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
           >
             {searchResults.map((file) => (
@@ -151,7 +153,7 @@ export default function CommandPalette() {
         )}
 
         <Command.Group
-          heading="Navigasi"
+          heading={t("navigation")}
           className="overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
         >
           <Command.Item
@@ -160,7 +162,7 @@ export default function CommandPalette() {
             className={itemClass}
           >
             <Home className="mr-2 h-4 w-4" />
-            <span>Home</span>
+            <span>{t("home")}</span>
           </Command.Item>
 
           <Command.Item
@@ -169,7 +171,7 @@ export default function CommandPalette() {
             className={itemClass}
           >
             <Star className="mr-2 h-4 w-4" />
-            <span>Favorit</span>
+            <span>{t("favorites")}</span>
           </Command.Item>
 
           <Command.Item
@@ -178,13 +180,13 @@ export default function CommandPalette() {
             className={itemClass}
           >
             <HardDrive className="mr-2 h-4 w-4" />
-            <span>Penyimpanan</span>
+            <span>{t("storage")}</span>
           </Command.Item>
         </Command.Group>
 
         {user?.role === "ADMIN" && (
           <Command.Group
-            heading="Admin"
+            heading={t("admin")}
             className="overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
           >
             <Command.Item
@@ -193,13 +195,13 @@ export default function CommandPalette() {
               className={itemClass}
             >
               <LayoutDashboard className="mr-2 h-4 w-4" />
-              <span>Dashboard Admin</span>
+              <span>{t("adminDashboard")}</span>
             </Command.Item>
           </Command.Group>
         )}
 
         <Command.Group
-          heading="Pengaturan"
+          heading={t("settings")}
           className="overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
         >
           <Command.Item
@@ -214,12 +216,14 @@ export default function CommandPalette() {
             ) : (
               <Moon className="mr-2 h-4 w-4" />
             )}
-            <span>Ganti Tema ({theme === "dark" ? "Light" : "Dark"})</span>
+            <span>
+              {t("changeTheme")} ({theme === "dark" ? "Light" : "Dark"})
+            </span>
           </Command.Item>
         </Command.Group>
 
         <Command.Group
-          heading="Eksternal"
+          heading={t("external")}
           className="overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
         >
           <Command.Item
@@ -232,7 +236,7 @@ export default function CommandPalette() {
             className={itemClass}
           >
             <Github className="mr-2 h-4 w-4" />
-            <span>GitHub</span>
+            <span>{t("github")}</span>
           </Command.Item>
 
           <Command.Item
@@ -245,7 +249,7 @@ export default function CommandPalette() {
             className={itemClass}
           >
             <Send className="mr-2 h-4 w-4" />
-            <span>Telegram Grup</span>
+            <span>{t("telegramGroup")}</span>
           </Command.Item>
         </Command.Group>
 
@@ -253,7 +257,7 @@ export default function CommandPalette() {
           <>
             <Command.Separator className="-mx-1 h-px bg-border my-1" />
             <Command.Group
-              heading="Akun"
+              heading={t("account")}
               className="overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
             >
               <Command.Item
@@ -264,7 +268,7 @@ export default function CommandPalette() {
                 className={`${itemClass} text-red-500 aria-selected:text-red-500`}
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Logout</span>
+                <span>{t("logout")}</span>
               </Command.Item>
             </Command.Group>
           </>

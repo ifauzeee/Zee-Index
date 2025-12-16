@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import React from "react";
 import EmptyState from "./EmptyState";
 import { SearchX } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function SearchResultsList() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function SearchResultsList() {
   const searchTerm = searchParams.get("q");
   const folderId = searchParams.get("folderId");
   const { shareToken, addToast, currentFolderId, user } = useAppStore();
+  const t = useTranslations("SearchResultsList");
 
   const [results, setResults] = useState<DriveFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,7 +42,7 @@ export default function SearchResultsList() {
         )}`;
       } else {
         addToast({
-          message: "Tidak dapat menentukan lokasi file.",
+          message: t("cannotDetermineLocation"),
           type: "error",
         });
         return;
@@ -52,7 +54,7 @@ export default function SearchResultsList() {
 
       router.push(destinationUrl);
     },
-    [router, shareToken, addToast, currentFolderId],
+    [router, shareToken, addToast, currentFolderId, t],
   );
 
   const fetchSearchResults = useCallback(async () => {
@@ -85,18 +87,18 @@ export default function SearchResultsList() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Gagal mencari file.");
+        throw new Error(data.error || t("failedToSearch"));
       }
 
       setResults(data.files);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
+      const msg = err instanceof Error ? err.message : t("unknownError");
       setError(msg);
       addToast({ message: msg, type: "error" });
     } finally {
       setIsLoading(false);
     }
-  }, [searchTerm, folderId, addToast, shareToken]);
+  }, [searchTerm, folderId, addToast, shareToken, t]);
 
   useEffect(() => {
     fetchSearchResults();
@@ -118,7 +120,7 @@ export default function SearchResultsList() {
       transition={{ duration: 0.3 }}
     >
       <h1 className="text-xl font-bold mb-8">
-        Hasil Pencarian untuk &quot;{searchTerm}&quot;
+        {t("searchResultsFor", { searchTerm: searchTerm || "" })}
       </h1>
       {results.length > 0 ? (
         <FileList
@@ -137,8 +139,8 @@ export default function SearchResultsList() {
         <div className="mt-8 text-center py-20 text-muted-foreground">
           <EmptyState
             icon={SearchX}
-            title="Tidak Ditemukan"
-            message="Tidak ada file atau folder yang cocok dengan pencarian Anda."
+            title={t("notFound")}
+            message={t("noMatchingFiles")}
           />
         </div>
       )}
