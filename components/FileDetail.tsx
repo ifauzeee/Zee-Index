@@ -241,7 +241,10 @@ export default function FileDetail({
         return <EbookPreview src={directLink} />;
       case "markdown":
       case "text":
-        if (showTextPreview && textContent) {
+        if (showTextPreview) {
+          if (isFetchingEditableContent || textContent === null) {
+            return <LoadingPreview />;
+          }
           if (fileType === "markdown") {
             return (
               <div className="prose dark:prose-invert prose-sm w-full h-full overflow-y-auto p-4 md:p-8 bg-background">
