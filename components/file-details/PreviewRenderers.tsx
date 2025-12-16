@@ -120,7 +120,7 @@ export const EbookPreview: React.FC<{ src: string }> = ({ src }) => {
         setIsLoading(false);
       });
     return () => book.destroy();
-  }, [src]);
+  }, [src, t]);
 
   return (
     <div className="w-full h-full bg-white text-black overflow-hidden relative">
