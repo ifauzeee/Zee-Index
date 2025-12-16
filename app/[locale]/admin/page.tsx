@@ -25,6 +25,7 @@ import {
   FolderLock,
   Network,
   Palette,
+  FileUp,
 } from "lucide-react";
 import Loading from "@/components/Loading";
 import { cn } from "@/lib/utils";
@@ -41,6 +42,7 @@ import SecurityConfig from "@/components/SecurityConfig";
 import UserFolderAccessManager from "@/components/UserFolderAccessManager";
 import ManualDrivesManager from "@/components/ManualDrivesManager";
 import BrandingConfig from "@/components/BrandingConfig";
+import StorageBreakdownChart from "@/components/charts/StorageBreakdownChart";
 
 const scrollbarHideStyles = {
   msOverflowStyle: "none" as const,
@@ -307,6 +309,13 @@ export default function AdminPage() {
                   </div>
 
                   <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm">
+                    <h3 className="text-base font-semibold mb-4">
+                      Storage Distribution
+                    </h3>
+                    <StorageBreakdownChart />
+                  </div>
+
+                  <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm">
                     <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
                       <Activity size={18} className="text-primary" /> Top User
                       (90 Days)
@@ -341,6 +350,48 @@ export default function AdminPage() {
                       ) : (
                         <p className="text-muted-foreground text-sm text-center py-8">
                           No data yet.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm">
+                    <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
+                      <FileUp size={18} className="text-primary" /> Top Uploads
+                    </h3>
+                    <div className="space-y-4">
+                      {stats.topUploadedFiles?.length > 0 ? (
+                        stats.topUploadedFiles.map((file, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between text-sm"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span
+                                className={cn(
+                                  "flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
+                                  idx < 3
+                                    ? "bg-green-500/10 text-green-500"
+                                    : "bg-muted text-muted-foreground",
+                                )}
+                              >
+                                {idx + 1}
+                              </span>
+                              <span
+                                className="truncate font-medium"
+                                title={file.name}
+                              >
+                                {file.name}
+                              </span>
+                            </div>
+                            <span className="font-mono text-muted-foreground text-xs bg-muted px-2 py-1 rounded-md">
+                              {file.count}x
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground text-sm text-center py-8">
+                          No uploads yet.
                         </p>
                       )}
                     </div>

@@ -4,6 +4,9 @@ import { useAppStore } from "@/lib/store";
 import FileItem from "./FileItem";
 import FileCard from "./FileBrowser/FileCard";
 import React, { useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
+
+const TimelineView = dynamic(() => import("./TimelineView"), { ssr: false });
 import EmptyState from "./EmptyState";
 import { FolderSearch } from "lucide-react";
 import Masonry from "react-masonry-css";
@@ -265,6 +268,20 @@ export default function FileList({
           {allItems.map(renderFileItem)}
         </Masonry>
       </motion.div>
+    );
+  }
+
+  if (view === "timeline") {
+    return (
+      <TimelineView
+        files={allItems}
+        onItemClick={onItemClick}
+        onItemContextMenu={(e, file) => onItemContextMenu(e, file)}
+        onShareClick={onShareClick}
+        onDetailsClick={onDetailsClick}
+        onDownloadClick={onDownloadClick}
+        onNavigate={handleNavigate}
+      />
     );
   }
 

@@ -47,7 +47,7 @@ interface UserProfile {
   isGuest?: boolean;
 }
 
-type ViewMode = "list" | "grid" | "gallery";
+type ViewMode = "list" | "grid" | "gallery" | "timeline";
 type SortKey = "name" | "size" | "modifiedTime";
 type SortOrder = "asc" | "desc";
 type DensityMode = "comfortable" | "compact";

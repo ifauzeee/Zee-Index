@@ -13,6 +13,7 @@ import {
   AlignJustify,
   StretchHorizontal,
   ArrowDownUp,
+  Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
@@ -30,7 +31,7 @@ interface FileBrowserHeaderProps {
   shareToken: string | null;
   isAdmin: boolean;
   isBulkMode: boolean;
-  view: "list" | "grid" | "gallery";
+  view: "list" | "grid" | "gallery" | "timeline";
   dragOverBreadcrumb: string | null;
   onBreadcrumbClick: (id: string) => void;
   onBreadcrumbDragOver: (e: React.DragEvent, id: string) => void;
@@ -39,7 +40,7 @@ interface FileBrowserHeaderProps {
   onUploadClick: () => void;
   onShareFolderClick: () => void;
   onToggleBulkMode: () => void;
-  onSetView: (view: "list" | "grid" | "gallery") => void;
+  onSetView: (view: "list" | "grid" | "gallery" | "timeline") => void;
   onDetailsClick: (e?: React.MouseEvent) => void;
   activeFileId: string | null;
   onRequestFileClick: () => void;
@@ -259,7 +260,7 @@ export default function FileBrowserHeader({
               onSetView(newView);
             }}
           />
-          {view !== "gallery" && (
+          {view !== "gallery" && view !== "timeline" && (
             <>
               <div className="w-px h-6 bg-border"></div>
               <button
@@ -272,7 +273,29 @@ export default function FileBrowserHeader({
               >
                 <LayoutTemplate size={18} />
               </button>
+              <button
+                onClick={() => onSetView("timeline")}
+                className={cn(
+                  "p-1.5 rounded-md transition-all border border-border",
+                  "text-muted-foreground hover:text-foreground hover:bg-background",
+                )}
+                title="Timeline View"
+              >
+                <Calendar size={18} />
+              </button>
             </>
+          )}
+          {(view === "gallery" || view === "timeline") && (
+            <button
+              onClick={() => onSetView("list")}
+              className={cn(
+                "p-1.5 rounded-md transition-all border border-border",
+                "text-muted-foreground hover:text-foreground hover:bg-background",
+              )}
+              title="Close Special View"
+            >
+              <AlignJustify size={18} />
+            </button>
           )}
         </div>
       </div>

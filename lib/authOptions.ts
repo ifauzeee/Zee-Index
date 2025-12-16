@@ -146,8 +146,13 @@ export const authOptions: AuthOptions = {
         token.role = user.role;
         token.isGuest = false;
 
-        const is2FAEnabled = await kv.get(`2fa:enabled:${user.email}`);
-        token.twoFactorRequired = !!is2FAEnabled;
+        try {
+          const is2FAEnabled = await kv.get(`2fa:enabled:${user.email}`);
+          token.twoFactorRequired = !!is2FAEnabled;
+        } catch (error) {
+          console.error("Failed to check 2FA status:", error);
+          token.twoFactorRequired = false;
+        }
       } else if (profile?.email) {
         const adminEmails: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
         if (adminEmails.includes(profile.email)) {
@@ -157,10 +162,11 @@ export const authOptions: AuthOptions = {
         }
         token.email = profile.email;
 
-        const is2FAEnabled = await kv.get(`2fa:enabled:${profile.email}`);
-        if (is2FAEnabled) {
-          token.twoFactorRequired = true;
-        } else {
+        try {
+          const is2FAEnabled = await kv.get(`2fa:enabled:${profile.email}`);
+          token.twoFactorRequired = !!is2FAEnabled;
+        } catch (error) {
+          console.error("Failed to check 2FA status:", error);
           token.twoFactorRequired = false;
         }
       }
@@ -176,6 +182,20 @@ export const authOptions: AuthOptions = {
         }
       }
       return session;
+    },
+  },
+  cookies: {
+    sessionToken: {
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-next-auth.session-token"
+          : "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
     },
   },
   secret: process.env.NEXTAUTH_SECRET,

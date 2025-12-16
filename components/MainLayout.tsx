@@ -13,7 +13,7 @@ import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 import KeyboardShortcutsModal from "@/components/KeyboardShortcutsModal";
 import NotificationCenter from "@/components/NotificationCenter";
 import Sidebar from "@/components/Sidebar";
-import { cn } from "@/lib/utils";
+import { cn, hexToHsl } from "@/lib/utils";
 import { HardDrive } from "lucide-react";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import GlobalDropZone from "@/components/GlobalDropZone";
@@ -80,6 +80,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     isSidebarOpen,
     setSidebarOpen,
     addToast,
+    primaryColor,
   } = useAppStore();
   const { status } = useSession();
   const pathname = usePathname();
@@ -98,6 +99,20 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
       fetchUser();
     }
   }, [status, fetchUser, fetchConfig, refreshKey]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (primaryColor) {
+      const hsl = hexToHsl(primaryColor);
+      root.style.setProperty("--primary", hsl);
+      root.style.setProperty("--media-brand", `hsl(${hsl})`);
+      root.style.setProperty("--media-focus-ring-color", `hsl(${hsl})`);
+    } else {
+      root.style.removeProperty("--primary");
+      root.style.removeProperty("--media-brand");
+      root.style.removeProperty("--media-focus-ring-color");
+    }
+  }, [primaryColor]);
 
   useEffect(() => {
     if (status === "authenticated" && user && !user.isGuest) {
