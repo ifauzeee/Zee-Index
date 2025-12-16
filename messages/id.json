@@ -74,6 +74,10 @@
     "emptyStateTitle": "Folder ini Kosong",
     "emptyStateMessage": "Unggah file atau buat folder baru untuk memulai."
   },
+  "TimelineView": {
+    "noMediaFound": "Tidak ada media ditemukan",
+    "uploadMediaHint": "Unggah foto atau video untuk melihatnya di timeline."
+  },
   "FileItem": {
     "share": "Bagikan",
     "download": "Unduh",

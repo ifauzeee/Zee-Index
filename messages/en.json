@@ -74,6 +74,10 @@
     "emptyStateTitle": "This folder is empty",
     "emptyStateMessage": "Upload files or create a new folder to start."
   },
+  "TimelineView": {
+    "noMediaFound": "No media found",
+    "uploadMediaHint": "Upload photos or videos to see them in the timeline."
+  },
   "FileItem": {
     "share": "Share",
     "download": "Download",
