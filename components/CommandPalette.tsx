@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { Command } from "cmdk";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation";
 import { useAppStore } from "@/lib/store";
 import { useTheme } from "next-themes";
 import {

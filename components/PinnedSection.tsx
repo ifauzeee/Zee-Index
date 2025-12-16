@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useAppStore } from "@/lib/store";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation";
 import { Pin, Folder, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import type { DriveFile } from "@/lib/googleDrive";

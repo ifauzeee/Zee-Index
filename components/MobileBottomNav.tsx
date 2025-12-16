@@ -1,7 +1,7 @@
 "use client";
 
 import { Home, Star, ShieldCheck, HardDrive } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter, usePathname } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import { useTranslations } from "next-intl";

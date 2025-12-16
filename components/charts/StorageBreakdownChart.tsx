@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import {
   BarChart,
@@ -12,35 +11,30 @@ import {
 } from "recharts";
 import { Loader2, AlertCircle, HardDrive } from "lucide-react";
 import { formatBytes } from "@/lib/utils";
-
 interface StorageItem {
   type: string;
   count: number;
   size: number;
   [key: string]: any;
 }
-
 interface StorageDetails {
   usage: number;
   limit: number;
   breakdown: StorageItem[];
 }
-
 const TYPE_COLORS: Record<string, string> = {
-  Video: "#facc15", // Yellow
-  Gambar: "#3b82f6", // Blue
-  Audio: "#a855f7", // Purple
-  PDF: "#ef4444", // Red
-  Dokumen: "#22c55e", // Green
-  Arsip: "#f97316", // Orange
-  Lainnya: "#6b7280", // Gray
+  Video: "#facc15",
+  Gambar: "#3b82f6",
+  Audio: "#a855f7",
+  PDF: "#ef4444",
+  Dokumen: "#22c55e",
+  Arsip: "#f97316",
+  Lainnya: "#6b7280",
 };
-
 export default function StorageBreakdownChart() {
   const [data, setData] = useState<StorageDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     fetch("/api/storage-details")
       .then((res) => {
@@ -56,7 +50,6 @@ export default function StorageBreakdownChart() {
         setLoading(false);
       });
   }, []);
-
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -64,7 +57,6 @@ export default function StorageBreakdownChart() {
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="flex h-64 flex-col items-center justify-center text-red-500 gap-2">
@@ -73,7 +65,6 @@ export default function StorageBreakdownChart() {
       </div>
     );
   }
-
   if (!data || !data.breakdown.length) {
     return (
       <div className="flex h-64 items-center justify-center text-muted-foreground">
@@ -81,11 +72,9 @@ export default function StorageBreakdownChart() {
       </div>
     );
   }
-
   const totalSize = data.breakdown.reduce((acc, item) => acc + item.size, 0);
   const usagePercent =
     data.limit > 0 ? ((data.usage / data.limit) * 100).toFixed(1) : 0;
-
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const item = payload[0].payload;
@@ -104,10 +93,8 @@ export default function StorageBreakdownChart() {
     }
     return null;
   };
-
   return (
     <div className="space-y-4">
-      {/* Storage Usage Bar */}
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-2">
@@ -128,8 +115,6 @@ export default function StorageBreakdownChart() {
           {usagePercent}% used
         </p>
       </div>
-
-      {/* Horizontal Bar Chart */}
       <div className="h-56">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
@@ -167,8 +152,6 @@ export default function StorageBreakdownChart() {
           </BarChart>
         </ResponsiveContainer>
       </div>
-
-      {/* Legend */}
       <div className="flex flex-wrap gap-3 justify-center pt-2">
         {data.breakdown.map((item) => (
           <div key={item.type} className="flex items-center gap-1.5 text-xs">

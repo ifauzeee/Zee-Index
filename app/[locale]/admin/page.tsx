@@ -30,7 +30,7 @@ import {
 import Loading from "@/components/Loading";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation";
 import TwoFactorAuthSetup from "@/components/TwoFactorAuthSetup";
 import ProtectedFoldersManager from "@/components/ProtectedFoldersManager";
 import ActivityLogDashboard from "@/components/ActivityLogDashboard";

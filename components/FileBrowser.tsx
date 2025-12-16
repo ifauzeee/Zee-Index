@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "@/lib/navigation";
 import { motion } from "framer-motion";
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from "@/lib/store";

@@ -7,6 +7,7 @@ import { getIcon, getLanguageFromFilename } from "@/lib/utils";
 import Prism from "prismjs";
 import dynamic from "next/dynamic";
 import { OfficeViewer } from "./OfficeViewer";
+import { useTranslations } from "next-intl";
 
 const PDFViewer = dynamic(() => import("./PDFViewer"), {
   loading: () => <LoadingPreview />,
@@ -40,6 +41,7 @@ export const FileIconPlaceholder: React.FC<{
   isPreviewable: boolean;
 }> = ({ mimeType, onPreview, isPreviewable }) => {
   const IconComponent = getIcon(mimeType);
+  const t = useTranslations("PreviewRenderers");
   return (
     <div className="flex flex-col items-center justify-center h-full w-full p-8 animate-in fade-in zoom-in duration-300">
       <div className="mb-8 transform transition-transform duration-500 hover:scale-105">
@@ -58,11 +60,11 @@ export const FileIconPlaceholder: React.FC<{
             size={18}
             className="transition-transform group-hover:scale-110"
           />
-          <span>Buka Pratinjau</span>
+          <span>{t("openPreview")}</span>
         </button>
       ) : (
         <p className="text-muted-foreground text-sm font-medium bg-muted/30 px-4 py-2 rounded-full">
-          Pratinjau tidak tersedia
+          {t("previewNotAvailable")}
         </p>
       )}
     </div>
@@ -96,11 +98,12 @@ export const EbookPreview: React.FC<{ src: string }> = ({ src }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const t = useTranslations("PreviewRenderers");
 
   useEffect(() => {
     if (!containerRef.current) return;
     if (typeof ePub === "undefined") {
-      setError("Library EpubJS belum dimuat.");
+      setError(t("libraryNotLoaded"));
       setIsLoading(false);
       return;
     }
@@ -172,6 +175,7 @@ export const DefaultPreview: React.FC<{
   downloadUrl: string;
 }> = ({ mimeType, fileName, downloadUrl }) => {
   const IconComponent = getIcon(mimeType);
+  const t = useTranslations("PreviewRenderers");
 
   if (mimeType === "application/pdf") {
     return <PDFViewer src={downloadUrl} />;
@@ -199,13 +203,13 @@ export const DefaultPreview: React.FC<{
       <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2 max-w-xs">
         {fileName}
       </h3>
-      <p className="text-sm text-zinc-500 mb-8">Pratinjau tidak tersedia</p>
+      <p className="text-sm text-zinc-500 mb-8">{t("previewNotAvailable")}</p>
       <a
         href={downloadUrl}
         download
         className="flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-medium hover:bg-zinc-200 transition-colors shadow-lg"
       >
-        <Download size={18} /> Unduh File
+        <Download size={18} /> {t("downloadFile")}
       </a>
     </div>
   );

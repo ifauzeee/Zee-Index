@@ -457,5 +457,59 @@
     "guestAccessDisabled": "Akses Tamu Dinonaktifkan",
     "continueAsGuest": "Lanjutkan sebagai Tamu",
     "createdBy": "Dibuat oleh"
+  },
+  "PreviewRenderers": {
+    "openPreview": "Buka Pratinjau",
+    "previewNotAvailable": "Pratinjau tidak tersedia",
+    "downloadFile": "Unduh File",
+    "libraryNotLoaded": "Library EpubJS belum dimuat."
+  },
+  "VideoPlayer": {
+    "proxyMode": "Mode Proxy (Lambat)",
+    "openDrive": "Buka Drive",
+    "directMode": "Mode Direct (Cepat)",
+    "connectionLost": "Koneksi Terputus",
+    "lastPosition": "Posisi terakhir: {time}",
+    "reconnect": "Sambung Ulang",
+    "formatNotSupported": "Format Tidak Didukung",
+    "codecNotSupported": "Codec video ini (kemungkinan HEVC/x265) tidak didukung browser.",
+    "downloadFile": "Unduh File",
+    "tryForcePlay": "Coba Paksa Putar (Mungkin Gagal)"
+  },
+  "Loading": {
+    "loading": "Memuat..."
+  },
+  "PDFViewer": {
+    "loadingPDF": "Memuat PDF..."
+  },
+  "TrashPage": {
+    "accessDeniedAdmin": "Akses Ditolak: Halaman ini khusus Admin",
+    "failedToLoadTrash": "Gagal memuat sampah",
+    "deletePermanentlyConfirm": "Hapus {count} item secara permanen? Aksi ini tidak dapat dibatalkan.",
+    "deletePermanentlyTitle": "Hapus Permanen?",
+    "failedToDelete": "Gagal menghapus",
+    "failedToRestore": "Gagal memulihkan",
+    "itemsDeleted": "{count} item berhasil dihapus.",
+    "itemsRestored": "{count} item berhasil dipulihkan.",
+    "errorOccurred": "Terjadi kesalahan",
+    "trash": "Sampah (Trash)",
+    "restore": "Pulihkan",
+    "delete": "Hapus",
+    "sortByDate": "Urutkan berdasarkan tanggal diubah",
+    "selectAll": "Pilih Semua",
+    "trashEmpty": "Tong sampah kosong."
+  },
+  "AdminLogs": {
+    "accessDenied": "Akses Ditolak",
+    "onlyAdminAccess": "Hanya admin yang dapat melihat halaman ini.",
+    "systemActivityLog": "Log Aktivitas Sistem",
+    "time": "Waktu",
+    "actionType": "Tipe Aksi",
+    "details": "Detail",
+    "actor": "Pelaku",
+    "item": "Item",
+    "target": "Target",
+    "systemPublicLink": "Sistem / Tautan Publik",
+    "noActivityRecorded": "Belum ada aktivitas yang tercatat."
   }
 }

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
+import { useTranslations } from "next-intl";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -22,6 +23,7 @@ export default function PDFViewer({ src }: PDFViewerProps) {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1.0);
+  const t = useTranslations("PDFViewer");
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
@@ -80,7 +82,7 @@ export default function PDFViewer({ src }: PDFViewerProps) {
           onLoadSuccess={onDocumentLoadSuccess}
           loading={
             <div className="flex items-center justify-center h-full text-white">
-              <Loader2 className="animate-spin mr-2" /> Memuat PDF...
+              <Loader2 className="animate-spin mr-2" /> {t("loadingPDF")}
             </div>
           }
           className="max-w-full"

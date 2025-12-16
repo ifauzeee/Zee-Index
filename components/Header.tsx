@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense, FC } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname } from "@/lib/navigation";
 import { useSession, signOut, signIn } from "next-auth/react";
 import { useTheme } from "next-themes";
 import Image from "next/image";

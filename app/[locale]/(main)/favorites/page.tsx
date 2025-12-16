@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation";
 import { useAppStore } from "@/lib/store";
 import Loading from "@/components/Loading";
 import FileList from "@/components/FileList";

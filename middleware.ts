@@ -7,6 +7,8 @@ import createMiddleware from "next-intl/middleware";
 const intlMiddleware = createMiddleware({
   locales: ["en", "id"],
   defaultLocale: "id",
+  localePrefix: "always",
+  localeDetection: true,
 });
 
 const PUBLIC_PATHS = new Set([

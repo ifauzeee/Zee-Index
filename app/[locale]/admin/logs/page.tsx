@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation";
 import { useSession } from "next-auth/react";
 import Loading from "@/components/Loading";
 import { motion } from "framer-motion";

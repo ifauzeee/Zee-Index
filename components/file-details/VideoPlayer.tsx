@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { formatDuration } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
+import { useTranslations } from "next-intl";
 
 import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
@@ -55,6 +56,7 @@ export default function VideoPlayer({
   webViewLink,
 }: VideoAudioPreviewProps) {
   const { videoProgress, setVideoProgress, addToast } = useAppStore();
+  const t = useTranslations("VideoPlayer");
   const playerRef = useRef<MediaPlayerInstance>(null);
   const [networkError, setNetworkError] = useState(false);
   const [formatError, setFormatError] = useState(false);
@@ -163,7 +165,7 @@ export default function VideoPlayer({
             onClick={() => setIsDirectMode(false)}
             className="px-3 py-1 bg-black/50 hover:bg-black/70 text-white rounded-lg text-xs font-medium backdrop-blur-md border border-white/10 transition-colors flex items-center gap-2"
           >
-            <ShieldAlert size={14} /> Mode Proxy (Lambat)
+            <ShieldAlert size={14} /> {t("proxyMode")}
           </button>
 
           <a
@@ -172,7 +174,7 @@ export default function VideoPlayer({
             rel="noreferrer"
             className="px-3 py-1 bg-black/50 hover:bg-black/70 text-white rounded-lg text-xs font-medium backdrop-blur-md border border-white/10 transition-colors flex items-center gap-2"
           >
-            <ExternalLink size={14} /> Buka Drive
+            <ExternalLink size={14} /> {t("openDrive")}
           </a>
         </div>
       </div>
@@ -242,7 +244,7 @@ export default function VideoPlayer({
                   className="px-3 py-1 bg-black/50 hover:bg-primary/80 text-white rounded-lg text-xs font-medium backdrop-blur-md border border-white/10 transition-colors flex items-center gap-2"
                   title="Gunakan player Google Drive langsung (Lebih Cepat)"
                 >
-                  <PlayCircle size={14} /> Mode Direct (Cepat)
+                  <PlayCircle size={14} /> {t("directMode")}
                 </button>
                 <a
                   href={webViewLink}
@@ -250,7 +252,7 @@ export default function VideoPlayer({
                   rel="noreferrer"
                   className="px-3 py-1 bg-black/50 hover:bg-black/70 text-white rounded-lg text-xs font-medium backdrop-blur-md border border-white/10 transition-colors flex items-center gap-2"
                 >
-                  <ExternalLink size={14} /> Buka Drive
+                  <ExternalLink size={14} /> {t("openDrive")}
                 </a>
               </>
             )}
@@ -267,15 +269,15 @@ export default function VideoPlayer({
             className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 text-white backdrop-blur-sm p-4 text-center"
           >
             <WifiOff size={48} className="mb-4 text-red-500" />
-            <h3 className="text-xl font-bold mb-2">Koneksi Terputus</h3>
+            <h3 className="text-xl font-bold mb-2">{t("connectionLost")}</h3>
             <p className="text-sm text-gray-300 mb-6 max-w-xs">
-              Posisi terakhir: {formatDuration(lastTime)}
+              {t("lastPosition", { time: formatDuration(lastTime) })}
             </p>
             <button
               onClick={handleRetry}
               className="px-6 py-2 bg-primary hover:bg-primary/90 rounded-full font-semibold transition-colors flex items-center gap-2"
             >
-              <History size={18} /> Sambung Ulang
+              <History size={18} /> {t("reconnect")}
             </button>
           </motion.div>
         )}
@@ -290,9 +292,11 @@ export default function VideoPlayer({
             className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-zinc-900/95 text-white p-4 text-center"
           >
             <FileWarning size={48} className="mb-4 text-amber-500" />
-            <h3 className="text-xl font-bold mb-2">Format Tidak Didukung</h3>
+            <h3 className="text-xl font-bold mb-2">
+              {t("formatNotSupported")}
+            </h3>
             <p className="text-sm text-gray-300 mb-4 max-w-sm">
-              Codec video ini (kemungkinan HEVC/x265) tidak didukung browser.
+              {t("codecNotSupported")}
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <a
@@ -300,14 +304,14 @@ export default function VideoPlayer({
                 download
                 className="px-4 py-2 bg-primary hover:bg-primary/90 rounded-lg text-sm font-medium flex items-center gap-2"
               >
-                <Download size={16} /> Unduh File
+                <Download size={16} /> {t("downloadFile")}
               </a>
             </div>
             <button
               onClick={handleRetry}
               className="mt-4 text-xs text-white/50 hover:text-white underline"
             >
-              Coba Paksa Putar (Mungkin Gagal)
+              {t("tryForcePlay")}
             </button>
           </motion.div>
         )}

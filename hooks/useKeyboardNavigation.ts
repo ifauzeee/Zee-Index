@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname } from "@/lib/navigation";
 
 interface UseKeyboardNavigationProps {
   files: Array<{ id: string; name: string; mimeType: string }>;

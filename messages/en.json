@@ -457,5 +457,59 @@
     "guestAccessDisabled": "Guest Access Disabled",
     "continueAsGuest": "Continue as Guest",
     "createdBy": "Created by"
+  },
+  "PreviewRenderers": {
+    "openPreview": "Open Preview",
+    "previewNotAvailable": "Preview not available",
+    "downloadFile": "Download File",
+    "libraryNotLoaded": "EpubJS library is not loaded."
+  },
+  "VideoPlayer": {
+    "proxyMode": "Proxy Mode (Slow)",
+    "openDrive": "Open Drive",
+    "directMode": "Direct Mode (Fast)",
+    "connectionLost": "Connection Lost",
+    "lastPosition": "Last position: {time}",
+    "reconnect": "Reconnect",
+    "formatNotSupported": "Format Not Supported",
+    "codecNotSupported": "This video codec (likely HEVC/x265) is not supported by the browser.",
+    "downloadFile": "Download File",
+    "tryForcePlay": "Try Force Play (May Fail)"
+  },
+  "Loading": {
+    "loading": "Loading..."
+  },
+  "PDFViewer": {
+    "loadingPDF": "Loading PDF..."
+  },
+  "TrashPage": {
+    "accessDeniedAdmin": "Access Denied: This page is for Admin only",
+    "failedToLoadTrash": "Failed to load trash",
+    "deletePermanentlyConfirm": "Delete {count} items permanently? This action cannot be undone.",
+    "deletePermanentlyTitle": "Delete Permanently?",
+    "failedToDelete": "Failed to delete",
+    "failedToRestore": "Failed to restore",
+    "itemsDeleted": "{count} items successfully deleted.",
+    "itemsRestored": "{count} items successfully restored.",
+    "errorOccurred": "An error occurred",
+    "trash": "Trash",
+    "restore": "Restore",
+    "delete": "Delete",
+    "sortByDate": "Sort by date modified",
+    "selectAll": "Select All",
+    "trashEmpty": "Trash is empty."
+  },
+  "AdminLogs": {
+    "accessDenied": "Access Denied",
+    "onlyAdminAccess": "Only admin can view this page.",
+    "systemActivityLog": "System Activity Log",
+    "time": "Time",
+    "actionType": "Action Type",
+    "details": "Details",
+    "actor": "Actor",
+    "item": "Item",
+    "target": "Target",
+    "systemPublicLink": "System / Public Link",
+    "noActivityRecorded": "No activity recorded yet."
   }
 }
