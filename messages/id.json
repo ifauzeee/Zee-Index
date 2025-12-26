@@ -1,4 +1,7 @@
 {
+  "LocaleSwitcher": {
+    "label": "Ganti Bahasa"
+  },
   "FileBrowser": {
     "sortName": "Nama",
     "sortDate": "Tanggal",

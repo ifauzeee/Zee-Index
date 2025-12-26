@@ -1,4 +1,7 @@
 {
+  "LocaleSwitcher": {
+    "label": "Switch Language"
+  },
   "FileBrowser": {
     "sortName": "Name",
     "sortDate": "Date",
