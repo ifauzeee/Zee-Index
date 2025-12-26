@@ -19,6 +19,7 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 import GlobalDropZone from "@/components/GlobalDropZone";
 import { usePathname, useSearchParams } from "next/navigation";
 import Loading from "@/components/Loading";
+import { useTranslations } from "next-intl";
 
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 const DetailsPanel = dynamic(() => import("@/components/DetailsPanel"), {
@@ -28,6 +29,7 @@ const DetailsPanel = dynamic(() => import("@/components/DetailsPanel"), {
 const AppFooter = () => {
   const { dataUsage } = useAppStore();
   const currentYear = new Date().getFullYear();
+  const t = useTranslations("Footer");
 
   let displayValue = dataUsage.value;
   if (dataUsage.status === "loading") {
@@ -40,7 +42,7 @@ const AppFooter = () => {
     <footer className="text-center py-6 text-sm text-muted-foreground border-t bg-background mb-16 lg:mb-0 w-full overflow-hidden">
       <div className="mb-2 flex items-center justify-center gap-2">
         <HardDrive size={14} />
-        <span>Total Penggunaan Data:</span>
+        <span>{t("dataUsage")}</span>
         <span
           id="data-usage-value"
           className={`font-medium text-foreground ${dataUsage.status === "loading" ? "animate-pulse" : ""}`}
@@ -49,7 +51,7 @@ const AppFooter = () => {
         </span>
       </div>
       <p>
-        &copy; {currentYear} All rights reserved -{" "}
+        &copy; {currentYear} {t("rightsReserved")}{" "}
         <a
           href="https://ifauzeee.vercel.app/"
           target="_blank"
@@ -118,6 +120,8 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     touchStartRef.current = null;
   };
 
+  const t = useTranslations("FileBrowser");
+
   return (
     <div
       onTouchStart={handleTouchStart}
@@ -166,7 +170,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
       <GlobalDropZone
         onDrop={(files) => {
           addToast({
-            message: `${files.length} file(s) siap diupload. Gunakan tombol Upload di halaman file browse.`,
+            message: t("dropReady", { count: files.length }),
             type: "info",
           });
         }}

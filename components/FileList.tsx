@@ -8,6 +8,7 @@ import EmptyState from "./EmptyState";
 import { FolderSearch } from "lucide-react";
 import Masonry from "react-masonry-css";
 import { MASONRY_BREAKPOINTS } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface FileListProps {
   files: DriveFile[];
@@ -56,6 +57,7 @@ export default function FileList({
     shareToken,
     folderTokens,
   } = useAppStore();
+  const t = useTranslations("FileList");
 
   const lastSelectedId = useRef<string | null>(null);
 
@@ -127,8 +129,8 @@ export default function FileList({
       <div className="text-center py-20 text-muted-foreground col-span-full">
         <EmptyState
           icon={FolderSearch}
-          title="Folder ini Kosong"
-          message="Unggah file atau buat folder baru untuk memulai."
+          title={t("emptyTitle")}
+          message={t("emptyMessage")}
         />
       </div>
     );

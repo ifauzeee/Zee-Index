@@ -19,6 +19,7 @@ import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useScrollLock } from "@/hooks/useScrollLock";
+import { useTranslations } from "next-intl";
 
 interface FolderNode {
   id: string;
@@ -40,6 +41,7 @@ export default function Sidebar() {
   const { isSidebarOpen, setSidebarOpen, currentFolderId, user, shareToken } =
     useAppStore();
   const [mounted, setMounted] = useState(false);
+  const t = useTranslations("Sidebar");
 
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
 
@@ -275,7 +277,7 @@ export default function Sidebar() {
           onClick={() => setIsDrivesExpanded(!isDrivesExpanded)}
           className="flex items-center justify-between w-full px-3 py-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider"
         >
-          <span>Shared Drives</span>
+          <span>{t("sharedDrives")}</span>
           {isDrivesExpanded ? (
             <ChevronDown size={14} />
           ) : (
@@ -338,7 +340,7 @@ export default function Sidebar() {
     >
       <div className="p-4 border-b border-border flex items-center justify-between shrink-0 h-16">
         <h2 className="font-bold text-sm text-foreground tracking-wide flex items-center gap-2">
-          NAVIGATION
+          {t("navigation")}
         </h2>
         <button
           onClick={() => setSidebarOpen(false)}
@@ -361,7 +363,7 @@ export default function Sidebar() {
                 "bg-accent font-medium text-primary",
             )}
           >
-            <Home size={16} /> Home
+            <Home size={16} /> {t("home")}
           </button>
           <button
             onClick={() => {
@@ -370,7 +372,7 @@ export default function Sidebar() {
             }}
             className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
           >
-            <Star size={16} /> Favorites
+            <Star size={16} /> {t("favorites")}
           </button>
           <button
             onClick={() => {
@@ -379,7 +381,7 @@ export default function Sidebar() {
             }}
             className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
           >
-            <HardDrive size={16} /> Storage
+            <HardDrive size={16} /> {t("storage")}
           </button>
           {user?.role === "ADMIN" && (
             <>
@@ -390,7 +392,7 @@ export default function Sidebar() {
                 }}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
               >
-                <Trash2 size={16} /> Trash
+                <Trash2 size={16} /> {t("trash")}
               </button>
               <button
                 onClick={() => {
@@ -399,7 +401,7 @@ export default function Sidebar() {
                 }}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
               >
-                <ShieldCheck size={16} /> Admin
+                <ShieldCheck size={16} /> {t("admin")}
               </button>
             </>
           )}
@@ -409,7 +411,7 @@ export default function Sidebar() {
 
         <div className="border-t border-border my-2 pt-4">
           <p className="px-3 text-xs font-bold text-muted-foreground mb-2 uppercase tracking-wider">
-            Explorer
+            {t("explorer")}
           </p>
           {renderNode(tree)}
         </div>

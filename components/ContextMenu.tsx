@@ -18,6 +18,7 @@ import {
 import { formatBytes, cn } from "@/lib/utils";
 import React, { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 
 interface ContextMenuProps {
   x: number;
@@ -70,6 +71,7 @@ export default function ContextMenu({
   const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ top: y, left: x });
+  const t = useTranslations("ContextMenu");
 
   useEffect(() => {
     setMounted(true);
@@ -150,14 +152,14 @@ export default function ContextMenu({
   const menuContent = (
     <ul className="py-2 md:py-1 space-y-0.5 md:space-y-0">
       {!isFolder && (
-        <MenuItem onClick={onPreview} icon={Eye} label="Preview / Open" />
+        <MenuItem onClick={onPreview} icon={Eye} label={t("preview")} />
       )}
 
       {isImage && isAdmin && (
-        <MenuItem onClick={onEditImage} icon={Edit3} label="Edit Image" />
+        <MenuItem onClick={onEditImage} icon={Edit3} label={t("editImage")} />
       )}
 
-      <MenuItem onClick={onShowDetails} icon={Info} label="View Details" />
+      <MenuItem onClick={onShowDetails} icon={Info} label={t("viewDetails")} />
 
       {isArchive && (
         <MenuItem
@@ -166,8 +168,10 @@ export default function ContextMenu({
           icon={Archive}
           label={
             !isArchivePreviewable
-              ? `Terlalu besar (> ${formatBytes(ARCHIVE_PREVIEW_LIMIT_BYTES)})`
-              : "View Archive Contents"
+              ? t("archiveTooBig", {
+                  size: formatBytes(ARCHIVE_PREVIEW_LIMIT_BYTES),
+                })
+              : t("viewArchive")
           }
         />
       )}
@@ -178,7 +182,7 @@ export default function ContextMenu({
           <MenuItem
             onClick={onTogglePin}
             icon={isPinned ? PinOff : Pin}
-            label={isPinned ? "Unpin" : "Pin Folder"}
+            label={isPinned ? t("unpin") : t("pinFolder")}
           />
         </>
       )}
@@ -190,23 +194,23 @@ export default function ContextMenu({
           onClick={onToggleFavorite}
           icon={Star}
           variant={isFavorite ? "warning" : "default"}
-          label={isFavorite ? "Remove Favorite" : "Add Favorite"}
+          label={isFavorite ? t("removeFavorite") : t("addFavorite")}
         />
       )}
 
       {isAdmin && (
         <>
-          <MenuItem onClick={onShare} icon={Share2} label="Share" />
-          <MenuItem onClick={onCopy} icon={Copy} label="Make a Copy" />
-          <MenuItem onClick={onMove} icon={Move} label="Move" />
-          <MenuItem onClick={onRename} icon={Pencil} label="Rename" />
+          <MenuItem onClick={onShare} icon={Share2} label={t("share")} />
+          <MenuItem onClick={onCopy} icon={Copy} label={t("makeCopy")} />
+          <MenuItem onClick={onMove} icon={Move} label={t("move")} />
+          <MenuItem onClick={onRename} icon={Pencil} label={t("rename")} />
 
           <li className="border-t my-2 border-border/50"></li>
 
           <MenuItem
             onClick={onDelete}
             icon={Trash2}
-            label="Delete"
+            label={t("delete")}
             variant="danger"
           />
         </>
@@ -255,7 +259,7 @@ export default function ContextMenu({
               onClick={onClose}
               className="w-full py-3.5 bg-muted/50 text-foreground rounded-2xl font-semibold active:scale-95 transition-transform"
             >
-              Cancel
+              {t("cancel")}
             </button>
           </div>
         </motion.div>

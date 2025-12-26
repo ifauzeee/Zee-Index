@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import React from "react";
 import EmptyState from "@/components/EmptyState";
 import { Link, SearchX } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 function SharedCollectionPage() {
   const router = useRouter();
@@ -17,9 +18,10 @@ function SharedCollectionPage() {
   const { addToast, user } = useAppStore();
   const shareId = params.shareId as string;
   const shareToken = searchParams.get("share_token");
+  const t = useTranslations("SharedCollectionPage");
 
   const [items, setItems] = useState<DriveFile[]>([]);
-  const [collectionName, setCollectionName] = useState("Koleksi Bersama");
+  const [collectionName, setCollectionName] = useState(t("defaultName"));
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const createSlug = (name: string) =>
@@ -39,7 +41,7 @@ function SharedCollectionPage() {
         )}`;
       } else {
         addToast({
-          message: "Tidak dapat menentukan lokasi file.",
+          message: t("locationError"),
           type: "error",
         });
         return;
@@ -50,11 +52,11 @@ function SharedCollectionPage() {
       }
       router.push(destinationUrl);
     },
-    [router, shareToken, addToast],
+    [router, shareToken, addToast, t],
   );
   useEffect(() => {
     if (!shareId || !shareToken) {
-      setError("Tautan berbagi tidak valid atau tidak lengkap.");
+      setError(t("invalidLink"));
       setIsLoading(false);
       return;
     }
@@ -76,16 +78,14 @@ function SharedCollectionPage() {
           if (response.status === 401) {
             router.push(`/login?callbackUrl=${window.location.pathname}`);
           }
-          throw new Error(data.error || "Gagal mengambil item koleksi.");
+          throw new Error(data.error || t("loadError"));
         }
 
         setItems(data.items);
-        setCollectionName(data.collectionName || "Koleksi Bersama");
+        setCollectionName(data.collectionName || t("defaultName"));
       } catch (err: unknown) {
         const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "Terjadi kesalahan tidak dikenal.";
+          err instanceof Error ? err.message : "Unknown error.";
         setError(errorMessage);
         addToast({ message: errorMessage, type: "error" });
       } finally {
@@ -94,7 +94,7 @@ function SharedCollectionPage() {
     };
 
     fetchCollectionItems();
-  }, [shareId, shareToken, addToast, router]);
+  }, [shareId, shareToken, addToast, router, t]);
 
   if (isLoading) {
     return <Loading />;
@@ -112,7 +112,7 @@ function SharedCollectionPage() {
       </h1>
       {error ? (
         <div className="mt-8 text-center py-20 text-muted-foreground">
-          <EmptyState icon={SearchX} title="Gagal Memuat" message={error} />
+          <EmptyState icon={SearchX} title={t("failedTitle")} message={error} />
         </div>
       ) : items.length > 0 ? (
         <FileList
@@ -131,8 +131,8 @@ function SharedCollectionPage() {
         <div className="mt-8 text-center py-20 text-muted-foreground">
           <EmptyState
             icon={SearchX}
-            title="Koleksi Kosong"
-            message="Tidak ada item yang ditemukan di koleksi ini."
+            title={t("emptyTitle")}
+            message={t("emptyMessage")}
           />
         </div>
       )}

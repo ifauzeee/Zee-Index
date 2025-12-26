@@ -28,6 +28,7 @@ import {
   cn,
 } from "@/lib/utils";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { useAppStore } from "@/lib/store";
 import { useScrollLock } from "@/hooks/useScrollLock";
 
@@ -131,6 +132,7 @@ const DetailRow = ({
   copyable?: boolean;
 }) => {
   const [copied, setCopied] = useState(false);
+  const t = useTranslations("DetailsPanel");
 
   const handleCopy = () => {
     if (!copyable) return;
@@ -160,13 +162,14 @@ const DetailRow = ({
           copied ? "text-green-500" : "text-foreground/90",
         )}
       >
-        {copied ? "Disalin!" : value}
+        {copied ? t("copied") : value}
       </span>
     </motion.div>
   );
 };
 
 export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
+  const t = useTranslations("DetailsPanel");
   const FileIconComponent = getIcon(file.mimeType);
   const metadata = file.imageMediaMetadata || file.videoMediaMetadata;
   const durationMillis = file.videoMediaMetadata?.durationMillis
@@ -213,7 +216,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
   useEffect(() => {
     const fetchPath = async () => {
       if (!file.parents || file.parents.length === 0) {
-        setPathString("Root");
+        setPathString(t("root"));
         return;
       }
 
@@ -224,25 +227,25 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
         if (res.ok) {
           const data = await res.json();
           const path = data.map((p: any) => p.name).join(" / ");
-          setPathString(path || "Root");
+          setPathString(path || t("root"));
         } else {
-          setPathString("Unknown");
+          setPathString(t("unknown"));
         }
       } catch (error) {
         console.error("Failed to fetch path", error);
-        setPathString("Error");
+        setPathString(t("error"));
       } finally {
         setPathLoading(false);
       }
     };
 
     fetchPath();
-  }, [file.id, file.parents]);
+  }, [file.id, file.parents, t]);
 
   const handleCopyLink = () => {
     const url = `/api/download?fileId=${file.id}`;
     navigator.clipboard.writeText(`${window.location.origin}${url}`);
-    addToast({ message: "Link download disalin!", type: "success" });
+    addToast({ message: t("linkDownloadCopied"), type: "success" });
   };
 
   const onDragEnd = async (
@@ -311,7 +314,9 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
             >
               <FileBox size={20} />
             </motion.div>
-            <h2 className="font-bold text-lg tracking-tight">Detail File</h2>
+            <h2 className="font-bold text-lg tracking-tight">
+              {t("fileDetails")}
+            </h2>
           </div>
           <motion.button
             whileHover={{ scale: 1.1, rotate: 90 }}
@@ -436,7 +441,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-primary/5 text-primary font-semibold text-sm hover:bg-primary/10 transition-colors border border-primary/10"
               >
                 <ExternalLink size={20} />
-                {editorLink ? "Edit File" : "Buka Drive"}
+                {editorLink ? t("editFile") : t("openDrive")}
               </motion.a>
               <motion.a
                 whileHover={{ scale: 1.02 }}
@@ -446,19 +451,19 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-secondary text-secondary-foreground font-semibold text-sm hover:bg-secondary/80 transition-colors border border-border/50"
               >
                 <Download size={20} />
-                Download
+                {t("download")}
               </motion.a>
             </motion.div>
 
             <div className="grid grid-cols-3 gap-3">
               <QuickStat
                 icon={HardDrive}
-                label="Ukuran"
+                label={t("size")}
                 value={file.size ? formatBytes(Number(file.size)) : "-"}
               />
               <QuickStat
                 icon={Calendar}
-                label="Diubah"
+                label={t("modified")}
                 value={new Date(file.modifiedTime).toLocaleDateString("id-ID", {
                   day: "numeric",
                   month: "short",
@@ -466,20 +471,20 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
               />
               <QuickStat
                 icon={FileType}
-                label="Ekstensi"
+                label={t("extension")}
                 value={file.name.split(".").pop()?.toUpperCase() || "FILE"}
               />
               {metadata?.width && (
                 <QuickStat
                   icon={Maximize2}
-                  label="Dimensi"
+                  label={t("dimensions")}
                   value={`${metadata.width} x ${metadata.height}`}
                 />
               )}
               {durationMillis && (
                 <QuickStat
                   icon={Clock}
-                  label="Durasi"
+                  label={t("duration")}
                   value={formatDuration(durationMillis / 1000)}
                 />
               )}
@@ -492,13 +497,13 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
               <div className="flex items-center gap-2 px-2 pb-2 border-b border-border/30">
                 <History size={16} className="text-primary" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  File Properties
+                  {t("fileProperties")}
                 </h4>
               </div>
               <div className="px-1 flex flex-col">
                 <DetailRow
                   icon={Calendar}
-                  label="Diubah"
+                  label={t("modified")}
                   value={new Date(file.modifiedTime).toLocaleString("id-ID", {
                     dateStyle: "medium",
                     timeStyle: "short",
@@ -506,7 +511,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 />
                 <DetailRow
                   icon={Calendar}
-                  label="Dibuat"
+                  label={t("created")}
                   value={new Date(file.createdTime).toLocaleString("id-ID", {
                     dateStyle: "medium",
                     timeStyle: "short",
@@ -514,21 +519,21 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 />
                 <DetailRow
                   icon={HardDrive}
-                  label="Lokasi"
-                  value={pathLoading ? "Memuat..." : pathString}
+                  label={t("location")}
+                  value={pathLoading ? t("loading") : pathString}
                   copyable={true}
                 />
                 {canShowAuthor && file.owners?.[0] && (
                   <DetailRow
                     icon={User}
-                    label="Pemilik"
+                    label={t("owner")}
                     value={file.owners[0].displayName}
                   />
                 )}
                 {canShowAuthor && file.lastModifyingUser && (
                   <DetailRow
                     icon={Edit3}
-                    label="Editor"
+                    label={t("editor")}
                     value={file.lastModifyingUser.displayName}
                   />
                 )}
@@ -537,7 +542,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                     <div className="flex items-center gap-2 mb-2 text-muted-foreground">
                       <Hash size={14} />
                       <span className="text-xs font-bold uppercase">
-                        MD5 Checksum
+                        {t("md5")}
                       </span>
                     </div>
                     <div className="p-3 bg-muted/50 rounded-xl border border-border/50 font-mono text-[10px] break-all select-all text-muted-foreground hover:text-foreground transition-colors cursor-text hover:bg-muted">
@@ -562,7 +567,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-foreground text-background hover:bg-foreground/90 font-bold text-sm shadow-xl shadow-foreground/5 transition-all"
           >
             <LinkIcon size={18} />
-            Copy Direct Link
+            {t("copyDirectLink")}
           </motion.button>
         </motion.div>
       </motion.div>

@@ -12,6 +12,7 @@ import { useUpload } from "@/hooks/useUpload";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { useGallery } from "@/hooks/useGallery";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 import FileBrowserHeader from "./FileBrowserHeader";
 import ImageGallery from "./ImageGallery";
@@ -66,6 +67,8 @@ export default function FileBrowser({
     setCurrentFolderId,
     playAudio,
   } = useAppStore();
+
+  const t = useTranslations("FileBrowser");
 
   const {
     files,
@@ -250,10 +253,9 @@ export default function FileBrowser({
         body: JSON.stringify({ folderId: authTarget.folderId, id, password }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Kredensial salah.");
-
+      if (!response.ok) throw new Error(data.error || t("wrongCredentials"));
       setFolderToken(authTarget.folderId, data.token);
-      addToast({ message: "Akses diberikan!", type: "success" });
+      addToast({ message: t("accessGranted"), type: "success" });
 
       setAuthTarget({ isLocked: false, folderId: "", folderName: "" });
 
@@ -319,14 +321,17 @@ export default function FileBrowser({
             if (res.status === 401 && errorData.protected) {
               throw { isProtected: true, folderId, error: errorData.error };
             }
-            throw new Error(errorData.error || "Failed to prefetch");
+            if (res.status === 401 && errorData.protected) {
+              throw { isProtected: true, folderId, error: errorData.error };
+            }
+            throw new Error(errorData.error || t("failedPrefetch"));
           }
           return res.json();
         },
         initialPageParam: null as string | null,
       });
     },
-    [queryClient, shareToken, folderTokens, refreshKey],
+    [queryClient, shareToken, folderTokens, refreshKey, t],
   );
 
   const handleContextMenuWrapper = useCallback(
@@ -395,7 +400,7 @@ export default function FileBrowser({
           onShareFolderClick={() =>
             handleShare({
               id: currentFolderId,
-              name: history[history.length - 1]?.name || "Folder",
+              name: history[history.length - 1]?.name || t("folderDefaultName"),
               isFolder: true,
               mimeType: "application/vnd.google-apps.folder",
               modifiedTime: "",
@@ -457,7 +462,7 @@ export default function FileBrowser({
         isFileRequestModalOpen={isFileRequestModalOpen}
         setIsFileRequestModalOpen={setIsFileRequestModalOpen}
         currentFolderId={currentFolderId}
-        folderName={history[history.length - 1]?.name || "Folder"}
+        folderName={history[history.length - 1]?.name || t("folderDefaultName")}
         imageEditorFile={imageEditorFile}
         setImageEditorFile={setImageEditorFile}
         contextMenu={contextMenu}

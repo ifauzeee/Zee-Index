@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface RenameModalProps {
   currentName: string;
@@ -17,6 +18,7 @@ export default function RenameModal({
 }: RenameModalProps) {
   const [newName, setNewName] = useState(currentName);
   const [isLoading, setIsLoading] = useState(false);
+  const t = useTranslations("RenameModal");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +46,7 @@ export default function RenameModal({
         >
           <X size={20} />
         </button>
-        <h3 className="text-lg font-semibold mb-4">Rename File</h3>
+        <h3 className="text-lg font-semibold mb-4">{t("title")}</h3>
         <form onSubmit={handleSubmit}>
           <input
             type="text"
@@ -60,14 +62,14 @@ export default function RenameModal({
               onClick={onClose}
               className="px-4 py-2 rounded-md hover:bg-accent"
             >
-              Cancel
+              {t("cancel")}
             </button>
             <button
               type="submit"
               disabled={isLoading || !newName || newName === currentName}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:bg-primary/50"
             >
-              {isLoading ? "Saving..." : "Save"}
+              {isLoading ? t("saving") : t("save")}
             </button>
           </div>
         </form>

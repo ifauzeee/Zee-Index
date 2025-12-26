@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAlert } from "@/components/providers/ModalProvider";
+import { useTranslations } from "next-intl";
 
 export default function SetupPage() {
   const router = useRouter();
   const { alert } = useAlert();
+  const t = useTranslations("SetupPage");
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -34,8 +36,8 @@ export default function SetupPage() {
 
   const handleAuthorize = async () => {
     if (!formData.clientId || !formData.clientSecret) {
-      await alert("Mohon isi Client ID dan Client Secret", {
-        title: "Input Tidak Lengkap",
+      await alert(t("fillInputs"), {
+        title: t("incompleteInput"),
       });
       return;
     }
@@ -67,24 +69,21 @@ export default function SetupPage() {
       if (res.ok) {
         localStorage.removeItem("zee_setup_temp");
         if (data.restartNeeded) {
-          await alert(
-            "Setup Berhasil! Token telah disimpan ke .env.\n\nServer akan dimatikan otomatis atau silakan restart manual.",
-            { title: "Setup Selesai" },
-          );
+          await alert(t("setupSuccessRestart"), { title: t("setupComplete") });
         } else {
-          await alert("Setup Berhasil! Mengalihkan ke beranda...", {
-            title: "Sukses",
+          await alert(t("setupSuccessRedirect"), {
+            title: t("success"),
           });
           router.push("/");
         }
       } else {
-        await alert(`Gagal: ${data.error}`, {
-          title: "Setup Gagal",
+        await alert(`${t("setupFailed")}: ${data.error}`, {
+          title: t("setupFailed"),
           variant: "destructive",
         });
       }
     } catch {
-      await alert("Terjadi kesalahan koneksi.", {
+      await alert(t("connectionError"), {
         title: "Error",
         variant: "destructive",
       });
@@ -118,18 +117,13 @@ export default function SetupPage() {
           {step === 1 ? (
             <div className="space-y-8">
               <div>
-                <h2 className="text-2xl font-semibold mb-2">
-                  Koneksi Google Drive
-                </h2>
-                <p className="text-muted-foreground">
-                  Masukkan kredensial dari Google Cloud Console untuk
-                  menghubungkan aplikasi dengan Google Drive Anda.
-                </p>
+                <h2 className="text-2xl font-semibold mb-2">{t("title")}</h2>
+                <p className="text-muted-foreground">{t("subtitle")}</p>
               </div>
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Client ID</label>
+                  <label className="text-sm font-medium">{t("clientId")}</label>
                   <input
                     placeholder="xxxxx.apps.googleusercontent.com"
                     className="w-full px-4 py-3 rounded-xl border border-border bg-background/50 backdrop-blur-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
@@ -141,7 +135,9 @@ export default function SetupPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Client Secret</label>
+                  <label className="text-sm font-medium">
+                    {t("clientSecret")}
+                  </label>
                   <input
                     type="password"
                     placeholder="GOCSPX-xxxxx"
@@ -154,9 +150,11 @@ export default function SetupPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Root Folder ID</label>
+                  <label className="text-sm font-medium">
+                    {t("rootFolderId")}
+                  </label>
                   <input
-                    placeholder="ID folder dari URL Google Drive"
+                    placeholder={t("rootFolderIdPlaceholder")}
                     className="w-full px-4 py-3 rounded-xl border border-border bg-background/50 backdrop-blur-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                     value={formData.rootFolderId}
                     onChange={(e) =>
@@ -164,7 +162,7 @@ export default function SetupPage() {
                     }
                   />
                   <p className="text-xs text-muted-foreground">
-                    Ambil dari URL: drive.google.com/drive/folders/
+                    {t("rootFolderIdHint")}
                     <span className="text-blue-500 font-mono">FOLDER_ID</span>
                   </p>
                 </div>
@@ -184,7 +182,7 @@ export default function SetupPage() {
                   <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                 </svg>
-                Authorize dengan Google
+                {t("authorize")}
               </button>
             </div>
           ) : (
@@ -206,11 +204,10 @@ export default function SetupPage() {
                   </svg>
                 </div>
                 <h2 className="text-2xl font-semibold mb-2">
-                  Otorisasi Berhasil!
+                  {t("authSuccessTitle")}
                 </h2>
                 <p className="text-muted-foreground max-w-sm">
-                  Kode otorisasi telah diterima. Klik tombol di bawah untuk
-                  menyelesaikan proses setup.
+                  {t("authSuccessMessage")}
                 </p>
               </div>
 
@@ -230,8 +227,7 @@ export default function SetupPage() {
                     </svg>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Proses ini akan menukar kode otorisasi dengan token akses
-                    dan menyimpannya ke database serta file .env.
+                    {t("processDescription")}
                   </p>
                 </div>
               </div>
@@ -262,7 +258,7 @@ export default function SetupPage() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    Memproses...
+                    {t("processing")}
                   </>
                 ) : (
                   <>
@@ -279,7 +275,7 @@ export default function SetupPage() {
                         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    Selesaikan Setup
+                    {t("finishSetup")}
                   </>
                 )}
               </button>

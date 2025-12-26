@@ -11,6 +11,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { useTranslations } from "next-intl";
 
 interface FileRequestModalProps {
   folderId: string;
@@ -24,7 +25,8 @@ export default function FileRequestModal({
   onClose,
 }: FileRequestModalProps) {
   const { addToast } = useAppStore();
-  const [title, setTitle] = useState(`Upload ke ${folderName}`);
+  const t = useTranslations("FileRequestModal");
+  const [title, setTitle] = useState(t("uploadTo", { folderName }));
   const [expiresIn, setExpiresIn] = useState(24);
   const [isLoading, setIsLoading] = useState(false);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
@@ -56,7 +58,7 @@ export default function FileRequestModal({
       navigator.clipboard.writeText(resultUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      addToast({ message: "Link disalin!", type: "success" });
+      addToast({ message: t("linkCopied"), type: "success" });
     }
   };
 
@@ -82,9 +84,9 @@ export default function FileRequestModal({
                 <UploadCloud size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-bold">Terima File</h3>
+                <h3 className="text-lg font-bold">{t("receiveFiles")}</h3>
                 <p className="text-xs text-muted-foreground">
-                  Buat link upload publik untuk folder ini
+                  {t("createLinkDesc")}
                 </p>
               </div>
             </div>
@@ -100,7 +102,7 @@ export default function FileRequestModal({
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Judul Permintaan
+                  {t("requestTitle")}
                 </label>
                 <input
                   type="text"
@@ -112,17 +114,17 @@ export default function FileRequestModal({
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Kadaluarsa Dalam (Jam)
+                  {t("expiresIn")}
                 </label>
                 <select
                   value={expiresIn}
                   onChange={(e) => setExpiresIn(Number(e.target.value))}
                   className="w-full px-3 py-2 rounded-md border bg-transparent focus:ring-2 focus:ring-primary outline-none"
                 >
-                  <option value={1}>1 Jam</option>
-                  <option value={24}>24 Jam (1 Hari)</option>
-                  <option value={72}>3 Hari</option>
-                  <option value={168}>1 Minggu</option>
+                  <option value={1}>{t("hours1")}</option>
+                  <option value={24}>{t("hours24")}</option>
+                  <option value={72}>{t("days3")}</option>
+                  <option value={168}>{t("week1")}</option>
                 </select>
               </div>
               <button
@@ -133,15 +135,14 @@ export default function FileRequestModal({
                 {isLoading ? (
                   <Loader2 className="animate-spin" size={18} />
                 ) : (
-                  "Buat Link Upload"
+                  t("createLink")
                 )}
               </button>
             </form>
           ) : (
             <div className="space-y-4">
               <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-600 text-sm text-center">
-                Link berhasil dibuat! Orang lain dapat mengupload file ke folder
-                ini tanpa login.
+                {t("successMessage")}
               </div>
               <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
                 <LinkIcon
@@ -168,7 +169,7 @@ export default function FileRequestModal({
                 onClick={onClose}
                 className="w-full py-2 bg-secondary text-secondary-foreground rounded-md font-medium hover:bg-secondary/80"
               >
-                Tutup
+                {t("close")}
               </button>
             </div>
           )}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface DeleteConfirmProps {
   itemName: string;
@@ -16,6 +17,7 @@ export default function DeleteConfirm({
   onConfirm,
 }: DeleteConfirmProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const t = useTranslations("DeleteConfirm");
 
   const handleConfirm = async () => {
     setIsLoading(true);
@@ -44,13 +46,13 @@ export default function DeleteConfirm({
           </div>
           <div className="mt-0 text-left">
             <h3 className="text-lg font-semibold leading-6 text-foreground">
-              Delete Item
+              {t("title")}
             </h3>
             <div className="mt-2">
               <p className="text-sm text-muted-foreground">
-                Are you sure you want to delete{" "}
-                <span className="font-bold">{itemName}</span>? This action
-                cannot be undone.
+                {t.rich("message", {
+                  itemName: () => <span className="font-bold">{itemName}</span>,
+                })}
               </p>
             </div>
           </div>
@@ -61,7 +63,7 @@ export default function DeleteConfirm({
             onClick={onClose}
             className="px-4 py-2 rounded-md hover:bg-accent"
           >
-            Cancel
+            {t("cancel")}
           </button>
           <button
             type="button"
@@ -69,7 +71,7 @@ export default function DeleteConfirm({
             onClick={handleConfirm}
             className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 disabled:bg-destructive/50"
           >
-            {isLoading ? "Deleting..." : "Delete"}
+            {isLoading ? t("deleting") : t("delete")}
           </button>
         </div>
       </motion.div>

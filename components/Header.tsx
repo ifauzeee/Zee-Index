@@ -24,6 +24,8 @@ import {
 import { useAppStore } from "@/lib/store";
 import Search from "@/components/Search";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslations } from "next-intl";
+import LocaleSwitcher from "./LocaleSwitcher";
 
 const overlayVariants = {
   open: { opacity: 1 },
@@ -74,6 +76,7 @@ interface MobileNavProps {
   shareToken: string | null;
   onClose: () => void;
   createLink: (href: string) => string;
+  localeSwitcher: React.ReactNode;
 }
 
 const MobileNav: FC<MobileNavProps> = ({
@@ -83,6 +86,7 @@ const MobileNav: FC<MobileNavProps> = ({
   shareToken,
   onClose,
   createLink,
+  localeSwitcher,
 }) => {
   return (
     <motion.div
@@ -153,9 +157,10 @@ const MobileNav: FC<MobileNavProps> = ({
 
           <motion.div
             variants={navItemVariants}
-            className="pt-5 mt-2 border-t border-muted"
+            className="pt-5 mt-2 border-t border-muted flex justify-between items-center"
           >
             {authButton}
+            {localeSwitcher}
           </motion.div>
         </motion.div>
       </motion.nav>
@@ -180,6 +185,7 @@ export default function Header() {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const t = useTranslations("Header");
 
   const isSharePage = pathname?.startsWith("/share");
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -200,13 +206,13 @@ export default function Header() {
       id: "theme",
       onClick: () => setTheme(theme === "dark" ? "light" : "dark"),
       icon: theme === "light" ? Moon : Sun,
-      label: `Ganti Tema`,
+      label: t("switchTheme"),
     },
     {
       id: "refresh",
       onClick: triggerRefresh,
       icon: RefreshCw,
-      label: "Segarkan Halaman",
+      label: t("refreshPage"),
     },
     {
       id: "github",
@@ -214,7 +220,7 @@ export default function Header() {
       target: "_blank",
       rel: "noopener noreferrer",
       icon: Github,
-      label: "GitHub",
+      label: t("github"),
     },
     {
       id: "telegram",
@@ -222,7 +228,7 @@ export default function Header() {
       target: "_blank",
       rel: "noopener noreferrer",
       icon: Send,
-      label: "Join Grup",
+      label: t("joinGroup"),
     },
     {
       id: "donate",
@@ -230,7 +236,7 @@ export default function Header() {
       target: "_blank",
       rel: "noopener noreferrer",
       icon: Coffee,
-      label: "Donasi",
+      label: t("donate"),
     },
   ];
 
@@ -271,7 +277,7 @@ export default function Header() {
       session.user.isGuest ? (
         <button
           onClick={handleGuestLogout}
-          title="Logout (Tamu)"
+          title={t("logoutGuest")}
           className="p-2 rounded-lg hover:bg-accent text-muted-foreground"
         >
           <LogOut size={20} />
@@ -279,7 +285,7 @@ export default function Header() {
       ) : (
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          title="Logout"
+          title={t("logout")}
           className="p-2 rounded-lg hover:bg-accent"
         >
           <LogOut size={20} />
@@ -288,11 +294,11 @@ export default function Header() {
     ) : (
       <button
         onClick={handleLoginClick}
-        title="Login"
+        title={t("login")}
         className="flex items-center gap-2 sm:gap-4 hover:text-primary transition-colors w-full py-2"
       >
         <LogIn size={24} />
-        <span>Login</span>
+        <span>{t("login")}</span>
       </button>
     );
 
@@ -327,7 +333,7 @@ export default function Header() {
               className={`text-xl font-bold flex items-center shrink-0 ${
                 !shareToken ? "cursor-pointer" : "cursor-default"
               }`}
-              title={!shareToken ? "Back to Home" : appName}
+              title={!shareToken ? t("backToHome") : appName}
             >
               {logoUrl ? (
                 <Image
@@ -399,7 +405,7 @@ export default function Header() {
                   <button
                     onClick={toggleNotificationCenter}
                     className="p-2 rounded-lg hover:bg-accent relative"
-                    title="Notifikasi"
+                    title={t("notifications")}
                   >
                     <Bell size={20} />
                     {unreadCount > 0 && (
@@ -434,6 +440,7 @@ export default function Header() {
                     );
                   })}
                   {authButton}
+                  <LocaleSwitcher />
                 </>
               )}
             </div>
@@ -450,7 +457,7 @@ export default function Header() {
               </button>
               <button
                 onClick={() => setIsSearchVisible(!isSearchVisible)}
-                title="Cari"
+                title={t("search")}
                 className="p-2 rounded-lg hover:bg-accent z-50"
               >
                 {isSearchVisible ? (
@@ -462,7 +469,7 @@ export default function Header() {
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
                 className="p-2 rounded-lg hover:bg-accent z-50"
-                title="Menu"
+                title={t("menu")}
               >
                 <Menu size={20} />
               </button>
@@ -488,6 +495,7 @@ export default function Header() {
             shareToken={shareToken}
             onClose={() => setIsMobileMenuOpen(false)}
             createLink={createLink}
+            localeSwitcher={<LocaleSwitcher />}
           />
         )}
       </AnimatePresence>

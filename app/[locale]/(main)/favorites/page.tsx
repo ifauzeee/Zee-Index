@@ -10,30 +10,32 @@ import { motion } from "framer-motion";
 import { StarOff, LogIn } from "lucide-react";
 import React from "react";
 import EmptyState from "@/components/EmptyState";
+import { useTranslations } from "next-intl";
 
 export default function FavoritesPage() {
   const router = useRouter();
   const { addToast, user } = useAppStore();
   const [favoriteFiles, setFavoriteFiles] = useState<DriveFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const t = useTranslations("FavoritesPage");
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
   const fetchFavorites = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/favorites");
-      if (!response.ok) throw new Error("Gagal mengambil data favorit.");
+      if (!response.ok) throw new Error(t("loadError"));
       const data = await response.json();
       setFavoriteFiles(data);
     } catch (err: unknown) {
       addToast({
-        message: err instanceof Error ? err.message : "Terjadi galat.",
+        message: err instanceof Error ? err.message : t("genericError"),
         type: "error",
       });
     } finally {
       setIsLoading(false);
     }
-  }, [addToast]);
+  }, [addToast, t]);
   useEffect(() => {
     if (user && !user.isGuest) {
       fetchFavorites();
@@ -53,14 +55,14 @@ export default function FavoritesPage() {
         )}`;
       } else {
         addToast({
-          message: "Tidak dapat menemukan lokasi file.",
+          message: t("locationError"),
           type: "error",
         });
         return;
       }
       router.push(destinationUrl);
     },
-    [router, addToast],
+    [router, addToast, t],
   );
   if (user?.isGuest) {
     return (
@@ -69,12 +71,12 @@ export default function FavoritesPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <h1 className="text-xl font-bold mb-4">File Favorit</h1>
+        <h1 className="text-xl font-bold mb-4">{t("title")}</h1>
         <div className="text-center py-20 text-muted-foreground">
           <EmptyState
             icon={LogIn}
-            title="Fitur Favorit Memerlukan Akun"
-            message="Anda harus login dengan akun Google untuk dapat menyimpan file atau folder ke favorit."
+            title={t("requireAccountTitle")}
+            message={t("requireAccountMessage")}
           />
         </div>
       </motion.div>
@@ -91,7 +93,7 @@ export default function FavoritesPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <h1 className="text-xl font-bold mb-4">File Favorit</h1>
+      <h1 className="text-xl font-bold mb-4">{t("title")}</h1>
       {favoriteFiles.length > 0 ? (
         <FileList
           files={favoriteFiles}
@@ -109,8 +111,8 @@ export default function FavoritesPage() {
         <div className="text-center py-20 text-muted-foreground">
           <EmptyState
             icon={StarOff}
-            title="Belum Ada Favorit"
-            message="Klik kanan pada file untuk menambahkannya ke favorit."
+            title={t("emptyTitle")}
+            message={t("emptyMessage")}
           />
         </div>
       )}

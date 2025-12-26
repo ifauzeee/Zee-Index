@@ -1,4 +1,4 @@
-import MainLayout from "@/app/(main)/layout";
+import MainLayout from "@/app/[locale]/(main)/layout";
 
 export const metadata = {
   title: "Log Aktivitas - Admin Zee Index",

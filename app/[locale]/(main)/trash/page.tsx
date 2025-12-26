@@ -9,6 +9,7 @@ import { formatBytes } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useTranslations } from "next-intl";
 
 interface TrashedFile {
   id: string;
@@ -26,6 +27,7 @@ export default function TrashPage() {
   const { confirm } = useConfirm();
   const { data: session, status } = useSession();
   const router = useRouter();
+  const t = useTranslations("TrashPage");
 
   const [files, setFiles] = useState<TrashedFile[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
@@ -48,26 +50,26 @@ export default function TrashPage() {
       (session?.user?.role && session.user.role !== "ADMIN")
     ) {
       addToast({
-        message: "Akses Ditolak: Halaman ini khusus Admin",
+        message: t("accessDenied"),
         type: "error",
       });
       router.push("/");
     }
-  }, [status, session, router, addToast]);
+  }, [status, session, router, addToast, t]);
 
   const fetchTrash = useCallback(async () => {
     setIsLoadingData(true);
     try {
       const res = await fetch("/api/trash");
-      if (!res.ok) throw new Error("Gagal memuat sampah");
+      if (!res.ok) throw new Error(t("loadError"));
       const data = await res.json();
       setFiles(data);
     } catch {
-      addToast({ message: "Gagal memuat sampah", type: "error" });
+      addToast({ message: t("loadError"), type: "error" });
     } finally {
       setIsLoadingData(false);
     }
-  }, [addToast]);
+  }, [addToast, t]);
 
   useEffect(() => {
     if (
@@ -123,8 +125,8 @@ export default function TrashPage() {
     if (
       isDelete &&
       !(await confirm(
-        `Hapus ${selectedFiles.length} item secara permanen? Aksi ini tidak dapat dibatalkan.`,
-        { title: "Hapus Permanen?", variant: "destructive" },
+        t("deleteConfirmMessage", { count: selectedFiles.length }),
+        { title: t("deleteConfirmTitle"), variant: "destructive" },
       ))
     )
       return;
@@ -137,16 +139,18 @@ export default function TrashPage() {
         body: JSON.stringify({ fileIds: selectedFiles }),
       });
       if (!response.ok)
-        throw new Error(`Gagal ${isDelete ? "menghapus" : "memulihkan"}`);
+        throw new Error(isDelete ? t("deleteFailed") : t("restoreFailed"));
       addToast({
-        message: `${selectedFiles.length} item berhasil di${isDelete ? "hapus" : "pulihkan"}.`,
+        message: isDelete
+          ? t("deleteSuccess", { count: selectedFiles.length })
+          : t("restoreSuccess", { count: selectedFiles.length }),
         type: "success",
       });
       await fetchTrash();
       setSelectedFiles([]);
     } catch (e) {
       addToast({
-        message: e instanceof Error ? e.message : "Terjadi kesalahan",
+        message: e instanceof Error ? e.message : t("genericError"),
         type: "error",
       });
     } finally {
@@ -171,7 +175,7 @@ export default function TrashPage() {
         <div className="p-3 bg-red-100 text-red-600 rounded-xl">
           <Trash2 size={24} />
         </div>
-        <h1 className="text-2xl font-bold">Sampah (Trash)</h1>
+        <h1 className="text-2xl font-bold">{t("title")}</h1>
       </div>
       <div className="flex items-center gap-2">
         {selectedFiles.length > 0 && (
@@ -181,21 +185,21 @@ export default function TrashPage() {
               disabled={isProcessing}
               className="px-3 py-2 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 disabled:opacity-50"
             >
-              Pulihkan ({selectedFiles.length})
+              {t("restore")} ({selectedFiles.length})
             </button>
             <button
               onClick={() => handleBulkAction("delete")}
               disabled={isProcessing}
               className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 disabled:opacity-50"
             >
-              Hapus ({selectedFiles.length})
+              {t("delete")} ({selectedFiles.length})
             </button>
           </>
         )}
         <button
           onClick={() => handleSort("modifiedTime")}
           className="p-2 bg-muted rounded-lg hover:bg-muted/80"
-          title="Urutkan berdasarkan tanggal diubah"
+          title={t("sortTooltip")}
         >
           <ArrowDownUp size={18} />
         </button>
@@ -216,7 +220,7 @@ export default function TrashPage() {
           className="mr-4"
         />
         <label htmlFor="select-all" className="font-medium">
-          Pilih Semua
+          {t("selectAll")}
         </label>
       </div>
       <div className="divide-y">
@@ -263,7 +267,7 @@ export default function TrashPage() {
       ) : files.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
           <FileX className="w-16 h-16 mx-auto mb-4 opacity-20" />
-          <p>Tong sampah kosong.</p>
+          <p>{t("empty")}</p>
         </div>
       ) : (
         renderFileList()

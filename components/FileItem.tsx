@@ -5,6 +5,7 @@ import React, { useState, useMemo, memo, useEffect } from "react";
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
 import { Lock, Star, Share2, Download, Info, MoreVertical } from "lucide-react";
+import { useTranslations, useFormatter } from "next-intl";
 
 interface FileItemProps {
   file: DriveFile & { isFavorite?: boolean };
@@ -55,6 +56,8 @@ function FileItem({
   const [imageError, setImageError] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [isDesktop, setIsDesktop] = useState(false);
+  const t = useTranslations("FileItem");
+  const format = useFormatter();
 
   useEffect(() => {
     const checkMatch = () => {
@@ -348,7 +351,7 @@ function FileItem({
                   onMouseDown={preventSelection}
                 >
                   {file.size ? formatBytes(parseInt(file.size)) : "-"} •{" "}
-                  {new Date(file.modifiedTime).toLocaleDateString("id-ID", {
+                  {format.dateTime(new Date(file.modifiedTime), {
                     day: "numeric",
                     month: "short",
                     year: "numeric",
@@ -384,7 +387,7 @@ function FileItem({
                     e.stopPropagation();
                     onShare(e);
                   }}
-                  title="Bagikan"
+                  title={t("share")}
                   className="p-2 rounded-full hover:bg-muted select-none"
                 >
                   <Share2 size={16} />
@@ -396,7 +399,7 @@ function FileItem({
                     e.stopPropagation();
                     onDownload(e);
                   }}
-                  title="Unduh"
+                  title={t("download")}
                   className="p-2 rounded-full hover:bg-muted select-none"
                 >
                   <Download size={16} />
@@ -407,7 +410,7 @@ function FileItem({
                   e.stopPropagation();
                   onShowDetails(e);
                 }}
-                title="Lihat Detail"
+                title={t("viewDetails")}
                 className="p-2 rounded-full hover:bg-muted select-none"
               >
                 <Info size={16} />
@@ -424,7 +427,7 @@ function FileItem({
                   ? "absolute top-1 right-1 bg-background/70 backdrop-blur-sm shadow-sm border border-black/5"
                   : "ml-auto",
               )}
-              aria-label="Opsi lainnya"
+              aria-label={t("moreOptions")}
             >
               <MoreVertical size={18} />
             </button>

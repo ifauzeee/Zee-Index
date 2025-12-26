@@ -25,6 +25,7 @@ import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import type { ActivityLog, ActivityType } from "@/lib/activityLogger";
 import EmptyState from "./EmptyState";
+import { useTranslations } from "next-intl";
 
 const iconMap: Record<string, React.ElementType> = {
   UPLOAD: Upload,
@@ -42,22 +43,24 @@ const iconMap: Record<string, React.ElementType> = {
 };
 
 const LogDetail: FC<{ log: ActivityLog }> = ({ log }) => {
+  const t = useTranslations("ActivityLogDashboard");
   return (
     <ul className="text-xs text-muted-foreground space-y-1 pl-2 mt-2 border-l-2 border-border/50">
       {log.itemName && (
         <li>
-          <strong className="text-foreground">Item:</strong>{" "}
+          <strong className="text-foreground">{t("item")}</strong>{" "}
           <span className="break-all">{log.itemName}</span>
         </li>
       )}
       {log.userEmail && (
         <li>
-          <strong className="text-foreground">Oleh:</strong> {log.userEmail}
+          <strong className="text-foreground">{t("by")}</strong> {log.userEmail}
         </li>
       )}
       {log.targetUser && (
         <li>
-          <strong className="text-foreground">Target:</strong> {log.targetUser}
+          <strong className="text-foreground">{t("target")}</strong>{" "}
+          {log.targetUser}
         </li>
       )}
       {log.status && (
@@ -66,12 +69,12 @@ const LogDetail: FC<{ log: ActivityLog }> = ({ log }) => {
             log.status === "failure" ? "text-red-500" : "text-green-500"
           }
         >
-          <strong>Status:</strong> {log.status}
+          <strong>{t("status")}</strong> {log.status}
         </li>
       )}
       {log.error && (
         <li className="text-red-500 mt-1 p-2 bg-red-500/5 rounded-md border border-red-500/20">
-          <strong>Error:</strong>{" "}
+          <strong>{t("error")}</strong>{" "}
           <span className="break-words whitespace-pre-wrap">{log.error}</span>
         </li>
       )}
@@ -105,6 +108,7 @@ export default function ActivityLogDashboard() {
   const [totalPages, setTotalPages] = useState(1);
   const [filterType, setFilterType] = useState<ActivityType | "ALL">(ALL_TYPES);
   const [searchQuery, setSearchQuery] = useState("");
+  const t = useTranslations("ActivityLogDashboard");
 
   const fetchLogs = useCallback(
     async (page: number) => {
@@ -113,7 +117,7 @@ export default function ActivityLogDashboard() {
         const response = await fetch(
           `/api/admin/activity-log?page=${page}&limit=${LOGS_PER_PAGE}`,
         );
-        if (!response.ok) throw new Error("Gagal mengambil log.");
+        if (!response.ok) throw new Error(t("loadingError"));
         const data = await response.json();
 
         setLogs(data.logs);
@@ -121,17 +125,14 @@ export default function ActivityLogDashboard() {
         setCurrentPage(data.currentPage);
       } catch (err: unknown) {
         addToast({
-          message:
-            err instanceof Error
-              ? err.message
-              : "Terjadi kesalahan tidak dikenal.",
+          message: err instanceof Error ? err.message : t("unknownError"),
           type: "error",
         });
       } finally {
         setIsLoading(false);
       }
     },
-    [addToast],
+    [addToast, t],
   );
 
   useEffect(() => {
@@ -161,15 +162,13 @@ export default function ActivityLogDashboard() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-semibold">Log Aktivitas</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Riwayat tindakan pengguna dan sistem
-          </p>
+          <h2 className="text-2xl font-semibold">{t("title")}</h2>
+          <p className="text-sm text-muted-foreground mt-1">{t("subtitle")}</p>
         </div>
         <button
           onClick={() => fetchLogs(currentPage)}
           className="p-2 hover:bg-accent rounded-full transition-colors"
-          title="Refresh Log"
+          title={t("refresh")}
         >
           <Loader2
             size={20}
@@ -186,7 +185,7 @@ export default function ActivityLogDashboard() {
           }
           className="w-full sm:w-48 px-3 py-2 rounded-md border bg-transparent focus:ring-2 focus:ring-ring focus:outline-none text-sm"
         >
-          <option value={ALL_TYPES}>Semua Tipe</option>
+          <option value={ALL_TYPES}>{t("allTypes")}</option>
           {logTypes.map((type) => (
             <option key={type} value={type}>
               {type.replace(/_/g, " ")}
@@ -197,7 +196,7 @@ export default function ActivityLogDashboard() {
           <FileSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Cari log (user, item, error...)"
+            placeholder={t("searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 rounded-lg border bg-transparent text-sm"
@@ -214,8 +213,8 @@ export default function ActivityLogDashboard() {
           <div className="text-center py-20 text-muted-foreground">
             <EmptyState
               icon={AlertCircle}
-              title="Tidak Ada Log"
-              message="Tidak ada aktivitas yang tercatat atau cocok dengan filter Anda."
+              title={t("emptyTitle")}
+              message={t("emptyMessage")}
             />
           </div>
         ) : (
@@ -266,17 +265,17 @@ export default function ActivityLogDashboard() {
               className="px-3 py-1 text-sm font-medium rounded-md hover:bg-accent disabled:opacity-50 flex items-center gap-1 transition-colors"
             >
               <ChevronLeft size={16} />
-              Sebelumnya
+              {t("prev")}
             </button>
             <span className="text-sm text-muted-foreground">
-              Halaman {currentPage} dari {totalPages}
+              {t("pageInfo", { current: currentPage, total: totalPages })}
             </span>
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
               className="px-3 py-1 text-sm font-medium rounded-md hover:bg-accent disabled:opacity-50 flex items-center gap-1 transition-colors"
             >
-              Berikutnya
+              {t("next")}
               <ChevronRight size={16} />
             </button>
           </div>

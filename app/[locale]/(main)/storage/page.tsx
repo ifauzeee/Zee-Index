@@ -13,6 +13,7 @@ import {
   AlertCircle,
   PieChart as PieChartIcon,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface BreakdownItem {
   type: string;
@@ -45,6 +46,7 @@ const chartColors = [
 ];
 
 const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
+  const t = useTranslations("StoragePage");
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
@@ -58,16 +60,14 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
         </p>
         <div className="space-y-1 text-xs text-muted-foreground">
           <p>
-            Ukuran:{" "}
+            {t("size")}{" "}
             <span className="text-foreground font-medium">
               {formatBytes(data.size)}
             </span>
           </p>
           <p>
-            Jumlah:{" "}
-            <span className="text-foreground font-medium">
-              {data.count} file
-            </span>
+            {t("count")}{" "}
+            <span className="text-foreground font-medium">{data.count}</span>
           </p>
         </div>
       </div>
@@ -80,6 +80,7 @@ function StoragePageContent() {
   const [data, setData] = useState<StorageDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const t = useTranslations("StoragePage");
 
   const searchParams = useSearchParams();
   const shareToken = searchParams.get("share_token");
@@ -94,24 +95,18 @@ function StoragePageContent() {
         setError(null);
         const response = await fetch("/api/storage-details");
         if (!response.ok) {
-          throw new Error(
-            "Gagal memuat data penyimpanan. Silakan coba lagi nanti.",
-          );
+          throw new Error(t("loadError"));
         }
         const result = await response.json();
         setData(result);
       } catch (err: unknown) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Terjadi kesalahan tidak dikenal.",
-        );
+        setError(err instanceof Error ? err.message : t("unknownError"));
       } finally {
         setIsLoading(false);
       }
     };
     fetchData();
-  }, []);
+  }, [t]);
 
   if (isLoading) return <Loading />;
   if (error)
@@ -119,7 +114,7 @@ function StoragePageContent() {
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-4">
         <AlertCircle size={48} className="text-red-500 mb-4" />
         <h3 className="text-lg font-semibold text-foreground">
-          Terjadi Kesalahan
+          {t("errorTitle")}
         </h3>
         <p className="text-muted-foreground mt-2">{error}</p>
       </div>
@@ -146,19 +141,15 @@ function StoragePageContent() {
           <HardDrive className="text-primary w-8 h-8" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Analisis Penyimpanan
-          </h1>
-          <p className="text-muted-foreground">
-            Detail penggunaan ruang penyimpanan Google Drive Anda.
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
       </div>
 
       <div className="mb-10">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <PieChartIcon className="w-5 h-5 text-muted-foreground" />
-          Ringkasan Penggunaan
+          {t("usageSummary")}
         </h2>
 
         <div className="flex flex-col md:flex-row gap-8 items-center justify-between">
@@ -168,11 +159,11 @@ function StoragePageContent() {
                 <span className="text-4xl font-bold text-foreground">
                   {usagePercentage.toFixed(1)}%
                 </span>
-                <span className="text-muted-foreground ml-2">Terpakai</span>
+                <span className="text-muted-foreground ml-2">{t("used")}</span>
               </div>
               <div className="text-right">
                 <div className="text-sm text-muted-foreground">
-                  Total Kapasitas
+                  {t("totalCapacity")}
                 </div>
                 <div className="font-medium text-foreground">
                   {formatBytes(data.limit)}
@@ -193,13 +184,13 @@ function StoragePageContent() {
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-primary" />
                 <span className="text-muted-foreground">
-                  {formatBytes(data.usage)} Terpakai
+                  {formatBytes(data.usage)} {t("used")}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-muted" />
                 <span className="text-muted-foreground">
-                  {formatBytes(freeSpace)} Tersedia
+                  {formatBytes(freeSpace)} {t("available")}
                 </span>
               </div>
             </div>
@@ -210,7 +201,9 @@ function StoragePageContent() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-5 flex flex-col gap-6">
           <div className="h-full flex flex-col">
-            <h2 className="text-lg font-semibold mb-6">Distribusi Tipe File</h2>
+            <h2 className="text-lg font-semibold mb-6">
+              {t("fileDistribution")}
+            </h2>
             <div className="h-[300px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -238,7 +231,9 @@ function StoragePageContent() {
                   <p className="text-xl font-bold">
                     {data.breakdown.reduce((acc, item) => acc + item.count, 0)}
                   </p>
-                  <p className="text-xs text-muted-foreground">Files</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("totalFiles")}
+                  </p>
                 </div>
               </div>
             </div>
@@ -270,7 +265,7 @@ function StoragePageContent() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <FileText className="w-5 h-5 text-muted-foreground" />
-                10 File Terbesar
+                {t("largestFiles")}
               </h2>
             </div>
 
@@ -290,7 +285,7 @@ function StoragePageContent() {
                               {file.name}
                             </p>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              Modified:{" "}
+                              {t("modified")}{" "}
                               {new Date(
                                 file.modifiedTime ?? "",
                               ).toLocaleDateString()}
@@ -334,7 +329,7 @@ function StoragePageContent() {
                 })
               ) : (
                 <div className="text-center py-10 text-muted-foreground">
-                  Tidak ada file yang ditemukan.
+                  {t("noFilesFound")}
                 </div>
               )}
             </div>

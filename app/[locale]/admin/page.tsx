@@ -41,6 +41,7 @@ import SecurityConfig from "@/components/SecurityConfig";
 import UserFolderAccessManager from "@/components/UserFolderAccessManager";
 import ManualDrivesManager from "@/components/ManualDrivesManager";
 import BrandingConfig from "@/components/BrandingConfig";
+import { useTranslations } from "next-intl";
 
 const scrollbarHideStyles = {
   msOverflowStyle: "none" as const,
@@ -68,6 +69,7 @@ export default function AdminPage() {
   const { status, data: session } = useSession();
   const router = useRouter();
   const [newAdminEmail, setNewAdminEmail] = useState("");
+  const t = useTranslations("AdminPage");
 
   const [isSubmittingAdmin, setIsSubmittingAdmin] = useState(false);
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -91,7 +93,7 @@ export default function AdminPage() {
         })
         .catch((err) =>
           addToast({
-            message: `Gagal memuat statistik: ${err.message}`,
+            message: t("loadingStatsError", { error: err.message }),
             type: "error",
           }),
         )
@@ -105,6 +107,7 @@ export default function AdminPage() {
     fetchFileRequests,
     fetchAdminEmails,
     addToast,
+    t,
   ]);
 
   const { expiredLinks } = useMemo(() => {
@@ -123,7 +126,7 @@ export default function AdminPage() {
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
-    addToast({ message: "Link copied to clipboard!", type: "success" });
+    addToast({ message: t("linkCopied"), type: "success" });
   };
 
   const handleDelete = async (
@@ -131,14 +134,11 @@ export default function AdminPage() {
     type: "share" | "request",
   ) => {
     if (
-      await confirm(
-        "This action will permanently revoke the link. Users will no longer be able to access it.",
-        {
-          title: "Delete Link?",
-          variant: "destructive",
-          confirmText: "Yes, Delete",
-        },
-      )
+      await confirm(t("revokeConfirm"), {
+        title: t("revokeTitle"),
+        variant: "destructive",
+        confirmText: t("revokeButton"),
+      })
     ) {
       if (type === "share") {
         await removeShareLink(item as ShareLink);
@@ -159,13 +159,10 @@ export default function AdminPage() {
 
   const handleRemoveAdmin = async (email: string) => {
     if (
-      await confirm(
-        `Are you sure you want to remove ${email} from the admin list?`,
-        {
-          title: "Remove Admin",
-          variant: "destructive",
-        },
-      )
+      await confirm(t("removeAdminConfirm", { email }), {
+        title: t("removeAdminTitle"),
+        variant: "destructive",
+      })
     ) {
       await removeAdminEmail(email);
     }
@@ -181,26 +178,26 @@ export default function AdminPage() {
         <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6">
           <AlertCircle className="h-10 w-10 text-red-600" />
         </div>
-        <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+        <h1 className="text-2xl font-bold mb-2">{t("accessDenied")}</h1>
         <p className="text-muted-foreground max-w-md">
-          You do not have Administrator permission to view this page.
+          {t("accessDeniedMessage")}
         </p>
         <button
           onClick={() => router.push("/")}
           className="mt-6 px-6 py-2 bg-primary text-primary-foreground rounded-full font-medium"
         >
-          Back to Home
+          {t("backToHome")}
         </button>
       </div>
     );
   }
 
   const tabItems = [
-    { value: "summary", label: "Summary", icon: Activity },
-    { value: "users", label: "Admin", icon: Users },
-    { value: "security", label: "Security & Control", icon: ShieldCheck },
-    { value: "branding", label: "Branding", icon: Palette },
-    { value: "logs", label: "Logs", icon: Clock },
+    { value: "summary", label: t("summary"), icon: Activity },
+    { value: "users", label: t("admin"), icon: Users },
+    { value: "security", label: t("security"), icon: ShieldCheck },
+    { value: "branding", label: t("branding"), icon: Palette },
+    { value: "logs", label: t("logs"), icon: Clock },
   ];
 
   return (
@@ -220,10 +217,8 @@ export default function AdminPage() {
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage files and users
-            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold">{t("title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
           </div>
         </div>
 
@@ -253,7 +248,7 @@ export default function AdminPage() {
                   <LinkIcon size={24} />
                 </div>
                 <p className="text-sm text-muted-foreground font-medium">
-                  Total Link
+                  {t("totalLinks")}
                 </p>
                 <p className="text-2xl font-bold">{shareLinks.length}</p>
               </div>
@@ -263,7 +258,7 @@ export default function AdminPage() {
                   <UploadCloud size={24} />
                 </div>
                 <p className="text-sm text-muted-foreground font-medium">
-                  Request Aktif
+                  {t("activeRequests")}
                 </p>
                 <p className="text-2xl font-bold">
                   {fileRequests.filter((r) => r.expiresAt > Date.now()).length}
@@ -275,7 +270,7 @@ export default function AdminPage() {
                   <Hourglass size={24} />
                 </div>
                 <p className="text-sm text-muted-foreground font-medium">
-                  Kedaluwarsa
+                  {t("expired")}
                 </p>
                 <p className="text-2xl font-bold">{expiredLinks.length}</p>
               </div>
@@ -285,14 +280,16 @@ export default function AdminPage() {
                   <Users size={24} />
                 </div>
                 <p className="text-sm text-muted-foreground font-medium">
-                  Total Admin
+                  {t("totalAdmin")}
                 </p>
                 <p className="text-2xl font-bold">{adminEmails.length}</p>
               </div>
             </div>
 
             <div>
-              <h2 className="text-xl font-semibold mb-4 px-1">Statistics</h2>
+              <h2 className="text-xl font-semibold mb-4 px-1">
+                {t("statistics")}
+              </h2>
               {isLoadingStats ? (
                 <div className="bg-card border rounded-xl p-6 h-64 flex items-center justify-center text-muted-foreground">
                   <Loader2 className="h-8 w-8 animate-spin" />
@@ -301,15 +298,15 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                   <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm">
                     <h3 className="text-base font-semibold mb-4">
-                      Today&apos;s Downloads
+                      {t("todaysDownloads")}
                     </h3>
                     <TodayDownloadsChart data={stats.downloadsToday} />
                   </div>
 
                   <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm">
                     <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
-                      <Activity size={18} className="text-primary" /> Top User
-                      (90 Days)
+                      <Activity size={18} className="text-primary" />{" "}
+                      {t("topUser")}
                     </h3>
                     <div className="space-y-4">
                       {stats.topUsers?.length > 0 ? (
@@ -340,7 +337,7 @@ export default function AdminPage() {
                         ))
                       ) : (
                         <p className="text-muted-foreground text-sm text-center py-8">
-                          No data yet.
+                          {t("noData")}
                         </p>
                       )}
                     </div>
@@ -348,14 +345,14 @@ export default function AdminPage() {
 
                   <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm xl:col-span-2">
                     <h3 className="text-base font-semibold mb-4">
-                      Weekly Trend
+                      {t("weeklyTrend")}
                     </h3>
                     <DayOfWeekChart data={stats.downloadsByDayOfWeek} />
                   </div>
                 </div>
               ) : (
                 <div className="bg-card border rounded-xl p-6 text-center text-muted-foreground">
-                  Failed to load data.
+                  {t("failed")}
                 </div>
               )}
             </div>
@@ -365,12 +362,12 @@ export default function AdminPage() {
             <section className="space-y-6">
               <div className="flex items-center gap-2 border-b pb-2 mb-4">
                 <ShieldCheck className="text-primary" />
-                <h3 className="text-lg font-bold">Basic Configuration</h3>
+                <h3 className="text-lg font-bold">{t("basicConfig")}</h3>
               </div>
               <SecurityConfig />
               <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm">
                 <h4 className="text-base font-semibold mb-4">
-                  Two-Factor Authentication (2FA)
+                  {t("twoFactor")}
                 </h4>
                 <TwoFactorAuthSetup />
               </div>
@@ -379,7 +376,7 @@ export default function AdminPage() {
             <section className="space-y-6">
               <div className="flex items-center gap-2 border-b pb-2 mb-4">
                 <FolderLock className="text-amber-500" />
-                <h3 className="text-lg font-bold">Protection & Access</h3>
+                <h3 className="text-lg font-bold">{t("protection")}</h3>
               </div>
 
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -395,7 +392,7 @@ export default function AdminPage() {
             <section className="space-y-6">
               <div className="flex items-center gap-2 border-b pb-2 mb-4">
                 <HardDrive className="text-blue-500" />
-                <h3 className="text-lg font-bold">Shared Drives</h3>
+                <h3 className="text-lg font-bold">{t("sharedDrives")}</h3>
               </div>
               <ManualDrivesManager />
             </section>
@@ -403,22 +400,22 @@ export default function AdminPage() {
             <section className="space-y-6">
               <div className="flex items-center gap-2 border-b pb-2 mb-4">
                 <Network className="text-purple-500" />
-                <h3 className="text-lg font-bold">Active Link Management</h3>
+                <h3 className="text-lg font-bold">
+                  {t("activeLinkManagement")}
+                </h3>
               </div>
 
               {shareLinks.length === 0 && fileRequests.length === 0 ? (
                 <div className="text-center py-12 bg-card border rounded-xl border-dashed">
                   <LinkIcon className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
-                  <p className="text-muted-foreground">
-                    No active share links or file requests yet.
-                  </p>
+                  <p className="text-muted-foreground">{t("noActiveLinks")}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {fileRequests.length > 0 && (
                     <div className="space-y-3">
                       <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-2">
-                        <UploadCloud size={16} /> Request Upload
+                        <UploadCloud size={16} /> {t("requestUpload")}
                       </h4>
                       <AnimatePresence>
                         {fileRequests.map((req) => {
@@ -496,7 +493,7 @@ export default function AdminPage() {
                   {shareLinks.length > 0 && (
                     <div className="space-y-3">
                       <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-2">
-                        <LinkIcon size={16} /> Share Links
+                        <LinkIcon size={16} /> {t("shareLinks")}
                       </h4>
                       <AnimatePresence>
                         {shareLinks.map((link) => {
@@ -591,7 +588,7 @@ export default function AdminPage() {
           <TabsContent value="users" className="mt-2">
             <div className="bg-card border rounded-xl shadow-sm overflow-hidden">
               <div className="p-4 sm:p-6 border-b">
-                <h2 className="text-lg font-semibold mb-4">Add Admin</h2>
+                <h2 className="text-lg font-semibold mb-4">{t("addAdmin")}</h2>
                 <form
                   onSubmit={handleAddAdmin}
                   className="flex flex-col sm:flex-row gap-3"
@@ -602,7 +599,7 @@ export default function AdminPage() {
                       type="email"
                       value={newAdminEmail}
                       onChange={(e) => setNewAdminEmail(e.target.value)}
-                      placeholder="email@example.com"
+                      placeholder={t("emailPlaceholder")}
                       required
                       className="w-full pl-10 pr-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary focus:outline-none"
                     />
@@ -617,14 +614,14 @@ export default function AdminPage() {
                     ) : (
                       <UserPlus size={18} />
                     )}
-                    <span>Add</span>
+                    <span>{t("add")}</span>
                   </button>
                 </form>
               </div>
 
               <div className="p-4 sm:p-6">
                 <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wider">
-                  Admin List
+                  {t("adminList")}
                 </h3>
                 {isFetchingAdmins ? (
                   <div className="flex justify-center py-8">

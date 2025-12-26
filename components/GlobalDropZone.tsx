@@ -4,12 +4,14 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { UploadCloud } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { useTranslations } from "next-intl";
 
 interface GlobalDropZoneProps {
   onDrop: (files: FileList) => void;
 }
 
 export default function GlobalDropZone({ onDrop }: GlobalDropZoneProps) {
+  const t = useTranslations("GlobalDropZone");
   const [isDragging, setIsDragging] = useState(false);
   const { user } = useAppStore();
 
@@ -94,10 +96,10 @@ export default function GlobalDropZone({ onDrop }: GlobalDropZoneProps) {
             </motion.div>
             <div className="text-center">
               <p className="text-xl font-semibold text-foreground">
-                Drop files to upload
+                {t("dropFiles")}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                Release to start uploading
+                {t("releaseToUpload")}
               </p>
             </div>
           </motion.div>

@@ -18,6 +18,7 @@ import {
   FolderInput,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface ManualDrive {
   id: string;
@@ -35,6 +36,7 @@ interface ScannedDrive {
 
 export default function ManualDrivesManager() {
   const { addToast } = useAppStore();
+  const t = useTranslations("ManualDrivesManager");
   const { confirm } = useConfirm();
   const [dbDrives, setDbDrives] = useState<ManualDrive[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -113,14 +115,11 @@ export default function ManualDrivesManager() {
   const addDrive = async (id: string, name: string, password?: string) => {
     if (envDrives.some((d) => d.id === id)) {
       if (
-        !(await confirm(
-          "ID ini sudah ada di file .env. Apakah Anda ingin menimpanya dengan konfigurasi Database?",
-          {
-            title: "Konfirmasi Overwrite",
-            confirmText: "Ya, Timpa",
-            cancelText: "Batal",
-          },
-        ))
+        !(await confirm(t("confirmOverwrite"), {
+          title: t("overwriteTitle"),
+          confirmText: t("yesOverwrite"),
+          cancelText: t("cancel"),
+        }))
       ) {
         return;
       }
@@ -137,7 +136,7 @@ export default function ManualDrivesManager() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      addToast({ message: "Drive berhasil ditambahkan!", type: "success" });
+      addToast({ message: t("addSuccess"), type: "success" });
       const newDbDrives = data.drives.map((d: any) => ({ ...d, source: "db" }));
       setDbDrives(newDbDrives);
     } catch (err: any) {
@@ -149,10 +148,10 @@ export default function ManualDrivesManager() {
 
   const handleDelete = async (id: string) => {
     if (
-      !(await confirm("Hapus shortcut drive ini dari Database?", {
+      !(await confirm(t("confirmDelete"), {
         variant: "destructive",
-        confirmText: "Hapus",
-        title: "Konfirmasi Hapus",
+        confirmText: t("delete"),
+        title: t("deleteTitle"),
       }))
     )
       return;
@@ -169,11 +168,11 @@ export default function ManualDrivesManager() {
           source: "db",
         }));
         setDbDrives(newDbDrives);
-        addToast({ message: "Dihapus.", type: "success" });
+        addToast({ message: t("deleted"), type: "success" });
       }
     } catch (e) {
       console.error("Delete error:", e);
-      addToast({ message: "Gagal menghapus.", type: "error" });
+      addToast({ message: t("deleteFailed"), type: "error" });
     }
   };
 
@@ -186,13 +185,12 @@ export default function ManualDrivesManager() {
         setScannedDrives(data);
         if (data.length === 0) {
           addToast({
-            message:
-              "Tidak ada Shared Drive atau Folder yang dibagikan ditemukan.",
+            message: t("noDrivesFound"),
             type: "info",
           });
         }
       } else {
-        throw new Error("Gagal scanning drives");
+        throw new Error(t("scanError"));
       }
     } catch (e: any) {
       addToast({ message: e.message, type: "error" });
@@ -210,17 +208,17 @@ export default function ManualDrivesManager() {
   return (
     <>
       <div>
-        <h2 className="text-2xl font-semibold mb-6">Manajemen Shared Drives</h2>
+        <h2 className="text-2xl font-semibold mb-6">{t("title")}</h2>
 
         <div className="bg-card border rounded-lg p-6 mb-8">
-          <h3 className="text-lg font-medium mb-4">Tambah Shortcut Manual</h3>
+          <h3 className="text-lg font-medium mb-4">{t("addShortcut")}</h3>
           <form
             onSubmit={handleSubmitManual}
             className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 items-end"
           >
             <div>
               <label className="text-xs font-semibold text-muted-foreground uppercase">
-                Folder ID
+                {t("folderId")}
               </label>
               <input
                 required
@@ -234,7 +232,7 @@ export default function ManualDrivesManager() {
             </div>
             <div>
               <label className="text-xs font-semibold text-muted-foreground uppercase">
-                Nama Tampilan
+                {t("displayName")}
               </label>
               <input
                 required
@@ -248,7 +246,7 @@ export default function ManualDrivesManager() {
             </div>
             <div>
               <label className="text-xs font-semibold text-muted-foreground uppercase">
-                Password (Opsional)
+                {t("passwordOptional")}
               </label>
               <input
                 type="password"
@@ -270,16 +268,14 @@ export default function ManualDrivesManager() {
               ) : (
                 <Plus size={18} />
               )}
-              Tambah
+              {t("add")}
             </button>
           </form>
         </div>
 
         <div className="bg-card border rounded-lg p-6 mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium">
-              Auto-Discovery (Shared Drives & Folders)
-            </h3>
+            <h3 className="text-lg font-medium">{t("autoDiscovery")}</h3>
             <button
               onClick={handleScanDrives}
               disabled={isScanning}
@@ -290,7 +286,7 @@ export default function ManualDrivesManager() {
               ) : (
                 <Search size={16} />
               )}
-              Scan Drive
+              {t("scanDrive")}
             </button>
           </div>
 
@@ -331,14 +327,14 @@ export default function ManualDrivesManager() {
                     </div>
                     {isAdded ? (
                       <span className="text-xs font-medium text-muted-foreground bg-muted px-3 py-1.5 rounded-md">
-                        Sudah Ditambah
+                        {t("alreadyAdded")}
                       </span>
                     ) : (
                       <button
                         onClick={() => openConfigureModal(drive)}
                         className="text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 px-3 py-1.5 rounded-md transition-colors"
                       >
-                        Konfigurasi & Tambah
+                        {t("configureAdd")}
                       </button>
                     )}
                   </div>
@@ -349,14 +345,14 @@ export default function ManualDrivesManager() {
         </div>
 
         <div className="space-y-2">
-          <h3 className="text-lg font-medium mb-4">Daftar Drive Aktif</h3>
+          <h3 className="text-lg font-medium mb-4">{t("activeDrives")}</h3>
           {isLoading ? (
             <div className="flex justify-center p-8">
               <Loader2 className="animate-spin" />
             </div>
           ) : allDrives.length === 0 ? (
             <p className="text-muted-foreground italic">
-              Belum ada drive manual ditambahkan.
+              {t("noManualDrives")}
             </p>
           ) : (
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -367,7 +363,7 @@ export default function ManualDrivesManager() {
                 >
                   {drive.source === "env" && (
                     <div className="absolute top-0 right-0 bg-muted px-2 py-0.5 text-[10px] text-muted-foreground rounded-bl-md border-l border-b border-border">
-                      Config .env
+                      {t("configEnv")}
                     </div>
                   )}
                   <div className="flex items-center gap-3 overflow-hidden">
@@ -397,12 +393,12 @@ export default function ManualDrivesManager() {
                       <button
                         onClick={() => handleDelete(drive.id)}
                         className="p-2 text-destructive hover:bg-destructive/10 rounded-md transition-colors"
-                        title="Hapus dari Database"
+                        title={t("deleteFromDb")}
                       >
                         <Trash2 size={18} />
                       </button>
                     ) : (
-                      <div title="Dikunci oleh .env (Hapus dari file .env untuk menghilangkan)">
+                      <div title={t("lockedEnv")}>
                         <Lock
                           size={18}
                           className="text-muted-foreground/30 p-2 box-content"
@@ -435,9 +431,9 @@ export default function ManualDrivesManager() {
             >
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-lg font-bold">Tambahkan Drive</h3>
+                  <h3 className="text-lg font-bold">{t("configureDrive")}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Konfigurasi shortcut untuk item ini
+                    {t("configureDesc")}
                   </p>
                 </div>
                 <button
@@ -460,7 +456,7 @@ export default function ManualDrivesManager() {
               <form onSubmit={handleConfigureSubmit} className="space-y-4">
                 <div>
                   <label className="text-xs font-semibold text-muted-foreground uppercase mb-1.5 block">
-                    Nama Tampilan
+                    {t("displayName")}
                   </label>
                   <div className="relative">
                     <FolderInput className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -475,7 +471,7 @@ export default function ManualDrivesManager() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-muted-foreground uppercase mb-1.5 block">
-                    Password (Opsional)
+                    {t("passwordOptional")}
                   </label>
                   <div className="relative">
                     <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -488,8 +484,7 @@ export default function ManualDrivesManager() {
                     />
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-1.5">
-                    Jika diisi, folder ini akan dikunci dan memerlukan password
-                    untuk dibuka.
+                    {t("passwordDesc")}
                   </p>
                 </div>
 
@@ -499,7 +494,7 @@ export default function ManualDrivesManager() {
                     onClick={() => setDriveToConfigure(null)}
                     className="flex-1 py-2.5 border rounded-lg hover:bg-accent font-medium text-sm transition-colors"
                   >
-                    Batal
+                    {t("cancel")}
                   </button>
                   <button
                     type="submit"
@@ -509,7 +504,7 @@ export default function ManualDrivesManager() {
                     {isSubmitting ? (
                       <Loader2 className="animate-spin" size={16} />
                     ) : (
-                      "Simpan & Tambah"
+                      t("saveAdd")
                     )}
                   </button>
                 </div>

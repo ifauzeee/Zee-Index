@@ -39,6 +39,8 @@ interface FileBrowserContentProps {
   fetchNextPage: () => void;
 }
 
+import { useTranslations } from "next-intl";
+
 export default function FileBrowserContent(props: FileBrowserContentProps) {
   const {
     isLoading,
@@ -67,6 +69,8 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
     fetchNextPage,
   } = props;
 
+  const t = useTranslations("FileBrowser");
+
   const { focusedIndex } = useKeyboardNavigation({
     files: sortedFiles as Array<{ id: string; name: string; mimeType: string }>,
     onFileOpen: (file) => onItemClick(file as DriveFile),
@@ -94,7 +98,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] w-full animate-in fade-in duration-500">
         <AuthForm
           folderId={lockedFolderId}
-          folderName={lockedFolderName || "Folder Terkunci"}
+          folderName={lockedFolderName || t("lockedFolder")}
           isLoading={isAuthLoading}
           onSubmit={onAuthSubmit}
         />
@@ -133,7 +137,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
         )}
         {!isFetchingNextPage && !nextPageToken && sortedFiles.length > 0 && (
           <span className="text-sm text-muted-foreground">
-            Akhir dari daftar
+            {t("endOfList")}
           </span>
         )}
       </div>

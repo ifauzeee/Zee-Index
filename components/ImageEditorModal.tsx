@@ -6,6 +6,7 @@ import { X, RotateCw, Loader2, Save } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import type { DriveFile } from "@/lib/googleDrive";
 import { useScrollLock } from "@/hooks/useScrollLock";
+import { useTranslations } from "next-intl";
 
 interface ImageEditorModalProps {
   file: DriveFile;
@@ -79,6 +80,7 @@ export default function ImageEditorModal({
   onClose,
 }: ImageEditorModalProps) {
   const { addToast, triggerRefresh } = useAppStore();
+  const t = useTranslations("ImageEditorModal");
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
@@ -99,7 +101,7 @@ export default function ImageEditorModal({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      if (!croppedAreaPixels) throw new Error("Area potong tidak valid");
+      if (!croppedAreaPixels) throw new Error(t("error"));
 
       const blob = await getCroppedImg(
         `/api/download?fileId=${file.id}`,
@@ -119,9 +121,9 @@ export default function ImageEditorModal({
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Gagal menyimpan gambar");
+      if (!res.ok) throw new Error(t("saveError"));
 
-      addToast({ message: "Gambar berhasil disimpan!", type: "success" });
+      addToast({ message: t("success"), type: "success" });
       triggerRefresh();
       onClose();
     } catch (error: unknown) {
@@ -141,14 +143,14 @@ export default function ImageEditorModal({
         >
           <X />
         </button>
-        <h3 className="font-bold">Edit Gambar</h3>
+        <h3 className="font-bold">{t("title")}</h3>
         <button
           onClick={handleSave}
           disabled={isSaving}
           className="px-4 py-2 bg-primary text-white rounded-full flex items-center gap-2 disabled:opacity-50"
         >
           {isSaving ? <Loader2 className="animate-spin" /> : <Save size={18} />}
-          Simpan
+          {t("save")}
         </button>
       </div>
 
@@ -168,7 +170,7 @@ export default function ImageEditorModal({
 
       <div className="p-6 bg-black text-white flex items-center gap-6 justify-center pb-8">
         <div className="flex flex-col gap-2 w-1/3">
-          <span className="text-xs text-gray-400">Zoom</span>
+          <span className="text-xs text-gray-400">{t("zoom")}</span>
           <input
             type="range"
             value={zoom}
@@ -181,7 +183,7 @@ export default function ImageEditorModal({
           />
         </div>
         <div className="flex flex-col gap-2 w-1/3">
-          <span className="text-xs text-gray-400">Rotasi</span>
+          <span className="text-xs text-gray-400">{t("rotation")}</span>
           <input
             type="range"
             value={rotation}

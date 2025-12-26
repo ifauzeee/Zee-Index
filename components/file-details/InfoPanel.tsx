@@ -11,6 +11,7 @@ import {
   History as HistoryIcon,
   Edit,
 } from "lucide-react";
+import { useTranslations, useFormatter } from "next-intl";
 
 interface InfoPanelProps {
   file: DriveFile;
@@ -48,6 +49,8 @@ export default function InfoPanel({
 }: InfoPanelProps) {
   const [newTag, setNewTag] = useState("");
   const [isAddingTag, setIsAddingTag] = useState(false);
+  const t = useTranslations("InfoPanel");
+  const format = useFormatter();
 
   const metadata = file.imageMediaMetadata || file.videoMediaMetadata;
   const durationMillis = file.videoMediaMetadata?.durationMillis
@@ -86,14 +89,14 @@ export default function InfoPanel({
         }
       } catch (error) {
         console.error("Failed to fetch path", error);
-        setPathString("Error");
+        setPathString(t("error"));
       } finally {
         setPathLoading(false);
       }
     };
 
     fetchPath();
-  }, [file.id, file.parents]);
+  }, [file.id, file.parents, t]);
 
   return (
     <div className="mt-8 lg:mt-0 lg:col-span-1 lg:overflow-y-auto">
@@ -108,7 +111,7 @@ export default function InfoPanel({
               onClick={onEditImage}
               className="px-3 py-2 bg-secondary hover:bg-secondary/80 rounded-md text-sm font-medium flex items-center gap-2 transition-colors"
             >
-              <Edit size={16} /> Edit Gambar
+              <Edit size={16} /> {t("editImage")}
             </button>
           )}
           {onShowHistory && (
@@ -116,49 +119,55 @@ export default function InfoPanel({
               onClick={onShowHistory}
               className="px-3 py-2 bg-secondary hover:bg-secondary/80 rounded-md text-sm font-medium flex items-center gap-2 transition-colors"
             >
-              <HistoryIcon size={16} /> Riwayat
+              <HistoryIcon size={16} /> {t("history")}
             </button>
           )}
         </div>
       )}
 
       <h3 className="text-lg font-semibold mb-4 border-b pb-2">
-        Informasi File
+        {t("fileInfo")}
       </h3>
       <ul className="space-y-3 text-sm text-foreground">
         <ListItem
-          label="Ukuran"
+          label={t("size")}
           value={file.size ? formatBytes(Number(file.size)) : "-"}
         />
         <ListItem
-          label="Location"
-          value={pathLoading ? "Memuat..." : pathString}
+          label={t("location")}
+          value={pathLoading ? t("loading") : pathString}
         />
-        <ListItem label="Tipe" value={file.mimeType} />
+        <ListItem label={t("type")} value={file.mimeType} />
         {metadata?.width && metadata?.height && (
           <ListItem
-            label="Dimensi"
+            label={t("dimensions")}
             value={`${metadata.width} x ${metadata.height} px`}
           />
         )}
         {durationMillis && (
           <ListItem
-            label="Durasi"
+            label={t("duration")}
             value={formatDuration(durationMillis / 1000)}
           />
         )}
         <ListItem
-          label="Diubah"
-          value={new Date(file.modifiedTime).toLocaleString("id-ID")}
+          label={t("modified")}
+          value={format.dateTime(new Date(file.modifiedTime), {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+          })}
         />
         {canShowAuthor && file.owners && (
-          <ListItem label="Pemilik" value={file.owners[0].displayName} />
+          <ListItem label={t("owner")} value={file.owners[0].displayName} />
         )}
       </ul>
 
       <div className="mt-6 pt-4 border-t">
         <h4 className="text-sm font-bold text-muted-foreground uppercase mb-2">
-          Tags
+          {t("tags")}
         </h4>
         <div className="flex flex-wrap gap-2 mb-3">
           {tags?.map((tag) => (
@@ -179,7 +188,7 @@ export default function InfoPanel({
           ))}
           {tags.length === 0 && (
             <p className="text-xs text-muted-foreground italic">
-              Tidak ada tag
+              {t("noTags")}
             </p>
           )}
         </div>
@@ -189,7 +198,7 @@ export default function InfoPanel({
             <input
               value={newTag}
               onChange={(e) => setNewTag(e.target.value)}
-              placeholder="Tambah tag..."
+              placeholder={t("addTag")}
               className="flex-1 px-3 py-1.5 bg-background border rounded text-sm focus:ring-1 focus:ring-primary outline-none"
             />
             <button
@@ -209,7 +218,7 @@ export default function InfoPanel({
           className="flex items-center justify-center px-4 py-3 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-lg font-semibold transition-colors"
         >
           <LinkIcon size={18} className="mr-3" />
-          Salin Link
+          {t("copyLink")}
         </button>
 
         <a
@@ -218,7 +227,7 @@ export default function InfoPanel({
           className="flex items-center justify-center px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-semibold"
         >
           <Download size={18} className="mr-3" />
-          Unduh
+          {t("download")}
         </a>
       </div>
     </div>

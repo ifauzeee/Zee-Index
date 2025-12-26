@@ -9,6 +9,7 @@ import { AnimatePresence } from "framer-motion";
 import { HardDrive } from "lucide-react";
 
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 const DetailsPanel = dynamic(() => import("@/components/DetailsPanel"), {
@@ -17,15 +18,15 @@ const DetailsPanel = dynamic(() => import("@/components/DetailsPanel"), {
 const AppFooter = () => {
   const { dataUsage } = useAppStore();
   const currentYear = new Date().getFullYear();
+  const t = useTranslations("Footer");
   return (
     <footer className="text-center py-6 text-sm text-muted-foreground border-t bg-background">
       <p className="mb-2">
         <HardDrive size={14} className="inline mr-2" />
-        Total Penggunaan Data:{" "}
-        <span id="data-usage-value">{dataUsage.value}</span>
+        {t("dataUsage")} <span id="data-usage-value">{dataUsage.value}</span>
       </p>
       <p>
-        &copy; {currentYear} All rights reserved -{" "}
+        &copy; {currentYear} {t("rightsReserved")}{" "}
         <a
           href="https://ifauzeee.vercel.app/"
           target="_blank"

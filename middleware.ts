@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { jwtVerify } from "jose";
+import createMiddleware from "next-intl/middleware";
+
+const intlMiddleware = createMiddleware({
+  locales: ["en", "id"],
+  defaultLocale: "en",
+  localePrefix: "always",
+});
 
 const PUBLIC_PATHS = new Set([
   "/login",
@@ -11,6 +18,7 @@ const PUBLIC_PATHS = new Set([
   "/manifest.webmanifest",
   "/sw.js",
   "/workbox-",
+  "/request",
 ]);
 
 const PUBLIC_API_PREFIXES = ["/api/auth", "/api/config/public", "/api/setup"];
@@ -18,32 +26,52 @@ const PUBLIC_API_PREFIXES = ["/api/auth", "/api/config/public", "/api/setup"];
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  if (
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/static") ||
+    pathname.includes(".")
+  ) {
+  }
+
+  const pathnameWithoutLocale = pathname.replace(/^\/(en|id)/, "") || "/";
+
+  if (
+    pathname.includes("/icon.png") ||
+    pathname.includes("/manifest.webmanifest") ||
+    pathname.includes("sw.js") ||
+    pathname.includes("workbox-")
+  ) {
+    return NextResponse.next();
+  }
+
   const isConfigured = !!process.env.GOOGLE_REFRESH_TOKEN;
 
   if (!isConfigured) {
     if (
-      pathname.startsWith("/setup") ||
-      pathname.startsWith("/api/setup") ||
-      pathname === "/icon.png"
+      pathnameWithoutLocale.startsWith("/setup") ||
+      pathnameWithoutLocale.startsWith("/api/setup") ||
+      pathname.endsWith("icon.png")
     ) {
-      return NextResponse.next();
+      if (pathname.startsWith("/api")) return NextResponse.next();
+      return intlMiddleware(request);
     }
     return NextResponse.redirect(new URL("/setup", request.url));
   }
 
-  if (isConfigured && pathname.startsWith("/setup")) {
+  if (isConfigured && pathnameWithoutLocale.startsWith("/setup")) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
   if (
-    PUBLIC_PATHS.has(pathname) ||
+    PUBLIC_PATHS.has(pathnameWithoutLocale) ||
     PUBLIC_API_PREFIXES.some((p) => pathname.startsWith(p)) ||
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/static") ||
-    pathname.includes("workbox") ||
     pathname.includes("swe-worker")
   ) {
-    return NextResponse.next();
+    if (pathname.startsWith("/api") || pathname.startsWith("/_next"))
+      return NextResponse.next();
+    return intlMiddleware(request);
   }
 
   const shareToken = request.nextUrl.searchParams.get("share_token");
@@ -69,7 +97,9 @@ export async function middleware(request: NextRequest) {
           return NextResponse.redirect(loginUrl);
         }
       }
-      return NextResponse.next();
+
+      if (pathname.startsWith("/api")) return NextResponse.next();
+      return intlMiddleware(request);
     } catch (error) {
       console.error("Share token verification failed:", error);
 
@@ -97,34 +127,39 @@ export async function middleware(request: NextRequest) {
   });
 
   if (!token) {
-    const isPublicRoute = ["/folder", "/share", "/request"].some((p) =>
-      pathname.startsWith(p),
+    const isPublicRoute = ["/folder", "/share", "/request", "/login"].some(
+      (p) => pathnameWithoutLocale.startsWith(p),
     );
 
-    if (isPublicRoute) return NextResponse.next();
+    if (isPublicRoute) {
+      if (pathname.startsWith("/api")) return NextResponse.next();
+      return intlMiddleware(request);
+    }
 
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  if (token.isGuest && pathname.startsWith("/admin")) {
+  if (token.isGuest && pathnameWithoutLocale.startsWith("/admin")) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("error", "GuestAccessDenied");
     return NextResponse.redirect(loginUrl);
   }
 
-  if (token.twoFactorRequired && pathname !== "/verify-2fa") {
+  if (token.twoFactorRequired && pathnameWithoutLocale !== "/verify-2fa") {
     const verifyUrl = new URL("/verify-2fa", request.url);
     verifyUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(verifyUrl);
   }
 
-  if (!token.twoFactorRequired && pathname === "/verify-2fa") {
+  if (!token.twoFactorRequired && pathnameWithoutLocale === "/verify-2fa") {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  return NextResponse.next();
+  if (pathname.startsWith("/api")) return NextResponse.next();
+
+  return intlMiddleware(request);
 }
 
 export const config = {

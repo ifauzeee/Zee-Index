@@ -13,6 +13,7 @@ import {
   FolderOpen,
 } from "lucide-react";
 import { formatBytes } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface RequestInfo {
   title: string;
@@ -23,6 +24,7 @@ interface RequestInfo {
 export default function PublicUploadPage() {
   const params = useParams();
   const token = params.token as string;
+  const t = useTranslations("RequestPage");
   const [requestInfo, setRequestInfo] = useState<RequestInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,8 +44,8 @@ export default function PublicUploadPage() {
         const res = await fetch(`/api/file-request/${token}`);
         if (!res.ok) {
           if (res.status === 404 || res.status === 410)
-            throw new Error("Link ini tidak valid atau sudah kadaluarsa.");
-          throw new Error("Gagal memuat informasi.");
+            throw new Error(t("invalidLink"));
+          throw new Error(t("loadError"));
         }
         const data = await res.json();
         setRequestInfo(data);
@@ -54,7 +56,7 @@ export default function PublicUploadPage() {
       }
     };
     fetchInfo();
-  }, [token]);
+  }, [token, t]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -146,7 +148,7 @@ export default function PublicUploadPage() {
           <div className="bg-red-100 text-red-600 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
             <AlertCircle size={32} />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Link Tidak Tersedia</h1>
+          <h1 className="text-2xl font-bold mb-2">{t("unavailableTitle")}</h1>
           <p className="text-muted-foreground">{error}</p>
         </div>
       </div>
@@ -167,8 +169,7 @@ export default function PublicUploadPage() {
             </div>
             <h1 className="text-2xl font-bold">{requestInfo?.title}</h1>
             <p className="text-muted-foreground mt-2 text-sm">
-              Anda diundang untuk mengunggah file ke folder{" "}
-              <strong>{requestInfo?.folderName}</strong>.
+              {t("invitedToUpload")} <strong>{requestInfo?.folderName}</strong>.
             </p>
           </div>
 
@@ -178,15 +179,17 @@ export default function PublicUploadPage() {
                 <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
                   <CheckCircle className="w-8 h-8" />
                 </div>
-                <h3 className="text-2xl font-bold mb-2">Upload Berhasil!</h3>
+                <h3 className="text-2xl font-bold mb-2">
+                  {t("uploadSuccessTitle")}
+                </h3>
                 <p className="text-muted-foreground mb-8">
-                  File Anda telah terkirim dengan aman.
+                  {t("uploadSuccessMessage")}
                 </p>
 
                 {requestInfo && (
                   <div className="w-full max-w-sm bg-card border rounded-xl p-4 shadow-sm mb-8 text-left hover:shadow-md transition-shadow">
                     <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">
-                      Disimpan ke:
+                      {t("savedTo")}
                     </p>
                     <a
                       href={`${window.location.origin}/folder/${requestInfo.folderId}`}
@@ -202,7 +205,7 @@ export default function PublicUploadPage() {
                           {requestInfo.folderName}
                         </h4>
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          Buka folder <ExternalLink size={10} />
+                          {t("openFolder")} <ExternalLink size={10} />
                         </p>
                       </div>
                     </a>
@@ -216,7 +219,7 @@ export default function PublicUploadPage() {
                   }}
                   className="text-primary font-medium hover:underline text-sm"
                 >
-                  Kirim file lain
+                  {t("sendAnother")}
                 </button>
               </div>
             ) : (
@@ -233,9 +236,9 @@ export default function PublicUploadPage() {
                     onChange={handleFileSelect}
                   />
                   <UploadCloud className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                  <p className="font-medium">Klik untuk pilih file</p>
+                  <p className="font-medium">{t("clickToSelect")}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Dokumen, Foto, Video, dll.
+                    {t("fileTypes")}
                   </p>
                 </div>
 
@@ -282,14 +285,14 @@ export default function PublicUploadPage() {
                     {uploadStatus === "uploading" ? (
                       <Loader2 className="animate-spin" />
                     ) : (
-                      "Mulai Upload"
+                      t("startUpload")
                     )}
                   </button>
                 )}
 
                 {uploadStatus === "error" && (
                   <div className="p-3 bg-red-100 text-red-600 text-sm rounded-lg text-center">
-                    Gagal mengupload sebagian file. Silakan coba lagi.
+                    {t("uploadFailed")}
                   </div>
                 )}
               </>
@@ -297,7 +300,7 @@ export default function PublicUploadPage() {
           </div>
         </div>
         <div className="p-4 text-center text-xs text-muted-foreground mt-8">
-          Powered by Zee-Index
+          {t("poweredBy")}
         </div>
       </motion.div>
     </div>
