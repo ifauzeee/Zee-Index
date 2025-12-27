@@ -367,8 +367,9 @@ export async function getFileDetailsFromDrive(
 
 export async function getFolderPath(
   folderId: string,
+  locale: string = "en",
 ): Promise<{ id: string; name: string }[]> {
-  const cacheKey = `zee-index:folder-path-v7:${folderId}`;
+  const cacheKey = `zee-index:folder-path-v7:${folderId}:${locale}`;
   try {
     const cachedPath: { id: string; name: string }[] | null =
       await kv.get(cacheKey);
@@ -383,7 +384,9 @@ export async function getFolderPath(
   const path: { id: string; name: string }[] = [];
   let currentId = folderId;
   const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID?.trim();
-  const rootName = process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Home";
+  const rootName =
+    process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME ||
+    (locale === "id" ? "Beranda" : "Home");
 
   const dbDrivesRaw = await kv.get("zee-index:manual-drives");
   const dbDrives: any[] = Array.isArray(dbDrivesRaw) ? dbDrivesRaw : [];
@@ -404,6 +407,8 @@ export async function getFolderPath(
     if (d && d.id) shortcutMap.set(d.id.trim(), d.name || "");
   });
 
+  const driveFallback = locale === "id" ? "Drive Bersama" : "Shared Drive";
+
   let iterations = 0;
   while (currentId && iterations < 20) {
     iterations++;
@@ -423,13 +428,13 @@ export async function getFolderPath(
         } else {
           path.unshift({
             id: currentId,
-            name: shortcutMap.get(currentId) || "Drive",
+            name: shortcutMap.get(currentId) || driveFallback,
           });
         }
       } catch {
         path.unshift({
           id: currentId,
-          name: shortcutMap.get(currentId) || "Drive",
+          name: shortcutMap.get(currentId) || driveFallback,
         });
       }
       break;

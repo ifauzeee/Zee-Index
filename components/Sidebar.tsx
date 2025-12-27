@@ -47,11 +47,18 @@ export default function Sidebar() {
 
   const [tree, setTree] = useState<FolderNode>({
     id: rootFolderId,
-    name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Home",
+    name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || t("home"),
     hasChildren: true,
     children: [],
     isExpanded: true,
   });
+
+  useEffect(() => {
+    setTree((prev) => ({
+      ...prev,
+      name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || t("home"),
+    }));
+  }, [t]);
 
   const [dbDrives, setDbDrives] = useState<ManualDrive[]>([]);
   const [isDrivesExpanded, setIsDrivesExpanded] = useState(true);

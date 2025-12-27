@@ -25,7 +25,9 @@
   },
   "Common": {
     "loading": "Memuat...",
-    "error": "Kesalahan"
+    "error": "Kesalahan",
+    "light": "Terang",
+    "dark": "Gelap"
   },
   "AuthForm": {
     "accessRestricted": "Akses Terbatas",
@@ -77,7 +79,7 @@
     "trash": "Sampah",
     "admin": "Admin",
     "sharedDrives": "Drive Bersama",
-    "explorer": "Explorer"
+    "explorer": "Penjelajah"
   },
   "Header": {
     "switchTheme": "Ganti Tema",
@@ -134,10 +136,11 @@
     "switchTheme": "Ganti Tema",
     "github": "GitHub",
     "telegram": "Grup Telegram",
-    "logout": "Keluar"
+    "logout": "Keluar",
+    "dialogLabel": "Menu Perintah Global"
   },
   "UploadModal": {
-    "title": "Upload File & Folder",
+    "title": "Unggah File & Folder",
     "dragDrop": "Seret file atau folder ke sini",
     "orClick": "atau klik tombol di bawah",
     "selectFile": "Pilih File",
@@ -146,7 +149,13 @@
     "folderNamePlaceholder": "Nama Folder...",
     "create": "Buat",
     "successMessage": "Folder '{folderName}' berhasil dibuat.",
-    "errorMessage": "Gagal membuat folder"
+    "errorMessage": "Gagal membuat folder",
+    "folderCreationFailed": "Gagal membuat struktur folder",
+    "initFailed": "Gagal inisialisasi unggahan",
+    "chunkFailed": "Gagal mengunggah bagian file",
+    "uploadError": "Gagal mengunggah {fileName}",
+    "destNotFound": "Folder tujuan tidak ditemukan.",
+    "accessDenied": "Akses ditolak: Anda bukan Admin."
   },
   "MoveModal": {
     "title": "Pindahkan {itemName}",
@@ -158,14 +167,14 @@
     "current": "Saat Ini"
   },
   "FileRequestModal": {
-    "uploadTo": "Upload ke {folderName}",
+    "uploadTo": "Unggah ke {folderName}",
     "receiveFiles": "Terima File",
-    "createLinkDesc": "Buat link upload publik untuk folder ini",
+    "createLinkDesc": "Buat tautan unggah publik untuk folder ini",
     "requestTitle": "Judul Permintaan",
     "expiresIn": "Kadaluarsa Dalam (Jam)",
     "createLink": "Buat Link",
     "creating": "Membuat...",
-    "successMessage": "Link berhasil dibuat! Orang lain dapat mengupload file ke folder ini tanpa login.",
+    "successMessage": "Tautan berhasil dibuat! Orang lain dapat mengunggah file ke folder ini tanpa masuk.",
     "copyLink": "Salin Link",
     "linkCopied": "Link disalin!",
     "close": "Tutup",
@@ -241,7 +250,7 @@
     "title": "Riwayat Versi: {fileName}",
     "error": "Gagal memuat riwayat",
     "noRevisions": "Tidak ada revisi lain.",
-    "download": "Download Versi Ini",
+    "download": "Unduh Versi Ini",
     "unknownUser": "Tidak diketahui"
   },
   "LoginPage": {
@@ -374,15 +383,15 @@
     "loadError": "Gagal memuat informasi.",
     "unavailableTitle": "Link Tidak Tersedia",
     "invitedToUpload": "Anda diundang untuk mengunggah file ke folder",
-    "uploadSuccessTitle": "Upload Berhasil!",
+    "uploadSuccessTitle": "Unggah Berhasil!",
     "uploadSuccessMessage": "File Anda telah terkirim dengan aman.",
     "savedTo": "Disimpan ke:",
     "openFolder": "Buka folder",
     "sendAnother": "Kirim file lain",
     "clickToSelect": "Klik untuk pilih file",
     "fileTypes": "Dokumen, Foto, Video, dll.",
-    "startUpload": "Mulai Upload",
-    "uploadFailed": "Gagal mengupload sebagian file. Silakan coba lagi.",
+    "startUpload": "Mulai Unggah",
+    "uploadFailed": "Gagal mengunggah sebagian file. Silakan coba lagi.",
     "poweredBy": "Powered by Zee-Index"
   },
   "StoragePage": {
@@ -449,7 +458,7 @@
     "fileDetails": "Detail File",
     "editFile": "Edit File",
     "openDrive": "Buka Drive",
-    "download": "Download",
+    "download": "Unduh",
     "size": "Ukuran",
     "modified": "Diubah",
     "extension": "Ekstensi",
@@ -556,7 +565,7 @@
     "deleteError": "Gagal menghapus"
   },
   "ManualDrivesManager": {
-    "title": "Manajemen Shared Drives",
+    "title": "Manajemen Drive Bersama",
     "addShortcut": "Tambah Shortcut Manual",
     "folderId": "Folder ID",
     "displayName": "Nama Tampilan",
@@ -595,5 +604,9 @@
     "emptyMessage": "Tidak ada item yang ditemukan di koleksi ini.",
     "failedTitle": "Gagal Memuat",
     "locationError": "Tidak dapat menentukan lokasi file."
+  },
+  "PinnedSection": {
+    "title": "Tersemat",
+    "folderSubtitle": "Folder Tersemat"
   }
 }

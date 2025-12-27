@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useAppStore } from "@/lib/store";
 import { parseDroppedItems, FileEntry } from "@/lib/fileParser";
+import { useTranslations } from "next-intl";
 
 interface UploadProgress {
   name: string;
@@ -27,6 +28,7 @@ export function useUpload({
   const [isDragging, setIsDragging] = useState(false);
   const { addToast } = useAppStore();
   const folderIdCache = useRef<Record<string, string>>({});
+  const t = useTranslations("UploadModal");
 
   const updateUploadProgress = useCallback(
     (
@@ -81,7 +83,7 @@ export function useUpload({
           }),
         });
 
-        if (!response.ok) throw new Error("Gagal membuat folder struktur");
+        if (!response.ok) throw new Error(t("folderCreationFailed"));
 
         const data = await response.json();
         currentParentId = data.id;
@@ -111,7 +113,7 @@ export function useUpload({
           }),
         });
 
-        if (!initRes.ok) throw new Error("Gagal inisialisasi upload");
+        if (!initRes.ok) throw new Error(t("initFailed"));
         const { uploadUrl } = await initRes.json();
 
         let start = 0;
@@ -135,7 +137,7 @@ export function useUpload({
             },
           );
 
-          if (!chunkRes.ok) throw new Error("Gagal upload chunk");
+          if (!chunkRes.ok) throw new Error(t("chunkFailed"));
           const chunkData = await chunkRes.json();
           const percent = Math.round((end / file.size) * 100);
           updateUploadProgress(file.name, percent, "uploading");
@@ -152,26 +154,26 @@ export function useUpload({
           error instanceof Error ? error.message : "Upload failed";
         updateUploadProgress(file.name, 0, "error", errorMessage);
         addToast({
-          message: `Gagal mengupload ${file.name}`,
+          message: t("uploadError", { fileName: file.name }),
           type: "error",
         });
       }
     },
-    [updateUploadProgress, addToast],
+    [updateUploadProgress, addToast, t],
   );
 
   const processUploadQueue = useCallback(
     async (items: FileList | FileEntry[]) => {
       if (!currentFolderId) {
         addToast({
-          message: "Folder tujuan tidak ditemukan (ID null).",
+          message: t("destNotFound"),
           type: "error",
         });
         return;
       }
       if (!isAdmin) {
         addToast({
-          message: "Akses ditolak: Anda bukan Admin.",
+          message: t("accessDenied"),
           type: "error",
         });
         return;

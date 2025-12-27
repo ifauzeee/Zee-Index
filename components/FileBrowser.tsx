@@ -12,7 +12,7 @@ import { useUpload } from "@/hooks/useUpload";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { useGallery } from "@/hooks/useGallery";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 import FileBrowserHeader from "./FileBrowserHeader";
 import ImageGallery from "./ImageGallery";
@@ -29,6 +29,7 @@ export default function FileBrowser({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status: sessionStatus } = useSession();
+  const locale = useLocale();
   const queryClient = useQueryClient();
   const [authTarget, setAuthTarget] = useState<{
     isLocked: boolean;
@@ -87,6 +88,7 @@ export default function FileBrowser({
     addToast,
     router,
     refreshKey,
+    locale,
   });
 
   useEffect(() => {

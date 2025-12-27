@@ -44,10 +44,16 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const rawFolderId = searchParams.get("folderId");
+  const locale = searchParams.get("locale") || "en";
 
   if (!rawFolderId) {
     return NextResponse.json(
-      { error: "Parameter folderId tidak ditemukan." },
+      {
+        error:
+          locale === "id"
+            ? "Parameter folderId tidak ditemukan."
+            : "Parameter folderId not found.",
+      },
       { status: 400 },
     );
   }
@@ -57,7 +63,7 @@ export async function GET(request: NextRequest) {
     .split("?")[0]
     .trim();
 
-  const cacheKey = `zee-index:folder-path-v7:${folderId}`;
+  const cacheKey = `zee-index:folder-path-v7:${folderId}:${locale}`;
 
   try {
     const cachedPath: { id: string; name: string }[] | null =
@@ -86,7 +92,8 @@ export async function GET(request: NextRequest) {
     if (process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
       shortcutMap.set(
         process.env.NEXT_PUBLIC_ROOT_FOLDER_ID.trim(),
-        process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Home",
+        process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME ||
+          (locale === "id" ? "Beranda" : "Home"),
       );
     }
 
@@ -99,6 +106,7 @@ export async function GET(request: NextRequest) {
     });
 
     const accessToken = await getAccessToken();
+    const driveFallback = locale === "id" ? "Drive Bersama" : "Shared Drive";
 
     if (shortcutMap.has(folderId)) {
       try {
@@ -119,7 +127,7 @@ export async function GET(request: NextRequest) {
       }
 
       const result = [
-        { id: folderId, name: shortcutMap.get(folderId) || "Drive" },
+        { id: folderId, name: shortcutMap.get(folderId) || driveFallback },
       ];
       return NextResponse.json(result);
     }
@@ -144,7 +152,7 @@ export async function GET(request: NextRequest) {
         } else {
           path.unshift({
             id: currentId,
-            name: shortcutMap.get(currentId) || "Drive",
+            name: shortcutMap.get(currentId) || driveFallback,
           });
         }
         break;
@@ -172,9 +180,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(path);
   } catch (error: unknown) {
     const errorMessage =
-      error instanceof Error
-        ? error.message
-        : "Terjadi kesalahan tidak dikenal.";
+      error instanceof Error ? error.message : "Internal error.";
     return NextResponse.json(
       { error: "Failed to fetch path", details: errorMessage },
       { status: 500 },

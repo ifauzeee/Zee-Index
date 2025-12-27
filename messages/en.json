@@ -25,7 +25,9 @@
   },
   "Common": {
     "loading": "Loading...",
-    "error": "Error"
+    "error": "Error",
+    "light": "Light",
+    "dark": "Dark"
   },
   "AuthForm": {
     "accessRestricted": "Access Restricted",
@@ -134,7 +136,8 @@
     "switchTheme": "Switch Theme",
     "github": "GitHub",
     "telegram": "Telegram Group",
-    "logout": "Logout"
+    "logout": "Logout",
+    "dialogLabel": "Global Command Menu"
   },
   "UploadModal": {
     "title": "Upload File & Folder",
@@ -146,7 +149,13 @@
     "folderNamePlaceholder": "Folder Name...",
     "create": "Create",
     "successMessage": "Folder '{folderName}' created successfully.",
-    "errorMessage": "Failed to create folder"
+    "errorMessage": "Failed to create folder",
+    "folderCreationFailed": "Failed to create folder structure",
+    "initFailed": "Failed to initialize upload",
+    "chunkFailed": "Failed to upload file chunk",
+    "uploadError": "Failed to upload {fileName}",
+    "destNotFound": "Target folder not found.",
+    "accessDenied": "Access denied: You are not an Admin."
   },
   "MoveModal": {
     "title": "Move {itemName}",
@@ -595,5 +604,9 @@
     "locationError": "Unable to determine file location.",
     "emptyTitle": "Empty Collection",
     "emptyMessage": "No items found in this shared collection."
+  },
+  "PinnedSection": {
+    "title": "Pinned",
+    "folderSubtitle": "Pinned Folder"
   }
 }

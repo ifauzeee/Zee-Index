@@ -28,6 +28,7 @@ export default function CommandPalette() {
   const { user } = useAppStore();
   const { theme, setTheme } = useTheme();
   const t = useTranslations("CommandPalette");
+  const commonT = useTranslations("Common");
 
   const [searchQuery, setSearchQuery] = React.useState("");
   const [searchResults, setSearchResults] = React.useState<any[]>([]);
@@ -89,7 +90,7 @@ export default function CommandPalette() {
     <Command.Dialog
       open={open}
       onOpenChange={setOpen}
-      label="Global Command Menu"
+      label={t("dialogLabel")}
       className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[640px] bg-popover text-popover-foreground rounded-xl shadow-2xl border border-border z-[9999] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
     >
       <div
@@ -217,7 +218,8 @@ export default function CommandPalette() {
               <Moon className="mr-2 h-4 w-4" />
             )}
             <span>
-              {t("switchTheme")} ({theme === "dark" ? "Light" : "Dark"})
+              {t("switchTheme")} (
+              {theme === "dark" ? commonT("light") : commonT("dark")})
             </span>
           </Command.Item>
         </Command.Group>

@@ -28,7 +28,7 @@ import {
   cn,
 } from "@/lib/utils";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useAppStore } from "@/lib/store";
 import { useScrollLock } from "@/hooks/useScrollLock";
 
@@ -170,6 +170,7 @@ const DetailRow = ({
 
 export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
   const t = useTranslations("DetailsPanel");
+  const locale = useLocale();
   const FileIconComponent = getIcon(file.mimeType);
   const metadata = file.imageMediaMetadata || file.videoMediaMetadata;
   const durationMillis = file.videoMediaMetadata?.durationMillis
@@ -223,7 +224,9 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
       setPathLoading(true);
       try {
         const parentId = file.parents[0];
-        const res = await fetch(`/api/folderpath?folderId=${parentId}`);
+        const res = await fetch(
+          `/api/folderpath?folderId=${parentId}&locale=${locale}`,
+        );
         if (res.ok) {
           const data = await res.json();
           const path = data.map((p: any) => p.name).join(" / ");
@@ -464,7 +467,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
               <QuickStat
                 icon={Calendar}
                 label={t("modified")}
-                value={new Date(file.modifiedTime).toLocaleDateString("id-ID", {
+                value={new Date(file.modifiedTime).toLocaleDateString(locale, {
                   day: "numeric",
                   month: "short",
                 })}
@@ -504,7 +507,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 <DetailRow
                   icon={Calendar}
                   label={t("modified")}
-                  value={new Date(file.modifiedTime).toLocaleString("id-ID", {
+                  value={new Date(file.modifiedTime).toLocaleString(locale, {
                     dateStyle: "medium",
                     timeStyle: "short",
                   })}
@@ -512,7 +515,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 <DetailRow
                   icon={Calendar}
                   label={t("created")}
-                  value={new Date(file.createdTime).toLocaleString("id-ID", {
+                  value={new Date(file.createdTime).toLocaleString(locale, {
                     dateStyle: "medium",
                     timeStyle: "short",
                   })}

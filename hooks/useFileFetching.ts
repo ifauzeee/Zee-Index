@@ -10,6 +10,7 @@ interface UseFileFetchingProps {
   addToast: (toast: { message: string; type: "error" | "info" }) => void;
   router: AppRouterInstance;
   refreshKey: number;
+  locale: string;
 }
 
 export class ProtectedError extends Error {
@@ -64,9 +65,11 @@ const fetchFilesApi = async ({
 const fetchFolderPathApi = async (
   folderId: string,
   shareToken: string | null,
+  locale: string,
 ) => {
   const url = new URL(`/api/folderpath`, window.location.origin);
   url.searchParams.set("folderId", folderId);
+  url.searchParams.set("locale", locale);
   if (shareToken) url.searchParams.append("share_token", shareToken);
 
   const response = await fetch(url.toString());
@@ -85,13 +88,14 @@ export function useFileFetching({
   addToast,
   router,
   refreshKey,
+  locale,
 }: UseFileFetchingProps) {
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
   const currentFolderId = initialFolderId || rootFolderId;
 
   const { data: historyData } = useQuery({
-    queryKey: ["folderPath", currentFolderId, shareToken, refreshKey],
-    queryFn: () => fetchFolderPathApi(currentFolderId, shareToken),
+    queryKey: ["folderPath", currentFolderId, shareToken, refreshKey, locale],
+    queryFn: () => fetchFolderPathApi(currentFolderId, shareToken, locale),
     enabled: !!currentFolderId && currentFolderId !== rootFolderId,
     initialData: initialFolderPath,
     retry: false,
@@ -105,7 +109,9 @@ export function useFileFetching({
       return [
         {
           id: rootFolderId,
-          name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Home",
+          name:
+            process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME ||
+            (locale === "id" ? "Beranda" : "Home"),
         },
       ];
     }
@@ -122,7 +128,9 @@ export function useFileFetching({
         return [
           {
             id: rootFolderId,
-            name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Home",
+            name:
+              process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME ||
+              (locale === "id" ? "Beranda" : "Home"),
           },
           ...slicedPath,
         ];
