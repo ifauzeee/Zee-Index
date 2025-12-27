@@ -368,7 +368,7 @@ export async function getFileDetailsFromDrive(
 export async function getFolderPath(
   folderId: string,
 ): Promise<{ id: string; name: string }[]> {
-  const cacheKey = `zee-index:folder-path-v2:${folderId}`;
+  const cacheKey = `zee-index:folder-path-v7:${folderId}`;
   try {
     const cachedPath: { id: string; name: string }[] | null =
       await kv.get(cacheKey);
@@ -382,15 +382,56 @@ export async function getFolderPath(
   const accessToken = await getAccessToken();
   const path: { id: string; name: string }[] = [];
   let currentId = folderId;
-  const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
+  const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID?.trim();
   const rootName = process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Home";
+
+  const dbDrivesRaw = await kv.get("zee-index:manual-drives");
+  const dbDrives: any[] = Array.isArray(dbDrivesRaw) ? dbDrivesRaw : [];
+  const envDrives = (process.env.NEXT_PUBLIC_MANUAL_DRIVES || "")
+    .split(",")
+    .reduce<string[]>((acc, entry) => {
+      const [id] = entry.split(":");
+      if (id?.trim()) acc.push(id.trim());
+      return acc;
+    }, []);
+
+  const shortcutMap = new Map<string, string>();
+  if (rootId) shortcutMap.set(rootId, rootName);
+  envDrives.forEach((id) => {
+    if (id?.trim()) shortcutMap.set(id.trim(), "");
+  });
+  dbDrives.forEach((d) => {
+    if (d && d.id) shortcutMap.set(d.id.trim(), d.name || "");
+  });
 
   let iterations = 0;
   while (currentId && iterations < 20) {
     iterations++;
 
-    if (currentId === rootId) {
-      path.unshift({ id: rootId, name: rootName });
+    if (shortcutMap.has(currentId)) {
+      const driveUrl = `https://www.googleapis.com/drive/v3/files/${currentId}?fields=id,name`;
+      try {
+        const response = await fetchWithRetry(driveUrl, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          cache: "no-store",
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const displayName = shortcutMap.get(currentId) || data.name;
+          path.unshift({ id: data.id, name: displayName });
+        } else {
+          path.unshift({
+            id: currentId,
+            name: shortcutMap.get(currentId) || "Drive",
+          });
+        }
+      } catch {
+        path.unshift({
+          id: currentId,
+          name: shortcutMap.get(currentId) || "Drive",
+        });
+      }
       break;
     }
 

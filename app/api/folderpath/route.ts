@@ -52,9 +52,12 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const folderId = rawFolderId.trim();
+  const folderId = decodeURIComponent(rawFolderId)
+    .split("&")[0]
+    .split("?")[0]
+    .trim();
 
-  const cacheKey = `zee-index:folder-path-v6:${folderId}`;
+  const cacheKey = `zee-index:folder-path-v7:${folderId}`;
 
   try {
     const cachedPath: { id: string; name: string }[] | null =
@@ -80,12 +83,6 @@ export async function GET(request: NextRequest) {
 
     const shortcutMap = new Map<string, string>();
 
-    envDrives.forEach((id) => shortcutMap.set(id, ""));
-
-    dbDrives.forEach((d) => {
-      if (d.id) shortcutMap.set(d.id.trim(), d.name);
-    });
-
     if (process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
       shortcutMap.set(
         process.env.NEXT_PUBLIC_ROOT_FOLDER_ID.trim(),
@@ -93,26 +90,42 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (shortcutMap.has(folderId)) {
-      const accessToken = await getAccessToken();
-      const driveUrl = `https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,name&supportsAllDrives=true`;
-      const response = await fetchWithRetry(driveUrl, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+    envDrives.forEach((id) => {
+      if (id?.trim()) shortcutMap.set(id.trim(), "");
+    });
 
-      if (response.ok) {
-        const data = await response.json();
-        const customName = shortcutMap.get(folderId) || data.name;
-        const result = [{ id: data.id, name: customName }];
-        await kv.set(cacheKey, result, { ex: 3600 });
-        return NextResponse.json(result);
-      }
-    }
+    dbDrives.forEach((d) => {
+      if (d && d.id) shortcutMap.set(d.id.trim(), d.name || "");
+    });
 
     const accessToken = await getAccessToken();
+
+    if (shortcutMap.has(folderId)) {
+      try {
+        const driveUrl = `https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,name&supportsAllDrives=true`;
+        const response = await fetchWithRetry(driveUrl, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const customName = shortcutMap.get(folderId) || data.name;
+          const result = [{ id: data.id, name: customName }];
+          await kv.set(cacheKey, result, { ex: 3600 });
+          return NextResponse.json(result);
+        }
+      } catch (err) {
+        console.error("Error fetching shortcut metadata", err);
+      }
+
+      const result = [
+        { id: folderId, name: shortcutMap.get(folderId) || "Drive" },
+      ];
+      return NextResponse.json(result);
+    }
+
     const path: { id: string; name: string }[] = [];
     let currentId = folderId;
-
     let iterations = 0;
 
     while (currentId && iterations < 20) {
@@ -128,12 +141,16 @@ export async function GET(request: NextRequest) {
           const data = await response.json();
           const displayName = shortcutMap.get(currentId) || data.name;
           path.unshift({ id: data.id, name: displayName });
+        } else {
+          path.unshift({
+            id: currentId,
+            name: shortcutMap.get(currentId) || "Drive",
+          });
         }
         break;
       }
 
       const driveUrl = `https://www.googleapis.com/drive/v3/files/${currentId}?fields=id,name,parents&supportsAllDrives=true`;
-
       const response = await fetchWithRetry(driveUrl, {
         headers: { Authorization: `Bearer ${accessToken}` },
         cache: "no-store",
