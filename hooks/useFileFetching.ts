@@ -140,7 +140,7 @@ export function useFileFetching({
     }
 
     return rawPath;
-  }, [historyData, currentFolderId, rootFolderId, folderTokens]);
+  }, [historyData, currentFolderId, rootFolderId, folderTokens, locale]);
 
   const {
     data,

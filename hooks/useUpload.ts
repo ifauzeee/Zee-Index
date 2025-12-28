@@ -54,48 +54,48 @@ export function useUpload({
     [],
   );
 
-  const ensureFolderStructure = async (
-    path: string,
-    rootId: string,
-  ): Promise<string> => {
-    const parts = path.split("/").filter(Boolean);
-    parts.pop();
-    if (parts.length === 0) return rootId;
+  const ensureFolderStructure = useCallback(
+    async (path: string, rootId: string): Promise<string> => {
+      const parts = path.split("/").filter(Boolean);
+      parts.pop();
+      if (parts.length === 0) return rootId;
 
-    let currentParentId = rootId;
-    let currentPath = "";
+      let currentParentId = rootId;
+      let currentPath = "";
 
-    for (const folderName of parts) {
-      currentPath += (currentPath ? "/" : "") + folderName;
+      for (const folderName of parts) {
+        currentPath += (currentPath ? "/" : "") + folderName;
 
-      if (folderIdCache.current[currentPath]) {
-        currentParentId = folderIdCache.current[currentPath];
-        continue;
+        if (folderIdCache.current[currentPath]) {
+          currentParentId = folderIdCache.current[currentPath];
+          continue;
+        }
+
+        try {
+          const response = await fetch("/api/folder/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              folderName: folderName,
+              parentId: currentParentId,
+            }),
+          });
+
+          if (!response.ok) throw new Error(t("folderCreationFailed"));
+
+          const data = await response.json();
+          currentParentId = data.id;
+          folderIdCache.current[currentPath] = data.id;
+        } catch (error) {
+          console.error(`Gagal membuat folder ${folderName}:`, error);
+          throw error;
+        }
       }
 
-      try {
-        const response = await fetch("/api/folder/create", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            folderName: folderName,
-            parentId: currentParentId,
-          }),
-        });
-
-        if (!response.ok) throw new Error(t("folderCreationFailed"));
-
-        const data = await response.json();
-        currentParentId = data.id;
-        folderIdCache.current[currentPath] = data.id;
-      } catch (error) {
-        console.error(`Gagal membuat folder ${folderName}:`, error);
-        throw error;
-      }
-    }
-
-    return currentParentId;
-  };
+      return currentParentId;
+    },
+    [t],
+  );
 
   const uploadFileChunked = useCallback(
     async (file: File, targetParentId: string) => {
@@ -202,7 +202,15 @@ export function useUpload({
 
       triggerRefresh();
     },
-    [currentFolderId, isAdmin, triggerRefresh, uploadFileChunked, addToast],
+    [
+      currentFolderId,
+      isAdmin,
+      triggerRefresh,
+      uploadFileChunked,
+      addToast,
+      ensureFolderStructure,
+      t,
+    ],
   );
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

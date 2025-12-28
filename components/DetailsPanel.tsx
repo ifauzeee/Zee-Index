@@ -243,7 +243,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
     };
 
     fetchPath();
-  }, [file.id, file.parents, t]);
+  }, [file.id, file.parents, t, locale]);
 
   const handleCopyLink = () => {
     const url = `/api/download?fileId=${file.id}`;
