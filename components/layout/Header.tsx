@@ -20,6 +20,7 @@ import {
   Github,
   Bell,
   PanelLeft,
+  HelpCircle,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import Search from "@/components/features/Search";
@@ -231,6 +232,12 @@ export default function Header() {
       label: t("joinGroup"),
     },
     {
+      id: "tour",
+      onClick: () => window.dispatchEvent(new Event("start-tour")),
+      icon: HelpCircle,
+      label: t("tour"),
+    },
+    {
       id: "donate",
       href: "https://ifauzeee.vercel.app/donate",
       target: "_blank",
@@ -355,7 +362,10 @@ export default function Header() {
             </h1>
           </div>
 
-          <div className="hidden sm:block w-full max-w-xl px-4 z-10 relative">
+          <div
+            className="hidden sm:block w-full max-w-xl px-4 z-10 relative"
+            id="header-search-bar"
+          >
             <Suspense
               fallback={
                 <div className="w-full h-10 bg-muted rounded-lg animate-pulse" />
@@ -406,6 +416,7 @@ export default function Header() {
                     onClick={toggleNotificationCenter}
                     className="p-2 rounded-lg hover:bg-accent relative"
                     title={t("notifications")}
+                    id="header-notifications-btn"
                   >
                     <Bell size={20} />
                     {unreadCount > 0 && (
@@ -417,6 +428,7 @@ export default function Header() {
                     return "href" in item && item.href ? (
                       <a
                         key={item.id}
+                        id={`header-btn-${item.id}`}
                         href={item.href}
                         target={item.target}
                         rel={item.rel}
@@ -430,6 +442,7 @@ export default function Header() {
                         typeof item.onClick === "function" && (
                           <button
                             key={item.id}
+                            id={`header-btn-${item.id}`}
                             onClick={item.onClick}
                             title={item.label}
                             className="p-2 rounded-lg hover:bg-accent"

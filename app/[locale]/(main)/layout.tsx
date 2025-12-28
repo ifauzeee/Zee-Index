@@ -12,6 +12,7 @@ import CommandPalette from "@/components/features/CommandPalette";
 import GlobalAudioPlayer from "@/components/features/GlobalAudioPlayer";
 import KeyboardShortcutsModal from "@/components/modals/KeyboardShortcutsModal";
 import NotificationCenter from "@/components/features/NotificationCenter";
+import TourGuide from "@/components/features/TourGuide";
 import Sidebar from "@/components/layout/Sidebar";
 import { cn } from "@/lib/utils";
 import { HardDrive } from "lucide-react";
@@ -179,6 +180,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
       <CommandPalette />
       <KeyboardShortcutsModal />
       <NotificationCenter />
+      <TourGuide />
       <GlobalDropZone
         onDrop={(files) => {
           addToast({

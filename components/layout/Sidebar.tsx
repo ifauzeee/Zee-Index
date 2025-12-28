@@ -387,6 +387,7 @@ export default function Sidebar() {
               router.push("/");
               if (window.innerWidth < 1024) setSidebarOpen(false);
             }}
+            id="sidebar-nav-home"
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
               currentFolderId === rootFolderId &&
@@ -400,6 +401,7 @@ export default function Sidebar() {
               router.push("/favorites");
               if (window.innerWidth < 1024) setSidebarOpen(false);
             }}
+            id="sidebar-nav-favorites"
             className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
           >
             <Star size={16} /> {t("favorites")}
@@ -409,6 +411,7 @@ export default function Sidebar() {
               router.push("/storage");
               if (window.innerWidth < 1024) setSidebarOpen(false);
             }}
+            id="sidebar-nav-storage"
             className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
           >
             <HardDrive size={16} /> {t("storage")}
@@ -439,7 +442,10 @@ export default function Sidebar() {
 
         {renderManualDrives()}
 
-        <div className="border-t border-border my-2 pt-4">
+        <div
+          className="border-t border-border my-2 pt-4"
+          id="sidebar-explorer-tree"
+        >
           <p className="px-3 text-xs font-bold text-muted-foreground mb-2 uppercase tracking-wider">
             {t("explorer")}
           </p>

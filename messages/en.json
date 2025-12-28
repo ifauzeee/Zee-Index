@@ -93,7 +93,8 @@
     "search": "Search",
     "menu": "Menu",
     "notifications": "Notifications",
-    "backToHome": "Back to Home"
+    "backToHome": "Back to Home",
+    "tour": "Start Tour"
   },
   "ContextMenu": {
     "preview": "Preview / Open",
@@ -608,5 +609,46 @@
   "PinnedSection": {
     "title": "Pinned",
     "folderSubtitle": "Pinned Folder"
+  },
+  "TourGuide": {
+    "startTour": "Start Tour",
+    "next": "Next",
+    "prev": "Previous",
+    "done": "Done",
+    "skip": "Skip",
+    "steps": {
+      "welcome": {
+        "title": "Welcome to Zee-Index!",
+        "description": "Let's take a quick tour to help you get started with your new file manager."
+      },
+      "navigation": {
+        "title": "Navigation",
+        "description": "Quickly access your Home, Favorites, and Storage analysis here."
+      },
+      "explorer": {
+        "title": "File Explorer",
+        "description": "Browse your folders and files in a hierarchical tree view."
+      },
+      "search": {
+        "title": "Search",
+        "description": "Find your files instantly. You can search by name or even content."
+      },
+      "notifications": {
+        "title": "Notifications",
+        "description": "Check here for important updates, access requests, or system messages."
+      },
+      "theme": {
+        "title": "Theme Switcher",
+        "description": "Toggle between Light and Dark mode to suit your preference."
+      },
+      "refresh": {
+        "title": "Refresh",
+        "description": "Reload the current view to see the latest changes."
+      },
+      "github": {
+        "title": "Open Source",
+        "description": "Check out the project on GitHub, report issues, or contribute!"
+      }
+    }
   }
 }

@@ -1,0 +1,91 @@
+/* Custom Driver.js Theme for Zee-Index */
+.driver-popover.driverjs-theme {
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  font-family: inherit;
+  padding: 1.5rem;
+  max-width: 350px;
+}
+
+.driver-popover.driverjs-theme .driver-popover-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: hsl(var(--foreground));
+}
+
+.driver-popover.driverjs-theme .driver-popover-description {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 1.5rem;
+}
+
+.driver-popover.driverjs-theme .driver-popover-progress-text {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.75rem;
+}
+
+.driver-popover.driverjs-theme button {
+  flex: 1;
+  text-align: center;
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  outline: none;
+  border: 1px solid transparent;
+}
+
+.driver-popover.driverjs-theme button.driver-popover-next-btn {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: 1px solid hsl(var(--primary));
+  text-shadow: none;
+}
+
+.driver-popover.driverjs-theme button.driver-popover-next-btn:hover {
+  background-color: hsl(var(--primary) / 0.9);
+}
+
+.driver-popover.driverjs-theme button.driver-popover-prev-btn {
+  background-color: transparent;
+  color: hsl(var(--muted-foreground));
+  border: 1px solid hsl(var(--border));
+}
+
+.driver-popover.driverjs-theme button.driver-popover-prev-btn:hover {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.driver-popover.driverjs-theme button.driver-popover-close-btn {
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  color: hsl(var(--muted-foreground));
+  background: transparent;
+  border: none;
+  z-index: 10;
+}
+
+.driver-popover.driverjs-theme button.driver-popover-close-btn:hover {
+  color: hsl(var(--destructive));
+  background-color: hsl(var(--destructive) / 0.1);
+}
+
+/* Fix for dark mode if needed (Tailwind variables handle this automatically usually) */
