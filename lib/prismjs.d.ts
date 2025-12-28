@@ -1,1 +1,0 @@
-declare module "prismjs/plugins/line-numbers/prism-line-numbers.min.js";

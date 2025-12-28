@@ -13,7 +13,7 @@ import UploadModal from "@/components/modals/UploadModal";
 import FileDetail from "@/components/file-browser/FileDetail";
 import ArchivePreviewModal from "@/components/modals/ArchivePreviewModal";
 import FileRevisionsModal from "@/components/modals/FileRevisionsModal";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 import type { ActionState, ContextMenuState } from "@/hooks/useFileActions";
 import FileList from "@/components/file-browser/FileList";
 import { useTranslations } from "next-intl";

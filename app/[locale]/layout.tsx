@@ -2,8 +2,10 @@ import "@/lib/env";
 import type { Metadata, Viewport } from "next";
 import { Providers } from "../providers";
 import "./(main)/globals.css";
-import "plyr/dist/plyr.css";
 import GlobalBranding from "@/components/layout/GlobalBranding";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
+import { notFound } from "next/navigation";
 
 export const preferredRegion = "sin1";
 
@@ -65,10 +67,6 @@ export const metadata: Metadata = {
     telephone: false,
   },
 };
-
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
-import { notFound } from "next/navigation";
 
 export default async function RootLayout({
   children,

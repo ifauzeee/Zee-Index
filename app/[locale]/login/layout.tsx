@@ -7,10 +7,5 @@ export default function LoginLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <html lang="id" suppressHydrationWarning>
-      <head />
-      <body>{children}</body>
-    </html>
-  );
+  return <>{children}</>;
 }

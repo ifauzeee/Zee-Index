@@ -24,6 +24,11 @@ export function BulkActionBar() {
   const { confirm } = useConfirm();
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleDownload = async () => {
     const filesToZip = selectedFiles.filter(
@@ -179,7 +184,7 @@ export function BulkActionBar() {
 
   const isAdmin = user?.role === "ADMIN";
 
-  if (selectedFiles.length === 0) return null;
+  if (!mounted || selectedFiles.length === 0) return null;
 
   return (
     <>

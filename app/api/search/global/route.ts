@@ -4,7 +4,7 @@ import {
   DriveFile,
   getAllDescendantFolders,
   searchFilesInFolder,
-} from "@/lib/googleDrive";
+} from "@/lib/drive";
 import { isProtected } from "@/lib/auth";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";

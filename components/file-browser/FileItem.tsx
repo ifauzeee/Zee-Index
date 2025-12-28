@@ -1,4 +1,4 @@
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 import { useAppStore } from "@/lib/store";
 import { formatBytes, getIcon, cn } from "@/lib/utils";
 import React, { useState, useMemo, memo, useEffect } from "react";

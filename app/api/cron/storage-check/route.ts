@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getStorageDetails } from "@/lib/googleDrive";
+import { getStorageDetails } from "@/lib/drive";
 import { sendMail } from "@/lib/mailer";
 import { formatBytes } from "@/lib/utils";
 import { kv } from "@/lib/kv";

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import { listSharedDrives, listSharedWithMeFolders } from "@/lib/googleDrive";
+import { listSharedDrives, listSharedWithMeFolders } from "@/lib/drive";
 
 export const dynamic = "force-dynamic";
 

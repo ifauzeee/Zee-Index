@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -8,7 +8,7 @@ import {
   File as FileIcon,
   AlertCircle,
 } from "lucide-react";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 import { formatBytes } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
@@ -38,30 +38,23 @@ export default function ArchivePreviewModal({
   onClose,
 }: ArchivePreviewModalProps) {
   const t = useTranslations("ArchivePreviewModal");
-  const [content, setContent] = useState<ArchiveEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    const fetchArchiveContent = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`/api/archive-preview?fileId=${file.id}`);
-        if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.error || t("error"));
-        }
-        const data = await response.json();
-        setContent(data);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : t("unknownError"));
-      } finally {
-        setIsLoading(false);
+  const {
+    data: content = [],
+    isLoading,
+    error,
+  } = useQuery<ArchiveEntry[]>({
+    queryKey: ["archive-preview", file.id],
+    queryFn: async () => {
+      const response = await fetch(`/api/archive-preview?fileId=${file.id}`);
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || t("error"));
       }
-    };
-
-    fetchArchiveContent();
-  }, [file.id, t]);
+      return response.json();
+    },
+    enabled: !!file.id,
+    staleTime: Infinity,
+  });
 
   return (
     <AnimatePresence>
@@ -111,7 +104,9 @@ export default function ArchivePreviewModal({
               <div className="flex flex-col items-center justify-center h-48 text-red-500">
                 <AlertCircle className="h-12 w-12 mb-2" />
                 <p className="font-semibold">{t("failed")}</p>
-                <p className="text-sm">{error}</p>
+                <p className="text-sm">
+                  {error instanceof Error ? error.message : t("unknownError")}
+                </p>
               </div>
             ) : content.length === 0 ? (
               <div className="flex items-center justify-center h-48 text-muted-foreground">

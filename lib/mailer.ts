@@ -11,7 +11,6 @@ export async function sendMail({ to, subject, html }: MailOptions) {
     process.env;
 
   if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
-    console.error("Konfigurasi SMTP tidak lengkap. Email tidak akan dikirim.");
     return;
   }
 
@@ -32,8 +31,5 @@ export async function sendMail({ to, subject, html }: MailOptions) {
       subject: subject,
       html: html,
     });
-    console.log(`Email berhasil dikirim ke: ${to}`);
-  } catch (error) {
-    console.error("Gagal mengirim email:", error);
-  }
+  } catch {}
 }

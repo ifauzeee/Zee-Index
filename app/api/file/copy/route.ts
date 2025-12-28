@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { copyFile } from "@/lib/googleDrive";
+import { copyFile } from "@/lib/drive";
 import { sendWebhookNotification } from "@/lib/webhook";
 
 export async function POST(req: NextRequest) {

@@ -10,13 +10,15 @@ type Props = {
   children?: React.ReactNode;
 };
 
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
 export function Providers({ children }: Props) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 5 * 60 * 1000,
+            staleTime: 60 * 1000,
             gcTime: 10 * 60 * 1000,
             retry: 1,
             refetchOnWindowFocus: false,
@@ -50,6 +52,7 @@ export function Providers({ children }: Props) {
         >
           <ModalProvider>{children}</ModalProvider>
         </ThemeProvider>
+        <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </SessionProvider>
   );

@@ -1,11 +1,12 @@
 "use client";
-import { useState, useEffect, Suspense } from "react";
+import { Suspense } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Loading from "@/components/common/Loading";
 import { formatBytes, getIcon } from "@/lib/utils";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import {
   HardDrive,
@@ -77,36 +78,23 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
 };
 
 function StoragePageContent() {
-  const [data, setData] = useState<StorageDetails | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const t = useTranslations("StoragePage");
-
   const searchParams = useSearchParams();
+  const t = useTranslations("StoragePage");
   const shareToken = searchParams.get("share_token");
 
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const response = await fetch("/api/storage-details");
-        if (!response.ok) {
-          throw new Error(t("loadError"));
-        }
-        const result = await response.json();
-        setData(result);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : t("unknownError"));
-      } finally {
-        setIsLoading(false);
+  const { data, isLoading, error } = useQuery<StorageDetails>({
+    queryKey: ["storageDetails"],
+    queryFn: async () => {
+      const response = await fetch("/api/storage-details");
+      if (!response.ok) {
+        throw new Error(t("loadError"));
       }
-    };
-    fetchData();
-  }, [t]);
+      return response.json();
+    },
+  });
 
   if (isLoading) return <Loading />;
   if (error)
@@ -116,7 +104,9 @@ function StoragePageContent() {
         <h3 className="text-lg font-semibold text-foreground">
           {t("errorTitle")}
         </h3>
-        <p className="text-muted-foreground mt-2">{error}</p>
+        <p className="text-muted-foreground mt-2">
+          {error instanceof Error ? error.message : t("unknownError")}
+        </p>
       </div>
     );
   if (!data) return null;

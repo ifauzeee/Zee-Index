@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { getAccessToken, getFileDetailsFromDrive } from "@/lib/googleDrive";
+import { getAccessToken, getFileDetailsFromDrive } from "@/lib/drive";
 import { type Session } from "next-auth";
 import { z } from "zod";
 import { logActivity } from "@/lib/activityLogger";

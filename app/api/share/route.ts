@@ -6,7 +6,7 @@ import crypto from "crypto";
 import { kv } from "@/lib/kv";
 import type { ShareLink } from "@/lib/store";
 import { sendMail } from "@/lib/mailer";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 
 interface ShareRequestBody {
   path?: string;

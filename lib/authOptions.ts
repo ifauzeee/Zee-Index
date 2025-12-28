@@ -51,11 +51,8 @@ export const authOptions: AuthOptions = {
         const email = credentials.email;
         const password = credentials.password;
 
-        console.log(`[Auth] Attempting login for: ${email}`);
-
         const adminEmails: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
         const envAdminsRaw = process.env.ADMIN_EMAILS;
-        console.log(`[Auth] Env ADMIN_EMAILS present: ${!!envAdminsRaw}`);
 
         const envAdmins =
           envAdminsRaw
@@ -66,10 +63,6 @@ export const authOptions: AuthOptions = {
         const isAdmin =
           adminEmails.includes(email) || envAdmins.includes(email);
 
-        console.log(
-          `[Auth] Is Admin: ${isAdmin} (DB: ${adminEmails.includes(email)}, Env: ${envAdmins.includes(email)})`,
-        );
-
         const storedHash: string | null = await kv.get(`password:${email}`);
 
         let isValid = false;
@@ -79,7 +72,6 @@ export const authOptions: AuthOptions = {
         }
 
         if (!isValid && isAdmin && process.env.ADMIN_PASSWORD) {
-          console.log("[Auth] Checking Env Password as fallback/recovery...");
           const bcrypt = await import("bcryptjs");
           const tempHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
           const isEnvValid = await bcrypt.compare(password, tempHash);
@@ -87,7 +79,6 @@ export const authOptions: AuthOptions = {
         }
 
         if (!isValid) {
-          console.log("[Auth] Invalid credentials");
           return null;
         }
 

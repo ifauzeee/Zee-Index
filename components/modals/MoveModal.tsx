@@ -10,7 +10,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { useTranslations } from "next-intl";
 

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import { getAccessToken } from "@/lib/googleDrive";
+import { getAccessToken } from "@/lib/drive";
 import JSZip, { JSZipObject } from "jszip";
 import { isAccessRestricted } from "@/lib/securityUtils";
 

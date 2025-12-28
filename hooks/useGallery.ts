@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 import { getFileType } from "@/lib/utils";
 
 export function useGallery(files: DriveFile[]) {

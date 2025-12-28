@@ -11,30 +11,40 @@ const intlMiddleware = createMiddleware({
 });
 
 const PUBLIC_PATHS = new Set(["/login", "/verify-2fa", "/setup", "/request"]);
-
 const PUBLIC_API_PREFIXES = ["/api/auth", "/api/config/public", "/api/setup"];
+
+const isPublicRoute = (pathname: string) => {
+  return (
+    PUBLIC_PATHS.has(pathname) ||
+    ["/folder", "/share", "/request", "/login"].some((p) =>
+      pathname.startsWith(p),
+    )
+  );
+};
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (
     pathname.startsWith("/_next") ||
-    pathname.includes(".") ||
-    pathname.startsWith("/static")
+    pathname.startsWith("/static") ||
+    pathname === "/sw.js" ||
+    pathname === "/manifest.webmanifest"
   ) {
     return NextResponse.next();
   }
 
   const pathnameWithoutLocale = pathname.replace(/^\/(en|id)/, "") || "/";
-
+  const isApi = pathname.startsWith("/api");
   const isConfigured = !!process.env.GOOGLE_REFRESH_TOKEN;
+
   if (!isConfigured) {
-    if (
+    const isSetupPage =
       pathnameWithoutLocale.startsWith("/setup") ||
-      pathnameWithoutLocale.startsWith("/api/setup")
-    ) {
-      if (pathname.startsWith("/api")) return NextResponse.next();
-      return intlMiddleware(request);
+      pathnameWithoutLocale.startsWith("/api/setup");
+
+    if (isSetupPage) {
+      return isApi ? NextResponse.next() : intlMiddleware(request);
     }
     return NextResponse.redirect(new URL("/setup", request.url));
   }
@@ -47,8 +57,7 @@ export async function middleware(request: NextRequest) {
     PUBLIC_PATHS.has(pathnameWithoutLocale) ||
     PUBLIC_API_PREFIXES.some((p) => pathname.startsWith(p))
   ) {
-    if (pathname.startsWith("/api")) return NextResponse.next();
-    return intlMiddleware(request);
+    return isApi ? NextResponse.next() : intlMiddleware(request);
   }
 
   const shareToken = request.nextUrl.searchParams.get("share_token");
@@ -58,6 +67,7 @@ export async function middleware(request: NextRequest) {
       if (!shareSecretKey || shareSecretKey.length < 32) {
         return NextResponse.redirect(new URL("/login", request.url));
       }
+
       const secret = new TextEncoder().encode(shareSecretKey);
       const { payload } = await jwtVerify(shareToken, secret);
 
@@ -74,11 +84,9 @@ export async function middleware(request: NextRequest) {
         }
       }
 
-      if (pathname.startsWith("/api")) return NextResponse.next();
-      return intlMiddleware(request);
-    } catch (error) {
-      console.error("Share token verification failed:", error);
-      if (pathname.startsWith("/api/")) {
+      return isApi ? NextResponse.next() : intlMiddleware(request);
+    } catch {
+      if (isApi) {
         return NextResponse.json(
           { error: "ShareLinkExpired" },
           { status: 401 },
@@ -99,13 +107,8 @@ export async function middleware(request: NextRequest) {
   );
 
   if (!isAuthenticated) {
-    const isPublicRoute = ["/folder", "/share", "/request", "/login"].some(
-      (p) => pathnameWithoutLocale.startsWith(p),
-    );
-
-    if (isPublicRoute) {
-      if (pathname.startsWith("/api")) return NextResponse.next();
-      return intlMiddleware(request);
+    if (isPublicRoute(pathnameWithoutLocale)) {
+      return isApi ? NextResponse.next() : intlMiddleware(request);
     }
     return handleAuthRedirect(request, pathname);
   }
@@ -114,18 +117,18 @@ export async function middleware(request: NextRequest) {
     return handleAuthRedirect(request, pathname, "GuestAccessDenied");
   }
 
-  if (is2FARequired && pathnameWithoutLocale !== "/verify-2fa") {
+  const is2FAPage = pathnameWithoutLocale === "/verify-2fa";
+  if (is2FARequired && !is2FAPage) {
     const verifyUrl = new URL("/verify-2fa", request.url);
     verifyUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(verifyUrl);
   }
 
-  if (!is2FARequired && pathnameWithoutLocale === "/verify-2fa") {
+  if (!is2FARequired && is2FAPage) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  if (pathname.startsWith("/api")) return NextResponse.next();
-  return intlMiddleware(request);
+  return isApi ? NextResponse.next() : intlMiddleware(request);
 }
 
 export const config = {

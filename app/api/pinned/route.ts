@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { kv } from "@/lib/kv";
-import { getFileDetailsFromDrive, DriveFile } from "@/lib/googleDrive";
+import { getFileDetailsFromDrive, DriveFile } from "@/lib/drive";
 import { z } from "zod";
 
 const PINNED_KEY = "zee-index:pinned-folders";

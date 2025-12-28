@@ -1,30 +1,40 @@
+# System & Deps
 /node_modules
+/.pnpm-store
+.DS_Store
+Thumbs.db
+
+# Build
 /.next/
 /out/
 /build
+*.tsbuildinfo
+next-env.d.ts
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-.env.local
-.env*.local
+*.log
+
+# Environment Variables
 .env
+.env*.local
+.env.local
+.env.production
+.env.development
 .vercel
-*.tsbuildinfo
-next-env.d.ts
-.DS_Store
+
+# Security keys
 *.pem
+*.key
+
+# Editor
+.vscode/
+.idea/
+
+# Legacy/Misc
 public/sw.js
 public/workbox-*.js
 public/swe-worker-*.js
-all_project_code.txt
-cat.py
-.vercel
-
-all_project_code.md
-
-project-dump.md
-
-# --- Auto-added by Context Tool ---
-code_context.txt
-scan.ps1

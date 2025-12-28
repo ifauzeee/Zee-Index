@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Folder, MoreVertical } from "lucide-react";
 import { formatBytes, getIcon, cn } from "@/lib/utils";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 import { useAppStore } from "@/lib/store";
 import {
   DropdownMenu,

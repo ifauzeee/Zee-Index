@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import { getStorageDetails } from "@/lib/googleDrive";
+import { getStorageDetails } from "@/lib/drive";
 import { isAccessRestricted } from "@/lib/securityUtils";
 
 export async function GET() {

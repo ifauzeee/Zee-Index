@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, Suspense } from "react";
+import { useEffect, useRef, Suspense, useState } from "react";
 import dynamic from "next/dynamic";
 import { useAppStore } from "@/lib/store";
 import { BulkActionBar } from "@/components/file-browser/BulkActionBar";
@@ -93,6 +93,13 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     pathname?.startsWith("/share") || searchParams.has("share_token");
 
   const touchStartRef = useRef<number | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const effectiveSidebarOpen = mounted ? isSidebarOpen : true;
 
   useEffect(() => {
     fetchConfig();
@@ -144,7 +151,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
           <div
             className={cn(
               "flex-1 flex flex-col transition-all duration-300 ease-in-out min-w-0 w-full max-w-full",
-              !isShareMode && isSidebarOpen ? "lg:ml-64" : "ml-0",
+              !isShareMode && effectiveSidebarOpen ? "lg:ml-64" : "ml-0",
             )}
           >
             <div className="container mx-auto px-4 max-w-7xl flex-grow py-4 pb-24 lg:pb-4 min-w-0 overflow-x-hidden">

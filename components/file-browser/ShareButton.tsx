@@ -5,7 +5,7 @@ import { Share2, X, Clock, Zap, Copy, ShieldCheck } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 import { useTranslations } from "next-intl";
 
 interface ShareButtonProps {

@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { getAccessToken } from "@/lib/googleDrive";
+import { getAccessToken } from "@/lib/drive";
 import { invalidateFolderCache } from "@/lib/cache";
 
 export async function PATCH(req: NextRequest) {

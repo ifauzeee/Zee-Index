@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { formatBytes, formatDuration } from "@/lib/utils";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 import {
   Plus,
   X,

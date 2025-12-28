@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { kv } from "@/lib/kv";
 import fs from "fs";
 import path from "path";
-import { invalidateAccessToken } from "@/lib/googleDrive";
+import { invalidateAccessToken } from "@/lib/drive";
 import { isAppConfigured } from "@/lib/config";
 
 export async function POST(req: Request) {
@@ -91,9 +91,7 @@ export async function POST(req: Request) {
 
         fs.writeFileSync(envPath, envContent.trim() + "\n");
         restartNeeded = true;
-      } catch (err) {
-        console.error(err);
-      }
+      } catch {}
     }
 
     return NextResponse.json({

@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { listFilesFromDrive, DriveFile } from "@/lib/googleDrive";
+import { listFilesFromDrive, DriveFile } from "@/lib/drive";
 import {
   isPrivateFolder,
   isProtected,

@@ -7,7 +7,7 @@ import remarkGfm from "remark-gfm";
 import { BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/lib/store";
-import "prismjs/themes/prism-tomorrow.min.css";
+import { CodeViewer } from "@/components/file-details/CodeViewer";
 
 interface FolderReadmeProps {
   fileId: string;
@@ -30,8 +30,7 @@ export default function FolderReadme({ fileId }: FolderReadmeProps) {
         if (!response.ok) throw new Error("Failed to load README");
         const text = await response.text();
         setContent(text);
-      } catch (error) {
-        console.error(error);
+      } catch {
         addToast({ message: "Gagal memuat README", type: "error" });
       } finally {
         setIsLoading(false);
@@ -73,6 +72,22 @@ export default function FolderReadme({ fileId }: FolderReadmeProps) {
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeSanitize]}
+                components={{
+                  code({ className, children, ...props }) {
+                    const match = /language-(\w+)/.exec(className || "");
+                    return match ? (
+                      <CodeViewer
+                        language={match[1]}
+                        content={String(children).replace(/\n$/, "")}
+                        className="my-4"
+                      />
+                    ) : (
+                      <code className={className} {...props}>
+                        {children}
+                      </code>
+                    );
+                  },
+                }}
               >
                 {content}
               </ReactMarkdown>

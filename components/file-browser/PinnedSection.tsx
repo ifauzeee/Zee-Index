@@ -5,7 +5,7 @@ import { useAppStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { Pin, Folder, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 
 import { useTranslations } from "next-intl";
 

@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 import { useAppStore } from "@/lib/store";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 import { getFileType, cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 

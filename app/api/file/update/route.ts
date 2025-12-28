@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { updateFileContent } from "@/lib/googleDrive";
+import { updateFileContent } from "@/lib/drive";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 

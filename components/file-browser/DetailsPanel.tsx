@@ -18,7 +18,7 @@ import {
   History,
   FileBox,
 } from "lucide-react";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 import {
   formatBytes,
   formatDuration,

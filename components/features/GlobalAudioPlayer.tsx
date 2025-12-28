@@ -36,6 +36,11 @@ export default function GlobalAudioPlayer() {
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [showQueue, setShowQueue] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!audioRef.current) return;
@@ -87,7 +92,7 @@ export default function GlobalAudioPlayer() {
     return url;
   };
 
-  if (!activeAudioFile) return null;
+  if (!mounted || !activeAudioFile) return null;
 
   return (
     <AnimatePresence>

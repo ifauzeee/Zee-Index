@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { getFileDetailsFromDrive } from "@/lib/googleDrive";
+import { getFileDetailsFromDrive } from "@/lib/drive";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { validateShareToken } from "@/lib/auth";

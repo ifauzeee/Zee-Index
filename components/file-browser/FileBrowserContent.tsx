@@ -7,7 +7,7 @@ import FileBrowserLoading from "@/components/file-browser/FileBrowserLoading";
 import FolderReadme from "@/components/file-browser/FolderReadme";
 import PinnedSection from "@/components/file-browser/PinnedSection";
 import AuthForm from "@/components/features/AuthForm";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 
 interface FileBrowserContentProps {

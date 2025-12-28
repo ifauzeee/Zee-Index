@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { getAccessToken, DriveFile } from "@/lib/googleDrive";
+import { getAccessToken, DriveFile } from "@/lib/drive";
 import { isProtected } from "@/lib/auth";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -98,9 +98,7 @@ export async function GET(request: NextRequest) {
   let cachedData = null;
   try {
     cachedData = await kv.get(cacheKey);
-  } catch (error) {
-    console.warn("Redis Cache Error (Get):", error);
-  }
+  } catch {}
 
   if (cachedData) {
     return NextResponse.json(cachedData);
@@ -165,9 +163,7 @@ export async function GET(request: NextRequest) {
         if (payload.folderId) {
           allowedTokens.push(payload.folderId as string);
         }
-      } catch (e) {
-        console.error("Token verification failed:", e);
-      }
+      } catch {}
     }
 
     const processedFilesPromise = (data.files || []).map(
@@ -200,9 +196,7 @@ export async function GET(request: NextRequest) {
 
     try {
       await kv.set(cacheKey, result, { ex: CACHE_TTL });
-    } catch (error) {
-      console.warn("Redis Cache Error (Set):", error);
-    }
+    } catch {}
 
     return NextResponse.json(result);
   } catch (error: unknown) {
@@ -210,7 +204,6 @@ export async function GET(request: NextRequest) {
       error instanceof Error
         ? error.message
         : "Terjadi kesalahan tidak dikenal.";
-    console.error("Search API Error:", errorMessage);
     return NextResponse.json(
       { error: "Failed to perform search.", details: errorMessage },
       { status: 500 },

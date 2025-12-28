@@ -1,48 +1,49 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import Loading from "@/components/common/Loading";
 import FileList from "@/components/file-browser/FileList";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 import { motion } from "framer-motion";
 import { StarOff, LogIn } from "lucide-react";
 import React from "react";
 import EmptyState from "@/components/file-browser/EmptyState";
 import { useTranslations } from "next-intl";
+import { useQuery } from "@tanstack/react-query";
 
 export default function FavoritesPage() {
   const router = useRouter();
   const { addToast, user } = useAppStore();
-  const [favoriteFiles, setFavoriteFiles] = useState<DriveFile[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const t = useTranslations("FavoritesPage");
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
-  const fetchFavorites = useCallback(async () => {
-    setIsLoading(true);
-    try {
+
+  const {
+    data: favoriteFiles = [],
+    isLoading,
+    error,
+  } = useQuery<DriveFile[]>({
+    queryKey: ["favorites"],
+    queryFn: async () => {
       const response = await fetch("/api/favorites");
       if (!response.ok) throw new Error(t("loadError"));
-      const data = await response.json();
-      setFavoriteFiles(data);
-    } catch (err: unknown) {
+      return response.json();
+    },
+    enabled: !!user && !user.isGuest,
+    initialData: [],
+  });
+
+  React.useEffect(() => {
+    if (error) {
       addToast({
-        message: err instanceof Error ? err.message : t("genericError"),
+        message: error instanceof Error ? error.message : t("genericError"),
         type: "error",
       });
-    } finally {
-      setIsLoading(false);
     }
-  }, [addToast, t]);
-  useEffect(() => {
-    if (user && !user.isGuest) {
-      fetchFavorites();
-    } else if (user?.isGuest) {
-      setIsLoading(false);
-    }
-  }, [fetchFavorites, user]);
+  }, [error, addToast, t]);
+
   const handleItemClick = useCallback(
     (file: DriveFile) => {
       const parentFolder = file.parents?.[0];

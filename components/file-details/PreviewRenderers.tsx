@@ -4,9 +4,9 @@ import React, { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { Loader2, Download, Eye } from "lucide-react";
 import { getIcon, getLanguageFromFilename } from "@/lib/utils";
-import Prism from "prismjs";
 import dynamic from "next/dynamic";
 import { OfficeViewer } from "./OfficeViewer";
+import { CodeViewer } from "./CodeViewer";
 
 const PDFViewer = dynamic(() => import("./PDFViewer"), {
   loading: () => <LoadingPreview />,
@@ -146,23 +146,20 @@ export const CodePreview: React.FC<{ src: string; fileName: string }> = ({
     fetch(src)
       .then((res) => res.text())
       .then(setContent)
-      .catch(console.error)
+      .catch(() => {})
       .finally(() => setIsLoading(false));
   }, [src]);
-
-  useEffect(() => {
-    if (content)
-      import("prismjs/plugins/line-numbers/prism-line-numbers.min.js").then(
-        () => Prism.highlightAll(),
-      );
-  }, [content]);
 
   if (isLoading) return <LoadingPreview />;
   const language = getLanguageFromFilename(fileName);
   return (
-    <pre className="line-numbers h-full w-full overflow-auto text-sm !m-0 !p-4 bg-[#2d2d2d]">
-      <code className={`language-${language}`}>{content}</code>
-    </pre>
+    <div className="h-full w-full overflow-hidden bg-[#1e1e1e]">
+      <CodeViewer
+        content={content || ""}
+        language={language}
+        className="h-full rounded-none border-0"
+      />
+    </div>
   );
 };
 

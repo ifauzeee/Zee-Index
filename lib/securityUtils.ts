@@ -1,5 +1,5 @@
 import { kv } from "@/lib/kv";
-import { getFileDetailsFromDrive } from "@/lib/googleDrive";
+import { getFileDetailsFromDrive } from "@/lib/drive";
 
 const PROTECTED_FOLDERS_KEY = "zee-index:protected-folders";
 

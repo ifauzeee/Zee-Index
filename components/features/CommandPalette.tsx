@@ -3,6 +3,8 @@ import * as React from "react";
 import { Command } from "cmdk";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
+import { useQuery } from "@tanstack/react-query";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useTheme } from "next-themes";
 import {
   LayoutDashboard,
@@ -31,8 +33,22 @@ export default function CommandPalette() {
   const commonT = useTranslations("Common");
 
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [searchResults, setSearchResults] = React.useState<any[]>([]);
-  const [loading, setLoading] = React.useState(false);
+  const debouncedQuery = useDebounce(searchQuery, 300);
+
+  const { data: searchResults = [], isLoading: loading } = useQuery({
+    queryKey: ["command-search", debouncedQuery],
+    queryFn: async () => {
+      if (!debouncedQuery) return [];
+      const res = await fetch(
+        `/api/search?q=${encodeURIComponent(debouncedQuery)}`,
+      );
+      if (!res.ok) throw new Error("Search failed");
+      const data = await res.json();
+      return data.files || [];
+    },
+    enabled: open && debouncedQuery.length > 0,
+    staleTime: 60 * 1000,
+  });
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -48,35 +64,8 @@ export default function CommandPalette() {
   React.useEffect(() => {
     if (!open) {
       setSearchQuery("");
-      setSearchResults([]);
     }
   }, [open]);
-
-  React.useEffect(() => {
-    if (!searchQuery) {
-      setSearchResults([]);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(
-          `/api/search?q=${encodeURIComponent(searchQuery)}`,
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setSearchResults(data.files || []);
-        }
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
 
   const runCommand = React.useCallback((command: () => void) => {
     setOpen(false);
@@ -117,7 +106,7 @@ export default function CommandPalette() {
             heading={t("headingResults")}
             className="overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
           >
-            {searchResults.map((file) => (
+            {searchResults.map((file: any) => (
               <Command.Item
                 key={file.id}
                 value={`${file.name} ${file.id}`}

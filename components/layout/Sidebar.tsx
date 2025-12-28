@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   ChevronRight,
   ChevronDown,
@@ -14,6 +20,7 @@ import {
   X,
   Lock,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -127,22 +134,38 @@ export default function Sidebar() {
 
   useScrollLock(isSidebarOpen && isMobile && !shareToken);
 
-  const fetchSubfolders = async (parentId: string) => {
-    const url = `/api/files?folderId=${parentId}`;
-    const res = await fetch(url);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.files
-      .filter((f: any) => f.isFolder)
-      .map((f: any) => ({
-        id: f.id,
-        name: f.name,
-        hasChildren: true,
-        children: [],
-        isExpanded: false,
-        isLoading: false,
-      }));
-  };
+  const queryClient = useQueryClient();
+
+  const fetchSubfolders = useCallback(
+    async (parentId: string) => {
+      try {
+        const data = await queryClient.fetchQuery({
+          queryKey: ["folder-contents", parentId],
+          queryFn: async () => {
+            const res = await fetch(`/api/files?folderId=${parentId}`);
+            if (!res.ok) throw new Error("Failed to fetch");
+            return res.json();
+          },
+          staleTime: 60 * 1000,
+        });
+
+        return (data.files || [])
+          .filter((f: any) => f.isFolder)
+          .map((f: any) => ({
+            id: f.id,
+            name: f.name,
+            hasChildren: true,
+            children: [],
+            isExpanded: false,
+            isLoading: false,
+          }));
+      } catch (error) {
+        console.error(error);
+        return [];
+      }
+    },
+    [queryClient],
+  );
 
   const toggleNode = async (node: FolderNode, parents: string[] = []) => {
     const newTree = { ...tree };
@@ -179,7 +202,7 @@ export default function Sidebar() {
       }
     };
     if (mounted) initRoot();
-  }, [rootFolderId, mounted, tree.children]);
+  }, [rootFolderId, mounted, tree.children, fetchSubfolders]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartRef.current = e.targetTouches[0].clientX;

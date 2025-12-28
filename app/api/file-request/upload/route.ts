@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { getAccessToken } from "@/lib/googleDrive";
+import { getAccessToken } from "@/lib/drive";
 import { kv } from "@/lib/kv";
 import { logActivity } from "@/lib/activityLogger";
 

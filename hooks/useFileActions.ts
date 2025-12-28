@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 import { useAppStore } from "@/lib/store";
 
 export type ActionState = {

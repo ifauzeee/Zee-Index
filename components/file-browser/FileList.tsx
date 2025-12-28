@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 import { useAppStore } from "@/lib/store";
 import FileItem from "@/components/file-browser/FileItem";
 import FileCard from "@/components/file-browser/FileCard";

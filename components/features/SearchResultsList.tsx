@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import Loading from "@/components/common/Loading";
 import FileList from "@/components/file-browser/FileList";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 import { motion } from "framer-motion";
 import React from "react";
 import EmptyState from "@/components/file-browser/EmptyState";
@@ -20,9 +21,41 @@ export default function SearchResultsList() {
   const { shareToken, addToast, currentFolderId, user } = useAppStore();
   const t = useTranslations("SearchResultsList");
 
-  const [results, setResults] = useState<DriveFile[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: results = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["search-page-results", searchTerm, folderId, shareToken],
+    queryFn: async () => {
+      if (!searchTerm) return [];
+
+      const isGlobalSearch = !folderId;
+      const apiPath = isGlobalSearch ? "/api/search/global" : "/api/search";
+
+      const url = new URL(apiPath, window.location.origin);
+      url.searchParams.append("q", searchTerm);
+
+      if (!isGlobalSearch && folderId) {
+        url.searchParams.append("folderId", folderId);
+      }
+
+      if (shareToken) {
+        url.searchParams.append("share_token", shareToken);
+      }
+
+      const response = await fetch(url.toString());
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || t("searchError"));
+      }
+      return data.files as DriveFile[];
+    },
+    enabled: !!searchTerm,
+    staleTime: 60 * 1000,
+    retry: 1,
+  });
 
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
@@ -57,53 +90,6 @@ export default function SearchResultsList() {
     [router, shareToken, addToast, currentFolderId, t],
   );
 
-  const fetchSearchResults = useCallback(async () => {
-    if (!searchTerm) {
-      setResults([]);
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    setResults([]);
-
-    try {
-      const isGlobalSearch = !folderId;
-      const apiPath = isGlobalSearch ? "/api/search/global" : "/api/search";
-
-      const url = new URL(apiPath, window.location.origin);
-      url.searchParams.append("q", searchTerm);
-
-      if (!isGlobalSearch && folderId) {
-        url.searchParams.append("folderId", folderId);
-      }
-
-      if (shareToken) {
-        url.searchParams.append("share_token", shareToken);
-      }
-
-      const response = await fetch(url.toString());
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || t("searchError"));
-      }
-
-      setResults(data.files);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : t("unknownError");
-      setError(msg);
-      addToast({ message: msg, type: "error" });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [searchTerm, folderId, addToast, shareToken, t]);
-
-  useEffect(() => {
-    fetchSearchResults();
-  }, [fetchSearchResults]);
-
   if (isLoading) {
     return <Loading />;
   }
@@ -111,7 +97,9 @@ export default function SearchResultsList() {
   if (error) {
     return (
       <div className="text-center py-20 text-red-500">
-        {t("errorPrefix", { error })}
+        {t("errorPrefix", {
+          error: (error as Error).message || "Unknown error",
+        })}
       </div>
     );
   }

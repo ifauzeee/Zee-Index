@@ -62,6 +62,7 @@ export default function VideoPlayer({
   const [currentSrc, setCurrentSrc] = useState(src);
   const [retryCount, setRetryCount] = useState(0);
   const [isDirectMode, setIsDirectMode] = useState(false);
+  const [hasResumed, setHasResumed] = useState(false);
 
   const fileIdMatch = src.match(/fileId=([^&]+)/);
   const fileId = fileIdMatch ? fileIdMatch[1] : null;
@@ -77,6 +78,7 @@ export default function VideoPlayer({
     setFormatError(false);
     setLastTime(0);
     setRetryCount(0);
+    setHasResumed(false);
   }, [src]);
 
   const handleRetry = () => {
@@ -97,7 +99,6 @@ export default function VideoPlayer({
     } else if (detail.code === 2 || detail.code === 3) {
       if (retryCount < 3) {
         setRetryCount((prev) => prev + 1);
-        console.log(`Auto-retrying video... Attempt ${retryCount + 1}/3`);
         setTimeout(() => {
           handleRetry();
         }, 1000);
@@ -112,12 +113,14 @@ export default function VideoPlayer({
     setFormatError(false);
     setRetryCount(0);
 
+    if (hasResumed) return;
+
     if (lastTime > 0 && playerRef.current) {
       const player = playerRef.current;
       if (Math.abs(player.currentTime - lastTime) > 1) {
         player.currentTime = lastTime;
       }
-      player.play().catch((e) => console.log(e));
+      player.play().catch(() => {});
     } else if (
       fileId &&
       videoProgress[fileId] &&
@@ -129,6 +132,7 @@ export default function VideoPlayer({
 
       if (duration > 0 && savedTime < duration * 0.95) {
         playerRef.current.currentTime = savedTime;
+        setHasResumed(true);
         addToast({
           message: `Resuming playback from ${formatDuration(savedTime)}`,
           type: "info",
@@ -139,7 +143,7 @@ export default function VideoPlayer({
 
   const handleTimeUpdate = (detail: any) => {
     if (fileId && detail.currentTime > 5) {
-      if (Math.floor(detail.currentTime) % 5 === 0) {
+      if (Math.floor(detail.currentTime) % 10 === 0) {
         setVideoProgress(fileId, detail.currentTime);
       }
     }
@@ -292,7 +296,7 @@ export default function VideoPlayer({
             <FileWarning size={48} className="mb-4 text-amber-500" />
             <h3 className="text-xl font-bold mb-2">Format Tidak Didukung</h3>
             <p className="text-sm text-gray-300 mb-4 max-w-sm">
-              Codec video ini (kemungkinan HEVC/x265) tidak didukung browser.
+              Codec video ini tidak didukung browser. Coba gunakan:
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <a
@@ -302,13 +306,15 @@ export default function VideoPlayer({
               >
                 <Download size={16} /> Unduh File
               </a>
+              {webViewLink && (
+                <button
+                  onClick={() => setIsDirectMode(true)}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium flex items-center gap-2"
+                >
+                  <PlayCircle size={16} /> Coba Mode Direct
+                </button>
+              )}
             </div>
-            <button
-              onClick={handleRetry}
-              className="mt-4 text-xs text-white/50 hover:text-white underline"
-            >
-              Coba Paksa Putar (Mungkin Gagal)
-            </button>
           </motion.div>
         )}
       </AnimatePresence>

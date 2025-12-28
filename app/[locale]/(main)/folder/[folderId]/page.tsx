@@ -1,5 +1,5 @@
 import FileBrowser from "@/components/file-browser/FileBrowser";
-import { getFolderPath } from "@/lib/googleDrive";
+import { getFolderPath } from "@/lib/drive";
 
 export default async function FolderPage({
   params,

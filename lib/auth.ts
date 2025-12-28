@@ -26,8 +26,7 @@ export async function isProtected(folderId: string): Promise<boolean> {
 
     const keys = Object.keys(protectedFolders);
     return keys.some((key) => key.trim() === targetId);
-  } catch (error) {
-    console.error("Error checking protected status:", error);
+  } catch {
     return true;
   }
 }
@@ -50,8 +49,7 @@ export async function getProtectedFolderCredentials(
       return protectedFolders[foundKey] as { id: string; password: string };
     }
     return null;
-  } catch (error) {
-    console.error("Error getting protected folder credentials:", error);
+  } catch {
     return null;
   }
 }

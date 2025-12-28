@@ -1,4 +1,4 @@
-import { getFileDetailsFromDrive, listFilesFromDrive } from "@/lib/googleDrive";
+import { getFileDetailsFromDrive, listFilesFromDrive } from "@/lib/drive";
 import dynamic from "next/dynamic";
 import Loading from "@/components/common/Loading";
 const FileDetail = dynamic(

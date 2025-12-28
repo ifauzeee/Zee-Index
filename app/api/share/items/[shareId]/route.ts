@@ -3,7 +3,7 @@ import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import type { DriveFile } from "@/lib/googleDrive";
+import type { DriveFile } from "@/lib/drive";
 import type { ShareLink } from "@/lib/store";
 
 const SHARE_LINKS_KEY = "zee-index:share-links";

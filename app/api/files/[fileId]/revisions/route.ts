@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { listFileRevisions } from "@/lib/googleDrive";
+import { listFileRevisions } from "@/lib/drive";
 
 export async function GET(
   req: NextRequest,
