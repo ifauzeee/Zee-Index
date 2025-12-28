@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { jwtVerify } from "jose";
 import createMiddleware from "next-intl/middleware";
+import { checkAuth, handleAuthRedirect } from "@/lib/auth-check";
 
 const intlMiddleware = createMiddleware({
   locales: ["en", "id"],
@@ -10,16 +10,7 @@ const intlMiddleware = createMiddleware({
   localePrefix: "always",
 });
 
-const PUBLIC_PATHS = new Set([
-  "/login",
-  "/icon.png",
-  "/verify-2fa",
-  "/setup",
-  "/manifest.webmanifest",
-  "/sw.js",
-  "/workbox-",
-  "/request",
-]);
+const PUBLIC_PATHS = new Set(["/login", "/verify-2fa", "/setup", "/request"]);
 
 const PUBLIC_API_PREFIXES = ["/api/auth", "/api/config/public", "/api/setup"];
 
@@ -27,31 +18,20 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (
-    pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/static") ||
-    pathname.includes(".")
-  ) {
-  }
-
-  const pathnameWithoutLocale = pathname.replace(/^\/(en|id)/, "") || "/";
-
-  if (
-    pathname.includes("/icon.png") ||
-    pathname.includes("/manifest.webmanifest") ||
-    pathname.includes("sw.js") ||
-    pathname.includes("workbox-")
+    pathname.includes(".") ||
+    pathname.startsWith("/static")
   ) {
     return NextResponse.next();
   }
 
-  const isConfigured = !!process.env.GOOGLE_REFRESH_TOKEN;
+  const pathnameWithoutLocale = pathname.replace(/^\/(en|id)/, "") || "/";
 
+  const isConfigured = !!process.env.GOOGLE_REFRESH_TOKEN;
   if (!isConfigured) {
     if (
       pathnameWithoutLocale.startsWith("/setup") ||
-      pathnameWithoutLocale.startsWith("/api/setup") ||
-      pathname.endsWith("icon.png")
+      pathnameWithoutLocale.startsWith("/api/setup")
     ) {
       if (pathname.startsWith("/api")) return NextResponse.next();
       return intlMiddleware(request);
@@ -65,12 +45,9 @@ export async function middleware(request: NextRequest) {
 
   if (
     PUBLIC_PATHS.has(pathnameWithoutLocale) ||
-    PUBLIC_API_PREFIXES.some((p) => pathname.startsWith(p)) ||
-    pathname.startsWith("/_next") ||
-    pathname.includes("swe-worker")
+    PUBLIC_API_PREFIXES.some((p) => pathname.startsWith(p))
   ) {
-    if (pathname.startsWith("/api") || pathname.startsWith("/_next"))
-      return NextResponse.next();
+    if (pathname.startsWith("/api")) return NextResponse.next();
     return intlMiddleware(request);
   }
 
@@ -85,12 +62,11 @@ export async function middleware(request: NextRequest) {
       const { payload } = await jwtVerify(shareToken, secret);
 
       if (payload.loginRequired) {
-        const token = await getToken({
-          req: request,
-          secret: process.env.NEXTAUTH_SECRET,
-        });
-
-        if (!token) {
+        const { isAuthenticated } = await checkAuth(
+          request,
+          process.env.NEXTAUTH_SECRET,
+        );
+        if (!isAuthenticated) {
           const loginUrl = new URL("/login", request.url);
           loginUrl.searchParams.set("callbackUrl", request.url);
           loginUrl.searchParams.set("error", "GuestAccessDenied");
@@ -102,31 +78,27 @@ export async function middleware(request: NextRequest) {
       return intlMiddleware(request);
     } catch (error) {
       console.error("Share token verification failed:", error);
-
       if (pathname.startsWith("/api/")) {
         return NextResponse.json(
           { error: "ShareLinkExpired" },
           { status: 401 },
         );
       }
-
-      const urlWithoutToken = request.nextUrl.clone();
-      urlWithoutToken.searchParams.delete("share_token");
-
+      const url = request.nextUrl.clone();
+      url.searchParams.delete("share_token");
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("error", "ShareLinkExpired");
-      loginUrl.searchParams.set("callbackUrl", urlWithoutToken.toString());
-
+      loginUrl.searchParams.set("callbackUrl", url.toString());
       return NextResponse.redirect(loginUrl);
     }
   }
 
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
+  const { isAuthenticated, isGuest, is2FARequired } = await checkAuth(
+    request,
+    process.env.NEXTAUTH_SECRET,
+  );
 
-  if (!token) {
+  if (!isAuthenticated) {
     const isPublicRoute = ["/folder", "/share", "/request", "/login"].some(
       (p) => pathnameWithoutLocale.startsWith(p),
     );
@@ -135,33 +107,29 @@ export async function middleware(request: NextRequest) {
       if (pathname.startsWith("/api")) return NextResponse.next();
       return intlMiddleware(request);
     }
-
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+    return handleAuthRedirect(request, pathname);
   }
 
-  if (token.isGuest && pathnameWithoutLocale.startsWith("/admin")) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("error", "GuestAccessDenied");
-    return NextResponse.redirect(loginUrl);
+  if (isGuest && pathnameWithoutLocale.startsWith("/admin")) {
+    return handleAuthRedirect(request, pathname, "GuestAccessDenied");
   }
 
-  if (token.twoFactorRequired && pathnameWithoutLocale !== "/verify-2fa") {
+  if (is2FARequired && pathnameWithoutLocale !== "/verify-2fa") {
     const verifyUrl = new URL("/verify-2fa", request.url);
     verifyUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(verifyUrl);
   }
 
-  if (!token.twoFactorRequired && pathnameWithoutLocale === "/verify-2fa") {
+  if (!is2FARequired && pathnameWithoutLocale === "/verify-2fa") {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
   if (pathname.startsWith("/api")) return NextResponse.next();
-
   return intlMiddleware(request);
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };

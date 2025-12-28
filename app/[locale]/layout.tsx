@@ -1,3 +1,4 @@
+import "@/lib/env";
 import type { Metadata, Viewport } from "next";
 import { Providers } from "../providers";
 import "./(main)/globals.css";
