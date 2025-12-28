@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 import type { DriveFile } from "@/lib/googleDrive";
 import { useAppStore } from "@/lib/store";
-import FileItem from "./FileItem";
-import FileCard from "./FileBrowser/FileCard";
+import FileItem from "@/components/file-browser/FileItem";
+import FileCard from "@/components/file-browser/FileCard";
 import React, { useEffect, useRef } from "react";
-import EmptyState from "./EmptyState";
+import EmptyState from "@/components/file-browser/EmptyState";
 import { FolderSearch } from "lucide-react";
 import Masonry from "react-masonry-css";
 import { MASONRY_BREAKPOINTS } from "@/lib/utils";

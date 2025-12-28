@@ -22,10 +22,10 @@ import {
   PanelLeft,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
-import Search from "@/components/Search";
+import Search from "@/components/features/Search";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import LocaleSwitcher from "./LocaleSwitcher";
+import LocaleSwitcher from "@/components/common/LocaleSwitcher";
 
 const overlayVariants = {
   open: { opacity: 1 },

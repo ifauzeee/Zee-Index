@@ -3,18 +3,23 @@
 import { useEffect, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useAppStore } from "@/lib/store";
-import { BulkActionBar } from "@/components/BulkActionBar";
-import Toast from "@/components/Toast";
+import { BulkActionBar } from "@/components/file-browser/BulkActionBar";
+import Toast from "@/components/common/Toast";
 import { AnimatePresence } from "framer-motion";
 import { HardDrive } from "lucide-react";
 
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 
-const Header = dynamic(() => import("@/components/Header"), { ssr: false });
-const DetailsPanel = dynamic(() => import("@/components/DetailsPanel"), {
+const Header = dynamic(() => import("@/components/layout/Header"), {
   ssr: false,
 });
+const DetailsPanel = dynamic(
+  () => import("@/components/file-browser/DetailsPanel"),
+  {
+    ssr: false,
+  },
+);
 const AppFooter = () => {
   const { dataUsage } = useAppStore();
   const currentYear = new Date().getFullYear();

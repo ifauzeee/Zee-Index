@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import Loading from "@/components/Loading";
+import Loading from "@/components/common/Loading";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";

@@ -2,20 +2,20 @@
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { UploadCloud } from "lucide-react";
-import FileRequestModal from "./FileRequestModal";
-import ImageEditorModal from "./ImageEditorModal";
-import ContextMenu from "./ContextMenu";
-import RenameModal from "./RenameModal";
-import DeleteConfirm from "./DeleteConfirm";
-import ShareButton from "./ShareButton";
-import MoveModal from "./MoveModal";
-import UploadModal from "./UploadModal";
-import FileDetail from "./FileDetail";
-import ArchivePreviewModal from "./ArchivePreviewModal";
-import FileRevisionsModal from "./FileRevisionsModal";
+import FileRequestModal from "@/components/modals/FileRequestModal";
+import ImageEditorModal from "@/components/modals/ImageEditorModal";
+import ContextMenu from "@/components/file-browser/ContextMenu";
+import RenameModal from "@/components/modals/RenameModal";
+import DeleteConfirm from "@/components/modals/DeleteConfirm";
+import ShareButton from "@/components/file-browser/ShareButton";
+import MoveModal from "@/components/modals/MoveModal";
+import UploadModal from "@/components/modals/UploadModal";
+import FileDetail from "@/components/file-browser/FileDetail";
+import ArchivePreviewModal from "@/components/modals/ArchivePreviewModal";
+import FileRevisionsModal from "@/components/modals/FileRevisionsModal";
 import type { DriveFile } from "@/lib/googleDrive";
 import type { ActionState, ContextMenuState } from "@/hooks/useFileActions";
-import FileList from "@/components/FileList";
+import FileList from "@/components/file-browser/FileList";
 import { useTranslations } from "next-intl";
 
 interface FileBrowserModalsProps {

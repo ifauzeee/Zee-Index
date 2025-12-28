@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
-import ViewToggle from "@/components/FileBrowser/ViewToggle";
+import ViewToggle from "@/components/file-browser/ViewToggle";
 import {
   DropdownMenu,
   DropdownMenuContent,

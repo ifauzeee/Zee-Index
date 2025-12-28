@@ -25,12 +25,12 @@ import type { DriveFile } from "@/lib/googleDrive";
 import { getFileType, cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
-import ShareButton from "./ShareButton";
-import ArchivePreviewModal from "./ArchivePreviewModal";
-import ImageEditorModal from "./ImageEditorModal";
-import FileRevisionsModal from "./FileRevisionsModal";
-import VideoPlayer from "./file-details/VideoPlayer";
-import InfoPanel from "./file-details/InfoPanel";
+import ShareButton from "@/components/file-browser/ShareButton";
+import ArchivePreviewModal from "@/components/modals/ArchivePreviewModal";
+import ImageEditorModal from "@/components/modals/ImageEditorModal";
+import FileRevisionsModal from "@/components/modals/FileRevisionsModal";
+import VideoPlayer from "../file-details/VideoPlayer";
+import InfoPanel from "../file-details/InfoPanel";
 import {
   ImagePreview,
   GoogleDrivePreview,
@@ -39,7 +39,7 @@ import {
   DefaultPreview,
   LoadingPreview,
   FileIconPlaceholder,
-} from "./file-details/PreviewRenderers";
+} from "../file-details/PreviewRenderers";
 
 interface SubtitleTrack {
   kind: string;

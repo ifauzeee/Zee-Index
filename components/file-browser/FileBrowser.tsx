@@ -14,10 +14,10 @@ import { useGallery } from "@/hooks/useGallery";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
 
-import FileBrowserHeader from "./FileBrowserHeader";
-import ImageGallery from "./ImageGallery";
-import FileBrowserModals from "./FileBrowserModals";
-import FileBrowserContent from "./FileBrowserContent";
+import FileBrowserHeader from "@/components/file-browser/FileBrowserHeader";
+import ImageGallery from "@/components/features/ImageGallery";
+import FileBrowserModals from "@/components/file-browser/FileBrowserModals";
+import FileBrowserContent from "@/components/file-browser/FileBrowserContent";
 
 export default function FileBrowser({
   initialFolderId,

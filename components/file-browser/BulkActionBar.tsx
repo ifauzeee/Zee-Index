@@ -6,7 +6,7 @@ import { X, Download, Trash2, Copy, FolderInput } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/providers/ModalProvider";
-import MoveModal from "./MoveModal";
+import MoveModal from "@/components/modals/MoveModal";
 import { cn } from "@/lib/utils";
 import JSZip from "jszip";
 import { useTranslations } from "next-intl";

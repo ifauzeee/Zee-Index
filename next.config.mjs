@@ -69,6 +69,9 @@ const nextConfig = {
   },
   webpack: (config) => {
     config.resolve.alias.canvas = false;
+    config.ignoreWarnings = [
+      { module: /node_modules\/require-in-the-middle/ },
+    ];
     return config;
   },
 };

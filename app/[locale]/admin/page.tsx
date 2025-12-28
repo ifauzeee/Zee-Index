@@ -26,21 +26,21 @@ import {
   Network,
   Palette,
 } from "lucide-react";
-import Loading from "@/components/Loading";
+import Loading from "@/components/common/Loading";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import TwoFactorAuthSetup from "@/components/TwoFactorAuthSetup";
-import ProtectedFoldersManager from "@/components/ProtectedFoldersManager";
-import ActivityLogDashboard from "@/components/ActivityLogDashboard";
+import TwoFactorAuthSetup from "@/components/features/TwoFactorAuthSetup";
+import ProtectedFoldersManager from "@/components/admin/ProtectedFoldersManager";
+import ActivityLogDashboard from "@/components/admin/ActivityLogDashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { AdminStats } from "@/lib/adminStats";
 import TodayDownloadsChart from "@/components/charts/TodayDownloadsChart";
 import DayOfWeekChart from "@/components/charts/DayOfWeekChart";
-import SecurityConfig from "@/components/SecurityConfig";
-import UserFolderAccessManager from "@/components/UserFolderAccessManager";
-import ManualDrivesManager from "@/components/ManualDrivesManager";
-import BrandingConfig from "@/components/BrandingConfig";
+import SecurityConfig from "@/components/admin/SecurityConfig";
+import UserFolderAccessManager from "@/components/admin/UserFolderAccessManager";
+import ManualDrivesManager from "@/components/admin/ManualDrivesManager";
+import BrandingConfig from "@/components/admin/BrandingConfig";
 import { useTranslations } from "next-intl";
 
 const scrollbarHideStyles = {

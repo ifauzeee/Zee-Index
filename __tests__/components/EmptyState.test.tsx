@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import EmptyState from "@/components/EmptyState";
+import EmptyState from "@/components/file-browser/EmptyState";
 import { Folder } from "lucide-react";
 
 describe("EmptyState", () => {

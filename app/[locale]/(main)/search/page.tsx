@@ -1,10 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Loading from "@/components/Loading";
+import Loading from "@/components/common/Loading";
 
 const SearchResultsList = dynamic(
-  () => import("@/components/SearchResultsList"),
+  () => import("@/components/features/SearchResultsList"),
   {
     ssr: false,
     loading: () => <Loading />,

@@ -3,7 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import Loading from "@/components/Loading";
+import Loading from "@/components/common/Loading";
 import { formatBytes, getIcon } from "@/lib/utils";
 import type { DriveFile } from "@/lib/googleDrive";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";

@@ -3,28 +3,33 @@
 import { useEffect, useRef, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useAppStore } from "@/lib/store";
-import { BulkActionBar } from "@/components/BulkActionBar";
-import Toast from "@/components/Toast";
+import { BulkActionBar } from "@/components/file-browser/BulkActionBar";
+import Toast from "@/components/common/Toast";
 import { AnimatePresence } from "framer-motion";
 
 import { useSession } from "next-auth/react";
-import CommandPalette from "@/components/CommandPalette";
-import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
-import KeyboardShortcutsModal from "@/components/KeyboardShortcutsModal";
-import NotificationCenter from "@/components/NotificationCenter";
-import Sidebar from "@/components/Sidebar";
+import CommandPalette from "@/components/features/CommandPalette";
+import GlobalAudioPlayer from "@/components/features/GlobalAudioPlayer";
+import KeyboardShortcutsModal from "@/components/modals/KeyboardShortcutsModal";
+import NotificationCenter from "@/components/features/NotificationCenter";
+import Sidebar from "@/components/layout/Sidebar";
 import { cn } from "@/lib/utils";
 import { HardDrive } from "lucide-react";
-import MobileBottomNav from "@/components/MobileBottomNav";
-import GlobalDropZone from "@/components/GlobalDropZone";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import GlobalDropZone from "@/components/file-browser/GlobalDropZone";
 import { usePathname, useSearchParams } from "next/navigation";
-import Loading from "@/components/Loading";
+import Loading from "@/components/common/Loading";
 import { useTranslations } from "next-intl";
 
-const Header = dynamic(() => import("@/components/Header"), { ssr: false });
-const DetailsPanel = dynamic(() => import("@/components/DetailsPanel"), {
+const Header = dynamic(() => import("@/components/layout/Header"), {
   ssr: false,
 });
+const DetailsPanel = dynamic(
+  () => import("@/components/file-browser/DetailsPanel"),
+  {
+    ssr: false,
+  },
+);
 
 const AppFooter = () => {
   const { dataUsage } = useAppStore();

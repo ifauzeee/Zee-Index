@@ -3,13 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
-import Loading from "@/components/Loading";
-import FileList from "@/components/FileList";
+import Loading from "@/components/common/Loading";
+import FileList from "@/components/file-browser/FileList";
 import type { DriveFile } from "@/lib/googleDrive";
 import { motion } from "framer-motion";
 import { StarOff, LogIn } from "lucide-react";
 import React from "react";
-import EmptyState from "@/components/EmptyState";
+import EmptyState from "@/components/file-browser/EmptyState";
 import { useTranslations } from "next-intl";
 
 export default function FavoritesPage() {

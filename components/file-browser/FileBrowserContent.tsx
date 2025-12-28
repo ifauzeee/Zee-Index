@@ -2,11 +2,11 @@
 
 import React, { useRef, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import FileList from "@/components/FileList";
-import FileBrowserLoading from "./FileBrowserLoading";
-import FolderReadme from "./FolderReadme";
-import PinnedSection from "./PinnedSection";
-import AuthForm from "./AuthForm";
+import FileList from "@/components/file-browser/FileList";
+import FileBrowserLoading from "@/components/file-browser/FileBrowserLoading";
+import FolderReadme from "@/components/file-browser/FolderReadme";
+import PinnedSection from "@/components/file-browser/PinnedSection";
+import AuthForm from "@/components/features/AuthForm";
 import type { DriveFile } from "@/lib/googleDrive";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 

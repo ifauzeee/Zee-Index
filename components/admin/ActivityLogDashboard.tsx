@@ -24,7 +24,7 @@ import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import type { ActivityLog, ActivityType } from "@/lib/activityLogger";
-import EmptyState from "./EmptyState";
+import EmptyState from "@/components/file-browser/EmptyState";
 import { useTranslations } from "next-intl";
 
 const iconMap: Record<string, React.ElementType> = {

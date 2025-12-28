@@ -1,10 +1,13 @@
 import { getFileDetailsFromDrive, listFilesFromDrive } from "@/lib/googleDrive";
 import dynamic from "next/dynamic";
-import Loading from "@/components/Loading";
-const FileDetail = dynamic(() => import("@/components/FileDetail"), {
-  ssr: false,
-  loading: () => <Loading />,
-});
+import Loading from "@/components/common/Loading";
+const FileDetail = dynamic(
+  () => import("@/components/file-browser/FileDetail"),
+  {
+    ssr: false,
+    loading: () => <Loading />,
+  },
+);
 
 const FileError = ({ message }: { message: string }) => (
   <div className="text-center py-20 text-muted-foreground">

@@ -3,7 +3,7 @@
 import React from "react";
 import { useAppStore } from "@/lib/store";
 import { motion } from "framer-motion";
-import FileItemSkeleton from "./FileItemSkeleton";
+import FileItemSkeleton from "@/components/file-browser/FileItemSkeleton";
 
 const FileBrowserLoading = () => {
   const { view } = useAppStore();
