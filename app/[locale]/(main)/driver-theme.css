@@ -89,3 +89,19 @@
 }
 
 /* Fix for dark mode if needed (Tailwind variables handle this automatically usually) */
+
+@media (max-width: 640px) {
+  .driver-popover.driverjs-theme {
+    max-width: 300px;
+    padding: 1rem;
+  }
+  
+  .driver-popover.driverjs-theme .driver-popover-title {
+    font-size: 1rem;
+  }
+  
+  .driver-popover.driverjs-theme .driver-popover-description {
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+  }
+}

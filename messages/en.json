@@ -621,6 +621,10 @@
         "title": "Welcome to Zee-Index!",
         "description": "Let's take a quick tour to help you get started with your new file manager."
       },
+      "mobileMenu": {
+        "title": "Menu Options",
+        "description": "Access Theme, Refresh, and Github options here."
+      },
       "navigation": {
         "title": "Navigation",
         "description": "Quickly access your Home, Favorites, and Storage analysis here."

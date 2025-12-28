@@ -329,6 +329,7 @@ export default function Header() {
           <div className="absolute left-4 flex items-center gap-3 shrink-0 z-20">
             {!isSharePage && !shareToken && (
               <button
+                id="header-sidebar-toggle"
                 onClick={toggleSidebar}
                 className="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground"
               >
@@ -460,6 +461,7 @@ export default function Header() {
 
             <div className="flex items-center gap-2 sm:hidden">
               <button
+                id="header-mobile-notifications"
                 onClick={toggleNotificationCenter}
                 className="p-2 rounded-lg hover:bg-accent relative z-50"
               >
@@ -469,6 +471,7 @@ export default function Header() {
                 )}
               </button>
               <button
+                id="header-mobile-search"
                 onClick={() => setIsSearchVisible(!isSearchVisible)}
                 title={t("search")}
                 className="p-2 rounded-lg hover:bg-accent z-50"
@@ -480,6 +483,7 @@ export default function Header() {
                 )}
               </button>
               <button
+                id="header-mobile-menu"
                 onClick={() => setIsMobileMenuOpen(true)}
                 className="p-2 rounded-lg hover:bg-accent z-50"
                 title={t("menu")}

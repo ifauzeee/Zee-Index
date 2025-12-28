@@ -621,6 +621,10 @@
         "title": "Selamat Datang di Zee-Index!",
         "description": "Mari ikuti tur singkat untuk membantu Anda memulai dengan manajer file baru Anda."
       },
+      "mobileMenu": {
+        "title": "Opsi Menu",
+        "description": "Akses Tema, Segarkan, dan opsi Github di sini."
+      },
       "navigation": {
         "title": "Navigasi",
         "description": "Akses cepat ke Beranda, Favorit, dan analisis Penyimpanan Anda di sini."

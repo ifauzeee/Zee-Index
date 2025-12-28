@@ -26,80 +26,129 @@ export default function TourGuide() {
       prevBtnText: t("prev"),
       progressText: "{{current}} / {{total}}",
       popoverClass: "driverjs-theme",
-      steps: [
-        {
-          element: "#app-container",
-          popover: {
-            title: t("steps.welcome.title"),
-            description: t("steps.welcome.description"),
-            side: "bottom",
-            align: "center",
-          },
-        },
-        {
-          element: "#sidebar-nav-home",
-          popover: {
-            title: t("steps.navigation.title"),
-            description: t("steps.navigation.description"),
-            side: "right",
-            align: "center",
-          },
-        },
-        {
-          element: "#sidebar-explorer-tree",
-          popover: {
-            title: t("steps.explorer.title"),
-            description: t("steps.explorer.description"),
-            side: "right",
-            align: "center",
-          },
-        },
-        {
-          element: "#header-search-bar",
-          popover: {
-            title: t("steps.search.title"),
-            description: t("steps.search.description"),
-            side: "bottom",
-            align: "center",
-          },
-        },
-        {
-          element: "#header-notifications-btn",
-          popover: {
-            title: t("steps.notifications.title"),
-            description: t("steps.notifications.description"),
-            side: "bottom",
-            align: "end",
-          },
-        },
-        {
-          element: "#header-btn-theme",
-          popover: {
-            title: t("steps.theme.title"),
-            description: t("steps.theme.description"),
-            side: "bottom",
-            align: "end",
-          },
-        },
-        {
-          element: "#header-btn-refresh",
-          popover: {
-            title: t("steps.refresh.title"),
-            description: t("steps.refresh.description"),
-            side: "bottom",
-            align: "end",
-          },
-        },
-        {
-          element: "#header-btn-github",
-          popover: {
-            title: t("steps.github.title"),
-            description: t("steps.github.description"),
-            side: "bottom",
-            align: "end",
-          },
-        },
-      ],
+      steps:
+        window.innerWidth < 640
+          ? [
+              {
+                element: "#app-container",
+                popover: {
+                  title: t("steps.welcome.title"),
+                  description: t("steps.welcome.description"),
+                  side: "bottom",
+                  align: "center",
+                },
+              },
+              {
+                element: "#header-sidebar-toggle",
+                popover: {
+                  title: t("steps.navigation.title"),
+                  description: t("steps.navigation.description"),
+                  side: "bottom",
+                  align: "start",
+                },
+              },
+              {
+                element: "#header-mobile-search",
+                popover: {
+                  title: t("steps.search.title"),
+                  description: t("steps.search.description"),
+                  side: "bottom",
+                  align: "end",
+                },
+              },
+              {
+                element: "#header-mobile-notifications",
+                popover: {
+                  title: t("steps.notifications.title"),
+                  description: t("steps.notifications.description"),
+                  side: "bottom",
+                  align: "end",
+                },
+              },
+              {
+                element: "#header-mobile-menu",
+                popover: {
+                  title: t("steps.mobileMenu.title"),
+                  description: t("steps.mobileMenu.description"),
+                  side: "bottom",
+                  align: "end",
+                },
+              },
+            ]
+          : [
+              {
+                element: "#app-container",
+                popover: {
+                  title: t("steps.welcome.title"),
+                  description: t("steps.welcome.description"),
+                  side: "bottom",
+                  align: "center",
+                },
+              },
+              {
+                element: "#sidebar-nav-home",
+                popover: {
+                  title: t("steps.navigation.title"),
+                  description: t("steps.navigation.description"),
+                  side: "right",
+                  align: "center",
+                },
+              },
+              {
+                element: "#sidebar-explorer-tree",
+                popover: {
+                  title: t("steps.explorer.title"),
+                  description: t("steps.explorer.description"),
+                  side: "right",
+                  align: "center",
+                },
+              },
+              {
+                element: "#header-search-bar",
+                popover: {
+                  title: t("steps.search.title"),
+                  description: t("steps.search.description"),
+                  side: "bottom",
+                  align: "center",
+                },
+              },
+              {
+                element: "#header-notifications-btn",
+                popover: {
+                  title: t("steps.notifications.title"),
+                  description: t("steps.notifications.description"),
+                  side: "bottom",
+                  align: "end",
+                },
+              },
+              {
+                element: "#header-btn-theme",
+                popover: {
+                  title: t("steps.theme.title"),
+                  description: t("steps.theme.description"),
+                  side: "bottom",
+                  align: "end",
+                },
+              },
+              {
+                element: "#header-btn-refresh",
+                popover: {
+                  title: t("steps.refresh.title"),
+                  description: t("steps.refresh.description"),
+                  side: "bottom",
+                  align: "end",
+                },
+              },
+              {
+                element: "#header-btn-github",
+                popover: {
+                  title: t("steps.github.title"),
+                  description: t("steps.github.description"),
+                  side: "bottom",
+                  align: "end",
+                },
+              },
+            ],
       onDestroyed: () => {
         localStorage.setItem("zee-index-tour-seen", "true");
       },
