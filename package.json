@@ -13,6 +13,7 @@
     "check:all": "pnpm typecheck && pnpm format:check && pnpm lint",
     "fix:all": "pnpm format:fix && pnpm lint --fix",
     "test": "vitest",
+    "prepush": "pnpm fix:all && pnpm check:all && pnpm test --run && pnpm build",
     "prepare": "husky"
   },
   "lint-staged": {
