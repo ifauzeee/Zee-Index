@@ -395,24 +395,6 @@
     "uploadFailed": "Failed to upload some files. Please try again.",
     "poweredBy": "Powered by Zee-Index"
   },
-  "StoragePage": {
-    "title": "Storage Analysis",
-    "subtitle": "Details of your Google Drive storage usage.",
-    "usageSummary": "Usage Summary",
-    "used": "Used",
-    "totalCapacity": "Total Capacity",
-    "available": "Available",
-    "fileDistribution": "File Type Distribution",
-    "largestFiles": "10 Largest Files",
-    "modified": "Modified:",
-    "noFilesFound": "No files found.",
-    "loadError": "Failed to load storage data. Please try again later.",
-    "unknownError": "An unknown error occurred.",
-    "errorTitle": "An Error Occurred",
-    "size": "Size:",
-    "count": "Count:",
-    "totalFiles": "Total Files"
-  },
   "TrashPage": {
     "accessDenied": "Access Denied: This page is for Admins only",
     "loadError": "Failed to load trash",
@@ -654,5 +636,55 @@
         "description": "Check out the project on GitHub, report issues, or contribute!"
       }
     }
+  },
+  "FilePage": {
+    "errorTitle": "Failed to Load",
+    "retry": "Try Again",
+    "notFoundTitle": "File Not Found",
+    "notFoundMessage": "The file you are looking for does not exist or Google Drive is busy.",
+    "fetchError": "There was a problem fetching file details. Check your network connection or try again later."
+  },
+  "KeyboardShortcuts": {
+    "title": "Keyboard Shortcuts",
+    "commandPalette": "Open Command Palette",
+    "help": "Open Shortcut Help",
+    "search": "Focus Search",
+    "close": "Close Modal / Clear Selection",
+    "preview": "Preview File (Quick Look)",
+    "delete": "Delete File (Admin)",
+    "rename": "Rename File (Admin)",
+    "closeHint": "Press <bold>Esc</bold> to close"
+  },
+  "Preview": {
+    "open": "Open Preview",
+    "notAvailable": "Preview not available",
+    "download": "Download File",
+    "libraryError": "EpubJS Library not loaded."
+  },
+  "FileCard": {
+    "info": "Info",
+    "download": "Download",
+    "share": "Share",
+    "delete": "Delete",
+    "folder": "Folder"
+  },
+  "StoragePage": {
+    "title": "Storage Analysis",
+    "subtitle": "Details of your Google Drive storage usage.",
+    "usageSummary": "Usage Summary",
+    "used": "Used",
+    "totalCapacity": "Total Capacity",
+    "available": "Available",
+    "fileDistribution": "File Type Distribution",
+    "largestFiles": "10 Largest Files",
+    "modified": "Modified:",
+    "noFilesFound": "No files found.",
+    "loadError": "Failed to load storage data. Please try again later.",
+    "unknownError": "An unknown error occurred.",
+    "errorTitle": "An Error Occurred",
+    "size": "Size:",
+    "count": "Count:",
+    "totalFiles": "Total Files",
+    "total": "Total"
   }
 }

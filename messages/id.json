@@ -395,24 +395,6 @@
     "uploadFailed": "Gagal mengunggah sebagian file. Silakan coba lagi.",
     "poweredBy": "Powered by Zee-Index"
   },
-  "StoragePage": {
-    "title": "Analisis Penyimpanan",
-    "subtitle": "Detail penggunaan ruang penyimpanan Google Drive Anda.",
-    "usageSummary": "Ringkasan Penggunaan",
-    "used": "Terpakai",
-    "totalCapacity": "Total Kapasitas",
-    "available": "Tersedia",
-    "fileDistribution": "Distribusi Tipe File",
-    "largestFiles": "10 File Terbesar",
-    "modified": "Diubah:",
-    "noFilesFound": "Tidak ada file yang ditemukan.",
-    "loadError": "Gagal memuat data penyimpanan. Silakan coba lagi nanti.",
-    "unknownError": "Terjadi kesalahan tidak dikenal.",
-    "errorTitle": "Terjadi Kesalahan",
-    "size": "Ukuran:",
-    "count": "Jumlah:",
-    "totalFiles": "Total File"
-  },
   "TrashPage": {
     "accessDenied": "Akses Ditolak: Halaman ini khusus Admin",
     "loadError": "Gagal memuat sampah",
@@ -654,5 +636,55 @@
         "description": "Lihat proyek ini di GitHub, laporkan masalah, atau berkontribusi!"
       }
     }
+  },
+  "FilePage": {
+    "errorTitle": "Gagal Memuat",
+    "retry": "Coba Muat Ulang",
+    "notFoundTitle": "File Tidak Ditemukan",
+    "notFoundMessage": "File yang Anda cari tidak ada atau Google Drive sedang sibuk.",
+    "fetchError": "Terjadi masalah saat mengambil detail file. Periksa koneksi jaringan Anda atau coba lagi nanti."
+  },
+  "KeyboardShortcuts": {
+    "title": "Pintasan Keyboard",
+    "commandPalette": "Buka Command Palette",
+    "help": "Buka Bantuan Shortcut",
+    "search": "Fokus Pencarian",
+    "close": "Tutup Modal / Hapus Pilihan",
+    "preview": "Pratinjau File (Quick Look)",
+    "delete": "Hapus File (Admin)",
+    "rename": "Ganti Nama File (Admin)",
+    "closeHint": "Tekan <bold>Esc</bold> untuk menutup"
+  },
+  "Preview": {
+    "open": "Buka Pratinjau",
+    "notAvailable": "Pratinjau tidak tersedia",
+    "download": "Unduh File",
+    "libraryError": "Library EpubJS belum dimuat."
+  },
+  "FileCard": {
+    "info": "Info",
+    "download": "Unduh",
+    "share": "Bagikan",
+    "delete": "Hapus",
+    "folder": "Folder"
+  },
+  "StoragePage": {
+    "title": "Analisis Penyimpanan",
+    "subtitle": "Detail penggunaan ruang penyimpanan Google Drive Anda.",
+    "usageSummary": "Ringkasan Penggunaan",
+    "used": "Terpakai",
+    "totalCapacity": "Total Kapasitas",
+    "available": "Tersedia",
+    "fileDistribution": "Distribusi Tipe File",
+    "largestFiles": "10 File Terbesar",
+    "modified": "Diubah:",
+    "noFilesFound": "Tidak ada file yang ditemukan.",
+    "loadError": "Gagal memuat data penyimpanan. Silakan coba lagi nanti.",
+    "unknownError": "Terjadi kesalahan tidak dikenal.",
+    "errorTitle": "Terjadi Kesalahan",
+    "size": "Ukuran:",
+    "count": "Jumlah:",
+    "totalFiles": "Total File",
+    "total": "Total"
   }
 }

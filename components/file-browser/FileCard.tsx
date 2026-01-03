@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslations } from "next-intl";
 
 interface FileCardProps {
   file: DriveFile & {
@@ -40,6 +41,7 @@ export default function FileCard({
   onDownload,
   thumbnailSrc,
 }: FileCardProps) {
+  const t = useTranslations("FileCard");
   const isFolder = file.mimeType === "application/vnd.google-apps.folder";
   const IconComponent = getIcon(file.mimeType);
 
@@ -137,7 +139,7 @@ export default function FileCard({
             )}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            {isFolder ? "Folder" : formatBytes(parseInt(file.size || "0"))}
+            {isFolder ? t("folder") : formatBytes(parseInt(file.size || "0"))}
           </p>
         </div>
 
@@ -151,20 +153,22 @@ export default function FileCard({
           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
             {onDetails && (
               <DropdownMenuItem onClick={(e) => onDetails(e as any, file)}>
-                Info
+                {t("info")}
               </DropdownMenuItem>
             )}
             {onDownload && !isFolder && (
               <DropdownMenuItem onClick={(e) => onDownload(e as any, file)}>
-                Download
+                {t("download")}
               </DropdownMenuItem>
             )}
             {onShare && (
               <DropdownMenuItem onClick={(e) => onShare(e as any, file)}>
-                Share
+                {t("share")}
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600">
+              {t("delete")}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

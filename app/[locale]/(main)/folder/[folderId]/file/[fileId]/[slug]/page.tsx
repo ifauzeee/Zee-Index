@@ -1,6 +1,8 @@
 import { getFileDetailsFromDrive, listFilesFromDrive } from "@/lib/drive";
 import dynamic from "next/dynamic";
 import Loading from "@/components/common/Loading";
+import { getTranslations } from "next-intl/server";
+
 const FileDetail = dynamic(
   () => import("@/components/file-browser/FileDetail"),
   {
@@ -9,15 +11,23 @@ const FileDetail = dynamic(
   },
 );
 
-const FileError = ({ message }: { message: string }) => (
+const FileError = ({
+  message,
+  title,
+  retry,
+}: {
+  message: string;
+  title: string;
+  retry: string;
+}) => (
   <div className="text-center py-20 text-muted-foreground">
-    <h1 className="text-4xl font-bold">Gagal Memuat</h1>
+    <h1 className="text-4xl font-bold">{title}</h1>
     <p className="mt-4 mb-6">{message}</p>
     <a
       href=""
       className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 text-sm"
     >
-      Coba Muat Ulang
+      {retry}
     </a>
   </div>
 );
@@ -38,6 +48,7 @@ export default async function FilePage({
 }: {
   params: { folderId: string; fileId: string };
 }) {
+  const t = await getTranslations("FilePage");
   let file = null;
   let error = null;
 
@@ -106,26 +117,25 @@ export default async function FilePage({
     }
   } catch (err) {
     console.error("Fetch file details error:", err);
-    error =
-      "Terjadi masalah saat mengambil detail file. Periksa koneksi jaringan Anda atau coba lagi nanti.";
+    error = t("fetchError");
   }
 
   if (error) {
-    return <FileError message={error} />;
+    return (
+      <FileError message={error} title={t("errorTitle")} retry={t("retry")} />
+    );
   }
 
   if (!file) {
     return (
       <div className="text-center py-20 text-muted-foreground">
-        <h1 className="text-4xl font-bold">File Tidak Ditemukan</h1>
-        <p className="mt-4 mb-6">
-          File yang Anda cari tidak ada atau Google Drive sedang sibuk.
-        </p>
+        <h1 className="text-4xl font-bold">{t("notFoundTitle")}</h1>
+        <p className="mt-4 mb-6">{t("notFoundMessage")}</p>
         <a
           href=""
           className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 text-sm"
         >
-          Coba Muat Ulang
+          {t("retry")}
         </a>
       </div>
     );

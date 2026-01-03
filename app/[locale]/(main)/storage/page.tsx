@@ -217,7 +217,7 @@ function StoragePageContent() {
 
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Total</p>
+                  <p className="text-sm text-muted-foreground">{t("total")}</p>
                   <p className="text-xl font-bold">
                     {data.breakdown.reduce((acc, item) => acc + item.count, 0)}
                   </p>
