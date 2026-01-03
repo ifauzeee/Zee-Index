@@ -19,9 +19,13 @@ export async function getStorageDetails() {
   if (!aboutResponse.ok) {
     throw new Error("Gagal mengambil data kuota Google Drive.");
   }
-  const aboutData: { storageQuota: { usage: string; limit: string } } =
-    await aboutResponse.json();
+
+  const aboutData: {
+    storageQuota: { usage: string; limit: string; usageInTrash: string };
+  } = await aboutResponse.json();
+
   const globalUsage = parseInt(aboutData.storageQuota.usage, 10);
+  const trashUsage = parseInt(aboutData.storageQuota.usageInTrash, 10);
 
   const envLimitGB = process.env.STORAGE_LIMIT_GB;
   const limit = envLimitGB
@@ -33,7 +37,7 @@ export async function getStorageDetails() {
     orderBy: "quotaBytesUsed desc",
     pageSize: "1000",
     fields:
-      "files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, hasThumbnail, parents, trashed)",
+      "files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, hasThumbnail, parents, trashed, md5Checksum)",
     supportsAllDrives: "true",
     includeItemsFromAllDrives: "true",
   });
@@ -81,6 +85,8 @@ export async function getStorageDetails() {
 
   const finalUsage = rootFolderId ? localUsage : globalUsage;
   const breakdownMap: Record<string, { size: number; count: number }> = {};
+  const md5Map: Record<string, DriveFile[]> = {};
+
   allFiles.forEach((file: DriveFile) => {
     let type = "Lainnya";
     const mime = file.mimeType || "";
@@ -111,7 +117,22 @@ export async function getStorageDetails() {
     const fileSize = parseInt(file.size || "0", 10);
     breakdownMap[type].size += fileSize;
     breakdownMap[type].count += 1;
+
+    if (file.md5Checksum) {
+      if (!md5Map[file.md5Checksum]) {
+        md5Map[file.md5Checksum] = [];
+      }
+      md5Map[file.md5Checksum].push(file);
+    }
   });
+
+  const duplicates = Object.values(md5Map)
+    .filter((group) => group.length > 1)
+    .sort((a, b) => {
+      const sizeA = parseInt(a[0].size || "0", 10) * (a.length - 1);
+      const sizeB = parseInt(b[0].size || "0", 10) * (b.length - 1);
+      return sizeB - sizeA;
+    });
 
   const breakdown = Object.entries(breakdownMap)
     .map(([type, data]) => ({
@@ -121,10 +142,21 @@ export async function getStorageDetails() {
     }))
     .sort((a, b) => b.size - a.size);
 
+  const oldestFiles = [...allFiles]
+    .filter((f) => f.modifiedTime)
+    .sort(
+      (a, b) =>
+        new Date(a.modifiedTime).getTime() - new Date(b.modifiedTime).getTime(),
+    )
+    .slice(0, 10);
+
   return {
     usage: finalUsage,
+    trashUsage,
     limit,
     breakdown,
     largestFiles: allFiles.slice(0, 10),
+    duplicates: duplicates.slice(0, 20),
+    oldestFiles,
   };
 }

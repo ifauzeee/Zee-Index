@@ -685,6 +685,15 @@
     "size": "Ukuran:",
     "count": "Jumlah:",
     "totalFiles": "Total File",
-    "total": "Total"
+    "total": "Total",
+    "trashUsage": "Penggunaan Sampah",
+    "emptyTrash": "Kosongkan Sampah",
+    "potentialDuplicates": "Potensi Duplikat (Dari 1000 File)",
+    "duplicateGroup": "Grup Duplikat",
+    "viewFiles": "Lihat File",
+    "oldestFiles": "File Terlama (Harta Karun Terlupakan)",
+    "cleanup": "Bersihkan",
+    "wastedSpace": "~{size} Terbuang",
+    "lastModified": "Terakhir Diubah"
   }
 }

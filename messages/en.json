@@ -685,6 +685,15 @@
     "size": "Size:",
     "count": "Count:",
     "totalFiles": "Total Files",
-    "total": "Total"
+    "total": "Total",
+    "trashUsage": "Trash Usage",
+    "emptyTrash": "Empty Trash",
+    "potentialDuplicates": "Potential Duplicates (Top 1000 Files)",
+    "duplicateGroup": "Duplicate Group",
+    "viewFiles": "View Files",
+    "oldestFiles": "Oldest Files (Forgotten Treasures)",
+    "cleanup": "Cleanup",
+    "wastedSpace": "~{size} Wasted",
+    "lastModified": "Last Modified"
   }
 }
