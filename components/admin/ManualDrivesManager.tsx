@@ -222,7 +222,7 @@ export default function ManualDrivesManager() {
               </label>
               <input
                 required
-                placeholder="Contoh: 1AbCdEfG..."
+                placeholder={t("folderIdPlaceholder")}
                 value={formData.id}
                 onChange={(e) =>
                   setFormData({ ...formData, id: e.target.value })
@@ -236,7 +236,7 @@ export default function ManualDrivesManager() {
               </label>
               <input
                 required
-                placeholder="Contoh: Project X"
+                placeholder={t("displayNamePlaceholder")}
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
@@ -250,7 +250,7 @@ export default function ManualDrivesManager() {
               </label>
               <input
                 type="password"
-                placeholder="Biarkan kosong jika publik"
+                placeholder={t("passwordPlaceholder")}
                 value={formData.password}
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
@@ -465,7 +465,7 @@ export default function ManualDrivesManager() {
                       value={configName}
                       onChange={(e) => setConfigName(e.target.value)}
                       className="w-full pl-9 pr-4 py-2.5 bg-background border rounded-lg focus:ring-2 focus:ring-primary outline-none"
-                      placeholder="Nama folder..."
+                      placeholder={t("folderNamePlaceholder")}
                     />
                   </div>
                 </div>
@@ -480,7 +480,7 @@ export default function ManualDrivesManager() {
                       value={configPassword}
                       onChange={(e) => setConfigPassword(e.target.value)}
                       className="w-full pl-9 pr-4 py-2.5 bg-background border rounded-lg focus:ring-2 focus:ring-primary outline-none"
-                      placeholder="Biarkan kosong untuk akses publik"
+                      placeholder={t("publicAccessPlaceholder")}
                     />
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-1.5">

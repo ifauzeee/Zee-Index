@@ -13,6 +13,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface ProtectedFolder {
   id: string;
@@ -21,6 +22,7 @@ interface ProtectedFolder {
 
 export default function ProtectedFoldersManager() {
   const { addToast } = useAppStore();
+  const t = useTranslations("ProtectedFoldersManager");
   const [folders, setFolders] = useState<Record<string, ProtectedFolder>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -92,14 +94,10 @@ export default function ProtectedFoldersManager() {
   return (
     <>
       <div>
-        <h2 className="text-2xl font-semibold mb-6">
-          Manajemen Folder Terproteksi
-        </h2>
+        <h2 className="text-2xl font-semibold mb-6">{t("title")}</h2>
         <div className="bg-card border rounded-lg p-6 space-y-6">
           <form onSubmit={handleAddFolder} className="space-y-4">
-            <h4 className="text-base font-medium">
-              Tambah atau Perbarui Folder
-            </h4>
+            <h4 className="text-base font-medium">{t("addOrUpdate")}</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative">
                 <FolderInput className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -107,7 +105,7 @@ export default function ProtectedFoldersManager() {
                   name="folderId"
                   value={newFolder.folderId}
                   onChange={handleInputChange}
-                  placeholder="ID Folder Google Drive"
+                  placeholder={t("folderIdPlaceholder")}
                   required
                   className="w-full pl-10 pr-4 py-2 rounded-lg border bg-transparent focus:ring-2 focus:ring-primary outline-none"
                 />
@@ -118,7 +116,7 @@ export default function ProtectedFoldersManager() {
                   name="password"
                   value={newFolder.password}
                   onChange={handleInputChange}
-                  placeholder="Kata Sandi Baru"
+                  placeholder={t("passwordPlaceholder")}
                   required
                   className="w-full pl-10 pr-4 py-2 rounded-lg border bg-transparent focus:ring-2 focus:ring-primary outline-none"
                 />
@@ -134,23 +132,19 @@ export default function ProtectedFoldersManager() {
               ) : (
                 <ShieldPlus />
               )}
-              <span>
-                {isSubmitting ? "Menyimpan..." : "Simpan Perlindungan"}
-              </span>
+              <span>{isSubmitting ? t("saving") : t("saveProtection")}</span>
             </button>
           </form>
 
           <div className="border-t pt-4 mt-4">
-            <h4 className="text-base font-medium mb-3">
-              Daftar Folder Terproteksi
-            </h4>
+            <h4 className="text-base font-medium mb-3">{t("protectedList")}</h4>
             {isLoading ? (
               <div className="flex justify-center items-center h-24">
                 <Loader2 className="animate-spin text-muted-foreground" />
               </div>
             ) : Object.keys(folders).length === 0 ? (
               <p className="text-sm text-muted-foreground italic">
-                Belum ada folder yang dilindungi.
+                {t("noProtected")}
               </p>
             ) : (
               <ul className="grid gap-3 sm:grid-cols-2">
@@ -166,7 +160,7 @@ export default function ProtectedFoldersManager() {
                       <button
                         onClick={() => setFolderToDelete(folderId)}
                         className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                        title="Hapus Perlindungan"
+                        title={t("removeProtection")}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -175,7 +169,7 @@ export default function ProtectedFoldersManager() {
                       {folderId}
                     </p>
                     <div className="flex items-center gap-1.5 text-xs text-green-600 font-medium bg-green-500/10 w-fit px-2 py-0.5 rounded-full">
-                      <Lock size={10} /> Terkunci Aman
+                      <Lock size={10} /> {t("securelyLocked")}
                     </div>
                   </li>
                 ))}
@@ -206,15 +200,14 @@ export default function ProtectedFoldersManager() {
                   <AlertTriangle className="h-8 w-8 text-amber-600" />
                 </div>
                 <h3 className="text-lg font-bold text-foreground">
-                  Hapus Proteksi?
+                  {t("removeTitle")}
                 </h3>
                 <p className="mt-2 text-sm text-muted-foreground">
                   Folder{" "}
                   <span className="font-mono bg-muted px-1 rounded">
                     {folderToDelete}
                   </span>{" "}
-                  akan menjadi terbuka untuk umum (kecuali jika dibatasi dari
-                  Google Drive).
+                  {t("removeMessage")}
                 </p>
               </div>
               <div className="mt-6 grid grid-cols-2 gap-3">
@@ -222,13 +215,13 @@ export default function ProtectedFoldersManager() {
                   onClick={() => setFolderToDelete(null)}
                   className="px-4 py-2 text-sm font-medium rounded-lg border bg-background hover:bg-accent transition-colors"
                 >
-                  Batal
+                  {t("cancel")}
                 </button>
                 <button
                   onClick={confirmDelete}
                   className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors shadow-sm"
                 >
-                  Ya, Hapus
+                  {t("yesRemove")}
                 </button>
               </div>
             </motion.div>

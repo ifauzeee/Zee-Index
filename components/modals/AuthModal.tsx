@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { KeyRound, X, User } from "lucide-react";
 import { useScrollLock } from "@/hooks/useScrollLock";
+import { useTranslations } from "next-intl";
 
 interface AuthModalProps {
   folderName: string;
@@ -33,6 +34,7 @@ export default function AuthModal({
 }: AuthModalProps) {
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
+  const t = useTranslations("AuthModal");
 
   useScrollLock(true);
 
@@ -74,7 +76,7 @@ export default function AuthModal({
               type="text"
               value={id}
               onChange={(e) => setId(e.target.value)}
-              placeholder="ID Pengguna"
+              placeholder={t("userIdPlaceholder")}
               className="w-full pl-10 pr-4 py-3 rounded-lg border bg-background focus:ring-2 focus:ring-ring focus:outline-none"
               required
               autoFocus
@@ -87,7 +89,7 @@ export default function AuthModal({
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Kata Sandi"
+              placeholder={t("passwordPlaceholder")}
               className="w-full pl-10 pr-4 py-3 rounded-lg border bg-background focus:ring-2 focus:ring-ring focus:outline-none"
               required
             />

@@ -3,11 +3,15 @@
 /.pnpm-store
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*~
 
 # Build
 /.next/
 /out/
 /build
+/dist
 *.tsbuildinfo
 next-env.d.ts
 
@@ -16,6 +20,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+lerna-debug.log*
 *.log
 
 # Environment Variables
@@ -33,8 +38,51 @@ yarn-error.log*
 # Editor
 .vscode/
 .idea/
+*.sublime-project
+*.sublime-workspace
+
+# Testing & Coverage
+/coverage
+/.nyc_output
+*.lcov
+.vitest
+
+# Cache
+.cache
+.turbo
+.eslintcache
+.stylelintcache
+.parcel-cache
+
+# Temporary files
+*.tmp
+*.temp
+.temp
+.tmp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
 
 # Legacy/Misc
 public/sw.js
 public/workbox-*.js
 public/swe-worker-*.js
+
+# Backup files
+*.bak
+*.backup
+*~
+*.orig
+
+# Debug files
+*.log.*
+*.pid
+*.seed
+*.pid.lock

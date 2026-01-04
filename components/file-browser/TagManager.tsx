@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useTranslations } from "next-intl";
 
 interface TagManagerProps {
   fileId: string;
@@ -12,6 +13,7 @@ interface TagManagerProps {
 export default function TagManager({ fileId }: TagManagerProps) {
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
+  const t = useTranslations("TagManager");
 
   useEffect(() => {
     fetch(`/api/tags?fileId=${fileId}`)
@@ -52,11 +54,11 @@ export default function TagManager({ fileId }: TagManagerProps) {
         <Input
           value={newTag}
           onChange={(e) => setNewTag(e.target.value)}
-          placeholder="New Label..."
+          placeholder={t("newLabelPlaceholder")}
           className="h-8"
         />
         <Button size="sm" onClick={() => handleUpdate(newTag, "add")}>
-          Add
+          {t("add")}
         </Button>
       </div>
     </div>

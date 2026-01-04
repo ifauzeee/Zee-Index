@@ -577,7 +577,12 @@
     "deleteTitle": "Konfirmasi Hapus",
     "deleted": "Dihapus.",
     "deleteFailed": "Gagal menghapus.",
-    "addSuccess": "Drive berhasil ditambahkan!"
+    "addSuccess": "Drive berhasil ditambahkan!",
+    "folderIdPlaceholder": "Contoh: 1AbCdEfG...",
+    "displayNamePlaceholder": "Contoh: Project X",
+    "passwordPlaceholder": "Biarkan kosong jika publik",
+    "folderNamePlaceholder": "Nama folder...",
+    "publicAccessPlaceholder": "Biarkan kosong untuk akses publik"
   },
   "SharedCollectionPage": {
     "defaultName": "Koleksi Bersama",
@@ -686,5 +691,42 @@
     "count": "Jumlah:",
     "totalFiles": "Total File",
     "total": "Total"
+  },
+  "ViewToggle": {
+    "listView": "Tampilan daftar",
+    "gridView": "Tampilan kisi"
+  },
+  "ProtectedFoldersManager": {
+    "title": "Manajemen Folder Terproteksi",
+    "addOrUpdate": "Tambah atau Perbarui Folder",
+    "folderIdPlaceholder": "ID Folder Google Drive",
+    "passwordPlaceholder": "Kata Sandi Baru",
+    "saving": "Menyimpan...",
+    "saveProtection": "Simpan Perlindungan",
+    "protectedList": "Daftar Folder Terproteksi",
+    "noProtected": "Belum ada folder yang dilindungi.",
+    "removeProtection": "Hapus Perlindungan",
+    "securelyLocked": "Terkunci Aman",
+    "removeTitle": "Hapus Proteksi?",
+    "removeMessage": "akan menjadi terbuka untuk umum (kecuali jika dibatasi dari Google Drive).",
+    "cancel": "Batal",
+    "yesRemove": "Ya, Hapus"
+  },
+  "AuthModal": {
+    "userIdPlaceholder": "ID Pengguna",
+    "passwordPlaceholder": "Kata Sandi"
+  },
+  "TwoFactorAuthSetup": {
+    "codePlaceholder": "123456"
+  },
+  "TagManager": {
+    "newLabelPlaceholder": "Label Baru...",
+    "add": "Tambah"
+  },
+  "BrandingConfig": {
+    "appNamePlaceholder": "Zee Index",
+    "taglinePlaceholder": "Default (Kosong)",
+    "logoUrlPlaceholder": "https://example.com/logo.png",
+    "faviconUrlPlaceholder": "https://example.com/favicon.ico"
   }
 }

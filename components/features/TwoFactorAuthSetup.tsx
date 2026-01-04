@@ -7,6 +7,7 @@ import { Loader2, ShieldCheck, ShieldOff } from "lucide-react";
 import Image from "next/image";
 import { useAppStore } from "@/lib/store";
 import { useConfirm } from "@/components/providers/ModalProvider";
+import { useTranslations } from "next-intl";
 
 export default function TwoFactorAuthSetup() {
   const [isEnabled, setIsEnabled] = useState<boolean | null>(null);
@@ -17,6 +18,7 @@ export default function TwoFactorAuthSetup() {
   const { addToast } = useAppStore();
   const { data: session } = useSession();
   const { confirm } = useConfirm();
+  const t = useTranslations("TwoFactorAuthSetup");
 
   const checkStatus = useCallback(async () => {
     setIsLoading(true);
@@ -200,7 +202,7 @@ export default function TwoFactorAuthSetup() {
                       onChange={(e) =>
                         setVerificationCode(e.target.value.replace(/\D/g, ""))
                       }
-                      placeholder="123456"
+                      placeholder={t("codePlaceholder")}
                       maxLength={6}
                       className="w-32 text-center tracking-[0.5em] font-mono text-lg px-3 py-2 rounded-md border bg-transparent focus:ring-2 focus:ring-ring focus:outline-none"
                     />

@@ -577,7 +577,12 @@
     "deleteTitle": "Confirm Delete",
     "deleted": "Deleted.",
     "deleteFailed": "Failed to delete.",
-    "addSuccess": "Drive added successfully!"
+    "addSuccess": "Drive added successfully!",
+    "folderIdPlaceholder": "Example: 1AbCdEfG...",
+    "displayNamePlaceholder": "Example: Project X",
+    "passwordPlaceholder": "Leave empty if public",
+    "folderNamePlaceholder": "Folder name...",
+    "publicAccessPlaceholder": "Leave empty for public access"
   },
   "SharedCollectionPage": {
     "defaultName": "Shared Collection",
@@ -686,5 +691,42 @@
     "count": "Count:",
     "totalFiles": "Total Files",
     "total": "Total"
+  },
+  "ViewToggle": {
+    "listView": "List view",
+    "gridView": "Grid view"
+  },
+  "ProtectedFoldersManager": {
+    "title": "Protected Folder Management",
+    "addOrUpdate": "Add or Update Folder",
+    "folderIdPlaceholder": "Google Drive Folder ID",
+    "passwordPlaceholder": "New Password",
+    "saving": "Saving...",
+    "saveProtection": "Save Protection",
+    "protectedList": "Protected Folder List",
+    "noProtected": "No protected folders yet.",
+    "removeProtection": "Remove Protection",
+    "securelyLocked": "Securely Locked",
+    "removeTitle": "Remove Protection?",
+    "removeMessage": "will be publicly accessible (unless restricted from Google Drive).",
+    "cancel": "Cancel",
+    "yesRemove": "Yes, Remove"
+  },
+  "AuthModal": {
+    "userIdPlaceholder": "User ID",
+    "passwordPlaceholder": "Password"
+  },
+  "TwoFactorAuthSetup": {
+    "codePlaceholder": "123456"
+  },
+  "TagManager": {
+    "newLabelPlaceholder": "New Label...",
+    "add": "Add"
+  },
+  "BrandingConfig": {
+    "appNamePlaceholder": "Zee Index",
+    "taglinePlaceholder": "Default (Empty)",
+    "logoUrlPlaceholder": "https://example.com/logo.png",
+    "faviconUrlPlaceholder": "https://example.com/favicon.ico"
   }
 }

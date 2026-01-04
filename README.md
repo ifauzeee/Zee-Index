@@ -88,6 +88,7 @@ Zee-Index allows you to build a powerful file system and media server on top of 
 - **Code Editor:** View and edit code files with syntax highlighting for 20+ languages.
 - **Image Editor:** Crop, resize, and rotate images directly in the browser and save changes back to Drive.
 - **File Request:** Create public upload links for non-users to send files to your Drive securely.
+- **🌍 Multilingual Support (i18n):** Full internationalization with English and Indonesian languages. Easy to add more languages via JSON translation files.
 
 ---
 
@@ -101,6 +102,7 @@ Zee-Index is built with modern, high-performance web technologies:
 - **Authentication:** NextAuth.js
 - **Database:** Vercel KV (Redis) / Upstash Redis
 - **State Management:** Zustand, React Query
+- **Internationalization:** next-intl (i18n support for multiple languages)
 - **Validation:** Zod
 - **External API:** Google Drive API V3
 
@@ -114,6 +116,7 @@ A quick overview of the codebase to help you navigate:
 .
 ├── app/                  # Next.js App Router pages and API routes
 │   ├── (main)/           # Main layout and file explorer routes
+│   ├── [locale]/         # Internationalized routes
 │   ├── admin/            # Admin Dashboard pages
 │   ├── api/              # Backend API endpoints
 │   ├── login/            # Authentication pages
@@ -121,13 +124,26 @@ A quick overview of the codebase to help you navigate:
 │   └── layout.tsx        # Root layout definition
 ├── components/           # Reusable UI components
 │   ├── file-details/     # Components for specific file types (Audio, Video, etc.)
+│   ├── file-browser/     # File explorer components
+│   ├── admin/            # Admin dashboard components
+│   ├── modals/           # Modal dialogs
 │   └── ...
 ├── lib/                  # Core business logic and utilities
-│   ├── googleDrive.ts    # Google Drive API client and helpers
+│   ├── drive/            # Google Drive API integration
+│   │   ├── client.ts     # Drive API client
+│   │   ├── operations.ts # File operations (list, search, etc.)
+│   │   ├── storage.ts    # Storage quota management
+│   │   └── auth.ts       # Drive authentication
 │   ├── authOptions.ts    # NextAuth configuration
 │   ├── kv.ts             # Redis database connection
-│   └── store.ts          # Zustand state stores
+│   ├── store.ts          # Zustand state stores
+│   ├── auth.ts           # Authentication utilities
+│   └── ...
+├── messages/             # i18n translation files
+│   ├── en.json           # English translations
+│   └── id.json           # Indonesian translations
 ├── public/               # Static assets (images, fonts, icons)
+├── i18n.ts               # Internationalization configuration
 └── middleware.ts         # Request handling, auth checks, and redirects
 ```
 

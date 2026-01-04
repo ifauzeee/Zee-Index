@@ -11,7 +11,6 @@ import {
   Save,
   RotateCcw,
 } from "lucide-react";
-
 export default function BrandingConfig() {
   const {
     appName,
