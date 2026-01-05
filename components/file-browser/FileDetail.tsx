@@ -411,7 +411,7 @@ export default function FileDetail({
           <div
             className={cn(
               "w-full flex-1 flex items-start justify-center overflow-hidden",
-              !isEditing && "bg-background rounded-lg",
+              !isEditing && fileType !== "image" && "bg-background rounded-lg",
             )}
           >
             {isEditing ? (
@@ -440,7 +440,7 @@ export default function FileDetail({
               </div>
             ) : fileType === "image" ? (
               <div
-                className="w-full h-full rounded-xl overflow-hidden relative shadow-sm border bg-muted/5 cursor-zoom-in group/image"
+                className="w-full h-full relative cursor-zoom-in group/image flex items-center justify-center"
                 onClick={() => setInternalPreviewOpen(true)}
               >
                 <ImagePreview src={directLink} />

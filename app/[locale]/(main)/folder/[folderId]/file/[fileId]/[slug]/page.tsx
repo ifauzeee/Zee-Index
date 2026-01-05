@@ -46,7 +46,7 @@ interface SubtitleTrack {
 export default async function FilePage({
   params,
 }: {
-  params: { folderId: string; fileId: string };
+  params: { folderId: string; fileId: string; locale: string };
 }) {
   const t = await getTranslations("FilePage");
   let file = null;
@@ -73,14 +73,14 @@ export default async function FilePage({
 
       if (currentIndex > 0) {
         const prevFile = nonFolderFiles[currentIndex - 1];
-        prevFileUrl = `/folder/${params.folderId}/file/${
+        prevFileUrl = `/${params.locale}/folder/${params.folderId}/file/${
           prevFile.id
         }/${createSlug(prevFile.name)}`;
       }
 
       if (currentIndex !== -1 && currentIndex < nonFolderFiles.length - 1) {
         const nextFile = nonFolderFiles[currentIndex + 1];
-        nextFileUrl = `/folder/${params.folderId}/file/${
+        nextFileUrl = `/${params.locale}/folder/${params.folderId}/file/${
           nextFile.id
         }/${createSlug(nextFile.name)}`;
       }

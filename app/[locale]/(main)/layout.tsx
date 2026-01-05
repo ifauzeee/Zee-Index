@@ -45,7 +45,7 @@ const AppFooter = () => {
   }
 
   return (
-    <footer className="text-center py-6 text-sm text-muted-foreground border-t bg-background mb-16 lg:mb-0 w-full overflow-hidden">
+    <footer className="text-center py-6 text-sm text-muted-foreground bg-background mb-16 lg:mb-0 w-full overflow-hidden">
       <div className="mb-2 flex items-center justify-center gap-2">
         <HardDrive size={14} />
         <span>{t("dataUsage")}</span>
@@ -155,8 +155,8 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
               !isShareMode && effectiveSidebarOpen ? "lg:ml-64" : "ml-0",
             )}
           >
-            <div className="container mx-auto px-4 max-w-7xl flex-grow py-4 pb-24 lg:pb-4 min-w-0 overflow-x-hidden">
-              <main className="min-h-[50vh] mb-12 w-full">{children}</main>
+            <div className="container mx-auto px-4 max-w-7xl flex-grow py-4 pb-20 lg:pb-0 min-w-0 overflow-x-hidden">
+              <main className="min-h-[50vh] mb-0 w-full">{children}</main>
             </div>
             <AppFooter />
           </div>
