@@ -7,6 +7,7 @@ RUN npm install -g pnpm && pnpm i --frozen-lockfile
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+COPY public ./public
 COPY . .
 
 

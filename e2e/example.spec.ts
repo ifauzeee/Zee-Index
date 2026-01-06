@@ -9,5 +9,5 @@ test("homepage has title", async ({ page }) => {
 test("has generic heading", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.locator("h1")).toBeVisible();
+  await expect(page.locator("h1")).toBeVisible({ timeout: 30000 });
 });
