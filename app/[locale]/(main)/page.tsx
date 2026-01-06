@@ -1,14 +1,5 @@
-import dynamic from "next/dynamic";
-import Loading from "@/components/common/Loading";
-
-const FileBrowser = dynamic(
-  () => import("@/components/file-browser/FileBrowser"),
-  {
-    ssr: false,
-    loading: () => <Loading />,
-  },
-);
+import FileBrowserClient from "@/components/file-browser/FileBrowserClient";
 
 export default function Home() {
-  return <FileBrowser />;
+  return <FileBrowserClient />;
 }

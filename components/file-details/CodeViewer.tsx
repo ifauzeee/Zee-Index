@@ -28,3 +28,5 @@ export function CodeViewer({ content, language, className }: CodeViewerProps) {
     </div>
   );
 }
+
+export default CodeViewer;

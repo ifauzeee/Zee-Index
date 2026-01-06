@@ -36,3 +36,13 @@ jobs:
 
       - name: Test
         run: pnpm test -- run
+
+      - name: Build
+        run: pnpm build
+        env:
+          GOOGLE_CLIENT_ID: "mock_client_id"
+          GOOGLE_CLIENT_SECRET: "mock_client_secret"
+          NEXTAUTH_SECRET: "super_secret_mock_key_at_least_32_chars_long"
+          NEXTAUTH_URL: "http://localhost:3000"
+          KV_REST_API_URL: "https://mock.upstash.io"
+          KV_REST_API_TOKEN: "mock_token"

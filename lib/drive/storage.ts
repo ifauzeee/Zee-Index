@@ -2,8 +2,9 @@ import { fetchWithRetry } from "./client";
 import { getAccessToken } from "./auth";
 import { getAllDescendantFolders } from "./operations";
 import { DriveFile } from "./types";
+import { unstable_cache } from "next/cache";
 
-export async function getStorageDetails() {
+async function fetchStorageDetails() {
   const accessToken = await getAccessToken();
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
   const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3";
@@ -128,3 +129,9 @@ export async function getStorageDetails() {
     largestFiles: allFiles.slice(0, 10),
   };
 }
+
+export const getStorageDetails = unstable_cache(
+  fetchStorageDetails,
+  ["storage-details"],
+  { revalidate: 300, tags: ["storage-details"] },
+);

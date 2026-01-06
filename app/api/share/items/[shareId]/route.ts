@@ -10,8 +10,9 @@ const SHARE_LINKS_KEY = "zee-index:share-links";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { shareId: string } },
+  props: { params: Promise<{ shareId: string }> },
 ) {
+  const params = await props.params;
   const { shareId } = params;
   const shareToken = req.nextUrl.searchParams.get("share_token");
 

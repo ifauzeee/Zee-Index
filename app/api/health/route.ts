@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const headersList = headers();
+  const headersList = await headers();
   const userAgent = headersList.get("user-agent") || "unknown";
 
   const healthData = {

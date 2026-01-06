@@ -1,15 +1,6 @@
 import { getFileDetailsFromDrive, listFilesFromDrive } from "@/lib/drive";
-import dynamic from "next/dynamic";
-import Loading from "@/components/common/Loading";
+import FileDetailClient from "@/components/file-browser/FileDetailClient";
 import { getTranslations } from "next-intl/server";
-
-const FileDetail = dynamic(
-  () => import("@/components/file-browser/FileDetail"),
-  {
-    ssr: false,
-    loading: () => <Loading />,
-  },
-);
 
 const FileError = ({
   message,
@@ -43,11 +34,10 @@ interface SubtitleTrack {
   default: boolean;
 }
 
-export default async function FilePage({
-  params,
-}: {
-  params: { folderId: string; fileId: string; locale: string };
+export default async function FilePage(props: {
+  params: Promise<{ folderId: string; fileId: string; locale: string }>;
 }) {
+  const params = await props.params;
   const t = await getTranslations("FilePage");
   let file = null;
   let error = null;
@@ -142,7 +132,7 @@ export default async function FilePage({
   }
 
   return (
-    <FileDetail
+    <FileDetailClient
       file={file}
       prevFileUrl={prevFileUrl}
       nextFileUrl={nextFileUrl}

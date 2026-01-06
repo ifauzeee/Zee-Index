@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-
-export const dynamic = "force-dynamic";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { kv } from "@/lib/kv";
@@ -13,20 +11,17 @@ import type {
   TopUser,
 } from "@/lib/adminStats";
 import { startOfToday, subDays, getDay } from "date-fns";
-
 import { type Session } from "next-auth";
+import { unstable_cache } from "next/cache";
+
+export const dynamic = "force-dynamic";
 
 async function isAdmin(session: Session | null): Promise<boolean> {
   return session?.user?.role === "ADMIN";
 }
 
-export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!(await isAdmin(session))) {
-    return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
-  }
-
-  try {
+const getAdminStatsCached = unstable_cache(
+  async () => {
     const ninetyDaysAgo = subDays(new Date(), 90).getTime();
     const logMembers: unknown[] = await kv.zrange(
       "zee-index:activity-log",
@@ -124,6 +119,20 @@ export async function GET() {
       topUploadedFiles,
     };
 
+    return stats;
+  },
+  ["admin-stats"],
+  { revalidate: 300, tags: ["admin-stats"] },
+);
+
+export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!(await isAdmin(session))) {
+    return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
+  }
+
+  try {
+    const stats = await getAdminStatsCached();
     return NextResponse.json(stats);
   } catch (error) {
     console.error("Gagal mengambil statistik admin:", error);

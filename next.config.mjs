@@ -1,4 +1,9 @@
 import withPWAInit from "@ducanh2912/next-pwa";
+import withBundleAnalyzer from "@next/bundle-analyzer";
+
+const withAnalyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 const withPWA = withPWAInit({
   dest: "public",
@@ -13,9 +18,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+
   // output: "standalone",
   images: {
     remotePatterns: [
@@ -79,4 +82,4 @@ const withNextIntl = createNextIntlPlugin("./i18n.ts");
 
 import { withSentryConfig } from "@sentry/nextjs";
 
-export default withPWA(withNextIntl(nextConfig));
+export default withAnalyzer(withPWA(withNextIntl(nextConfig)));

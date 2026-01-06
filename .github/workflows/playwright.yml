@@ -1,0 +1,39 @@
+name: Playwright Tests
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm install -g pnpm && pnpm install --frozen-lockfile
+
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: pnpm exec playwright test
+        env:
+          # Mock env needed for Next.js build during test
+          GOOGLE_CLIENT_ID: "mock_client_id"
+          GOOGLE_CLIENT_SECRET: "mock_client_secret"
+          NEXTAUTH_SECRET: "super_secret_mock_key_at_least_32_chars_long"
+          NEXTAUTH_URL: "http://localhost:3000"
+          KV_REST_API_URL: "https://mock.upstash.io"
+          KV_REST_API_TOKEN: "mock_token"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30

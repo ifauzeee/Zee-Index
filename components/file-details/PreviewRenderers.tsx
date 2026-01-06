@@ -7,7 +7,7 @@ import { getIcon, getLanguageFromFilename } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { OfficeViewer } from "./OfficeViewer";
-import { CodeViewer } from "./CodeViewer";
+const CodeViewer = dynamic(() => import("./CodeViewer"));
 
 const PDFViewer = dynamic(() => import("./PDFViewer"), {
   loading: () => <LoadingPreview />,

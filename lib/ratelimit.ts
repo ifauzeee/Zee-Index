@@ -29,9 +29,7 @@ export async function checkRateLimit(
   identifier?: string,
 ) {
   const forwardedFor = request.headers.get("x-forwarded-for");
-  const ip = forwardedFor
-    ? forwardedFor.split(",")[0].trim()
-    : (request.ip ?? "127.0.0.1");
+  const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : "127.0.0.1";
 
   const finalId = identifier || ip;
 

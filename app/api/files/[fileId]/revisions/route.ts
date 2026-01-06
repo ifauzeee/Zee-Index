@@ -5,8 +5,9 @@ import { listFileRevisions } from "@/lib/drive";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { fileId: string } },
+  props: { params: Promise<{ fileId: string }> },
 ) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });

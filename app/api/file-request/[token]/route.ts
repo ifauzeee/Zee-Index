@@ -12,8 +12,9 @@ interface RequestData {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { token: string } },
+  props: { params: Promise<{ token: string }> },
 ) {
+  const params = await props.params;
   const { token } = params;
 
   try {

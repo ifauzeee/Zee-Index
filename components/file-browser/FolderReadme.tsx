@@ -7,7 +7,10 @@ import remarkGfm from "remark-gfm";
 import { BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/lib/store";
-import { CodeViewer } from "@/components/file-details/CodeViewer";
+import dynamic from "next/dynamic";
+const CodeViewer = dynamic(
+  () => import("@/components/file-details/CodeViewer"),
+);
 
 interface FolderReadmeProps {
   fileId: string;

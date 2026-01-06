@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 import React, { useState, useEffect, useMemo } from "react";
 import { useAppStore, ShareLink, FileRequestLink } from "@/lib/store";
 import { useConfirm } from "@/components/providers/ModalProvider";
@@ -35,8 +36,14 @@ import ProtectedFoldersManager from "@/components/admin/ProtectedFoldersManager"
 import ActivityLogDashboard from "@/components/admin/ActivityLogDashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { AdminStats } from "@/lib/adminStats";
-import TodayDownloadsChart from "@/components/charts/TodayDownloadsChart";
-import DayOfWeekChart from "@/components/charts/DayOfWeekChart";
+const TodayDownloadsChart = dynamic(
+  () => import("@/components/charts/TodayDownloadsChart"),
+  { ssr: false },
+);
+const DayOfWeekChart = dynamic(
+  () => import("@/components/charts/DayOfWeekChart"),
+  { ssr: false },
+);
 import SecurityConfig from "@/components/admin/SecurityConfig";
 import UserFolderAccessManager from "@/components/admin/UserFolderAccessManager";
 import ManualDrivesManager from "@/components/admin/ManualDrivesManager";

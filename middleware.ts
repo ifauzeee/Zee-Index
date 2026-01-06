@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import createMiddleware from "next-intl/middleware";
 import { checkAuth, handleAuthRedirect } from "@/lib/auth-check";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 const intlMiddleware = createMiddleware({
   locales: ["en", "id"],
@@ -126,6 +127,25 @@ export async function middleware(request: NextRequest) {
 
   if (!is2FARequired && is2FAPage) {
     return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  if (isApi) {
+    const isDownload =
+      pathname.startsWith("/api/download") ||
+      pathname.startsWith("/api/proxy-image");
+
+    const { success, pending, limit, reset, remaining } = await checkRateLimit(
+      request,
+      isDownload ? "download" : "general",
+    );
+    await pending;
+
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too Many Requests", limit, reset, remaining },
+        { status: 429, headers: { "Retry-After": reset.toString() } },
+      );
+    }
   }
 
   return isApi ? NextResponse.next() : intlMiddleware(request);
