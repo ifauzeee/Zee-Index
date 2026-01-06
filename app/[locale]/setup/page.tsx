@@ -117,7 +117,7 @@ export default function SetupPage() {
           {step === 1 ? (
             <div className="space-y-8">
               <div>
-                <h2 className="text-2xl font-semibold mb-2">{t("title")}</h2>
+                <h1 className="text-2xl font-semibold mb-2">{t("title")}</h1>
                 <p className="text-muted-foreground">{t("subtitle")}</p>
               </div>
 
@@ -203,9 +203,9 @@ export default function SetupPage() {
                     />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-semibold mb-2">
+                <h1 className="text-2xl font-semibold mb-2">
                   {t("authSuccessTitle")}
-                </h2>
+                </h1>
                 <p className="text-muted-foreground max-w-sm">
                   {t("authSuccessMessage")}
                 </p>
