@@ -106,32 +106,49 @@ export default function FileBrowserHeader({
 
           return (
             <div key={folder.id} className="flex items-center shrink-0">
-              <button
-                onClick={() => {
-                  if (isClickable) {
-                    onBreadcrumbClick(folder.id);
-                  }
-                }}
-                disabled={!isClickable}
-                onDragOver={(e) => onBreadcrumbDragOver(e, folder.id)}
-                onDragLeave={onBreadcrumbDragLeave}
-                onDrop={(e) => onBreadcrumbDrop(e, folder)}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all border",
-                  isLast
-                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                    : isClickable
+              {isLast ? (
+                <h1
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all border",
+                    "bg-primary text-primary-foreground border-primary shadow-sm",
+                    dragOverBreadcrumb === folder.id &&
+                      "ring-2 ring-primary ring-offset-2",
+                  )}
+                  onDragOver={(e) => onBreadcrumbDragOver(e, folder.id)}
+                  onDragLeave={onBreadcrumbDragLeave}
+                  onDrop={(e) => onBreadcrumbDrop(e, folder)}
+                >
+                  {isRoot && <Home size={14} />}
+                  <span className="max-w-[120px] md:max-w-[200px] truncate">
+                    {folder.name}
+                  </span>
+                </h1>
+              ) : (
+                <button
+                  onClick={() => {
+                    if (isClickable) {
+                      onBreadcrumbClick(folder.id);
+                    }
+                  }}
+                  disabled={!isClickable}
+                  onDragOver={(e) => onBreadcrumbDragOver(e, folder.id)}
+                  onDragLeave={onBreadcrumbDragLeave}
+                  onDrop={(e) => onBreadcrumbDrop(e, folder)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all border",
+                    isClickable
                       ? "bg-card text-muted-foreground border-border hover:bg-accent hover:text-foreground"
                       : "bg-transparent text-muted-foreground border-transparent cursor-default opacity-70",
-                  dragOverBreadcrumb === folder.id &&
-                    "ring-2 ring-primary ring-offset-2",
-                )}
-              >
-                {isRoot && <Home size={14} />}
-                <span className="max-w-[120px] md:max-w-[200px] truncate">
-                  {folder.name}
-                </span>
-              </button>
+                    dragOverBreadcrumb === folder.id &&
+                      "ring-2 ring-primary ring-offset-2",
+                  )}
+                >
+                  {isRoot && <Home size={14} />}
+                  <span className="max-w-[120px] md:max-w-[200px] truncate">
+                    {folder.name}
+                  </span>
+                </button>
+              )}
 
               {!isLast && (
                 <ChevronRight

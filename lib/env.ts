@@ -27,4 +27,10 @@ const envSchema = z.object({
   NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
 });
 
-export const env = envSchema.parse(process.env);
+const shouldSkip =
+  !!process.env.SKIP_ENV_VALIDATION ||
+  process.env.npm_lifecycle_event === "lint";
+
+export const env = shouldSkip
+  ? (process.env as unknown as z.infer<typeof envSchema>)
+  : envSchema.parse(process.env);
