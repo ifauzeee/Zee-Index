@@ -18,7 +18,6 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig = {
-
   output: "standalone",
   images: {
     remotePatterns: [
@@ -79,7 +78,5 @@ const nextConfig = {
 
 import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./i18n.ts");
-
-import { withSentryConfig } from "@sentry/nextjs";
 
 export default withAnalyzer(withPWA(withNextIntl(nextConfig)));

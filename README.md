@@ -276,6 +276,18 @@ The easiest way to deploy.
 
 ---
 
+## 🧪 Testing
+
+We use **Vitest** for unit testing and **Playwright** for end-to-end testing.
+
+```bash
+# Run Unit Tests
+pnpm test
+
+# Run E2E Tests
+pnpm test:e2e
+```
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please follow these steps:
