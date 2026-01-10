@@ -29,6 +29,7 @@ interface FileCardProps {
   onDetails?: (e: React.MouseEvent, file: DriveFile) => void;
   onDownload?: (e: React.MouseEvent, file: DriveFile) => void;
   thumbnailSrc?: string;
+  onMouseEnter?: () => void;
 }
 
 export default function FileCard({
@@ -40,6 +41,7 @@ export default function FileCard({
   onDetails,
   onDownload,
   thumbnailSrc,
+  onMouseEnter,
 }: FileCardProps) {
   const t = useTranslations("FileCard");
   const isFolder = file.mimeType === "application/vnd.google-apps.folder";
@@ -85,6 +87,7 @@ export default function FileCard({
       )}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
+      onMouseEnter={onMouseEnter}
     >
       <div
         className="absolute top-3 left-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity data-[selected=true]:opacity-100"

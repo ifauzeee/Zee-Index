@@ -56,14 +56,7 @@ const getDateQuery = (modifiedTime?: string | null) => {
 export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
-  const isShareAuth = await validateShareToken(request);
-
-  if (!session && !isShareAuth) {
-    return NextResponse.json(
-      { error: "Authentication required." },
-      { status: 401 },
-    );
-  }
+  await validateShareToken(request);
 
   const { searchParams } = new URL(request.url);
   const rawSearchTerm = searchParams.get("q");
@@ -184,7 +177,11 @@ export async function GET(request: NextRequest) {
     const filteredFiles = await Promise.all(
       processedFiles.map(async (file) => {
         if (isAdmin) return file;
-        const restricted = await isAccessRestricted(file.id, allowedTokens);
+        const restricted = await isAccessRestricted(
+          file.id,
+          allowedTokens,
+          session?.user?.email,
+        );
         return restricted ? null : file;
       }),
     );

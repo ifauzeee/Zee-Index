@@ -110,14 +110,9 @@ export default function AuthForm({
         </h3>
 
         <p className="text-muted-foreground mt-4 leading-relaxed max-w-[280px] text-base">
-          {t.rich("folderProtected", {
-            folderName: () => (
-              <span className="font-semibold text-foreground px-1 bg-muted rounded-md">
-                {folderName}
-              </span>
-            ),
-          })}
-          <br />
+          <span className="block mb-2">
+            {t("folderProtected", { folderName })}
+          </span>
           {t("enterPassword")}
         </p>
       </motion.div>

@@ -424,7 +424,7 @@ export default function FileBrowser({
         />
       )}
 
-      <main className="min-h-[50vh] mb-12">
+      <main className="min-h-[50vh] mb-4">
         <FileBrowserContent
           isLoading={isLoading}
           sessionStatus={sessionStatus}

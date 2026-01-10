@@ -7,10 +7,6 @@ import { isAccessRestricted } from "@/lib/securityUtils";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: "Akses ditolak." }, { status: 401 });
-  }
-
   try {
     const { fileIds } = await request.json();
     if (!fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {
@@ -32,7 +28,11 @@ export async function POST(request: Request) {
 
     for (const fileId of fileIds) {
       if (session?.user?.role !== "ADMIN") {
-        const isRestricted = await isAccessRestricted(fileId);
+        const isRestricted = await isAccessRestricted(
+          fileId,
+          [],
+          session?.user?.email,
+        );
         if (isRestricted) continue;
       }
 

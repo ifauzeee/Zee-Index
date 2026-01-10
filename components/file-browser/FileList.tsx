@@ -3,12 +3,13 @@ import type { DriveFile } from "@/lib/drive";
 import { useAppStore } from "@/lib/store";
 import FileItem from "@/components/file-browser/FileItem";
 import FileCard from "@/components/file-browser/FileCard";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import EmptyState from "@/components/file-browser/EmptyState";
 import { FolderSearch } from "lucide-react";
 import Masonry from "react-masonry-css";
 import { MASONRY_BREAKPOINTS } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 
 interface FileListProps {
   files: DriveFile[];
@@ -60,12 +61,43 @@ export default function FileList({
   const t = useTranslations("FileList");
 
   const lastSelectedId = useRef<string | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
+
+  // Column calculation state
+  const [numColumns, setNumColumns] = useState(1);
 
   useEffect(() => {
     if (isAdmin && shareLinks.length === 0) {
       fetchShareLinks();
     }
   }, [isAdmin, shareLinks.length, fetchShareLinks]);
+
+  // Handle responsive columns for Grid View
+  useEffect(() => {
+    if (view === "list") {
+      setNumColumns(1);
+      return;
+    }
+
+    if (view === "gallery") return; // Handled by Masonry
+
+    const updateColumns = () => {
+      const width = window.innerWidth;
+      if (width >= 1280)
+        setNumColumns(6); // xl
+      else if (width >= 1024)
+        setNumColumns(5); // lg
+      else if (width >= 768)
+        setNumColumns(4); // md
+      else if (width >= 640)
+        setNumColumns(3); // sm
+      else setNumColumns(2); // default
+    };
+
+    updateColumns();
+    window.addEventListener("resize", updateColumns);
+    return () => window.removeEventListener("resize", updateColumns);
+  }, [view]);
 
   const handleItemClickWrapper = (file: DriveFile, e: React.MouseEvent) => {
     if (isAdmin && e.shiftKey && lastSelectedId.current) {
@@ -103,26 +135,42 @@ export default function FileList({
     toggleFavorite(file.id, true);
   };
 
-  const uploadGhostFiles = Object.values(uploads).map(
-    (upload: any) =>
-      ({
-        id: `upload-${upload.name}`,
-        name: upload.name,
-        mimeType: "application/octet-stream",
-        size: "0",
-        modifiedTime: new Date().toISOString(),
-        createdTime: new Date().toISOString(),
-        webViewLink: "",
-        hasThumbnail: false,
-        isFolder: false,
-        trashed: false,
-        uploadProgress: upload.progress,
-        uploadStatus: upload.status,
-        uploadError: upload.error,
-      }) as any,
+  const uploadGhostFiles = useMemo(
+    () =>
+      Object.values(uploads).map(
+        (upload: any) =>
+          ({
+            id: `upload-${upload.name}`,
+            name: upload.name,
+            mimeType: "application/octet-stream",
+            size: "0",
+            modifiedTime: new Date().toISOString(),
+            createdTime: new Date().toISOString(),
+            webViewLink: "",
+            hasThumbnail: false,
+            isFolder: false,
+            trashed: false,
+            uploadProgress: upload.progress,
+            uploadStatus: upload.status,
+            uploadError: upload.error,
+          }) as any,
+      ),
+    [uploads],
   );
 
-  const allItems = [...uploadGhostFiles, ...files];
+  const allItems = useMemo(
+    () => [...uploadGhostFiles, ...files],
+    [uploadGhostFiles, files],
+  );
+
+  const rowCount = Math.ceil(allItems.length / numColumns);
+
+  const virtualizer = useWindowVirtualizer({
+    count: rowCount,
+    estimateSize: () => (view === "list" ? 64 : 220), // Estimate heights
+    overscan: 5,
+    scrollMargin: listRef.current?.offsetTop ?? 0,
+  });
 
   if (allItems.length === 0) {
     return (
@@ -135,16 +183,6 @@ export default function FileList({
       </div>
     );
   }
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0,
-      },
-    },
-  };
 
   const getThumbnailSrc = (file: DriveFile) => {
     if (file.thumbnailLink) {
@@ -170,14 +208,7 @@ export default function FileList({
     }
   };
 
-  const renderFileItem = (
-    file: DriveFile & {
-      uploadProgress?: number;
-      uploadStatus?: string;
-      uploadError?: string;
-    },
-    index: number,
-  ) => {
+  const renderItemContent = (file: any, index: number) => {
     const isShared =
       !file.uploadStatus &&
       shareLinks.some(
@@ -192,8 +223,8 @@ export default function FileList({
           data-file-index={index}
           className={
             isFocused
-              ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg"
-              : ""
+              ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg h-full"
+              : "h-full"
           }
         >
           <FileCard
@@ -205,6 +236,11 @@ export default function FileList({
             onDetails={onDetailsClick}
             onDownload={onDownloadClick}
             thumbnailSrc={getThumbnailSrc(file)}
+            onMouseEnter={() => {
+              if (file.isFolder && onPrefetchFolder && !file.uploadStatus) {
+                onPrefetchFolder(file.id);
+              }
+            }}
           />
         </div>
       );
@@ -217,8 +253,8 @@ export default function FileList({
         onClick={(e) => !file.uploadStatus && handleItemClickWrapper(file, e)}
         className={
           isFocused
-            ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg"
-            : ""
+            ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg mb-2"
+            : "mb-2"
         }
       >
         <FileItem
@@ -251,36 +287,71 @@ export default function FileList({
   };
 
   if (view === "gallery") {
+    // Gallery View remains un-virtualized for now (Masonry complexity)
     return (
       <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
       >
         <Masonry
           breakpointCols={MASONRY_BREAKPOINTS}
           className="flex w-auto -ml-4"
           columnClassName="pl-4 bg-clip-padding"
         >
-          {allItems.map(renderFileItem)}
+          {allItems.map((file, index) => (
+            <div key={file.id} className="mb-4">
+              {renderItemContent(file, index)}
+            </div>
+          ))}
         </Masonry>
       </motion.div>
     );
   }
 
-  const containerClass =
-    view === "list"
-      ? "flex flex-col gap-2"
-      : "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4";
-
   return (
-    <motion.div
-      className={containerClass}
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      {allItems.map(renderFileItem)}
-    </motion.div>
+    <div ref={listRef} className="relative w-full">
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: "100%",
+          position: "relative",
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualRow) => {
+          const startIndex = virtualRow.index * numColumns;
+          const rowFiles = allItems.slice(startIndex, startIndex + numColumns);
+
+          return (
+            <div
+              key={virtualRow.key}
+              data-index={virtualRow.index}
+              ref={virtualizer.measureElement}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                transform: `translateY(${virtualRow.start}px)`,
+              }}
+            >
+              <div
+                className={
+                  view === "grid"
+                    ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4"
+                    : "flex flex-col gap-0" // Gap is handled inside renderItemContent for list
+                }
+              >
+                {rowFiles.map((file, colIndex) => (
+                  <React.Fragment key={file.id}>
+                    {renderItemContent(file, startIndex + colIndex)}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

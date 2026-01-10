@@ -11,7 +11,6 @@ import {
   Moon,
   RefreshCw,
   Send,
-  Coffee,
   Search as SearchIcon,
   Menu,
   LogIn,
@@ -237,23 +236,9 @@ export default function Header() {
       icon: HelpCircle,
       label: t("tour"),
     },
-    {
-      id: "donate",
-      href: "https://ifauzeee.vercel.app/donate",
-      target: "_blank",
-      rel: "noopener noreferrer",
-      icon: Coffee,
-      label: t("donate"),
-    },
   ];
 
-  const publicShareLinkItems = [
-    "theme",
-    "refresh",
-    "github",
-    "telegram",
-    "donate",
-  ];
+  const publicShareLinkItems = ["theme", "refresh", "github", "telegram"];
 
   const handleLogoClick = () => {
     if (!shareToken) {

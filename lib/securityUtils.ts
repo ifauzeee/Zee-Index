@@ -1,11 +1,13 @@
 import { kv } from "@/lib/kv";
 import { getFileDetailsFromDrive } from "@/lib/drive";
+import { hasUserAccess } from "@/lib/auth";
 
 const PROTECTED_FOLDERS_KEY = "zee-index:protected-folders";
 
 export async function isAccessRestricted(
   fileId: string,
   allowedTokens: string[] = [],
+  userEmail: string | null | undefined = null,
   depth: number = 0,
   maxDepth: number = 20,
 ): Promise<boolean> {
@@ -28,9 +30,18 @@ export async function isAccessRestricted(
 
   if (allRestrictedIds.length === 0) return false;
 
+  async function checkAccess(id: string) {
+    if (allowedTokens.includes(id)) return true;
+    if (userEmail) {
+      const hasAccess = await hasUserAccess(userEmail, id);
+      if (hasAccess) return true;
+    }
+    return false;
+  }
+
   if (allRestrictedIds.includes(fileId)) {
-    if (allowedTokens.includes(fileId)) return false;
-    return true;
+    const access = await checkAccess(fileId);
+    if (!access) return true;
   }
 
   try {
@@ -40,8 +51,9 @@ export async function isAccessRestricted(
 
     for (const parentId of file.parents) {
       if (allRestrictedIds.includes(parentId)) {
-        if (!allowedTokens.includes(parentId)) return true;
-        if (allowedTokens.includes(parentId)) continue;
+        const access = await checkAccess(parentId);
+        if (!access) return true;
+        if (access) continue;
       }
 
       if (parentId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
@@ -51,6 +63,7 @@ export async function isAccessRestricted(
       const isParentRestricted = await isAccessRestricted(
         parentId,
         allowedTokens,
+        userEmail,
         depth + 1,
         maxDepth,
       );

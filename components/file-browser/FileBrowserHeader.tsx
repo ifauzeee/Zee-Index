@@ -88,14 +88,14 @@ export default function FileBrowserHeader({
   return (
     <div
       className={cn(
-        "flex gap-4 py-4 transition-all duration-300",
+        "flex gap-2 py-0 transition-all duration-300",
         showAdminActions ? "flex-col" : "flex-row items-center justify-between",
       )}
     >
       <nav
         ref={navRef}
         className={cn(
-          "flex items-center gap-1 overflow-x-auto whitespace-nowrap no-scrollbar px-1 py-1 mask-gradient-right",
+          "flex items-center gap-1 overflow-x-auto whitespace-nowrap no-scrollbar px-1 py-0 mask-gradient-right",
           showAdminActions ? "w-full" : "flex-1 min-w-0 pr-4",
         )}
       >

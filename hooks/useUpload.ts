@@ -3,13 +3,6 @@ import { useAppStore } from "@/lib/store";
 import { parseDroppedItems, FileEntry } from "@/lib/fileParser";
 import { useTranslations } from "next-intl";
 
-interface UploadProgress {
-  name: string;
-  progress: number;
-  status: "uploading" | "success" | "error";
-  error?: string;
-}
-
 interface UseUploadProps {
   currentFolderId: string;
   isAdmin: boolean;
@@ -17,41 +10,68 @@ interface UseUploadProps {
 }
 
 const CHUNK_SIZE = 2 * 1024 * 1024;
+const MAX_CONCURRENT_UPLOADS = 3;
+const MAX_RETRIES = 3;
+
+const retryFetch = async (
+  url: string,
+  options: RequestInit,
+  retries = MAX_RETRIES,
+): Promise<Response> => {
+  try {
+    const res = await fetch(url, options);
+    if (!res.ok && retries > 0 && res.status >= 500) {
+      throw new Error(`Server error: ${res.status}`);
+    }
+    return res;
+  } catch (err) {
+    if (retries > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return retryFetch(url, options, retries - 1);
+    }
+    throw err;
+  }
+};
 
 export function useUpload({
   currentFolderId,
   isAdmin,
   triggerRefresh,
 }: UseUploadProps) {
-  const [uploads, setUploads] = useState<Record<string, UploadProgress>>({});
+  const { uploads, updateUploadProgress, removeUpload, addToast } =
+    useAppStore();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const { addToast } = useAppStore();
   const folderIdCache = useRef<Record<string, string>>({});
+  const activeUploadsCount = useRef(0);
+  const uploadQueue = useRef<(() => Promise<void>)[]>([]);
   const t = useTranslations("UploadModal");
 
-  const updateUploadProgress = useCallback(
-    (
-      fileName: string,
-      progress: number,
-      status: "uploading" | "success" | "error",
-      error?: string,
-    ) => {
-      setUploads((prev) => ({
-        ...prev,
-        [fileName]: { name: fileName, progress, status, error },
-      }));
-      if (status === "success") {
-        setTimeout(() => {
-          setUploads((prev) => {
-            const newUploads = { ...prev };
-            delete newUploads[fileName];
-            return newUploads;
-          });
-        }, 5000);
+  const processNextInQueue = useCallback(async () => {
+    if (
+      uploadQueue.current.length === 0 ||
+      activeUploadsCount.current >= MAX_CONCURRENT_UPLOADS
+    )
+      return;
+
+    const nextTask = uploadQueue.current.shift();
+    if (nextTask) {
+      activeUploadsCount.current++;
+      try {
+        await nextTask();
+      } finally {
+        activeUploadsCount.current--;
+        processNextInQueue();
       }
+    }
+  }, []);
+
+  const addToQueue = useCallback(
+    (task: () => Promise<void>) => {
+      uploadQueue.current.push(task);
+      processNextInQueue();
     },
-    [],
+    [processNextInQueue],
   );
 
   const ensureFolderStructure = useCallback(
@@ -72,6 +92,7 @@ export function useUpload({
         }
 
         try {
+          // No concurrency limit for folder creation to avoid bottlenecks, but could be added
           const response = await fetch("/api/folder/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -102,7 +123,7 @@ export function useUpload({
       try {
         updateUploadProgress(file.name, 0, "uploading");
 
-        const initRes = await fetch("/api/files/upload?type=init", {
+        const initRes = await retryFetch("/api/files/upload?type=init", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -123,7 +144,7 @@ export function useUpload({
 
           const contentRange = `bytes ${start}-${end - 1}/${file.size}`;
 
-          const chunkRes = await fetch(
+          const chunkRes = await retryFetch(
             `/api/files/upload?type=chunk&uploadUrl=${encodeURIComponent(
               uploadUrl,
             )}&parentId=${targetParentId}`,
@@ -144,6 +165,10 @@ export function useUpload({
 
           if (chunkData.status === "completed") {
             updateUploadProgress(file.name, 100, "success");
+            triggerRefresh(); // Refresh immediately after success
+            setTimeout(() => {
+              removeUpload(file.name);
+            }, 5000);
             return;
           }
           start = end;
@@ -159,7 +184,7 @@ export function useUpload({
         });
       }
     },
-    [updateUploadProgress, addToast, t],
+    [updateUploadProgress, removeUpload, addToast, t, triggerRefresh],
   );
 
   const processUploadQueue = useCallback(
@@ -188,27 +213,35 @@ export function useUpload({
             path: (f as any).webkitRelativePath || f.name,
           }));
 
-      for (const entry of fileList) {
-        try {
-          const targetId = await ensureFolderStructure(
-            entry.path,
-            currentFolderId,
-          );
-          await uploadFileChunked(entry.file, targetId);
-        } catch (e) {
-          console.error("Skip file karena gagal create folder:", entry.path, e);
-        }
-      }
+      // Pre-process folders sequentially to ensure structure, then parallel upload files
+      // Simple optimization: Group by path?
+      // For now, simplify: Ensure folder structure for each file (cached) then add to upload queue
 
-      triggerRefresh();
+      for (const entry of fileList) {
+        addToQueue(async () => {
+          try {
+            const targetId = await ensureFolderStructure(
+              entry.path,
+              currentFolderId,
+            );
+            await uploadFileChunked(entry.file, targetId);
+          } catch (e) {
+            console.error(
+              "Skip file karena gagal create folder:",
+              entry.path,
+              e,
+            );
+          }
+        });
+      }
     },
     [
       currentFolderId,
       isAdmin,
-      triggerRefresh,
-      uploadFileChunked,
       addToast,
       ensureFolderStructure,
+      uploadFileChunked,
+      addToQueue,
       t,
     ],
   );

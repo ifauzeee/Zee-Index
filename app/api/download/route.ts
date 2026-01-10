@@ -23,7 +23,6 @@ export async function GET(request: NextRequest) {
   const shareToken = searchParams.get("share_token");
   const accessTokenParam = searchParams.get("access_token");
 
-  let isShareTokenValid = false;
   if (shareToken) {
     try {
       const shareSecretKey = process.env.SHARE_SECRET_KEY;
@@ -32,7 +31,6 @@ export async function GET(request: NextRequest) {
         const { payload } = await jwtVerify(shareToken, secret);
         const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);
         if (isBlocked) throw new Error("Tautan ini telah dibatalkan.");
-        isShareTokenValid = true;
       }
     } catch {
       console.error("Verifikasi share token gagal");
@@ -57,7 +55,11 @@ export async function GET(request: NextRequest) {
   const userRole = session?.user?.role;
 
   if (userRole !== "ADMIN") {
-    const isRestricted = await isAccessRestricted(fileId);
+    const isRestricted = await isAccessRestricted(
+      fileId,
+      [],
+      session?.user?.email,
+    );
 
     if (isRestricted) {
       const authHeader = request.headers.get("Authorization");
@@ -72,9 +74,11 @@ export async function GET(request: NextRequest) {
           const { payload } = await jwtVerify(token, secret);
           const folderId = payload.folderId as string;
           if (folderId) {
-            const stillRestricted = await isAccessRestricted(fileId, [
-              folderId,
-            ]);
+            const stillRestricted = await isAccessRestricted(
+              fileId,
+              [folderId],
+              session?.user?.email,
+            );
             if (!stillRestricted) {
               accessGranted = true;
             }
@@ -89,10 +93,6 @@ export async function GET(request: NextRequest) {
           { error: "Access Denied: File is protected." },
           { status: 403 },
         );
-      }
-    } else {
-      if (!session && !isShareTokenValid) {
-        return NextResponse.json({ error: "Akses ditolak." }, { status: 401 });
       }
     }
   }

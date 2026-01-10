@@ -157,6 +157,23 @@ interface AppState {
 
   videoProgress: Record<string, number>;
   setVideoProgress: (fileId: string, time: number) => void;
+
+  uploads: Record<
+    string,
+    {
+      name: string;
+      progress: number;
+      status: "uploading" | "success" | "error";
+      error?: string;
+    }
+  >;
+  updateUploadProgress: (
+    fileName: string,
+    progress: number,
+    status: "uploading" | "success" | "error",
+    error?: string,
+  ) => void;
+  removeUpload: (fileName: string) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -701,10 +718,26 @@ export const useAppStore = create<AppState>()(
       },
 
       videoProgress: {},
+
       setVideoProgress: (fileId, time) =>
         set((state) => ({
           videoProgress: { ...state.videoProgress, [fileId]: time },
         })),
+
+      uploads: {},
+      updateUploadProgress: (fileName, progress, status, error) =>
+        set((state) => ({
+          uploads: {
+            ...state.uploads,
+            [fileName]: { name: fileName, progress, status, error },
+          },
+        })),
+      removeUpload: (fileName) =>
+        set((state) => {
+          const newUploads = { ...state.uploads };
+          delete newUploads[fileName];
+          return { uploads: newUploads };
+        }),
     }),
     {
       name: "zee-index-storage",

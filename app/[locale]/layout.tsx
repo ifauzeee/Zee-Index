@@ -1,6 +1,7 @@
 import "@/lib/env";
 import type { Metadata, Viewport } from "next";
 import { Providers } from "../providers";
+import { Analytics } from "@vercel/analytics/react";
 import "./(main)/globals.css";
 import GlobalBranding from "@/components/layout/GlobalBranding";
 import { NextIntlClientProvider } from "next-intl";
@@ -90,6 +91,7 @@ export default async function RootLayout({
           <Providers>
             <GlobalBranding />
             {children}
+            <Analytics />
           </Providers>
         </NextIntlClientProvider>
       </body>

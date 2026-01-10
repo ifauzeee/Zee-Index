@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { listSharedDrives, listFilesFromDrive } from "@/lib/drive/operations";
+import {
+  listSharedDrives,
+  listFilesFromDrive,
+  getAllDescendantFolders,
+} from "@/lib/drive/operations";
 
 vi.mock("@/lib/kv", () => ({
   kv: {
@@ -83,6 +87,69 @@ describe("lib/drive/operations", () => {
       });
 
       await expect(listFilesFromDrive("bad-id")).rejects.toThrow("Not Found");
+    });
+  });
+  describe("getAllDescendantFolders", () => {
+    it("returns cached tree if available", async () => {
+      const mockTree = ["root", "child1", "child2"];
+      const { kv } = await import("@/lib/kv");
+      (kv.get as any).mockResolvedValue(mockTree);
+
+      const result = await getAllDescendantFolders("token", "root");
+      expect(result).toEqual(mockTree);
+      expect(fetchWithRetry).not.toHaveBeenCalled();
+    });
+
+    it("fetches from API if cache miss", async () => {
+      const { kv } = await import("@/lib/kv");
+      (kv.get as any).mockResolvedValue(null);
+
+      (fetchWithRetry as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          files: [{ id: "child1" }, { id: "child2" }],
+        }),
+      });
+
+      (fetchWithRetry as any).mockResolvedValue({
+        ok: true,
+        json: async () => ({ files: [] }),
+      });
+
+      const result = await getAllDescendantFolders("token", "root");
+      expect(result).toContain("root");
+      expect(result).toContain("child1");
+      expect(result).toContain("child2");
+      expect(kv.set).toHaveBeenCalled();
+    });
+
+    it("handles pagination correctly", async () => {
+      const { kv } = await import("@/lib/kv");
+      (kv.get as any).mockResolvedValue(null);
+
+      (fetchWithRetry as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          files: [{ id: "child1" }],
+          nextPageToken: "next-page",
+        }),
+      });
+
+      (fetchWithRetry as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          files: [{ id: "child2" }],
+        }),
+      });
+
+      (fetchWithRetry as any).mockResolvedValue({
+        ok: true,
+        json: async () => ({ files: [] }),
+      });
+
+      const result = await getAllDescendantFolders("token", "root");
+      expect(result).toContain("child1");
+      expect(result).toContain("child2");
     });
   });
 });

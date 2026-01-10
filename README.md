@@ -61,20 +61,28 @@
 
 ## 🌟 Key Features
 
-Zee-Index allows you to build a powerful file system and media server on top of Google Drive.
+Zee-Index allows you to build a powerful file system and media server on top of Google Drive, now faster and more secure than ever.
+
+### ⚡ High-Performance Architecture
+
+- **Virtualized Rendering:** Built with `@tanstack/react-virtual`, enabling smooth scrolling through folders with **thousands of files** without lag.
+- **Smart Prefetching:** Intelligently preloads folder contents when you hover over them, making navigation feel instant.
+- **Optimized Assets:** Automatic image optimization and lazy loading for thumbnails.
+
+### 🛡️ Enterprise-Grade Security
+
+- **Recursive Folder Protection:** Locking a parent folder automatically protects all sub-folders and files deep within the hierarchy.
+- **Whitelist Access:** Allow specific users (via email) to bypass folder passwords while keeping them locked for everyone else.
+- **Smart Folder Locking:** Password-protect specific folders using Bcrypt hashing.
+- **Role-Based Access:** Configurable Guest, User, and Admin roles.
+- **2FA Support:** Secure Admin login with Time-based One-Time Passwords (TOTP/Google Authenticator).
+- **Rate Limiting:** Built-in protection against abuse and DDoS attacks using Upstash Ratelimit (Redis).
 
 ### 🗂️ Multi-Drive Management
 
 - **Unified Sidebar:** Consolidate multiple Personal Drives, Shared Drives, and Team Drives into one navigation pane.
 - **Aliases:** Rename folders in the UI without changing them in Drive (e.g., `backup_v1_final` -> `🗄️ Archives`).
 - **No Code Config:** Manage drives and folders entirely via the **Admin Dashboard**.
-
-### 🛡️ Enterprise-Grade Security
-
-- **Smart Folder Locking:** Password-protect specific folders using Bcrypt hashing.
-- **Role-Based Access:** Configurable Guest, User, and Admin roles.
-- **2FA Support:** Secure Admin login with Time-based One-Time Passwords (TOTP/Google Authenticator).
-- **Rate Limiting:** Built-in protection against abuse and DDoS attacks using Upstash Ratelimit (Redis).
 
 ### 🎬 Powerful Media Streaming
 
@@ -96,9 +104,11 @@ Zee-Index allows you to build a powerful file system and media server on top of 
 
 Zee-Index is built with modern, high-performance web technologies:
 
-- **Framework:** [Next.js 14](https://nextjs.org/) (App Router, Server Actions)
+- **Framework:** [Next.js 16](https://nextjs.org/) (App Router, Server Actions)
 - **Language:** TypeScript
+- **Library:** React 19
 - **Styling:** Tailwind CSS, Framer Motion, Radix UI
+- **Virtualization:** @tanstack/react-virtual (for high-scale file lists)
 - **Authentication:** NextAuth.js
 - **Database:** Vercel KV (Redis) / Upstash Redis
 - **State Management:** Zustand, React Query
@@ -124,7 +134,7 @@ A quick overview of the codebase to help you navigate:
 │   └── layout.tsx        # Root layout definition
 ├── components/           # Reusable UI components
 │   ├── file-details/     # Components for specific file types (Audio, Video, etc.)
-│   ├── file-browser/     # File explorer components
+│   ├── file-browser/     # File explorer components (Virtualized)
 │   ├── admin/            # Admin dashboard components
 │   ├── modals/           # Modal dialogs
 │   └── ...
@@ -138,10 +148,9 @@ A quick overview of the codebase to help you navigate:
 │   ├── kv.ts             # Redis database connection
 │   ├── store.ts          # Zustand state stores
 │   ├── auth.ts           # Authentication utilities
+│   ├── securityUtils.ts  # Access control logic (Recursive checks)
 │   └── ...
 ├── messages/             # i18n translation files
-│   ├── en.json           # English translations
-│   └── id.json           # Indonesian translations
 ├── public/               # Static assets (images, fonts, icons)
 ├── i18n.ts               # Internationalization configuration
 └── middleware.ts         # Request handling, auth checks, and redirects
@@ -220,8 +229,10 @@ These are the most important environment variables. See `.env.example` for the f
 | `KV_REST_API_URL`              | Connection URL for Vercel KV / Upstash Redis                     |    ✅     |
 | `KV_REST_API_TOKEN`            | Auth token for Redis                                             |    ✅     |
 | `ADMIN_EMAILS`                 | Comma-separated list of admin email addresses                    |    ✅     |
+| `ADMIN_PASSWORD`               | Password for fallback admin login                                |    ✅     |
 | `SHARE_SECRET_KEY`             | Random key for signing share URLs                                |    ✅     |
 | `STORAGE_LIMIT_GB`             | Optional visual storage limit (e.g., `15`)                       |    No     |
+| `STORAGE_WARNING_THRESHOLD`    | Storage usage threshold for warnings (e.g., `0.90` for 90%)      |    No     |
 
 ---
 
