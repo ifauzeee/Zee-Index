@@ -253,8 +253,8 @@ export default function FileList({
         onClick={(e) => !file.uploadStatus && handleItemClickWrapper(file, e)}
         className={
           isFocused
-            ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg mb-2"
-            : "mb-2"
+            ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg pb-2"
+            : "pb-2"
         }
       >
         <FileItem
@@ -338,7 +338,7 @@ export default function FileList({
               <div
                 className={
                   view === "grid"
-                    ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4"
+                    ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 pb-3 sm:pb-4"
                     : "flex flex-col gap-0" // Gap is handled inside renderItemContent for list
                 }
               >

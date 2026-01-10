@@ -130,7 +130,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
 
       <div
         ref={loaderRef}
-        className="flex justify-center items-center p-4 h-20"
+        className="flex justify-center items-center p-4 h-24 mb-16 mt-12"
       >
         {isFetchingNextPage && (
           <Loader2 className="animate-spin text-primary" />
