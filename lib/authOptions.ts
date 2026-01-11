@@ -134,26 +134,45 @@ export const authOptions: AuthOptions = {
         token.id = user.id;
         token.name = user.name;
         token.email = user.email;
-        token.role = user.role;
         token.isGuest = false;
+
+        const adminEmails: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
+        const envAdminsRaw = process.env.ADMIN_EMAILS;
+        const envAdmins =
+          envAdminsRaw
+            ?.split(",")
+            .map((e) => e.trim())
+            .filter(Boolean) || [];
+
+        const isAdmin =
+          adminEmails.includes(user.email) || envAdmins.includes(user.email);
+
+        if (user.role) {
+          token.role = user.role;
+        } else {
+          token.role = isAdmin ? "ADMIN" : "USER";
+        }
 
         const is2FAEnabled = await kv.get(`2fa:enabled:${user.email}`);
         token.twoFactorRequired = !!is2FAEnabled;
-      } else if (profile?.email) {
-        const adminEmails: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
-        if (adminEmails.includes(profile.email)) {
-          token.role = "ADMIN";
-        } else {
-          token.role = "USER";
-        }
+      } else if (profile?.email && !token.email) {
         token.email = profile.email;
+        const adminEmails: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
+        const envAdminsRaw = process.env.ADMIN_EMAILS;
+        const envAdmins =
+          envAdminsRaw
+            ?.split(",")
+            .map((e) => e.trim())
+            .filter(Boolean) || [];
+
+        const isAdmin =
+          adminEmails.includes(profile.email) ||
+          envAdmins.includes(profile.email);
+
+        token.role = isAdmin ? "ADMIN" : "USER";
 
         const is2FAEnabled = await kv.get(`2fa:enabled:${profile.email}`);
-        if (is2FAEnabled) {
-          token.twoFactorRequired = true;
-        } else {
-          token.twoFactorRequired = false;
-        }
+        token.twoFactorRequired = !!is2FAEnabled;
       }
       return token;
     },

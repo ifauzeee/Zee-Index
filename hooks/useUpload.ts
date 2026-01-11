@@ -92,7 +92,6 @@ export function useUpload({
         }
 
         try {
-          // No concurrency limit for folder creation to avoid bottlenecks, but could be added
           const response = await fetch("/api/folder/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -165,7 +164,7 @@ export function useUpload({
 
           if (chunkData.status === "completed") {
             updateUploadProgress(file.name, 100, "success");
-            triggerRefresh(); // Refresh immediately after success
+            triggerRefresh();
             setTimeout(() => {
               removeUpload(file.name);
             }, 5000);
@@ -212,10 +211,6 @@ export function useUpload({
             file: f,
             path: (f as any).webkitRelativePath || f.name,
           }));
-
-      // Pre-process folders sequentially to ensure structure, then parallel upload files
-      // Simple optimization: Group by path?
-      // For now, simplify: Ensure folder structure for each file (cached) then add to upload queue
 
       for (const entry of fileList) {
         addToQueue(async () => {

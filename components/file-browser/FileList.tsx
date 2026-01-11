@@ -63,7 +63,6 @@ export default function FileList({
   const lastSelectedId = useRef<string | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
 
-  // Column calculation state
   const [numColumns, setNumColumns] = useState(1);
 
   useEffect(() => {
@@ -72,26 +71,21 @@ export default function FileList({
     }
   }, [isAdmin, shareLinks.length, fetchShareLinks]);
 
-  // Handle responsive columns for Grid View
   useEffect(() => {
     if (view === "list") {
       setNumColumns(1);
       return;
     }
 
-    if (view === "gallery") return; // Handled by Masonry
+    if (view === "gallery") return;
 
     const updateColumns = () => {
       const width = window.innerWidth;
-      if (width >= 1280)
-        setNumColumns(6); // xl
-      else if (width >= 1024)
-        setNumColumns(5); // lg
-      else if (width >= 768)
-        setNumColumns(4); // md
-      else if (width >= 640)
-        setNumColumns(3); // sm
-      else setNumColumns(2); // default
+      if (width >= 1280) setNumColumns(6);
+      else if (width >= 1024) setNumColumns(5);
+      else if (width >= 768) setNumColumns(4);
+      else if (width >= 640) setNumColumns(3);
+      else setNumColumns(2);
     };
 
     updateColumns();
@@ -167,7 +161,7 @@ export default function FileList({
 
   const virtualizer = useWindowVirtualizer({
     count: rowCount,
-    estimateSize: () => (view === "list" ? 64 : 220), // Estimate heights
+    estimateSize: () => (view === "list" ? 64 : 220),
     overscan: 5,
     scrollMargin: listRef.current?.offsetTop ?? 0,
   });
@@ -287,7 +281,6 @@ export default function FileList({
   };
 
   if (view === "gallery") {
-    // Gallery View remains un-virtualized for now (Masonry complexity)
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -339,7 +332,7 @@ export default function FileList({
                 className={
                   view === "grid"
                     ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 pb-3 sm:pb-4"
-                    : "flex flex-col gap-0" // Gap is handled inside renderItemContent for list
+                    : "flex flex-col gap-0"
                 }
               >
                 {rowFiles.map((file, colIndex) => (

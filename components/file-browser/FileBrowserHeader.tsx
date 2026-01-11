@@ -88,15 +88,19 @@ export default function FileBrowserHeader({
   return (
     <div
       className={cn(
-        "flex gap-2 py-0 transition-all duration-300",
-        showAdminActions ? "flex-col" : "flex-row items-center justify-between",
+        "flex gap-x-2 gap-y-4 py-0 transition-all duration-300",
+        showAdminActions
+          ? "flex-col md:flex-row md:items-center justify-between"
+          : "flex-row items-center justify-between",
       )}
     >
       <nav
         ref={navRef}
         className={cn(
-          "flex items-center gap-1 overflow-x-auto whitespace-nowrap no-scrollbar px-1 py-0 mask-gradient-right",
-          showAdminActions ? "w-full" : "flex-1 min-w-0 pr-4",
+          "flex items-center gap-0 overflow-x-auto whitespace-nowrap no-scrollbar px-1 py-0 mask-gradient-right",
+          showAdminActions
+            ? "w-full md:flex-1 md:min-w-0 md:pr-4"
+            : "flex-1 min-w-0 pr-4",
         )}
       >
         {history.map((folder, index) => {
@@ -109,7 +113,7 @@ export default function FileBrowserHeader({
               {isLast ? (
                 <h1
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all border",
+                    "flex items-center gap-1 px-1.5 py-1 rounded-full text-sm font-medium transition-all border",
                     "bg-primary text-primary-foreground border-primary shadow-sm",
                     dragOverBreadcrumb === folder.id &&
                       "ring-2 ring-primary ring-offset-2",
@@ -135,7 +139,7 @@ export default function FileBrowserHeader({
                   onDragLeave={onBreadcrumbDragLeave}
                   onDrop={(e) => onBreadcrumbDrop(e, folder)}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all border",
+                    "flex items-center gap-1 px-1.5 py-1 rounded-full text-sm font-medium transition-all border",
                     isClickable
                       ? "bg-card text-muted-foreground border-border hover:bg-accent hover:text-foreground"
                       : "bg-transparent text-muted-foreground border-transparent cursor-default opacity-70",
@@ -153,7 +157,7 @@ export default function FileBrowserHeader({
               {!isLast && (
                 <ChevronRight
                   size={14}
-                  className="text-muted-foreground mx-1 opacity-50"
+                  className="text-muted-foreground mx-0 opacity-50"
                 />
               )}
             </div>
@@ -165,7 +169,7 @@ export default function FileBrowserHeader({
         className={cn(
           "flex items-center gap-4",
           showAdminActions
-            ? "justify-between w-full md:justify-end"
+            ? "justify-between w-full md:w-auto"
             : "justify-end shrink-0",
         )}
       >
