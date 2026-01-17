@@ -1,0 +1,29 @@
+# ==============================================================================
+# ZEE-INDEX DOCKERFILE - DEVELOPMENT
+# Hot reload enabled for local development
+# ==============================================================================
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies for development
+RUN apk add --no-cache libc6-compat curl
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Copy package files
+COPY package.json pnpm-lock.yaml* ./
+
+# Install all dependencies (including devDependencies)
+RUN pnpm i --frozen-lockfile
+
+# Copy source code
+COPY . .
+
+# Expose port
+EXPOSE 3000
+
+# Development command with hot reload
+CMD ["pnpm", "dev"]

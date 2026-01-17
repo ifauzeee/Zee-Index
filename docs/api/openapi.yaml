@@ -1,0 +1,741 @@
+openapi: 3.1.0
+info:
+  title: Zee-Index API
+  description: |
+    API documentation for Zee-Index - The Ultimate Self-Hosted Google Drive CMS, Explorer & Streaming Platform.
+
+    ## Authentication
+    Most endpoints require authentication via NextAuth.js session or folder-specific tokens.
+
+    ## Rate Limiting
+    - General API: 100 requests per minute
+    - Download API: 30 requests per minute
+
+    ## Error Responses
+    All errors follow this format:
+    ```json
+    {
+      "error": "Error message",
+      "code": "ERROR_CODE"
+    }
+    ```
+  version: 2.0.0
+  contact:
+    name: Zee-Index Support
+    url: https://github.com/ifauzeee/Zee-Index/issues
+  license:
+    name: AGPL-3.0
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://zee-index.vercel.app
+    description: Production server
+
+tags:
+  - name: Files
+    description: File and folder operations
+  - name: Auth
+    description: Authentication endpoints
+  - name: Admin
+    description: Admin-only operations
+  - name: Share
+    description: Share link management
+  - name: Health
+    description: Health check endpoints
+
+paths:
+  # ==============================================================================
+  # HEALTH ENDPOINTS
+  # ==============================================================================
+  /api/health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check the health status of the application and its dependencies
+      operationId: healthCheck
+      responses:
+        "200":
+          description: All services healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "503":
+          description: One or more services unhealthy
+
+  # ==============================================================================
+  # FILE ENDPOINTS
+  # ==============================================================================
+  /api/files:
+    get:
+      tags:
+        - Files
+      summary: List files in a folder
+      description: Get a paginated list of files and folders within a specified folder
+      operationId: listFiles
+      parameters:
+        - name: folderId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Google Drive folder ID
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 100
+          description: Number of items per page
+        - name: pageToken
+          in: query
+          schema:
+            type: string
+          description: Token for pagination
+        - name: share_token
+          in: query
+          schema:
+            type: string
+          description: Share token for public access
+      responses:
+        "200":
+          description: List of files
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileListResponse"
+        "401":
+          description: Unauthorized or folder protected
+        "404":
+          description: Folder not found
+
+  /api/filedetails:
+    get:
+      tags:
+        - Files
+      summary: Get file details
+      description: Get detailed metadata for a specific file
+      operationId: getFileDetails
+      parameters:
+        - name: fileId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: File details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveFile"
+
+  /api/download:
+    get:
+      tags:
+        - Files
+      summary: Download a file
+      description: Initiate file download from Google Drive
+      operationId: downloadFile
+      parameters:
+        - name: fileId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: share_token
+          in: query
+          schema:
+            type: string
+        - name: access_token
+          in: query
+          schema:
+            type: string
+          description: Folder access token for protected folders
+      responses:
+        "200":
+          description: File stream
+        "302":
+          description: Redirect to Google Drive download URL
+        "401":
+          description: Unauthorized
+        "404":
+          description: File not found
+
+  /api/search:
+    get:
+      tags:
+        - Files
+      summary: Search files
+      description: Search for files within a folder
+      operationId: searchFiles
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search query
+        - name: folderId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [image, video, audio, document, all]
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DriveFile"
+
+  /api/files/upload:
+    post:
+      tags:
+        - Files
+      summary: Upload a file
+      description: Upload a file to Google Drive (Admin only)
+      operationId: uploadFile
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                folderId:
+                  type: string
+      responses:
+        "200":
+          description: Upload successful
+        "401":
+          description: Unauthorized
+        "403":
+          description: Admin access required
+
+  /api/files/rename:
+    patch:
+      tags:
+        - Files
+      summary: Rename a file
+      description: Rename a file or folder (Admin only)
+      operationId: renameFile
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fileId
+                - newName
+              properties:
+                fileId:
+                  type: string
+                newName:
+                  type: string
+      responses:
+        "200":
+          description: Rename successful
+        "401":
+          description: Unauthorized
+
+  /api/files/delete:
+    delete:
+      tags:
+        - Files
+      summary: Delete a file
+      description: Move file to trash (Admin only)
+      operationId: deleteFile
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fileId
+              properties:
+                fileId:
+                  type: string
+      responses:
+        "200":
+          description: Delete successful
+        "401":
+          description: Unauthorized
+
+  # ==============================================================================
+  # AUTH ENDPOINTS
+  # ==============================================================================
+  /api/auth/me:
+    get:
+      tags:
+        - Auth
+      summary: Get current user
+      description: Get the currently authenticated user's information
+      operationId: getCurrentUser
+      responses:
+        "200":
+          description: User information
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+
+  /api/auth/folder:
+    post:
+      tags:
+        - Auth
+      summary: Authenticate to protected folder
+      description: Submit credentials to access a protected folder
+      operationId: authenticateFolder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - folderId
+                - password
+              properties:
+                folderId:
+                  type: string
+                id:
+                  type: string
+                  description: Optional user ID
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Access granted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        "401":
+          description: Invalid credentials
+
+  # ==============================================================================
+  # SHARE ENDPOINTS
+  # ==============================================================================
+  /api/share/create:
+    post:
+      tags:
+        - Share
+      summary: Create share link
+      description: Create a shareable link for a file or folder (Admin only)
+      operationId: createShareLink
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - path
+                - itemName
+              properties:
+                path:
+                  type: string
+                itemName:
+                  type: string
+                expiresIn:
+                  type: integer
+                  default: 86400
+                  description: Expiration time in seconds
+                loginRequired:
+                  type: boolean
+                  default: false
+      responses:
+        "200":
+          description: Share link created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShareLink"
+        "401":
+          description: Unauthorized
+
+  /api/share/list:
+    get:
+      tags:
+        - Share
+      summary: List share links
+      description: Get all active share links (Admin only)
+      operationId: listShareLinks
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: List of share links
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ShareLink"
+
+  /api/share/delete:
+    post:
+      tags:
+        - Share
+      summary: Delete share link
+      description: Delete a share link (Admin only)
+      operationId: deleteShareLink
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShareLink"
+      responses:
+        "200":
+          description: Share link deleted
+        "401":
+          description: Unauthorized
+
+  # ==============================================================================
+  # ADMIN ENDPOINTS
+  # ==============================================================================
+  /api/admin/config:
+    get:
+      tags:
+        - Admin
+      summary: Get app configuration
+      description: Get current application configuration
+      operationId: getConfig
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: Configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppConfig"
+    post:
+      tags:
+        - Admin
+      summary: Update app configuration
+      description: Update application configuration (Admin only)
+      operationId: updateConfig
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppConfig"
+      responses:
+        "200":
+          description: Configuration updated
+        "401":
+          description: Unauthorized
+
+  /api/admin/users:
+    get:
+      tags:
+        - Admin
+      summary: List admin users
+      description: Get list of admin email addresses
+      operationId: listAdmins
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: List of admin emails
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+    post:
+      tags:
+        - Admin
+      summary: Add admin user
+      description: Add a new admin user
+      operationId: addAdmin
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        "200":
+          description: Admin added
+        "401":
+          description: Unauthorized
+    delete:
+      tags:
+        - Admin
+      summary: Remove admin user
+      description: Remove an admin user
+      operationId: removeAdmin
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        "200":
+          description: Admin removed
+        "401":
+          description: Unauthorized
+
+  /api/admin/activity-log:
+    get:
+      tags:
+        - Admin
+      summary: Get activity logs
+      description: Get system activity logs
+      operationId: getActivityLogs
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Activity logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityLog"
+
+# ==============================================================================
+# COMPONENTS
+# ==============================================================================
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: next-auth.session-token
+      description: NextAuth.js session cookie
+
+  schemas:
+    DriveFile:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        mimeType:
+          type: string
+        size:
+          type: string
+        modifiedTime:
+          type: string
+          format: date-time
+        createdTime:
+          type: string
+          format: date-time
+        isFolder:
+          type: boolean
+        hasThumbnail:
+          type: boolean
+        thumbnailLink:
+          type: string
+        webViewLink:
+          type: string
+        parents:
+          type: array
+          items:
+            type: string
+        trashed:
+          type: boolean
+
+    FileListResponse:
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/DriveFile"
+        nextPageToken:
+          type: string
+          nullable: true
+        folderPath:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+
+    User:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        image:
+          type: string
+        role:
+          type: string
+          enum: [USER, ADMIN, GUEST]
+        isGuest:
+          type: boolean
+
+    ShareLink:
+      type: object
+      properties:
+        id:
+          type: string
+        path:
+          type: string
+        token:
+          type: string
+        jti:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        loginRequired:
+          type: boolean
+        itemName:
+          type: string
+        viewCount:
+          type: integer
+        isCollection:
+          type: boolean
+
+    AppConfig:
+      type: object
+      properties:
+        hideAuthor:
+          type: boolean
+        disableGuestLogin:
+          type: boolean
+        appName:
+          type: string
+        logoUrl:
+          type: string
+        faviconUrl:
+          type: string
+        primaryColor:
+          type: string
+
+    ActivityLog:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        timestamp:
+          type: integer
+        severity:
+          type: string
+          enum: [info, warning, error, critical]
+        userEmail:
+          type: string
+        itemName:
+          type: string
+        status:
+          type: string
+        ipAddress:
+          type: string
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+        timestamp:
+          type: string
+          format: date-time
+        uptime:
+          type: number
+        environment:
+          type: string
+        services:
+          type: object
+          properties:
+            database:
+              type: object
+              properties:
+                status:
+                  type: string
+                latency:
+                  type: integer
+            google_drive:
+              type: object
+              properties:
+                status:
+                  type: string
+                latency:
+                  type: integer
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string

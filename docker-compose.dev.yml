@@ -1,0 +1,51 @@
+# ==============================================================================
+# ZEE-INDEX DOCKER COMPOSE - DEVELOPMENT
+# Use this for local development with hot reload
+# ==============================================================================
+# Usage: docker-compose -f docker-compose.dev.yml up
+
+version: "3.8"
+
+services:
+  zee-index-dev:
+    container_name: zee-index-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Optional: Local Redis for development
+  redis:
+    image: redis:7-alpine
+    container_name: zee-index-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  redis_data:

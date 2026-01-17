@@ -1,29 +1,66 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
+import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
-import { UploadCloud } from "lucide-react";
-import FileRequestModal from "@/components/modals/FileRequestModal";
-import ImageEditorModal from "@/components/modals/ImageEditorModal";
+import { UploadCloud, Loader2 } from "lucide-react";
+import type { DriveFile } from "@/lib/drive";
+import type { ActionState, ContextMenuState } from "@/hooks/useFileActions";
+import { useTranslations } from "next-intl";
+
+const ModalLoading = () => (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="flex flex-col items-center gap-4 p-8 bg-background rounded-lg">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <span className="text-sm text-muted-foreground">Loading...</span>
+    </div>
+  </div>
+);
+
+const FileRequestModal = dynamic(
+  () => import("@/components/modals/FileRequestModal"),
+  { loading: () => <ModalLoading />, ssr: false },
+);
+
+const ImageEditorModal = dynamic(
+  () => import("@/components/modals/ImageEditorModal"),
+  { loading: () => <ModalLoading />, ssr: false },
+);
+
+const ArchivePreviewModal = dynamic(
+  () => import("@/components/modals/ArchivePreviewModal"),
+  { loading: () => <ModalLoading />, ssr: false },
+);
+
+const FileRevisionsModal = dynamic(
+  () => import("@/components/modals/FileRevisionsModal"),
+  { loading: () => <ModalLoading />, ssr: false },
+);
+
+const MoveModal = dynamic(() => import("@/components/modals/MoveModal"), {
+  loading: () => <ModalLoading />,
+  ssr: false,
+});
+
+const UploadModal = dynamic(() => import("@/components/modals/UploadModal"), {
+  loading: () => <ModalLoading />,
+  ssr: false,
+});
+
+const FileDetail = dynamic(
+  () => import("@/components/file-browser/FileDetail"),
+  { loading: () => <ModalLoading />, ssr: false },
+);
+
 import ContextMenu from "@/components/file-browser/ContextMenu";
 import RenameModal from "@/components/modals/RenameModal";
 import DeleteConfirm from "@/components/modals/DeleteConfirm";
 import ShareButton from "@/components/file-browser/ShareButton";
-import MoveModal from "@/components/modals/MoveModal";
-import UploadModal from "@/components/modals/UploadModal";
-import FileDetail from "@/components/file-browser/FileDetail";
-import ArchivePreviewModal from "@/components/modals/ArchivePreviewModal";
-import FileRevisionsModal from "@/components/modals/FileRevisionsModal";
-import type { DriveFile } from "@/lib/drive";
-import type { ActionState, ContextMenuState } from "@/hooks/useFileActions";
-import FileList from "@/components/file-browser/FileList";
-import { useTranslations } from "next-intl";
 
 interface FileBrowserModalsProps {
   authModal: { isOpen: boolean; folderId: string; folderName: string };
   isAuthLoading: boolean;
   onCloseAuth: () => void;
   onAuthSubmit: (id: string, pass: string) => void;
-
   isFileRequestModalOpen: boolean;
   setIsFileRequestModalOpen: (open: boolean) => void;
   currentFolderId: string;
@@ -105,6 +142,7 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
     handleTogglePin,
     isFilePinned,
   } = props;
+
   const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024;
   const t = useTranslations("FileBrowserModals");
 
@@ -140,18 +178,24 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
   return (
     <AnimatePresence>
       {isFileRequestModalOpen && (
-        <FileRequestModal
-          folderId={currentFolderId}
-          folderName={folderName}
-          onClose={() => setIsFileRequestModalOpen(false)}
-        />
+        <Suspense fallback={<ModalLoading />}>
+          <FileRequestModal
+            folderId={currentFolderId}
+            folderName={folderName}
+            onClose={() => setIsFileRequestModalOpen(false)}
+          />
+        </Suspense>
       )}
+
       {imageEditorFile && (
-        <ImageEditorModal
-          file={imageEditorFile}
-          onClose={() => setImageEditorFile(null)}
-        />
+        <Suspense fallback={<ModalLoading />}>
+          <ImageEditorModal
+            file={imageEditorFile}
+            onClose={() => setImageEditorFile(null)}
+          />
+        </Suspense>
       )}
+
       {contextMenu && (
         <ContextMenu
           x={contextMenu.x}
@@ -207,6 +251,7 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
           isAdmin={isAdmin}
         />
       )}
+
       {actionState.type === "rename" && actionState.file && (
         <RenameModal
           currentName={actionState.file.name}
@@ -214,6 +259,7 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
           onRename={handleRename}
         />
       )}
+
       {actionState.type === "delete" && actionState.file && (
         <DeleteConfirm
           itemName={actionState.file.name}
@@ -221,6 +267,7 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
           onConfirm={handleDelete}
         />
       )}
+
       {actionState.type === "share" && actionState.file && (
         <ShareButton
           path={getSharePath(actionState.file)}
@@ -229,25 +276,32 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
           onClose={() => setActionState({ type: null, file: null })}
         />
       )}
+
       {actionState.type === "move" && actionState.file && (
-        <MoveModal
-          fileToMove={actionState.file}
-          onClose={() => setActionState({ type: null, file: null })}
-          onConfirmMove={handleMove}
-        />
+        <Suspense fallback={<ModalLoading />}>
+          <MoveModal
+            fileToMove={actionState.file}
+            onClose={() => setActionState({ type: null, file: null })}
+            onConfirmMove={handleMove}
+          />
+        </Suspense>
       )}
+
       {isUploadModalOpen && (
-        <UploadModal
-          isOpen={isUploadModalOpen}
-          onClose={() => setIsUploadModalOpen(false)}
-          initialFiles={droppedFiles}
-          handleFileSelect={handleFileSelect}
-          handleDragOver={handleDragOver}
-          handleDragLeave={handleDragLeave}
-          handleDropUpload={handleDropUpload}
-          isDragging={isDragging}
-        />
+        <Suspense fallback={<ModalLoading />}>
+          <UploadModal
+            isOpen={isUploadModalOpen}
+            onClose={() => setIsUploadModalOpen(false)}
+            initialFiles={droppedFiles}
+            handleFileSelect={handleFileSelect}
+            handleDragOver={handleDragOver}
+            handleDragLeave={handleDragLeave}
+            handleDropUpload={handleDropUpload}
+            isDragging={isDragging}
+          />
+        </Suspense>
       )}
+
       {previewFile && (
         <motion.div
           className="fixed inset-0 z-[100] bg-black flex flex-col"
@@ -260,27 +314,36 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
             className="relative w-full h-full overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <FileDetail
-              file={previewFile}
-              isModal={true}
-              onCloseModal={() => setPreviewFile(null)}
-            />
+            <Suspense fallback={<ModalLoading />}>
+              <FileDetail
+                file={previewFile}
+                isModal={true}
+                onCloseModal={() => setPreviewFile(null)}
+              />
+            </Suspense>
           </div>
         </motion.div>
       )}
+
       {archivePreview && (
-        <ArchivePreviewModal
-          file={archivePreview}
-          onClose={() => setArchivePreview(null)}
-        />
+        <Suspense fallback={<ModalLoading />}>
+          <ArchivePreviewModal
+            file={archivePreview}
+            onClose={() => setArchivePreview(null)}
+          />
+        </Suspense>
       )}
+
       {showHistory && contextMenu?.file && (
-        <FileRevisionsModal
-          fileId={contextMenu.file.id}
-          fileName={contextMenu.file.name}
-          onClose={() => setShowHistory(false)}
-        />
+        <Suspense fallback={<ModalLoading />}>
+          <FileRevisionsModal
+            fileId={contextMenu.file.id}
+            fileName={contextMenu.file.name}
+            onClose={() => setShowHistory(false)}
+          />
+        </Suspense>
       )}
+
       {isDragging && isAdmin && (
         <motion.div
           initial={{ opacity: 0 }}

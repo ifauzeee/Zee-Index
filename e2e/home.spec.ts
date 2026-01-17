@@ -10,7 +10,6 @@ test("redirects to setup or login when not configured", async ({ page }) => {
   await page.goto("/");
 
   const url = page.url();
-  console.log("Current URL:", url);
 
   const isOk =
     url.includes("/setup") ||
