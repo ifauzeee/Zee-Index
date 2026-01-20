@@ -110,3 +110,28 @@ export async function validateShareToken(
     return false;
   }
 }
+
+export async function verifyShareTokenString(token: string): Promise<boolean> {
+  if (!token) return false;
+
+  try {
+    const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
+    const { payload } = await jwtVerify(token, secret);
+
+    if (typeof payload.jti !== "string") {
+      return false;
+    }
+    const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);
+    if (isBlocked) {
+      return false;
+    }
+
+    if (payload.loginRequired) {
+      const session = await getServerSession(authOptions);
+      return !!session;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}

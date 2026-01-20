@@ -31,9 +31,16 @@ export async function GET(request: NextRequest) {
         const { payload } = await jwtVerify(shareToken, secret);
         const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);
         if (isBlocked) throw new Error("Tautan ini telah dibatalkan.");
+
+        if (payload.loginRequired && !session) {
+          throw new Error("Login required.");
+        }
       }
     } catch {
-      console.error("Verifikasi share token gagal");
+      return NextResponse.json(
+        { error: "Invalid share token or authentication required." },
+        { status: 401 },
+      );
     }
   }
 

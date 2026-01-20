@@ -1,6 +1,14 @@
 import { getFileDetailsFromDrive, listFilesFromDrive } from "@/lib/drive";
 import FileDetailClient from "@/components/file-browser/FileDetailClient";
 import { getTranslations } from "next-intl/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/authOptions";
+import {
+  isPrivateFolder,
+  isProtected,
+  hasUserAccess,
+  verifyShareTokenString,
+} from "@/lib/auth";
 
 const FileError = ({
   message,
@@ -15,8 +23,8 @@ const FileError = ({
     <h1 className="text-4xl font-bold">{title}</h1>
     <p className="mt-4 mb-6">{message}</p>
     <a
-      href=""
-      className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 text-sm"
+      href="/"
+      className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-sm font-medium transition-colors"
     >
       {retry}
     </a>
@@ -36,11 +44,54 @@ interface SubtitleTrack {
 
 export default async function FilePage(props: {
   params: Promise<{ folderId: string; fileId: string; locale: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await props.params;
+  const searchParams = await props.searchParams;
   const t = await getTranslations("FilePage");
   let file = null;
   let error = null;
+
+  const session = await getServerSession(authOptions);
+  const shareToken = searchParams?.share_token as string | undefined;
+
+  if (shareToken) {
+    const isValidShare = await verifyShareTokenString(shareToken);
+    if (!isValidShare) {
+      return (
+        <FileError
+          title="Access Denied"
+          message="Invalid share token or login required."
+          retry="Go Home"
+        />
+      );
+    }
+  } else {
+    const folderId = params.folderId;
+    const isPriv = isPrivateFolder(folderId);
+    const isProt = await isProtected(folderId);
+    const userEmail = session?.user?.email;
+    const isAdmin = session?.user?.role === "ADMIN";
+
+    let hasAccess = false;
+    if (isAdmin) {
+      hasAccess = true;
+    } else if (userEmail && (await hasUserAccess(userEmail, folderId))) {
+      hasAccess = true;
+    } else if (!isPriv && !isProt) {
+      hasAccess = true;
+    }
+
+    if (!hasAccess) {
+      return (
+        <FileError
+          title="Access Denied"
+          message="You do not have permission to view this file."
+          retry="Go Home"
+        />
+      );
+    }
+  }
 
   let prevFileUrl: string | undefined = undefined;
   let nextFileUrl: string | undefined = undefined;
@@ -123,7 +174,7 @@ export default async function FilePage(props: {
         <p className="mt-4 mb-6">{t("notFoundMessage")}</p>
         <a
           href=""
-          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 text-sm"
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-sm font-medium transition-colors"
         >
           {t("retry")}
         </a>

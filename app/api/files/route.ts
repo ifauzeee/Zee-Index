@@ -51,6 +51,13 @@ export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
     const isShareAuth = await validateShareToken(request);
 
+    if (new URL(request.url).searchParams.has("share_token") && !isShareAuth) {
+      return NextResponse.json(
+        { error: "Invalid share token or login required." },
+        { status: 401 },
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const rawFolderId =
       searchParams.get("folderId") || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;

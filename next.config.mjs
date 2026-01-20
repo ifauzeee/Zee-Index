@@ -36,8 +36,7 @@ const securityHeaders = [
   },
   {
     key: "Permissions-Policy",
-    value:
-      "camera=(), microphone=(), geolocation=(), interest-cohort=(), payment=(), usb=()",
+    value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
   },
   {
     key: "Referrer-Policy",
@@ -52,15 +51,17 @@ const securityHeaders = [
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: blob: https://*.googleusercontent.com https://drive.google.com https://images.unsplash.com https://*.google.com https://cdn-icons-png.freepik.com https://*.cdn.freepik.com",
       "media-src 'self' blob: https://*.googleusercontent.com https://drive.google.com",
-      "connect-src 'self' https://*.googleapis.com https://*.google.com https://www.google-analytics.com https://*.vercel-insights.com https://va.vercel-scripts.com https://*.upstash.io wss://*.upstash.io https://*.sentry.io",
+      "connect-src 'self' https://*.googleapis.com https://*.google.com https://*.googleusercontent.com https://www.google-analytics.com https://*.vercel-insights.com https://va.vercel-scripts.com https://*.upstash.io wss://*.upstash.io https://*.sentry.io",
       "frame-src 'self' https://docs.google.com https://drive.google.com",
       "worker-src 'self' blob:",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",
-      "upgrade-insecure-requests",
-    ].join("; "),
+      process.env.NODE_ENV === "production" ? "upgrade-insecure-requests" : "",
+    ]
+      .filter(Boolean)
+      .join("; "),
   },
   {
     key: "Strict-Transport-Security",

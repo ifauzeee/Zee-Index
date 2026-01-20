@@ -4,14 +4,14 @@ import { NextRequest } from "next/server";
 
 export const ratelimit = new Ratelimit({
   redis: kv,
-  limiter: Ratelimit.slidingWindow(20, "10 s"),
+  limiter: Ratelimit.slidingWindow(100, "10 s"),
   analytics: true,
   prefix: "@upstash/ratelimit",
 });
 
 export const downloadLimiter = new Ratelimit({
   redis: kv,
-  limiter: Ratelimit.slidingWindow(10, "60 s"),
+  limiter: Ratelimit.slidingWindow(50, "60 s"),
   analytics: true,
   prefix: "@upstash/ratelimit/download",
 });

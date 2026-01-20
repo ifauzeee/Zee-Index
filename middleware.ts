@@ -138,13 +138,17 @@ export async function middleware(request: NextRequest) {
       request,
       isDownload ? "download" : "general",
     );
-    await pending;
 
-    if (!success) {
-      return NextResponse.json(
-        { error: "Too Many Requests", limit, reset, remaining },
-        { status: 429, headers: { "Retry-After": reset.toString() } },
-      );
+    if (process.env.NODE_ENV === "development") {
+    } else {
+      await pending;
+
+      if (!success) {
+        return NextResponse.json(
+          { error: "Too Many Requests", limit, reset, remaining },
+          { status: 429, headers: { "Retry-After": reset.toString() } },
+        );
+      }
     }
   }
 
