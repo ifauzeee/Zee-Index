@@ -55,8 +55,6 @@ export default function FileList({
     setSelectedFiles,
     setBulkMode,
     toggleFavorite,
-    shareToken,
-    folderTokens,
   } = useAppStore();
   const t = useTranslations("FileList");
 
@@ -184,15 +182,7 @@ export default function FileList({
         view === "grid" ? "s320" : view === "gallery" ? "s1280" : "s64";
       return file.thumbnailLink.replace(/=s\d+/, `=${size}`);
     }
-    let url = `/api/download?fileId=${file.id}`;
-    if (shareToken) {
-      url += `&share_token=${shareToken}`;
-    }
-    const parentId = file.parents?.[0];
-    if (parentId && folderTokens[parentId]) {
-      url += `&access_token=${folderTokens[parentId]}`;
-    }
-    return url;
+    return undefined;
   };
 
   const handleNavigate = (folderId: string) => {

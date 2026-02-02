@@ -1,6 +1,7 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeSanitize from "rehype-sanitize";
 import { cn } from "@/lib/utils";
 
 interface MarkdownViewerProps {
@@ -8,15 +9,23 @@ interface MarkdownViewerProps {
   className?: string;
 }
 
-export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
+export default function MarkdownViewer({
+  content,
+  className,
+}: MarkdownViewerProps) {
   return (
     <div
       className={cn(
-        "prose prose-sm dark:prose-invert max-w-none w-full bg-card p-6 rounded-lg border shadow-sm",
+        "prose prose-sm dark:prose-invert max-w-none w-full bg-background p-4 md:p-8",
         className,
       )}
     >
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeSanitize]}
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   );
 }

@@ -5,9 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeSanitize from "rehype-sanitize";
+import dynamic from "next/dynamic";
 import {
   ArrowLeft,
   Save,
@@ -26,10 +24,6 @@ import { getFileType, cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
 import ShareButton from "@/components/file-browser/ShareButton";
-import ArchivePreviewModal from "@/components/modals/ArchivePreviewModal";
-import ImageEditorModal from "@/components/modals/ImageEditorModal";
-import FileRevisionsModal from "@/components/modals/FileRevisionsModal";
-import VideoPlayer from "../file-details/VideoPlayer";
 import InfoPanel from "../file-details/InfoPanel";
 import {
   ImagePreview,
@@ -40,6 +34,24 @@ import {
   LoadingPreview,
   FileIconPlaceholder,
 } from "../file-details/PreviewRenderers";
+
+const VideoPlayer = dynamic(() => import("../file-details/VideoPlayer"), {
+  loading: () => <LoadingPreview />,
+});
+
+const MarkdownViewer = dynamic(() => import("../file-details/MarkdownViewer"), {
+  loading: () => <LoadingPreview />,
+});
+
+const ArchivePreviewModal = dynamic(
+  () => import("@/components/modals/ArchivePreviewModal"),
+);
+const ImageEditorModal = dynamic(
+  () => import("@/components/modals/ImageEditorModal"),
+);
+const FileRevisionsModal = dynamic(
+  () => import("@/components/modals/FileRevisionsModal"),
+);
 
 interface SubtitleTrack {
   kind: string;
@@ -242,13 +254,8 @@ export default function FileDetail({
         if (showTextPreview && textContent) {
           if (fileType === "markdown") {
             return (
-              <div className="prose dark:prose-invert prose-sm w-full h-full overflow-y-auto p-4 md:p-8 bg-background">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeSanitize]}
-                >
-                  {textContent}
-                </ReactMarkdown>
+              <div className="w-full h-full overflow-y-auto">
+                <MarkdownViewer content={textContent} />
               </div>
             );
           }

@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "dotenv -- next dev",
     "build": "next build",
+    "docker:dev": "docker compose -f docker-compose.dev.yml up --build",
+    "docker:prod": "docker compose up --build",
     "start": "dotenv -- next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",

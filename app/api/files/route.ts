@@ -84,7 +84,11 @@ export async function GET(request: Request) {
     }
 
     const canSeeAll = userRole === "ADMIN";
-    const isFolderProtected = await isProtected(folderId);
+
+    const [isFolderProtected, hasDirectAccess] = await Promise.all([
+      isProtected(folderId),
+      userEmail ? hasUserAccess(userEmail, folderId) : Promise.resolve(false),
+    ]);
 
     if (
       !session &&
@@ -96,11 +100,6 @@ export async function GET(request: Request) {
         { error: "Authentication required." },
         { status: 401 },
       );
-    }
-
-    let hasDirectAccess = false;
-    if (userEmail) {
-      hasDirectAccess = await hasUserAccess(userEmail, folderId);
     }
 
     if (!canSeeAll && isFolderProtected && !hasDirectAccess) {
@@ -126,8 +125,9 @@ export async function GET(request: Request) {
     if (!forceRefresh) {
       try {
         const cachedDataPromise = kv.get<CachedFolderData>(cacheKey);
+
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject("timeout"), 1500),
+          setTimeout(() => reject("timeout"), 500),
         );
 
         const cachedData = await Promise.race([
@@ -145,36 +145,39 @@ export async function GET(request: Request) {
       } catch {}
     }
 
-    const allProtectedFolders = !canSeeAll
-      ? (await kv.hgetall("zee-index:protected-folders")) || {}
-      : {};
+    const [driveResponse, allProtectedFolders] = await Promise.all([
+      listFilesFromDrive(folderId, pageToken),
+      !canSeeAll
+        ? kv.hgetall("zee-index:protected-folders").then((res) => res || {})
+        : Promise.resolve({}),
+    ]);
 
-    const driveResponse = await listFilesFromDrive(folderId, pageToken);
     let filteredFiles: DriveFile[];
 
     if (canSeeAll) {
       filteredFiles = driveResponse.files;
     } else {
-      filteredFiles = [];
-      for (const file of driveResponse.files) {
+      const filteringPromises = driveResponse.files.map(async (file) => {
         const isPriv = isPrivateFolder(file.id);
-        if (isPriv) {
-          if (userEmail) {
-            const hasAccess = await hasUserAccess(userEmail, file.id);
-            if (hasAccess) filteredFiles.push(file);
-          }
-          continue;
-        }
+        if (!isPriv) return file;
 
-        filteredFiles.push(file);
-      }
+        if (userEmail) {
+          const hasAccess = await hasUserAccess(userEmail, file.id);
+          return hasAccess ? file : null;
+        }
+        return null;
+      });
+
+      const results = await Promise.all(filteringPromises);
+      filteredFiles = results.filter((f): f is DriveFile => f !== null);
     }
 
     const processedFiles = filteredFiles.map((file) => {
+      const fileId = file.id as string;
       return {
         ...file,
         isFolder: file.mimeType === "application/vnd.google-apps.folder",
-        isProtected: !canSeeAll && !!allProtectedFolders[file.id],
+        isProtected: !canSeeAll && !!(allProtectedFolders as any)[fileId],
       };
     });
 
@@ -183,11 +186,9 @@ export async function GET(request: Request) {
       nextPageToken: driveResponse.nextPageToken,
     };
 
-    try {
-      await kv.set(cacheKey, responseData, { ex: CACHE_TTL_SECONDS });
-    } catch (e) {
-      console.error(e);
-    }
+    kv.set(cacheKey, responseData, { ex: CACHE_TTL_SECONDS }).catch(
+      console.error,
+    );
 
     return NextResponse.json(responseData);
   } catch (error: unknown) {

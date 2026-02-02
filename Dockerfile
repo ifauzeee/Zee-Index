@@ -13,8 +13,10 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml* ./
 
 # Install pnpm and dependencies
-RUN npm install -g pnpm && \
-    pnpm i --frozen-lockfile --prod=false
+RUN --mount=type=cache,id=pnpm,target=/root/.pnpm-store \
+    npm install -g pnpm && \
+    pnpm config set store-dir /root/.pnpm-store && \
+    pnpm i --frozen-lockfile
 
 # Stage 2: Builder
 # Build the application
@@ -43,12 +45,8 @@ ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
 ENV SKIP_ENV_VALIDATION=1
 
 # Build the application
-RUN pnpm run build
-
-# Remove node_modules and reinstall production dependencies only
-# This is more reliable than pnpm prune --prod which can fail
-RUN rm -rf node_modules && \
-    pnpm install --frozen-lockfile --prod --ignore-scripts
+RUN --mount=type=cache,id=nextjs,target=/app/.next/cache \
+    pnpm run build
 
 # Stage 3: Runner
 # Production runtime with minimal footprint

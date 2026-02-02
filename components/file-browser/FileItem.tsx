@@ -50,7 +50,7 @@ function FileItem({
   uploadProgress,
   uploadStatus,
 }: FileItemProps) {
-  const { view, shareToken, folderTokens } = useAppStore();
+  const { view } = useAppStore();
   const Icon = getIcon(file.mimeType);
   const [isDragOver, setIsDragOver] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -77,23 +77,8 @@ function FileItem({
 
       return file.thumbnailLink.replace(/=s\d+/, `=${size}`);
     }
-    let url = `/api/download?fileId=${file.id}`;
-    if (shareToken) {
-      url += `&share_token=${shareToken}`;
-    }
-    const parentId = file.parents?.[0];
-    if (parentId && folderTokens[parentId]) {
-      url += `&access_token=${folderTokens[parentId]}`;
-    }
-    return url;
-  }, [
-    file.thumbnailLink,
-    file.id,
-    view,
-    shareToken,
-    file.parents,
-    folderTokens,
-  ]);
+    return undefined;
+  }, [file.thumbnailLink, view]);
 
   const handleContextMenuEvent = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -145,10 +130,7 @@ function FileItem({
   };
 
   const isGallery = view === "gallery";
-  const hasImage =
-    (file.mimeType.startsWith("image/") || file.thumbnailLink) &&
-    !file.isFolder &&
-    !imageError;
+  const hasImage = !!thumbnailSrc && !file.isFolder && !imageError;
 
   const compactClass = density === "compact" && view === "list";
   const isUploading = uploadStatus === "uploading";

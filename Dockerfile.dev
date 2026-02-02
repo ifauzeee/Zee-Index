@@ -11,13 +11,14 @@ WORKDIR /app
 RUN apk add --no-cache libc6-compat curl
 
 # Install pnpm
-RUN npm install -g pnpm
-
 # Copy package files
 COPY package.json pnpm-lock.yaml* ./
 
 # Install all dependencies (including devDependencies)
-RUN pnpm i --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/root/.pnpm-store \
+    npm install -g pnpm && \
+    pnpm config set store-dir /root/.pnpm-store && \
+    pnpm i --frozen-lockfile
 
 # Copy source code
 COPY . .
