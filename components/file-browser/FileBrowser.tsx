@@ -351,6 +351,7 @@ export default function FileBrowser({
   const handlePrefetchItem = useCallback(
     (file: DriveFile) => {
       if (file.isFolder) {
+        if (file.isProtected && !folderTokens[file.id]) return;
         handlePrefetchFolder(file.id);
       } else {
         let destinationUrl = `/folder/${currentFolderId}/file/${file.id}/${createSlug(
@@ -362,7 +363,7 @@ export default function FileBrowser({
         router.prefetch(destinationUrl);
       }
     },
-    [handlePrefetchFolder, currentFolderId, shareToken, router],
+    [handlePrefetchFolder, currentFolderId, shareToken, router, folderTokens],
   );
 
   const handleContextMenuWrapper = useCallback(
