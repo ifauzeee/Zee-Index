@@ -309,7 +309,8 @@ export default function FileBrowser({
       ];
 
       const existingData = queryClient.getQueryState(queryKey);
-      if (existingData?.status === "fetching" || existingData?.data) return;
+      if (existingData?.fetchStatus === "fetching" || existingData?.data)
+        return;
       if (existingData?.status === "error") return;
 
       let folderUrl =
