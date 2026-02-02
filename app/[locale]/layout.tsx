@@ -91,7 +91,7 @@ export default async function RootLayout({
           <Providers>
             <GlobalBranding />
             {children}
-            <Analytics />
+            {process.env.NEXT_PUBLIC_VERCEL_ANALYTICS_ID && <Analytics />}
           </Providers>
         </NextIntlClientProvider>
       </body>

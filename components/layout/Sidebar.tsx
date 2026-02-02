@@ -82,9 +82,13 @@ export default function Sidebar() {
         if (res.ok) {
           const data = await res.json();
           setDbDrives(data);
+        } else if (res.status === 401) {
+          console.error(
+            "Unauthorized to fetch manual drives - session may have expired",
+          );
         }
       } catch (e) {
-        console.error("Failed fetching DB drives", e);
+        console.error("Error fetching DB drives:", e);
       }
     };
     if (mounted) fetchDbDrives();

@@ -36,6 +36,13 @@ export function handleAuthRedirect(
   pathname: string,
   error?: string,
 ) {
+  if (pathname.startsWith("/api")) {
+    return NextResponse.json(
+      { error: error || "Unauthorized" },
+      { status: 401 },
+    );
+  }
+
   const loginUrl = new URL("/login", request.url);
   loginUrl.searchParams.set("callbackUrl", pathname);
   if (error) {

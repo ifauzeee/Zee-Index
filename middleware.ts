@@ -66,7 +66,7 @@ export async function middleware(request: NextRequest) {
     try {
       const shareSecretKey = process.env.SHARE_SECRET_KEY;
       if (!shareSecretKey || shareSecretKey.length < 32) {
-        return NextResponse.redirect(new URL("/login", request.url));
+        return handleAuthRedirect(request, pathname);
       }
 
       const secret = new TextEncoder().encode(shareSecretKey);
@@ -78,10 +78,7 @@ export async function middleware(request: NextRequest) {
           process.env.NEXTAUTH_SECRET,
         );
         if (!isAuthenticated) {
-          const loginUrl = new URL("/login", request.url);
-          loginUrl.searchParams.set("callbackUrl", request.url);
-          loginUrl.searchParams.set("error", "GuestAccessDenied");
-          return NextResponse.redirect(loginUrl);
+          return handleAuthRedirect(request, pathname, "GuestAccessDenied");
         }
       }
 

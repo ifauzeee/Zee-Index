@@ -574,17 +574,23 @@ export const useAppStore = create<AppState>()(
         set({ isConfigLoading: true });
         try {
           const response = await fetch("/api/admin/config");
+          if (!response.ok) {
+            if (response.status === 401) {
+              console.error("Unauthorized: Session expired or invalid");
+            }
+            throw new Error(`Failed to fetch config: ${response.status}`);
+          }
           const config: AppConfig = await response.json();
           set({
-            hideAuthor: config.hideAuthor || false,
-            disableGuestLogin: config.disableGuestLogin || false,
+            hideAuthor: config.hideAuthor ?? false,
+            disableGuestLogin: config.disableGuestLogin ?? false,
             appName: config.appName || "Zee Index",
             logoUrl: config.logoUrl || "",
             faviconUrl: config.faviconUrl || "",
             primaryColor: config.primaryColor || "",
           });
         } catch (error) {
-          console.error("Failed to fetch config:", error);
+          console.error("Config fetch error:", error);
           set({ hideAuthor: true, disableGuestLogin: true });
         } finally {
           set({ isConfigLoading: false });
@@ -597,16 +603,23 @@ export const useAppStore = create<AppState>()(
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(config),
           });
-          const result = await response.json();
-          if (!response.ok) throw new Error(result.error);
 
+          if (!response.ok) {
+            const result = await response.json().catch(() => ({}));
+            throw new Error(
+              result.error || `Update failed: ${response.status}`,
+            );
+          }
+
+          const result = await response.json();
           set((state) => ({
             ...state,
             ...result.config,
           }));
         } catch (error: unknown) {
           get().addToast({
-            message: error instanceof Error ? error.message : "Error",
+            message:
+              error instanceof Error ? error.message : "Error updating config",
             type: "error",
           });
         }
