@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
-import { FolderSearch } from "lucide-react";
+import { FolderSearch, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import FileItem from "../FileItem";
@@ -25,18 +25,43 @@ export default function ListView({
   isBulkMode,
   shareLinks,
   density,
+  isFetchingNextPage,
+  nextPageToken,
 }: FileBrowserViewProps) {
   const t = useTranslations("FileList");
   const listRef = useRef<HTMLDivElement | null>(null);
+  const [offset, setOffset] = React.useState(0);
+
+  React.useLayoutEffect(() => {
+    const updateOffset = () => {
+      if (listRef.current) {
+        const rect = listRef.current.getBoundingClientRect();
+        setOffset(rect.top + window.scrollY);
+      }
+    };
+
+    updateOffset();
+
+    const observer = new ResizeObserver(updateOffset);
+    if (listRef.current?.parentElement) {
+      observer.observe(listRef.current.parentElement);
+    }
+
+    window.addEventListener("resize", updateOffset);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateOffset);
+    };
+  }, []);
 
   const virtualizer = useWindowVirtualizer({
     count: files.length,
     estimateSize: () => (density === "compact" ? 40 : 68),
     overscan: 5,
-    scrollMargin: listRef.current?.offsetTop ?? 0,
+    scrollMargin: offset,
   });
 
-  if (files.length === 0) {
+  if (files.length === 0 && !isFetchingNextPage) {
     return (
       <div className="text-center py-20 text-muted-foreground col-span-full">
         <EmptyState
@@ -55,6 +80,7 @@ export default function ListView({
           height: `${virtualizer.getTotalSize()}px`,
           width: "100%",
           position: "relative",
+          minHeight: files.length > 0 ? "100px" : "0px",
         }}
       >
         {virtualizer.getVirtualItems().map((virtualRow) => {
@@ -72,14 +98,14 @@ export default function ListView({
           return (
             <div
               key={virtualRow.key}
-              data-index={virtualRow.index}
+              data-index={virtualRow.index.toString()}
               ref={virtualizer.measureElement}
               style={{
                 position: "absolute",
                 top: 0,
                 left: 0,
                 width: "100%",
-                transform: `translateY(${virtualRow.start}px)`,
+                transform: `translateY(${virtualRow.start - offset}px)`,
               }}
             >
               <div
@@ -122,6 +148,17 @@ export default function ListView({
             </div>
           );
         })}
+      </div>
+
+      {/* Akhir daftar / Loader di luar virtualisasi absolute */}
+      <div className="flex justify-center items-center p-8 mt-4 mb-16">
+        {isFetchingNextPage ? (
+          <Loader2 className="animate-spin text-primary" />
+        ) : !nextPageToken && files.length > 0 ? (
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
+            {t("endOfList")}
+          </span>
+        ) : null}
       </div>
     </div>
   );

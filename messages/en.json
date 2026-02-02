@@ -293,7 +293,8 @@
   },
   "FileList": {
     "emptyTitle": "This Folder is Empty",
-    "emptyMessage": "Upload files or create a new folder to get started."
+    "emptyMessage": "Upload files or create a new folder to get started.",
+    "endOfList": "End of list"
   },
   "SearchResultsList": {
     "title": "Search Results for \"{searchTerm}\"",

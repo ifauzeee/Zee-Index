@@ -311,33 +311,34 @@ export default function FileBrowser({
       fetchUrl.searchParams.append("folderId", folderId);
       if (shareToken) fetchUrl.searchParams.append("share_token", shareToken);
 
-      queryClient.prefetchInfiniteQuery({
-        queryKey: [
-          "files",
-          folderId,
-          shareToken,
-          folderTokens[folderId],
-          refreshKey,
-        ],
-        queryFn: async () => {
-          const headers = new Headers();
-          if (folderTokens[folderId]) {
-            headers.append("Authorization", `Bearer ${folderTokens[folderId]}`);
-          }
-          const res = await fetch(fetchUrl.toString(), { headers });
-          if (!res.ok) {
-            const errorData = await res.json().catch(() => ({}));
-            if (res.status === 401 && errorData.protected) {
-              throw { isProtected: true, folderId, error: errorData.error };
+      queryClient
+        .prefetchInfiniteQuery({
+          queryKey: [
+            "files",
+            folderId,
+            shareToken,
+            folderTokens[folderId],
+            refreshKey,
+          ],
+          queryFn: async () => {
+            const headers = new Headers();
+            if (folderTokens[folderId]) {
+              headers.append(
+                "Authorization",
+                `Bearer ${folderTokens[folderId]}`,
+              );
             }
-            throw new Error(errorData.error || t("failedPrefetch"));
-          }
-          return res.json();
-        },
-        initialPageParam: null as string | null,
-      });
+            const res = await fetch(fetchUrl.toString(), { headers });
+            if (!res.ok) {
+              return null;
+            }
+            return res.json();
+          },
+          initialPageParam: null as string | null,
+        })
+        .catch(() => {});
     },
-    [router, shareToken, queryClient, folderTokens, refreshKey, t],
+    [router, shareToken, queryClient, folderTokens, refreshKey],
   );
 
   const handlePrefetchItem = useCallback(
@@ -401,7 +402,7 @@ export default function FileBrowser({
 
   return (
     <motion.div
-      className="relative"
+      className="relative flex flex-col gap-6"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDropUpload}
@@ -446,7 +447,7 @@ export default function FileBrowser({
         />
       )}
 
-      <main className="min-h-[50vh] mb-4">
+      <div>
         <FileBrowserContent
           isLoading={isLoading}
           sessionStatus={sessionStatus}
@@ -476,7 +477,7 @@ export default function FileBrowser({
           nextPageToken={nextPageToken}
           fetchNextPage={fetchNextPage}
         />
-      </main>
+      </div>
 
       <FileBrowserModals
         authModal={{ isOpen: false, folderId: "", folderName: "" }}

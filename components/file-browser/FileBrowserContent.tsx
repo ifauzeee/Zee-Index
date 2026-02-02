@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
-import { Loader2 } from "lucide-react";
 import FileList from "@/components/file-browser/FileList";
 import FileBrowserLoading from "@/components/file-browser/FileBrowserLoading";
 import FolderReadme from "@/components/file-browser/FolderReadme";
@@ -108,9 +107,15 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
 
   return (
     <>
-      <PinnedSection />
+      <div className="mb-6">
+        <PinnedSection />
+      </div>
 
-      {readmeFile && <FolderReadme fileId={readmeFile.id} />}
+      {readmeFile && (
+        <div className="mb-6">
+          <FolderReadme fileId={readmeFile.id} />
+        </div>
+      )}
 
       <FileList
         files={sortedFiles}
@@ -126,21 +131,9 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
         onFileDrop={onFileDrop}
         onPrefetchItem={onPrefetchItem}
         uploads={uploads}
+        isFetchingNextPage={isFetchingNextPage}
+        nextPageToken={nextPageToken}
       />
-
-      <div
-        ref={loaderRef}
-        className="flex justify-center items-center p-4 h-24 mb-16 mt-12"
-      >
-        {isFetchingNextPage && (
-          <Loader2 className="animate-spin text-primary" />
-        )}
-        {!isFetchingNextPage && !nextPageToken && sortedFiles.length > 0 && (
-          <span className="text-sm text-muted-foreground">
-            {t("endOfList")}
-          </span>
-        )}
-      </div>
     </>
   );
 }

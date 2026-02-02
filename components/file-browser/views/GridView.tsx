@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
-import { FolderSearch } from "lucide-react";
+import { FolderSearch, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import FileCard from "../FileCard";
@@ -17,10 +17,35 @@ export default function GridView({
   onDetailsClick,
   onDownloadClick,
   onPrefetchItem,
+  isFetchingNextPage,
+  nextPageToken,
 }: FileBrowserViewProps) {
   const t = useTranslations("FileList");
   const listRef = useRef<HTMLDivElement | null>(null);
   const [numColumns, setNumColumns] = useState(2);
+  const [offset, setOffset] = React.useState(0);
+
+  React.useLayoutEffect(() => {
+    const updateOffset = () => {
+      if (listRef.current) {
+        const rect = listRef.current.getBoundingClientRect();
+        setOffset(rect.top + window.scrollY);
+      }
+    };
+
+    updateOffset();
+
+    const observer = new ResizeObserver(updateOffset);
+    if (listRef.current?.parentElement) {
+      observer.observe(listRef.current.parentElement);
+    }
+
+    window.addEventListener("resize", updateOffset);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateOffset);
+    };
+  }, []);
 
   useEffect(() => {
     const updateColumns = () => {
@@ -43,7 +68,7 @@ export default function GridView({
     count: rowCount,
     estimateSize: () => 220,
     overscan: 5,
-    scrollMargin: listRef.current?.offsetTop ?? 0,
+    scrollMargin: offset,
   });
 
   const getThumbnailSrc = (file: DriveFile) => {
@@ -65,7 +90,7 @@ export default function GridView({
     }
   };
 
-  if (files.length === 0) {
+  if (files.length === 0 && !isFetchingNextPage) {
     return (
       <div className="text-center py-20 text-muted-foreground col-span-full">
         <EmptyState
@@ -84,6 +109,7 @@ export default function GridView({
           height: `${virtualizer.getTotalSize()}px`,
           width: "100%",
           position: "relative",
+          minHeight: files.length > 0 ? "200px" : "0px",
         }}
       >
         {virtualizer.getVirtualItems().map((virtualRow) => {
@@ -93,14 +119,14 @@ export default function GridView({
           return (
             <div
               key={virtualRow.key}
-              data-index={virtualRow.index}
+              data-index={virtualRow.index.toString()}
               ref={virtualizer.measureElement}
               style={{
                 position: "absolute",
                 top: 0,
                 left: 0,
                 width: "100%",
-                transform: `translateY(${virtualRow.start}px)`,
+                transform: `translateY(${virtualRow.start - offset}px)`,
               }}
             >
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 pb-3 sm:pb-4">
@@ -147,6 +173,17 @@ export default function GridView({
             </div>
           );
         })}
+      </div>
+
+      {/* Akhir daftar / Loader di luar virtualisasi absolute */}
+      <div className="flex justify-center items-center p-8 mt-4 mb-16">
+        {isFetchingNextPage ? (
+          <Loader2 className="animate-spin text-primary" />
+        ) : !nextPageToken && files.length > 0 ? (
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
+            {t("endOfList")}
+          </span>
+        ) : null}
       </div>
     </div>
   );

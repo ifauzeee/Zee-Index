@@ -49,7 +49,7 @@ export default function FolderReadme({ fileId }: FolderReadmeProps) {
   if (!content) return null;
 
   return (
-    <div className="mb-6 bg-card border rounded-lg overflow-hidden shadow-sm">
+    <div className="bg-card border rounded-lg overflow-hidden shadow-sm">
       <div
         className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b cursor-pointer hover:bg-muted/50 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}

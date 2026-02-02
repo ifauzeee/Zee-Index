@@ -293,7 +293,8 @@
   },
   "FileList": {
     "emptyTitle": "Folder ini Kosong",
-    "emptyMessage": "Unggah file atau buat folder baru untuk memulai."
+    "emptyMessage": "Unggah file atau buat folder baru untuk memulai.",
+    "endOfList": "Akhir dari daftar"
   },
   "SearchResultsList": {
     "title": "Hasil Pencarian untuk \"{searchTerm}\"",

@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import Masonry from "react-masonry-css";
-import { FolderSearch } from "lucide-react";
+import { FolderSearch, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { MASONRY_BREAKPOINTS } from "@/lib/utils";
@@ -27,10 +27,12 @@ export default function GalleryView({
   isBulkMode,
   shareLinks,
   density,
+  isFetchingNextPage,
+  nextPageToken,
 }: FileBrowserViewProps) {
   const t = useTranslations("FileList");
 
-  if (files.length === 0) {
+  if (files.length === 0 && !isFetchingNextPage) {
     return (
       <div className="text-center py-20 text-muted-foreground col-span-full">
         <EmptyState
@@ -104,6 +106,16 @@ export default function GalleryView({
           );
         })}
       </Masonry>
+
+      <div className="flex justify-center items-center p-8 mb-16">
+        {isFetchingNextPage ? (
+          <Loader2 className="animate-spin text-primary" />
+        ) : !nextPageToken && files.length > 0 ? (
+          <span className="text-sm text-muted-foreground">
+            {t("endOfList")}
+          </span>
+        ) : null}
+      </div>
     </motion.div>
   );
 }

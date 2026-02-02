@@ -137,44 +137,41 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div
+      id="app-container"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className="min-h-screen w-full overflow-x-hidden relative"
+      className="bg-background text-foreground flex flex-col min-h-screen w-full relative"
     >
-      <div
-        id="app-container"
-        className={`bg-background text-foreground min-h-screen flex flex-col w-full max-w-[100vw] overflow-x-hidden`}
-      >
-        <Header />
-        <div className="flex flex-1 container max-w-full px-0 overflow-x-hidden relative">
-          {!isShareMode && <Sidebar />}
-
-          <div
-            className={cn(
-              "flex-1 flex flex-col transition-all duration-300 ease-in-out min-w-0 w-full max-w-full",
-              !isShareMode && effectiveSidebarOpen ? "lg:ml-64" : "ml-0",
-            )}
-          >
-            <div className="container mx-auto px-4 max-w-7xl flex-grow py-4 pb-20 lg:pb-0 min-w-0 overflow-x-hidden">
-              <main className="min-h-[50vh] mb-0 w-full">{children}</main>
-            </div>
-            <AppFooter />
-          </div>
-        </div>
-
-        {!isShareMode && <MobileBottomNav />}
+      <Header />
+      <div className="flex flex-1 container max-w-full px-0 relative">
+        {!isShareMode && <Sidebar />}
 
         <div
-          id="toast-container"
-          className="fixed bottom-24 lg:bottom-6 right-6 z-[9999] flex flex-col gap-3 max-w-[90vw]"
+          className={cn(
+            "flex-1 flex flex-col transition-all duration-300 ease-in-out min-w-0 w-full relative",
+            !isShareMode && effectiveSidebarOpen ? "lg:ml-64" : "ml-0",
+          )}
         >
-          <AnimatePresence>
-            {toasts.map((toast) => (
-              <Toast key={toast.id} toast={toast} onRemove={removeToast} />
-            ))}
-          </AnimatePresence>
+          <main className="flex-grow container mx-auto px-4 max-w-7xl py-4 pb-20 lg:pb-8 min-w-0">
+            {children}
+          </main>
+          <AppFooter />
         </div>
       </div>
+
+      {!isShareMode && <MobileBottomNav />}
+
+      <div
+        id="toast-container"
+        className="fixed bottom-24 lg:bottom-6 right-6 z-[9999] flex flex-col gap-3 max-w-[90vw]"
+      >
+        <AnimatePresence>
+          {toasts.map((toast) => (
+            <Toast key={toast.id} toast={toast} onRemove={removeToast} />
+          ))}
+        </AnimatePresence>
+      </div>
+
       <BulkActionBar />
       <GlobalAudioPlayer />
       <CommandPalette />

@@ -24,4 +24,6 @@ export interface FileBrowserViewProps {
   shareLinks: any[];
 
   density?: "comfortable" | "compact";
+  isFetchingNextPage?: boolean;
+  nextPageToken?: string | null;
 }

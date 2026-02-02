@@ -23,6 +23,8 @@ interface FileListProps {
   onFileDrop: (e: React.DragEvent, targetFolder: DriveFile) => void;
   onPrefetchItem?: (file: DriveFile) => void;
   uploads?: Record<string, any>;
+  isFetchingNextPage?: boolean;
+  nextPageToken?: string | null;
 }
 
 export default function FileList({
@@ -39,6 +41,8 @@ export default function FileList({
   onFileDrop,
   onPrefetchItem,
   uploads = {},
+  isFetchingNextPage,
+  nextPageToken,
 }: FileListProps) {
   const {
     view,
@@ -145,6 +149,8 @@ export default function FileList({
     isBulkMode,
     shareLinks,
     density,
+    isFetchingNextPage,
+    nextPageToken,
   };
 
   if (view === "grid") {
