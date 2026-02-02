@@ -300,6 +300,18 @@ export default function FileBrowser({
 
   const handlePrefetchFolder = useCallback(
     (folderId: string) => {
+      const queryKey = [
+        "files",
+        folderId,
+        shareToken,
+        folderTokens[folderId],
+        refreshKey,
+      ];
+
+      const existingData = queryClient.getQueryState(queryKey);
+      if (existingData?.status === "fetching" || existingData?.data) return;
+      if (existingData?.status === "error") return;
+
       let folderUrl =
         folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID
           ? "/"
@@ -313,13 +325,7 @@ export default function FileBrowser({
 
       queryClient
         .prefetchInfiniteQuery({
-          queryKey: [
-            "files",
-            folderId,
-            shareToken,
-            folderTokens[folderId],
-            refreshKey,
-          ],
+          queryKey,
           queryFn: async () => {
             const headers = new Headers();
             if (folderTokens[folderId]) {
@@ -330,7 +336,7 @@ export default function FileBrowser({
             }
             const res = await fetch(fetchUrl.toString(), { headers });
             if (!res.ok) {
-              return null;
+              throw new Error("Prefetch failed");
             }
             return res.json();
           },

@@ -167,14 +167,14 @@ export function useFileFetching({
         refresh: refreshKey > 0,
       }),
     initialPageParam: null as string | null,
-    getNextPageParam: (lastPage) => lastPage.nextPageToken || undefined,
+    getNextPageParam: (lastPage) => lastPage?.nextPageToken || undefined,
     retry: (failureCount, error: any) => {
       if (error instanceof ProtectedError || error?.isProtected) return false;
       if (error?.status === 401) return false;
       return failureCount < 2;
     },
-    refetchInterval: 15000,
-    refetchOnWindowFocus: true,
+    refetchInterval: (query) => (query.state.error ? false : 15000),
+    refetchOnWindowFocus: (query) => (query.state.error ? false : true),
     staleTime: 1000 * 5,
     gcTime: 1000 * 60 * 10,
     enabled: !!currentFolderId && currentFolderId !== "undefined",
