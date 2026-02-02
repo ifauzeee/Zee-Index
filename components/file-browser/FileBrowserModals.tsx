@@ -99,6 +99,7 @@ interface FileBrowserModalsProps {
   setShowHistory: (show: boolean) => void;
   handleTogglePin: () => void;
   isFilePinned: (id: string) => boolean;
+  shareToken: string | null;
 }
 
 export default function FileBrowserModals(props: FileBrowserModalsProps) {
@@ -141,6 +142,7 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
     setShowHistory,
     handleTogglePin,
     isFilePinned,
+    shareToken,
   } = props;
 
   const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024;
@@ -249,6 +251,15 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
           isPinned={isFilePinned(contextMenu.file.id)}
           onTogglePin={handleTogglePin}
           isAdmin={isAdmin}
+          onOpenNewTab={() => {
+            const sharePath = getSharePath(contextMenu.file);
+            let finalUrl = sharePath;
+            if (shareToken) {
+              finalUrl += `?share_token=${shareToken}`;
+            }
+            window.open(finalUrl, "_blank");
+            setContextMenu(null);
+          }}
         />
       )}
 

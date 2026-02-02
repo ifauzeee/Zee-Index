@@ -150,7 +150,6 @@ export default function ListView({
         })}
       </div>
 
-      {/* Akhir daftar / Loader di luar virtualisasi absolute */}
       <div className="flex justify-center items-center p-8 mt-4 mb-16">
         {isFetchingNextPage ? (
           <Loader2 className="animate-spin text-primary" />

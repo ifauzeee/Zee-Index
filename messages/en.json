@@ -110,7 +110,8 @@
     "move": "Move",
     "rename": "Rename",
     "delete": "Delete",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "openInNewTab": "Open in New Tab"
   },
   "DeleteConfirm": {
     "title": "Delete Item",

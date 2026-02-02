@@ -13,7 +13,10 @@ export type ContextMenuState = {
   file: DriveFile;
 } | null;
 
+import { useQueryClient } from "@tanstack/react-query";
+
 export function useFileActions(currentFolderId: string) {
+  const queryClient = useQueryClient();
   const {
     addToast,
     triggerRefresh,
@@ -22,6 +25,9 @@ export function useFileActions(currentFolderId: string) {
     pinnedFolders,
     addPin,
     removePin,
+    shareToken,
+    folderTokens,
+    refreshKey,
   } = useAppStore();
   const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
   const [actionState, setActionState] = useState<ActionState>({
@@ -89,18 +95,47 @@ export function useFileActions(currentFolderId: string) {
       setActionState({ type: null, file: null });
       return;
     }
+
+    const fileToRename = actionState.file;
+    const queryKey = [
+      "files",
+      currentFolderId,
+      shareToken,
+      folderTokens[currentFolderId],
+      refreshKey,
+    ];
+
+    const previousData = queryClient.getQueryData(queryKey);
+
+    queryClient.setQueryData(queryKey, (old: any) => {
+      if (!old) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          files: page.files.map((f: DriveFile) =>
+            f.id === fileToRename.id ? { ...f, name: newName } : f,
+          ),
+        })),
+      };
+    });
+
+    setActionState({ type: null, file: null });
+
     try {
       const response = await fetch("/api/files/rename", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileId: actionState.file.id, newName }),
+        body: JSON.stringify({ fileId: fileToRename.id, newName }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Failed to rename");
-      triggerRefresh();
+
       addToast({ message: "Name successfully changed!", type: "success" });
-      setActionState({ type: null, file: null });
+
+      queryClient.invalidateQueries({ queryKey });
     } catch (err: any) {
+      queryClient.setQueryData(queryKey, previousData);
       addToast({ message: err.message, type: "error" });
     }
   };
@@ -109,6 +144,28 @@ export function useFileActions(currentFolderId: string) {
     if (!actionState.file) return;
     const fileToDelete = actionState.file;
     setActionState({ type: null, file: null });
+
+    const queryKey = [
+      "files",
+      currentFolderId,
+      shareToken,
+      folderTokens[currentFolderId],
+      refreshKey,
+    ];
+
+    const previousData = queryClient.getQueryData(queryKey);
+
+    queryClient.setQueryData(queryKey, (old: any) => {
+      if (!old) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          files: page.files.filter((f: DriveFile) => f.id !== fileToDelete.id),
+        })),
+      };
+    });
+
     try {
       const response = await fetch("/api/files/delete", {
         method: "POST",
@@ -117,9 +174,11 @@ export function useFileActions(currentFolderId: string) {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Failed to delete file");
-      triggerRefresh();
+
       addToast({ message: "File successfully deleted!", type: "success" });
+      queryClient.invalidateQueries({ queryKey });
     } catch (err: any) {
+      queryClient.setQueryData(queryKey, previousData);
       addToast({ message: err.message, type: "error" });
     }
   };
@@ -130,22 +189,47 @@ export function useFileActions(currentFolderId: string) {
       return;
     }
     const currentParentId = actionState.file.parents[0];
+    const fileToMove = actionState.file;
+    setActionState({ type: null, file: null });
+
+    const queryKey = [
+      "files",
+      currentFolderId,
+      shareToken,
+      folderTokens[currentFolderId],
+      refreshKey,
+    ];
+
+    const previousData = queryClient.getQueryData(queryKey);
+
+    queryClient.setQueryData(queryKey, (old: any) => {
+      if (!old) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          files: page.files.filter((f: DriveFile) => f.id !== fileToMove.id),
+        })),
+      };
+    });
+
     try {
       const response = await fetch("/api/files/move", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fileId: actionState.file.id,
+          fileId: fileToMove.id,
           currentParentId,
           newParentId,
         }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Failed to move file");
-      triggerRefresh();
+
       addToast({ message: "File successfully moved!", type: "success" });
-      setActionState({ type: null, file: null });
+      queryClient.invalidateQueries({ queryKey });
     } catch (err: any) {
+      queryClient.setQueryData(queryKey, previousData);
       addToast({ message: err.message, type: "error" });
     }
   };

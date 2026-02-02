@@ -122,7 +122,6 @@ body.bulk-action-bar-visible {
   }
 }
 
-/* Scrollbar Styling - Seragam untuk semua elemen */
 * {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted)) transparent;

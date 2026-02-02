@@ -1,4 +1,3 @@
-/* Custom Driver.js Theme for Zee-Index */
 .driver-popover.driverjs-theme {
   background-color: hsl(var(--popover));
   color: hsl(var(--popover-foreground));
@@ -87,8 +86,6 @@
   color: hsl(var(--destructive));
   background-color: hsl(var(--destructive) / 0.1);
 }
-
-/* Fix for dark mode if needed (Tailwind variables handle this automatically usually) */
 
 @media (max-width: 640px) {
   .driver-popover.driverjs-theme {

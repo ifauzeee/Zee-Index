@@ -530,6 +530,7 @@ export default function FileBrowser({
         setShowHistory={setShowHistory}
         handleTogglePin={handleTogglePin}
         isFilePinned={isFilePinned}
+        shareToken={shareToken}
       />
 
       <ImageGallery

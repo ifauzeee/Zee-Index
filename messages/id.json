@@ -110,7 +110,8 @@
     "move": "Pindahkan",
     "rename": "Ganti Nama",
     "delete": "Hapus",
-    "cancel": "Batal"
+    "cancel": "Batal",
+    "openInNewTab": "Buka di Tab Baru"
   },
   "DeleteConfirm": {
     "title": "Hapus Item",

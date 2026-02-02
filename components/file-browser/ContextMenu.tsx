@@ -14,6 +14,7 @@ import {
   Edit3,
   Pin,
   PinOff,
+  ExternalLink,
 } from "lucide-react";
 import { formatBytes, cn } from "@/lib/utils";
 import React, { useEffect, useState, useRef } from "react";
@@ -42,6 +43,7 @@ interface ContextMenuProps {
   isPinned: boolean;
   onTogglePin: () => void;
   isAdmin: boolean;
+  onOpenNewTab: () => void;
 }
 
 export default function ContextMenu({
@@ -66,6 +68,7 @@ export default function ContextMenu({
   isPinned,
   onTogglePin,
   isAdmin,
+  onOpenNewTab,
 }: ContextMenuProps) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -152,7 +155,14 @@ export default function ContextMenu({
   const menuContent = (
     <ul className="py-2 md:py-1 space-y-0.5 md:space-y-0">
       {!isFolder && (
-        <MenuItem onClick={onPreview} icon={Eye} label={t("preview")} />
+        <>
+          <MenuItem onClick={onPreview} icon={Eye} label={t("preview")} />
+          <MenuItem
+            onClick={onOpenNewTab}
+            icon={ExternalLink}
+            label={t("openInNewTab")}
+          />
+        </>
       )}
 
       {isImage && isAdmin && (
