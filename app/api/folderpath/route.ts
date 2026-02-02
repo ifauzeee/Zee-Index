@@ -35,16 +35,22 @@ export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   const isShareAuth = await validateShareToken(request);
 
-  if (!session && !isShareAuth) {
+  const { searchParams } = new URL(request.url);
+  const rawFolderId = searchParams.get("folderId");
+  const locale = searchParams.get("locale") || "en";
+
+  const isPriv = rawFolderId
+    ? (process.env.PRIVATE_FOLDER_IDS || "")
+        .split(",")
+        .includes(rawFolderId.trim())
+    : false;
+
+  if (isPriv && !session && !isShareAuth) {
     return NextResponse.json(
       { error: "Authentication required." },
       { status: 401 },
     );
   }
-
-  const { searchParams } = new URL(request.url);
-  const rawFolderId = searchParams.get("folderId");
-  const locale = searchParams.get("locale") || "en";
 
   if (!rawFolderId) {
     return NextResponse.json(

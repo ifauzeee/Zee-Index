@@ -12,7 +12,18 @@ const intlMiddleware = createMiddleware({
 });
 
 const PUBLIC_PATHS = new Set(["/login", "/verify-2fa", "/setup", "/request"]);
-const PUBLIC_API_PREFIXES = ["/api/auth", "/api/config/public", "/api/setup"];
+const PUBLIC_API_PREFIXES = [
+  "/api/auth",
+  "/api/config/public",
+  "/api/setup",
+  "/api/files",
+  "/api/folderpath",
+  "/api/tags",
+  "/api/download",
+  "/api/proxy-image",
+  "/api/admin/config",
+  "/api/admin/manual-drives",
+];
 
 const isPublicRoute = (pathname: string) => {
   return (
