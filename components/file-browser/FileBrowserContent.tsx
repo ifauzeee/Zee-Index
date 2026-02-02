@@ -32,7 +32,7 @@ interface FileBrowserContentProps {
   onDownloadClick: (e: React.MouseEvent, file: DriveFile) => void;
   onDragStart: (e: React.DragEvent, file: DriveFile) => void;
   onFileDrop: (e: React.DragEvent, target: DriveFile) => void;
-  onPrefetchFolder: (id: string) => void;
+  onPrefetchItem: (file: DriveFile) => void;
 
   isFetchingNextPage: boolean;
   nextPageToken: string | null;
@@ -63,7 +63,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
     onDownloadClick,
     onDragStart,
     onFileDrop,
-    onPrefetchFolder,
+    onPrefetchItem,
     isFetchingNextPage,
     nextPageToken,
     fetchNextPage,
@@ -124,7 +124,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
         isAdmin={isAdmin}
         onDragStart={onDragStart}
         onFileDrop={onFileDrop}
-        onPrefetchFolder={onPrefetchFolder}
+        onPrefetchItem={onPrefetchItem}
         uploads={uploads}
       />
 

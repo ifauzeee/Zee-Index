@@ -1,15 +1,10 @@
-import { motion } from "framer-motion";
 import type { DriveFile } from "@/lib/drive";
 import { useAppStore } from "@/lib/store";
-import FileItem from "@/components/file-browser/FileItem";
-import FileCard from "@/components/file-browser/FileCard";
-import React, { useEffect, useRef, useState, useMemo } from "react";
-import EmptyState from "@/components/file-browser/EmptyState";
-import { FolderSearch } from "lucide-react";
-import Masonry from "react-masonry-css";
-import { MASONRY_BREAKPOINTS } from "@/lib/utils";
-import { useTranslations } from "next-intl";
-import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import React, { useEffect, useRef, useMemo } from "react";
+
+import ListView from "./views/ListView";
+import GridView from "./views/GridView";
+import GalleryView from "./views/GalleryView";
 
 interface FileListProps {
   files: DriveFile[];
@@ -26,7 +21,7 @@ interface FileListProps {
   isAdmin: boolean;
   onDragStart: (e: React.DragEvent, file: DriveFile) => void;
   onFileDrop: (e: React.DragEvent, targetFolder: DriveFile) => void;
-  onPrefetchFolder?: (folderId: string) => void;
+  onPrefetchItem?: (file: DriveFile) => void;
   uploads?: Record<string, any>;
 }
 
@@ -42,7 +37,7 @@ export default function FileList({
   isAdmin,
   onDragStart,
   onFileDrop,
-  onPrefetchFolder,
+  onPrefetchItem,
   uploads = {},
 }: FileListProps) {
   const {
@@ -56,12 +51,8 @@ export default function FileList({
     setBulkMode,
     toggleFavorite,
   } = useAppStore();
-  const t = useTranslations("FileList");
 
   const lastSelectedId = useRef<string | null>(null);
-  const listRef = useRef<HTMLDivElement | null>(null);
-
-  const [numColumns, setNumColumns] = useState(1);
 
   useEffect(() => {
     if (isAdmin && shareLinks.length === 0) {
@@ -69,37 +60,18 @@ export default function FileList({
     }
   }, [isAdmin, shareLinks.length, fetchShareLinks]);
 
-  useEffect(() => {
-    if (view === "list") {
-      setNumColumns(1);
-      return;
-    }
-
-    if (view === "gallery") return;
-
-    const updateColumns = () => {
-      const width = window.innerWidth;
-      if (width >= 1280) setNumColumns(6);
-      else if (width >= 1024) setNumColumns(5);
-      else if (width >= 768) setNumColumns(4);
-      else if (width >= 640) setNumColumns(3);
-      else setNumColumns(2);
-    };
-
-    updateColumns();
-    window.addEventListener("resize", updateColumns);
-    return () => window.removeEventListener("resize", updateColumns);
-  }, [view]);
-
   const handleItemClickWrapper = (file: DriveFile, e: React.MouseEvent) => {
     if (isAdmin && e.shiftKey && lastSelectedId.current) {
-      const currentIndex = files.findIndex((f) => f.id === file.id);
-      const lastIndex = files.findIndex((f) => f.id === lastSelectedId.current);
+      const allFileItems = [...uploadGhostFiles, ...files];
+      const currentIndex = allFileItems.findIndex((f) => f.id === file.id);
+      const lastIndex = allFileItems.findIndex(
+        (f) => f.id === lastSelectedId.current,
+      );
 
       if (currentIndex !== -1 && lastIndex !== -1) {
         const start = Math.min(currentIndex, lastIndex);
         const end = Math.max(currentIndex, lastIndex);
-        const newSelection = files.slice(start, end + 1);
+        const newSelection = allFileItems.slice(start, end + 1);
 
         if (!isBulkMode) setBulkMode(true);
 
@@ -155,186 +127,33 @@ export default function FileList({
     [uploadGhostFiles, files],
   );
 
-  const rowCount = Math.ceil(allItems.length / numColumns);
+  const commonProps = {
+    files: allItems,
+    onItemClick: handleItemClickWrapper,
+    onItemContextMenu,
+    activeFileId,
+    focusedIndex,
+    onShareClick,
+    onDetailsClick,
+    onDownloadClick,
+    onToggleFavorite: handleToggleFavoriteWrapper,
+    isAdmin,
+    onDragStart,
+    onFileDrop,
+    onPrefetchItem,
+    selectedFiles,
+    isBulkMode,
+    shareLinks,
+    density,
+  };
 
-  const virtualizer = useWindowVirtualizer({
-    count: rowCount,
-    estimateSize: () => (view === "list" ? 64 : 220),
-    overscan: 5,
-    scrollMargin: listRef.current?.offsetTop ?? 0,
-  });
-
-  if (allItems.length === 0) {
-    return (
-      <div className="text-center py-20 text-muted-foreground col-span-full">
-        <EmptyState
-          icon={FolderSearch}
-          title={t("emptyTitle")}
-          message={t("emptyMessage")}
-        />
-      </div>
-    );
+  if (view === "grid") {
+    return <GridView {...commonProps} />;
   }
-
-  const getThumbnailSrc = (file: DriveFile) => {
-    if (file.thumbnailLink) {
-      const size =
-        view === "grid" ? "s320" : view === "gallery" ? "s1280" : "s64";
-      return file.thumbnailLink.replace(/=s\d+/, `=${size}`);
-    }
-    return undefined;
-  };
-
-  const handleNavigate = (folderId: string) => {
-    const folder = files.find((f) => f.id === folderId);
-    if (folder) {
-      onItemClick(folder);
-    }
-  };
-
-  const renderItemContent = (file: any, index: number) => {
-    const isShared =
-      !file.uploadStatus &&
-      shareLinks.some(
-        (link) => !link.isCollection && link.path.includes(file.id),
-      );
-    const isFocused = index === focusedIndex;
-
-    if (view === "grid") {
-      return (
-        <div
-          key={file.id}
-          data-file-index={index}
-          className={
-            isFocused
-              ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg h-full"
-              : "h-full"
-          }
-        >
-          <FileCard
-            file={file}
-            onNavigate={handleNavigate}
-            onClick={onItemClick}
-            onContextMenu={onItemContextMenu}
-            onShare={onShareClick}
-            onDetails={onDetailsClick}
-            onDownload={onDownloadClick}
-            thumbnailSrc={getThumbnailSrc(file)}
-            onMouseEnter={() => {
-              if (file.isFolder && onPrefetchFolder && !file.uploadStatus) {
-                onPrefetchFolder(file.id);
-              }
-            }}
-          />
-        </div>
-      );
-    }
-
-    return (
-      <div
-        key={file.id}
-        data-file-index={index}
-        onClick={(e) => !file.uploadStatus && handleItemClickWrapper(file, e)}
-        className={
-          isFocused
-            ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg pb-2"
-            : "pb-2"
-        }
-      >
-        <FileItem
-          file={file}
-          onClick={() => {}}
-          onContextMenu={(event) => onItemContextMenu(event, file)}
-          isSelected={selectedFiles.some((f) => f.id === file.id)}
-          isActive={!isBulkMode && activeFileId === file.id}
-          isBulkMode={isBulkMode}
-          onShare={(e) => onShareClick(e, file)}
-          onShowDetails={(e) => onDetailsClick(e, file)}
-          onDownload={(e) => onDownloadClick(e, file)}
-          onToggleFavorite={(e) => handleToggleFavoriteWrapper(e, file)}
-          isAdmin={isAdmin}
-          onDragStart={(e) => onDragStart(e, file)}
-          onFileDrop={onFileDrop}
-          onMouseEnter={() => {
-            if (file.isFolder && onPrefetchFolder && !file.uploadStatus) {
-              onPrefetchFolder(file.id);
-            }
-          }}
-          density={density}
-          isShared={isShared}
-          uploadProgress={file.uploadProgress}
-          uploadStatus={file.uploadStatus as any}
-          uploadError={file.uploadError}
-        />
-      </div>
-    );
-  };
 
   if (view === "gallery") {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
-        <Masonry
-          breakpointCols={MASONRY_BREAKPOINTS}
-          className="flex w-auto -ml-4"
-          columnClassName="pl-4 bg-clip-padding"
-        >
-          {allItems.map((file, index) => (
-            <div key={file.id} className="mb-4">
-              {renderItemContent(file, index)}
-            </div>
-          ))}
-        </Masonry>
-      </motion.div>
-    );
+    return <GalleryView {...commonProps} />;
   }
 
-  return (
-    <div ref={listRef} className="relative w-full">
-      <div
-        style={{
-          height: `${virtualizer.getTotalSize()}px`,
-          width: "100%",
-          position: "relative",
-        }}
-      >
-        {virtualizer.getVirtualItems().map((virtualRow) => {
-          const startIndex = virtualRow.index * numColumns;
-          const rowFiles = allItems.slice(startIndex, startIndex + numColumns);
-
-          return (
-            <div
-              key={virtualRow.key}
-              data-index={virtualRow.index}
-              ref={virtualizer.measureElement}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                transform: `translateY(${virtualRow.start}px)`,
-              }}
-            >
-              <div
-                className={
-                  view === "grid"
-                    ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 pb-3 sm:pb-4"
-                    : "flex flex-col gap-0"
-                }
-              >
-                {rowFiles.map((file, colIndex) => (
-                  <React.Fragment key={file.id}>
-                    {renderItemContent(file, startIndex + colIndex)}
-                  </React.Fragment>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+  return <ListView {...commonProps} />;
 }

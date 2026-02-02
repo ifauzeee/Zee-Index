@@ -45,6 +45,7 @@ interface FileBrowserHeaderProps {
   onRequestFileClick: () => void;
   sort: { key: string; order: "asc" | "desc" };
   onSortChange: (key: "name" | "size" | "modifiedTime") => void;
+  onPrefetchFolder?: (id: string) => void;
 }
 
 export default function FileBrowserHeader({
@@ -67,6 +68,7 @@ export default function FileBrowserHeader({
   onRequestFileClick,
   sort,
   onSortChange,
+  onPrefetchFolder,
 }: FileBrowserHeaderProps) {
   const navRef = useRef<HTMLElement>(null);
   const { density, setDensity } = useAppStore();
@@ -138,6 +140,7 @@ export default function FileBrowserHeader({
                   onDragOver={(e) => onBreadcrumbDragOver(e, folder.id)}
                   onDragLeave={onBreadcrumbDragLeave}
                   onDrop={(e) => onBreadcrumbDrop(e, folder)}
+                  onMouseEnter={() => onPrefetchFolder?.(folder.id)}
                   className={cn(
                     "flex items-center gap-1 px-1.5 py-1 rounded-full text-sm font-medium transition-all border",
                     isClickable
@@ -201,31 +204,6 @@ export default function FileBrowserHeader({
 
             <div className="w-px h-6 bg-border mx-1 hidden sm:block shrink-0"></div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className="p-2 rounded-lg bg-card border hover:bg-accent transition-colors shadow-sm flex items-center justify-center shrink-0 gap-2 px-3"
-                  title={t("sortFiles")}
-                >
-                  <ArrowDownUp size={16} />
-                  <span className="text-sm font-medium">
-                    {sortLabels[sort.key as keyof typeof sortLabels]}
-                  </span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onSortChange("name")}>
-                  {t("sortName")}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onSortChange("modifiedTime")}>
-                  {t("sortDate")}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onSortChange("size")}>
-                  {t("sortSize")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
             <button
               onClick={onDetailsClick}
               disabled={!activeFileId}
@@ -271,6 +249,31 @@ export default function FileBrowserHeader({
               )}
             </button>
           )}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="p-1.5 rounded-md transition-all text-muted-foreground hover:text-foreground hover:bg-background border border-border flex items-center justify-center shrink-0 gap-2 px-2"
+                title={t("sortFiles")}
+              >
+                <ArrowDownUp size={18} />
+                <span className="text-sm font-medium hidden sm:inline">
+                  {sortLabels[sort.key as keyof typeof sortLabels]}
+                </span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onSortChange("name")}>
+                {t("sortName")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onSortChange("modifiedTime")}>
+                {t("sortDate")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onSortChange("size")}>
+                {t("sortSize")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <ViewToggle
             currentView={
               view === "gallery" ? "grid" : (view as "list" | "grid")

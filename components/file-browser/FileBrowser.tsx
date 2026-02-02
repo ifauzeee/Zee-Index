@@ -300,6 +300,13 @@ export default function FileBrowser({
 
   const handlePrefetchFolder = useCallback(
     (folderId: string) => {
+      let folderUrl =
+        folderId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID
+          ? "/"
+          : `/folder/${folderId}`;
+      if (shareToken) folderUrl += `?share_token=${shareToken}`;
+      router.prefetch(folderUrl);
+
       const fetchUrl = new URL(window.location.origin + "/api/files");
       fetchUrl.searchParams.append("folderId", folderId);
       if (shareToken) fetchUrl.searchParams.append("share_token", shareToken);
@@ -323,9 +330,6 @@ export default function FileBrowser({
             if (res.status === 401 && errorData.protected) {
               throw { isProtected: true, folderId, error: errorData.error };
             }
-            if (res.status === 401 && errorData.protected) {
-              throw { isProtected: true, folderId, error: errorData.error };
-            }
             throw new Error(errorData.error || t("failedPrefetch"));
           }
           return res.json();
@@ -333,7 +337,24 @@ export default function FileBrowser({
         initialPageParam: null as string | null,
       });
     },
-    [queryClient, shareToken, folderTokens, refreshKey, t],
+    [router, shareToken, queryClient, folderTokens, refreshKey, t],
+  );
+
+  const handlePrefetchItem = useCallback(
+    (file: DriveFile) => {
+      if (file.isFolder) {
+        handlePrefetchFolder(file.id);
+      } else {
+        let destinationUrl = `/folder/${currentFolderId}/file/${file.id}/${createSlug(
+          file.name,
+        )}`;
+        if (shareToken) {
+          destinationUrl += `?share_token=${shareToken}`;
+        }
+        router.prefetch(destinationUrl);
+      }
+    },
+    [handlePrefetchFolder, currentFolderId, shareToken, router],
   );
 
   const handleContextMenuWrapper = useCallback(
@@ -421,6 +442,7 @@ export default function FileBrowser({
           }}
           sort={sort}
           onSortChange={setSort}
+          onPrefetchFolder={handlePrefetchFolder}
         />
       )}
 
@@ -449,7 +471,7 @@ export default function FileBrowser({
           onDownloadClick={handleQuickDownload}
           onDragStart={handleDragStart}
           onFileDrop={onDropOnFolder}
-          onPrefetchFolder={handlePrefetchFolder}
+          onPrefetchItem={handlePrefetchItem}
           isFetchingNextPage={isFetchingNextPage}
           nextPageToken={nextPageToken}
           fetchNextPage={fetchNextPage}

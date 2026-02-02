@@ -175,7 +175,7 @@ export function useFileFetching({
     },
     refetchInterval: 15000,
     refetchOnWindowFocus: true,
-    staleTime: 0,
+    staleTime: 1000 * 5,
     gcTime: 1000 * 60 * 10,
     enabled: !!currentFolderId && currentFolderId !== "undefined",
   });
