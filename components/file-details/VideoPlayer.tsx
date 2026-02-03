@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { formatDuration } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
+import { srtToVtt } from "@/lib/subtitleUtils";
 
 import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
@@ -63,6 +64,59 @@ export default function VideoPlayer({
   const [retryCount, setRetryCount] = useState(0);
   const [isDirectMode, setIsDirectMode] = useState(false);
   const [hasResumed, setHasResumed] = useState(false);
+  const [processedTracks, setProcessedTracks] = useState<SubtitleTrack[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    const createdUrls: string[] = [];
+
+    const processTracks = async () => {
+      if (!subtitleTracks) {
+        if (active) setProcessedTracks([]);
+        return;
+      }
+
+      const tracks = await Promise.all(
+        subtitleTracks.map(async (track) => {
+          if (track.src.startsWith("blob:") || track.src.endsWith(".vtt")) {
+            return track;
+          }
+
+          try {
+            const response = await fetch(track.src);
+            const text = await response.text();
+
+            if (text.trim().startsWith("WEBVTT")) {
+              return track;
+            }
+
+            const vtt = srtToVtt(text);
+            const blob = new Blob([vtt], { type: "text/vtt" });
+            const url = URL.createObjectURL(blob);
+            createdUrls.push(url);
+            return {
+              ...track,
+              src: url,
+            };
+          } catch (e) {
+            console.error("Failed to convert subtitle:", e);
+            return track;
+          }
+        }),
+      );
+
+      if (active) setProcessedTracks(tracks);
+    };
+
+    processTracks();
+
+    return () => {
+      active = false;
+      createdUrls.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+    };
+  }, [subtitleTracks]);
 
   const fileIdMatch = src.match(/fileId=([^&]+)/);
   const fileId = fileIdMatch ? fileIdMatch[1] : null;
@@ -207,6 +261,7 @@ export default function VideoPlayer({
         onError={handleError}
         onCanPlay={handleCanPlay}
         onTimeUpdate={handleTimeUpdate}
+        logLevel="silent"
         className="w-full h-full ring-media-focus"
         crossOrigin
         autoplay={true}
@@ -217,7 +272,7 @@ export default function VideoPlayer({
             <div className="vds-poster w-full h-full absolute inset-0 object-cover" />
           )}
           {type === "video" &&
-            subtitleTracks?.map((track, i) => (
+            processedTracks.map((track, i) => (
               <Track
                 key={String(i)}
                 src={track.src}

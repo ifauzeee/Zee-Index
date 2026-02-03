@@ -8,6 +8,10 @@ import { logActivity } from "@/lib/activityLogger";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { isAccessRestricted } from "@/lib/securityUtils";
 
+export async function HEAD(request: NextRequest) {
+  return GET(request);
+}
+
 export async function GET(request: NextRequest) {
   const { success } = await checkRateLimit(request, "download");
   if (!success) {
@@ -127,7 +131,7 @@ export async function GET(request: NextRequest) {
 
     const googleResponse = await fetch(
       `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
-      { headers },
+      { headers, method: request.method },
     );
 
     if (!googleResponse.ok) {
@@ -150,7 +154,7 @@ export async function GET(request: NextRequest) {
       `inline; filename="${encodedFileName}"; filename*=UTF-8''${encodedFileName}`,
     );
 
-    responseHeaders.set("Cache-Control", "private, max-age=3600");
+    responseHeaders.set("Cache-Control", "private, no-transform, max-age=3600");
     responseHeaders.set("X-Accel-Buffering", "no");
 
     if (googleResponse.headers.get("Content-Range")) {
@@ -167,7 +171,7 @@ export async function GET(request: NextRequest) {
     }
     responseHeaders.set("Accept-Ranges", "bytes");
 
-    if (!range) {
+    if (!range && request.method === "GET") {
       logActivity("DOWNLOAD", {
         itemName: fileDetails.name,
         itemSize: fileDetails.size,
@@ -175,10 +179,13 @@ export async function GET(request: NextRequest) {
       }).catch((e) => console.error("Gagal mencatat log aktivitas:", e));
     }
 
-    return new Response(googleResponse.body, {
-      status: googleResponse.status,
-      headers: responseHeaders,
-    });
+    return new Response(
+      request.method === "HEAD" ? null : googleResponse.body,
+      {
+        status: googleResponse.status,
+        headers: responseHeaders,
+      },
+    );
   } catch (error: unknown) {
     console.error("Download API Error:", error);
     return NextResponse.json(

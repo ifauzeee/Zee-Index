@@ -218,7 +218,16 @@
     "download": "Unduh",
     "loading": "Memuat...",
     "error": "Error",
-    "unknown": "Tidak diketahui"
+    "unknown": "Tidak diketahui",
+    "subtitles": "Subtitle",
+    "noSubtitles": "Tidak ada subtitle yang terdeteksi",
+    "addSubtitle": "Tambah dari Drive",
+    "addLocalSubtitle": "Unggah File Lokal (.srt/.vtt)"
+  },
+  "SubtitleSelector": {
+    "title": "Pilih File Subtitle",
+    "loading": "Mencari file subtitle di folder...",
+    "noFiles": "Tidak ada file .vtt atau .srt yang ditemukan di folder ini."
   },
   "FileItem": {
     "share": "Bagikan",

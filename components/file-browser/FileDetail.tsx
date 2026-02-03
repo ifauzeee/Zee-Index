@@ -74,6 +74,8 @@ export default function FileDetail({
   prevFileUrl?: string;
   nextFileUrl?: string;
   subtitleTracks?: SubtitleTrack[];
+  onAddSubtitle?: (track: SubtitleTrack) => void;
+  onRemoveSubtitle?: (src: string) => void;
   onCloseModal?: () => void;
 }) {
   const router = useRouter();
@@ -105,6 +107,24 @@ export default function FileDetail({
   const [showImageEditor, setShowImageEditor] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showMobileInfo, setShowMobileInfo] = useState(false);
+  const [activeSubtitleTracks, setActiveSubtitleTracks] = useState<
+    SubtitleTrack[]
+  >(subtitleTracks || []);
+
+  useEffect(() => {
+    setActiveSubtitleTracks(subtitleTracks || []);
+  }, [subtitleTracks]);
+
+  const handleAddSubtitle = (track: SubtitleTrack) => {
+    setActiveSubtitleTracks((prev) => {
+      if (prev.find((t) => t.src === track.src)) return prev;
+      return [...prev, track];
+    });
+  };
+
+  const handleRemoveSubtitle = (src: string) => {
+    setActiveSubtitleTracks((prev) => prev.filter((t) => t.src !== src));
+  };
 
   const shareToken = useMemo(
     () => searchParams.get("share_token"),
@@ -228,7 +248,7 @@ export default function FileDetail({
             poster={file.thumbnailLink}
             mimeType={file.mimeType}
             webViewLink={file.webViewLink}
-            subtitleTracks={subtitleTracks}
+            subtitleTracks={activeSubtitleTracks}
             onEnded={() => nextFileUrl && router.push(nextFileUrl)}
           />
         );
@@ -365,6 +385,9 @@ export default function FileDetail({
                   onRemoveTag={(tag) => removeTag(file.id, tag)}
                   onCopyLink={handleCopyLink}
                   isImage={fileType === "image"}
+                  subtitleTracks={activeSubtitleTracks}
+                  onAddSubtitle={handleAddSubtitle}
+                  onRemoveSubtitle={handleRemoveSubtitle}
                 />
               </motion.div>
             </>
@@ -441,7 +464,7 @@ export default function FileDetail({
                   poster={file.thumbnailLink}
                   mimeType={file.mimeType}
                   webViewLink={file.webViewLink}
-                  subtitleTracks={subtitleTracks}
+                  subtitleTracks={activeSubtitleTracks}
                   onEnded={() => nextFileUrl && router.push(nextFileUrl)}
                 />
               </div>
@@ -498,6 +521,9 @@ export default function FileDetail({
           onEditImage={() => setShowImageEditor(true)}
           onShowHistory={() => setShowHistory(true)}
           isImage={fileType === "image"}
+          subtitleTracks={activeSubtitleTracks}
+          onAddSubtitle={handleAddSubtitle}
+          onRemoveSubtitle={handleRemoveSubtitle}
         />
       </div>
 
@@ -508,6 +534,9 @@ export default function FileDetail({
           onCloseModal={() => setInternalPreviewOpen(false)}
           prevFileUrl={prevFileUrl}
           nextFileUrl={nextFileUrl}
+          subtitleTracks={activeSubtitleTracks}
+          onAddSubtitle={handleAddSubtitle}
+          onRemoveSubtitle={handleRemoveSubtitle}
         />
       )}
       {showArchivePreview && isArchivePreviewable && (

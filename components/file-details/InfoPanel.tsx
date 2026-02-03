@@ -10,8 +10,13 @@ import {
   Link as LinkIcon,
   History as HistoryIcon,
   Edit,
+  Subtitles,
+  Trash2,
+  Upload,
 } from "lucide-react";
 import { useTranslations, useFormatter } from "next-intl";
+import SubtitleSelectorModal from "../modals/SubtitleSelectorModal";
+import { srtToVtt } from "@/lib/subtitleUtils";
 
 interface InfoPanelProps {
   file: DriveFile;
@@ -25,6 +30,9 @@ interface InfoPanelProps {
   onEditImage?: () => void;
   onShowHistory?: () => void;
   isImage: boolean;
+  subtitleTracks?: any[];
+  onAddSubtitle?: (track: any) => void;
+  onRemoveSubtitle?: (src: string) => void;
 }
 
 const ListItem = ({ label, value }: { label: string; value: string }) => (
@@ -46,9 +54,15 @@ export default function InfoPanel({
   onEditImage,
   onShowHistory,
   isImage,
+  subtitleTracks = [],
+  onAddSubtitle,
+  onRemoveSubtitle,
 }: InfoPanelProps) {
   const [newTag, setNewTag] = useState("");
   const [isAddingTag, setIsAddingTag] = useState(false);
+  const [isShowingSubtitleSelector, setIsShowingSubtitleSelector] =
+    useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const t = useTranslations("InfoPanel");
   const format = useFormatter();
 
@@ -64,6 +78,36 @@ export default function InfoPanel({
     await onAddTag(newTag.trim());
     setNewTag("");
     setIsAddingTag(false);
+  };
+
+  const handleLocalSubtitleUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result;
+      if (typeof content === "string") {
+        let finalContent = content;
+        if (!content.trim().startsWith("WEBVTT")) {
+          finalContent = srtToVtt(content);
+        }
+        const blob = new Blob([finalContent], { type: "text/vtt" });
+        const url = URL.createObjectURL(blob);
+
+        onAddSubtitle?.({
+          src: url,
+          kind: "subtitles",
+          srcLang: "local",
+          label: `Local: ${file.name.replace(".srt", ".vtt")}`,
+          default: true,
+        });
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
   };
 
   const [pathString, setPathString] = useState<string>("/");
@@ -211,6 +255,79 @@ export default function InfoPanel({
           </form>
         )}
       </div>
+
+      {file.mimeType.startsWith("video/") && (
+        <div className="mt-6 pt-4 border-t">
+          <div className="flex justify-between items-center mb-4">
+            <h4 className="text-sm font-bold text-muted-foreground uppercase">
+              {t("subtitles")}
+            </h4>
+            <div className="flex gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept=".srt,.vtt"
+                onChange={handleLocalSubtitleUpload}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="px-2 py-1 bg-secondary/80 hover:bg-secondary text-xs font-semibold rounded-md flex items-center gap-1 transition-colors"
+                title={t("addLocalSubtitle")}
+              >
+                <Upload size={14} />
+              </button>
+              <button
+                onClick={() => setIsShowingSubtitleSelector(true)}
+                className="px-2 py-1 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-semibold rounded-md flex items-center gap-1 transition-colors"
+                title={t("addSubtitle")}
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {subtitleTracks.map((track) => (
+              <div
+                key={track.src}
+                className="flex items-center justify-between p-2 bg-secondary/30 rounded-lg text-xs"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Subtitles
+                    size={14}
+                    className="text-muted-foreground shrink-0"
+                  />
+                  <span className="truncate font-medium">{track.label}</span>
+                  <span className="text-[10px] uppercase bg-background px-1 rounded text-muted-foreground">
+                    {track.srcLang}
+                  </span>
+                </div>
+                <button
+                  onClick={() => onRemoveSubtitle?.(track.src)}
+                  className="p-1 hover:text-destructive transition-colors"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+            {subtitleTracks.length === 0 && (
+              <p className="text-xs text-muted-foreground italic">
+                {t("noSubtitles")}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {isShowingSubtitleSelector && file.parents && (
+        <SubtitleSelectorModal
+          folderId={file.parents[0]}
+          existingTracks={subtitleTracks}
+          onSelect={(track) => onAddSubtitle?.(track)}
+          onClose={() => setIsShowingSubtitleSelector(false)}
+        />
+      )}
 
       <div className="grid grid-cols-2 gap-3 mt-8">
         <button

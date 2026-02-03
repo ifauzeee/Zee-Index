@@ -218,7 +218,16 @@
     "download": "Download",
     "loading": "Loading...",
     "error": "Error",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "subtitles": "Subtitles",
+    "noSubtitles": "No subtitles detected",
+    "addSubtitle": "Add Drive Subtitle",
+    "addLocalSubtitle": "Add Local File (.srt/.vtt)"
+  },
+  "SubtitleSelector": {
+    "title": "Select Subtitle File",
+    "loading": "Searching for subtitle files in folder...",
+    "noFiles": "No .vtt or .srt files found in this folder."
   },
   "FileItem": {
     "share": "Share",
