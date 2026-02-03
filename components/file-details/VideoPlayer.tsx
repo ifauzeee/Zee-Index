@@ -236,6 +236,8 @@ export default function VideoPlayer({
         playsInline
         load="eager"
         posterLoad="eager"
+        preload="auto"
+        streamType="on-demand"
       >
         <MediaProvider>
           {type === "video" && poster && (

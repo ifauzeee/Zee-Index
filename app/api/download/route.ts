@@ -215,8 +215,11 @@ export async function GET(request: NextRequest) {
       `${disposition}; filename="${encodedFileName}"; filename*=UTF-8''${encodedFileName}`,
     );
 
-    responseHeaders.set("Cache-Control", "private, no-transform, max-age=3600");
+    // Optimized headers for streaming
+    responseHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
     responseHeaders.set("X-Accel-Buffering", "no");
+    responseHeaders.set("Connection", "keep-alive");
+    responseHeaders.set("Access-Control-Allow-Origin", "*");
 
     const contentRange = googleResponse.headers.get("Content-Range");
     if (contentRange) {
