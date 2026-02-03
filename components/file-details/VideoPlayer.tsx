@@ -17,8 +17,10 @@ import {
   ExternalLink,
   PlayCircle,
   ShieldAlert,
+  Zap,
+  Activity,
 } from "lucide-react";
-import { formatDuration } from "@/lib/utils";
+import { formatDuration, cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import { srtToVtt } from "@/lib/subtitleUtils";
 
@@ -62,9 +64,20 @@ export default function VideoPlayer({
   const [lastTime, setLastTime] = useState(0);
   const [currentSrc, setCurrentSrc] = useState(src);
   const [retryCount, setRetryCount] = useState(0);
-  const [isDirectMode, setIsDirectMode] = useState(false);
+  const [isDirectMode, setIsDirectMode] = useState(true);
   const [hasResumed, setHasResumed] = useState(false);
   const [processedTracks, setProcessedTracks] = useState<SubtitleTrack[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const [waitingCount, setWaitingCount] = useState(0);
+  const [showTurboAutoNotify, setShowTurboAutoNotify] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+  }, []);
+
+  useEffect(() => {
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -121,10 +134,10 @@ export default function VideoPlayer({
   const fileIdMatch = src.match(/fileId=([^&]+)/);
   const fileId = fileIdMatch ? fileIdMatch[1] : null;
 
-  const displayMimeType =
-    mimeType.includes("matroska") || title.toLowerCase().endsWith(".mkv")
-      ? "video/webm"
-      : mimeType;
+  const isMkv =
+    mimeType.includes("matroska") || title.toLowerCase().endsWith(".mkv");
+
+  const displayMimeType = isMkv ? "video/webm" : mimeType;
 
   useEffect(() => {
     setCurrentSrc(src);
@@ -150,6 +163,9 @@ export default function VideoPlayer({
 
     if (detail.code === 4) {
       setFormatError(true);
+      if (isMobile && webViewLink) {
+        setTimeout(() => setIsDirectMode(true), 2000);
+      }
     } else if (detail.code === 2 || detail.code === 3) {
       if (retryCount < 3) {
         setRetryCount((prev) => prev + 1);
@@ -158,6 +174,12 @@ export default function VideoPlayer({
         }, 1000);
       } else {
         setNetworkError(true);
+        if (webViewLink) {
+          addToast({
+            message: "Koneksi lambat? Coba gunakan Mode Direct (Cepat)",
+            type: "info",
+          });
+        }
       }
     }
   };
@@ -195,6 +217,22 @@ export default function VideoPlayer({
     }
   };
 
+  const handleWaiting = () => {
+    setWaitingCount((prev) => prev + 1);
+    if (waitingCount >= 3 && !isDirectMode && webViewLink) {
+      if (!showTurboAutoNotify) {
+        setShowTurboAutoNotify(true);
+        addToast({
+          message: "⚠️ Jaringan lambat terdeteksi. Mengoptimalkan stream...",
+          type: "info",
+        });
+        if (isMobile && waitingCount >= 5) {
+          setIsDirectMode(true);
+        }
+      }
+    }
+  };
+
   const handleTimeUpdate = (detail: any) => {
     if (fileId && detail.currentTime > 5) {
       if (Math.floor(detail.currentTime) % 10 === 0) {
@@ -212,27 +250,32 @@ export default function VideoPlayer({
       <div className="relative w-full h-full bg-black flex flex-col items-center justify-center rounded-xl overflow-hidden shadow-2xl">
         <iframe
           src={previewLink}
-          className="w-full h-full flex-1"
-          allow="autoplay"
+          className="w-full h-full flex-1 border-0"
+          allow="autoplay; encrypted-media; fullscreen"
           allowFullScreen
         />
         <div className="absolute top-2 right-2 flex gap-2 z-10">
           <button
             onClick={() => setIsDirectMode(false)}
-            className="px-3 py-1 bg-black/50 hover:bg-black/70 text-white rounded-lg text-xs font-medium backdrop-blur-md border border-white/10 transition-colors flex items-center gap-2"
+            className="px-3 py-1 bg-black/60 hover:bg-black text-white rounded-lg text-xs font-medium backdrop-blur-md border border-white/20 transition-all flex items-center gap-2"
           >
-            <ShieldAlert size={14} /> Mode Proxy (Lambat)
+            <ShieldAlert size={14} className="text-amber-400" /> Mode Proxy
           </button>
 
           <a
             href={webViewLink}
             target="_blank"
             rel="noreferrer"
-            className="px-3 py-1 bg-black/50 hover:bg-black/70 text-white rounded-lg text-xs font-medium backdrop-blur-md border border-white/10 transition-colors flex items-center gap-2"
+            className="px-3 py-1 bg-black/60 hover:bg-black text-white rounded-lg text-xs font-medium backdrop-blur-md border border-white/20 transition-all flex items-center gap-2"
           >
             <ExternalLink size={14} /> Buka Drive
           </a>
         </div>
+        {isMobile && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/80 px-4 py-2 rounded-full text-[10px] text-white/70 backdrop-blur-sm pointer-events-none border border-white/10">
+            Gunakan kontrol Google Drive untuk pemutaran terbaik
+          </div>
+        )}
       </div>
     );
   }
@@ -263,9 +306,13 @@ export default function VideoPlayer({
         onTimeUpdate={handleTimeUpdate}
         logLevel="silent"
         className="w-full h-full ring-media-focus"
-        crossOrigin
+        crossOrigin="anonymous"
         autoplay={true}
         playsInline
+        load="eager"
+        posterLoad="eager"
+        onWaiting={handleWaiting}
+        onPlaying={() => setWaitingCount(0)}
       >
         <MediaProvider>
           {type === "video" && poster && (
@@ -293,24 +340,63 @@ export default function VideoPlayer({
           <DefaultAudioLayout icons={defaultLayoutIcons} />
         )}
         {type === "video" && (
-          <div className="absolute top-2 right-2 flex gap-2 z-20 opacity-0 hover:opacity-100 transition-opacity duration-300">
+          <div
+            className={cn(
+              "absolute top-4 right-4 flex flex-col items-end gap-3 z-20 transition-all duration-500",
+              isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+            )}
+          >
             {webViewLink && (
               <>
-                <button
-                  onClick={() => setIsDirectMode(true)}
-                  className="px-3 py-1 bg-black/50 hover:bg-primary/80 text-white rounded-lg text-xs font-medium backdrop-blur-md border border-white/10 transition-colors flex items-center gap-2"
-                  title="Gunakan player Google Drive langsung (Lebih Cepat)"
-                >
-                  <PlayCircle size={14} /> Mode Direct (Cepat)
-                </button>
-                <a
-                  href={webViewLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-3 py-1 bg-black/50 hover:bg-black/70 text-white rounded-lg text-xs font-medium backdrop-blur-md border border-white/10 transition-colors flex items-center gap-2"
-                >
-                  <ExternalLink size={14} /> Buka Drive
-                </a>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIsDirectMode(true)}
+                    className={cn(
+                      "group relative px-4 py-2 bg-primary/90 hover:bg-primary text-white rounded-xl text-xs font-bold backdrop-blur-xl border border-white/20 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(0,0,0,0.5)] overflow-hidden",
+                      isMkv && "border-amber-500/50 bg-amber-500/20",
+                      waitingCount > 2 && "animate-pulse ring-2 ring-primary",
+                    )}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+                    <Zap
+                      size={14}
+                      className={cn(
+                        "fill-current",
+                        isMkv ? "text-amber-400" : "text-yellow-400",
+                      )}
+                    />
+                    <span>
+                      {isMobile ? "Turbo Mode" : "Aktifkan Turbo Mode"}
+                    </span>
+                  </button>
+                  {!isMobile && (
+                    <a
+                      href={webViewLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-2 bg-black/40 hover:bg-black/80 text-white rounded-xl backdrop-blur-md border border-white/10 transition-all shadow-lg"
+                      title="Buka original di Google Drive"
+                    >
+                      <ExternalLink size={16} />
+                    </a>
+                  )}
+                </div>
+
+                {waitingCount > 0 && !isDirectMode && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2"
+                  >
+                    <Activity
+                      size={12}
+                      className="text-green-400 animate-pulse"
+                    />
+                    <span className="text-[10px] text-white/80 font-medium">
+                      Buffering: {waitingCount}x
+                    </span>
+                  </motion.div>
+                )}
               </>
             )}
           </div>

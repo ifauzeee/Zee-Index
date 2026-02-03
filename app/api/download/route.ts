@@ -112,10 +112,23 @@ export async function GET(request: NextRequest) {
     const accessToken = await getAccessToken();
     const fileDetails = await getFileDetailsFromDrive(fileId);
 
-    if (!fileDetails || !fileDetails.size) {
+    if (!fileDetails) {
       return NextResponse.json(
-        { error: "File tidak ditemukan." },
+        { error: "File tidak ditemukan di Google Drive." },
         { status: 404 },
+      );
+    }
+
+    const isGoogleDoc = fileDetails.mimeType.startsWith(
+      "application/vnd.google-apps.",
+    );
+    const isFolder =
+      fileDetails.mimeType === "application/vnd.google-apps.folder";
+
+    if (isFolder) {
+      return NextResponse.json(
+        { error: "Tidak dapat mengunduh folder secara langsung." },
+        { status: 400 },
       );
     }
 
@@ -125,56 +138,102 @@ export async function GET(request: NextRequest) {
     headers.set("User-Agent", "Zee-Index-Streamer/1.0");
     headers.set("Accept-Encoding", "identity");
 
-    if (range) {
+    if (range && !isGoogleDoc) {
       headers.set("Range", range);
     }
 
-    const googleResponse = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
-      { headers, method: request.method },
-    );
+    let downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`;
+    let responseMimeType = fileDetails.mimeType;
+    let responseFileName = fileDetails.name;
+
+    if (isGoogleDoc) {
+      const exportTypeMap: Record<string, { mime: string; ext: string }> = {
+        "application/vnd.google-apps.document": {
+          mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          ext: ".docx",
+        },
+        "application/vnd.google-apps.spreadsheet": {
+          mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          ext: ".xlsx",
+        },
+        "application/vnd.google-apps.presentation": {
+          mime: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          ext: ".pptx",
+        },
+        "application/vnd.google-apps.drawing": {
+          mime: "image/png",
+          ext: ".png",
+        },
+        "application/vnd.google-apps.script": {
+          mime: "application/vnd.google-apps.script+json",
+          ext: ".json",
+        },
+      };
+
+      const exportInfo = exportTypeMap[fileDetails.mimeType] || {
+        mime: "application/pdf",
+        ext: ".pdf",
+      };
+      downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=${encodeURIComponent(exportInfo.mime)}&supportsAllDrives=true`;
+      responseMimeType = exportInfo.mime;
+      if (!responseFileName.endsWith(exportInfo.ext)) {
+        responseFileName += exportInfo.ext;
+      }
+    }
+
+    const googleResponse = await fetch(downloadUrl, {
+      headers,
+      method: request.method,
+    });
 
     if (!googleResponse.ok) {
+      const errorJson = await googleResponse.json().catch(() => ({}));
+      console.error("Google Drive API Error:", errorJson);
       return NextResponse.json(
-        { error: "Gagal mengambil dari Google Drive" },
+        {
+          error:
+            errorJson.error?.message ||
+            "Gagal mengambil file dari Google Drive",
+        },
         { status: googleResponse.status },
       );
     }
 
     const responseHeaders = new Headers();
-    responseHeaders.set("Content-Type", fileDetails.mimeType);
+    responseHeaders.set("Content-Type", responseMimeType);
 
-    const encodedFileName = encodeURIComponent(fileDetails.name).replace(
+    const encodedFileName = encodeURIComponent(responseFileName).replace(
       /['()]/g,
       (char) => "%" + char.charCodeAt(0).toString(16).toUpperCase(),
     );
 
+    const isDirectDownload = !range && !request.headers.get("Sec-Fetch-Dest");
+    const disposition = isDirectDownload ? "attachment" : "inline";
+
     responseHeaders.set(
       "Content-Disposition",
-      `inline; filename="${encodedFileName}"; filename*=UTF-8''${encodedFileName}`,
+      `${disposition}; filename="${encodedFileName}"; filename*=UTF-8''${encodedFileName}`,
     );
 
     responseHeaders.set("Cache-Control", "private, no-transform, max-age=3600");
     responseHeaders.set("X-Accel-Buffering", "no");
 
-    if (googleResponse.headers.get("Content-Range")) {
-      responseHeaders.set(
-        "Content-Range",
-        googleResponse.headers.get("Content-Range")!,
-      );
+    const contentRange = googleResponse.headers.get("Content-Range");
+    if (contentRange) {
+      responseHeaders.set("Content-Range", contentRange);
     }
-    if (googleResponse.headers.get("Content-Length")) {
-      responseHeaders.set(
-        "Content-Length",
-        googleResponse.headers.get("Content-Length")!,
-      );
+
+    const contentLength = googleResponse.headers.get("Content-Length");
+    if (contentLength) {
+      responseHeaders.set("Content-Length", contentLength);
     }
+
     responseHeaders.set("Accept-Ranges", "bytes");
 
     if (!range && request.method === "GET") {
       logActivity("DOWNLOAD", {
         itemName: fileDetails.name,
-        itemSize: fileDetails.size,
+        itemSize: fileDetails.size || "0",
         userEmail: session?.user?.email,
       }).catch((e) => console.error("Gagal mencatat log aktivitas:", e));
     }
@@ -186,10 +245,10 @@ export async function GET(request: NextRequest) {
         headers: responseHeaders,
       },
     );
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("Download API Error:", error);
     return NextResponse.json(
-      { error: "Internal Server Error." },
+      { error: error.message || "Internal Server Error." },
       { status: 500 },
     );
   }
