@@ -15,7 +15,6 @@ import {
   FileWarning,
   Download,
   ExternalLink,
-  Activity,
 } from "lucide-react";
 import { formatDuration, cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
@@ -64,7 +63,6 @@ export default function VideoPlayer({
   const [hasResumed, setHasResumed] = useState(false);
   const [processedTracks, setProcessedTracks] = useState<SubtitleTrack[]>([]);
   const [isMobile, setIsMobile] = useState(false);
-  const [waitingCount, setWaitingCount] = useState(0);
 
   useEffect(() => {
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
@@ -207,10 +205,6 @@ export default function VideoPlayer({
     }
   };
 
-  const handleWaiting = () => {
-    setWaitingCount((prev) => prev + 1);
-  };
-
   return (
     <div className="relative w-full h-full bg-black flex items-center justify-center rounded-xl overflow-hidden shadow-2xl">
       <MediaPlayer
@@ -237,13 +231,11 @@ export default function VideoPlayer({
         onTimeUpdate={handleTimeUpdate}
         logLevel="silent"
         className="w-full h-full ring-media-focus"
-        crossOrigin="anonymous"
+        crossOrigin="use-credentials"
         autoplay={true}
         playsInline
         load="eager"
         posterLoad="eager"
-        onWaiting={handleWaiting}
-        onPlaying={() => setWaitingCount(0)}
       >
         <MediaProvider>
           {type === "video" && poster && (
@@ -288,19 +280,6 @@ export default function VideoPlayer({
               >
                 <ExternalLink size={16} />
               </a>
-            )}
-
-            {waitingCount > 0 && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2"
-              >
-                <Activity size={12} className="text-green-400 animate-pulse" />
-                <span className="text-[10px] text-white/80 font-medium">
-                  Turbo Path Active
-                </span>
-              </motion.div>
             )}
           </div>
         )}
