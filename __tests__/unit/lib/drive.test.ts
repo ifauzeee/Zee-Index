@@ -8,7 +8,7 @@ import {
 vi.mock("@/lib/kv", () => ({
   kv: {
     get: vi.fn(),
-    set: vi.fn(),
+    set: vi.fn().mockResolvedValue("OK"),
     del: vi.fn(),
   },
 }));

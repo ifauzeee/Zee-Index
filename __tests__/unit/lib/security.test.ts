@@ -75,9 +75,11 @@ describe("lib/securityUtils/isAccessRestricted", () => {
 
   it("recursively checks parents for protection", async () => {
     (kv.hgetall as any).mockResolvedValue({ [PROTECTED_ID]: "some-config" });
-    (getFileDetailsFromDrive as any).mockResolvedValue({
-      id: NESTED_ID,
-      parents: [PROTECTED_ID],
+    (getFileDetailsFromDrive as any).mockImplementation(async (id: string) => {
+      if (id === NESTED_ID) return { id: NESTED_ID, parents: [PROTECTED_ID] };
+      if (id === PROTECTED_ID)
+        return { id: PROTECTED_ID, parents: ["root-id"] };
+      return null;
     });
 
     const resultBlocked = await isAccessRestricted(NESTED_ID);
