@@ -26,4 +26,5 @@ export interface FileBrowserViewProps {
   density?: "comfortable" | "compact";
   isFetchingNextPage?: boolean;
   nextPageToken?: string | null;
+  navigatingId: string | null;
 }

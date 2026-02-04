@@ -107,6 +107,7 @@ export default function FavoritesPage() {
           isAdmin={false}
           onDragStart={() => {}}
           onFileDrop={() => {}}
+          navigatingId={null}
         />
       ) : (
         <div className="text-center py-20 text-muted-foreground">

@@ -22,9 +22,13 @@ import FileBrowserContent from "@/components/file-browser/FileBrowserContent";
 export default function FileBrowser({
   initialFolderId,
   initialFolderPath,
+  initialFiles,
+  initialNextPageToken,
 }: {
   initialFolderId?: string;
   initialFolderPath?: { id: string; name: string }[];
+  initialFiles?: DriveFile[];
+  initialNextPageToken?: string | null;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -67,6 +71,8 @@ export default function FileBrowser({
     setDetailsFile,
     setCurrentFolderId,
     playAudio,
+    navigatingId,
+    setNavigatingId,
   } = useAppStore();
 
   const t = useTranslations("FileBrowser");
@@ -83,6 +89,8 @@ export default function FileBrowser({
   } = useFileFetching({
     initialFolderId,
     initialFolderPath,
+    initialFiles,
+    initialNextPageToken,
     shareToken,
     folderTokens,
     addToast,
@@ -92,7 +100,9 @@ export default function FileBrowser({
   });
 
   useEffect(() => {
-    if (currentFolderId) setCurrentFolderId(currentFolderId);
+    if (currentFolderId) {
+      setCurrentFolderId(currentFolderId);
+    }
   }, [currentFolderId, setCurrentFolderId]);
 
   const isGuest = user?.isGuest === true;
@@ -295,6 +305,7 @@ export default function FileBrowser({
     if (shareToken) {
       destinationUrl += `?share_token=${shareToken}`;
     }
+    setNavigatingId(file.id);
     router.push(destinationUrl);
   };
 
@@ -484,6 +495,7 @@ export default function FileBrowser({
           isFetchingNextPage={isFetchingNextPage}
           nextPageToken={nextPageToken}
           fetchNextPage={fetchNextPage}
+          navigatingId={navigatingId}
         />
       </div>
 

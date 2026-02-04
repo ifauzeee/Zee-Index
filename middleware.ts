@@ -3,7 +3,6 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import createMiddleware from "next-intl/middleware";
 import { checkAuth, handleAuthRedirect } from "@/lib/auth-check";
-import { checkRateLimit } from "@/lib/ratelimit";
 
 const intlMiddleware = createMiddleware({
   locales: ["en", "id"],
@@ -23,6 +22,7 @@ const PUBLIC_API_PREFIXES = [
   "/api/proxy-image",
   "/api/admin/config",
   "/api/admin/manual-drives",
+  "/api/health",
 ];
 
 const isPublicRoute = (pathname: string) => {
@@ -41,7 +41,9 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
     pathname === "/sw.js" ||
-    pathname === "/manifest.webmanifest"
+    pathname === "/manifest.webmanifest" ||
+    pathname.startsWith("/api/health") ||
+    pathname.startsWith("/api/download")
   ) {
     return NextResponse.next();
   }
@@ -135,29 +137,6 @@ export async function middleware(request: NextRequest) {
 
   if (!is2FARequired && is2FAPage) {
     return NextResponse.redirect(new URL("/", request.url));
-  }
-
-  if (isApi) {
-    const isDownload =
-      pathname.startsWith("/api/download") ||
-      pathname.startsWith("/api/proxy-image");
-
-    const { success, pending, limit, reset, remaining } = await checkRateLimit(
-      request,
-      isDownload ? "download" : "general",
-    );
-
-    if (process.env.NODE_ENV === "development") {
-    } else {
-      await pending;
-
-      if (!success) {
-        return NextResponse.json(
-          { error: "Too Many Requests", limit, reset, remaining },
-          { status: 429, headers: { "Retry-After": reset.toString() } },
-        );
-      }
-    }
   }
 
   return isApi ? NextResponse.next() : intlMiddleware(request);

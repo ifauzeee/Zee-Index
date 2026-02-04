@@ -45,8 +45,15 @@ interface ManualDrive {
 
 export default function Sidebar() {
   const router = useRouter();
-  const { isSidebarOpen, setSidebarOpen, currentFolderId, user, shareToken } =
-    useAppStore();
+  const {
+    isSidebarOpen,
+    setSidebarOpen,
+    currentFolderId,
+    user,
+    shareToken,
+    navigatingId,
+    setNavigatingId,
+  } = useAppStore();
   const [mounted, setMounted] = useState(false);
   const t = useTranslations("Sidebar");
 
@@ -238,6 +245,7 @@ export default function Sidebar() {
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
           onClick={() => {
             const url = node.id === rootFolderId ? "/" : `/folder/${node.id}`;
+            setNavigatingId(node.id);
             router.push(url);
             if (window.innerWidth < 1024) setSidebarOpen(false);
           }}
@@ -264,15 +272,21 @@ export default function Sidebar() {
               <ChevronRight size={12} />
             )}
           </div>
-          <Folder
-            size={14}
-            className={cn(
-              "shrink-0 transition-colors",
-              isActive
-                ? "text-primary fill-primary/20"
-                : "text-muted-foreground group-hover:text-primary",
+          <div className="relative shrink-0 flex items-center justify-center w-3.5 h-3.5">
+            {navigatingId === node.id ? (
+              <Loader2 size={12} className="animate-spin text-primary" />
+            ) : (
+              <Folder
+                size={14}
+                className={cn(
+                  "shrink-0 transition-colors",
+                  isActive
+                    ? "text-primary fill-primary/20"
+                    : "text-muted-foreground group-hover:text-primary",
+                )}
+              />
             )}
-          />
+          </div>
           <span className="truncate text-[13px] leading-none pt-0.5">
             {node.name}
           </span>
@@ -331,6 +345,7 @@ export default function Sidebar() {
                 <button
                   key={drive.id}
                   onClick={() => {
+                    setNavigatingId(drive.id);
                     router.push(`/folder/${drive.id}`);
                     if (window.innerWidth < 1024) setSidebarOpen(false);
                   }}
@@ -341,14 +356,21 @@ export default function Sidebar() {
                   )}
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <HardDrive
-                      size={14}
-                      className={
-                        currentFolderId === drive.id
-                          ? "text-primary"
-                          : "text-muted-foreground"
-                      }
-                    />
+                    {navigatingId === drive.id ? (
+                      <Loader2
+                        size={14}
+                        className="animate-spin text-primary"
+                      />
+                    ) : (
+                      <HardDrive
+                        size={14}
+                        className={
+                          currentFolderId === drive.id
+                            ? "text-primary"
+                            : "text-muted-foreground"
+                        }
+                      />
+                    )}
                     <span className="truncate text-[13px]">{drive.name}</span>
                   </div>
                   {drive.isProtected && (
@@ -388,6 +410,7 @@ export default function Sidebar() {
         <div className="mb-4 space-y-0.5">
           <button
             onClick={() => {
+              setNavigatingId("home");
               router.push("/");
               if (window.innerWidth < 1024) setSidebarOpen(false);
             }}
@@ -398,27 +421,44 @@ export default function Sidebar() {
                 "bg-accent font-medium text-primary",
             )}
           >
-            <Home size={16} /> {t("home")}
+            {navigatingId === "home" ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Home size={16} />
+            )}{" "}
+            {t("home")}
           </button>
           <button
             onClick={() => {
+              setNavigatingId("favorites");
               router.push("/favorites");
               if (window.innerWidth < 1024) setSidebarOpen(false);
             }}
             id="sidebar-nav-favorites"
             className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
           >
-            <Star size={16} /> {t("favorites")}
+            {navigatingId === "favorites" ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Star size={16} />
+            )}{" "}
+            {t("favorites")}
           </button>
           <button
             onClick={() => {
+              setNavigatingId("storage");
               router.push("/storage");
               if (window.innerWidth < 1024) setSidebarOpen(false);
             }}
             id="sidebar-nav-storage"
             className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
           >
-            <HardDrive size={16} /> {t("storage")}
+            {navigatingId === "storage" ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <HardDrive size={16} />
+            )}{" "}
+            {t("storage")}
           </button>
           {user?.role === "ADMIN" && (
             <>

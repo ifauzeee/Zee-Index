@@ -83,13 +83,18 @@ const fetchFolderPathApi = async (
 export function useFileFetching({
   initialFolderId,
   initialFolderPath,
+  initialFiles,
+  initialNextPageToken,
   shareToken,
   folderTokens,
   addToast,
   router,
   refreshKey,
   locale,
-}: UseFileFetchingProps) {
+}: UseFileFetchingProps & {
+  initialFiles?: any[];
+  initialNextPageToken?: string | null;
+}) {
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
   const currentFolderId = initialFolderId || rootFolderId;
 
@@ -167,6 +172,12 @@ export function useFileFetching({
         refresh: refreshKey > 0,
       }),
     initialPageParam: null as string | null,
+    initialData: initialFiles
+      ? {
+          pages: [{ files: initialFiles, nextPageToken: initialNextPageToken }],
+          pageParams: [null],
+        }
+      : undefined,
     getNextPageParam: (lastPage) => lastPage?.nextPageToken || undefined,
     retry: (failureCount, error: any) => {
       if (error instanceof ProtectedError || error?.isProtected) return false;
@@ -175,8 +186,8 @@ export function useFileFetching({
     },
     refetchInterval: (query) => (query.state.error ? false : 15000),
     refetchOnWindowFocus: (query) => (query.state.error ? false : true),
-    staleTime: 1000 * 5,
-    gcTime: 1000 * 60 * 10,
+    staleTime: 1000 * 10,
+    gcTime: 1000 * 60 * 30,
     enabled: !!currentFolderId && currentFolderId !== "undefined",
   });
 

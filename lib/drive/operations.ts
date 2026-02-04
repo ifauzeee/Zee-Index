@@ -1,4 +1,5 @@
 import { kv } from "@/lib/kv";
+import { memoryCache, CACHE_TTL } from "@/lib/memory-cache";
 import { getAccessToken } from "./auth";
 import { fetchWithRetry } from "./client";
 import {
@@ -128,7 +129,33 @@ export async function listFilesFromDrive(
   folderId: string,
   pageToken?: string | null,
   pageSize: number = 50,
+  useCache: boolean = true,
 ) {
+  const cacheKey = `zee-index:folder-content-v3:${folderId}:${pageToken || "first"}`;
+  const memoryCacheKey = `drive:folder:${folderId}:${pageToken || "first"}`;
+
+  if (useCache) {
+    const memoryCached = memoryCache.get<{
+      files: DriveFile[];
+      nextPageToken: string | null;
+    }>(memoryCacheKey);
+    if (memoryCached) return memoryCached;
+
+    try {
+      const cached = await kv.get(cacheKey);
+      if (cached) {
+        const result = cached as {
+          files: DriveFile[];
+          nextPageToken: string | null;
+        };
+        memoryCache.set(memoryCacheKey, result, CACHE_TTL.FOLDER_CONTENT);
+        return result;
+      }
+    } catch (e) {
+      console.warn("Redis cache hit error:", e);
+    }
+  }
+
   const accessToken = await getAccessToken();
   const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3/files";
   const params = new URLSearchParams({
@@ -166,10 +193,17 @@ export async function listFilesFromDrive(
     isFolder: file.mimeType === "application/vnd.google-apps.folder",
   }));
 
-  return {
+  const result = {
     files: processedFiles,
     nextPageToken: data.nextPageToken || null,
   };
+
+  if (useCache) {
+    memoryCache.set(memoryCacheKey, result, CACHE_TTL.FOLDER_CONTENT);
+    kv.set(cacheKey, result, { ex: 3600 }).catch(console.error);
+  }
+
+  return result;
 }
 
 export async function getFileDetailsFromDrive(

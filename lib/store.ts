@@ -99,6 +99,8 @@ interface AppState {
   fetchUser: () => Promise<void>;
   currentFolderId: string | null;
   setCurrentFolderId: (id: string | null) => void;
+  navigatingId: string | null;
+  setNavigatingId: (id: string | null) => void;
   shareLinks: ShareLink[];
   fetchShareLinks: () => Promise<void>;
   addShareLink: (link: ShareLink) => void;
@@ -282,7 +284,13 @@ export const useAppStore = create<AppState>()(
         }
       },
       currentFolderId: null,
-      setCurrentFolderId: (id) => set({ currentFolderId: id }),
+      setCurrentFolderId: (id) =>
+        set((state) => ({
+          currentFolderId: id,
+          navigatingId: state.navigatingId === id ? null : state.navigatingId,
+        })),
+      navigatingId: null,
+      setNavigatingId: (id) => set({ navigatingId: id }),
 
       shareLinks: [],
       fetchShareLinks: async () => {
@@ -383,7 +391,7 @@ export const useAppStore = create<AppState>()(
         }));
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
 
         try {
           const response = await fetch("/api/datausage", {
@@ -397,8 +405,14 @@ export const useAppStore = create<AppState>()(
           const formattedUsage = formatBytes(data.totalUsage);
 
           set({ dataUsage: { status: "success", value: formattedUsage } });
-        } catch (error: unknown) {
+        } catch (error: any) {
           clearTimeout(timeoutId);
+          if (error.name === "AbortError") {
+            console.warn("[DataUsage] Request timed out or was aborted");
+          } else {
+            console.error("Failed to fetch data usage", error);
+          }
+
           set((state) => ({
             dataUsage: {
               status: "error",
@@ -408,7 +422,6 @@ export const useAppStore = create<AppState>()(
                   : "Failed",
             },
           }));
-          console.error("Failed to fetch data usage", error);
         }
       },
       adminEmails: [],

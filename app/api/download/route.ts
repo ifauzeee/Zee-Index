@@ -184,6 +184,7 @@ export async function GET(request: NextRequest) {
     const googleResponse = await fetch(downloadUrl, {
       headers,
       method: request.method,
+      cache: "no-store",
     });
 
     if (!googleResponse.ok) {
@@ -215,9 +216,12 @@ export async function GET(request: NextRequest) {
       `${disposition}; filename="${encodedFileName}"; filename*=UTF-8''${encodedFileName}`,
     );
 
-    // Optimized headers for streaming
-    responseHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
+    responseHeaders.set(
+      "Cache-Control",
+      "public, max-age=31536000, no-transform, immutable",
+    );
     responseHeaders.set("X-Accel-Buffering", "no");
+    responseHeaders.set("X-Content-Type-Options", "nosniff");
     responseHeaders.set("Connection", "keep-alive");
     responseHeaders.set("Access-Control-Allow-Origin", "*");
 

@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Folder, MoreVertical } from "lucide-react";
+import { Folder, MoreVertical, Loader2 } from "lucide-react";
 import { formatBytes, getIcon, cn } from "@/lib/utils";
 import type { DriveFile } from "@/lib/drive";
 import { useAppStore } from "@/lib/store";
@@ -30,6 +30,7 @@ interface FileCardProps {
   onDownload?: (e: React.MouseEvent, file: DriveFile) => void;
   thumbnailSrc?: string;
   onMouseEnter?: () => void;
+  isNavigating?: boolean;
 }
 
 export default function FileCard({
@@ -42,6 +43,7 @@ export default function FileCard({
   onDownload,
   thumbnailSrc,
   onMouseEnter,
+  isNavigating,
 }: FileCardProps) {
   const t = useTranslations("FileCard");
   const isFolder = file.mimeType === "application/vnd.google-apps.folder";
@@ -102,7 +104,11 @@ export default function FileCard({
       </div>
 
       <div className="flex-1 w-full bg-muted/20 rounded flex items-center justify-center overflow-hidden relative">
-        {isUploading ? (
+        {isNavigating ? (
+          <div className="flex flex-col items-center justify-center gap-2 text-primary">
+            <Loader2 className="w-12 h-12 animate-spin" />
+          </div>
+        ) : isUploading ? (
           <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
             <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             <span className="text-xs">{file.uploadProgress || 0}%</span>

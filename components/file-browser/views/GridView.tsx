@@ -19,6 +19,7 @@ export default function GridView({
   onPrefetchItem,
   isFetchingNextPage,
   nextPageToken,
+  navigatingId,
 }: FileBrowserViewProps) {
   const t = useTranslations("FileList");
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -165,6 +166,7 @@ export default function GridView({
                             onPrefetchItem(file);
                           }
                         }}
+                        isNavigating={navigatingId === file.id}
                       />
                     </div>
                   );

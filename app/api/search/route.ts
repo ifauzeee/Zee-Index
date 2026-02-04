@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/authOptions";
 import { validateShareToken } from "@/lib/auth";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { jwtVerify } from "jose";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 
 const CACHE_TTL = 3600;
 

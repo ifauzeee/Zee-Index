@@ -4,7 +4,15 @@ import { formatBytes, getIcon, cn } from "@/lib/utils";
 import React, { useState, useMemo, memo, useEffect } from "react";
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
-import { Lock, Star, Share2, Download, Info, MoreVertical } from "lucide-react";
+import {
+  Lock,
+  Star,
+  Share2,
+  Download,
+  Info,
+  MoreVertical,
+  Loader2,
+} from "lucide-react";
 import { useTranslations, useFormatter } from "next-intl";
 
 interface FileItemProps {
@@ -30,6 +38,7 @@ interface FileItemProps {
   uploadProgress?: number;
   uploadStatus?: "uploading" | "error" | "success";
   uploadError?: string;
+  isNavigating?: boolean;
 }
 
 function FileItem({
@@ -49,6 +58,7 @@ function FileItem({
   density = "comfortable",
   uploadProgress,
   uploadStatus,
+  isNavigating,
 }: FileItemProps) {
   const { view } = useAppStore();
   const Icon = getIcon(file.mimeType);
@@ -253,16 +263,31 @@ function FileItem({
                     "py-8 text-6xl bg-accent/10 w-full flex flex-col gap-2",
                 )}
               >
-                {React.createElement(Icon, {
-                  size:
-                    view === "grid"
-                      ? 48
-                      : isGallery
-                        ? 64
-                        : compactClass
-                          ? 20
-                          : 28,
-                })}
+                {isNavigating ? (
+                  <Loader2
+                    size={
+                      view === "grid"
+                        ? 48
+                        : isGallery
+                          ? 64
+                          : compactClass
+                            ? 20
+                            : 28
+                    }
+                    className="animate-spin text-primary"
+                  />
+                ) : (
+                  React.createElement(Icon, {
+                    size:
+                      view === "grid"
+                        ? 48
+                        : isGallery
+                          ? 64
+                          : compactClass
+                            ? 20
+                            : 28,
+                  })
+                )}
               </div>
             )}
 

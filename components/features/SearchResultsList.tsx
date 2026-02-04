@@ -126,6 +126,7 @@ export default function SearchResultsList() {
           isAdmin={isAdmin}
           onDragStart={() => {}}
           onFileDrop={() => {}}
+          navigatingId={null}
         />
       ) : (
         <div className="mt-8 text-center py-20 text-muted-foreground">

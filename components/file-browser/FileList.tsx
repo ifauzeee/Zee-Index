@@ -25,6 +25,7 @@ interface FileListProps {
   uploads?: Record<string, any>;
   isFetchingNextPage?: boolean;
   nextPageToken?: string | null;
+  navigatingId: string | null;
 }
 
 export default function FileList({
@@ -43,6 +44,7 @@ export default function FileList({
   uploads = {},
   isFetchingNextPage,
   nextPageToken,
+  navigatingId,
 }: FileListProps) {
   const {
     view,
@@ -151,6 +153,7 @@ export default function FileList({
     density,
     isFetchingNextPage,
     nextPageToken,
+    navigatingId,
   };
 
   if (view === "grid") {

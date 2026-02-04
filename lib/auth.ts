@@ -1,5 +1,6 @@
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
+import { memoryCache, CACHE_TTL } from "@/lib/memory-cache";
 import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -16,16 +17,29 @@ export function isPrivateFolder(folderId: string): boolean {
 
 export async function isProtected(folderId: string): Promise<boolean> {
   if (!folderId) return false;
+
+  const targetId = folderId.trim();
+  const cacheKey = `auth:protected:${targetId}`;
+
+  const cached = memoryCache.get<boolean>(cacheKey);
+  if (cached !== null) return cached;
+
   try {
-    const targetId = folderId.trim();
     const protectedFolders = await kv.hgetall("zee-index:protected-folders");
 
-    if (!protectedFolders) return false;
+    if (!protectedFolders) {
+      memoryCache.set(cacheKey, false, CACHE_TTL.PROTECTED_FOLDERS);
+      return false;
+    }
 
-    if (protectedFolders[targetId]) return true;
+    const folders = protectedFolders as Record<string, unknown>;
+    const result = !!(
+      folders[targetId] ||
+      Object.keys(folders).some((key) => key.trim() === targetId)
+    );
 
-    const keys = Object.keys(protectedFolders);
-    return keys.some((key) => key.trim() === targetId);
+    memoryCache.set(cacheKey, result, CACHE_TTL.PROTECTED_FOLDERS);
+    return result;
   } catch {
     return true;
   }
@@ -37,7 +51,9 @@ export async function getProtectedFolderCredentials(
   if (!folderId) return null;
   try {
     const targetId = folderId.trim();
-    const protectedFolders = await kv.hgetall("zee-index:protected-folders");
+    const protectedFolders = await kv.hgetall<
+      Record<string, { id: string; password: string }>
+    >("zee-index:protected-folders");
 
     if (!protectedFolders) return null;
 
@@ -46,7 +62,7 @@ export async function getProtectedFolderCredentials(
     );
 
     if (foundKey) {
-      return protectedFolders[foundKey] as { id: string; password: string };
+      return protectedFolders[foundKey];
     }
     return null;
   } catch {
@@ -73,10 +89,18 @@ export async function hasUserAccess(
   folderId: string,
 ): Promise<boolean> {
   if (!folderId || !email) return false;
+
+  const cleanId = folderId.trim();
+  const cacheKey = `auth:access:${cleanId}:${email}`;
+
+  const cached = memoryCache.get<boolean>(cacheKey);
+  if (cached !== null) return cached;
+
   try {
-    const cleanId = folderId.trim();
     const result = await kv.sismember(`folder:access:${cleanId}`, email);
-    return result === 1;
+    const hasAccess = result === 1;
+    memoryCache.set(cacheKey, hasAccess, CACHE_TTL.USER_ACCESS);
+    return hasAccess;
   } catch {
     return false;
   }

@@ -1,12 +1,12 @@
 import "@/lib/env";
 import type { Metadata, Viewport } from "next";
 import { Providers } from "../providers";
-import { Analytics } from "@vercel/analytics/react";
 import "./(main)/globals.css";
 import GlobalBranding from "@/components/layout/GlobalBranding";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
+import NextTopLoader from "nextjs-toploader";
 
 export const preferredRegion = "sin1";
 
@@ -89,9 +89,20 @@ export default async function RootLayout({
       <body>
         <NextIntlClientProvider messages={messages}>
           <Providers>
+            <NextTopLoader
+              color="#3b82f6"
+              initialPosition={0.08}
+              crawlSpeed={200}
+              height={3}
+              crawl={true}
+              showSpinner={false}
+              easing="ease"
+              speed={200}
+              shadow="0 0 10px #3b82f6,0 0 5px #3b82f6"
+              zIndex={9999}
+            />
             <GlobalBranding />
             {children}
-            {process.env.NEXT_PUBLIC_VERCEL_ANALYTICS_ID && <Analytics />}
           </Providers>
         </NextIntlClientProvider>
       </body>

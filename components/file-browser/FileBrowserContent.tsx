@@ -36,6 +36,7 @@ interface FileBrowserContentProps {
   isFetchingNextPage: boolean;
   nextPageToken: string | null;
   fetchNextPage: () => void;
+  navigatingId: string | null;
 }
 
 import { useTranslations } from "next-intl";
@@ -66,6 +67,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
     isFetchingNextPage,
     nextPageToken,
     fetchNextPage,
+    navigatingId,
   } = props;
 
   const t = useTranslations("FileBrowser");
@@ -133,6 +135,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
         uploads={uploads}
         isFetchingNextPage={isFetchingNextPage}
         nextPageToken={nextPageToken}
+        navigatingId={navigatingId}
       />
     </>
   );

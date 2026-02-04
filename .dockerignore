@@ -68,3 +68,16 @@ Thumbs.db
 public/sw.js
 public/workbox-*.js
 public/swe-worker-*.js
+
+# Additional optimizations
+.turbo
+.swc
+*.tgz
+*.tar.gz
+.npmrc
+.yarnrc
+.pnpmfile.cjs
+analyze
+.analyze
+bundle-analyzer
+*.local

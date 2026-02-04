@@ -27,6 +27,7 @@ export default function ListView({
   density,
   isFetchingNextPage,
   nextPageToken,
+  navigatingId,
 }: FileBrowserViewProps) {
   const t = useTranslations("FileList");
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -143,6 +144,7 @@ export default function ListView({
                   uploadProgress={(file as any).uploadProgress}
                   uploadStatus={(file as any).uploadStatus}
                   uploadError={(file as any).uploadError}
+                  isNavigating={navigatingId === file.id}
                 />
               </div>
             </div>

@@ -12,13 +12,6 @@ import { authOptions } from "@/lib/authOptions";
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
 
-interface CachedFolderData {
-  files: DriveFile[];
-  nextPageToken: string | null;
-}
-
-const CACHE_TTL_SECONDS = 3600;
-
 async function validateShareToken(request: Request): Promise<boolean> {
   const { searchParams } = new URL(request.url);
   const shareToken = searchParams.get("share_token");
@@ -118,37 +111,12 @@ export async function GET(request: Request) {
       }
     }
 
-    const cacheKey = `folder:content:${folderId}:${
-      userRole || "GUEST"
-    }:${pageToken || "page1"}`;
-
-    if (!forceRefresh) {
-      try {
-        const cachedDataPromise = kv.get<CachedFolderData>(cacheKey);
-
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject("timeout"), 500),
-        );
-
-        const cachedData = await Promise.race([
-          cachedDataPromise,
-          timeoutPromise,
-        ]);
-
-        if (
-          cachedData &&
-          typeof cachedData === "object" &&
-          "files" in cachedData
-        ) {
-          return NextResponse.json(cachedData);
-        }
-      } catch {}
-    }
-
     const [driveResponse, allProtectedFolders] = await Promise.all([
-      listFilesFromDrive(folderId, pageToken),
+      listFilesFromDrive(folderId, pageToken, 50, !forceRefresh),
       !canSeeAll
-        ? kv.hgetall("zee-index:protected-folders").then((res) => res || {})
+        ? kv
+            .hgetall<Record<string, unknown>>("zee-index:protected-folders")
+            .then((res) => res || {})
         : Promise.resolve({}),
     ]);
 
@@ -157,19 +125,23 @@ export async function GET(request: Request) {
     if (canSeeAll) {
       filteredFiles = driveResponse.files;
     } else {
-      const filteringPromises = driveResponse.files.map(async (file) => {
-        const isPriv = isPrivateFolder(file.id);
-        if (!isPriv) return file;
+      const filteringPromises = (driveResponse.files as DriveFile[]).map(
+        async (file: DriveFile) => {
+          const isPriv = isPrivateFolder(file.id);
+          if (!isPriv) return file;
 
-        if (userEmail) {
-          const hasAccess = await hasUserAccess(userEmail, file.id);
-          return hasAccess ? file : null;
-        }
-        return null;
-      });
+          if (userEmail) {
+            const hasAccess = await hasUserAccess(userEmail, file.id);
+            return hasAccess ? file : null;
+          }
+          return null;
+        },
+      );
 
       const results = await Promise.all(filteringPromises);
-      filteredFiles = results.filter((f): f is DriveFile => f !== null);
+      filteredFiles = results.filter(
+        (f: DriveFile | null): f is DriveFile => f !== null,
+      );
     }
 
     const processedFiles = filteredFiles.map((file) => {
@@ -185,10 +157,6 @@ export async function GET(request: Request) {
       files: processedFiles,
       nextPageToken: driveResponse.nextPageToken,
     };
-
-    kv.set(cacheKey, responseData, { ex: CACHE_TTL_SECONDS }).catch(
-      console.error,
-    );
 
     return NextResponse.json(responseData);
   } catch (error: unknown) {

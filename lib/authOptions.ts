@@ -14,7 +14,7 @@ async function ensureInitialAdmins() {
         .map((email) => email.trim())
         .filter(Boolean) || [];
     if (initialAdmins.length > 0) {
-      const existingAdmins = await kv.smembers(ADMIN_EMAILS_KEY);
+      const existingAdmins = (await kv.smembers(ADMIN_EMAILS_KEY)) as string[];
       const adminsToAdd = initialAdmins.filter(
         (email) => !existingAdmins.includes(email),
       );
@@ -51,13 +51,13 @@ export const authOptions: AuthOptions = {
         const email = credentials.email;
         const password = credentials.password;
 
-        const adminEmails: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
+        const adminEmails = (await kv.smembers(ADMIN_EMAILS_KEY)) as string[];
         const envAdminsRaw = process.env.ADMIN_EMAILS;
 
         const envAdmins =
           envAdminsRaw
             ?.split(",")
-            .map((e) => e.trim())
+            .map((e) => e.trim().replace(/^["'](.+)["']$/, "$1"))
             .filter(Boolean) || [];
 
         const isAdmin =
@@ -71,11 +71,16 @@ export const authOptions: AuthOptions = {
           isValid = await bcrypt.compare(password, storedHash);
         }
 
-        if (!isValid && isAdmin && process.env.ADMIN_PASSWORD) {
-          const bcrypt = await import("bcryptjs");
-          const tempHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
-          const isEnvValid = await bcrypt.compare(password, tempHash);
-          if (isEnvValid) isValid = true;
+        const envPass = process.env.ADMIN_PASSWORD?.trim().replace(
+          /^["'](.+)["']$/,
+          "$1",
+        );
+        const isEnvMatch = password === envPass;
+
+        if (!isValid && isAdmin && envPass) {
+          if (isEnvMatch) {
+            isValid = true;
+          }
         }
 
         if (!isValid) {
@@ -136,7 +141,7 @@ export const authOptions: AuthOptions = {
         token.email = user.email;
         token.isGuest = false;
 
-        const adminEmails: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
+        const adminEmails = (await kv.smembers(ADMIN_EMAILS_KEY)) as string[];
         const envAdminsRaw = process.env.ADMIN_EMAILS;
         const envAdmins =
           envAdminsRaw
@@ -157,7 +162,7 @@ export const authOptions: AuthOptions = {
         token.twoFactorRequired = !!is2FAEnabled;
       } else if (profile?.email && !token.email) {
         token.email = profile.email;
-        const adminEmails: string[] = await kv.smembers(ADMIN_EMAILS_KEY);
+        const adminEmails = (await kv.smembers(ADMIN_EMAILS_KEY)) as string[];
         const envAdminsRaw = process.env.ADMIN_EMAILS;
         const envAdmins =
           envAdminsRaw

@@ -11,7 +11,7 @@
 
   <p align="center">
     Transform your Google Drive into a professional portfolio website, media gallery, or file repository.<br>
-    Features <strong>Shared Drive</strong> management, instant streaming, no UI limitations, and enterprise-grade security.
+    Features <strong>Shared Drive</strong> management, <strong>Instant Navigation</strong>, enterprise security, and <strong>High-Performance Streaming</strong>.
   </p>
 
   <div align="center">
@@ -25,12 +25,12 @@
   <br />
 
   <div align="center">
-    <img src="https://img.shields.io/badge/Next.js_14-App_Router-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js" />
-    <img src="https://img.shields.io/badge/Vercel_KV-Redis-red?style=for-the-badge&logo=redis&logoColor=white" alt="Vercel KV" />
+    <img src="https://img.shields.io/badge/Next.js_16-App_Router-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js" />
+    <img src="https://img.shields.io/badge/Turbopack-Fast-blue?style=for-the-badge&logo=vercel&logoColor=white" alt="Turbopack" />
+    <img src="https://img.shields.io/badge/Redis-Cache-red?style=for-the-badge&logo=redis&logoColor=white" alt="Redis" />
     <img src="https://img.shields.io/badge/TypeScript-Strict_Mode-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
     <img src="https://img.shields.io/badge/Tailwind_CSS-Glassmorphism-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" />
-    <img src="https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
-    <img src="https://img.shields.io/badge/PWA-Installable-purple?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA" />
+    <img src="https://img.shields.io/badge/Docker-Optimized-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
   </div>
 </div>
 
@@ -45,13 +45,12 @@
 - [📂 Project Structure](#-project-structure)
 - [🚀 Getting Started](#-getting-started)
   - [Prerequisites](#prerequisites)
-  - [Installation (Local)](#installation-local)
-  - [Docker Setup](#docker-setup)
+  - [Installation (Local Pro Mode)](#installation-local-pro-mode)
+  - [Docker Deployment](#docker-deployment)
 - [⚙️ Configuration (.env)](#️-configuration-env)
 - [📦 Deployment](#-deployment)
   - [Step 1: Google Cloud Setup](#step-1-google-cloud-setup)
   - [Step 2: Deploy to Vercel](#step-2-deploy-to-vercel)
-  - [Step 3: Setup Wizard](#step-3-setup-wizard)
 - [🖱️ Keyboard Shortcuts](#️-keyboard-shortcuts)
 - [⚠️ Security & Troubleshooting](#️-security--troubleshooting)
 - [🤝 Contributing](#-contributing)
@@ -63,98 +62,50 @@
 
 Zee-Index allows you to build a powerful file system and media server on top of Google Drive, now faster and more secure than ever.
 
-### ⚡ High-Performance Architecture
+### ⚡ ultra-Fast & Responsive
 
 - **Virtualized Rendering:** Built with `@tanstack/react-virtual`, enabling smooth scrolling through folders with **thousands of files** without lag.
-- **Smart Prefetching:** Intelligently preloads folder contents when you hover over them, making navigation feel instant.
-- **Optimized Assets:** Automatic image optimization and lazy loading for thumbnails.
+- **Instant Visual Feedback:** Immediate "click" response with loading spinners on folders, files, and sidebar items, reducing perceived latency.
+- **Global Progress Bar:** Visual top-loading bar moves between routes for a premium app-like feel.
+- **Smart Prefetching:** Intelligently preloads folder contents when you hover over them.
+
+### 🎬 Professional Media Streaming
+
+- **Direct Stream (No Transform):** Optimized headers (`Cache-Control: no-transform`) ensure Google Drive streams video directly without re-encoding delays.
+- **Universal Audio Dock:** Persistent audio player that continues playing while you navigate.
+- **Adaptive Video Player:** Stream videos with auto-subtitle detection (`.srt`, `.vtt`) and quality selection.
+- **Modern Gallery:** High-performance lightboxes for viewing images and PDFs.
 
 ### 🛡️ Enterprise-Grade Security
 
-- **Recursive Folder Protection:** Locking a parent folder automatically protects all sub-folders and files deep within the hierarchy.
-- **Whitelist Access:** Allow specific users (via email) to bypass folder passwords while keeping them locked for everyone else.
-- **Smart Folder Locking:** Password-protect specific folders using Bcrypt hashing.
+- **Recursive Folder Protection:** Locking a parent folder automatically protects all sub-folders and files deep within.
+- **Admin "Pro Mode":** Simplified admin login with secure environment variable validation.
 - **Role-Based Access:** Configurable Guest, User, and Admin roles.
-- **2FA Support:** Secure Admin login with Time-based One-Time Passwords (TOTP/Google Authenticator).
-- **Rate Limiting:** Built-in protection against abuse and DDoS attacks using Upstash Ratelimit (Redis).
+- **Rate Limiting:** Built-in protection against abuse using Upstash Ratelimit.
 
 ### 🗂️ Multi-Drive Management
 
-- **Unified Sidebar:** Consolidate multiple Personal Drives, Shared Drives, and Team Drives into one navigation pane.
-- **Aliases:** Rename folders in the UI without changing them in Drive (e.g., `backup_v1_final` -> `🗄️ Archives`).
-- **No Code Config:** Manage drives and folders entirely via the **Admin Dashboard**.
-
-### 🎬 Powerful Media Streaming
-
-- **Universal Audio Dock:** Persistent audio player that continues playing while you navigate. Supports playlists and background play.
-- **Adaptive Video Player:** Stream videos directly from Drive with auto-subtitle detection (`.srt`, `.vtt`) and quality selection.
-- **E-Book Reader:** Native `.epub` reader with adjustable fonts and themes.
-- **Modern Gallery:** High-performance lightboxes for viewing images and PDFs.
+- **Unified Sidebar:** Consolidate multiple Personal Drives, Shared Drives, and Team Drives.
+- **Aliases:** Rename folders in the UI without changing them in Drive (e.g., `backup_v1` -> `🗄️ Archives`).
 
 ### 🛠️ Built-in Tools
 
-- **Code Editor:** View and edit code files with syntax highlighting for 20+ languages.
-- **Image Editor:** Crop, resize, and rotate images directly in the browser and save changes back to Drive.
-- **File Request:** Create public upload links for non-users to send files to your Drive securely.
-- **🌍 Multilingual Support (i18n):** Full internationalization with English and Indonesian languages. Easy to add more languages via JSON translation files.
+- **Code Editor:** Syntax highlighting for 20+ languages.
+- **Data Usage Monitor:** Background calculation of drive storage usage with timeout handling.
+- **File Request:** Create public upload links securely.
+- **🌍 Multilingual:** English and Indonesian (i18n).
 
 ---
 
 ## 🛠️ Tech Stack
 
-Zee-Index is built with modern, high-performance web technologies:
-
-- **Framework:** [Next.js 16](https://nextjs.org/) (App Router, Server Actions)
+- **Framework:** [Next.js 16.1](https://nextjs.org/) (App Router, Turbopack)
 - **Language:** TypeScript
-- **Library:** React 19
-- **Styling:** Tailwind CSS, Framer Motion, Radix UI
-- **Virtualization:** @tanstack/react-virtual (for high-scale file lists)
-- **Authentication:** NextAuth.js
-- **Database:** Vercel KV (Redis) / Upstash Redis
-- **State Management:** Zustand, React Query
-- **Internationalization:** next-intl (i18n support for multiple languages)
-- **Validation:** Zod
-- **External API:** Google Drive API V3
-
----
-
-## 📂 Project Structure
-
-A quick overview of the codebase to help you navigate:
-
-```bash
-.
-├── app/                  # Next.js App Router pages and API routes
-│   ├── (main)/           # Main layout and file explorer routes
-│   ├── [locale]/         # Internationalized routes
-│   ├── admin/            # Admin Dashboard pages
-│   ├── api/              # Backend API endpoints
-│   ├── login/            # Authentication pages
-│   ├── setup/            # Initial setup wizard
-│   └── layout.tsx        # Root layout definition
-├── components/           # Reusable UI components
-│   ├── file-details/     # Components for specific file types (Audio, Video, etc.)
-│   ├── file-browser/     # File explorer components (Virtualized)
-│   ├── admin/            # Admin dashboard components
-│   ├── modals/           # Modal dialogs
-│   └── ...
-├── lib/                  # Core business logic and utilities
-│   ├── drive/            # Google Drive API integration
-│   │   ├── client.ts     # Drive API client
-│   │   ├── operations.ts # File operations (list, search, etc.)
-│   │   ├── storage.ts    # Storage quota management
-│   │   └── auth.ts       # Drive authentication
-│   ├── authOptions.ts    # NextAuth configuration
-│   ├── kv.ts             # Redis database connection
-│   ├── store.ts          # Zustand state stores
-│   ├── auth.ts           # Authentication utilities
-│   ├── securityUtils.ts  # Access control logic (Recursive checks)
-│   └── ...
-├── messages/             # i18n translation files
-├── public/               # Static assets (images, fonts, icons)
-├── i18n.ts               # Internationalization configuration
-└── middleware.ts         # Request handling, auth checks, and redirects
-```
+- **Styling:** Tailwind CSS, Framer Motion
+- **State:** Zustand, TanStack Query
+- **Cache/DB:** Redis (Local Docker or Vercel KV)
+- **Auth:** NextAuth.js
+- **API:** Google Drive API V3
 
 ---
 
@@ -163,11 +114,13 @@ A quick overview of the codebase to help you navigate:
 ### Prerequisites
 
 - **Node.js 20+**
-- **pnpm** (preferred) or npm
-- A **Google Cloud Project** with Drive API enabled (see Deployment section)
-- A **Vercel Account** (optional, but recommended for KV/Redis)
+- **pnpm** (preferred)
+- **Docker Desktop** (for local Redis/Pro Mode)
+- **Google Cloud Project** (Drive API enabled)
 
-### Installation (Local)
+### Installation (Local "Pro Mode")
+
+This mode runs Redis in a lightweight Docker container for persistent caching while giving you the speed of `pnpm dev` (Hot Reload).
 
 1. **Clone the repository:**
 
@@ -183,56 +136,56 @@ A quick overview of the codebase to help you navigate:
    ```
 
 3. **Configure Environment:**
-   Copy the example environment file:
+   Copy `.env.example` to `.env` and fill in your Google Cloud credentials.
 
    ```bash
-   cp .env.example .env.local
+   cp .env.example .env
    ```
 
-   _Fill in the required variables (see [Configuration](#configuration) below)._
-
-4. **Run Development Server:**
-   ```bash
-   pnpm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) to view the app.
-
-### Docker Setup
-
-You can run Zee-Index in a container.
-
-1. **Build the image:**
+4. **Start "Pro Mode" Dev Server:**
+   This command starts Redis in the background and then launches Next.js.
 
    ```bash
-   docker build -t zee-index . --build-arg NEXT_PUBLIC_ROOT_FOLDER_ID=your_id --build-arg NEXT_PUBLIC_ROOT_FOLDER_NAME=Home
+   # Start Redis container
+   pnpm redis:up
+
+   # Start App (in new terminal)
+   pnpm dev
    ```
 
-2. **Run the container:**
-   ```bash
-   docker run -p 3000:3000 --env-file .env zee-index
-   ```
+   _To stop Redis later:_ `pnpm redis:down`
+
+5. **Open App:**
+   Go to [http://localhost:3000](http://localhost:3000).
+
+### Docker Deployment
+
+To build the production image for deployment:
+
+```bash
+# Build the optimized image
+docker-compose build
+
+# Run the container
+docker-compose up -d
+```
 
 ---
 
 ## ⚙️ Configuration (.env)
 
-These are the most important environment variables. See `.env.example` for the full list.
-
-| Variable                       | Description                                                      | Required? |
-| :----------------------------- | :--------------------------------------------------------------- | :-------: |
-| `GOOGLE_CLIENT_ID`             | OAuth Client ID from Google Cloud Console                        |    ✅     |
-| `GOOGLE_CLIENT_SECRET`         | OAuth Client Secret from Google Cloud Console                    |    ✅     |
-| `NEXT_PUBLIC_ROOT_FOLDER_ID`   | The ID of the Google Drive folder to use as root                 |    ✅     |
-| `NEXT_PUBLIC_ROOT_FOLDER_NAME` | Display name for the root folder (e.g., "Home")                  |    No     |
-| `NEXTAUTH_SECRET`              | Random string for session encryption (`openssl rand -base64 32`) |    ✅     |
-| `NEXTAUTH_URL`                 | Application URL (e.g., `http://localhost:3000`)                  |    ✅     |
-| `KV_REST_API_URL`              | Connection URL for Vercel KV / Upstash Redis                     |    ✅     |
-| `KV_REST_API_TOKEN`            | Auth token for Redis                                             |    ✅     |
-| `ADMIN_EMAILS`                 | Comma-separated list of admin email addresses                    |    ✅     |
-| `ADMIN_PASSWORD`               | Password for fallback admin login                                |    ✅     |
-| `SHARE_SECRET_KEY`             | Random key for signing share URLs                                |    ✅     |
-| `STORAGE_LIMIT_GB`             | Optional visual storage limit (e.g., `15`)                       |    No     |
-| `STORAGE_WARNING_THRESHOLD`    | Storage usage threshold for warnings (e.g., `0.90` for 90%)      |    No     |
+| Variable                     | Description                                               | Required? |
+| :--------------------------- | :-------------------------------------------------------- | :-------: |
+| `GOOGLE_CLIENT_ID`           | OAuth Client ID from Google Cloud Console                 |    ✅     |
+| `GOOGLE_CLIENT_SECRET`       | OAuth Client Secret from Google Cloud Console             |    ✅     |
+| `NEXT_PUBLIC_ROOT_FOLDER_ID` | The ID of the Google Drive folder to use as root          |    ✅     |
+| `NEXTAUTH_SECRET`            | Random string for encryption (`openssl rand -base64 32`)  |    ✅     |
+| `NEXTAUTH_URL`               | URL (e.g., `http://localhost:3000`)                       |    ✅     |
+| `KV_REST_API_URL`            | Redis URL. Use `redis://localhost:6379` for local Docker. |    ✅     |
+| `KV_REST_API_TOKEN`          | Redis Token. Leave blank if using local Redis.            |    ✅     |
+| `ADMIN_EMAILS`               | Comma-separated list of admin emails                      |    ✅     |
+| `ADMIN_PASSWORD`             | Password for fallback admin login                         |    ✅     |
+| `SHARE_SECRET_KEY`           | Random key for signing share URLs                         |    ✅     |
 
 ---
 
@@ -241,81 +194,51 @@ These are the most important environment variables. See `.env.example` for the f
 ### Step 1: Google Cloud Setup
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/).
-2. Create a new project and enable **Google Drive API**.
+2. Enable **Google Drive API**.
 3. Create **OAuth 2.0 Credentials** (Web Application).
-4. Set Authorized Redirect URIs:
-   - `http://localhost:3000/setup` (for local dev)
-   - `https://your-domain.com/setup` (for production)
-5. Copy the **Client ID** and **Client Secret**.
+4. Add Redirect URI: `https://your-domain.com/setup` (or `http://localhost:3000/setup`).
 
 ### Step 2: Deploy to Vercel
 
-The easiest way to deploy.
-
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fifauzeee%2FZee-Index)
 
-**Important:** During deployment, Vercel will ask to add a **Storage** integration. Select **Vercel KV** to automatically configure the database variables.
-
-### Step 3: Setup Wizard
-
-1. Visit your deployed site. You will be redirected to `/setup`.
-2. Enter your Google Client ID and Secret.
-3. Login with the Google Account that owns the Drive folders.
-4. The system will generate and store your **Refresh Token** securely.
+**Note:** Choose **Vercel KV** integration during deployment for database.
 
 ---
 
 ## 🖱️ Keyboard Shortcuts
 
-| Key             | Function                                        |
-| :-------------- | :---------------------------------------------- |
-| `Cmd/Ctrl + K`  | **Command Bar:** Open global search and actions |
-| `/`             | **Search:** Focus search bar                    |
-| `Space`         | **Quick Look:** Preview selected file           |
-| `Del`           | **Delete:** Move file to trash                  |
-| `Shift + Click` | **Multi-Select:** Select range of files         |
-| `F2`            | **Rename:** Rename selected file                |
-| `G then H`      | **Go Home:** Navigate to root                   |
+| Key            | Function          |
+| :------------- | :---------------- |
+| `Cmd/Ctrl + K` | **Command Bar**   |
+| `/`            | **Search**        |
+| `Space`        | **Quick Preview** |
+| `Del`          | **Delete File**   |
+| `Ctrl + A`     | **Select All**    |
+| `F2`           | **Rename**        |
 
 ---
 
 ## ⚠️ Security & Troubleshooting
 
-- **Protected Folders:** Zee-Index uses "frontend" protection. For true security, ensure the underlying Google Drive folders are set to **"Restricted"** access, not "Anyone with the link".
-- **"Waiting for data" errors:** Usually means the Google API quota is exceeded or the Refresh Token is invalid. Re-run `/setup` to generic a new token.
-- **KV Error:** If you see database errors, check `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
+- **Login Failed:** Check `ADMIN_EMAILS` and `ADMIN_PASSWORD` in `.env`. Ensure no extra quotes are around the values.
+- **Data Usage Timeout:** If calculating storage takes too long, the system will silence the error and retry in the background.
+- **Redis Error:** Ensure `pnpm redis:up` is running if you are in local development.
 
 ---
-
-## 🧪 Testing
-
-We use **Vitest** for unit testing and **Playwright** for end-to-end testing.
-
-```bash
-# Run Unit Tests
-pnpm test
-
-# Run E2E Tests
-pnpm test:e2e
-```
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow these steps:
+Contributions are welcome!
 
-1. Fork the repository.
-2. Create feature branch (`git checkout -b feature/NewFeature`).
-3. Commit changes (`git commit -m 'Add NewFeature'`).
-4. Push to branch (`git push origin feature/NewFeature`).
-5. Open a Pull Request.
+1. Fork it
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch
+5. Open a Pull Request
 
 ---
 
-## 📜 License
-
-Distributed under the **AGPL-3.0** License. See `LICENSE` for more information.
-
-<br />
 <div align="center">
-  <p>Crafted with ❤️ and ☕ by <a href="https://github.com/ifauzeee">Muhammad Ibnu Fauzi</a></p>
+  <p>Crafted with ❤️ by <a href="https://github.com/ifauzeee">Muhammad Ibnu Fauzi</a></p>
 </div>

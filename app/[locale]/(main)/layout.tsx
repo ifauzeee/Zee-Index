@@ -81,7 +81,6 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     detailsFile,
     setDetailsFile,
     fetchConfig,
-    user,
     isSidebarOpen,
     setSidebarOpen,
     addToast,
@@ -111,10 +110,8 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
   }, [status, fetchUser, fetchConfig, refreshKey]);
 
   useEffect(() => {
-    if (status === "authenticated" && user && !user.isGuest) {
-      fetchDataUsage();
-    }
-  }, [status, user, fetchDataUsage, refreshKey]);
+    fetchDataUsage();
+  }, [fetchDataUsage, refreshKey]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartRef.current = e.targetTouches[0].clientX;

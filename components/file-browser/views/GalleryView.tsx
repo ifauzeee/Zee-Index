@@ -29,6 +29,7 @@ export default function GalleryView({
   density,
   isFetchingNextPage,
   nextPageToken,
+  navigatingId,
 }: FileBrowserViewProps) {
   const t = useTranslations("FileList");
 
@@ -100,6 +101,7 @@ export default function GalleryView({
                   uploadProgress={(file as any).uploadProgress}
                   uploadStatus={(file as any).uploadStatus}
                   uploadError={(file as any).uploadError}
+                  isNavigating={navigatingId === file.id}
                 />
               </div>
             </div>
