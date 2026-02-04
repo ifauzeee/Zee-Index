@@ -4,15 +4,11 @@ import { memoryCache, CACHE_TTL } from "@/lib/memory-cache";
 import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-
-const privateFolderIds = (process.env.PRIVATE_FOLDER_IDS || "")
-  .split(",")
-  .map((id) => id.trim())
-  .filter((id) => id);
+import { getPrivateFolderIds } from "@/lib/utils";
 
 export function isPrivateFolder(folderId: string): boolean {
   if (!folderId) return false;
-  return privateFolderIds.includes(folderId.trim());
+  return getPrivateFolderIds().includes(folderId.trim());
 }
 
 export async function isProtected(folderId: string): Promise<boolean> {

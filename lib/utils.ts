@@ -240,3 +240,20 @@ export const MASONRY_BREAKPOINTS = {
   768: 2,
   640: 1,
 };
+
+export function getPrivateFolderIds(): string[] {
+  const ids = process.env.PRIVATE_FOLDER_IDS;
+  if (!ids) return [];
+  if (ids.trim().startsWith("[")) {
+    try {
+      const parsed = JSON.parse(ids);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return ids
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+}

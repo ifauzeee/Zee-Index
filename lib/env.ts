@@ -26,6 +26,7 @@ const envSchema = z.object({
   GOOGLE_REFRESH_TOKEN: z.string().optional().or(z.literal("")),
 
   NEXT_PUBLIC_ROOT_FOLDER_NAME: z.string().optional(),
+  PRIVATE_FOLDER_IDS: z.string().optional(),
   STORAGE_LIMIT_GB: z.string().optional(),
   STORAGE_WARNING_THRESHOLD: z.string().optional(),
   CRON_SECRET: z.string().optional(),
