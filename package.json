@@ -45,6 +45,7 @@
     "@tanstack/react-virtual": "^3.13.18",
     "@types/bcryptjs": "^2.4.6",
     "@types/qrcode": "^1.5.5",
+    "@vercel/kv": "^3.0.0",
     "@vidstack/react": "^1.12.13",
     "bcryptjs": "^3.0.2",
     "clsx": "^2.1.1",

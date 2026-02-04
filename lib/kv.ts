@@ -1,10 +1,13 @@
 import { memoryCache, CACHE_TTL } from "./memory-cache";
+import { createClient } from "@vercel/kv";
 
-const hasLocalRedis = !!process.env.REDIS_URL && process.env.REDIS_URL !== "";
+const hasRedis =
+  (!!process.env.KV_REST_API_URL && !!process.env.KV_REST_API_TOKEN) ||
+  !!process.env.REDIS_URL;
 
 if (typeof window === "undefined") {
-  if (hasLocalRedis) {
-    console.log("[KV] Using local Redis:", process.env.REDIS_URL);
+  if (hasRedis) {
+    console.log("[KV] Connecting to Vercel KV/Redis...");
   } else {
     console.log(
       "[KV] Using in-memory store (data will not persist across restarts)",
@@ -12,11 +15,52 @@ if (typeof window === "undefined") {
   }
 }
 
-class InMemoryKV {
+export interface KVClient {
+  get<T>(key: string): Promise<T | null>;
+  set(key: string, value: unknown, options?: { ex?: number }): Promise<string>;
+  del(...keys: string[]): Promise<number>;
+  exists(...keys: string[]): Promise<number>;
+  keys(pattern: string): Promise<string[]>;
+  mget<T>(...keys: string[]): Promise<(T | null)[]>;
+  mset(keyValues: Record<string, unknown>): Promise<string>;
+  incr(key: string): Promise<number>;
+  expire(key: string, seconds: number): Promise<number>;
+  hgetall<T>(key: string): Promise<T | null>;
+  hset(key: string, obj: Record<string, unknown>): Promise<number>;
+  hget<T>(key: string, field: string): Promise<T | null>;
+  hdel(key: string, ...fields: string[]): Promise<number>;
+  sadd(key: string, ...members: unknown[]): Promise<number>;
+  srem(key: string, ...members: unknown[]): Promise<number>;
+  sismember(key: string, member: unknown): Promise<number>;
+  smembers(key: string): Promise<string[]>;
+  scard(key: string): Promise<number>;
+  zadd(
+    key: string,
+    options: { score: number; member: string },
+  ): Promise<number>;
+  zrange<T>(
+    key: string,
+    start: number,
+    stop: number,
+    options?: { rev?: boolean; byScore?: boolean },
+  ): Promise<T[]>;
+  zremrangebyscore(key: string, min: number, max: number): Promise<number>;
+  zcard(key: string): Promise<number>;
+  zrem(key: string, ...members: string[]): Promise<number>;
+  zscore(key: string, member: string): Promise<number | null>;
+  lpush(key: string, ...values: unknown[]): Promise<number>;
+  rpush(key: string, ...values: unknown[]): Promise<number>;
+  lrange<T>(key: string, start: number, stop: number): Promise<T[]>;
+  llen(key: string): Promise<number>;
+  flushall(): Promise<string>;
+}
+
+class InMemoryKV implements KVClient {
   private store = new Map<string, unknown>();
   private expirations = new Map<string, NodeJS.Timeout>();
   private hashStore = new Map<string, Map<string, unknown>>();
   private setStore = new Map<string, Set<unknown>>();
+  private sortedSets = new Map<string, Map<string, number>>();
 
   async get<T>(key: string): Promise<T | null> {
     const cached = memoryCache.get<T>(`kv:${key}`);
@@ -58,6 +102,7 @@ class InMemoryKV {
       if (this.store.delete(key)) deleted++;
       if (this.hashStore.delete(key)) deleted++;
       if (this.setStore.delete(key)) deleted++;
+      this.sortedSets.delete(key);
       memoryCache.delete(`kv:${key}`);
       memoryCache.delete(`kv:hash:${key}`);
 
@@ -75,7 +120,8 @@ class InMemoryKV {
       (key) =>
         this.store.has(key) ||
         this.hashStore.has(key) ||
-        this.setStore.has(key),
+        this.setStore.has(key) ||
+        this.sortedSets.has(key),
     ).length;
   }
 
@@ -87,6 +133,7 @@ class InMemoryKV {
       ...this.store.keys(),
       ...this.hashStore.keys(),
       ...this.setStore.keys(),
+      ...this.sortedSets.keys(),
     ]);
     return Array.from(allKeys).filter((key) => regex.test(key));
   }
@@ -121,7 +168,8 @@ class InMemoryKV {
     if (
       !this.store.has(key) &&
       !this.hashStore.has(key) &&
-      !this.setStore.has(key)
+      !this.setStore.has(key) &&
+      !this.sortedSets.has(key)
     ) {
       return 0;
     }
@@ -133,6 +181,7 @@ class InMemoryKV {
       this.store.delete(key);
       this.hashStore.delete(key);
       this.setStore.delete(key);
+      this.sortedSets.delete(key);
       memoryCache.delete(`kv:${key}`);
       memoryCache.delete(`kv:hash:${key}`);
       this.expirations.delete(key);
@@ -187,26 +236,6 @@ class InMemoryKV {
     return deleted;
   }
 
-  async hexists(key: string, field: string): Promise<number> {
-    const hash = this.hashStore.get(key);
-    return hash?.has(field) ? 1 : 0;
-  }
-
-  async hkeys(key: string): Promise<string[]> {
-    const hash = this.hashStore.get(key);
-    return hash ? Array.from(hash.keys()) : [];
-  }
-
-  async hvals<T>(key: string): Promise<T[]> {
-    const hash = this.hashStore.get(key);
-    return hash ? (Array.from(hash.values()) as T[]) : [];
-  }
-
-  async hlen(key: string): Promise<number> {
-    const hash = this.hashStore.get(key);
-    return hash?.size ?? 0;
-  }
-
   async sadd(key: string, ...members: unknown[]): Promise<number> {
     let set = this.setStore.get(key);
     if (!set) {
@@ -256,8 +285,6 @@ class InMemoryKV {
     return set?.size ?? 0;
   }
 
-  private sortedSets = new Map<string, Map<string, number>>();
-
   async zadd(
     key: string,
     options: { score: number; member: string },
@@ -306,22 +333,6 @@ class InMemoryKV {
         return member as unknown as T;
       }
     });
-  }
-
-  async zrangebyscore<T>(key: string, min: number, max: number): Promise<T[]> {
-    const zset = this.sortedSets.get(key);
-    if (!zset) return [];
-
-    return Array.from(zset.entries())
-      .filter(([, score]) => score >= min && score <= max)
-      .sort((a, b) => a[1] - b[1])
-      .map(([member]) => {
-        try {
-          return JSON.parse(member) as T;
-        } catch {
-          return member as unknown as T;
-        }
-      });
   }
 
   async zremrangebyscore(
@@ -396,14 +407,11 @@ class InMemoryKV {
     return Array.isArray(list) ? list.length : 0;
   }
 
-  async ping(): Promise<string> {
-    return "PONG";
-  }
-
   async flushall(): Promise<string> {
     this.store.clear();
     this.hashStore.clear();
     this.setStore.clear();
+    this.sortedSets.clear();
     for (const timer of this.expirations.values()) {
       clearTimeout(timer);
     }
@@ -422,43 +430,16 @@ class InMemoryKV {
   }
 }
 
-export interface KVClient {
-  get<T>(key: string): Promise<T | null>;
-  set(key: string, value: unknown, options?: { ex?: number }): Promise<string>;
-  del(...keys: string[]): Promise<number>;
-  exists(...keys: string[]): Promise<number>;
-  keys(pattern: string): Promise<string[]>;
-  mget<T>(...keys: string[]): Promise<(T | null)[]>;
-  mset(keyValues: Record<string, unknown>): Promise<string>;
-  incr(key: string): Promise<number>;
-  expire(key: string, seconds: number): Promise<number>;
-  hgetall<T>(key: string): Promise<T | null>;
-  hset(key: string, obj: Record<string, unknown>): Promise<number>;
-  hget<T>(key: string, field: string): Promise<T | null>;
-  hdel(key: string, ...fields: string[]): Promise<number>;
-  sadd(key: string, ...members: unknown[]): Promise<number>;
-  srem(key: string, ...members: unknown[]): Promise<number>;
-  sismember(key: string, member: unknown): Promise<number>;
-  smembers(key: string): Promise<string[]>;
-  zadd(
-    key: string,
-    options: { score: number; member: string },
-  ): Promise<number>;
-  zrange<T>(
-    key: string,
-    start: number,
-    stop: number,
-    options?: { rev?: boolean; byScore?: boolean },
-  ): Promise<T[]>;
-  zremrangebyscore(key: string, min: number, max: number): Promise<number>;
-  zcard(key: string): Promise<number>;
-  zrem(key: string, ...members: string[]): Promise<number>;
-  zscore(key: string, member: string): Promise<number | null>;
-}
+const vercelKv = hasRedis
+  ? createClient({
+      url: process.env.KV_REST_API_URL || process.env.REDIS_URL!,
+      token: process.env.KV_REST_API_TOKEN || process.env.REDIS_TOKEN || "",
+    })
+  : null;
 
-const kvInstance = new InMemoryKV();
-
-export const kv = kvInstance as unknown as KVClient & InMemoryKV;
+export const kv = (hasRedis && vercelKv
+  ? vercelKv
+  : new InMemoryKV()) as unknown as KVClient;
 
 export function invalidateKvCache(key: string): void {
   memoryCache.delete(`kv:${key}`);
@@ -471,7 +452,7 @@ export function invalidateKvCacheByPrefix(prefix: string): void {
 
 export function getKvStats() {
   return {
-    kv: kvInstance.getStats(),
+    kv: hasRedis ? { type: "redis" } : (kv as unknown as InMemoryKV).getStats(),
     memoryCache: memoryCache.getStats(),
   };
 }

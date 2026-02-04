@@ -23,6 +23,15 @@ import { srtToVtt } from "@/lib/subtitleUtils";
 import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
 import "@vidstack/react/player/styles/default/layouts/audio.css";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MonitorPlay, Copy, Play } from "lucide-react";
 
 interface SubtitleTrack {
   kind: string;
@@ -205,6 +214,14 @@ export default function VideoPlayer({
     }
   };
 
+  const getHasAbsoluteUrl = (url: string) => {
+    if (typeof window === "undefined") return url;
+    if (url.startsWith("http")) return url;
+    return `${window.location.origin}${url}`;
+  };
+
+  const getAbsoluteSrc = () => getHasAbsoluteUrl(currentSrc);
+
   return (
     <div className="relative w-full h-full bg-black flex items-center justify-center rounded-xl overflow-hidden shadow-2xl">
       <MediaPlayer
@@ -272,6 +289,84 @@ export default function VideoPlayer({
               isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100",
             )}
           >
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="p-2 bg-black/40 hover:bg-black/80 text-white rounded-xl backdrop-blur-md border border-white/10 transition-all shadow-lg focus:outline-none"
+                  title="Stream Eksternal"
+                >
+                  <MonitorPlay size={16} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-56 bg-zinc-950/90 border-white/10 text-white backdrop-blur-xl z-[100]"
+              >
+                <DropdownMenuLabel>External Player</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-white/10" />
+
+                <DropdownMenuItem
+                  className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
+                  onClick={() => {
+                    navigator.clipboard.writeText(getAbsoluteSrc());
+                    addToast({
+                      message: "URL Stream disalin!",
+                      type: "success",
+                    });
+                  }}
+                >
+                  <Copy className="mr-2 h-4 w-4" /> Copy URL
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
+                  onClick={() =>
+                    (window.location.href = `vlc://${getAbsoluteSrc()}`)
+                  }
+                >
+                  <Play className="mr-2 h-4 w-4" /> Open in VLC (PC)
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
+                  onClick={() =>
+                    (window.location.href = `intent:${getAbsoluteSrc()}#Intent;package=org.videolan.vlc;type=video/*;scheme=https;end`)
+                  }
+                >
+                  <Play className="mr-2 h-4 w-4" /> VLC (Android)
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
+                  onClick={() =>
+                    (window.location.href = `intent:${getAbsoluteSrc()}#Intent;package=com.mxtech.videoplayer.ad;type=video/*;scheme=https;end`)
+                  }
+                >
+                  <Play className="mr-2 h-4 w-4" /> MX Player (Free)
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
+                  onClick={() =>
+                    (window.location.href = `intent:${getAbsoluteSrc()}#Intent;package=com.mxtech.videoplayer.pro;type=video/*;scheme=https;end`)
+                  }
+                >
+                  <Play className="mr-2 h-4 w-4" /> MX Player (Pro)
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
+                  onClick={() =>
+                    (window.location.href = `infuse://x-callback-url/play?url=${encodeURIComponent(
+                      getAbsoluteSrc(),
+                    )}`)
+                  }
+                >
+                  <Play className="mr-2 h-4 w-4" /> Infuse (iOS/Mac)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {webViewLink && !isMobile && (
               <a
                 href={webViewLink}

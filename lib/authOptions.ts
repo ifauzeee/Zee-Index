@@ -52,48 +52,33 @@ export const authOptions: AuthOptions = {
         const password = credentials.password;
 
         const adminEmails = (await kv.smembers(ADMIN_EMAILS_KEY)) as string[];
-        const envAdminsRaw = process.env.ADMIN_EMAILS;
+        const envAdminsRaw = process.env.ADMIN_EMAILS || "";
 
-        const envAdmins =
-          envAdminsRaw
-            ?.split(",")
-            .map((e) => e.trim().replace(/^["'](.+)["']$/, "$1"))
-            .filter(Boolean) || [];
+        const normalizedInputEmail = email.toLowerCase().trim();
+        const normalizedEnvAdmins = envAdminsRaw
+          .split(",")
+          .map((e) => e.trim().toLowerCase().replace(/["']/g, ""));
 
         const isAdmin =
-          adminEmails.includes(email) || envAdmins.includes(email);
+          adminEmails.some((e) => e.toLowerCase() === normalizedInputEmail) ||
+          normalizedEnvAdmins.includes(normalizedInputEmail);
 
-        const storedHash: string | null = await kv.get(`password:${email}`);
+        const envPass = (process.env.ADMIN_PASSWORD || "")
+          .trim()
+          .replace(/["']/g, "");
+        const isPassValid = password === envPass;
 
-        let isValid = false;
-        if (storedHash) {
-          const bcrypt = await import("bcryptjs");
-          isValid = await bcrypt.compare(password, storedHash);
+        if (isAdmin && isPassValid) {
+          return {
+            id: email,
+            name: email.split("@")[0],
+            email: email,
+            role: "ADMIN",
+            isGuest: false,
+          };
         }
 
-        const envPass = process.env.ADMIN_PASSWORD?.trim().replace(
-          /^["'](.+)["']$/,
-          "$1",
-        );
-        const isEnvMatch = password === envPass;
-
-        if (!isValid && isAdmin && envPass) {
-          if (isEnvMatch) {
-            isValid = true;
-          }
-        }
-
-        if (!isValid) {
-          return null;
-        }
-
-        return {
-          id: email,
-          name: email.split("@")[0],
-          email: email,
-          role: isAdmin ? "ADMIN" : "USER",
-          isGuest: false,
-        };
+        return null;
       },
     }),
     CredentialsProvider({
@@ -142,15 +127,16 @@ export const authOptions: AuthOptions = {
         token.isGuest = false;
 
         const adminEmails = (await kv.smembers(ADMIN_EMAILS_KEY)) as string[];
-        const envAdminsRaw = process.env.ADMIN_EMAILS;
-        const envAdmins =
-          envAdminsRaw
-            ?.split(",")
-            .map((e) => e.trim())
-            .filter(Boolean) || [];
+        const envAdminsRaw = process.env.ADMIN_EMAILS || "";
+
+        const normalizedUserEmail = user.email.toLowerCase().trim();
+        const normalizedEnvAdmins = envAdminsRaw
+          .split(",")
+          .map((e) => e.trim().toLowerCase().replace(/["']/g, ""));
 
         const isAdmin =
-          adminEmails.includes(user.email) || envAdmins.includes(user.email);
+          adminEmails.some((e) => e.toLowerCase() === normalizedUserEmail) ||
+          normalizedEnvAdmins.includes(normalizedUserEmail);
 
         if (user.role) {
           token.role = user.role;
@@ -162,17 +148,18 @@ export const authOptions: AuthOptions = {
         token.twoFactorRequired = !!is2FAEnabled;
       } else if (profile?.email && !token.email) {
         token.email = profile.email;
+
         const adminEmails = (await kv.smembers(ADMIN_EMAILS_KEY)) as string[];
-        const envAdminsRaw = process.env.ADMIN_EMAILS;
-        const envAdmins =
-          envAdminsRaw
-            ?.split(",")
-            .map((e) => e.trim())
-            .filter(Boolean) || [];
+        const envAdminsRaw = process.env.ADMIN_EMAILS || "";
+
+        const normalizedProfileEmail = profile.email.toLowerCase().trim();
+        const normalizedEnvAdmins = envAdminsRaw
+          .split(",")
+          .map((e) => e.trim().toLowerCase().replace(/["']/g, ""));
 
         const isAdmin =
-          adminEmails.includes(profile.email) ||
-          envAdmins.includes(profile.email);
+          adminEmails.some((e) => e.toLowerCase() === normalizedProfileEmail) ||
+          normalizedEnvAdmins.includes(normalizedProfileEmail);
 
         token.role = isAdmin ? "ADMIN" : "USER";
 
@@ -183,9 +170,9 @@ export const authOptions: AuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.role = token.role;
+        session.user.role = (token.role as any) || "USER";
         session.user.email = token.email as string;
-        session.user.isGuest = token.isGuest;
+        session.user.isGuest = !!token.isGuest;
         if (token.isGuest) {
           session.user.name = "Guest User";
         }
@@ -194,4 +181,16 @@ export const authOptions: AuthOptions = {
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: true,
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: false,
+      },
+    },
+  },
 };

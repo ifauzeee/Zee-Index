@@ -117,6 +117,10 @@ export async function middleware(request: NextRequest) {
     process.env.NEXTAUTH_SECRET,
   );
 
+  if (!isAuthenticated && !isPublicRoute(pathnameWithoutLocale)) {
+    console.log(`[Middleware] Auth failed for ${pathname} (Guest: ${isGuest})`);
+  }
+
   if (!isAuthenticated) {
     if (isPublicRoute(pathnameWithoutLocale)) {
       return isApi ? NextResponse.next() : intlMiddleware(request);
