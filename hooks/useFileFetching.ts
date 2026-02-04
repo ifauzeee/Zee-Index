@@ -104,9 +104,9 @@ export function useFileFetching({
     enabled: !!currentFolderId && currentFolderId !== rootFolderId,
     initialData: initialFolderPath,
     retry: false,
-    refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 60,
-    gcTime: 1000 * 60 * 60 * 24,
+    refetchOnWindowFocus: true,
+    staleTime: 1000 * 30,
+    gcTime: 1000 * 60 * 5,
   });
 
   const history = useMemo(() => {
@@ -180,14 +180,15 @@ export function useFileFetching({
       : undefined,
     getNextPageParam: (lastPage) => lastPage?.nextPageToken || undefined,
     retry: (failureCount, error: any) => {
+      // Immediate fail for protected folders to show Auth Form
       if (error instanceof ProtectedError || error?.isProtected) return false;
       if (error?.status === 401) return false;
       return failureCount < 2;
     },
-    refetchInterval: (query) => (query.state.error ? false : 15000),
-    refetchOnWindowFocus: (query) => (query.state.error ? false : true),
-    staleTime: 1000 * 10,
-    gcTime: 1000 * 60 * 30,
+    refetchInterval: (query) => (query.state.error ? false : 30000), // Increased to 30s to avoid spam
+    refetchOnWindowFocus: true, // Enable window focus refetch
+    staleTime: 1000 * 5, // Reduced to 5s for faster updates
+    gcTime: 1000 * 60 * 10,
     enabled: !!currentFolderId && currentFolderId !== "undefined",
   });
 
