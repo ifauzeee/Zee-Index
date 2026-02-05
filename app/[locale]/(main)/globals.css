@@ -175,11 +175,20 @@ media-player {
   background-color: black;
   border-radius: var(--radius);
   overflow: hidden;
+  width: 100%;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   media-player {
-    aspect-ratio: auto;
-    height: 300px;
+    aspect-ratio: 16/9;
+    height: auto;
+    min-height: 200px;
+
+    --media-button-size: 32px;
+    --media-icon-size: 20px;
+    --media-slider-height: 48px;
+    --media-slider-thumb-size: 14px;
+    --media-slider-track-height: 3px;
+    --media-font-family: inherit;
   }
 }

@@ -86,6 +86,11 @@ export default function VideoPlayer({
 
   useEffect(() => {
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+
+    const { isAudioPlaying, toggleAudioPlay } = useAppStore.getState();
+    if (isAudioPlaying) {
+      toggleAudioPlay();
+    }
   }, []);
 
   useEffect(() => {
@@ -261,7 +266,7 @@ export default function VideoPlayer({
   }, [processedTracks]);
 
   return (
-    <div className="relative w-full h-full bg-black flex items-center justify-center rounded-xl overflow-hidden shadow-2xl">
+    <div className="relative w-full h-full bg-black flex items-center justify-center rounded-xl overflow-hidden shadow-2xl min-h-[220px] md:min-h-[400px]">
       <MediaPlayer
         key={currentSrc}
         ref={playerRef}
@@ -288,11 +293,11 @@ export default function VideoPlayer({
         logLevel="silent"
         className="w-full h-full ring-media-focus"
         crossOrigin="anonymous"
-        autoplay={true}
+        autoplay={false}
         playsInline
-        load="eager"
+        load="visible"
         posterLoad="eager"
-        preload="auto"
+        preload="metadata"
         streamType="on-demand"
       >
         <MediaProvider>
@@ -317,6 +322,8 @@ export default function VideoPlayer({
           <DefaultVideoLayout
             thumbnails={poster?.replace("=s220", "=s1280")}
             icons={defaultLayoutIcons}
+            noModal={isMobile}
+            className="vds-video-layout"
           />
         ) : (
           <DefaultAudioLayout icons={defaultLayoutIcons} />
