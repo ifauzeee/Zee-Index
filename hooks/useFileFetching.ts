@@ -153,6 +153,13 @@ export function useFileFetching({
     return rawPath;
   }, [historyData, currentFolderId, rootFolderId, folderTokens, locale]);
 
+  const bestToken = useMemo(() => {
+    if (folderTokens[currentFolderId]) return folderTokens[currentFolderId];
+    const hist = Array.isArray(historyData) ? historyData : [];
+    const found = [...hist].reverse().find((f) => folderTokens[f.id]);
+    return found ? folderTokens[found.id] : undefined;
+  }, [currentFolderId, folderTokens, historyData]);
+
   const {
     data,
     fetchNextPage,
@@ -162,19 +169,13 @@ export function useFileFetching({
     error,
     refetch,
   } = useInfiniteQuery({
-    queryKey: [
-      "files",
-      currentFolderId,
-      shareToken,
-      folderTokens[currentFolderId],
-      refreshKey,
-    ],
+    queryKey: ["files", currentFolderId, shareToken, bestToken, refreshKey],
     queryFn: ({ pageParam }) =>
       fetchFilesApi({
         folderId: currentFolderId,
         pageToken: pageParam as string | null,
         shareToken,
-        folderToken: folderTokens[currentFolderId],
+        folderToken: bestToken,
         refresh: refreshKey > 0,
       }),
     initialPageParam: null as string | null,

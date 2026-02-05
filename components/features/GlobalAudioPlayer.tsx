@@ -87,8 +87,15 @@ export default function GlobalAudioPlayer() {
   };
 
   const getAudioSrc = (fileId: string) => {
+    const { folderTokens, currentFolderId, activeAudioFile } =
+      useAppStore.getState();
     let url = `/api/download?fileId=${fileId}`;
     if (shareToken) url += `&share_token=${shareToken}`;
+
+    const parentId = activeAudioFile?.parents?.[0] || currentFolderId;
+    if (parentId && folderTokens[parentId]) {
+      url += `&access_token=${folderTokens[parentId]}`;
+    }
     return url;
   };
 

@@ -7,6 +7,7 @@ import { authOptions } from "@/lib/authOptions";
 import { logActivity } from "@/lib/activityLogger";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { isAccessRestricted } from "@/lib/securityUtils";
+export const dynamic = "force-dynamic";
 
 export async function HEAD(request: NextRequest) {
   return GET(request);
@@ -83,23 +84,34 @@ export async function GET(request: NextRequest) {
             process.env.SHARE_SECRET_KEY!,
           );
           const { payload } = await jwtVerify(token, secret);
-          const folderId = payload.folderId as string;
-          if (folderId) {
+          const authorizedFolderId = payload.folderId as string;
+          console.log(
+            `[Download] Token authorized for folder: ${authorizedFolderId}`,
+          );
+
+          if (authorizedFolderId) {
             const stillRestricted = await isAccessRestricted(
               fileId,
-              [folderId],
+              [authorizedFolderId],
               session?.user?.email,
             );
             if (!stillRestricted) {
               accessGranted = true;
+            } else {
+              console.warn(
+                `[Download] File ${fileId} is still restricted for folder token ${authorizedFolderId}`,
+              );
             }
           }
         } catch (e) {
-          console.error("Token verification failed:", e);
+          console.error("[Download] Token verification failed:", e);
         }
       }
 
       if (!accessGranted) {
+        console.warn(
+          `[Download] Access Denied for file ${fileId}. User: ${session?.user?.email}. Token: ${token ? "Provided" : "None"}`,
+        );
         return NextResponse.json(
           { error: "Access Denied: File is protected." },
           { status: 403 },
@@ -111,6 +123,9 @@ export async function GET(request: NextRequest) {
   try {
     const accessToken = await getAccessToken();
     const fileDetails = await getFileDetailsFromDrive(fileId);
+    console.log(
+      `[Download] Streaming file: ${fileDetails?.name}, Parents: ${JSON.stringify(fileDetails?.parents)}`,
+    );
 
     if (!fileDetails) {
       return NextResponse.json(

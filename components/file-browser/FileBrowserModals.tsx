@@ -329,6 +329,7 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
               <FileDetail
                 file={previewFile}
                 isModal={true}
+                currentFolderId={currentFolderId}
                 onCloseModal={() => setPreviewFile(null)}
               />
             </Suspense>

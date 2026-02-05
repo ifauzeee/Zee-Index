@@ -192,6 +192,7 @@ export default async function FilePage(props: {
       prevFileUrl={prevFileUrl}
       nextFileUrl={nextFileUrl}
       subtitleTracks={subtitleTracks}
+      currentFolderId={params.folderId}
     />
   );
 }

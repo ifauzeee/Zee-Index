@@ -402,9 +402,14 @@ export default function FileBrowser({
     if (shareToken) {
       url += `&share_token=${shareToken}`;
     }
-    const parentId = file.parents?.[0];
-    if (parentId && folderTokens[parentId]) {
-      url += `&access_token=${folderTokens[parentId]}`;
+
+    const protectedParent = [...history]
+      .reverse()
+      .find((f) => folderTokens[f.id]);
+    const token = protectedParent ? folderTokens[protectedParent.id] : null;
+
+    if (token) {
+      url += `&access_token=${token}`;
     }
     window.open(url, "_blank");
   };

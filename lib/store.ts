@@ -780,6 +780,7 @@ export const useAppStore = create<AppState>()(
         faviconUrl: state.faviconUrl,
         primaryColor: state.primaryColor,
         videoProgress: state.videoProgress,
+        folderTokens: state.folderTokens,
       }),
     },
   ),

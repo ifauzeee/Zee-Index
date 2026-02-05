@@ -1,16 +1,12 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { listFilesFromDrive, DriveFile } from "@/lib/drive";
-import {
-  isPrivateFolder,
-  isProtected,
-  verifyFolderToken,
-  hasUserAccess,
-} from "@/lib/auth";
+import { isPrivateFolder, hasUserAccess } from "@/lib/auth";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
+import { isAccessRestricted } from "@/lib/securityUtils";
 
 async function validateShareToken(request: Request): Promise<boolean> {
   const { searchParams } = new URL(request.url);
@@ -78,37 +74,42 @@ export async function GET(request: Request) {
 
     const canSeeAll = userRole === "ADMIN";
 
-    const [isFolderProtected, hasDirectAccess] = await Promise.all([
-      isProtected(folderId),
-      userEmail ? hasUserAccess(userEmail, folderId) : Promise.resolve(false),
-    ]);
+    const isRestricted = await isAccessRestricted(folderId, [], userEmail);
 
-    if (
-      !session &&
-      !isShareAuth &&
-      isPrivateFolder(folderId) &&
-      !isFolderProtected
-    ) {
-      return NextResponse.json(
-        {
-          error: "Authentication required.",
-          protected: true,
-          folderId: folderId,
-        },
-        { status: 401 },
-      );
-    }
-
-    if (!canSeeAll && isFolderProtected && !hasDirectAccess) {
+    if (!canSeeAll && isRestricted) {
       const authHeader = request.headers.get("Authorization");
       const token = authHeader?.split(" ")[1];
-      const isTokenValid = await verifyFolderToken(token || "", folderId);
 
-      if (!isTokenValid) {
+      let accessGranted = false;
+      if (token) {
+        try {
+          const secret = new TextEncoder().encode(
+            process.env.SHARE_SECRET_KEY!,
+          );
+          const { payload } = await jwtVerify(token, secret);
+          const authorizedFolderId = payload.folderId as string;
+
+          if (authorizedFolderId) {
+            const stillRestricted = await isAccessRestricted(
+              folderId,
+              [authorizedFolderId],
+              userEmail,
+            );
+            if (!stillRestricted) {
+              accessGranted = true;
+            }
+          }
+        } catch (e) {
+          console.error("[Files API] Token verification failed:", e);
+        }
+      }
+
+      if (!accessGranted) {
         return NextResponse.json(
           {
             error: "Authentication required for this folder.",
             protected: true,
+            folderId: folderId,
           },
           { status: 401 },
         );

@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import {
@@ -67,6 +68,7 @@ export default function FileDetail({
   prevFileUrl,
   nextFileUrl,
   subtitleTracks,
+  currentFolderId,
   onCloseModal,
 }: {
   file: DriveFile;
@@ -74,6 +76,7 @@ export default function FileDetail({
   prevFileUrl?: string;
   nextFileUrl?: string;
   subtitleTracks?: SubtitleTrack[];
+  currentFolderId?: string;
   onAddSubtitle?: (track: SubtitleTrack) => void;
   onRemoveSubtitle?: (src: string) => void;
   onCloseModal?: () => void;
@@ -134,18 +137,55 @@ export default function FileDetail({
   const isAdmin = user?.role === "ADMIN" || session?.user?.role === "ADMIN";
   const canShowAuthor = isAdmin || !hideAuthor;
   const fileType = getFileType(file);
+  const { data: folderPathData } = useQuery({
+    queryKey: ["folderPath", currentFolderId],
+    queryFn: async () => {
+      if (!currentFolderId) return [];
+      let url = `/api/folderpath?folderId=${currentFolderId}`;
+      if (shareToken) url += `&share_token=${shareToken}`;
+      const res = await fetch(url);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!currentFolderId,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const bestToken = useMemo(() => {
+    const parentId = file.parents?.[0];
+    if (parentId && folderTokens[parentId]) return folderTokens[parentId];
+
+    if (currentFolderId && folderTokens[currentFolderId])
+      return folderTokens[currentFolderId];
+
+    const path = Array.isArray(folderPathData) ? folderPathData : [];
+    const found = [...path].reverse().find((f) => folderTokens[f.id]);
+    return found ? folderTokens[found.id] : null;
+  }, [file.parents, currentFolderId, folderTokens, folderPathData]);
 
   const directLink = useMemo(() => {
     let url = `/api/download?fileId=${file.id}`;
     if (shareToken) {
       url += `&share_token=${shareToken}`;
     }
-    const parentId = file.parents?.[0];
-    if (parentId && folderTokens[parentId]) {
-      url += `&access_token=${folderTokens[parentId]}`;
+    if (bestToken) {
+      url += `&access_token=${bestToken}`;
     }
     return url;
-  }, [file.id, shareToken, file.parents, folderTokens]);
+  }, [file.id, shareToken, bestToken]);
+
+  const authenticatedSubtitleTracks = useMemo(() => {
+    if (!bestToken) return activeSubtitleTracks;
+
+    return activeSubtitleTracks.map((t) => {
+      if (t.src.includes("access_token=")) return t;
+      const separator = t.src.includes("?") ? "&" : "?";
+      return {
+        ...t,
+        src: `${t.src}${separator}access_token=${bestToken}`,
+      };
+    });
+  }, [activeSubtitleTracks, bestToken]);
 
   const ARCHIVE_PREVIEW_LIMIT = 100 * 1024 * 1024;
   const isArchivePreviewable =
@@ -249,7 +289,7 @@ export default function FileDetail({
             poster={file.thumbnailLink}
             mimeType={file.mimeType}
             webViewLink={file.webViewLink}
-            subtitleTracks={activeSubtitleTracks}
+            subtitleTracks={authenticatedSubtitleTracks}
             onEnded={() => nextFileUrl && router.push(nextFileUrl)}
           />
         );
@@ -386,7 +426,7 @@ export default function FileDetail({
                   onRemoveTag={(tag) => removeTag(file.id, tag)}
                   onCopyLink={handleCopyLink}
                   isImage={fileType === "image"}
-                  subtitleTracks={activeSubtitleTracks}
+                  subtitleTracks={authenticatedSubtitleTracks}
                   onAddSubtitle={handleAddSubtitle}
                   onRemoveSubtitle={handleRemoveSubtitle}
                 />
@@ -465,7 +505,7 @@ export default function FileDetail({
                   poster={file.thumbnailLink}
                   mimeType={file.mimeType}
                   webViewLink={file.webViewLink}
-                  subtitleTracks={activeSubtitleTracks}
+                  subtitleTracks={authenticatedSubtitleTracks}
                   onEnded={() => nextFileUrl && router.push(nextFileUrl)}
                 />
               </div>
@@ -522,7 +562,7 @@ export default function FileDetail({
           onEditImage={() => setShowImageEditor(true)}
           onShowHistory={() => setShowHistory(true)}
           isImage={fileType === "image"}
-          subtitleTracks={activeSubtitleTracks}
+          subtitleTracks={authenticatedSubtitleTracks}
           onAddSubtitle={handleAddSubtitle}
           onRemoveSubtitle={handleRemoveSubtitle}
         />
@@ -535,7 +575,8 @@ export default function FileDetail({
           onCloseModal={() => setInternalPreviewOpen(false)}
           prevFileUrl={prevFileUrl}
           nextFileUrl={nextFileUrl}
-          subtitleTracks={activeSubtitleTracks}
+          subtitleTracks={authenticatedSubtitleTracks}
+          currentFolderId={currentFolderId}
           onAddSubtitle={handleAddSubtitle}
           onRemoveSubtitle={handleRemoveSubtitle}
         />
