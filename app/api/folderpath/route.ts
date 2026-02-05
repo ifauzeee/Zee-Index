@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
   if (isPriv && !session && !isShareAuth) {
     return NextResponse.json(
-      { error: "Authentication required." },
+      { error: "Authentication required.", protected: true },
       { status: 401 },
     );
   }

@@ -117,11 +117,9 @@ export async function GET(request: Request) {
 
     const [driveResponse, allProtectedFolders] = await Promise.all([
       listFilesFromDrive(folderId, pageToken, 50, !forceRefresh),
-      !canSeeAll
-        ? kv
-            .hgetall<Record<string, unknown>>("zee-index:protected-folders")
-            .then((res) => res || {})
-        : Promise.resolve({}),
+      kv
+        .hgetall<Record<string, unknown>>("zee-index:protected-folders")
+        .then((res) => res || {}),
     ]);
 
     let filteredFiles: DriveFile[];
@@ -132,13 +130,19 @@ export async function GET(request: Request) {
       const filteringPromises = (driveResponse.files as DriveFile[]).map(
         async (file: DriveFile) => {
           const isPriv = isPrivateFolder(file.id);
-          if (!isPriv) return file;
+          const isProt = !!(allProtectedFolders as any)[file.id];
 
-          if (userEmail) {
-            const hasAccess = await hasUserAccess(userEmail, file.id);
-            return hasAccess ? file : null;
+          if (!isPriv && !isProt) return file;
+
+          if (isPriv) {
+            if (userEmail) {
+              const hasAccess = await hasUserAccess(userEmail, file.id);
+              if (hasAccess) return file;
+            }
+            return isProt ? file : null;
           }
-          return null;
+
+          return file;
         },
       );
 
@@ -150,10 +154,13 @@ export async function GET(request: Request) {
 
     const processedFiles = filteredFiles.map((file) => {
       const fileId = file.id as string;
+      const isProt = !!(allProtectedFolders as any)[fileId];
+      const isPriv = isPrivateFolder(fileId);
+
       return {
         ...file,
         isFolder: file.mimeType === "application/vnd.google-apps.folder",
-        isProtected: !canSeeAll && !!(allProtectedFolders as any)[fileId],
+        isProtected: !canSeeAll && (isProt || isPriv),
       };
     });
 

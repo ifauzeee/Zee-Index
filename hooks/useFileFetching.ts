@@ -56,6 +56,8 @@ const fetchFilesApi = async ({
     }
     const err = new Error(errorData.error || "Gagal mengambil data file.");
     (err as any).status = response.status;
+    (err as any).isProtected = errorData.protected || false;
+    (err as any).folderId = errorData.folderId || folderId;
     throw err;
   }
 
@@ -64,18 +66,22 @@ const fetchFilesApi = async ({
 
 const fetchFolderPathApi = async (
   folderId: string,
-  shareToken: string | null,
-  locale: string,
+  shareToken?: string | null,
+  locale?: string,
 ) => {
-  const url = new URL(`/api/folderpath`, window.location.origin);
-  url.searchParams.set("folderId", folderId);
-  url.searchParams.set("locale", locale);
+  const url = new URL(window.location.origin + "/api/folderpath");
+  url.searchParams.append("folderId", folderId);
   if (shareToken) url.searchParams.append("share_token", shareToken);
+  if (locale) url.searchParams.append("locale", locale);
 
   const response = await fetch(url.toString());
   if (!response.ok) {
-    if (response.status === 401) return [];
-    throw new Error("Gagal memuat path folder.");
+    const errorData = await response.json();
+    const err = new Error(errorData.error || "Gagal mengambil data folder.");
+    (err as any).status = response.status;
+    (err as any).isProtected = errorData.protected || false;
+    (err as any).folderId = errorData.folderId || folderId;
+    throw err;
   }
   return response.json();
 };
@@ -193,7 +199,7 @@ export function useFileFetching({
   });
 
   const files = useMemo(() => {
-    return data?.pages.flatMap((page) => page.files) || [];
+    return data?.pages.flatMap((page) => page?.files || []) || [];
   }, [data]);
 
   useEffect(() => {

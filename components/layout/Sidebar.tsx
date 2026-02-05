@@ -35,6 +35,7 @@ interface FolderNode {
   children?: FolderNode[];
   isExpanded?: boolean;
   isLoading?: boolean;
+  isProtected?: boolean;
 }
 
 interface ManualDrive {
@@ -169,6 +170,7 @@ export default function Sidebar() {
             children: [],
             isExpanded: false,
             isLoading: false,
+            isProtected: f.isProtected,
           }));
       } catch (error) {
         console.error(error);
@@ -276,15 +278,22 @@ export default function Sidebar() {
             {navigatingId === node.id ? (
               <Loader2 size={12} className="animate-spin text-primary" />
             ) : (
-              <Folder
-                size={14}
-                className={cn(
-                  "shrink-0 transition-colors",
-                  isActive
-                    ? "text-primary fill-primary/20"
-                    : "text-muted-foreground group-hover:text-primary",
+              <>
+                <Folder
+                  size={14}
+                  className={cn(
+                    "shrink-0 transition-colors",
+                    isActive
+                      ? "text-primary fill-primary/20"
+                      : "text-muted-foreground group-hover:text-primary",
+                  )}
+                />
+                {node.isProtected && (
+                  <div className="absolute -bottom-0.5 -right-0.5 bg-background rounded-full p-0.5">
+                    <Lock size={8} className="text-primary fill-primary/20" />
+                  </div>
                 )}
-              />
+              </>
             )}
           </div>
           <span className="truncate text-[13px] leading-none pt-0.5">
