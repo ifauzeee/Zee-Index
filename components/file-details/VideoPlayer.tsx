@@ -165,6 +165,9 @@ export default function VideoPlayer({
   }, [src]);
 
   const handleRetry = () => {
+    if (playerRef.current && playerRef.current.currentTime > 0) {
+      setLastTime(playerRef.current.currentTime);
+    }
     setNetworkError(false);
     setFormatError(false);
     const separator = src.includes("?") ? "&" : "?";
@@ -268,7 +271,6 @@ export default function VideoPlayer({
   return (
     <div className="relative w-full h-full bg-black flex items-center justify-center rounded-xl overflow-hidden shadow-2xl min-h-[220px] md:min-h-[400px]">
       <MediaPlayer
-        key={currentSrc}
         ref={playerRef}
         title={title}
         src={{ src: currentSrc, type: displayMimeType as any }}
@@ -295,9 +297,9 @@ export default function VideoPlayer({
         crossOrigin="anonymous"
         autoplay={false}
         playsInline
-        load="visible"
-        posterLoad="eager"
-        preload="metadata"
+        load="eager"
+        posterLoad="visible"
+        preload="auto"
         streamType="on-demand"
       >
         <MediaProvider>

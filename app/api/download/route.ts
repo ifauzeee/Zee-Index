@@ -14,12 +14,18 @@ export async function HEAD(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const { success } = await checkRateLimit(request, "download");
-  if (!success) {
-    return NextResponse.json(
-      { error: "Terlalu banyak permintaan unduhan. Silakan tunggu sebentar." },
-      { status: 429 },
-    );
+  const range = request.headers.get("range");
+
+  if (!range) {
+    const { success } = await checkRateLimit(request, "download");
+    if (!success) {
+      return NextResponse.json(
+        {
+          error: "Terlalu banyak permintaan unduhan. Silakan tunggu sebentar.",
+        },
+        { status: 429 },
+      );
+    }
   }
 
   const session = await getServerSession(authOptions);
@@ -196,9 +202,35 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    const encodedFileName = encodeURIComponent(responseFileName).replace(
+      /['()]/g,
+      (char) => "%" + char.charCodeAt(0).toString(16).toUpperCase(),
+    );
+
+    const isDirectDownload = !range && !request.headers.get("Sec-Fetch-Dest");
+    const disposition = isDirectDownload ? "attachment" : "inline";
+
+    if (request.method === "HEAD") {
+      const headHeaders = new Headers();
+      headHeaders.set("Content-Type", responseMimeType);
+      headHeaders.set("Accept-Ranges", "bytes");
+      if (fileDetails.size) {
+        headHeaders.set("Content-Length", fileDetails.size);
+      }
+      headHeaders.set(
+        "Content-Disposition",
+        `${disposition}; filename="${encodedFileName}"; filename*=UTF-8''${encodedFileName}`,
+      );
+      headHeaders.set(
+        "Cache-Control",
+        "public, max-age=31536000, no-transform, immutable",
+      );
+      return new Response(null, { status: 200, headers: headHeaders });
+    }
+
     const googleResponse = await fetch(downloadUrl, {
       headers,
-      method: request.method,
+      method: "GET",
       cache: "no-store",
     });
 
@@ -217,15 +249,6 @@ export async function GET(request: NextRequest) {
 
     const responseHeaders = new Headers();
     responseHeaders.set("Content-Type", responseMimeType);
-
-    const encodedFileName = encodeURIComponent(responseFileName).replace(
-      /['()]/g,
-      (char) => "%" + char.charCodeAt(0).toString(16).toUpperCase(),
-    );
-
-    const isDirectDownload = !range && !request.headers.get("Sec-Fetch-Dest");
-    const disposition = isDirectDownload ? "attachment" : "inline";
-
     responseHeaders.set(
       "Content-Disposition",
       `${disposition}; filename="${encodedFileName}"; filename*=UTF-8''${encodedFileName}`,
@@ -260,13 +283,10 @@ export async function GET(request: NextRequest) {
       }).catch((e) => console.error("Gagal mencatat log aktivitas:", e));
     }
 
-    return new Response(
-      request.method === "HEAD" ? null : googleResponse.body,
-      {
-        status: googleResponse.status,
-        headers: responseHeaders,
-      },
-    );
+    return new Response(googleResponse.body, {
+      status: googleResponse.status,
+      headers: responseHeaders,
+    });
   } catch (error: any) {
     console.error("Download API Error:", error);
     return NextResponse.json(
