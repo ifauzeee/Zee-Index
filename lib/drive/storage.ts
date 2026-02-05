@@ -1,6 +1,6 @@
 import { fetchWithRetry } from "./client";
 import { getAccessToken } from "./auth";
-import { getAllDescendantFolders } from "./operations";
+import { getAllDescendantFolders } from "./fetchers";
 import { DriveFile } from "./types";
 import { unstable_cache } from "next/cache";
 

@@ -1,7 +1,7 @@
 import type { DriveFile } from "@/lib/drive";
 import { useAppStore } from "@/lib/store";
 import { formatBytes, getIcon, cn } from "@/lib/utils";
-import React, { useState, useMemo, memo, useEffect } from "react";
+import React, { useState, useMemo, memo, useEffect, useRef } from "react";
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
 import {
@@ -39,6 +39,7 @@ interface FileItemProps {
   uploadStatus?: "uploading" | "error" | "success";
   uploadError?: string;
   isNavigating?: boolean;
+  onPrefetchItem?: (file: DriveFile) => void;
 }
 
 function FileItem({
@@ -59,7 +60,28 @@ function FileItem({
   uploadProgress,
   uploadStatus,
   isNavigating,
+  onPrefetchItem,
 }: FileItemProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!onPrefetchItem || uploadStatus || !file.isFolder) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          onPrefetchItem(file);
+        }
+      },
+      { rootMargin: "200px" },
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [file, uploadStatus, onPrefetchItem]);
   const { view } = useAppStore();
   const Icon = getIcon(file.mimeType);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -161,6 +183,7 @@ function FileItem({
         "w-full max-w-full will-change-transform",
       )}
       onMouseEnter={onMouseEnter}
+      ref={containerRef}
     >
       <div
         className={cn(

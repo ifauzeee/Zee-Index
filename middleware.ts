@@ -118,29 +118,53 @@ export async function middleware(request: NextRequest) {
   );
 
   if (!isAuthenticated && !isPublicRoute(pathnameWithoutLocale)) {
-    console.log(`[Middleware] Auth failed for ${pathname} (Guest: ${isGuest})`);
-  }
-
-  if (!isAuthenticated) {
-    if (isPublicRoute(pathnameWithoutLocale)) {
-      return isApi ? NextResponse.next() : intlMiddleware(request);
-    }
     return handleAuthRedirect(request, pathname);
   }
 
-  if (isGuest && pathnameWithoutLocale.startsWith("/admin")) {
+  if (
+    isAuthenticated &&
+    isGuest &&
+    pathnameWithoutLocale.startsWith("/admin")
+  ) {
     return handleAuthRedirect(request, pathname, "GuestAccessDenied");
   }
 
   const is2FAPage = pathnameWithoutLocale === "/verify-2fa";
-  if (is2FARequired && !is2FAPage) {
+  if (isAuthenticated && is2FARequired && !is2FAPage) {
     const verifyUrl = new URL("/verify-2fa", request.url);
     verifyUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(verifyUrl);
   }
 
-  if (!is2FARequired && is2FAPage) {
-    return NextResponse.redirect(new URL("/", request.url));
+  let currentFolderId = "";
+  if (pathnameWithoutLocale.startsWith("/folder/")) {
+    currentFolderId = pathnameWithoutLocale.split("/")[2];
+  } else if (pathname.startsWith("/api/files")) {
+    currentFolderId = request.nextUrl.searchParams.get("folderId") || "";
+  }
+
+  if (currentFolderId) {
+    const folderToken = request.cookies.get(
+      `folder_token_${currentFolderId}`,
+    )?.value;
+    if (folderToken) {
+      try {
+        const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
+        const { payload } = await jwtVerify(folderToken, secret);
+
+        if (payload.folderId === currentFolderId) {
+          const response = isApi
+            ? NextResponse.next()
+            : intlMiddleware(request);
+          response.headers.set("x-folder-authorized", "true");
+          return response;
+        }
+      } catch {}
+    }
+  }
+
+  if (!isAuthenticated && !isPublicRoute(pathnameWithoutLocale)) {
+    return handleAuthRedirect(request, pathname);
   }
 
   return isApi ? NextResponse.next() : intlMiddleware(request);

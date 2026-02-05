@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Folder, MoreVertical, Loader2 } from "lucide-react";
@@ -31,6 +31,7 @@ interface FileCardProps {
   thumbnailSrc?: string;
   onMouseEnter?: () => void;
   isNavigating?: boolean;
+  onPrefetchItem?: (file: DriveFile) => void;
 }
 
 export default function FileCard({
@@ -44,7 +45,28 @@ export default function FileCard({
   thumbnailSrc,
   onMouseEnter,
   isNavigating,
+  onPrefetchItem,
 }: FileCardProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!onPrefetchItem || file.uploadStatus || !file.isFolder) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          onPrefetchItem(file);
+        }
+      },
+      { rootMargin: "200px" },
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [file, onPrefetchItem]);
   const t = useTranslations("FileCard");
   const isFolder = file.mimeType === "application/vnd.google-apps.folder";
   const IconComponent = getIcon(file.mimeType);
@@ -90,6 +112,7 @@ export default function FileCard({
       onClick={handleClick}
       onContextMenu={handleContextMenu}
       onMouseEnter={onMouseEnter}
+      ref={containerRef}
     >
       <div
         className="absolute top-3 left-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity data-[selected=true]:opacity-100"

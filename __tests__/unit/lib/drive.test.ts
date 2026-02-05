@@ -3,7 +3,7 @@ import {
   listSharedDrives,
   listFilesFromDrive,
   getAllDescendantFolders,
-} from "@/lib/drive/operations";
+} from "@/lib/drive";
 
 vi.mock("@/lib/kv", () => ({
   kv: {

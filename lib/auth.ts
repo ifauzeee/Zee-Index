@@ -102,6 +102,54 @@ export async function hasUserAccess(
   }
 }
 
+export async function hasUserAccessBatch(
+  email: string,
+  ids: string[],
+): Promise<Record<string, boolean>> {
+  if (!email || !ids.length) return {};
+
+  const results: Record<string, boolean> = {};
+  const idsToCheck: string[] = [];
+
+  for (const id of ids) {
+    const cleanId = id.trim();
+    const cacheKey = `auth:access:${cleanId}:${email}`;
+    const cached = memoryCache.get<boolean>(cacheKey);
+    if (cached !== null) {
+      results[cleanId] = cached;
+    } else {
+      idsToCheck.push(cleanId);
+    }
+  }
+
+  if (idsToCheck.length === 0) return results;
+
+  try {
+    const pipeline = kv.pipeline();
+    for (const id of idsToCheck) {
+      pipeline.sismember(`folder:access:${id}`, email);
+    }
+    const pipelineResults = await pipeline.exec();
+
+    idsToCheck.forEach((id, index) => {
+      const hasAccess = pipelineResults[index] === 1;
+      results[id] = hasAccess;
+      memoryCache.set(
+        `auth:access:${id}:${email}`,
+        hasAccess,
+        CACHE_TTL.USER_ACCESS,
+      );
+    });
+  } catch (e) {
+    console.error("[Auth] Batch access check failed:", e);
+    idsToCheck.forEach((id) => {
+      if (!(id in results)) results[id] = false;
+    });
+  }
+
+  return results;
+}
+
 export async function validateShareToken(
   request: NextRequest,
 ): Promise<boolean> {

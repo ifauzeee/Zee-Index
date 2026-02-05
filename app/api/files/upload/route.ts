@@ -1,18 +1,14 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getAccessToken } from "@/lib/drive";
-import { withAdminSession } from "@/lib/api-middleware";
+import { withEditorSession } from "@/lib/api-middleware";
 import { logActivity } from "@/lib/activityLogger";
 import { type Session } from "next-auth";
 import { invalidateFolderCache } from "@/lib/cache";
 
 export const maxDuration = 60;
 
-export const POST = withAdminSession(
-  async (
-    request: NextRequest,
-    context: Record<string, unknown>,
-    session: Session,
-  ) => {
+export const POST = withEditorSession(
+  async (request: NextRequest, context: { params?: any }, session: Session) => {
     const searchParams = request.nextUrl.searchParams;
     const uploadType = searchParams.get("type");
 

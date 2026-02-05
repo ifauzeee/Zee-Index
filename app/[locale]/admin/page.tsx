@@ -71,6 +71,11 @@ export default function AdminPage() {
     fetchAdminEmails,
     addAdminEmail,
     removeAdminEmail,
+    editorEmails,
+    isFetchingEditors,
+    fetchEditorEmails,
+    addEditorEmail,
+    removeEditorEmail,
   } = useAppStore();
   const { confirm } = useConfirm();
   const { status, data: session } = useSession();
@@ -79,6 +84,8 @@ export default function AdminPage() {
   const t = useTranslations("AdminPage");
 
   const [isSubmittingAdmin, setIsSubmittingAdmin] = useState(false);
+  const [newEditorEmail, setNewEditorEmail] = useState("");
+  const [isSubmittingEditor, setIsSubmittingEditor] = useState(false);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
@@ -90,6 +97,7 @@ export default function AdminPage() {
       fetchShareLinks();
       fetchFileRequests();
       fetchAdminEmails();
+      fetchEditorEmails();
 
       setIsLoadingStats(true);
       fetch("/api/admin/stats")
@@ -113,6 +121,7 @@ export default function AdminPage() {
     fetchShareLinks,
     fetchFileRequests,
     fetchAdminEmails,
+    fetchEditorEmails,
     addToast,
     t,
   ]);
@@ -172,6 +181,29 @@ export default function AdminPage() {
       })
     ) {
       await removeAdminEmail(email);
+    }
+  };
+
+  const handleAddEditor = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEditorEmail.trim()) return;
+    setIsSubmittingEditor(true);
+    await addEditorEmail(newEditorEmail);
+    setNewEditorEmail("");
+    setIsSubmittingEditor(false);
+  };
+
+  const handleRemoveEditor = async (email: string) => {
+    if (
+      await confirm(
+        t("removeEditorConfirm", { email }) || `Remove ${email} from Editors?`,
+        {
+          title: t("removeEditorTitle") || "Remove Editor",
+          variant: "destructive",
+        },
+      )
+    ) {
+      await removeEditorEmail(email);
     }
   };
 
@@ -656,6 +688,72 @@ export default function AdminPage() {
                         </button>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 sm:p-6 border-t">
+                <h2 className="text-lg font-semibold mb-4">Manage Editors</h2>
+                <form
+                  onSubmit={handleAddEditor}
+                  className="flex flex-col sm:flex-row gap-3 mb-6"
+                >
+                  <div className="relative flex-grow">
+                    <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <input
+                      type="email"
+                      value={newEditorEmail}
+                      onChange={(e) => setNewEditorEmail(e.target.value)}
+                      placeholder="Editor Email"
+                      required
+                      className="w-full pl-10 pr-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary focus:outline-none"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingEditor}
+                    className="w-full sm:w-auto px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isSubmittingEditor ? (
+                      <Loader2 className="animate-spin" size={18} />
+                    ) : (
+                      <UserPlus size={18} />
+                    )}
+                    <span>Add Editor</span>
+                  </button>
+                </form>
+
+                <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wider">
+                  Editor List
+                </h3>
+                {isFetchingEditors ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {editorEmails.length === 0 ? (
+                      <p className="text-sm text-center py-4 text-muted-foreground">
+                        No editors configured.
+                      </p>
+                    ) : (
+                      editorEmails.map((email) => (
+                        <div
+                          key={email}
+                          className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border hover:border-border/80 transition-colors"
+                        >
+                          <span className="text-sm font-medium truncate mr-2">
+                            {email}
+                          </span>
+                          <button
+                            onClick={() => handleRemoveEditor(email)}
+                            className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      ))
+                    )}
                   </div>
                 )}
               </div>

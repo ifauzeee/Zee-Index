@@ -108,6 +108,8 @@ export default function FileBrowser({
 
   const isGuest = user?.isGuest === true;
   const isAdmin = user?.role === "ADMIN" && !isGuest;
+  const isEditor = user?.role === "EDITOR" && !isGuest;
+  const canEdit = (isAdmin || isEditor) && !isGuest;
 
   const {
     uploads,
@@ -121,7 +123,7 @@ export default function FileBrowser({
     handleFileSelect,
   } = useUpload({
     currentFolderId,
-    isAdmin,
+    isAdmin: canEdit,
     triggerRefresh: useAppStore.getState().triggerRefresh,
   });
 
@@ -133,7 +135,7 @@ export default function FileBrowser({
     handleBreadcrumbDragOver,
     handleBreadcrumbDragLeave,
   } = useDragAndDrop({
-    isAdmin,
+    isAdmin: canEdit,
     isBulkMode,
     selectedFiles: useAppStore.getState().selectedFiles,
     currentFolderId,
@@ -267,6 +269,7 @@ export default function FileBrowser({
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || t("wrongCredentials"));
+      document.cookie = `folder_token_${authTarget.folderId}=${data.token}; path=/; max-age=3600; SameSite=Lax`;
       setFolderToken(authTarget.folderId, data.token);
       addToast({ message: t("accessGranted"), type: "success" });
 

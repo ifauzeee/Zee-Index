@@ -138,10 +138,17 @@ export const authOptions: AuthOptions = {
           adminEmails.some((e) => e.toLowerCase() === normalizedUserEmail) ||
           normalizedEnvAdmins.includes(normalizedUserEmail);
 
+        const isEditor = await kv.sismember(
+          "zee-index:editors",
+          normalizedUserEmail,
+        );
+
         if (user.role) {
-          token.role = user.role;
+          token.role = user.role as any;
         } else {
-          token.role = isAdmin ? "ADMIN" : "USER";
+          token.role = (
+            isAdmin ? "ADMIN" : isEditor ? "EDITOR" : "USER"
+          ) as any;
         }
 
         const is2FAEnabled = await kv.get(`2fa:enabled:${user.email}`);
@@ -161,7 +168,12 @@ export const authOptions: AuthOptions = {
           adminEmails.some((e) => e.toLowerCase() === normalizedProfileEmail) ||
           normalizedEnvAdmins.includes(normalizedProfileEmail);
 
-        token.role = isAdmin ? "ADMIN" : "USER";
+        const isEditor = await kv.sismember(
+          "zee-index:editors",
+          normalizedProfileEmail,
+        );
+
+        token.role = (isAdmin ? "ADMIN" : isEditor ? "EDITOR" : "USER") as any;
 
         const is2FAEnabled = await kv.get(`2fa:enabled:${profile.email}`);
         token.twoFactorRequired = !!is2FAEnabled;

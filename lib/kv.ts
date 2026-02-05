@@ -53,9 +53,27 @@ export interface KVClient {
   lrange<T>(key: string, start: number, stop: number): Promise<T[]>;
   llen(key: string): Promise<number>;
   flushall(): Promise<string>;
+  pipeline(): any;
 }
 
 class InMemoryKV implements KVClient {
+  pipeline() {
+    const results: any[] = [];
+    const commands: any[] = [];
+    return {
+      sismember: (key: string, member: unknown) => {
+        commands.push(async () => {
+          const res = await this.sismember(key, member);
+          results.push(res);
+        });
+        return this;
+      },
+      exec: async () => {
+        for (const cmd of commands) await cmd();
+        return results;
+      },
+    };
+  }
   private store = new Map<string, unknown>();
   private expirations = new Map<string, NodeJS.Timeout>();
   private hashStore = new Map<string, Map<string, unknown>>();

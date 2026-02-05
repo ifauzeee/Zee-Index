@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import sharp from "sharp";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const imageUrl = url.searchParams.get("url");
+  const width = parseInt(url.searchParams.get("w") || "0");
+  const height = parseInt(url.searchParams.get("h") || "0");
+  const quality = parseInt(url.searchParams.get("q") || "80");
 
   if (!imageUrl) {
     return new NextResponse("Missing url parameter", { status: 400 });
@@ -12,16 +16,19 @@ export async function GET(request: NextRequest) {
 
   try {
     const targetUrl = new URL(imageUrl);
-    if (
-      !targetUrl.hostname.endsWith("googleusercontent.com") &&
-      !targetUrl.hostname.endsWith("google.com")
-    ) {
+    const validHosts = [
+      "googleusercontent.com",
+      "google.com",
+      "lh3.googleusercontent.com",
+    ];
+
+    if (!validHosts.some((host) => targetUrl.hostname.endsWith(host))) {
       return new NextResponse("Invalid image host", { status: 400 });
     }
 
     const response = await fetch(imageUrl, {
       headers: {
-        "User-Agent": "Zee-Index-Proxy/1.0",
+        "User-Agent": "Zee-Index-Proxy/2.0",
       },
     });
 
@@ -31,16 +38,29 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const contentType = response.headers.get("Content-Type") || "image/jpeg";
+    const buffer = Buffer.from(await response.arrayBuffer());
+    let transformer = sharp(buffer);
+
+    if (width > 0 || height > 0) {
+      transformer = transformer.resize({
+        width: width > 0 ? width : undefined,
+        height: height > 0 ? height : undefined,
+        fit: "cover",
+      });
+    }
+
+    const processedBuffer = await transformer.webp({ quality }).toBuffer();
+
     const cacheControl = "public, max-age=31536000, immutable";
 
-    return new NextResponse(response.body, {
+    return new NextResponse(new Uint8Array(processedBuffer), {
       headers: {
-        "Content-Type": contentType,
+        "Content-Type": "image/webp",
         "Cache-Control": cacheControl,
       },
     });
-  } catch {
+  } catch (error) {
+    console.error("Image proxy error:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

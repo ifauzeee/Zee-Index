@@ -58,6 +58,9 @@ export default function Sidebar() {
   const [mounted, setMounted] = useState(false);
   const t = useTranslations("Sidebar");
 
+  const canEdit =
+    (user?.role === "ADMIN" || user?.role === "EDITOR") && !user?.isGuest;
+
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
 
   const [tree, setTree] = useState<FolderNode>({
@@ -77,6 +80,7 @@ export default function Sidebar() {
 
   const [dbDrives, setDbDrives] = useState<ManualDrive[]>([]);
   const [isDrivesExpanded, setIsDrivesExpanded] = useState(true);
+  const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
   const touchStartRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -237,14 +241,71 @@ export default function Sidebar() {
   ) => {
     const isActive = !isCurrentFolderShortcut && currentFolderId === node.id;
 
+    const handleDropMove = async (filesToMove: any[], newParentId: string) => {
+      try {
+        const response = await fetch("/api/files/bulk-move", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileIds: filesToMove.map((f) => f.id),
+            newParentId,
+          }),
+        });
+        const result = await response.json();
+        if (!response.ok)
+          throw new Error(result.error || "Gagal memindahkan item.");
+
+        useAppStore.getState().addToast({
+          message: result.message || "Item berhasil dipindahkan",
+          type: "success",
+        });
+        useAppStore.getState().triggerRefresh();
+      } catch (error: any) {
+        useAppStore
+          .getState()
+          .addToast({ message: error.message, type: "error" });
+      }
+    };
+
+    const handleDrop = (e: React.DragEvent, targetFolderId: string) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragOverFolderId(null);
+
+      let data;
+      try {
+        data = JSON.parse(e.dataTransfer.getData("application/json"));
+      } catch {
+        return;
+      }
+
+      if (data.type !== "files" || !data.files) return;
+      if (data.sourceFolderId === targetFolderId) return;
+
+      handleDropMove(data.files, targetFolderId);
+    };
+
     return (
       <div key={node.id} className="relative">
         <div
           className={cn(
-            "flex items-center gap-1.5 py-1.5 px-2 cursor-pointer hover:bg-accent/50 text-sm rounded-md transition-colors select-none relative group my-0.5",
+            "flex items-center gap-1.5 py-1.5 px-2 cursor-pointer hover:bg-accent/50 text-sm rounded-md transition-all select-none relative group my-0.5",
             isActive && "bg-accent text-accent-foreground font-medium",
+            dragOverFolderId === node.id &&
+              "bg-primary/20 scale-[1.02] ring-2 ring-primary/50",
           )}
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
+          onDragOver={(e) => {
+            if (!canEdit) return;
+            e.preventDefault();
+            e.stopPropagation();
+            setDragOverFolderId(node.id);
+          }}
+          onDragLeave={() => setDragOverFolderId(null)}
+          onDrop={(e) => {
+            if (!canEdit) return;
+            handleDrop(e, node.id);
+          }}
           onClick={() => {
             const url = node.id === rootFolderId ? "/" : `/folder/${node.id}`;
             setNavigatingId(node.id);

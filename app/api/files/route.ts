@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { listFilesFromDrive, DriveFile } from "@/lib/drive";
-import { isPrivateFolder, hasUserAccess } from "@/lib/auth";
+import { isPrivateFolder } from "@/lib/auth";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { jwtVerify } from "jose";
@@ -128,29 +128,31 @@ export async function GET(request: Request) {
     if (canSeeAll) {
       filteredFiles = driveResponse.files;
     } else {
-      const filteringPromises = (driveResponse.files as DriveFile[]).map(
-        async (file: DriveFile) => {
-          const isPriv = isPrivateFolder(file.id);
-          const isProt = !!(allProtectedFolders as any)[file.id];
-
-          if (!isPriv && !isProt) return file;
-
-          if (isPriv) {
-            if (userEmail) {
-              const hasAccess = await hasUserAccess(userEmail, file.id);
-              if (hasAccess) return file;
-            }
-            return isProt ? file : null;
-          }
-
-          return file;
-        },
+      const privateFoldersToCheck = driveResponse.files.filter((f) =>
+        isPrivateFolder(f.id),
       );
+      const accessMap =
+        userEmail && privateFoldersToCheck.length > 0
+          ? await import("@/lib/auth").then((m) =>
+              m.hasUserAccessBatch(
+                userEmail,
+                privateFoldersToCheck.map((f) => f.id),
+              ),
+            )
+          : {};
 
-      const results = await Promise.all(filteringPromises);
-      filteredFiles = results.filter(
-        (f: DriveFile | null): f is DriveFile => f !== null,
-      );
+      filteredFiles = driveResponse.files.filter((file) => {
+        const isPriv = isPrivateFolder(file.id);
+        const isProt = !!(allProtectedFolders as any)[file.id];
+
+        if (!isPriv) return true;
+
+        if (accessMap[file.id]) return true;
+
+        if (isProt) return true;
+
+        return false;
+      });
     }
 
     const processedFiles = filteredFiles.map((file) => {
@@ -169,6 +171,15 @@ export async function GET(request: Request) {
       files: processedFiles,
       nextPageToken: driveResponse.nextPageToken,
     };
+
+    import("@/lib/activityLogger").then((m) => {
+      m.logActivity("SHARE_LINK_ACCESSED" as any, {
+        itemName: "Folder View",
+        itemId: folderId,
+        userEmail: session?.user?.email || "Guest",
+        status: "success",
+      });
+    });
 
     return NextResponse.json(responseData);
   } catch (error: unknown) {
