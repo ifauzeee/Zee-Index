@@ -86,6 +86,7 @@ export default function FileBrowser({
     nextPageToken,
     currentFolderId,
     authModalInfo,
+    error,
   } = useFileFetching({
     initialFolderId,
     initialFolderPath,
@@ -479,6 +480,7 @@ export default function FileBrowser({
           readmeFile={readmeFile}
           sortedFiles={sortedFiles}
           activeFileId={activeFileId}
+          error={error}
           isAdmin={isAdmin}
           uploads={uploads}
           onItemClick={handleItemClick}

@@ -90,7 +90,11 @@ export async function GET(request: Request) {
       !isFolderProtected
     ) {
       return NextResponse.json(
-        { error: "Authentication required." },
+        {
+          error: "Authentication required.",
+          protected: true,
+          folderId: folderId,
+        },
         { status: 401 },
       );
     }

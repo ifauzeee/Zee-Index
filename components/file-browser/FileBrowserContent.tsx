@@ -6,6 +6,7 @@ import FileBrowserLoading from "@/components/file-browser/FileBrowserLoading";
 import FolderReadme from "@/components/file-browser/FolderReadme";
 import PinnedSection from "@/components/file-browser/PinnedSection";
 import AuthForm from "@/components/features/AuthForm";
+import { Lock } from "lucide-react";
 import type { DriveFile } from "@/lib/drive";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 
@@ -37,6 +38,7 @@ interface FileBrowserContentProps {
   nextPageToken: string | null;
   fetchNextPage: () => void;
   navigatingId: string | null;
+  error: any;
 }
 
 import { useTranslations } from "next-intl";
@@ -68,9 +70,11 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
     nextPageToken,
     fetchNextPage,
     navigatingId,
+    error,
   } = props;
 
   const t = useTranslations("FileBrowser");
+  const tList = useTranslations("FileList");
 
   const { focusedIndex } = useKeyboardNavigation({
     files: sortedFiles as Array<{ id: string; name: string; mimeType: string }>,
@@ -103,6 +107,26 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
           isLoading={isAuthLoading}
           onSubmit={onAuthSubmit}
         />
+      </div>
+    );
+  }
+
+  if (error && !isLocked) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground w-full gap-4">
+        <div className="p-4 bg-destructive/10 rounded-full text-destructive">
+          <Lock className="w-8 h-8" />
+        </div>
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-foreground">
+            {error.status === 401
+              ? t("lockedFolder")
+              : tList("errorTitle") || "Error"}
+          </h3>
+          <p className="text-sm max-w-md mt-1">
+            {error.message || "Gagal mengambil data file."}
+          </p>
+        </div>
       </div>
     );
   }

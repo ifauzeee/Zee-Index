@@ -180,7 +180,6 @@ export function useFileFetching({
       : undefined,
     getNextPageParam: (lastPage) => lastPage?.nextPageToken || undefined,
     retry: (failureCount, error: any) => {
-      // Immediate fail for protected folders to show Auth Form
       if (error instanceof ProtectedError || error?.isProtected) return false;
       if (error?.status === 401) return false;
       return failureCount < 2;
@@ -223,6 +222,15 @@ export function useFileFetching({
           )}`,
         );
       }
+
+      if (err.status === 401 && !err.isProtected) {
+        const currentUrl = new URL(window.location.href);
+        router.push(
+          `/login?callbackUrl=${encodeURIComponent(
+            currentUrl.pathname + currentUrl.search,
+          )}`,
+        );
+      }
     }
   }, [error, addToast, router]);
 
@@ -251,5 +259,6 @@ export function useFileFetching({
     refetchFiles: refetch,
     currentFolderId,
     authModalInfo,
+    error,
   };
 }
