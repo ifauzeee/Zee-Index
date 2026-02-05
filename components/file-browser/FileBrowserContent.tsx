@@ -111,7 +111,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
     );
   }
 
-  if (error && !isLocked) {
+  if (error && !isLocked && !error.isProtected) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-muted-foreground w-full gap-4">
         <div className="p-4 bg-destructive/10 rounded-full text-destructive">
@@ -124,7 +124,9 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
               : tList("errorTitle") || "Error"}
           </h3>
           <p className="text-sm max-w-md mt-1">
-            {error.message || "Gagal mengambil data file."}
+            {error.message ||
+              tList("errorMessage") ||
+              "Gagal mengambil data file."}
           </p>
         </div>
       </div>

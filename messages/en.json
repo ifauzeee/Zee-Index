@@ -304,7 +304,9 @@
   "FileList": {
     "emptyTitle": "This Folder is Empty",
     "emptyMessage": "Upload files or create a new folder to get started.",
-    "endOfList": "End of list"
+    "endOfList": "End of list",
+    "errorTitle": "Failed to Load Files",
+    "errorMessage": "An error occurred while fetching the file list. Please try again later."
   },
   "SearchResultsList": {
     "title": "Search Results for \"{searchTerm}\"",
