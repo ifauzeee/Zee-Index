@@ -227,7 +227,8 @@
   "SubtitleSelector": {
     "title": "Select Subtitle File",
     "loading": "Searching for subtitle files in folder...",
-    "noFiles": "No .vtt or .srt files found in this folder."
+    "noFiles": "No .vtt or .srt files found in this folder.",
+    "description": "Select a subtitle file available in this folder to be displayed on the video."
   },
   "FileItem": {
     "share": "Share",

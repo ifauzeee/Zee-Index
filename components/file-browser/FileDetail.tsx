@@ -117,7 +117,8 @@ export default function FileDetail({
 
   const handleAddSubtitle = (track: SubtitleTrack) => {
     setActiveSubtitleTracks((prev) => {
-      if (prev.find((t) => t.src === track.src)) return prev;
+      if (prev.find((t) => t.src === track.src || t.label === track.label))
+        return prev;
       return [...prev, track];
     });
   };

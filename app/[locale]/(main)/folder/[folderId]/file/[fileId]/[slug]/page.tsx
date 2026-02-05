@@ -131,7 +131,7 @@ export default async function FilePage(props: {
           file.name.substring(0, file.name.lastIndexOf(".")) || file.name;
         const supportedExtensions = [".vtt", ".srt"];
 
-        subtitleTracks = allFiles
+        const rawTracks = allFiles
           .filter((f) => {
             const fName = f.name.toLowerCase();
             const ext = f.name.substring(f.name.lastIndexOf("."));
@@ -154,6 +154,10 @@ export default async function FilePage(props: {
               default: lang === "en",
             };
           });
+
+        subtitleTracks = Array.from(
+          new Map(rawTracks.map((t) => [t.label, t])).values(),
+        );
       }
     }
   } catch (err) {

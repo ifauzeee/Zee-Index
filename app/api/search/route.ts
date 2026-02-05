@@ -1,6 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getAccessToken, DriveFile } from "@/lib/drive";
-import { isProtected } from "@/lib/auth";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { validateShareToken } from "@/lib/auth";

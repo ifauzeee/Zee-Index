@@ -227,7 +227,8 @@
   "SubtitleSelector": {
     "title": "Pilih File Subtitle",
     "loading": "Mencari file subtitle di folder...",
-    "noFiles": "Tidak ada file .vtt atau .srt yang ditemukan di folder ini."
+    "noFiles": "Tidak ada file .vtt atau .srt yang ditemukan di folder ini.",
+    "description": "Pilih salah satu file subtitle yang tersedia di folder ini untuk ditampilkan pada video."
   },
   "FileItem": {
     "share": "Bagikan",

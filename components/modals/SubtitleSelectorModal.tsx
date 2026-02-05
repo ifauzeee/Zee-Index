@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { type DriveFile } from "@/lib/drive";
 import { FileText, Loader2, Music, Check } from "lucide-react";
@@ -78,6 +79,7 @@ export default function SubtitleSelectorModal({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
 
         <div className="max-h-[60vh] overflow-y-auto px-1">

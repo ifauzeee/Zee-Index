@@ -1,7 +1,12 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
-import { MediaPlayer, MediaProvider, Track } from "@vidstack/react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
+import {
+  MediaPlayer,
+  MediaProvider,
+  Track,
+  useMediaState,
+} from "@vidstack/react";
 import type { MediaPlayerInstance, MediaErrorDetail } from "@vidstack/react";
 import {
   DefaultVideoLayout,
@@ -75,6 +80,7 @@ export default function VideoPlayer({
   const [isMobile, setIsMobile] = useState(false);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
   const [resumeTime, setResumeTime] = useState(0);
+  const controlsVisible = useMediaState("controlsVisible", playerRef);
 
   const tPlayer = useTranslations("VideoPlayer");
 
@@ -150,6 +156,7 @@ export default function VideoPlayer({
     setRetryCount(0);
     setHasResumed(false);
     setShowResumePrompt(false);
+    setProcessedTracks([]);
   }, [src]);
 
   const handleRetry = () => {
@@ -242,9 +249,21 @@ export default function VideoPlayer({
 
   const getAbsoluteSrc = () => getHasAbsoluteUrl(currentSrc);
 
+  const uniqueTracks = useMemo(() => {
+    const seenLabels = new Set<string>();
+
+    return processedTracks.filter((track: SubtitleTrack) => {
+      const labelKey = (track.label || "Subtitle").trim().toLowerCase();
+      if (seenLabels.has(labelKey)) return false;
+      seenLabels.add(labelKey);
+      return true;
+    });
+  }, [processedTracks]);
+
   return (
     <div className="relative w-full h-full bg-black flex items-center justify-center rounded-xl overflow-hidden shadow-2xl">
       <MediaPlayer
+        key={currentSrc}
         ref={playerRef}
         title={title}
         src={{ src: currentSrc, type: displayMimeType as any }}
@@ -268,7 +287,7 @@ export default function VideoPlayer({
         onTimeUpdate={handleTimeUpdate}
         logLevel="silent"
         className="w-full h-full ring-media-focus"
-        crossOrigin="use-credentials"
+        crossOrigin="anonymous"
         autoplay={true}
         playsInline
         load="eager"
@@ -281,9 +300,10 @@ export default function VideoPlayer({
             <div className="vds-poster w-full h-full absolute inset-0 object-cover" />
           )}
           {type === "video" &&
-            processedTracks.map((track, i) => (
+            uniqueTracks.map((track: SubtitleTrack) => (
               <Track
-                key={String(i)}
+                key={track.src}
+                id={track.src}
                 src={track.src}
                 kind={track.kind as any}
                 label={track.label}
@@ -306,7 +326,7 @@ export default function VideoPlayer({
           <div
             className={cn(
               "absolute top-4 right-4 flex flex-col items-end gap-3 z-20 transition-all duration-500",
-              isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+              controlsVisible ? "opacity-100" : "opacity-0 pointer-events-none",
             )}
           >
             <DropdownMenu>
