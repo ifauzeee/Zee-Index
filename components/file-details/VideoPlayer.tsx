@@ -303,6 +303,8 @@ export default function VideoPlayer({
         crossOrigin="anonymous"
         autoplay={false}
         playsInline
+        muted={true}
+        volume={0}
         load="eager"
         posterLoad="visible"
         preload="auto"
