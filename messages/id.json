@@ -738,5 +738,11 @@
     "taglinePlaceholder": "Default (Kosong)",
     "logoUrlPlaceholder": "https://example.com/logo.png",
     "faviconUrlPlaceholder": "https://example.com/favicon.ico"
+  },
+  "VideoPlayer": {
+    "resumeTitle": "Lanjutkan Menonton?",
+    "resumeMessage": "Anda menonton sampai {time} terakhir kali.",
+    "resumeButton": "Lanjutkan",
+    "startOver": "Ulang dari Awal"
   }
 }

@@ -738,5 +738,11 @@
     "taglinePlaceholder": "Default (Empty)",
     "logoUrlPlaceholder": "https://example.com/logo.png",
     "faviconUrlPlaceholder": "https://example.com/favicon.ico"
+  },
+  "VideoPlayer": {
+    "resumeTitle": "Resume Playback?",
+    "resumeMessage": "You watched up to {time} last time.",
+    "resumeButton": "Resume",
+    "startOver": "Start Over"
   }
 }

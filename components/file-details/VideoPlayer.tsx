@@ -19,6 +19,7 @@ import {
 import { formatDuration, cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import { srtToVtt } from "@/lib/subtitleUtils";
+import { useTranslations } from "next-intl";
 
 import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
@@ -72,6 +73,10 @@ export default function VideoPlayer({
   const [hasResumed, setHasResumed] = useState(false);
   const [processedTracks, setProcessedTracks] = useState<SubtitleTrack[]>([]);
   const [isMobile, setIsMobile] = useState(false);
+  const [showResumePrompt, setShowResumePrompt] = useState(false);
+  const [resumeTime, setResumeTime] = useState(0);
+
+  const tPlayer = useTranslations("VideoPlayer");
 
   useEffect(() => {
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
@@ -144,6 +149,7 @@ export default function VideoPlayer({
     setLastTime(0);
     setRetryCount(0);
     setHasResumed(false);
+    setShowResumePrompt(false);
   }, [src]);
 
   const handleRetry = () => {
@@ -189,25 +195,39 @@ export default function VideoPlayer({
     } else if (
       fileId &&
       videoProgress[fileId] &&
-      videoProgress[fileId] > 5 &&
-      playerRef.current
+      videoProgress[fileId] > 10 &&
+      playerRef.current &&
+      !hasResumed
     ) {
       const savedTime = videoProgress[fileId];
       const duration = playerRef.current.duration;
 
       if (duration > 0 && savedTime < duration * 0.95) {
-        playerRef.current.currentTime = savedTime;
-        setHasResumed(true);
-        addToast({
-          message: `Resuming playback from ${formatDuration(savedTime)}`,
-          type: "info",
-        });
+        setResumeTime(savedTime);
+        setShowResumePrompt(true);
       }
     }
   };
 
+  const performResume = () => {
+    if (playerRef.current && resumeTime > 0) {
+      playerRef.current.currentTime = resumeTime;
+      setHasResumed(true);
+      setShowResumePrompt(false);
+      playerRef.current.play().catch(() => {});
+    }
+  };
+
+  const skipResume = () => {
+    setShowResumePrompt(false);
+    setHasResumed(true);
+    if (playerRef.current) {
+      playerRef.current.play().catch(() => {});
+    }
+  };
+
   const handleTimeUpdate = (detail: any) => {
-    if (fileId && detail.currentTime > 5) {
+    if (fileId && detail.currentTime > 5 && !showResumePrompt) {
       if (Math.floor(detail.currentTime) % 10 === 0) {
         setVideoProgress(fileId, detail.currentTime);
       }
@@ -426,6 +446,45 @@ export default function VideoPlayer({
               >
                 <Download size={16} /> Unduh File
               </a>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showResumePrompt && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="absolute inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-[2px]"
+          >
+            <div className="bg-zinc-900/90 border border-white/10 p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center">
+              <div className="mx-auto w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mb-4 text-primary">
+                <History size={24} />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">
+                {tPlayer("resumeTitle")}
+              </h3>
+              <p className="text-sm text-zinc-400 mb-6">
+                {tPlayer("resumeMessage", {
+                  time: formatDuration(resumeTime),
+                })}
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={skipResume}
+                  className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-sm font-medium transition-colors"
+                >
+                  {tPlayer("startOver")}
+                </button>
+                <button
+                  onClick={performResume}
+                  className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-medium transition-colors"
+                >
+                  {tPlayer("resumeButton")}
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
