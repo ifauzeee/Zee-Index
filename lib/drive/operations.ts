@@ -198,10 +198,12 @@ export async function listFilesFromDrive(
     nextPageToken: data.nextPageToken || null,
   };
 
-  if (useCache) {
-    memoryCache.set(memoryCacheKey, result, CACHE_TTL.FOLDER_CONTENT);
-    kv.set(cacheKey, result, { ex: 3600 }).catch(console.error);
-  }
+  const ttl = processedFiles.length === 0 ? 5 : 3600;
+  const memoryTtl =
+    processedFiles.length === 0 ? 5000 : CACHE_TTL.FOLDER_CONTENT;
+
+  memoryCache.set(memoryCacheKey, result, memoryTtl);
+  kv.set(cacheKey, result, { ex: ttl }).catch(console.error);
 
   return result;
 }

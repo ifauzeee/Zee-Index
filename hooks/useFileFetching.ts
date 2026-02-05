@@ -108,7 +108,7 @@ export function useFileFetching({
     queryKey: ["folderPath", currentFolderId, shareToken, refreshKey, locale],
     queryFn: () => fetchFolderPathApi(currentFolderId, shareToken, locale),
     enabled: !!currentFolderId && currentFolderId !== rootFolderId,
-    initialData: initialFolderPath,
+    initialData: refreshKey === 0 ? initialFolderPath : undefined,
     retry: false,
     refetchOnWindowFocus: true,
     staleTime: 1000 * 30,
@@ -179,12 +179,15 @@ export function useFileFetching({
         refresh: refreshKey > 0,
       }),
     initialPageParam: null as string | null,
-    initialData: initialFiles
-      ? {
-          pages: [{ files: initialFiles, nextPageToken: initialNextPageToken }],
-          pageParams: [null],
-        }
-      : undefined,
+    initialData:
+      refreshKey === 0 && initialFiles
+        ? {
+            pages: [
+              { files: initialFiles, nextPageToken: initialNextPageToken },
+            ],
+            pageParams: [null],
+          }
+        : undefined,
     getNextPageParam: (lastPage) => lastPage?.nextPageToken || undefined,
     retry: (failureCount, error: any) => {
       if (error instanceof ProtectedError || error?.isProtected) return false;

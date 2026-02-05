@@ -201,6 +201,10 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isScrolled]);
 
+  const handleRefresh = () => {
+    triggerRefresh();
+  };
+
   const menuItems: MenuItem[] = [
     {
       id: "theme",
@@ -210,7 +214,7 @@ export default function Header() {
     },
     {
       id: "refresh",
-      onClick: triggerRefresh,
+      onClick: handleRefresh,
       icon: RefreshCw,
       label: t("refreshPage"),
     },
