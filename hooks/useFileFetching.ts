@@ -185,10 +185,11 @@ export function useFileFetching({
       if (error?.status === 401) return false;
       return failureCount < 2;
     },
-    refetchInterval: (query) => (query.state.error ? false : 30000), // Increased to 30s to avoid spam
-    refetchOnWindowFocus: true, // Enable window focus refetch
-    staleTime: 1000 * 5, // Reduced to 5s for faster updates
-    gcTime: 1000 * 60 * 10,
+    refetchInterval: (query) => (query.state.error ? false : 30000),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0,
+    gcTime: 1000 * 60 * 5,
     enabled: !!currentFolderId && currentFolderId !== "undefined",
   });
 
