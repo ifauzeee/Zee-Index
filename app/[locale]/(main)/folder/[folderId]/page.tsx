@@ -26,26 +26,26 @@ export default async function FolderPage(props: {
       import("@/lib/auth").then((m) => m.isPrivateFolder),
     ]);
 
-  let initialData: { files: any[]; nextPageToken: string | null } = {
-    files: [],
-    nextPageToken: null,
-  };
-  if (!protectedStatus) {
+  let initialFiles: any[] | undefined = undefined;
+  let initialNextPageToken: string | null = null;
+
+  const isLocked = protectedStatus || isPrivateFolder(cleanFolderId);
+
+  if (!isLocked) {
     try {
       const data = await listFilesFromDrive(cleanFolderId, null, 50, true);
-      initialData = {
-        files: data.files.map((f) => {
-          const isProt = !!(allProtectedFolders as any)[f.id];
-          const isPriv = isPrivateFolder(f.id);
-          return {
-            ...f,
-            isProtected: isProt || isPriv,
-          };
-        }),
-        nextPageToken: data.nextPageToken,
-      };
+      initialFiles = data.files.map((f) => {
+        const isProt = !!(allProtectedFolders as any)[f.id];
+        const isPriv = isPrivateFolder(f.id);
+        return {
+          ...f,
+          isProtected: isProt || isPriv,
+        };
+      });
+      initialNextPageToken = data.nextPageToken;
     } catch (e) {
       console.error("ISR Fetch error:", e);
+      initialFiles = [];
     }
   }
 
@@ -53,8 +53,8 @@ export default async function FolderPage(props: {
     <FileBrowser
       initialFolderId={cleanFolderId}
       initialFolderPath={folderPath}
-      initialFiles={initialData.files}
-      initialNextPageToken={initialData.nextPageToken}
+      initialFiles={initialFiles}
+      initialNextPageToken={initialNextPageToken}
     />
   );
 }
