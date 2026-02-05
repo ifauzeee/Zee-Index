@@ -19,10 +19,13 @@ export async function invalidateFolderCache(folderId: string) {
     const memoryPrefixes = [
       `drive:folder:${folderId}:`,
       `folder-path:${folderId}:`,
+      `auth:protected:${folderId}`,
+      `auth:access:${folderId}:`,
     ];
     for (const prefix of memoryPrefixes) {
       memoryCache.deleteByPrefix(prefix);
     }
+    memoryCache.delete(`auth:protected:${folderId}`);
 
     console.log(`[Cache] Full invalidation for folder ${folderId}`);
   } catch (error) {

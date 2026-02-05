@@ -303,11 +303,9 @@ export default function VideoPlayer({
         crossOrigin="anonymous"
         autoplay={false}
         playsInline
-        muted={true}
-        volume={0}
-        load="eager"
+        load={isMobile ? "play" : "eager"}
         posterLoad="visible"
-        preload="auto"
+        preload={isMobile ? "metadata" : "auto"}
         streamType="on-demand"
       >
         <MediaProvider>

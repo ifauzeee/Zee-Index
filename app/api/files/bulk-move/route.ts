@@ -51,6 +51,9 @@ export const POST = withEditorSession(
       if (failedMoves.length < fileIds.length) {
         await invalidateFolderCache(currentParentId);
         await invalidateFolderCache(newParentId);
+        for (const fileId of fileIds) {
+          await invalidateFolderCache(fileId);
+        }
       }
 
       await logActivity("MOVE", {

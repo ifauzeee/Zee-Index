@@ -52,6 +52,7 @@ export const POST = withEditorSession(
 
       await invalidateFolderCache(currentParentId);
       await invalidateFolderCache(newParentId);
+      await invalidateFolderCache(fileId);
 
       await logActivity("MOVE", {
         itemName: data.name || fileId,
