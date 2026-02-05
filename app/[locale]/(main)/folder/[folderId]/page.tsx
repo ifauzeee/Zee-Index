@@ -14,10 +14,17 @@ export default async function FolderPage(props: {
     .split("?")[0]
     .trim();
 
-  const [folderPath, protectedStatus] = await Promise.all([
-    getFolderPath(cleanFolderId, locale),
-    isProtected(cleanFolderId),
-  ]);
+  const [folderPath, protectedStatus, allProtectedFolders, isPrivateFolder] =
+    await Promise.all([
+      getFolderPath(cleanFolderId, locale),
+      isProtected(cleanFolderId),
+      import("@/lib/kv").then((m) =>
+        m.kv
+          .hgetall<Record<string, unknown>>("zee-index:protected-folders")
+          .then((res) => res || {}),
+      ),
+      import("@/lib/auth").then((m) => m.isPrivateFolder),
+    ]);
 
   let initialData: { files: any[]; nextPageToken: string | null } = {
     files: [],
@@ -27,7 +34,14 @@ export default async function FolderPage(props: {
     try {
       const data = await listFilesFromDrive(cleanFolderId, null, 50, true);
       initialData = {
-        files: data.files.map((f) => ({ ...f, isProtected: false })),
+        files: data.files.map((f) => {
+          const isProt = !!(allProtectedFolders as any)[f.id];
+          const isPriv = isPrivateFolder(f.id);
+          return {
+            ...f,
+            isProtected: isProt || isPriv,
+          };
+        }),
         nextPageToken: data.nextPageToken,
       };
     } catch (e) {

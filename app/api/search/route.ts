@@ -159,23 +159,28 @@ export async function GET(request: NextRequest) {
       } catch {}
     }
 
-    const processedFilesPromise = (data.files || []).map(
-      async (file: DriveFile) => {
-        const isFolder = file.mimeType === "application/vnd.google-apps.folder";
-        const protectedFolder = isFolder ? await isProtected(file.id) : false;
+    const [allProtectedFolders, isPrivFolder] = await Promise.all([
+      kv
+        .hgetall<Record<string, unknown>>("zee-index:protected-folders")
+        .then((res) => res || {}),
+      import("@/lib/auth").then((m) => m.isPrivateFolder),
+    ]);
 
-        return {
-          ...file,
-          isFolder,
-          isProtected: protectedFolder,
-        };
-      },
-    );
+    const processedFiles = (data.files || []).map((file: DriveFile) => {
+      const isFolder = file.mimeType === "application/vnd.google-apps.folder";
+      const fileId = file.id as string;
+      const isProt = !!(allProtectedFolders as any)[fileId];
+      const isPriv = isPrivFolder(fileId);
 
-    const processedFiles = await Promise.all(processedFilesPromise);
+      return {
+        ...file,
+        isFolder,
+        isProtected: isProt || isPriv,
+      };
+    });
 
     const filteredFiles = await Promise.all(
-      processedFiles.map(async (file) => {
+      processedFiles.map(async (file: any) => {
         if (isAdmin) return file;
         const restricted = await isAccessRestricted(
           file.id,

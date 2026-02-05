@@ -27,16 +27,28 @@ export async function GET() {
       return detail;
     });
 
-    const results = await Promise.all(detailPromises);
+    const [results, allProtectedFolders, isPrivFolder] = await Promise.all([
+      Promise.all(detailPromises),
+      kv
+        .hgetall<Record<string, unknown>>("zee-index:protected-folders")
+        .then((res) => res || {}),
+      import("@/lib/auth").then((m) => m.isPrivateFolder),
+    ]);
 
     const allFiles: DriveFile[] = results.filter(
       (file): file is DriveFile => file !== null && !file.trashed,
     );
 
-    const validFiles = allFiles.map((file) => ({
-      ...file,
-      isFolder: file.mimeType === "application/vnd.google-apps.folder",
-    }));
+    const validFiles = allFiles.map((file) => {
+      const fileId = file.id as string;
+      const isProt = !!(allProtectedFolders as any)[fileId];
+      const isPriv = isPrivFolder(fileId);
+      return {
+        ...file,
+        isFolder: file.mimeType === "application/vnd.google-apps.folder",
+        isProtected: isProt || isPriv,
+      };
+    });
 
     return NextResponse.json(validFiles);
   } catch (error: unknown) {
