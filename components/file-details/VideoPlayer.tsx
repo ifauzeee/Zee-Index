@@ -459,14 +459,14 @@ export default function VideoPlayer({
             exit={{ opacity: 0, scale: 0.9 }}
             className="absolute inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-[2px]"
           >
-            <div className="bg-zinc-900/90 border border-white/10 p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center">
+            <div className="bg-background border p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center">
               <div className="mx-auto w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mb-4 text-primary">
                 <History size={24} />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">
+              <h3 className="text-xl font-bold text-foreground mb-1">
                 {tPlayer("resumeTitle")}
               </h3>
-              <p className="text-sm text-zinc-400 mb-6">
+              <p className="text-sm text-muted-foreground mb-6">
                 {tPlayer("resumeMessage", {
                   time: formatDuration(resumeTime),
                 })}
@@ -474,13 +474,13 @@ export default function VideoPlayer({
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={skipResume}
-                  className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-sm font-medium transition-colors"
+                  className="px-4 py-2.5 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-xl text-sm font-medium transition-colors"
                 >
                   {tPlayer("startOver")}
                 </button>
                 <button
                   onClick={performResume}
-                  className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-medium transition-colors"
+                  className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-sm font-medium transition-colors"
                 >
                   {tPlayer("resumeButton")}
                 </button>
