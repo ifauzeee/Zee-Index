@@ -498,16 +498,18 @@ export default function FileDetail({
               )
             ) : fileType === "video" ? (
               <div className="w-full h-full bg-black rounded-xl overflow-hidden flex items-center justify-center shadow-2xl ring-1 ring-white/10">
-                <VideoPlayer
-                  src={directLink}
-                  title={file.name}
-                  type="video"
-                  poster={file.thumbnailLink}
-                  mimeType={file.mimeType}
-                  webViewLink={file.webViewLink}
-                  subtitleTracks={authenticatedSubtitleTracks}
-                  onEnded={() => nextFileUrl && router.push(nextFileUrl)}
-                />
+                {!internalPreviewOpen && (
+                  <VideoPlayer
+                    src={directLink}
+                    title={file.name}
+                    type="video"
+                    poster={file.thumbnailLink}
+                    mimeType={file.mimeType}
+                    webViewLink={file.webViewLink}
+                    subtitleTracks={authenticatedSubtitleTracks}
+                    onEnded={() => nextFileUrl && router.push(nextFileUrl)}
+                  />
+                )}
               </div>
             ) : fileType === "image" ? (
               <div

@@ -91,6 +91,12 @@ export default function VideoPlayer({
     if (isAudioPlaying) {
       toggleAudioPlay();
     }
+
+    return () => {
+      if (playerRef.current) {
+        playerRef.current.pause();
+      }
+    };
   }, []);
 
   useEffect(() => {
