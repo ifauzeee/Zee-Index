@@ -149,7 +149,7 @@
     "createNewFolder": "Buat Folder Baru di Drive",
     "folderNamePlaceholder": "Nama Folder...",
     "create": "Buat",
-    "successMessage": "Folder '{folderName}' berhasil dibuat.",
+    "successMessage": "Folder \"{folderName}\" berhasil dibuat.",
     "errorMessage": "Gagal membuat folder",
     "folderCreationFailed": "Gagal membuat struktur folder",
     "initFailed": "Gagal inisialisasi unggahan",

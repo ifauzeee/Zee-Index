@@ -149,7 +149,7 @@
     "createNewFolder": "Create New Folder in Drive",
     "folderNamePlaceholder": "Folder Name...",
     "create": "Create",
-    "successMessage": "Folder '{folderName}' created successfully.",
+    "successMessage": "Folder \"{folderName}\" created successfully.",
     "errorMessage": "Failed to create folder",
     "folderCreationFailed": "Failed to create folder structure",
     "initFailed": "Failed to initialize upload",

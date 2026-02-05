@@ -48,7 +48,7 @@ const AppFooter = () => {
     <footer className="text-center py-6 text-sm text-muted-foreground bg-background mb-16 lg:mb-0 w-full overflow-hidden">
       <div className="mb-2 flex items-center justify-center gap-2">
         <HardDrive size={14} />
-        <span>{t("dataUsage")}</span>
+        <span>{t("dataUsage")} </span>
         <span
           id="data-usage-value"
           className={`font-medium text-foreground ${dataUsage.status === "loading" ? "animate-pulse" : ""}`}
