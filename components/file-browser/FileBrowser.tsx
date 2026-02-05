@@ -348,6 +348,9 @@ export default function FileBrowser({
               );
             }
             const res = await fetch(fetchUrl.toString(), { headers });
+            if (res.status === 401) {
+              return null;
+            }
             if (!res.ok) {
               throw new Error("Prefetch failed");
             }
