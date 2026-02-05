@@ -426,7 +426,7 @@ export default function FileBrowser({
   };
 
   const isLockedImmediate = !!authModalInfo || authTarget.isLocked;
-  const shouldShowHeader = !isLockedImmediate && !isLoading;
+  const shouldShowHeader = !isLockedImmediate && (!isLoading || refreshKey > 0);
 
   return (
     <motion.div

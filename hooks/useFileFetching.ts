@@ -108,7 +108,7 @@ export function useFileFetching({
     queryKey: ["folderPath", currentFolderId, shareToken, refreshKey, locale],
     queryFn: () => fetchFolderPathApi(currentFolderId, shareToken, locale),
     enabled: !!currentFolderId && currentFolderId !== rootFolderId,
-    initialData: refreshKey === 0 ? initialFolderPath : undefined,
+    initialData: initialFolderPath,
     retry: false,
     refetchOnWindowFocus: true,
     staleTime: 1000 * 30,
