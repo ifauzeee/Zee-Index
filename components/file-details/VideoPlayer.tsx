@@ -20,6 +20,7 @@ import {
   FileWarning,
   Download,
   ExternalLink,
+  Loader2,
 } from "lucide-react";
 import { formatDuration, cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
@@ -81,6 +82,7 @@ export default function VideoPlayer({
   const [showResumePrompt, setShowResumePrompt] = useState(false);
   const [resumeTime, setResumeTime] = useState(0);
   const controlsVisible = useMediaState("controlsVisible", playerRef);
+  const buffering = useMediaState("waiting", playerRef);
 
   const tPlayer = useTranslations("VideoPlayer");
 
@@ -92,9 +94,10 @@ export default function VideoPlayer({
       toggleAudioPlay();
     }
 
+    const currentPlayer = playerRef.current;
     return () => {
-      if (playerRef.current) {
-        playerRef.current.pause();
+      if (currentPlayer) {
+        currentPlayer.pause();
       }
     };
   }, []);
@@ -298,15 +301,24 @@ export default function VideoPlayer({
         onError={handleError}
         onCanPlay={handleCanPlay}
         onTimeUpdate={handleTimeUpdate}
+        onWaiting={() => {
+          console.debug("[VideoPlayer] Buffering...");
+        }}
+        onPlaying={() => {
+          console.debug("[VideoPlayer] Playing");
+        }}
         logLevel="silent"
         className="w-full h-full ring-media-focus"
         crossOrigin="anonymous"
         autoplay={false}
         playsInline
-        load={isMobile ? "play" : "eager"}
+        load={isMobile ? "idle" : "eager"}
         posterLoad="visible"
-        preload={isMobile ? "metadata" : "auto"}
+        preload="auto"
         streamType="on-demand"
+        storage="local-storage"
+        keyDisabled={false}
+        fullscreenOrientation="landscape"
       >
         <MediaProvider>
           {type === "video" && poster && (
@@ -520,6 +532,21 @@ export default function VideoPlayer({
                   {tPlayer("resumeButton")}
                 </button>
               </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {buffering && !networkError && !formatError && !showResumePrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
+          >
+            <div className="bg-black/50 rounded-full p-4 backdrop-blur-sm">
+              <Loader2 size={40} className="text-white animate-spin" />
             </div>
           </motion.div>
         )}

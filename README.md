@@ -6,12 +6,12 @@
   <h1 align="center">⚡ Zee-Index</h1>
 
   <p align="center">
-    <strong>The Ultimate Self-Hosted Google Drive CMS, Explorer & Streaming Platform</strong>
+    <strong>Self-Hosted Google Drive CMS, Explorer & Streaming Platform</strong>
   </p>
 
   <p align="center">
     Transform your Google Drive into a professional portfolio website, media gallery, or file repository.<br>
-    Features <strong>Shared Drive</strong> management, <strong>Instant Navigation</strong>, enterprise security, and <strong>High-Performance Streaming</strong>.
+    Features <strong>Shared Drive</strong> management, <strong>Instant Navigation</strong>, and <strong>High-Performance Streaming</strong>.
   </p>
 
   <div align="center">
@@ -41,9 +41,9 @@
 ## 📚 Table of Contents
 
 - [🌟 Key Features](#-key-features)
-  - [Ultra-Fast & Responsive](#-ultra-fast--responsive)
-  - [Professional Media Streaming](#-professional-media-streaming)
-  - [Enterprise-Grade Security](#️-enterprise-grade-security)
+  - [Fast & Responsive](#-fast--responsive)
+  - [Media Streaming](#-media-streaming)
+  - [Security](#️-security)
   - [Multi-Drive Management](#️-multi-drive-management)
   - [Built-in Tools](#️-built-in-tools)
 - [🛠️ Tech Stack](#️-tech-stack)
@@ -84,9 +84,9 @@
 
 ## 🌟 Key Features
 
-Zee-Index transforms your Google Drive into a powerful, self-hosted file system and media server with enterprise-grade features.
+Zee-Index transforms your Google Drive into a powerful, self-hosted file system and media server.
 
-### ⚡ Ultra-Fast & Responsive
+### ⚡ Fast & Responsive
 
 | Feature                     | Description                                                                                                  |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -97,7 +97,7 @@ Zee-Index transforms your Google Drive into a powerful, self-hosted file system 
 | **Turbopack Bundler**       | Uses Next.js 16's Turbopack for blazing-fast development builds                                              |
 | **Redis Caching**           | Multi-layer caching with Redis/Vercel KV for optimized API responses                                         |
 
-### 🎬 Professional Media Streaming
+### 🎬 Media Streaming
 
 | Feature                     | Description                                                                                |
 | --------------------------- | ------------------------------------------------------------------------------------------ |
@@ -109,7 +109,7 @@ Zee-Index transforms your Google Drive into a powerful, self-hosted file system 
 | **PDF Viewer**              | Built-in PDF viewer with `react-pdf` integration                                           |
 | **Archive Preview**         | Preview contents of ZIP archives without downloading                                       |
 
-### 🛡️ Enterprise-Grade Security
+### 🛡️ Security
 
 | Feature                         | Description                                                     |
 | ------------------------------- | --------------------------------------------------------------- |
@@ -808,7 +808,7 @@ Zee-Index supports multiple languages using `next-intl`:
 
    ```typescript
    const intlMiddleware = createMiddleware({
-     locales: ["en", "id", "fr"], // Add new locale
+     locales: ["en", "id", "fr"],
      defaultLocale: "en",
      localePrefix: "always",
    });

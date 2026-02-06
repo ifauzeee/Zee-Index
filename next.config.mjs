@@ -128,6 +128,31 @@ const nextConfig = {
           },
         ],
       },
+      {
+        source: "/api/download",
+        headers: [
+          {
+            key: "Accept-Ranges",
+            value: "bytes",
+          },
+          {
+            key: "X-Accel-Buffering",
+            value: "no",
+          },
+          {
+            key: "Connection",
+            value: "keep-alive",
+          },
+          {
+            key: "Access-Control-Allow-Origin",
+            value: "*",
+          },
+          {
+            key: "Access-Control-Expose-Headers",
+            value: "Content-Range, Content-Length, Accept-Ranges",
+          },
+        ],
+      },
     ];
   },
 

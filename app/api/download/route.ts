@@ -153,7 +153,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    let downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`;
+    let responseMimeType = fileDetails.mimeType;
+    let responseFileName = fileDetails.name;
+
     const range = request.headers.get("range");
+    const isVideoOrAudio =
+      responseMimeType.startsWith("video/") ||
+      responseMimeType.startsWith("audio/");
+
     const headers = new Headers();
     headers.set("Authorization", `Bearer ${accessToken}`);
     headers.set("User-Agent", "Zee-Index-Streamer/1.0");
@@ -161,11 +169,13 @@ export async function GET(request: NextRequest) {
 
     if (range && !isGoogleDoc) {
       headers.set("Range", range);
+    } else if (isVideoOrAudio && !isGoogleDoc && fileDetails.size) {
+      const initialChunkSize = Math.min(
+        2 * 1024 * 1024,
+        parseInt(fileDetails.size),
+      );
+      headers.set("Range", `bytes=0-${initialChunkSize - 1}`);
     }
-
-    let downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`;
-    let responseMimeType = fileDetails.mimeType;
-    let responseFileName = fileDetails.name;
 
     if (isGoogleDoc) {
       const exportTypeMap: Record<string, { mime: string; ext: string }> = {
@@ -228,11 +238,15 @@ export async function GET(request: NextRequest) {
       return new Response(null, { status: 200, headers: headHeaders });
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
     const googleResponse = await fetch(downloadUrl, {
       headers,
       method: "GET",
       cache: "no-store",
-    });
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId));
 
     if (!googleResponse.ok) {
       const errorJson = await googleResponse.json().catch(() => ({}));
@@ -254,14 +268,28 @@ export async function GET(request: NextRequest) {
       `${disposition}; filename="${encodedFileName}"; filename*=UTF-8''${encodedFileName}`,
     );
 
-    responseHeaders.set(
-      "Cache-Control",
-      "public, max-age=31536000, no-transform, immutable",
-    );
+    if (isVideoOrAudio) {
+      responseHeaders.set(
+        "Cache-Control",
+        "public, max-age=604800, no-transform",
+      );
+    } else {
+      responseHeaders.set(
+        "Cache-Control",
+        "public, max-age=31536000, no-transform, immutable",
+      );
+    }
+
     responseHeaders.set("X-Accel-Buffering", "no");
     responseHeaders.set("X-Content-Type-Options", "nosniff");
     responseHeaders.set("Connection", "keep-alive");
     responseHeaders.set("Access-Control-Allow-Origin", "*");
+    responseHeaders.set(
+      "Access-Control-Expose-Headers",
+      "Content-Range, Content-Length, Accept-Ranges",
+    );
+
+    responseHeaders.set("Transfer-Encoding", "chunked");
 
     const contentRange = googleResponse.headers.get("Content-Range");
     if (contentRange) {
