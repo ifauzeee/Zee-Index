@@ -82,7 +82,7 @@ function FileItem({
 
     return () => observer.disconnect();
   }, [file, uploadStatus, onPrefetchItem]);
-  const { view } = useAppStore();
+  const { view, toggleSelection } = useAppStore();
   const Icon = getIcon(file.mimeType);
   const [isDragOver, setIsDragOver] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -475,7 +475,10 @@ function FileItem({
                   : "top-2 right-2",
                 "rounded border-primary text-primary focus:ring-primary accent-primary",
               )}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleSelection(file);
+              }}
             />
           )}
         </div>

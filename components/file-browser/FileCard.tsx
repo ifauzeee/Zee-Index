@@ -117,6 +117,11 @@ export default function FileCard({
       <div
         className="absolute top-3 left-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity data-[selected=true]:opacity-100"
         data-selected={isSelected}
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleSelection(file);
+          if (!isBulkMode) setBulkMode(true);
+        }}
       >
         <input
           type="checkbox"
