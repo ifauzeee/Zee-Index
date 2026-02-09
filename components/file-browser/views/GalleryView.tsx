@@ -68,11 +68,6 @@ export default function GalleryView({
             <div key={file.id} className="mb-4">
               <div
                 data-file-index={index}
-                onClick={(e) => {
-                  if (!(file as any).uploadStatus) {
-                    onItemClick(file, e);
-                  }
-                }}
                 className={
                   isFocused
                     ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg pb-2"
@@ -81,7 +76,7 @@ export default function GalleryView({
               >
                 <FileItem
                   file={file}
-                  onClick={() => {}}
+                  onClick={(e) => onItemClick(file, e)}
                   onContextMenu={(event) => onItemContextMenu(event, file)}
                   isSelected={selectedFiles.some((f) => f.id === file.id)}
                   isActive={!isBulkMode && activeFileId === file.id}

@@ -76,6 +76,9 @@ export default function FileCard({
   const isSelected = selectedFiles.some((f) => f.id === file.id);
 
   const handleClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("button") || target.closest("input")) return;
+
     if (isBulkMode || e.shiftKey) {
       e.preventDefault();
       e.stopPropagation();

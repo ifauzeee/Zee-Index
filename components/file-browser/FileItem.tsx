@@ -17,7 +17,7 @@ import { useTranslations, useFormatter } from "next-intl";
 
 interface FileItemProps {
   file: DriveFile & { isFavorite?: boolean };
-  onClick: () => void;
+  onClick: (e: React.MouseEvent) => void;
   onContextMenu: (
     event: { clientX: number; clientY: number },
     file: DriveFile,
@@ -205,7 +205,14 @@ function FileItem({
           isError && "ring-2 ring-destructive/50 bg-destructive/5",
         )}
         style={{ WebkitTapHighlightColor: "transparent" }}
-        onClick={() => !isUploading && onClick()}
+        onClick={(e) => {
+          if (isUploading) return;
+
+          const target = e.target as HTMLElement;
+          if (target.closest("button") || target.closest("input")) return;
+
+          onClick(e);
+        }}
         onMouseDown={preventSelection}
         onDoubleClick={(e) => {
           e.preventDefault();
@@ -414,6 +421,7 @@ function FileItem({
               {isAdmin && (
                 <button
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     onShare(e);
                   }}
@@ -426,6 +434,7 @@ function FileItem({
               {!file.isFolder && (
                 <button
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     onDownload(e);
                   }}
@@ -437,6 +446,7 @@ function FileItem({
               )}
               <button
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   onShowDetails(e);
                 }}
