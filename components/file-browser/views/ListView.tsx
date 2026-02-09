@@ -111,9 +111,11 @@ export default function ListView({
             >
               <div
                 data-file-index={virtualRow.index}
-                onClick={(e) =>
-                  !(file as any).uploadStatus && onItemClick(file, e)
-                }
+                onClick={(e) => {
+                  if (!(file as any).uploadStatus) {
+                    onItemClick(file, e);
+                  }
+                }}
                 className={
                   isFocused
                     ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg pb-2"
