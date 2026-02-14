@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import type { DriveFile } from "@/lib/drive";
 import { useAppStore } from "@/lib/store";
@@ -105,6 +105,12 @@ export default function FileBrowser({
       setCurrentFolderId(currentFolderId);
     }
   }, [currentFolderId, setCurrentFolderId]);
+
+  // Reset navigatingId when pathname changes (navigation completes)
+  const pathname = usePathname();
+  useEffect(() => {
+    setNavigatingId(null);
+  }, [pathname, setNavigatingId]);
 
   const isGuest = user?.isGuest === true;
   const isAdmin = user?.role === "ADMIN" && !isGuest;
