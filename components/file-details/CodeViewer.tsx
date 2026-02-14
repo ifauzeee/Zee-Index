@@ -1,7 +1,7 @@
 import React from "react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import Editor from "@monaco-editor/react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "next-themes";
 
 interface CodeViewerProps {
   content: string;
@@ -10,21 +10,28 @@ interface CodeViewerProps {
 }
 
 export function CodeViewer({ content, language, className }: CodeViewerProps) {
+  const { theme } = useTheme();
+
   return (
     <div
       className={cn(
-        "rounded-lg overflow-hidden border shadow-sm bg-[#1e1e1e]",
+        "rounded-lg overflow-hidden border shadow-sm h-[500px]",
         className,
       )}
     >
-      <SyntaxHighlighter
-        language={language}
-        style={vscDarkPlus}
-        customStyle={{ margin: 0, padding: "1.5rem", fontSize: "0.875rem" }}
-        showLineNumbers
-      >
-        {content}
-      </SyntaxHighlighter>
+      <Editor
+        height="100%"
+        defaultLanguage={language}
+        value={content}
+        theme={theme === "dark" ? "vs-dark" : "light"}
+        options={{
+          readOnly: true,
+          minimap: { enabled: true },
+          scrollBeyondLastLine: false,
+          fontSize: 14,
+          automaticLayout: true,
+        }}
+      />
     </div>
   );
 }
