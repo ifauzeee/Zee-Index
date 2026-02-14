@@ -217,7 +217,7 @@ export function BulkActionBar() {
                   size="sm"
                   variant="ghost"
                   disabled={isProcessing}
-                  className="hover:bg-background/20 hover:text-background h-8 px-2 text-xs"
+                  className="hover:bg-background/20 h-8 px-2 text-xs"
                   onClick={() => setIsMoveModalOpen(true)}
                 >
                   <FolderInput size={16} className="mr-2" />
@@ -227,7 +227,7 @@ export function BulkActionBar() {
                   size="sm"
                   variant="ghost"
                   disabled={isProcessing}
-                  className="hover:bg-background/20 hover:text-background h-8 px-2 text-xs"
+                  className="hover:bg-background/20 h-8 px-2 text-xs"
                   onClick={handleCopy}
                 >
                   <Copy size={16} className="mr-2" />
@@ -238,7 +238,7 @@ export function BulkActionBar() {
             <Button
               size="sm"
               variant="ghost"
-              className="hover:bg-background/20 hover:text-background h-8 px-2 text-xs"
+              className="hover:bg-background/20 h-8 px-2 text-xs"
               onClick={handleDownload}
             >
               <Download size={16} className="mr-2" />
@@ -248,7 +248,7 @@ export function BulkActionBar() {
               <Button
                 size="sm"
                 variant="ghost"
-                className="hover:bg-background/20 hover:text-background h-8 px-2 text-xs text-red-400 hover:text-red-300"
+                className="hover:bg-background/20 h-8 px-2 text-xs text-red-400 hover:text-red-300"
                 onClick={handleDelete}
               >
                 <Trash2 size={16} className="mr-2" />
