@@ -167,6 +167,61 @@ export async function middleware(request: NextRequest) {
     return handleAuthRedirect(request, pathname);
   }
 
+  if (pathname.startsWith("/findpath")) {
+    const fileId = request.nextUrl.searchParams.get("id");
+    if (!fileId) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+
+    try {
+      const { getAccessToken } = await import("@/lib/drive/auth");
+      const { fetchMetadata } = await import("@/lib/drive/fetchers");
+
+      const accessToken = await getAccessToken();
+      let file = await fetchMetadata(fileId, accessToken);
+
+      if (!file || file.trashed) {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+
+      if (
+        file.mimeType === "application/vnd.google-apps.shortcut" &&
+        file.shortcutDetails?.targetId
+      ) {
+        const targetToken = await getAccessToken();
+        const targetFile = await fetchMetadata(
+          file.shortcutDetails.targetId,
+          targetToken,
+        );
+        if (targetFile) file = targetFile;
+      }
+
+      let destinationPath = "";
+      if (file.mimeType === "application/vnd.google-apps.folder") {
+        destinationPath = `/folder/${file.id}`;
+      } else {
+        const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID || "root";
+        const parentId =
+          file.parents && file.parents.length > 0
+            ? file.parents[0]
+            : rootFolderId;
+        const slug = encodeURIComponent(
+          (file.name || "view").replace(/\s+/g, "-").toLowerCase(),
+        );
+        destinationPath = `/folder/${parentId}/file/${file.id}/${slug}`;
+      }
+
+      const destinationUrl = new URL(destinationPath, request.url);
+      if (request.nextUrl.searchParams.get("view") === "true") {
+        destinationUrl.searchParams.set("view", "true");
+      }
+      return NextResponse.redirect(destinationUrl);
+    } catch (error) {
+      console.error("Middleware findpath error:", error);
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  }
+
   return isApi ? NextResponse.next() : intlMiddleware(request);
 }
 

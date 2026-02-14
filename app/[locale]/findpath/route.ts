@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAccessToken, invalidateAccessToken } from "@/lib/drive";
 
-export const dynamic = "force-dynamic";
+export const runtime = "edge";
 
 async function fetchFileMetadata(
   fileId: string,

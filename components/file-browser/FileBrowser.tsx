@@ -106,7 +106,6 @@ export default function FileBrowser({
     }
   }, [currentFolderId, setCurrentFolderId]);
 
-  // Reset navigatingId when pathname changes (navigation completes)
   const pathname = usePathname();
   useEffect(() => {
     setNavigatingId(null);

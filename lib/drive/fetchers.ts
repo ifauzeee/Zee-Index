@@ -458,3 +458,24 @@ export async function listFileRevisions(
   const data = await response.json();
   return data.revisions || [];
 }
+
+export async function fetchMetadata(
+  fileId: string,
+  accessToken: string,
+): Promise<any> {
+  const cleanId = fileId.split("&")[0].split("?")[0].trim();
+  const response = await fetchWithRetry(
+    `https://www.googleapis.com/drive/v3/files/${cleanId}?fields=id,name,mimeType,parents,trashed,shortcutDetails&supportsAllDrives=true`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    if (response.status === 404) return null;
+    throw new Error("Failed to fetch metadata");
+  }
+
+  return response.json();
+}
