@@ -492,7 +492,7 @@ export default function Sidebar() {
             id="sidebar-nav-home"
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
-              currentFolderId === rootFolderId &&
+              (pathname === "/" || pathname.match(/^\/[a-zA-Z-]{2,5}$/)) &&
                 "bg-accent font-medium text-primary",
             )}
           >
@@ -510,7 +510,11 @@ export default function Sidebar() {
               if (window.innerWidth < 1024) setSidebarOpen(false);
             }}
             id="sidebar-nav-favorites"
-            className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
+              pathname.includes("/favorites") &&
+                "bg-accent font-medium text-primary",
+            )}
           >
             {navigatingId === "favorites" ? (
               <Loader2 size={16} className="animate-spin" />
@@ -526,7 +530,11 @@ export default function Sidebar() {
               if (window.innerWidth < 1024) setSidebarOpen(false);
             }}
             id="sidebar-nav-storage"
-            className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
+              pathname.includes("/storage") &&
+                "bg-accent font-medium text-primary",
+            )}
           >
             {navigatingId === "storage" ? (
               <Loader2 size={16} className="animate-spin" />
@@ -542,7 +550,11 @@ export default function Sidebar() {
                   router.push("/trash");
                   if (window.innerWidth < 1024) setSidebarOpen(false);
                 }}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
+                  pathname.includes("/trash") &&
+                    "bg-accent font-medium text-primary",
+                )}
               >
                 <Trash2 size={16} /> {t("trash")}
               </button>
@@ -551,7 +563,11 @@ export default function Sidebar() {
                   router.push("/admin");
                   if (window.innerWidth < 1024) setSidebarOpen(false);
                 }}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors"
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
+                  pathname.includes("/admin") &&
+                    "bg-accent font-medium text-primary",
+                )}
               >
                 <ShieldCheck size={16} /> {t("admin")}
               </button>
