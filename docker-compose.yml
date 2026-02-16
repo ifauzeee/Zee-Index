@@ -9,8 +9,8 @@ services:
         NEXT_PUBLIC_ROOT_FOLDER_NAME: ${NEXT_PUBLIC_ROOT_FOLDER_NAME}
         BUILDKIT_INLINE_CACHE: 1
     restart: always
-    expose:
-      - "3000"
+    ports:
+      - "3000:3000"
     env_file:
       - .env
     healthcheck:

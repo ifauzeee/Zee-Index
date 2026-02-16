@@ -21,7 +21,7 @@ import {
   Lock,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -46,6 +46,7 @@ interface ManualDrive {
 
 export default function Sidebar() {
   const router = useRouter();
+  const pathname = usePathname();
   const {
     isSidebarOpen,
     setSidebarOpen,
@@ -86,6 +87,10 @@ export default function Sidebar() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    setNavigatingId(null);
+  }, [pathname, setNavigatingId]);
 
   useEffect(() => {
     const fetchDbDrives = async () => {
