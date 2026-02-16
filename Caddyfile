@@ -1,0 +1,3 @@
+zee-index.duckdns.org {
+    reverse_proxy zee-index:3000
+}

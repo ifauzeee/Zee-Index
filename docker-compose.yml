@@ -9,8 +9,8 @@ services:
         NEXT_PUBLIC_ROOT_FOLDER_NAME: ${NEXT_PUBLIC_ROOT_FOLDER_NAME}
         BUILDKIT_INLINE_CACHE: 1
     restart: always
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     env_file:
       - .env
     healthcheck:
@@ -19,3 +19,33 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  duckdns:
+    image: lscr.io/linuxserver/duckdns:latest
+    container_name: duckdns
+    environment:
+      - SUBDOMAINS=${DUCKDNS_DOMAIN:-zee-index}
+      - TOKEN=${DUCKDNS_TOKEN}
+      - LOG_FILE=false
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:alpine
+    container_name: caddy
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - zee-index
+
+volumes:
+  caddy_data:
+  caddy_config:

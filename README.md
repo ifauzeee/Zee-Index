@@ -692,6 +692,31 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:3000/api/health || exit 1
 ```
 
+
+### Automatic HTTPS with DuckDNS & Caddy
+
+The attached `docker-compose.yml` includes built-in support for **DuckDNS** (Dynamic DNS) and **Caddy** (Reverse Proxy & Auto SSL).
+
+1. **Obtain DuckDNS Token**
+   - Go to [DuckDNS](https://www.duckdns.org/)
+   - Create a domain (e.g., `my-drive.duckdns.org`)
+   - Copy your **Token**
+
+2. **Configure Environment**
+   - Add these lines to your `.env` file:
+     ```bash
+     DUCKDNS_DOMAIN="my-drive"
+     DUCKDNS_TOKEN="your-duckdns-token"
+     ```
+   - Change `NEXTAUTH_URL` in `.env` to your new HTTPS URL:
+     ```bash
+     NEXTAUTH_URL="https://my-drive.duckdns.org"
+     ```
+
+3. **Deploy**
+   - Caddy will automatically provision an SSL certificate from Let's Encrypt.
+   - DuckDNS container will keep your home IP address updated.
+
 ---
 
 ## 🔐 Authentication & Authorization
