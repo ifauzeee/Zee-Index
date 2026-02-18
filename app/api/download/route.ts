@@ -8,6 +8,13 @@ import { logActivity } from "@/lib/activityLogger";
 import { trackBandwidth } from "@/lib/analyticsTracker";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { isAccessRestricted } from "@/lib/securityUtils";
+import {
+  MIME_TYPES,
+  EXPORT_TYPE_MAP,
+  REDIS_KEYS,
+  ERROR_MESSAGES,
+  GOOGLE_DRIVE_API_BASE_URL,
+} from "@/lib/constants";
 export const dynamic = "force-dynamic";
 
 export async function HEAD(request: NextRequest) {
@@ -22,7 +29,7 @@ export async function GET(request: NextRequest) {
     if (!success) {
       return NextResponse.json(
         {
-          error: "Terlalu banyak permintaan unduhan. Silakan tunggu sebentar.",
+          error: ERROR_MESSAGES.RATE_LIMIT_EXCEEDED,
         },
         { status: 429 },
       );
@@ -41,8 +48,10 @@ export async function GET(request: NextRequest) {
       if (shareSecretKey && shareSecretKey.length >= 32) {
         const secret = new TextEncoder().encode(shareSecretKey);
         const { payload } = await jwtVerify(shareToken, secret);
-        const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);
-        if (isBlocked) throw new Error("Tautan ini telah dibatalkan.");
+        const isBlocked = await kv.get(
+          `${REDIS_KEYS.SHARE_BLOCKED}${payload.jti}`,
+        );
+        if (isBlocked) throw new Error(ERROR_MESSAGES.SHARE_LINK_REVOKED);
 
         if (payload.loginRequired && !session) {
           throw new Error("Login required.");
@@ -50,7 +59,7 @@ export async function GET(request: NextRequest) {
       }
     } catch {
       return NextResponse.json(
-        { error: "Invalid share token or authentication required." },
+        { error: ERROR_MESSAGES.INVALID_SHARE_TOKEN },
         { status: 401 },
       );
     }
@@ -58,7 +67,7 @@ export async function GET(request: NextRequest) {
 
   if (!fileId) {
     return NextResponse.json(
-      { error: "Parameter fileId tidak ditemukan." },
+      { error: ERROR_MESSAGES.MISSING_FILE_ID },
       { status: 400 },
     );
   }
@@ -66,7 +75,7 @@ export async function GET(request: NextRequest) {
   const fileIdPattern = /^[a-zA-Z0-9_-]+$/;
   if (!fileIdPattern.test(fileId) || fileId.length > 100) {
     return NextResponse.json(
-      { error: "Format fileId tidak valid." },
+      { error: ERROR_MESSAGES.INVALID_FILE_ID },
       { status: 400 },
     );
   }
@@ -120,7 +129,7 @@ export async function GET(request: NextRequest) {
           `[Download] Access Denied for file ${fileId}. User: ${session?.user?.email}. Token: ${token ? "Provided" : "None"}`,
         );
         return NextResponse.json(
-          { error: "Access Denied: File is protected." },
+          { error: ERROR_MESSAGES.ACCESS_DENIED },
           { status: 403 },
         );
       }
@@ -144,7 +153,7 @@ export async function GET(request: NextRequest) {
 
     if (!fileDetails) {
       return NextResponse.json(
-        { error: "File tidak ditemukan di Google Drive." },
+        { error: ERROR_MESSAGES.FILE_NOT_FOUND },
         { status: 404 },
       );
     }
@@ -152,17 +161,16 @@ export async function GET(request: NextRequest) {
     const isGoogleDoc = fileDetails.mimeType.startsWith(
       "application/vnd.google-apps.",
     );
-    const isFolder =
-      fileDetails.mimeType === "application/vnd.google-apps.folder";
+    const isFolder = fileDetails.mimeType === MIME_TYPES.FOLDER;
 
     if (isFolder) {
       return NextResponse.json(
-        { error: "Tidak dapat mengunduh folder secara langsung." },
+        { error: ERROR_MESSAGES.FOLDER_DOWNLOAD_NOT_SUPPORTED },
         { status: 400 },
       );
     }
 
-    let downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`;
+    let downloadUrl = `${GOOGLE_DRIVE_API_BASE_URL}/files/${fileId}?alt=media&supportsAllDrives=true`;
     let responseMimeType = fileDetails.mimeType;
     let responseFileName = fileDetails.name;
 
@@ -187,34 +195,14 @@ export async function GET(request: NextRequest) {
     }
 
     if (isGoogleDoc) {
-      const exportTypeMap: Record<string, { mime: string; ext: string }> = {
-        "application/vnd.google-apps.document": {
-          mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          ext: ".docx",
-        },
-        "application/vnd.google-apps.spreadsheet": {
-          mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          ext: ".xlsx",
-        },
-        "application/vnd.google-apps.presentation": {
-          mime: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-          ext: ".pptx",
-        },
-        "application/vnd.google-apps.drawing": {
-          mime: "image/png",
-          ext: ".png",
-        },
-        "application/vnd.google-apps.script": {
-          mime: "application/vnd.google-apps.script+json",
-          ext: ".json",
-        },
-      };
-
-      const exportInfo = exportTypeMap[fileDetails.mimeType] || {
-        mime: "application/pdf",
-        ext: ".pdf",
-      };
-      downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=${encodeURIComponent(exportInfo.mime)}&supportsAllDrives=true`;
+      const exportInfo =
+        EXPORT_TYPE_MAP[
+        fileDetails.mimeType as keyof typeof EXPORT_TYPE_MAP
+        ] || {
+          mime: "application/pdf",
+          ext: ".pdf",
+        };
+      downloadUrl = `${GOOGLE_DRIVE_API_BASE_URL}/files/${fileId}/export?mimeType=${encodeURIComponent(exportInfo.mime)}&supportsAllDrives=true`;
       responseMimeType = exportInfo.mime;
       if (!responseFileName.endsWith(exportInfo.ext)) {
         responseFileName += exportInfo.ext;
@@ -332,10 +320,12 @@ export async function GET(request: NextRequest) {
       status: googleResponse.status,
       headers: responseHeaders,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Download API Error:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : ERROR_MESSAGES.INTERNAL_SERVER_ERROR;
     return NextResponse.json(
-      { error: error.message || "Internal Server Error." },
+      { error: errorMessage },
       { status: 500 },
     );
   }

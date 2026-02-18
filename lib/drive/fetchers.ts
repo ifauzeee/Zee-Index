@@ -8,10 +8,17 @@ import {
   DriveRevision,
   SharedDrive,
 } from "./types";
+import {
+  GOOGLE_DRIVE_API_BASE_URL,
+  REDIS_KEYS,
+  REDIS_TTL,
+  MEMORY_CACHE_KEYS,
+  MIME_TYPES,
+} from "@/lib/constants";
 
 export async function listSharedDrives(): Promise<SharedDrive[]> {
   const accessToken = await getAccessToken();
-  const url = "https://www.googleapis.com/drive/v3/drives?pageSize=100";
+  const url = `${GOOGLE_DRIVE_API_BASE_URL}/drives?pageSize=100`;
 
   const response = await fetchWithRetry(url, {
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -28,9 +35,9 @@ export async function listSharedDrives(): Promise<SharedDrive[]> {
 
 export async function listSharedWithMeFolders(): Promise<DriveFile[]> {
   const accessToken = await getAccessToken();
-  const url = "https://www.googleapis.com/drive/v3/files";
+  const url = `${GOOGLE_DRIVE_API_BASE_URL}/files`;
   const params = new URLSearchParams({
-    q: "sharedWithMe = true and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+    q: `sharedWithMe = true and mimeType = '${MIME_TYPES.FOLDER}' and trashed = false`,
     fields: "files(id, name, mimeType, owners)",
     pageSize: "100",
   });
@@ -52,7 +59,7 @@ export async function getAllDescendantFolders(
   accessToken: string,
   rootFolderId: string,
 ): Promise<string[]> {
-  const cacheKey = `zee-index:folder-tree-v2:${rootFolderId}`;
+  const cacheKey = `${REDIS_KEYS.FOLDER_TREE}${rootFolderId}`;
   try {
     const cachedTree: string[] | null = await kv.get(cacheKey);
     if (cachedTree) {
@@ -64,7 +71,6 @@ export async function getAllDescendantFolders(
 
   const allFolderIds = new Set<string>([rootFolderId]);
   const queue: [string, number][] = [[rootFolderId, 0]];
-  const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3/files";
   const MAX_DEPTH = 10;
 
   while (queue.length > 0) {
@@ -76,7 +82,7 @@ export async function getAllDescendantFolders(
     let pageToken: string | null = null;
     do {
       const params = new URLSearchParams({
-        q: `'${folderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+        q: `'${folderId}' in parents and mimeType='${MIME_TYPES.FOLDER}' and trashed=false`,
         fields: "nextPageToken, files(id)",
         pageSize: "1000",
         supportsAllDrives: "true",
@@ -86,7 +92,7 @@ export async function getAllDescendantFolders(
 
       try {
         const response = await fetchWithRetry(
-          `${GOOGLE_DRIVE_API_URL}?${params.toString()}`,
+          `${GOOGLE_DRIVE_API_BASE_URL}/files?${params.toString()}`,
           {
             headers: { Authorization: `Bearer ${accessToken}` },
             cache: "no-store",
@@ -117,7 +123,7 @@ export async function getAllDescendantFolders(
   }
   const folderArray = Array.from(allFolderIds);
   try {
-    await kv.set(cacheKey, folderArray, { ex: 3600 });
+    await kv.set(cacheKey, folderArray, { ex: REDIS_TTL.FOLDER_TREE });
   } catch (e) {
     console.warn("Failed to cache folder tree:", e);
   }
@@ -131,8 +137,8 @@ export async function listFilesFromDrive(
   pageSize: number = 50,
   useCache: boolean = true,
 ) {
-  const cacheKey = `zee-index:folder-content-v3:${folderId}:${pageToken || "first"}`;
-  const memoryCacheKey = `drive:folder:${folderId}:${pageToken || "first"}`;
+  const cacheKey = `${REDIS_KEYS.FOLDER_CONTENT}${folderId}:${pageToken || "first"}`;
+  const memoryCacheKey = `${MEMORY_CACHE_KEYS.FOLDER_CONTENT}${folderId}:${pageToken || "first"}`;
 
   if (useCache) {
     const memoryCached = memoryCache.get<{
@@ -172,7 +178,7 @@ export async function listFilesFromDrive(
   }
 
   const response = await fetchWithRetry(
-    `${GOOGLE_DRIVE_API_URL}?${params.toString()}`,
+    `${GOOGLE_DRIVE_API_BASE_URL}/files?${params.toString()}`,
     {
       headers: { Authorization: `Bearer ${accessToken}` },
       cache: "no-store",
@@ -190,7 +196,7 @@ export async function listFilesFromDrive(
 
   const processedFiles: DriveFile[] = (data.files || []).map((file) => ({
     ...file,
-    isFolder: file.mimeType === "application/vnd.google-apps.folder",
+    isFolder: file.mimeType === MIME_TYPES.FOLDER,
   }));
 
   const result = {
@@ -198,7 +204,10 @@ export async function listFilesFromDrive(
     nextPageToken: data.nextPageToken || null,
   };
 
-  const ttl = processedFiles.length === 0 ? 5 : 3600;
+  const ttl =
+    processedFiles.length === 0
+      ? REDIS_TTL.FOLDER_CONTENT_EMPTY
+      : REDIS_TTL.FOLDER_CONTENT;
   const memoryTtl =
     processedFiles.length === 0 ? 5000 : CACHE_TTL.FOLDER_CONTENT;
 
@@ -211,7 +220,7 @@ export async function listFilesFromDrive(
 export async function getFileDetailsFromDrive(
   fileId: string,
 ): Promise<DriveFile | null> {
-  const cacheKey = `gdrive:file-details-v2:${fileId}`;
+  const cacheKey = `${REDIS_KEYS.FILE_DETAILS}${fileId}`;
   try {
     const cachedDetails: DriveFile | null = await kv.get(cacheKey);
     if (cachedDetails) {
@@ -222,7 +231,7 @@ export async function getFileDetailsFromDrive(
   }
 
   const accessToken = await getAccessToken();
-  const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}`;
+  const driveUrl = `${GOOGLE_DRIVE_API_BASE_URL}/files/${fileId}`;
   const params = new URLSearchParams({
     fields:
       "id, name, mimeType, size, modifiedTime, createdTime, webViewLink, webContentLink, thumbnailLink, hasThumbnail, parents, owners(displayName, emailAddress), lastModifyingUser(displayName), md5Checksum, imageMediaMetadata(width, height), videoMediaMetadata(width, height, durationMillis), trashed",
@@ -241,11 +250,11 @@ export async function getFileDetailsFromDrive(
   const data = (await response.json()) as DriveFile;
   const fileDetails = {
     ...data,
-    isFolder: data.mimeType === "application/vnd.google-apps.folder",
+    isFolder: data.mimeType === MIME_TYPES.FOLDER,
   };
 
   try {
-    await kv.set(cacheKey, fileDetails, { ex: 600 });
+    await kv.set(cacheKey, fileDetails, { ex: REDIS_TTL.FILE_DETAILS });
   } catch (e) {
     console.error(`Gagal mengatur cache untuk file ${fileId}:`, e);
   }
@@ -257,7 +266,7 @@ export async function getFolderPath(
   folderId: string,
   locale: string = "en",
 ): Promise<{ id: string; name: string }[]> {
-  const cacheKey = `zee-index:folder-path-v7:${folderId}:${locale}`;
+  const cacheKey = `${REDIS_KEYS.FOLDER_PATH}${folderId}:${locale}`;
   try {
     const cachedPath: { id: string; name: string }[] | null =
       await kv.get(cacheKey);
@@ -276,7 +285,7 @@ export async function getFolderPath(
     process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME ||
     (locale === "id" ? "Beranda" : "Home");
 
-  const dbDrivesRaw = await kv.get("zee-index:manual-drives");
+  const dbDrivesRaw = await kv.get(REDIS_KEYS.MANUAL_DRIVES);
   const dbDrives: any[] = Array.isArray(dbDrivesRaw) ? dbDrivesRaw : [];
   const envDrives = (process.env.NEXT_PUBLIC_MANUAL_DRIVES || "")
     .split(",")
@@ -302,7 +311,7 @@ export async function getFolderPath(
     iterations++;
 
     if (shortcutMap.has(currentId)) {
-      const driveUrl = `https://www.googleapis.com/drive/v3/files/${currentId}?fields=id,name`;
+      const driveUrl = `${GOOGLE_DRIVE_API_BASE_URL}/files/${currentId}?fields=id,name`;
       try {
         const response = await fetchWithRetry(driveUrl, {
           headers: { Authorization: `Bearer ${accessToken}` },
@@ -328,7 +337,7 @@ export async function getFolderPath(
       break;
     }
 
-    const driveUrl = `https://www.googleapis.com/drive/v3/files/${currentId}`;
+    const driveUrl = `${GOOGLE_DRIVE_API_BASE_URL}/files/${currentId}`;
     const params = new URLSearchParams({
       fields: "id, name, parents",
       supportsAllDrives: "true",
@@ -364,7 +373,7 @@ export async function getFolderPath(
   }
 
   try {
-    await kv.set(cacheKey, path, { ex: 3600 });
+    await kv.set(cacheKey, path, { ex: REDIS_TTL.FOLDER_PATH });
   } catch (e) {
     console.error(e);
   }
@@ -380,7 +389,6 @@ export async function searchFilesInFolder(
   mimeQuery: string,
   dateQuery: string,
 ): Promise<DriveFile[]> {
-  const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3/files";
   const sanitizedSearchTerm = searchTerm.replace(/['\\]/g, "\\$&");
   let driveQuery = `${queryField} contains '${sanitizedSearchTerm}' and trashed=false`;
   driveQuery += ` and '${folderId}' in parents`;
@@ -397,7 +405,7 @@ export async function searchFilesInFolder(
   });
 
   const response = await fetchWithRetry(
-    `${GOOGLE_DRIVE_API_URL}?${params.toString()}`,
+    `${GOOGLE_DRIVE_API_BASE_URL}/files?${params.toString()}`,
     {
       headers: { Authorization: `Bearer ${accessToken}` },
       cache: "no-store",
@@ -414,7 +422,6 @@ export async function searchFilesInFolder(
 
 export async function listTrashedFiles() {
   const accessToken = await getAccessToken();
-  const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3/files";
   const params = new URLSearchParams({
     q: "trashed=true",
     fields:
@@ -426,7 +433,7 @@ export async function listTrashedFiles() {
   });
 
   const response = await fetchWithRetry(
-    `${GOOGLE_DRIVE_API_URL}?${params.toString()}`,
+    `${GOOGLE_DRIVE_API_BASE_URL}/files?${params.toString()}`,
     {
       headers: { Authorization: `Bearer ${accessToken}` },
       cache: "no-store",
@@ -439,7 +446,7 @@ export async function listTrashedFiles() {
     const driveFile = file as DriveFile;
     return {
       ...driveFile,
-      isFolder: driveFile.mimeType === "application/vnd.google-apps.folder",
+      isFolder: driveFile.mimeType === MIME_TYPES.FOLDER,
     };
   });
 }
@@ -449,7 +456,7 @@ export async function listFileRevisions(
 ): Promise<DriveRevision[]> {
   const accessToken = await getAccessToken();
   const response = await fetch(
-    `https://www.googleapis.com/drive/v3/files/${fileId}/revisions?fields=revisions(id,modifiedTime,keepForever,size,originalFilename,lastModifyingUser)`,
+    `${GOOGLE_DRIVE_API_BASE_URL}/files/${fileId}/revisions?fields=revisions(id,modifiedTime,keepForever,size,originalFilename,lastModifyingUser)`,
     {
       headers: { Authorization: `Bearer ${accessToken}` },
     },
@@ -465,7 +472,7 @@ export async function fetchMetadata(
 ): Promise<any> {
   const cleanId = fileId.split("&")[0].split("?")[0].trim();
   const response = await fetchWithRetry(
-    `https://www.googleapis.com/drive/v3/files/${cleanId}?fields=id,name,mimeType,parents,trashed,shortcutDetails&supportsAllDrives=true`,
+    `${GOOGLE_DRIVE_API_BASE_URL}/files/${cleanId}?fields=id,name,mimeType,parents,trashed,shortcutDetails&supportsAllDrives=true`,
     {
       headers: { Authorization: `Bearer ${accessToken}` },
       cache: "no-store",

@@ -1,15 +1,19 @@
 import { kv } from "@/lib/kv";
 import { getAppCredentials } from "@/lib/config";
-
-const ACCESS_TOKEN_KEY = "google:access-token";
+import {
+  REDIS_KEYS,
+  REDIS_TTL,
+  ERROR_MESSAGES,
+  GOOGLE_OAUTH_TOKEN_URL,
+} from "@/lib/constants";
 
 export async function invalidateAccessToken() {
-  await kv.del(ACCESS_TOKEN_KEY);
+  await kv.del(REDIS_KEYS.ACCESS_TOKEN);
 }
 
 export async function getAccessToken(): Promise<string> {
   try {
-    const cachedToken: string | null = await kv.get(ACCESS_TOKEN_KEY);
+    const cachedToken: string | null = await kv.get(REDIS_KEYS.ACCESS_TOKEN);
     if (cachedToken) {
       return cachedToken;
     }
@@ -19,12 +23,9 @@ export async function getAccessToken(): Promise<string> {
 
   const creds = await getAppCredentials();
   if (!creds) {
-    throw new Error(
-      "Aplikasi belum dikonfigurasi. Silakan jalankan Setup Wizard.",
-    );
+    throw new Error(ERROR_MESSAGES.APP_NOT_CONFIGURED);
   }
 
-  const url = "https://oauth2.googleapis.com/token";
   const bodyParams = new URLSearchParams({
     client_id: creds.clientId,
     client_secret: creds.clientSecret,
@@ -32,7 +33,7 @@ export async function getAccessToken(): Promise<string> {
     grant_type: "refresh_token",
   });
 
-  const response = await fetch(url, {
+  const response = await fetch(GOOGLE_OAUTH_TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: bodyParams,
@@ -43,21 +44,21 @@ export async function getAccessToken(): Promise<string> {
     const errorData = await response.json();
     console.error("OAuth token refresh failed:", errorData.error);
 
-    if (errorData.error === "invalid_grant") {
-      await kv.del("zee-index:credentials");
-      throw new Error(
-        "Sesi Google Drive kadaluarsa. Silakan lakukan Setup ulang di /setup",
-      );
+    if (errorData.error === ERROR_MESSAGES.INVALID_GRANT) {
+      await kv.del(REDIS_KEYS.CREDENTIALS);
+      throw new Error(ERROR_MESSAGES.SESSION_EXPIRED);
     }
 
-    throw new Error(errorData.error_description || "Otentikasi Gagal");
+    throw new Error(errorData.error_description || ERROR_MESSAGES.AUTH_FAILED);
   }
 
   const tokenData: { access_token: string; expires_in: number } =
     await response.json();
 
   try {
-    await kv.set(ACCESS_TOKEN_KEY, tokenData.access_token, { ex: 3500 });
+    await kv.set(REDIS_KEYS.ACCESS_TOKEN, tokenData.access_token, {
+      ex: REDIS_TTL.ACCESS_TOKEN,
+    });
   } catch (e) {
     console.error(e);
   }
