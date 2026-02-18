@@ -12,7 +12,12 @@ export async function checkAuth(
   request: NextRequest,
   secret: string | undefined,
 ): Promise<MiddlewareAuthResult> {
-  const token = await getToken({ req: request, secret });
+  const token = await getToken({
+    req: request,
+    secret,
+    cookieName: "next-auth.session-token",
+    secureCookie: false,
+  });
 
   if (!token) {
     return {

@@ -46,39 +46,61 @@ export const authOptions: AuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials): Promise<User | null> {
-        if (!credentials?.email || !credentials.password) return null;
+        if (!credentials?.email || !credentials.password) {
+          console.log("[Auth] No credentials provided");
+          return null;
+        }
 
         const email = credentials.email;
         const password = credentials.password;
 
-        const adminEmails = (await kv.smembers(ADMIN_EMAILS_KEY)) as string[];
-        const envAdminsRaw = process.env.ADMIN_EMAILS || "";
+        try {
+          const adminEmails = (await kv.smembers(ADMIN_EMAILS_KEY)) as string[];
+          const envAdminsRaw = process.env.ADMIN_EMAILS || "";
 
-        const normalizedInputEmail = email.toLowerCase().trim();
-        const normalizedEnvAdmins = envAdminsRaw
-          .split(",")
-          .map((e) => e.trim().toLowerCase().replace(/["']/g, ""));
+          const normalizedInputEmail = email.toLowerCase().trim();
+          const normalizedEnvAdmins = envAdminsRaw
+            .split(",")
+            .map((e) => e.trim().toLowerCase().replace(/["']/g, ""));
 
-        const isAdmin =
-          adminEmails.some((e) => e.toLowerCase() === normalizedInputEmail) ||
-          normalizedEnvAdmins.includes(normalizedInputEmail);
+          const isAdminKV = adminEmails.some((e) => e.toLowerCase() === normalizedInputEmail);
+          const isAdminEnv = normalizedEnvAdmins.includes(normalizedInputEmail);
+          const isAdmin = isAdminKV || isAdminEnv;
 
-        const envPass = (process.env.ADMIN_PASSWORD || "")
-          .trim()
-          .replace(/["']/g, "");
-        const isPassValid = password === envPass;
+          const envPass = (process.env.ADMIN_PASSWORD || "")
+            .trim()
+            .replace(/["']/g, "");
+          const isPassValid = password === envPass;
 
-        if (isAdmin && isPassValid) {
-          return {
-            id: email,
-            name: email.split("@")[0],
-            email: email,
-            role: "ADMIN",
-            isGuest: false,
-          };
+          console.log("[Auth] Login attempt:", {
+            inputEmail: normalizedInputEmail,
+            kvAdmins: adminEmails,
+            envAdmins: normalizedEnvAdmins,
+            isAdminKV,
+            isAdminEnv,
+            isAdmin,
+            isPassValid,
+            envPassLength: envPass.length,
+            inputPassLength: password.length,
+          });
+
+          if (isAdmin && isPassValid) {
+            console.log("[Auth] Login successful for:", email);
+            return {
+              id: email,
+              name: email.split("@")[0],
+              email: email,
+              role: "ADMIN",
+              isGuest: false,
+            };
+          }
+
+          console.log("[Auth] Login failed - isAdmin:", isAdmin, "isPassValid:", isPassValid);
+          return null;
+        } catch (error) {
+          console.error("[Auth] Error during authorization:", error);
+          return null;
         }
-
-        return null;
       },
     }),
     CredentialsProvider({
@@ -190,8 +212,39 @@ export const authOptions: AuthOptions = {
         }
       }
       return session;
+      return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === "development",
-};
+  session: {
+    strategy: "jwt",
+  },
+  trustHost: true,
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: false,
+      },
+    },
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        sameSite: "lax",
+        path: "/",
+        secure: false,
+      },
+    },
+    csrfToken: {
+      name: `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: false,
+      },
+    },
+  },
+} as AuthOptions;

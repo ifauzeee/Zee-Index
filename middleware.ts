@@ -22,6 +22,7 @@ const PUBLIC_API_PREFIXES = [
   "/api/proxy-image",
   "/api/admin/config",
   "/api/admin/manual-drives",
+  "/api/admin/analytics/track",
   "/api/health",
 ];
 
@@ -159,7 +160,7 @@ export async function middleware(request: NextRequest) {
           response.headers.set("x-folder-authorized", "true");
           return response;
         }
-      } catch {}
+      } catch { }
     }
   }
 
