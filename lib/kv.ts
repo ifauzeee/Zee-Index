@@ -1,13 +1,15 @@
 import { memoryCache, CACHE_TTL } from "./memory-cache";
-import { createClient } from "@vercel/kv";
 
-const hasRedis =
-  (!!process.env.KV_REST_API_URL && !!process.env.KV_REST_API_TOKEN) ||
-  !!process.env.REDIS_URL;
 
-if (typeof window === "undefined") {
-  if (hasRedis) {
-    console.log("[KV] Connecting to Vercel KV/Redis...");
+const isEdgeRuntime =
+  typeof globalThis !== "undefined" &&
+  (globalThis as any).EdgeRuntime !== undefined;
+
+const redisUrl = typeof process !== "undefined" ? process.env?.REDIS_URL : undefined;
+
+if (typeof window === "undefined" && !isEdgeRuntime) {
+  if (redisUrl) {
+    console.log("[KV] Connecting to Redis...");
   } else {
     console.log(
       "[KV] Using in-memory store (data will not persist across restarts)",
@@ -56,6 +58,307 @@ export interface KVClient {
   pipeline(): any;
 }
 
+
+let RedisClient: any = null;
+
+function getRedisConstructor() {
+  if (!RedisClient) {
+
+    RedisClient = require("ioredis");
+  }
+  return RedisClient;
+}
+
+class RedisKV implements KVClient {
+  private client: any;
+
+  constructor(url: string) {
+    const IORedis = getRedisConstructor();
+    this.client = new IORedis(url, {
+      maxRetriesPerRequest: 3,
+      retryStrategy: (times: number) => {
+        if (times > 5) return null;
+        return Math.min(times * 200, 2000);
+      },
+      lazyConnect: false,
+      enableReadyCheck: true,
+    });
+
+    this.client.on("connect", () => {
+      console.log("[KV] Redis connected successfully");
+    });
+
+    this.client.on("error", (err: Error) => {
+      console.error("[KV] Redis connection error:", err.message);
+    });
+  }
+
+  private serialize(value: unknown): string {
+    return JSON.stringify(value);
+  }
+
+  private deserialize<T>(value: string | null): T | null {
+    if (value === null || value === undefined) return null;
+    try {
+      return JSON.parse(value) as T;
+    } catch {
+      return value as unknown as T;
+    }
+  }
+
+  async get<T>(key: string): Promise<T | null> {
+    const cached = memoryCache.get<T>(`kv:${key}`);
+    if (cached !== null) return cached;
+
+    const value = await this.client.get(key);
+    const parsed = this.deserialize<T>(value);
+    if (parsed !== null) {
+      memoryCache.set(`kv:${key}`, parsed, CACHE_TTL.FOLDER_CONTENT);
+    }
+    return parsed;
+  }
+
+  async set(
+    key: string,
+    value: unknown,
+    options?: { ex?: number },
+  ): Promise<string> {
+    const serialized = this.serialize(value);
+    if (options?.ex) {
+      await this.client.setex(key, options.ex, serialized);
+    } else {
+      await this.client.set(key, serialized);
+    }
+    memoryCache.set(`kv:${key}`, value, (options?.ex ?? 3600) * 1000);
+    return "OK";
+  }
+
+  async del(...keys: string[]): Promise<number> {
+    for (const key of keys) {
+      memoryCache.delete(`kv:${key}`);
+      memoryCache.delete(`kv:hash:${key}`);
+    }
+    if (keys.length === 0) return 0;
+    return await this.client.del(...keys);
+  }
+
+  async exists(...keys: string[]): Promise<number> {
+    if (keys.length === 0) return 0;
+    return await this.client.exists(...keys);
+  }
+
+  async keys(pattern: string): Promise<string[]> {
+    return await this.client.keys(pattern);
+  }
+
+  async mget<T>(...keys: string[]): Promise<(T | null)[]> {
+    if (keys.length === 0) return [];
+    const values = await this.client.mget(...keys);
+    return values.map((v: string | null) => this.deserialize<T>(v));
+  }
+
+  async mset(keyValues: Record<string, unknown>): Promise<string> {
+    const flat: string[] = [];
+    for (const [key, value] of Object.entries(keyValues)) {
+      flat.push(key, this.serialize(value));
+      memoryCache.set(`kv:${key}`, value, CACHE_TTL.FOLDER_CONTENT);
+    }
+    if (flat.length === 0) return "OK";
+    await this.client.mset(...flat);
+    return "OK";
+  }
+
+  async incr(key: string): Promise<number> {
+    return await this.client.incr(key);
+  }
+
+  async expire(key: string, seconds: number): Promise<number> {
+    return await this.client.expire(key, seconds);
+  }
+
+  async hgetall<T>(key: string): Promise<T | null> {
+    const cached = memoryCache.get<T>(`kv:hash:${key}`);
+    if (cached !== null) return cached;
+
+    const data = await this.client.hgetall(key);
+    if (!data || Object.keys(data).length === 0) return null;
+
+
+    const parsed: Record<string, unknown> = {};
+    for (const [field, value] of Object.entries(data)) {
+      try {
+        parsed[field] = JSON.parse(value as string);
+      } catch {
+        parsed[field] = value;
+      }
+    }
+
+    const result = parsed as T;
+    memoryCache.set(`kv:hash:${key}`, result, CACHE_TTL.PROTECTED_FOLDERS);
+    return result;
+  }
+
+  async hset(key: string, obj: Record<string, unknown>): Promise<number> {
+    const serialized: Record<string, string> = {};
+    for (const [field, value] of Object.entries(obj)) {
+      serialized[field] = this.serialize(value);
+    }
+    memoryCache.delete(`kv:hash:${key}`);
+    return await this.client.hset(key, serialized);
+  }
+
+  async hget<T>(key: string, field: string): Promise<T | null> {
+    const value = await this.client.hget(key, field);
+    return this.deserialize<T>(value);
+  }
+
+  async hdel(key: string, ...fields: string[]): Promise<number> {
+    memoryCache.delete(`kv:hash:${key}`);
+    if (fields.length === 0) return 0;
+    return await this.client.hdel(key, ...fields);
+  }
+
+  async sadd(key: string, ...members: unknown[]): Promise<number> {
+    if (members.length === 0) return 0;
+    const serialized = members.map((m) =>
+      typeof m === "string" ? m : this.serialize(m),
+    );
+    return await this.client.sadd(key, ...serialized);
+  }
+
+  async srem(key: string, ...members: unknown[]): Promise<number> {
+    if (members.length === 0) return 0;
+    const serialized = members.map((m) =>
+      typeof m === "string" ? m : this.serialize(m),
+    );
+    return await this.client.srem(key, ...serialized);
+  }
+
+  async sismember(key: string, member: unknown): Promise<number> {
+    const cacheKey = `kv:sismember:${key}:${String(member)}`;
+    const cached = memoryCache.get<number>(cacheKey);
+    if (cached !== null) return cached;
+
+    const serialized =
+      typeof member === "string" ? member : this.serialize(member);
+    const result = await this.client.sismember(key, serialized);
+    memoryCache.set(cacheKey, result, CACHE_TTL.USER_ACCESS);
+    return result;
+  }
+
+  async smembers(key: string): Promise<string[]> {
+    return await this.client.smembers(key);
+  }
+
+  async scard(key: string): Promise<number> {
+    return await this.client.scard(key);
+  }
+
+  async zadd(
+    key: string,
+    options: { score: number; member: string },
+  ): Promise<number> {
+    return await this.client.zadd(key, options.score, options.member);
+  }
+
+  async zrange<T>(
+    key: string,
+    start: number,
+    stop: number,
+    options?: { rev?: boolean; byScore?: boolean },
+  ): Promise<T[]> {
+    let results: string[];
+
+    if (options?.byScore) {
+      if (options?.rev) {
+        results = await this.client.zrevrangebyscore(key, stop, start);
+      } else {
+        results = await this.client.zrangebyscore(key, start, stop);
+      }
+    } else {
+      if (options?.rev) {
+        results = await this.client.zrevrange(key, start, stop);
+      } else {
+        results = await this.client.zrange(key, start, stop);
+      }
+    }
+
+    return results.map((member: string) => {
+      try {
+        return JSON.parse(member) as T;
+      } catch {
+        return member as unknown as T;
+      }
+    });
+  }
+
+  async zremrangebyscore(
+    key: string,
+    min: number,
+    max: number,
+  ): Promise<number> {
+    return await this.client.zremrangebyscore(key, min, max);
+  }
+
+  async zcard(key: string): Promise<number> {
+    return await this.client.zcard(key);
+  }
+
+  async zrem(key: string, ...members: string[]): Promise<number> {
+    if (members.length === 0) return 0;
+    return await this.client.zrem(key, ...members);
+  }
+
+  async zscore(key: string, member: string): Promise<number | null> {
+    const score = await this.client.zscore(key, member);
+    return score !== null ? parseFloat(score) : null;
+  }
+
+  async lpush(key: string, ...values: unknown[]): Promise<number> {
+    if (values.length === 0) return 0;
+    const serialized = values.map((v) => this.serialize(v));
+    return await this.client.lpush(key, ...serialized);
+  }
+
+  async rpush(key: string, ...values: unknown[]): Promise<number> {
+    if (values.length === 0) return 0;
+    const serialized = values.map((v) => this.serialize(v));
+    return await this.client.rpush(key, ...serialized);
+  }
+
+  async lrange<T>(key: string, start: number, stop: number): Promise<T[]> {
+    const values = await this.client.lrange(key, start, stop);
+    return values.map((v: string) => this.deserialize<T>(v)!);
+  }
+
+  async llen(key: string): Promise<number> {
+    return await this.client.llen(key);
+  }
+
+  async flushall(): Promise<string> {
+    await this.client.flushall();
+    return "OK";
+  }
+
+  pipeline() {
+    const pipe = this.client.pipeline();
+    const self = this;
+    return {
+      sismember: (key: string, member: unknown) => {
+        const serialized =
+          typeof member === "string" ? member : JSON.stringify(member);
+        pipe.sismember(key, serialized);
+        return self;
+      },
+      exec: async () => {
+        const results = await pipe.exec();
+        return results?.map(([, val]: [any, any]) => val) || [];
+      },
+    };
+  }
+}
+
+
 class InMemoryKV implements KVClient {
   pipeline() {
     const results: any[] = [];
@@ -75,7 +378,7 @@ class InMemoryKV implements KVClient {
     };
   }
   private store = new Map<string, unknown>();
-  private expirations = new Map<string, NodeJS.Timeout>();
+  private expirations = new Map<string, ReturnType<typeof setTimeout>>();
   private hashStore = new Map<string, Map<string, unknown>>();
   private setStore = new Map<string, Set<unknown>>();
   private sortedSets = new Map<string, Map<string, number>>();
@@ -103,12 +406,14 @@ class InMemoryKV implements KVClient {
     if (existingTimer) clearTimeout(existingTimer);
 
     if (options?.ex) {
+
+      const timeoutMs = Math.min(options.ex * 1000, 2_147_483_647);
       const timer = setTimeout(() => {
         this.store.delete(key);
         memoryCache.delete(`kv:${key}`);
         this.expirations.delete(key);
-      }, options.ex * 1000);
-      if (timer.unref) timer.unref();
+      }, timeoutMs);
+      if (typeof timer === "object" && timer.unref) timer.unref();
       this.expirations.set(key, timer);
     }
     return "OK";
@@ -175,13 +480,6 @@ class InMemoryKV implements KVClient {
     return newVal;
   }
 
-  async decr(key: string): Promise<number> {
-    const val = Number(this.store.get(key) || 0);
-    const newVal = val - 1;
-    this.store.set(key, newVal);
-    return newVal;
-  }
-
   async expire(key: string, seconds: number): Promise<number> {
     if (
       !this.store.has(key) &&
@@ -195,6 +493,8 @@ class InMemoryKV implements KVClient {
     const existingTimer = this.expirations.get(key);
     if (existingTimer) clearTimeout(existingTimer);
 
+
+    const timeoutMs = Math.min(seconds * 1000, 2_147_483_647);
     const timer = setTimeout(() => {
       this.store.delete(key);
       this.hashStore.delete(key);
@@ -203,8 +503,8 @@ class InMemoryKV implements KVClient {
       memoryCache.delete(`kv:${key}`);
       memoryCache.delete(`kv:hash:${key}`);
       this.expirations.delete(key);
-    }, seconds * 1000);
-    if (timer.unref) timer.unref();
+    }, timeoutMs);
+    if (typeof timer === "object" && timer.unref) timer.unref();
     this.expirations.set(key, timer);
     return 1;
   }
@@ -448,16 +748,27 @@ class InMemoryKV implements KVClient {
   }
 }
 
-const vercelKv = hasRedis
-  ? createClient({
-      url: process.env.KV_REST_API_URL || process.env.REDIS_URL!,
-      token: process.env.KV_REST_API_TOKEN || process.env.REDIS_TOKEN || "",
-    })
-  : null;
 
-export const kv = (hasRedis && vercelKv
-  ? vercelKv
-  : new InMemoryKV()) as unknown as KVClient;
+function createKVClient(): KVClient {
+
+  if (isEdgeRuntime || typeof window !== "undefined") {
+    return new InMemoryKV();
+  }
+
+
+  if (redisUrl) {
+    try {
+      return new RedisKV(redisUrl);
+    } catch (err) {
+      console.error("[KV] Failed to initialize Redis, falling back to in-memory:", err);
+      return new InMemoryKV();
+    }
+  }
+
+  return new InMemoryKV();
+}
+
+export const kv: KVClient = createKVClient();
 
 export function invalidateKvCache(key: string): void {
   memoryCache.delete(`kv:${key}`);
@@ -470,7 +781,9 @@ export function invalidateKvCacheByPrefix(prefix: string): void {
 
 export function getKvStats() {
   return {
-    kv: hasRedis ? { type: "redis" } : (kv as unknown as InMemoryKV).getStats(),
+    kv: redisUrl && !isEdgeRuntime
+      ? { type: "redis" }
+      : (kv as unknown as InMemoryKV).getStats(),
     memoryCache: memoryCache.getStats(),
   };
 }

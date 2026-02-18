@@ -77,6 +77,8 @@ const nextConfig = {
     formats: ["image/avif", "image/webp"],
   },
 
+  serverExternalPackages: ["ioredis"],
+
   experimental: {
     serverActions: {
       bodySizeLimit: "5mb",

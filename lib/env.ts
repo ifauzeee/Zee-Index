@@ -20,8 +20,7 @@ const envSchema = z.object({
     .string()
     .min(8, "ADMIN_PASSWORD must be at least 8 characters"),
 
-  KV_REST_API_URL: z.string().url().optional().or(z.literal("")),
-  KV_REST_API_TOKEN: z.string().optional().or(z.literal("")),
+  REDIS_URL: z.string().optional().or(z.literal("")),
 
   GOOGLE_REFRESH_TOKEN: z.string().optional().or(z.literal("")),
 
@@ -37,8 +36,6 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
-
-  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional().or(z.literal("")),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -78,9 +75,9 @@ export function validateEnv(): ValidationResult {
     result.errors.push(`Validation failed: ${String(error)}`);
   }
 
-  if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+  if (!process.env.REDIS_URL) {
     result.warnings.push(
-      "KV_REST_API_URL and KV_REST_API_TOKEN are not set. Using in-memory storage (data will not persist).",
+      "REDIS_URL is not set. Using in-memory storage (data will not persist across restarts).",
     );
   }
 
@@ -93,12 +90,6 @@ export function validateEnv(): ValidationResult {
   if (!process.env.SMTP_HOST) {
     result.warnings.push(
       "SMTP is not configured. Email features will be disabled.",
-    );
-  }
-
-  if (!process.env.NEXT_PUBLIC_SENTRY_DSN) {
-    result.warnings.push(
-      "NEXT_PUBLIC_SENTRY_DSN is not set. Error monitoring is disabled.",
     );
   }
 
@@ -131,7 +122,7 @@ export function needsSetup(): boolean {
 }
 
 export function getDatabaseStatus(): "configured" | "memory" | "error" {
-  if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+  if (process.env.REDIS_URL) {
     return "configured";
   }
   return "memory";
@@ -174,8 +165,7 @@ export const config = {
   adminEmails: (process.env.ADMIN_EMAILS || "").split(",").filter(Boolean),
   adminPassword: process.env.ADMIN_PASSWORD || "",
 
-  kvUrl: process.env.KV_REST_API_URL || "",
-  kvToken: process.env.KV_REST_API_TOKEN || "",
+  redisUrl: process.env.REDIS_URL || "",
 
   storageLimitGb: process.env.STORAGE_LIMIT_GB
     ? parseInt(process.env.STORAGE_LIMIT_GB, 10)
@@ -190,8 +180,5 @@ export const config = {
     process.env.SMTP_PASS
   ),
   isWebhookEnabled: !!process.env.WEBHOOK_URL,
-  isSentryEnabled: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
-  isDatabaseEnabled: !!(
-    process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN
-  ),
+  isDatabaseEnabled: !!process.env.REDIS_URL,
 };
