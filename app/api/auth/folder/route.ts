@@ -6,7 +6,7 @@ import { checkRateLimit } from "@/lib/ratelimit";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: NextRequest) {
-  const { success } = await checkRateLimit(request);
+  const { success } = await checkRateLimit(request, "AUTH");
   if (!success) {
     return NextResponse.json(
       { error: "Terlalu banyak percobaan. Silakan coba lagi nanti." },

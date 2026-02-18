@@ -8,6 +8,7 @@ import { logActivity } from "@/lib/activityLogger";
 import { trackBandwidth } from "@/lib/analyticsTracker";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { isAccessRestricted } from "@/lib/securityUtils";
+import { logger } from "@/lib/logger";
 import {
   MIME_TYPES,
   EXPORT_TYPE_MAP,
@@ -25,11 +26,11 @@ export async function GET(request: NextRequest) {
   const range = request.headers.get("range");
 
   if (!range) {
-    const { success } = await checkRateLimit(request, "download");
+    const { success } = await checkRateLimit(request, "DOWNLOAD");
     if (!success) {
       return NextResponse.json(
         {
-          error: ERROR_MESSAGES.RATE_LIMIT_EXCEEDED,
+          error: ERROR_MESSAGES.DOWNLOAD_LIMIT_EXCEEDED,
         },
         { status: 429 },
       );
@@ -101,8 +102,9 @@ export async function GET(request: NextRequest) {
           );
           const { payload } = await jwtVerify(token, secret);
           const authorizedFolderId = payload.folderId as string;
-          console.log(
-            `[Download] Token authorized for folder: ${authorizedFolderId}`,
+          logger.info(
+            { authorizedFolderId },
+            "[Download] Token authorized for folder"
           );
 
           if (authorizedFolderId) {
@@ -114,19 +116,21 @@ export async function GET(request: NextRequest) {
             if (!stillRestricted) {
               accessGranted = true;
             } else {
-              console.warn(
-                `[Download] File ${fileId} is still restricted for folder token ${authorizedFolderId}`,
+              logger.warn(
+                { fileId, authorizedFolderId },
+                "[Download] File is still restricted for folder token"
               );
             }
           }
         } catch (e) {
-          console.error("[Download] Token verification failed:", e);
+          logger.error({ err: e }, "[Download] Token verification failed");
         }
       }
 
       if (!accessGranted) {
-        console.warn(
-          `[Download] Access Denied for file ${fileId}. User: ${session?.user?.email}. Token: ${token ? "Provided" : "None"}`,
+        logger.warn(
+          { fileId, userEmail: session?.user?.email, hasToken: !!token },
+          "[Download] Access Denied"
         );
         return NextResponse.json(
           { error: ERROR_MESSAGES.ACCESS_DENIED },
@@ -137,19 +141,19 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log(`[Download] Starting for ${fileId}`);
+    logger.info({ fileId }, "[Download] Starting download");
     const start = Date.now();
 
     const accessToken = await getAccessToken();
-    console.log(`[Download] AccessToken took ${Date.now() - start}ms`);
-
     const t2 = Date.now();
     const fileDetails = await getFileDetailsFromDrive(fileId);
-    console.log(`[Download] FileDetails took ${Date.now() - t2}ms`);
 
-    console.log(
-      `[Download] Streaming file: ${fileDetails?.name}, Size: ${fileDetails?.size}`,
-    );
+    if (fileDetails) {
+      logger.info(
+        { fileName: fileDetails.name, size: fileDetails.size },
+        "[Download] Streaming file"
+      );
+    }
 
     if (!fileDetails) {
       return NextResponse.json(
@@ -238,7 +242,6 @@ export async function GET(request: NextRequest) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-    console.log(`[Download] Fetching stream from Google...`);
     const t3 = Date.now();
     const googleResponse = await fetch(downloadUrl, {
       headers,
@@ -250,7 +253,7 @@ export async function GET(request: NextRequest) {
 
     if (!googleResponse.ok) {
       const errorJson = await googleResponse.json().catch(() => ({}));
-      console.error("Google Drive API Error:", errorJson);
+      logger.error({ errorJson, fileId }, "Google Drive API Error");
       return NextResponse.json(
         {
           error:
@@ -308,7 +311,7 @@ export async function GET(request: NextRequest) {
         itemName: fileDetails.name,
         itemSize: fileDetails.size || "0",
         userEmail: session?.user?.email,
-      }).catch((e) => console.error("Gagal mencatat log aktivitas:", e));
+      }).catch((e) => logger.error({ err: e }, "Gagal mencatat log aktivitas"));
 
       const downloadSize = parseInt(fileDetails.size || "0", 10);
       if (downloadSize > 0) {
@@ -321,7 +324,7 @@ export async function GET(request: NextRequest) {
       headers: responseHeaders,
     });
   } catch (error: unknown) {
-    console.error("Download API Error:", error);
+    logger.error({ err: error, fileId }, "Download API Error");
     const errorMessage =
       error instanceof Error ? error.message : ERROR_MESSAGES.INTERNAL_SERVER_ERROR;
     return NextResponse.json(

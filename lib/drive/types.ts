@@ -23,6 +23,10 @@ export interface DriveFile {
   };
   trashed: boolean;
   sharedWithMeTime?: string;
+  shortcutDetails?: {
+    targetId: string;
+    targetMimeType: string;
+  };
 }
 
 export interface DriveRevision {

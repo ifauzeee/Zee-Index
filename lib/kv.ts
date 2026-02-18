@@ -3,15 +3,16 @@ import { memoryCache, CACHE_TTL } from "./memory-cache";
 
 const isEdgeRuntime =
   typeof globalThis !== "undefined" &&
-  (globalThis as any).EdgeRuntime !== undefined;
+  (globalThis as Record<string, unknown>).EdgeRuntime !== undefined;
+import { logger } from "./logger";
 
 const redisUrl = typeof process !== "undefined" ? process.env?.REDIS_URL : undefined;
 
 if (typeof window === "undefined" && !isEdgeRuntime) {
   if (redisUrl) {
-    console.log("[KV] Connecting to Redis...");
+    logger.info("[KV] Connecting to Redis...");
   } else {
-    console.log(
+    logger.info(
       "[KV] Using in-memory store (data will not persist across restarts)",
     );
   }
@@ -55,18 +56,20 @@ export interface KVClient {
   lrange<T>(key: string, start: number, stop: number): Promise<T[]>;
   llen(key: string): Promise<number>;
   flushall(): Promise<string>;
-  pipeline(): any;
+  pipeline(): {
+    sismember(key: string, member: unknown): any;
+    exec(): Promise<any[]>;
+  };
 }
 
 
-let RedisClient: any = null;
+let RedisClient: unknown = null;
 
 function getRedisConstructor() {
   if (!RedisClient) {
-
     RedisClient = require("ioredis");
   }
-  return RedisClient;
+  return RedisClient as any;
 }
 
 class RedisKV implements KVClient {
@@ -85,11 +88,11 @@ class RedisKV implements KVClient {
     });
 
     this.client.on("connect", () => {
-      console.log("[KV] Redis connected successfully");
+      logger.info("[KV] Redis connected successfully");
     });
 
     this.client.on("error", (err: Error) => {
-      console.error("[KV] Redis connection error:", err.message);
+      logger.error({ err }, "[KV] Redis connection error");
     });
   }
 

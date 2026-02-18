@@ -57,6 +57,7 @@ export const REDIS_TTL = {
 
 export const MEMORY_CACHE_KEYS = {
     FOLDER_CONTENT: "drive:folder:",
+    FILE_DETAILS: "drive:file:",
 } as const;
 
 export const ERROR_MESSAGES = {
@@ -69,8 +70,28 @@ export const ERROR_MESSAGES = {
     INVALID_FILE_ID: "Format fileId tidak valid.",
     MISSING_FILE_ID: "Parameter fileId tidak ditemukan.",
     ACCESS_DENIED: "Access Denied: File is protected.",
-    RATE_LIMIT_EXCEEDED: "Terlalu banyak permintaan unduhan. Silakan tunggu sebentar.",
+    DOWNLOAD_LIMIT_EXCEEDED: "Terlalu banyak permintaan unduhan. Silakan tunggu sebentar.",
+    RATE_LIMIT_EXCEEDED: "Terlalu banyak permintaan. Silakan coba lagi nanti.",
     INVALID_SHARE_TOKEN: "Invalid share token or authentication required.",
     SHARE_LINK_REVOKED: "Tautan ini telah dibatalkan.",
     INTERNAL_SERVER_ERROR: "Internal Server Error.",
+} as const;
+
+export const RATE_LIMITS = {
+    API: {
+        LIMIT: 100,
+        WINDOW: 60,
+    },
+    DOWNLOAD: {
+        LIMIT: 10,
+        WINDOW: 60 * 60,
+    },
+    AUTH: {
+        LIMIT: 5,
+        WINDOW: 60 * 15,
+    },
+    ADMIN: {
+        LIMIT: 50,
+        WINDOW: 60,
+    },
 } as const;

@@ -2,6 +2,7 @@ import { kv } from "@/lib/kv";
 import { getFileDetailsFromDrive } from "@/lib/drive";
 import { hasUserAccess } from "@/lib/auth";
 import { getPrivateFolderIds } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 const PROTECTED_FOLDERS_KEY = "zee-index:protected-folders";
 
@@ -26,7 +27,7 @@ async function getRestrictedIds(): Promise<string[]> {
     lastCacheUpdate = now;
     return cachedProtectedIds;
   } catch (e) {
-    console.error("Failed to fetch restricted IDs:", e);
+    logger.error({ err: e }, "Failed to fetch restricted IDs");
     return cachedProtectedIds || [];
   }
 }
@@ -40,7 +41,7 @@ export async function isAccessRestricted(
   preFetchedRestrictedIds: string[] | null = null,
 ): Promise<boolean> {
   if (depth >= maxDepth) {
-    console.error(`Max depth reached for fileId: ${fileId}`);
+    logger.error({ fileId, depth }, "Max depth reached for security check");
     return true;
   }
 
@@ -90,7 +91,7 @@ export async function isAccessRestricted(
 
     return false;
   } catch (error) {
-    console.error("Error checking access restriction:", error);
+    logger.error({ err: error, fileId }, "Error checking access restriction");
     return true;
   }
 }

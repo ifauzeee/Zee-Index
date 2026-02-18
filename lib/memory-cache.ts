@@ -1,9 +1,11 @@
 interface CacheEntry<T> {
   value: T;
   expires: number;
+  staleAt: number;
   accessCount: number;
   lastAccess: number;
 }
+import { logger } from "./logger";
 
 interface CacheStats {
   hits: number;
@@ -69,9 +71,7 @@ class MemoryCache {
     }
   }
 
-  /**
-   * Get a value from cache
-   */
+
   get<T>(key: string): T | null {
     const entry = this.cache.get(key);
 
@@ -93,25 +93,23 @@ class MemoryCache {
     return entry.value as T;
   }
 
-  /**
-   * Set a value in cache
-   */
-  set<T>(key: string, value: T, ttlMs: number = DEFAULT_TTL): void {
+
+  set<T>(key: string, value: T, ttlMs: number = DEFAULT_TTL, swrMs: number = 0): void {
     this.evictLRU();
 
+    const now = Date.now();
     this.cache.set(key, {
       value,
-      expires: Date.now() + ttlMs,
+      expires: now + ttlMs,
+      staleAt: now + (ttlMs - swrMs),
       accessCount: 1,
-      lastAccess: Date.now(),
+      lastAccess: now,
     });
 
     this.stats.sets++;
   }
 
-  /**
-   * Check if key exists and is not expired
-   */
+
   has(key: string): boolean {
     const entry = this.cache.get(key);
     if (!entry) return false;
@@ -122,16 +120,12 @@ class MemoryCache {
     return true;
   }
 
-  /**
-   * Delete a key from cache
-   */
+
   delete(key: string): boolean {
     return this.cache.delete(key);
   }
 
-  /**
-   * Delete all keys matching a pattern (simple prefix match)
-   */
+
   deleteByPrefix(prefix: string): number {
     let deleted = 0;
     for (const key of this.cache.keys()) {
@@ -143,16 +137,12 @@ class MemoryCache {
     return deleted;
   }
 
-  /**
-   * Clear entire cache
-   */
+
   clear(): void {
     this.cache.clear();
   }
 
-  /**
-   * Get cache statistics
-   */
+
   getStats(): CacheStats & { size: number; hitRate: string } {
     const total = this.stats.hits + this.stats.misses;
     const hitRate =
@@ -165,9 +155,7 @@ class MemoryCache {
     };
   }
 
-  /**
-   * Get or set pattern - fetch from cache or compute and store
-   */
+
   async getOrSet<T>(
     key: string,
     fetcher: () => Promise<T>,
@@ -180,6 +168,36 @@ class MemoryCache {
 
     const value = await fetcher();
     this.set(key, value, ttlMs);
+    return value;
+  }
+
+
+  async getWithSWR<T>(
+    key: string,
+    fetcher: () => Promise<T>,
+    ttlMs: number = DEFAULT_TTL,
+    swrMs: number = ttlMs / 2,
+  ): Promise<T> {
+    const entry = this.cache.get(key) as CacheEntry<T> | undefined;
+    const now = Date.now();
+
+    if (entry && entry.expires > now) {
+      if (now > entry.staleAt) {
+
+        logger.debug({ key }, "[MemoryCache] SWR Revalidating");
+        fetcher()
+          .then((value) => this.set(key, value, ttlMs, swrMs))
+          .catch((err) => logger.warn({ err, key }, "[MemoryCache] SWR Revalidation failed"));
+      }
+      this.stats.hits++;
+      entry.accessCount++;
+      entry.lastAccess = now;
+      return entry.value;
+    }
+
+    this.stats.misses++;
+    const value = await fetcher();
+    this.set(key, value, ttlMs, swrMs);
     return value;
   }
 }

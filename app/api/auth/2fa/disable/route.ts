@@ -7,7 +7,7 @@ import { kv } from "@/lib/kv";
 import { checkRateLimit } from "@/lib/ratelimit";
 
 export async function POST(request: NextRequest) {
-  const { success } = await checkRateLimit(request);
+  const { success } = await checkRateLimit(request, "AUTH");
   if (!success) {
     return NextResponse.json(
       { error: "Terlalu banyak permintaan. Silakan coba lagi nanti." },

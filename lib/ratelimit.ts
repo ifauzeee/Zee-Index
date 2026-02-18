@@ -1,118 +1,108 @@
 import { NextRequest } from "next/server";
+import { kv } from "./kv";
+import { RATE_LIMITS } from "./constants";
+import { logger } from "./logger";
 
-interface RateLimitEntry {
-  count: number;
-  resetAt: number;
-}
+export type RateLimitType = keyof typeof RATE_LIMITS;
 
-interface RateLimitResult {
+export interface RateLimitResult {
   success: boolean;
   limit: number;
   remaining: number;
   reset: number;
 }
 
-class LocalRateLimiter {
-  private store = new Map<string, RateLimitEntry>();
-  private readonly maxRequests: number;
-  private readonly windowMs: number;
-  private cleanupTimer: NodeJS.Timeout | null = null;
+const RATELIMIT_PREFIX = "ratelimit";
 
-  constructor(maxRequests: number, windowSeconds: number) {
-    this.maxRequests = maxRequests;
-    this.windowMs = windowSeconds * 1000;
-    this.startCleanup();
+export class KVRateLimiter {
+  private readonly type: RateLimitType;
+  private readonly limitCount: number;
+  private readonly windowSeconds: number;
+
+  constructor(type: RateLimitType) {
+    this.type = type;
+    this.limitCount = RATE_LIMITS[type].LIMIT;
+    this.windowSeconds = RATE_LIMITS[type].WINDOW;
   }
 
-  private startCleanup() {
-    if (this.cleanupTimer) return;
-
-    this.cleanupTimer = setInterval(() => {
-      const now = Date.now();
-      for (const [key, entry] of this.store.entries()) {
-        if (entry.resetAt < now) {
-          this.store.delete(key);
-        }
-      }
-    }, 60_000);
-
-    if (this.cleanupTimer.unref) {
-      this.cleanupTimer.unref();
-    }
-  }
 
   async check(identifier: string): Promise<RateLimitResult> {
+    const key = `${RATELIMIT_PREFIX}:${this.type}:${identifier}`;
     const now = Date.now();
-    const entry = this.store.get(identifier);
 
-    if (!entry || entry.resetAt < now) {
-      const newEntry: RateLimitEntry = {
-        count: 1,
-        resetAt: now + this.windowMs,
+    try {
+      const currentCount = await kv.incr(key);
+
+
+      if (currentCount === 1) {
+        await kv.expire(key, this.windowSeconds);
+      }
+
+      const reset = now + this.windowSeconds * 1000;
+
+      const remaining = Math.max(0, this.limitCount - currentCount);
+      const success = currentCount <= this.limitCount;
+
+      return {
+        success,
+        limit: this.limitCount,
+        remaining,
+        reset,
       };
-      this.store.set(identifier, newEntry);
+    } catch (error) {
+      logger.error({ err: error, type: this.type, identifier }, "Rate limit check failed");
 
       return {
         success: true,
-        limit: this.maxRequests,
-        remaining: this.maxRequests - 1,
-        reset: newEntry.resetAt,
+        limit: this.limitCount,
+        remaining: this.limitCount - 1,
+        reset: now + this.windowSeconds * 1000,
       };
     }
-
-    entry.count++;
-
-    const success = entry.count <= this.maxRequests;
-
-    return {
-      success,
-      limit: this.maxRequests,
-      remaining: Math.max(0, this.maxRequests - entry.count),
-      reset: entry.resetAt,
-    };
-  }
-
-  async limit(identifier: string): Promise<RateLimitResult> {
-    return this.check(identifier);
-  }
-
-  getStats() {
-    return {
-      activeIdentifiers: this.store.size,
-      maxRequests: this.maxRequests,
-      windowMs: this.windowMs,
-    };
   }
 }
 
-export const ratelimit = new LocalRateLimiter(100, 10);
-export const downloadLimiter = new LocalRateLimiter(50, 60);
-export const adminLimiter = new LocalRateLimiter(100, 10);
 
-/**
- * Check rate limit for a request
- */
+export const ratelimit = new KVRateLimiter("API");
+export const downloadLimiter = new KVRateLimiter("DOWNLOAD");
+export const authLimiter = new KVRateLimiter("AUTH");
+export const adminLimiter = new KVRateLimiter("ADMIN");
+
+
 export async function checkRateLimit(
   request: NextRequest,
-  type: "general" | "download" = "general",
+  type: RateLimitType = "API",
   identifier?: string,
 ): Promise<RateLimitResult> {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : "127.0.0.1";
 
-  const finalId = identifier || ip;
+  let finalId = identifier;
 
-  if (identifier?.startsWith("admin_")) {
-    return await adminLimiter.check(finalId);
+  if (!finalId) {
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    finalId = forwardedFor ? forwardedFor.split(",")[0].trim() : "127.0.0.1";
   }
 
-  const limiter = type === "download" ? downloadLimiter : ratelimit;
+
+  let limiter: KVRateLimiter;
+  switch (type) {
+    case "DOWNLOAD":
+      limiter = downloadLimiter;
+      break;
+    case "AUTH":
+      limiter = authLimiter;
+      break;
+    case "ADMIN":
+      limiter = adminLimiter;
+      break;
+    case "API":
+    default:
+      limiter = ratelimit;
+  }
+
   return await limiter.check(finalId);
 }
 
-/**
- * Rate limit middleware helper
- */
+
 export function createRateLimitResponse(result: RateLimitResult) {
   return {
     headers: {
@@ -120,13 +110,5 @@ export function createRateLimitResponse(result: RateLimitResult) {
       "X-RateLimit-Remaining": result.remaining.toString(),
       "X-RateLimit-Reset": result.reset.toString(),
     },
-  };
-}
-
-export function getRateLimitStats() {
-  return {
-    general: ratelimit.getStats(),
-    download: downloadLimiter.getStats(),
-    admin: adminLimiter.getStats(),
   };
 }

@@ -16,6 +16,7 @@ import {
   MIME_TYPES,
 } from "@/lib/constants";
 import { logger } from "@/lib/logger";
+import { measure } from "@/lib/performance";
 
 export async function listSharedDrives(): Promise<SharedDrive[]> {
   const accessToken = await getAccessToken();
@@ -141,128 +142,148 @@ export async function listFilesFromDrive(
   const cacheKey = `${REDIS_KEYS.FOLDER_CONTENT}${folderId}:${pageToken || "first"}`;
   const memoryCacheKey = `${MEMORY_CACHE_KEYS.FOLDER_CONTENT}${folderId}:${pageToken || "first"}`;
 
-  if (useCache) {
-    const memoryCached = memoryCache.get<{
-      files: DriveFile[];
-      nextPageToken: string | null;
-    }>(memoryCacheKey);
-    if (memoryCached) return memoryCached;
+  const fetcher = async () => {
 
     try {
-      const cached = await kv.get(cacheKey);
+      const cached = await kv.get<{
+        files: DriveFile[];
+        nextPageToken: string | null;
+      }>(cacheKey);
       if (cached) {
-        const result = cached as {
-          files: DriveFile[];
-          nextPageToken: string | null;
-        };
-        memoryCache.set(memoryCacheKey, result, CACHE_TTL.FOLDER_CONTENT);
-        return result;
+        return cached;
       }
     } catch (e) {
-      logger.warn({ err: e }, "Redis cache hit error");
+      logger.warn({ err: e }, "Redis cache hit error in listFilesFromDrive");
     }
-  }
 
-  const accessToken = await getAccessToken();
-  const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3/files";
-  const params = new URLSearchParams({
-    q: `'${folderId}' in parents and trashed=false`,
-    fields:
-      "nextPageToken, files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents, trashed)",
-    orderBy: "folder, name",
-    pageSize: String(pageSize),
-    supportsAllDrives: "true",
-    includeItemsFromAllDrives: "true",
-  });
-  if (pageToken) {
-    params.append("pageToken", pageToken);
-  }
 
-  const response = await fetchWithRetry(
-    `${GOOGLE_DRIVE_API_BASE_URL}/files?${params.toString()}`,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      cache: "no-store",
-    },
-  );
+    const accessToken = await measure("getAccessToken", () => getAccessToken());
+    const params = new URLSearchParams({
+      q: `'${folderId}' in parents and trashed=false`,
+      fields:
+        "nextPageToken, files(id, name, mimeType, size, modifiedTime, createdTime, webViewLink, thumbnailLink, hasThumbnail, parents, trashed)",
+      orderBy: "folder, name",
+      pageSize: String(pageSize),
+      supportsAllDrives: "true",
+      includeItemsFromAllDrives: "true",
+    });
+    if (pageToken) {
+      params.append("pageToken", pageToken);
+    }
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(
-      errorData.error?.message || "Pastikan folder ID benar dan dapat diakses.",
+    const response = await measure("GoogleAPI:listFiles", () =>
+      fetchWithRetry(
+        `${GOOGLE_DRIVE_API_BASE_URL}/files?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          cache: "no-store",
+        },
+      )
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.error?.message || "Pastikan folder ID benar dan dapat diakses.",
+      );
+    }
+
+    const data: DriveListResponse = await response.json();
+
+    const processedFiles: DriveFile[] = (data.files || []).map((file) => ({
+      ...file,
+      isFolder: file.mimeType === MIME_TYPES.FOLDER,
+    }));
+
+    const result = {
+      files: processedFiles,
+      nextPageToken: data.nextPageToken || null,
+    };
+
+    const ttl =
+      processedFiles.length === 0
+        ? REDIS_TTL.FOLDER_CONTENT_EMPTY
+        : REDIS_TTL.FOLDER_CONTENT;
+
+    kv.set(cacheKey, result, { ex: ttl }).catch((e) =>
+      logger.warn({ err: e }, "Failed to cache folder content to Redis"),
+    );
+
+    return result;
+  };
+
+  if (useCache) {
+    return memoryCache.getWithSWR(
+      memoryCacheKey,
+      fetcher,
+      CACHE_TTL.FOLDER_CONTENT,
+      CACHE_TTL.FOLDER_CONTENT / 2
     );
   }
 
-  const data: DriveListResponse = await response.json();
-
-  const processedFiles: DriveFile[] = (data.files || []).map((file) => ({
-    ...file,
-    isFolder: file.mimeType === MIME_TYPES.FOLDER,
-  }));
-
-  const result = {
-    files: processedFiles,
-    nextPageToken: data.nextPageToken || null,
-  };
-
-  const ttl =
-    processedFiles.length === 0
-      ? REDIS_TTL.FOLDER_CONTENT_EMPTY
-      : REDIS_TTL.FOLDER_CONTENT;
-  const memoryTtl =
-    processedFiles.length === 0 ? 5000 : CACHE_TTL.FOLDER_CONTENT;
-
-  memoryCache.set(memoryCacheKey, result, memoryTtl);
-  kv.set(cacheKey, result, { ex: ttl }).catch((e) =>
-    logger.warn({ err: e }, "Failed to cache folder content"),
-  );
-
-  return result;
+  return fetcher();
 }
 
 export async function getFileDetailsFromDrive(
   fileId: string,
 ): Promise<DriveFile | null> {
   const cacheKey = `${REDIS_KEYS.FILE_DETAILS}${fileId}`;
-  try {
-    const cachedDetails: DriveFile | null = await kv.get(cacheKey);
-    if (cachedDetails) {
-      return cachedDetails;
+  const memoryCacheKey = `${MEMORY_CACHE_KEYS.FILE_DETAILS}${fileId}`;
+
+  const fetcher = async () => {
+
+    try {
+      const cachedDetails = await kv.get<DriveFile>(cacheKey);
+      if (cachedDetails) {
+        return cachedDetails;
+      }
+    } catch (e) {
+      logger.warn({ err: e, fileId }, "Failed to get file details cache from Redis");
     }
-  } catch (e) {
-    logger.warn({ err: e, fileId }, "Failed to get file details cache");
-  }
 
-  const accessToken = await getAccessToken();
-  const driveUrl = `${GOOGLE_DRIVE_API_BASE_URL}/files/${fileId}`;
-  const params = new URLSearchParams({
-    fields:
-      "id, name, mimeType, size, modifiedTime, createdTime, webViewLink, webContentLink, thumbnailLink, hasThumbnail, parents, owners(displayName, emailAddress), lastModifyingUser(displayName), md5Checksum, imageMediaMetadata(width, height), videoMediaMetadata(width, height, durationMillis), trashed",
-    supportsAllDrives: "true",
-  });
 
-  const response = await fetchWithRetry(`${driveUrl}?${params.toString()}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-    cache: "no-store",
-  });
+    const accessToken = await measure("getAccessToken", () => getAccessToken());
+    const driveUrl = `${GOOGLE_DRIVE_API_BASE_URL}/files/${fileId}`;
+    const params = new URLSearchParams({
+      fields:
+        "id, name, mimeType, size, modifiedTime, createdTime, webViewLink, webContentLink, thumbnailLink, hasThumbnail, parents, owners(displayName, emailAddress), lastModifyingUser(displayName), md5Checksum, imageMediaMetadata(width, height), videoMediaMetadata(width, height, durationMillis), trashed",
+      supportsAllDrives: "true",
+    });
 
-  if (!response.ok) {
-    return null;
-  }
+    const response = await measure("GoogleAPI:getFileDetails", () =>
+      fetchWithRetry(`${driveUrl}?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        cache: "no-store",
+      }),
+      { fileId }
+    );
 
-  const data = (await response.json()) as DriveFile;
-  const fileDetails = {
-    ...data,
-    isFolder: data.mimeType === MIME_TYPES.FOLDER,
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = (await response.json()) as DriveFile;
+    const fileDetails = {
+      ...data,
+      isFolder: data.mimeType === MIME_TYPES.FOLDER,
+    };
+
+
+    try {
+      await kv.set(cacheKey, fileDetails, { ex: REDIS_TTL.FILE_DETAILS });
+    } catch (e) {
+      logger.warn({ err: e, fileId }, "Failed to cache file details to Redis");
+    }
+
+    return fileDetails;
   };
 
-  try {
-    await kv.set(cacheKey, fileDetails, { ex: REDIS_TTL.FILE_DETAILS });
-  } catch (e) {
-    logger.warn({ err: e, fileId }, "Failed to cache file details");
-  }
-
-  return fileDetails;
+  return memoryCache.getWithSWR(
+    memoryCacheKey,
+    fetcher,
+    CACHE_TTL.FILE_DETAILS,
+    CACHE_TTL.FILE_DETAILS / 2
+  );
 }
 
 export async function getFolderPath(
@@ -472,7 +493,7 @@ export async function listFileRevisions(
 export async function fetchMetadata(
   fileId: string,
   accessToken: string,
-): Promise<any> {
+): Promise<DriveFile | null> {
   const cleanId = fileId.split("&")[0].split("?")[0].trim();
   const response = await fetchWithRetry(
     `${GOOGLE_DRIVE_API_BASE_URL}/files/${cleanId}?fields=id,name,mimeType,parents,trashed,shortcutDetails&supportsAllDrives=true`,
