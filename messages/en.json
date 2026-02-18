@@ -386,7 +386,8 @@
     "accessDenied": "Access Denied",
     "accessDeniedMessage": "You do not have Administrator permission to view this page.",
     "linkCopied": "Link copied to clipboard!",
-    "loadingStatsError": "Failed to load statistics: {error}"
+    "loadingStatsError": "Failed to load statistics: {error}",
+    "analytics": "Analytics"
   },
   "Footer": {
     "dataUsage": "Total Data Usage:",
@@ -747,5 +748,34 @@
     "resumeMessage": "You watched up to {time} last time.",
     "resumeButton": "Resume",
     "startOver": "Start Over"
+  },
+  "AnalyticsDashboard": {
+    "title": "Analytics Dashboard",
+    "subtitle": "Real-time traffic insights and visitor analytics",
+    "refresh": "Refresh",
+    "noData": "No data available",
+    "fetchError": "Failed to fetch analytics data.",
+    "unknownError": "An unknown error occurred.",
+    "viewsToday": "Views Today",
+    "visitorsToday": "Visitors Today",
+    "activeNow": "Active Now",
+    "viewsThisWeek": "Weekly Views",
+    "viewsThisMonth": "Monthly Views",
+    "yesterday": "Yesterday",
+    "todaysTraffic": "Today's Traffic",
+    "todaysTrafficSubtitle": "Hourly page views and unique visitors",
+    "monthlyTrend": "30-Day Trend",
+    "monthlyTrendSubtitle": "Daily views and visitor trend over the last month",
+    "popularPages": "Popular Pages",
+    "topReferrers": "Top Referrers",
+    "noReferrers": "No referrer data yet",
+    "deviceBreakdown": "Device & Browser Breakdown",
+    "browser": "Browser",
+    "operatingSystem": "Operating System",
+    "deviceType": "Device Type",
+    "bandwidthUsage": "Bandwidth Usage",
+    "today": "Today",
+    "week": "This Week",
+    "month": "This Month"
   }
 }

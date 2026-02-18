@@ -5,6 +5,7 @@ import { kv } from "@/lib/kv";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { logActivity } from "@/lib/activityLogger";
+import { trackBandwidth } from "@/lib/analyticsTracker";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { isAccessRestricted } from "@/lib/securityUtils";
 export const dynamic = "force-dynamic";
@@ -309,6 +310,12 @@ export async function GET(request: NextRequest) {
         itemSize: fileDetails.size || "0",
         userEmail: session?.user?.email,
       }).catch((e) => console.error("Gagal mencatat log aktivitas:", e));
+
+
+      const downloadSize = parseInt(fileDetails.size || "0", 10);
+      if (downloadSize > 0) {
+        trackBandwidth(downloadSize).catch(() => { });
+      }
     }
 
     return new Response(googleResponse.body, {

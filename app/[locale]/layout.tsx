@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { Providers } from "../providers";
 import "./(main)/globals.css";
 import GlobalBranding from "@/components/layout/GlobalBranding";
+import PageViewTracker from "@/components/features/PageViewTracker";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -102,6 +103,7 @@ export default async function RootLayout({
               zIndex={9999}
             />
             <GlobalBranding />
+            <PageViewTracker />
             {children}
           </Providers>
         </NextIntlClientProvider>

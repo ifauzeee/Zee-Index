@@ -386,7 +386,8 @@
     "accessDenied": "Akses Ditolak",
     "accessDeniedMessage": "Anda tidak memiliki izin Administrator untuk melihat halaman ini.",
     "linkCopied": "Tautan disalin ke papan klip!",
-    "loadingStatsError": "Gagal memuat statistik: {error}"
+    "loadingStatsError": "Gagal memuat statistik: {error}",
+    "analytics": "Analitik"
   },
   "Footer": {
     "dataUsage": "Total Penggunaan Data:",
@@ -747,5 +748,34 @@
     "resumeMessage": "Anda menonton sampai {time} terakhir kali.",
     "resumeButton": "Lanjutkan",
     "startOver": "Ulang dari Awal"
+  },
+  "AnalyticsDashboard": {
+    "title": "Dasbor Analitik",
+    "subtitle": "Wawasan trafik real-time dan analitik pengunjung",
+    "refresh": "Segarkan",
+    "noData": "Belum ada data",
+    "fetchError": "Gagal mengambil data analitik.",
+    "unknownError": "Terjadi kesalahan yang tidak diketahui.",
+    "viewsToday": "Tayangan Hari Ini",
+    "visitorsToday": "Pengunjung Hari Ini",
+    "activeNow": "Aktif Sekarang",
+    "viewsThisWeek": "Tayangan Mingguan",
+    "viewsThisMonth": "Tayangan Bulanan",
+    "yesterday": "Kemarin",
+    "todaysTraffic": "Trafik Hari Ini",
+    "todaysTrafficSubtitle": "Tayangan halaman dan pengunjung unik per jam",
+    "monthlyTrend": "Tren 30 Hari",
+    "monthlyTrendSubtitle": "Tren tayangan dan pengunjung harian selama sebulan terakhir",
+    "popularPages": "Halaman Populer",
+    "topReferrers": "Sumber Rujukan Teratas",
+    "noReferrers": "Belum ada data rujukan",
+    "deviceBreakdown": "Rincian Perangkat & Browser",
+    "browser": "Browser",
+    "operatingSystem": "Sistem Operasi",
+    "deviceType": "Tipe Perangkat",
+    "bandwidthUsage": "Penggunaan Bandwidth",
+    "today": "Hari Ini",
+    "week": "Minggu Ini",
+    "month": "Bulan Ini"
   }
 }
