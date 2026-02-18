@@ -26,6 +26,7 @@ import {
   FolderLock,
   Network,
   Palette,
+  BarChart3,
 } from "lucide-react";
 import Loading from "@/components/common/Loading";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,7 @@ import { useRouter } from "next/navigation";
 import TwoFactorAuthSetup from "@/components/features/TwoFactorAuthSetup";
 import ProtectedFoldersManager from "@/components/admin/ProtectedFoldersManager";
 import ActivityLogDashboard from "@/components/admin/ActivityLogDashboard";
+import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { AdminStats } from "@/lib/adminStats";
 const TodayDownloadsChart = dynamic(
@@ -233,6 +235,7 @@ export default function AdminPage() {
 
   const tabItems = [
     { value: "summary", label: t("summary"), icon: Activity },
+    { value: "analytics", label: t("analytics"), icon: BarChart3 },
     { value: "users", label: t("admin"), icon: Users },
     { value: "security", label: t("security"), icon: ShieldCheck },
     { value: "branding", label: t("branding"), icon: Palette },
@@ -394,6 +397,12 @@ export default function AdminPage() {
                   {t("failed")}
                 </div>
               )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="mt-2">
+            <div className="bg-card border rounded-xl overflow-hidden shadow-sm p-4 sm:p-6">
+              <AnalyticsDashboard />
             </div>
           </TabsContent>
 
