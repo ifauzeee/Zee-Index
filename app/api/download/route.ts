@@ -128,10 +128,18 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    console.log(`[Download] Starting for ${fileId}`);
+    const start = Date.now();
+
     const accessToken = await getAccessToken();
+    console.log(`[Download] AccessToken took ${Date.now() - start}ms`);
+
+    const t2 = Date.now();
     const fileDetails = await getFileDetailsFromDrive(fileId);
+    console.log(`[Download] FileDetails took ${Date.now() - t2}ms`);
+
     console.log(
-      `[Download] Streaming file: ${fileDetails?.name}, Parents: ${JSON.stringify(fileDetails?.parents)}`,
+      `[Download] Streaming file: ${fileDetails?.name}, Size: ${fileDetails?.size}`,
     );
 
     if (!fileDetails) {
@@ -240,14 +248,17 @@ export async function GET(request: NextRequest) {
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
 
+    console.log(`[Download] Fetching stream from Google...`);
+    const t3 = Date.now();
     const googleResponse = await fetch(downloadUrl, {
       headers,
       method: "GET",
       cache: "no-store",
       signal: controller.signal,
     }).finally(() => clearTimeout(timeoutId));
+    console.log(`[Download] Google Stream Ready in ${Date.now() - t3}ms`);
 
     if (!googleResponse.ok) {
       const errorJson = await googleResponse.json().catch(() => ({}));
@@ -310,7 +321,6 @@ export async function GET(request: NextRequest) {
         itemSize: fileDetails.size || "0",
         userEmail: session?.user?.email,
       }).catch((e) => console.error("Gagal mencatat log aktivitas:", e));
-
 
       const downloadSize = parseInt(fileDetails.size || "0", 10);
       if (downloadSize > 0) {
