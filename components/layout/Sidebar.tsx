@@ -11,6 +11,7 @@ import {
   ChevronRight,
   ChevronDown,
   Folder,
+  File,
   Loader2,
   Home,
   Star,
@@ -36,6 +37,7 @@ interface FolderNode {
   isExpanded?: boolean;
   isLoading?: boolean;
   isProtected?: boolean;
+  isFolder: boolean;
 }
 
 interface ManualDrive {
@@ -70,6 +72,7 @@ export default function Sidebar() {
     hasChildren: true,
     children: [],
     isExpanded: true,
+    isFolder: true,
   });
 
   useEffect(() => {
@@ -171,15 +174,15 @@ export default function Sidebar() {
         });
 
         return (data.files || [])
-          .filter((f: any) => f.isFolder)
           .map((f: any) => ({
             id: f.id,
             name: f.name,
-            hasChildren: true,
+            hasChildren: f.isFolder,
             children: [],
             isExpanded: false,
             isLoading: false,
             isProtected: f.isProtected,
+            isFolder: f.isFolder,
           }));
       } catch (error) {
         console.error(error);
@@ -190,6 +193,7 @@ export default function Sidebar() {
   );
 
   const toggleNode = async (node: FolderNode, parents: string[] = []) => {
+    if (!node.isFolder) return;
     const newTree = { ...tree };
     let current = newTree;
     for (const pid of parents) {
@@ -297,7 +301,7 @@ export default function Sidebar() {
             "flex items-center gap-1.5 py-1.5 px-2 cursor-pointer hover:bg-accent/50 text-sm rounded-md transition-all select-none relative group my-0.5",
             isActive && "bg-accent text-accent-foreground font-medium",
             dragOverFolderId === node.id &&
-              "bg-primary/20 scale-[1.02] ring-2 ring-primary/50",
+            "bg-primary/20 scale-[1.02] ring-2 ring-primary/50",
           )}
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
           onDragOver={(e) => {
@@ -312,7 +316,12 @@ export default function Sidebar() {
             handleDrop(e, node.id);
           }}
           onClick={() => {
-            const url = node.id === rootFolderId ? "/" : `/folder/${node.id}`;
+            let url = "";
+            if (node.isFolder) {
+              url = node.id === rootFolderId ? "/" : `/folder/${node.id}`;
+            } else {
+              url = `/findpath?id=${node.id}`;
+            }
             setNavigatingId(node.id);
             router.push(url);
             if (window.innerWidth < 1024) setSidebarOpen(false);
@@ -327,17 +336,28 @@ export default function Sidebar() {
 
           <div
             onClick={(e) => {
-              e.stopPropagation();
-              toggleNode(node, parents);
+              if (node.isFolder) {
+                e.stopPropagation();
+                toggleNode(node, parents);
+              }
             }}
-            className="p-0.5 rounded-sm hover:bg-muted text-muted-foreground transition-colors"
+            className={cn(
+              "p-0.5 rounded-sm transition-colors",
+              node.isFolder
+                ? "hover:bg-muted text-muted-foreground cursor-pointer"
+                : "opacity-0 cursor-default",
+            )}
           >
-            {node.isLoading ? (
-              <Loader2 size={12} className="animate-spin" />
-            ) : node.isExpanded ? (
-              <ChevronDown size={12} />
+            {node.isFolder ? (
+              node.isLoading ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : node.isExpanded ? (
+                <ChevronDown size={12} />
+              ) : (
+                <ChevronRight size={12} />
+              )
             ) : (
-              <ChevronRight size={12} />
+              <div className="w-3" />
             )}
           </div>
           <div className="relative shrink-0 flex items-center justify-center w-3.5 h-3.5">
@@ -345,15 +365,27 @@ export default function Sidebar() {
               <Loader2 size={12} className="animate-spin text-primary" />
             ) : (
               <>
-                <Folder
-                  size={14}
-                  className={cn(
-                    "shrink-0 transition-colors",
-                    isActive
-                      ? "text-primary fill-primary/20"
-                      : "text-muted-foreground group-hover:text-primary",
-                  )}
-                />
+                {node.isFolder ? (
+                  <Folder
+                    size={14}
+                    className={cn(
+                      "shrink-0 transition-colors",
+                      isActive
+                        ? "text-primary fill-primary/20"
+                        : "text-muted-foreground group-hover:text-primary",
+                    )}
+                  />
+                ) : (
+                  <File
+                    size={14}
+                    className={cn(
+                      "shrink-0 transition-colors",
+                      isActive
+                        ? "text-primary fill-primary/20"
+                        : "text-muted-foreground group-hover:text-primary",
+                    )}
+                  />
+                )}
                 {node.isProtected && (
                   <div className="absolute -bottom-0.5 -right-0.5 bg-background rounded-full p-0.5">
                     <Lock size={8} className="text-primary fill-primary/20" />
@@ -427,7 +459,7 @@ export default function Sidebar() {
                   className={cn(
                     "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors group",
                     currentFolderId === drive.id &&
-                      "bg-accent font-medium text-primary",
+                    "bg-accent font-medium text-primary",
                   )}
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
@@ -493,7 +525,7 @@ export default function Sidebar() {
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
               (pathname === "/" || pathname.match(/^\/[a-zA-Z-]{2,5}$/)) &&
-                "bg-accent font-medium text-primary",
+              "bg-accent font-medium text-primary",
             )}
           >
             {navigatingId === "home" ? (
@@ -513,7 +545,7 @@ export default function Sidebar() {
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
               pathname.includes("/favorites") &&
-                "bg-accent font-medium text-primary",
+              "bg-accent font-medium text-primary",
             )}
           >
             {navigatingId === "favorites" ? (
@@ -533,7 +565,7 @@ export default function Sidebar() {
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
               pathname.includes("/storage") &&
-                "bg-accent font-medium text-primary",
+              "bg-accent font-medium text-primary",
             )}
           >
             {navigatingId === "storage" ? (
@@ -553,7 +585,7 @@ export default function Sidebar() {
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
                   pathname.includes("/trash") &&
-                    "bg-accent font-medium text-primary",
+                  "bg-accent font-medium text-primary",
                 )}
               >
                 <Trash2 size={16} /> {t("trash")}
@@ -566,7 +598,7 @@ export default function Sidebar() {
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
                   pathname.includes("/admin") &&
-                    "bg-accent font-medium text-primary",
+                  "bg-accent font-medium text-primary",
                 )}
               >
                 <ShieldCheck size={16} /> {t("admin")}
