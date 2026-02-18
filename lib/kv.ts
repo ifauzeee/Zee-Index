@@ -342,19 +342,19 @@ class RedisKV implements KVClient {
 
   pipeline() {
     const pipe = this.client.pipeline();
-    const self = this;
-    return {
+    const pipelineWrapper = {
       sismember: (key: string, member: unknown) => {
         const serialized =
           typeof member === "string" ? member : JSON.stringify(member);
         pipe.sismember(key, serialized);
-        return self;
+        return pipelineWrapper;
       },
       exec: async () => {
         const results = await pipe.exec();
         return results?.map(([, val]: [any, any]) => val) || [];
       },
     };
+    return pipelineWrapper;
   }
 }
 
