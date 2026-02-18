@@ -1,5 +1,6 @@
 import { kv } from "@/lib/kv";
 import { headers } from "next/headers";
+import { logger } from "@/lib/logger";
 
 export type ActivityType =
   | "UPLOAD"
@@ -178,7 +179,7 @@ export async function logActivity(
 
     return logEntry;
   } catch (error) {
-    console.error("Failed to log activity:", error);
+    logger.error({ err: error }, "Failed to log activity");
     return null;
   }
 }
@@ -218,7 +219,7 @@ export async function getActivityLogs(
       typeof log === "string" ? JSON.parse(log) : log,
     ) as ActivityLog[];
   } catch (error) {
-    console.error("Failed to get activity logs:", error);
+    logger.error({ err: error }, "Failed to get activity logs");
     return [];
   }
 }
@@ -233,7 +234,7 @@ export async function getAdminAuditLogs(
       typeof log === "string" ? JSON.parse(log) : log,
     ) as ActivityLog[];
   } catch (error) {
-    console.error("Failed to get admin audit logs:", error);
+    logger.error({ err: error }, "Failed to get admin audit logs");
     return [];
   }
 }
@@ -248,7 +249,7 @@ export async function getSecurityLogs(
       typeof log === "string" ? JSON.parse(log) : log,
     ) as ActivityLog[];
   } catch (error) {
-    console.error("Failed to get security logs:", error);
+    logger.error({ err: error }, "Failed to get security logs");
     return [];
   }
 }
@@ -303,7 +304,7 @@ export async function getActivityStats(): Promise<{
       last7Days,
     };
   } catch (error) {
-    console.error("Failed to get activity stats:", error);
+    logger.error({ err: error }, "Failed to get activity stats");
     return {
       totalLogs: 0,
       byType: {},

@@ -15,6 +15,7 @@ import {
   MEMORY_CACHE_KEYS,
   MIME_TYPES,
 } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 
 export async function listSharedDrives(): Promise<SharedDrive[]> {
   const accessToken = await getAccessToken();
@@ -66,7 +67,7 @@ export async function getAllDescendantFolders(
       return cachedTree;
     }
   } catch (e) {
-    console.error(e);
+    logger.warn({ err: e }, "Failed to get folder tree from cache");
   }
 
   const allFolderIds = new Set<string>([rootFolderId]);
@@ -125,7 +126,7 @@ export async function getAllDescendantFolders(
   try {
     await kv.set(cacheKey, folderArray, { ex: REDIS_TTL.FOLDER_TREE });
   } catch (e) {
-    console.warn("Failed to cache folder tree:", e);
+    logger.warn({ err: e }, "Failed to cache folder tree");
   }
 
   return folderArray;
@@ -158,7 +159,7 @@ export async function listFilesFromDrive(
         return result;
       }
     } catch (e) {
-      console.warn("Redis cache hit error:", e);
+      logger.warn({ err: e }, "Redis cache hit error");
     }
   }
 
@@ -212,7 +213,9 @@ export async function listFilesFromDrive(
     processedFiles.length === 0 ? 5000 : CACHE_TTL.FOLDER_CONTENT;
 
   memoryCache.set(memoryCacheKey, result, memoryTtl);
-  kv.set(cacheKey, result, { ex: ttl }).catch(console.error);
+  kv.set(cacheKey, result, { ex: ttl }).catch((e) =>
+    logger.warn({ err: e }, "Failed to cache folder content"),
+  );
 
   return result;
 }
@@ -227,7 +230,7 @@ export async function getFileDetailsFromDrive(
       return cachedDetails;
     }
   } catch (e) {
-    console.error(`Gagal mengambil cache untuk file ${fileId}:`, e);
+    logger.warn({ err: e, fileId }, "Failed to get file details cache");
   }
 
   const accessToken = await getAccessToken();
@@ -256,7 +259,7 @@ export async function getFileDetailsFromDrive(
   try {
     await kv.set(cacheKey, fileDetails, { ex: REDIS_TTL.FILE_DETAILS });
   } catch (e) {
-    console.error(`Gagal mengatur cache untuk file ${fileId}:`, e);
+    logger.warn({ err: e, fileId }, "Failed to cache file details");
   }
 
   return fileDetails;
@@ -274,7 +277,7 @@ export async function getFolderPath(
       return cachedPath;
     }
   } catch (e) {
-    console.error(e);
+    logger.warn({ err: e }, "Failed to get folder path cache");
   }
 
   const accessToken = await getAccessToken();
@@ -367,7 +370,7 @@ export async function getFolderPath(
         break;
       }
     } catch (e) {
-      console.error("Error fetching folder path segment:", e);
+      logger.error({ err: e }, "Error fetching folder path segment");
       break;
     }
   }
@@ -375,7 +378,7 @@ export async function getFolderPath(
   try {
     await kv.set(cacheKey, path, { ex: REDIS_TTL.FOLDER_PATH });
   } catch (e) {
-    console.error(e);
+    logger.warn({ err: e }, "Failed to cache folder path");
   }
 
   return path;

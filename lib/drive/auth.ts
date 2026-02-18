@@ -6,6 +6,7 @@ import {
   ERROR_MESSAGES,
   GOOGLE_OAUTH_TOKEN_URL,
 } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 
 export async function invalidateAccessToken() {
   await kv.del(REDIS_KEYS.ACCESS_TOKEN);
@@ -18,7 +19,7 @@ export async function getAccessToken(): Promise<string> {
       return cachedToken;
     }
   } catch (e) {
-    console.error(e);
+    logger.error({ err: e }, "Failed to get cached access token");
   }
 
   const creds = await getAppCredentials();
@@ -42,7 +43,7 @@ export async function getAccessToken(): Promise<string> {
 
   if (!response.ok) {
     const errorData = await response.json();
-    console.error("OAuth token refresh failed:", errorData.error);
+    logger.error({ error: errorData.error }, "OAuth token refresh failed");
 
     if (errorData.error === ERROR_MESSAGES.INVALID_GRANT) {
       await kv.del(REDIS_KEYS.CREDENTIALS);
@@ -59,8 +60,9 @@ export async function getAccessToken(): Promise<string> {
     await kv.set(REDIS_KEYS.ACCESS_TOKEN, tokenData.access_token, {
       ex: REDIS_TTL.ACCESS_TOKEN,
     });
+    logger.debug("Access token refreshed successfully");
   } catch (e) {
-    console.error(e);
+    logger.error({ err: e }, "Failed to cache access token");
   }
 
   return tokenData.access_token;
