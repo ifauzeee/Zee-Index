@@ -142,10 +142,8 @@ export async function GET(request: NextRequest) {
 
   try {
     logger.info({ fileId }, "[Download] Starting download");
-    const start = Date.now();
 
     const accessToken = await getAccessToken();
-    const t2 = Date.now();
     const fileDetails = await getFileDetailsFromDrive(fileId);
 
     if (fileDetails) {
@@ -314,7 +312,7 @@ export async function GET(request: NextRequest) {
 
       const downloadSize = parseInt(fileDetails.size || "0", 10);
       if (downloadSize > 0) {
-        trackBandwidth(downloadSize).catch(() => {});
+        trackBandwidth(downloadSize).catch(() => { });
       }
     }
 
