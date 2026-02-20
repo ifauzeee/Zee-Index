@@ -73,6 +73,7 @@ export default function FileBrowser({
     playAudio,
     navigatingId,
     setNavigatingId,
+    setCurrentFileId,
   } = useAppStore();
 
   const t = useTranslations("FileBrowser");
@@ -109,7 +110,8 @@ export default function FileBrowser({
   const pathname = usePathname();
   useEffect(() => {
     setNavigatingId(null);
-  }, [pathname, setNavigatingId]);
+    setCurrentFileId(null);
+  }, [pathname, setNavigatingId, setCurrentFileId]);
 
   const isGuest = user?.isGuest === true;
   const isAdmin = user?.role === "ADMIN" && !isGuest;
@@ -366,7 +368,7 @@ export default function FileBrowser({
           },
           initialPageParam: null as string | null,
         })
-        .catch(() => {});
+        .catch(() => { });
     },
     [router, shareToken, queryClient, folderTokens, refreshKey],
   );
@@ -526,8 +528,8 @@ export default function FileBrowser({
       <FileBrowserModals
         authModal={{ isOpen: false, folderId: "", folderName: "" }}
         isAuthLoading={isAuthLoading}
-        onCloseAuth={() => {}}
-        onAuthSubmit={() => {}}
+        onCloseAuth={() => { }}
+        onAuthSubmit={() => { }}
         isFileRequestModalOpen={isFileRequestModalOpen}
         setIsFileRequestModalOpen={setIsFileRequestModalOpen}
         currentFolderId={currentFolderId}

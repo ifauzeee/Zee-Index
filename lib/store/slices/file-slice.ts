@@ -46,6 +46,12 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
     })),
   navigatingId: null,
   setNavigatingId: (id: string | null) => set({ navigatingId: id }),
+  currentFileId: null,
+  setCurrentFileId: (id: string | null) =>
+    set((state: AppState) => ({
+      currentFileId: id,
+      navigatingId: state.navigatingId === id ? null : state.navigatingId,
+    })),
   shareLinks: [],
   fetchShareLinks: async () => {
     try {

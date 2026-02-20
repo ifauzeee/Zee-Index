@@ -94,6 +94,8 @@ export default function FileDetail({
     addTag,
     removeTag,
     folderTokens,
+    setCurrentFileId,
+    setCurrentFolderId,
   } = useAppStore();
 
   const [internalPreviewOpen, setInternalPreviewOpen] = useState(false);
@@ -117,6 +119,15 @@ export default function FileDetail({
   useEffect(() => {
     setActiveSubtitleTracks(subtitleTracks || []);
   }, [subtitleTracks]);
+
+  useEffect(() => {
+    if (!isModal) {
+      setCurrentFileId(file.id);
+      if (currentFolderId) {
+        setCurrentFolderId(currentFolderId);
+      }
+    }
+  }, [file.id, currentFolderId, isModal, setCurrentFileId, setCurrentFolderId]);
 
   const handleAddSubtitle = (track: SubtitleTrack) => {
     setActiveSubtitleTracks((prev) => {

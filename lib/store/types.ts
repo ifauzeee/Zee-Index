@@ -118,6 +118,8 @@ export interface FileSlice {
   setCurrentFolderId: (id: string | null) => void;
   navigatingId: string | null;
   setNavigatingId: (id: string | null) => void;
+  currentFileId: string | null;
+  setCurrentFileId: (id: string | null) => void;
   shareLinks: ShareLink[];
   fetchShareLinks: () => Promise<void>;
   addShareLink: (link: ShareLink) => void;
