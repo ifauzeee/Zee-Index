@@ -362,7 +362,7 @@ export default function Sidebar() {
             "flex items-center gap-1.5 py-1.5 px-2 cursor-pointer hover:bg-accent/50 text-sm rounded-md transition-all select-none relative group my-0.5",
             isActive && "bg-accent text-accent-foreground font-medium",
             dragOverFolderId === node.id &&
-            "bg-primary/20 scale-[1.02] ring-2 ring-primary/50",
+              "bg-primary/20 scale-[1.02] ring-2 ring-primary/50",
           )}
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
           onDragOver={(e) => {
@@ -520,7 +520,7 @@ export default function Sidebar() {
                   className={cn(
                     "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors group",
                     currentFolderId === drive.id &&
-                    "bg-accent font-medium text-primary",
+                      "bg-accent font-medium text-primary",
                   )}
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
@@ -586,7 +586,7 @@ export default function Sidebar() {
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
               (pathname === "/" || pathname.match(/^\/[a-zA-Z-]{2,5}$/)) &&
-              "bg-accent font-medium text-primary",
+                "bg-accent font-medium text-primary",
             )}
           >
             {navigatingId === "home" ? (
@@ -606,7 +606,7 @@ export default function Sidebar() {
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
               pathname.includes("/favorites") &&
-              "bg-accent font-medium text-primary",
+                "bg-accent font-medium text-primary",
             )}
           >
             {navigatingId === "favorites" ? (
@@ -626,7 +626,7 @@ export default function Sidebar() {
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
               pathname.includes("/storage") &&
-              "bg-accent font-medium text-primary",
+                "bg-accent font-medium text-primary",
             )}
           >
             {navigatingId === "storage" ? (
@@ -646,7 +646,7 @@ export default function Sidebar() {
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
                   pathname.includes("/trash") &&
-                  "bg-accent font-medium text-primary",
+                    "bg-accent font-medium text-primary",
                 )}
               >
                 <Trash2 size={16} /> {t("trash")}
@@ -659,7 +659,7 @@ export default function Sidebar() {
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
                   pathname.includes("/admin") &&
-                  "bg-accent font-medium text-primary",
+                    "bg-accent font-medium text-primary",
                 )}
               >
                 <ShieldCheck size={16} /> {t("admin")}
