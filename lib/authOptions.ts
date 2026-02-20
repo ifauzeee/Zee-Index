@@ -63,7 +63,9 @@ export const authOptions: AuthOptions = {
             .split(",")
             .map((e) => e.trim().toLowerCase().replace(/["']/g, ""));
 
-          const isAdminKV = adminEmails.some((e) => e.toLowerCase() === normalizedInputEmail);
+          const isAdminKV = adminEmails.some(
+            (e) => e.toLowerCase() === normalizedInputEmail,
+          );
           const isAdminEnv = normalizedEnvAdmins.includes(normalizedInputEmail);
           const isAdmin = isAdminKV || isAdminEnv;
 
@@ -95,7 +97,12 @@ export const authOptions: AuthOptions = {
             };
           }
 
-          console.log("[Auth] Login failed - isAdmin:", isAdmin, "isPassValid:", isPassValid);
+          console.log(
+            "[Auth] Login failed - isAdmin:",
+            isAdmin,
+            "isPassValid:",
+            isPassValid,
+          );
           return null;
         } catch (error) {
           console.error("[Auth] Error during authorization:", error);

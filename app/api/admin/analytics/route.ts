@@ -8,31 +8,31 @@ import { unstable_cache } from "next/cache";
 export const dynamic = "force-dynamic";
 
 async function isAdmin(session: Session | null): Promise<boolean> {
-    return session?.user?.role === "ADMIN";
+  return session?.user?.role === "ADMIN";
 }
 
 const getAnalyticsCached = unstable_cache(
-    async () => {
-        return await getAnalyticsData();
-    },
-    ["admin-analytics"],
-    { revalidate: 60, tags: ["admin-analytics"] },
+  async () => {
+    return await getAnalyticsData();
+  },
+  ["admin-analytics"],
+  { revalidate: 60, tags: ["admin-analytics"] },
 );
 
 export async function GET() {
-    const session = await getServerSession(authOptions);
-    if (!(await isAdmin(session))) {
-        return NextResponse.json({ error: "Access denied." }, { status: 403 });
-    }
+  const session = await getServerSession(authOptions);
+  if (!(await isAdmin(session))) {
+    return NextResponse.json({ error: "Access denied." }, { status: 403 });
+  }
 
-    try {
-        const analytics = await getAnalyticsCached();
-        return NextResponse.json(analytics);
-    } catch (error) {
-        console.error("Failed to fetch analytics:", error);
-        return NextResponse.json(
-            { error: "Failed to fetch analytics data." },
-            { status: 500 },
-        );
-    }
+  try {
+    const analytics = await getAnalyticsCached();
+    return NextResponse.json(analytics);
+  } catch (error) {
+    console.error("Failed to fetch analytics:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch analytics data." },
+      { status: 500 },
+    );
+  }
 }

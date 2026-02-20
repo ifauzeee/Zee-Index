@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
           const authorizedFolderId = payload.folderId as string;
           logger.info(
             { authorizedFolderId },
-            "[Download] Token authorized for folder"
+            "[Download] Token authorized for folder",
           );
 
           if (authorizedFolderId) {
@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
             } else {
               logger.warn(
                 { fileId, authorizedFolderId },
-                "[Download] File is still restricted for folder token"
+                "[Download] File is still restricted for folder token",
               );
             }
           }
@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
       if (!accessGranted) {
         logger.warn(
           { fileId, userEmail: session?.user?.email, hasToken: !!token },
-          "[Download] Access Denied"
+          "[Download] Access Denied",
         );
         return NextResponse.json(
           { error: ERROR_MESSAGES.ACCESS_DENIED },
@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
     if (fileDetails) {
       logger.info(
         { fileName: fileDetails.name, size: fileDetails.size },
-        "[Download] Streaming file"
+        "[Download] Streaming file",
       );
     }
 
@@ -199,13 +199,12 @@ export async function GET(request: NextRequest) {
     }
 
     if (isGoogleDoc) {
-      const exportInfo =
-        EXPORT_TYPE_MAP[
+      const exportInfo = EXPORT_TYPE_MAP[
         fileDetails.mimeType as keyof typeof EXPORT_TYPE_MAP
-        ] || {
-          mime: "application/pdf",
-          ext: ".pdf",
-        };
+      ] || {
+        mime: "application/pdf",
+        ext: ".pdf",
+      };
       downloadUrl = `${GOOGLE_DRIVE_API_BASE_URL}/files/${fileId}/export?mimeType=${encodeURIComponent(exportInfo.mime)}&supportsAllDrives=true`;
       responseMimeType = exportInfo.mime;
       if (!responseFileName.endsWith(exportInfo.ext)) {
@@ -315,7 +314,7 @@ export async function GET(request: NextRequest) {
 
       const downloadSize = parseInt(fileDetails.size || "0", 10);
       if (downloadSize > 0) {
-        trackBandwidth(downloadSize).catch(() => { });
+        trackBandwidth(downloadSize).catch(() => {});
       }
     }
 
@@ -326,10 +325,9 @@ export async function GET(request: NextRequest) {
   } catch (error: unknown) {
     logger.error({ err: error, fileId }, "Download API Error");
     const errorMessage =
-      error instanceof Error ? error.message : ERROR_MESSAGES.INTERNAL_SERVER_ERROR;
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 },
-    );
+      error instanceof Error
+        ? error.message
+        : ERROR_MESSAGES.INTERNAL_SERVER_ERROR;
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

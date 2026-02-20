@@ -692,7 +692,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:3000/api/health || exit 1
 ```
 
-
 ### Automatic HTTPS with DuckDNS & Caddy
 
 The attached `docker-compose.yml` includes built-in support for **DuckDNS** (Dynamic DNS) and **Caddy** (Reverse Proxy & Auto SSL).

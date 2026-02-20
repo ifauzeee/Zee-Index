@@ -1,12 +1,12 @@
 import { memoryCache, CACHE_TTL } from "./memory-cache";
 
-
 const isEdgeRuntime =
   typeof globalThis !== "undefined" &&
   (globalThis as Record<string, unknown>).EdgeRuntime !== undefined;
 import { logger } from "./logger";
 
-const redisUrl = typeof process !== "undefined" ? process.env?.REDIS_URL : undefined;
+const redisUrl =
+  typeof process !== "undefined" ? process.env?.REDIS_URL : undefined;
 
 if (typeof window === "undefined" && !isEdgeRuntime) {
   if (redisUrl) {
@@ -61,7 +61,6 @@ export interface KVClient {
     exec(): Promise<any[]>;
   };
 }
-
 
 let RedisClient: unknown = null;
 
@@ -185,7 +184,6 @@ class RedisKV implements KVClient {
 
     const data = await this.client.hgetall(key);
     if (!data || Object.keys(data).length === 0) return null;
-
 
     const parsed: Record<string, unknown> = {};
     for (const [field, value] of Object.entries(data)) {
@@ -361,7 +359,6 @@ class RedisKV implements KVClient {
   }
 }
 
-
 class InMemoryKV implements KVClient {
   pipeline() {
     const results: any[] = [];
@@ -409,7 +406,6 @@ class InMemoryKV implements KVClient {
     if (existingTimer) clearTimeout(existingTimer);
 
     if (options?.ex) {
-
       const timeoutMs = Math.min(options.ex * 1000, 2_147_483_647);
       const timer = setTimeout(() => {
         this.store.delete(key);
@@ -495,7 +491,6 @@ class InMemoryKV implements KVClient {
 
     const existingTimer = this.expirations.get(key);
     if (existingTimer) clearTimeout(existingTimer);
-
 
     const timeoutMs = Math.min(seconds * 1000, 2_147_483_647);
     const timer = setTimeout(() => {
@@ -751,19 +746,19 @@ class InMemoryKV implements KVClient {
   }
 }
 
-
 function createKVClient(): KVClient {
-
   if (isEdgeRuntime || typeof window !== "undefined") {
     return new InMemoryKV();
   }
-
 
   if (redisUrl) {
     try {
       return new RedisKV(redisUrl);
     } catch (err) {
-      console.error("[KV] Failed to initialize Redis, falling back to in-memory:", err);
+      console.error(
+        "[KV] Failed to initialize Redis, falling back to in-memory:",
+        err,
+      );
       return new InMemoryKV();
     }
   }
@@ -784,9 +779,10 @@ export function invalidateKvCacheByPrefix(prefix: string): void {
 
 export function getKvStats() {
   return {
-    kv: redisUrl && !isEdgeRuntime
-      ? { type: "redis" }
-      : (kv as unknown as InMemoryKV).getStats(),
+    kv:
+      redisUrl && !isEdgeRuntime
+        ? { type: "redis" }
+        : (kv as unknown as InMemoryKV).getStats(),
     memoryCache: memoryCache.getStats(),
   };
 }

@@ -64,7 +64,7 @@ const fetchFilesApi = async ({
   return response.json();
 };
 
-const fetchFolderPathApi = async (
+export const fetchFolderPathApi = async (
   folderId: string,
   shareToken?: string | null,
   locale?: string,

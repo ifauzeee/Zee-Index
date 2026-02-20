@@ -160,7 +160,7 @@ export async function middleware(request: NextRequest) {
           response.headers.set("x-folder-authorized", "true");
           return response;
         }
-      } catch { }
+      } catch {}
     }
   }
 

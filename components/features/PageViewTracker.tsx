@@ -8,45 +8,39 @@ import { usePathname } from "next/navigation";
  * Place this in the root layout to track all page navigation.
  */
 export default function PageViewTracker() {
-    const pathname = usePathname();
-    const lastPathRef = useRef<string>("");
+  const pathname = usePathname();
+  const lastPathRef = useRef<string>("");
 
-    useEffect(() => {
+  useEffect(() => {
+    if (
+      pathname.startsWith("/api") ||
+      pathname.startsWith("/_next") ||
+      pathname.includes("/static/")
+    ) {
+      return;
+    }
 
-        if (
-            pathname.startsWith("/api") ||
-            pathname.startsWith("/_next") ||
-            pathname.includes("/static/")
-        ) {
-            return;
-        }
+    if (pathname === lastPathRef.current) return;
+    lastPathRef.current = pathname;
 
+    const track = async () => {
+      try {
+        await fetch("/api/admin/analytics/track", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            path: pathname,
+            referrer: document.referrer || "",
+          }),
 
-        if (pathname === lastPathRef.current) return;
-        lastPathRef.current = pathname;
+          keepalive: true,
+        });
+      } catch {}
+    };
 
+    const timer = setTimeout(track, 300);
+    return () => clearTimeout(timer);
+  }, [pathname]);
 
-        const track = async () => {
-            try {
-                await fetch("/api/admin/analytics/track", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        path: pathname,
-                        referrer: document.referrer || "",
-                    }),
-
-                    keepalive: true,
-                });
-            } catch {
-
-            }
-        };
-
-
-        const timer = setTimeout(track, 300);
-        return () => clearTimeout(timer);
-    }, [pathname]);
-
-    return null;
+  return null;
 }

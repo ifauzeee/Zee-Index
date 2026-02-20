@@ -25,14 +25,12 @@ export class KVRateLimiter {
     this.windowSeconds = RATE_LIMITS[type].WINDOW;
   }
 
-
   async check(identifier: string): Promise<RateLimitResult> {
     const key = `${RATELIMIT_PREFIX}:${this.type}:${identifier}`;
     const now = Date.now();
 
     try {
       const currentCount = await kv.incr(key);
-
 
       if (currentCount === 1) {
         await kv.expire(key, this.windowSeconds);
@@ -50,7 +48,10 @@ export class KVRateLimiter {
         reset,
       };
     } catch (error) {
-      logger.error({ err: error, type: this.type, identifier }, "Rate limit check failed");
+      logger.error(
+        { err: error, type: this.type, identifier },
+        "Rate limit check failed",
+      );
 
       return {
         success: true,
@@ -62,26 +63,22 @@ export class KVRateLimiter {
   }
 }
 
-
 export const ratelimit = new KVRateLimiter("API");
 export const downloadLimiter = new KVRateLimiter("DOWNLOAD");
 export const authLimiter = new KVRateLimiter("AUTH");
 export const adminLimiter = new KVRateLimiter("ADMIN");
-
 
 export async function checkRateLimit(
   request: NextRequest,
   type: RateLimitType = "API",
   identifier?: string,
 ): Promise<RateLimitResult> {
-
   let finalId = identifier;
 
   if (!finalId) {
     const forwardedFor = request.headers.get("x-forwarded-for");
     finalId = forwardedFor ? forwardedFor.split(",")[0].trim() : "127.0.0.1";
   }
-
 
   let limiter: KVRateLimiter;
   switch (type) {
@@ -101,7 +98,6 @@ export async function checkRateLimit(
 
   return await limiter.check(finalId);
 }
-
 
 export function createRateLimitResponse(result: RateLimitResult) {
   return {

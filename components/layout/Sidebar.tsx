@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { useTranslations } from "next-intl";
+import { fetchFolderPathApi } from "@/hooks/useFileFetching";
 
 interface FolderNode {
   id: string;
@@ -173,17 +174,16 @@ export default function Sidebar() {
           staleTime: 60 * 1000,
         });
 
-        return (data.files || [])
-          .map((f: any) => ({
-            id: f.id,
-            name: f.name,
-            hasChildren: f.isFolder,
-            children: [],
-            isExpanded: false,
-            isLoading: false,
-            isProtected: f.isProtected,
-            isFolder: f.isFolder,
-          }));
+        return (data.files || []).map((f: any) => ({
+          id: f.id,
+          name: f.name,
+          hasChildren: f.isFolder,
+          children: [],
+          isExpanded: false,
+          isLoading: false,
+          isProtected: f.isProtected,
+          isFolder: f.isFolder,
+        }));
       } catch (error) {
         console.error(error);
         return [];
@@ -229,6 +229,99 @@ export default function Sidebar() {
     };
     if (mounted) initRoot();
   }, [rootFolderId, mounted, tree.children, fetchSubfolders]);
+
+  useEffect(() => {
+    if (!currentFolderId || !mounted) return;
+
+    const expandPath = async () => {
+      try {
+        const path = await fetchFolderPathApi(currentFolderId);
+        if (!path || !Array.isArray(path)) return;
+
+        const pathSet = new Set(path.map((p: any) => p.id));
+
+        pathSet.add(rootFolderId);
+
+        setTree((prevTree) => {
+          const newTree = { ...prevTree };
+
+          const updateNodeState = async (
+            node: FolderNode,
+          ): Promise<boolean> => {
+            let changed = false;
+
+            const shouldBeExpanded = pathSet.has(node.id);
+
+            if (node.isExpanded !== shouldBeExpanded) {
+              node.isExpanded = shouldBeExpanded;
+              changed = true;
+            }
+
+            if (
+              shouldBeExpanded &&
+              (!node.children || node.children.length === 0) &&
+              node.hasChildren
+            ) {
+              const children = await fetchSubfolders(node.id);
+              node.children = children;
+              changed = true;
+            }
+
+            if (node.children) {
+              for (const child of node.children) {
+                const childChanged = await updateNodeState(child);
+                if (childChanged) changed = true;
+              }
+            }
+
+            return changed;
+          };
+
+          return newTree;
+        });
+
+        let currentAndFutureTree = { ...tree };
+
+        const updateNodeState = async (node: FolderNode): Promise<boolean> => {
+          let changed = false;
+
+          const shouldBeExpanded = pathSet.has(node.id);
+
+          if (node.isExpanded !== shouldBeExpanded) {
+            node.isExpanded = shouldBeExpanded;
+            changed = true;
+          }
+
+          if (
+            shouldBeExpanded &&
+            (!node.children || node.children.length === 0) &&
+            node.hasChildren
+          ) {
+            const children = await fetchSubfolders(node.id);
+            node.children = children;
+            changed = true;
+          }
+
+          if (node.children) {
+            for (const child of node.children) {
+              const childChanged = await updateNodeState(child);
+              if (childChanged) changed = true;
+            }
+          }
+
+          return changed;
+        };
+
+        const hasChanges = await updateNodeState(currentAndFutureTree);
+
+        if (hasChanges) {
+          setTree({ ...currentAndFutureTree });
+        }
+      } catch (error) {}
+    };
+
+    expandPath();
+  }, [currentFolderId, mounted]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartRef.current = e.targetTouches[0].clientX;
@@ -301,7 +394,7 @@ export default function Sidebar() {
             "flex items-center gap-1.5 py-1.5 px-2 cursor-pointer hover:bg-accent/50 text-sm rounded-md transition-all select-none relative group my-0.5",
             isActive && "bg-accent text-accent-foreground font-medium",
             dragOverFolderId === node.id &&
-            "bg-primary/20 scale-[1.02] ring-2 ring-primary/50",
+              "bg-primary/20 scale-[1.02] ring-2 ring-primary/50",
           )}
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
           onDragOver={(e) => {
@@ -459,7 +552,7 @@ export default function Sidebar() {
                   className={cn(
                     "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors group",
                     currentFolderId === drive.id &&
-                    "bg-accent font-medium text-primary",
+                      "bg-accent font-medium text-primary",
                   )}
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
@@ -525,7 +618,7 @@ export default function Sidebar() {
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
               (pathname === "/" || pathname.match(/^\/[a-zA-Z-]{2,5}$/)) &&
-              "bg-accent font-medium text-primary",
+                "bg-accent font-medium text-primary",
             )}
           >
             {navigatingId === "home" ? (
@@ -545,7 +638,7 @@ export default function Sidebar() {
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
               pathname.includes("/favorites") &&
-              "bg-accent font-medium text-primary",
+                "bg-accent font-medium text-primary",
             )}
           >
             {navigatingId === "favorites" ? (
@@ -565,7 +658,7 @@ export default function Sidebar() {
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
               pathname.includes("/storage") &&
-              "bg-accent font-medium text-primary",
+                "bg-accent font-medium text-primary",
             )}
           >
             {navigatingId === "storage" ? (
@@ -585,7 +678,7 @@ export default function Sidebar() {
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
                   pathname.includes("/trash") &&
-                  "bg-accent font-medium text-primary",
+                    "bg-accent font-medium text-primary",
                 )}
               >
                 <Trash2 size={16} /> {t("trash")}
@@ -598,7 +691,7 @@ export default function Sidebar() {
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
                   pathname.includes("/admin") &&
-                  "bg-accent font-medium text-primary",
+                    "bg-accent font-medium text-primary",
                 )}
               >
                 <ShieldCheck size={16} /> {t("admin")}

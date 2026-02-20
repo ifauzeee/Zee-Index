@@ -71,7 +71,6 @@ class MemoryCache {
     }
   }
 
-
   get<T>(key: string): T | null {
     const entry = this.cache.get(key);
 
@@ -93,8 +92,12 @@ class MemoryCache {
     return entry.value as T;
   }
 
-
-  set<T>(key: string, value: T, ttlMs: number = DEFAULT_TTL, swrMs: number = 0): void {
+  set<T>(
+    key: string,
+    value: T,
+    ttlMs: number = DEFAULT_TTL,
+    swrMs: number = 0,
+  ): void {
     this.evictLRU();
 
     const now = Date.now();
@@ -109,7 +112,6 @@ class MemoryCache {
     this.stats.sets++;
   }
 
-
   has(key: string): boolean {
     const entry = this.cache.get(key);
     if (!entry) return false;
@@ -120,11 +122,9 @@ class MemoryCache {
     return true;
   }
 
-
   delete(key: string): boolean {
     return this.cache.delete(key);
   }
-
 
   deleteByPrefix(prefix: string): number {
     let deleted = 0;
@@ -137,11 +137,9 @@ class MemoryCache {
     return deleted;
   }
 
-
   clear(): void {
     this.cache.clear();
   }
-
 
   getStats(): CacheStats & { size: number; hitRate: string } {
     const total = this.stats.hits + this.stats.misses;
@@ -154,7 +152,6 @@ class MemoryCache {
       hitRate,
     };
   }
-
 
   async getOrSet<T>(
     key: string,
@@ -171,7 +168,6 @@ class MemoryCache {
     return value;
   }
 
-
   async getWithSWR<T>(
     key: string,
     fetcher: () => Promise<T>,
@@ -183,11 +179,12 @@ class MemoryCache {
 
     if (entry && entry.expires > now) {
       if (now > entry.staleAt) {
-
         logger.debug({ key }, "[MemoryCache] SWR Revalidating");
         fetcher()
           .then((value) => this.set(key, value, ttlMs, swrMs))
-          .catch((err) => logger.warn({ err, key }, "[MemoryCache] SWR Revalidation failed"));
+          .catch((err) =>
+            logger.warn({ err, key }, "[MemoryCache] SWR Revalidation failed"),
+          );
       }
       this.stats.hits++;
       entry.accessCount++;
