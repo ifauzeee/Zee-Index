@@ -338,14 +338,21 @@ export default function InfoPanel({
           {t("copyLink")}
         </button>
 
-        <a
-          href={directLink}
-          download
+        <button
+          onClick={() => {
+            const iframe = document.createElement("iframe");
+            iframe.style.display = "none";
+            iframe.src = directLink;
+            document.body.appendChild(iframe);
+            setTimeout(() => {
+              document.body.removeChild(iframe);
+            }, 5000);
+          }}
           className="flex items-center justify-center px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-semibold"
         >
           <Download size={18} className="mr-3" />
           {t("download")}
-        </a>
+        </button>
       </div>
     </div>
   );

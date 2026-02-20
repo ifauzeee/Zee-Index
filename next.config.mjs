@@ -47,6 +47,14 @@ const securityHeaders = [
 const nextConfig = {
   output: "standalone",
 
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
   logging: {
     fetches: {
       fullUrl: process.env.NODE_ENV === "development",

@@ -419,7 +419,13 @@ export default function FileBrowser({
     if (token) {
       url += `&access_token=${token}`;
     }
-    window.open(url, "_blank");
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    iframe.src = url;
+    document.body.appendChild(iframe);
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 5000);
   };
 
   const handleBreadcrumbClick = (folderId: string) => {

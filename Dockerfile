@@ -6,20 +6,25 @@
 # Stage 1: Base - Shared base image for consistency
 FROM node:20-alpine AS base
 RUN apk add --no-cache libc6-compat
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
 # Stage 2: Dependencies - Install only when package files change
 FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
-
-# Use BuildKit cache mount for faster reinstalls
+COPY pnpm-lock.yaml ./
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile --prefer-offline
+    pnpm fetch
+
+COPY package.json ./
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --offline --frozen-lockfile
 
 # Stage 3: Builder - Build the application
 FROM base AS builder
 WORKDIR /app
+ENV NODE_ENV=production
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules

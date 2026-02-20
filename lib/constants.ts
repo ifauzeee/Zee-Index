@@ -86,7 +86,7 @@ export const RATE_LIMITS = {
     WINDOW: 60,
   },
   DOWNLOAD: {
-    LIMIT: 10,
+    LIMIT: 100,
     WINDOW: 60 * 60,
   },
   AUTH: {

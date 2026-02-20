@@ -201,13 +201,20 @@ export const DefaultPreview: React.FC<{
         {fileName}
       </h3>
       <p className="text-sm text-zinc-500 mb-8">{t("notAvailable")}</p>
-      <a
-        href={downloadUrl}
-        download
+      <button
+        onClick={() => {
+          const iframe = document.createElement("iframe");
+          iframe.style.display = "none";
+          iframe.src = downloadUrl;
+          document.body.appendChild(iframe);
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+          }, 5000);
+        }}
         className="flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-medium hover:bg-zinc-200 transition-colors shadow-lg"
       >
         <Download size={18} /> {t("download")}
-      </a>
+      </button>
     </div>
   );
 };

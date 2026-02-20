@@ -72,12 +72,13 @@ export function BulkActionBar() {
 
       const content = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(content);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `zee-files-${Date.now()}.zip`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      iframe.src = url;
+      document.body.appendChild(iframe);
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 5000);
       URL.revokeObjectURL(url);
 
       addToast({ message: t("zipStarted"), type: "success" });

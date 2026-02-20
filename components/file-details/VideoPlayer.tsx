@@ -439,6 +439,8 @@ export default function VideoPlayer({
                 href={webViewLink}
                 target="_blank"
                 rel="noreferrer"
+                data-prevent-nprogress="true"
+                data-nprogress="off"
                 className="p-2 bg-black/40 hover:bg-black/80 text-white rounded-xl backdrop-blur-md border border-white/10 transition-all shadow-lg"
                 title="Buka original di Google Drive"
               >
@@ -486,13 +488,20 @@ export default function VideoPlayer({
               Codec video ini tidak didukung browser.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              <a
-                href={currentSrc}
-                download
+              <button
+                onClick={() => {
+                  const iframe = document.createElement("iframe");
+                  iframe.style.display = "none";
+                  iframe.src = currentSrc;
+                  document.body.appendChild(iframe);
+                  setTimeout(() => {
+                    document.body.removeChild(iframe);
+                  }, 5000);
+                }}
                 className="px-4 py-2 bg-primary hover:bg-primary/90 rounded-lg text-sm font-medium flex items-center gap-2"
               >
                 <Download size={16} /> Unduh File
-              </a>
+              </button>
             </div>
           </motion.div>
         )}
