@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getStorageDetails } from "@/lib/drive";
 
-export const revalidate = 3600;
+export const revalidate = 7200;
 export const maxDuration = 60;
 
 export async function GET() {

@@ -62,7 +62,8 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - zee-index
+      zee-index:
+        condition: service_healthy
 
 volumes:
   redis_data:
