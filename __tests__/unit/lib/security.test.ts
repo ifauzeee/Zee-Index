@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { isAccessRestricted } from "@/lib/securityUtils";
+import { isAccessRestricted, __resetCache } from "@/lib/securityUtils";
 
-vi.mock("@/lib/kv", () => ({
-  kv: {
-    hgetall: vi.fn(),
+vi.mock("@/lib/db", () => ({
+  db: {
+    protectedFolder: {
+      findMany: vi.fn(),
+    },
   },
 }));
 
@@ -15,7 +17,7 @@ vi.mock("@/lib/auth", () => ({
   hasUserAccess: vi.fn(),
 }));
 
-import { kv } from "@/lib/kv";
+import { db } from "@/lib/db";
 import { getFileDetailsFromDrive } from "@/lib/drive";
 import { hasUserAccess } from "@/lib/auth";
 
@@ -27,26 +29,33 @@ describe("lib/securityUtils/isAccessRestricted", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    __resetCache();
     process.env.PRIVATE_FOLDER_IDS = PRIVATE_ID;
     process.env.NEXT_PUBLIC_ROOT_FOLDER_ID = "root-id";
   });
 
   it("blocks access to protected folder without token or user", async () => {
-    (kv.hgetall as any).mockResolvedValue({ [PROTECTED_ID]: "some-config" });
+    (db.protectedFolder.findMany as any).mockResolvedValue([
+      { folderId: PROTECTED_ID },
+    ]);
 
     const result = await isAccessRestricted(PROTECTED_ID);
     expect(result).toBe(true);
   });
 
   it("allows access to protected folder with valid token", async () => {
-    (kv.hgetall as any).mockResolvedValue({ [PROTECTED_ID]: "some-config" });
+    (db.protectedFolder.findMany as any).mockResolvedValue([
+      { folderId: PROTECTED_ID },
+    ]);
 
     const result = await isAccessRestricted(PROTECTED_ID, [PROTECTED_ID]);
     expect(result).toBe(false);
   });
 
   it("allows access to protected folder with whitelist user email", async () => {
-    (kv.hgetall as any).mockResolvedValue({ [PROTECTED_ID]: "some-config" });
+    (db.protectedFolder.findMany as any).mockResolvedValue([
+      { folderId: PROTECTED_ID },
+    ]);
     (hasUserAccess as any).mockResolvedValue(true);
 
     const result = await isAccessRestricted(
@@ -62,7 +71,9 @@ describe("lib/securityUtils/isAccessRestricted", () => {
   });
 
   it("blocks access if user email is not whitelisted", async () => {
-    (kv.hgetall as any).mockResolvedValue({ [PROTECTED_ID]: "some-config" });
+    (db.protectedFolder.findMany as any).mockResolvedValue([
+      { folderId: PROTECTED_ID },
+    ]);
     (hasUserAccess as any).mockResolvedValue(false);
 
     const result = await isAccessRestricted(
@@ -74,7 +85,9 @@ describe("lib/securityUtils/isAccessRestricted", () => {
   });
 
   it("recursively checks parents for protection", async () => {
-    (kv.hgetall as any).mockResolvedValue({ [PROTECTED_ID]: "some-config" });
+    (db.protectedFolder.findMany as any).mockResolvedValue([
+      { folderId: PROTECTED_ID },
+    ]);
     (getFileDetailsFromDrive as any).mockImplementation(async (id: string) => {
       if (id === NESTED_ID) return { id: NESTED_ID, parents: [PROTECTED_ID] };
       if (id === PROTECTED_ID)
@@ -91,7 +104,7 @@ describe("lib/securityUtils/isAccessRestricted", () => {
   });
 
   it("stops recursion at root folder", async () => {
-    (kv.hgetall as any).mockResolvedValue({});
+    (db.protectedFolder.findMany as any).mockResolvedValue([]);
     (getFileDetailsFromDrive as any).mockImplementation(async (id: string) => {
       if (id === PUBLIC_ID) return { id, parents: ["root-id"] };
       return null;
@@ -102,7 +115,7 @@ describe("lib/securityUtils/isAccessRestricted", () => {
   });
 
   it("handles environment variable private folders", async () => {
-    (kv.hgetall as any).mockResolvedValue({});
+    (db.protectedFolder.findMany as any).mockResolvedValue([]);
 
     const result = await isAccessRestricted(PRIVATE_ID);
     expect(result).toBe(true);

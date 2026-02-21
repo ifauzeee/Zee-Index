@@ -8,6 +8,12 @@ let cachedProtectedIds: string[] | null = null;
 let lastCacheUpdate = 0;
 const CACHE_TTL = 10000;
 
+/** @internal */
+export function __resetCache() {
+  cachedProtectedIds = null;
+  lastCacheUpdate = 0;
+}
+
 async function getRestrictedIds(): Promise<string[]> {
   const now = Date.now();
   if (cachedProtectedIds && now - lastCacheUpdate < CACHE_TTL) {
