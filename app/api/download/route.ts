@@ -4,6 +4,7 @@ import { logActivity } from "@/lib/activityLogger";
 import { trackBandwidth } from "@/lib/analyticsTracker";
 import { logger } from "@/lib/logger";
 import { ERROR_MESSAGES } from "@/lib/constants";
+import { kv } from "@/lib/kv";
 import {
   validateDownloadRequest,
   prepareGoogleDriveUrl,
@@ -120,15 +121,29 @@ export async function GET(request: NextRequest) {
     );
 
     if (!range) {
-      logActivity("DOWNLOAD", {
-        itemName: fileDetails.name,
-        itemSize: fileDetails.size || "0",
-        userEmail: session?.user?.email,
-      }).catch((e) => logger.error({ err: e }, "Gagal mencatat log aktivitas"));
+      const forwardedFor = request.headers.get("x-forwarded-for");
+      const realIp = request.headers.get("x-real-ip");
+      const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : (realIp || "anonymous");
+      const userIdentifier = session?.user?.email || ip;
 
-      const downloadSize = parseInt(fileDetails.size || "0", 10);
-      if (downloadSize > 0) {
-        trackBandwidth(downloadSize).catch(() => {});
+      const dedupeKey = `loop_prevent:download:${fileId}:${userIdentifier}`;
+      const isDuplicate = await kv.get(dedupeKey);
+
+      if (!isDuplicate) {
+        await kv.set(dedupeKey, "1", { ex: 5 });
+
+        logActivity("DOWNLOAD", {
+          itemName: fileDetails.name,
+          itemSize: fileDetails.size || "0",
+          userEmail: session?.user?.email,
+        }).catch((e) => logger.error({ err: e }, "Gagal mencatat log aktivitas"));
+
+        const downloadSize = parseInt(fileDetails.size || "0", 10);
+        if (downloadSize > 0) {
+          trackBandwidth(downloadSize).catch(() => { });
+        }
+      } else {
+        logger.info({ fileId, userIdentifier }, "[Download] Skipping duplicate log");
       }
     }
 
