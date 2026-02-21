@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { folderId, id, password } = validation.data;
+    const { folderId, password } = validation.data;
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 

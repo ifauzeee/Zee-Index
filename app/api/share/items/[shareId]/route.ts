@@ -5,7 +5,6 @@ import { db } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import type { DriveFile } from "@/lib/drive";
-import type { ShareLink } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 

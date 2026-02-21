@@ -2,12 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { db } from "@/lib/db";
-import { getActivityLogs, type ActivityLog } from "@/lib/activityLogger";
+import { getActivityLogs } from "@/lib/activityLogger";
 import { z } from "zod";
 
 import { type Session } from "next-auth";
-
-const ACTIVITY_LOG_KEY = "zee-index:activity-log";
 
 const querySchema = z.object({
   page: z.coerce.number().min(1).default(1),

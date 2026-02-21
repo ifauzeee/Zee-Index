@@ -39,6 +39,7 @@ interface FolderNode {
   isLoading?: boolean;
   isProtected?: boolean;
   isFolder: boolean;
+  hasLoaded?: boolean;
 }
 
 interface ManualDrive {
@@ -175,18 +176,17 @@ export default function Sidebar() {
           staleTime: 60 * 1000,
         });
 
-        return (data.files || [])
-          .filter((f: any) => f.isFolder)
-          .map((f: any) => ({
-            id: f.id,
-            name: f.name,
-            hasChildren: true, // We assume true to show the chevron, it will update when expanded
-            children: [],
-            isExpanded: false,
-            isLoading: false,
-            isProtected: f.isProtected,
-            isFolder: f.isFolder,
-          }));
+        return (data.files || []).map((f: any) => ({
+          id: f.id,
+          name: f.name,
+          hasChildren: f.isFolder,
+          children: [],
+          isExpanded: false,
+          isLoading: false,
+          isProtected: f.isProtected,
+          isFolder: f.isFolder,
+          hasLoaded: !f.isFolder,
+        }));
       } catch (error) {
         console.error(error);
         return [];
@@ -195,43 +195,66 @@ export default function Sidebar() {
     [queryClient],
   );
 
-  const toggleNode = async (node: FolderNode, parents: string[] = []) => {
-    if (!node.isFolder) return;
-    const newTree = { ...tree };
-    let current = newTree;
-    for (const pid of parents) {
-      if (pid === rootFolderId) continue;
-      const found = current.children?.find((c) => c.id === pid);
-      if (found) current = found;
-    }
-    const target =
-      node.id === rootFolderId
-        ? newTree
-        : current.children?.find((c) => c.id === node.id);
-    if (!target) return;
-    if (
-      !target.isExpanded &&
-      (!target.children || target.children.length === 0)
-    ) {
-      target.isLoading = true;
-      setTree({ ...newTree });
-      const children = await fetchSubfolders(node.id);
-      target.children = children;
-      target.isLoading = false;
-    }
-    target.isExpanded = !target.isExpanded;
-    setTree({ ...newTree });
-  };
+  const toggleNode = useCallback(
+    async (targetNode: FolderNode) => {
+      if (!targetNode.isFolder) return;
+
+      const updateNodeRecursive = (
+        curr: FolderNode,
+        id: string,
+        updates: Partial<FolderNode>,
+      ): FolderNode => {
+        if (curr.id === id) {
+          return { ...curr, ...updates };
+        }
+        if (!curr.children) return curr;
+        return {
+          ...curr,
+          children: curr.children.map((c) =>
+            updateNodeRecursive(c, id, updates),
+          ),
+        };
+      };
+
+      const needsToLoad =
+        (!targetNode.children || targetNode.children.length === 0) &&
+        !targetNode.hasLoaded;
+
+      if (needsToLoad) {
+        setTree((prev) =>
+          updateNodeRecursive(prev, targetNode.id, { isLoading: true }),
+        );
+
+        const children = await fetchSubfolders(targetNode.id);
+
+        setTree((prev) =>
+          updateNodeRecursive(prev, targetNode.id, {
+            children,
+            isLoading: false,
+            isExpanded: true,
+            hasLoaded: true,
+          }),
+        );
+      } else {
+        setTree((prev) =>
+          updateNodeRecursive(prev, targetNode.id, {
+            isExpanded: !targetNode.isExpanded,
+          }),
+        );
+      }
+    },
+    [fetchSubfolders],
+  );
 
   useEffect(() => {
     const initRoot = async () => {
-      if (tree.children && tree.children.length === 0) {
+      if (tree.children && tree.children.length === 0 && !tree.hasLoaded) {
         const children = await fetchSubfolders(rootFolderId);
-        setTree((prev) => ({ ...prev, children }));
+        setTree((prev) => ({ ...prev, children, hasLoaded: true }));
       }
     };
     if (mounted) initRoot();
-  }, [rootFolderId, mounted, tree.children, fetchSubfolders]);
+  }, [rootFolderId, mounted, tree, fetchSubfolders]);
 
   useEffect(() => {
     if (!currentFolderId || !mounted) return;
@@ -244,48 +267,38 @@ export default function Sidebar() {
         const pathSet = new Set(path.map((p: any) => p.id));
         pathSet.add(rootFolderId);
 
-        setTree((prevTree) => {
-          const newTree = { ...prevTree };
-          return newTree;
-        });
-
-        const currentAndFutureTree = { ...tree };
-
-        const updateNodeState = async (node: FolderNode): Promise<boolean> => {
-          let changed = false;
+        const updateNodeState = async (
+          node: FolderNode,
+        ): Promise<FolderNode> => {
+          const updatedNode = { ...node };
 
           const shouldBeExpanded = pathSet.has(node.id);
 
-          if (node.isExpanded !== shouldBeExpanded) {
-            node.isExpanded = shouldBeExpanded;
-            changed = true;
+          if (shouldBeExpanded) {
+            updatedNode.isExpanded = true;
           }
 
           if (
             shouldBeExpanded &&
-            (!node.children || node.children.length === 0) &&
-            node.hasChildren
+            (!updatedNode.children || updatedNode.children.length === 0) &&
+            !updatedNode.hasLoaded
           ) {
             const children = await fetchSubfolders(node.id);
-            node.children = children;
-            changed = true;
+            updatedNode.children = children;
+            updatedNode.hasLoaded = true;
           }
 
-          if (node.children) {
-            for (const child of node.children) {
-              const childChanged = await updateNodeState(child);
-              if (childChanged) changed = true;
-            }
+          if (updatedNode.children) {
+            updatedNode.children = await Promise.all(
+              updatedNode.children.map((child) => updateNodeState(child)),
+            );
           }
 
-          return changed;
+          return updatedNode;
         };
 
-        const hasChanges = await updateNodeState(currentAndFutureTree);
-
-        if (hasChanges) {
-          setTree({ ...currentAndFutureTree });
-        }
+        const updatedTree = await updateNodeState(tree);
+        setTree(updatedTree);
       } catch (error) {
         console.error("Error expanding tree:", error);
       }
@@ -385,6 +398,9 @@ export default function Sidebar() {
             let url = "";
             if (node.isFolder) {
               url = node.id === rootFolderId ? "/" : `/folder/${node.id}`;
+              if (!node.isExpanded) {
+                toggleNode(node);
+              }
             } else {
               url = `/findpath?id=${node.id}`;
             }
@@ -404,7 +420,7 @@ export default function Sidebar() {
             onClick={(e) => {
               if (node.isFolder) {
                 e.stopPropagation();
-                toggleNode(node, parents);
+                toggleNode(node);
               }
             }}
             className={cn(
@@ -441,7 +457,17 @@ export default function Sidebar() {
                         : "text-muted-foreground group-hover:text-primary",
                     )}
                   />
-                ) : null}
+                ) : (
+                  <File
+                    size={14}
+                    className={cn(
+                      "shrink-0 transition-colors",
+                      isActive
+                        ? "text-primary"
+                        : "text-muted-foreground group-hover:text-primary",
+                    )}
+                  />
+                )}
                 {node.isProtected && (
                   <div className="absolute -bottom-0.5 -right-0.5 bg-background rounded-full p-0.5">
                     <Lock size={8} className="text-primary fill-primary/20" />
