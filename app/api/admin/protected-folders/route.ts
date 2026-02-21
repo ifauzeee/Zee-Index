@@ -37,7 +37,7 @@ export async function GET() {
 
     const sanitizedFolders: Record<string, any> = {};
     if (folders) {
-      folders.forEach((folder) => {
+      folders.forEach((folder: { folderId: string }) => {
         sanitizedFolders[folder.folderId] = {
           id: "admin",
           password: "***REDACTED***",

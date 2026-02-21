@@ -121,9 +121,9 @@ export async function GET(request: Request) {
       listFilesFromDrive(folderId, pageToken, 50, !forceRefresh),
       db.protectedFolder
         .findMany({ select: { folderId: true } })
-        .then((res) => {
+        .then((res: { folderId: string }[]) => {
           const map: Record<string, boolean> = {};
-          res.forEach((r) => (map[r.folderId] = true));
+          res.forEach((r: { folderId: string }) => (map[r.folderId] = true));
           return map;
         }),
     ]);
@@ -133,7 +133,7 @@ export async function GET(request: Request) {
     if (canSeeAll) {
       filteredFiles = driveResponse.files;
     } else {
-      const privateFoldersToCheck = driveResponse.files.filter((f) =>
+      const privateFoldersToCheck = driveResponse.files.filter((f: DriveFile) =>
         isPrivateFolder(f.id),
       );
       const accessMap =
@@ -141,12 +141,12 @@ export async function GET(request: Request) {
           ? await import("@/lib/auth").then((m) =>
               m.hasUserAccessBatch(
                 userEmail,
-                privateFoldersToCheck.map((f) => f.id),
+                privateFoldersToCheck.map((f: DriveFile) => f.id),
               ),
             )
           : {};
 
-      filteredFiles = driveResponse.files.filter((file) => {
+      filteredFiles = driveResponse.files.filter((file: DriveFile) => {
         const isPriv = isPrivateFolder(file.id);
         const isProt = !!(allProtectedFolders as any)[file.id];
 

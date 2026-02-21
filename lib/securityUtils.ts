@@ -18,7 +18,9 @@ async function getRestrictedIds(): Promise<string[]> {
     const protecteds = await db.protectedFolder.findMany({
       select: { folderId: true },
     });
-    const kvProtectedIds = protecteds.map((p) => p.folderId);
+    const kvProtectedIds = protecteds.map(
+      (p: { folderId: string }) => p.folderId,
+    );
     const envPrivateIds = getPrivateFolderIds();
 
     cachedProtectedIds = Array.from(

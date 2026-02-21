@@ -28,7 +28,7 @@ const getAdminStatsCached = unstable_cache(
     });
 
     const allLogs = allLogsRaw.map(
-      (log) =>
+      (log: any) =>
         ({
           ...log,
           type: log.type as any,

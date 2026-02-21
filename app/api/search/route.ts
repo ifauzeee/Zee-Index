@@ -162,9 +162,9 @@ export async function GET(request: NextRequest) {
     const [allProtectedFolders, isPrivFolder] = await Promise.all([
       db.protectedFolder
         .findMany({ select: { folderId: true } })
-        .then((res) => {
+        .then((res: { folderId: string }[]) => {
           const map: Record<string, boolean> = {};
-          res.forEach((r) => (map[r.folderId] = true));
+          res.forEach((r: { folderId: string }) => (map[r.folderId] = true));
           return map;
         }),
       import("@/lib/auth").then((m) => m.isPrivateFolder),

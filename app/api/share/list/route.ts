@@ -17,7 +17,7 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
-    const shareLinks: ShareLink[] = shareLinksRecords.map((record) => ({
+    const shareLinks: ShareLink[] = shareLinksRecords.map((record: any) => ({
       id: record.id,
       path: record.path,
       token: record.token,

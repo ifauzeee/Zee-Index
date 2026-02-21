@@ -18,25 +18,48 @@ Object.defineProperty(window, "matchMedia", {
 
 vi.mock("framer-motion", () => {
   const React = require("react");
+  const motionProps = [
+    "whileHover",
+    "whileTap",
+    "initial",
+    "animate",
+    "exit",
+    "variants",
+    "transition",
+    "layout",
+  ];
+
+  const filterProps = (props: any) => {
+    const filtered: any = {};
+    Object.keys(props).forEach((key) => {
+      if (!motionProps.includes(key)) {
+        filtered[key] = props[key];
+      }
+    });
+    return filtered;
+  };
+
   return {
     motion: {
       div: React.forwardRef(function MockMotionDiv(
-        {
-          children,
-          ...props
-        }: React.PropsWithChildren<Record<string, unknown>>,
-        ref: React.ForwardedRef<HTMLDivElement>,
+        { children, ...props }: any,
+        ref: any,
       ) {
-        return React.createElement("div", { ref, ...props }, children);
+        return React.createElement(
+          "div",
+          { ref, ...filterProps(props) },
+          children,
+        );
       }),
       button: React.forwardRef(function MockMotionButton(
-        {
-          children,
-          ...props
-        }: React.PropsWithChildren<Record<string, unknown>>,
-        ref: React.ForwardedRef<HTMLButtonElement>,
+        { children, ...props }: any,
+        ref: any,
       ) {
-        return React.createElement("button", { ref, ...props }, children);
+        return React.createElement(
+          "button",
+          { ref, ...filterProps(props) },
+          children,
+        );
       }),
     },
     AnimatePresence: function MockAnimatePresence({

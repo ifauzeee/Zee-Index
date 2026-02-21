@@ -159,7 +159,7 @@ export async function logActivity(
       .deleteMany({
         where: { timestamp: { lt: expirationTime } },
       })
-      .catch((e) =>
+      .catch((e: Error | any) =>
         logger.error({ err: e }, "Failed to clean old activity logs"),
       );
 
@@ -208,7 +208,7 @@ export async function getActivityLogs(
       orderBy: { timestamp: "desc" },
     });
 
-    return logs.map((log) => ({
+    return logs.map((log: any) => ({
       ...log,
       type: log.type as ActivityType,
       severity: log.severity as ActivityLog["severity"],
@@ -230,7 +230,7 @@ export async function getAdminAuditLogs(
       orderBy: { timestamp: "desc" },
     });
 
-    return logs.map((log) => ({
+    return logs.map((log: any) => ({
       ...log,
       type: log.type as ActivityType,
       severity: log.severity as ActivityLog["severity"],
@@ -261,7 +261,7 @@ export async function getSecurityLogs(
       orderBy: { timestamp: "desc" },
     });
 
-    return logs.map((log) => ({
+    return logs.map((log: any) => ({
       ...log,
       type: log.type as ActivityType,
       severity: log.severity as ActivityLog["severity"],
@@ -282,7 +282,7 @@ export async function getLogsByUser(
     take: limit,
     orderBy: { timestamp: "desc" },
   });
-  return logs.map((log) => ({
+  return logs.map((log: any) => ({
     ...log,
     type: log.type as ActivityType,
     severity: log.severity as ActivityLog["severity"],
@@ -299,7 +299,7 @@ export async function getLogsByType(
     take: limit,
     orderBy: { timestamp: "desc" },
   });
-  return logs.map((log) => ({
+  return logs.map((log: any) => ({
     ...log,
     type: log.type as ActivityType,
     severity: log.severity as ActivityLog["severity"],
