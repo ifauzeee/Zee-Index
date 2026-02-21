@@ -175,16 +175,18 @@ export default function Sidebar() {
           staleTime: 60 * 1000,
         });
 
-        return (data.files || []).map((f: any) => ({
-          id: f.id,
-          name: f.name,
-          hasChildren: f.isFolder,
-          children: [],
-          isExpanded: false,
-          isLoading: false,
-          isProtected: f.isProtected,
-          isFolder: f.isFolder,
-        }));
+        return (data.files || [])
+          .filter((f: any) => f.isFolder)
+          .map((f: any) => ({
+            id: f.id,
+            name: f.name,
+            hasChildren: true, // We assume true to show the chevron, it will update when expanded
+            children: [],
+            isExpanded: false,
+            isLoading: false,
+            isProtected: f.isProtected,
+            isFolder: f.isFolder,
+          }));
       } catch (error) {
         console.error(error);
         return [];
@@ -406,9 +408,9 @@ export default function Sidebar() {
               }
             }}
             className={cn(
-              "p-0.5 rounded-sm transition-colors",
+              "p-1.5 -ml-1.5 rounded-sm transition-colors flex items-center justify-center shrink-0",
               node.isFolder
-                ? "hover:bg-muted text-muted-foreground cursor-pointer"
+                ? "hover:bg-muted text-muted-foreground cursor-pointer group/chevron z-10"
                 : "opacity-0 cursor-default",
             )}
           >
@@ -426,7 +428,7 @@ export default function Sidebar() {
           </div>
           <div className="relative shrink-0 flex items-center justify-center w-3.5 h-3.5">
             {navigatingId === node.id ? (
-              <Loader2 size={12} className="animate-spin text-primary" />
+              <Loader2 size={14} className="animate-spin text-primary" />
             ) : (
               <>
                 {node.isFolder ? (
@@ -439,17 +441,7 @@ export default function Sidebar() {
                         : "text-muted-foreground group-hover:text-primary",
                     )}
                   />
-                ) : (
-                  <File
-                    size={14}
-                    className={cn(
-                      "shrink-0 transition-colors",
-                      isActive
-                        ? "text-primary fill-primary/20"
-                        : "text-muted-foreground group-hover:text-primary",
-                    )}
-                  />
-                )}
+                ) : null}
                 {node.isProtected && (
                   <div className="absolute -bottom-0.5 -right-0.5 bg-background rounded-full p-0.5">
                     <Lock size={8} className="text-primary fill-primary/20" />
