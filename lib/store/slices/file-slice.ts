@@ -176,16 +176,13 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
   },
   toggleFavorite: async (fileId: string, isCurrentlyFavorite: boolean) => {
     const originalFavorites = get().favorites;
-    const apiPath = isCurrentlyFavorite
-      ? "/api/favorites/remove"
-      : "/api/favorites/add";
     const newFavorites = isCurrentlyFavorite
       ? originalFavorites.filter((id: string) => id !== fileId)
       : [...originalFavorites, fileId];
     set({ favorites: newFavorites });
     try {
-      const response = await fetch(apiPath, {
-        method: "POST",
+      const response = await fetch("/api/favorites", {
+        method: isCurrentlyFavorite ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fileId }),
       });

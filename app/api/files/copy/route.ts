@@ -10,6 +10,8 @@ import { logActivity } from "@/lib/activityLogger";
 
 const copySchema = z.object({
   fileId: z.string().min(1),
+  destinationId: z.string().optional(),
+  newName: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { fileId } = validation.data;
+    const { fileId, destinationId, newName } = validation.data;
     const fileDetails = await getFileDetailsFromDrive(fileId);
 
     if (
@@ -41,10 +43,10 @@ export async function POST(request: NextRequest) {
         "Tidak dapat menemukan file asli atau informasi folder induknya.",
       );
     }
-    const parentId = fileDetails.parents[0];
+    const targetParentId = destinationId || fileDetails.parents[0];
 
     const accessToken = await getAccessToken();
-    const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/copy`;
+    const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/copy?supportsAllDrives=true`;
 
     const response = await fetch(driveUrl, {
       method: "POST",
@@ -52,19 +54,20 @@ export async function POST(request: NextRequest) {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ name: `Salinan dari ${fileDetails.name}` }),
+      body: JSON.stringify({
+        parents: [targetParentId],
+        name: newName || `Salinan dari ${fileDetails.name}`,
+      }),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(
-        `Google Drive API Error: ${
-          errorData.error?.message || "Gagal membuat salinan."
-        }`,
+        `Google Drive API Error: ${errorData.error?.message || "Gagal membuat salinan."}`,
       );
     }
 
-    await invalidateFolderCache(parentId);
+    await invalidateFolderCache(targetParentId);
     const copiedFile = await response.json();
 
     await logActivity("COPY", {

@@ -23,7 +23,7 @@ export default function CopyAction({
     setLoading(true);
     try {
       const newName = fileName ? `Copy of ${fileName}` : undefined;
-      await fetch("/api/file/copy", {
+      await fetch("/api/files/copy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
