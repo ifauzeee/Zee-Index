@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse, NextRequest } from "next/server";
 import { getAccessToken } from "@/lib/drive";
 import { withEditorSession } from "@/lib/api-middleware";

@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { kv } from "@/lib/kv";
+import { db } from "@/lib/db";
 import { DriveFile, getFileDetailsFromDrive } from "@/lib/drive";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -29,9 +32,13 @@ export async function GET() {
 
     const [results, allProtectedFolders, isPrivFolder] = await Promise.all([
       Promise.all(detailPromises),
-      kv
-        .hgetall<Record<string, unknown>>("zee-index:protected-folders")
-        .then((res) => res || {}),
+      db.protectedFolder
+        .findMany({ select: { folderId: true } })
+        .then((res) => {
+          const map: Record<string, boolean> = {};
+          res.forEach((r) => (map[r.folderId] = true));
+          return map;
+        }),
       import("@/lib/auth").then((m) => m.isPrivateFolder),
     ]);
 

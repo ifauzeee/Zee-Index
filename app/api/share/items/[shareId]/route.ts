@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
+import { db } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import type { DriveFile } from "@/lib/drive";
 import type { ShareLink } from "@/lib/store";
 
-const SHARE_LINKS_KEY = "zee-index:share-links";
+export const dynamic = "force-dynamic";
 
 export async function GET(
   req: NextRequest,
@@ -63,8 +64,9 @@ export async function GET(
       );
     }
 
-    const allLinks: ShareLink[] = (await kv.get(SHARE_LINKS_KEY)) || [];
-    const linkDetails = allLinks.find((link) => link.jti === shareId);
+    const linkDetails = await db.shareLink.findUnique({
+      where: { jti: shareId },
+    });
 
     return NextResponse.json({
       items,

@@ -1,9 +1,10 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+import { db } from "@/lib/db";
 import { kv } from "@/lib/kv";
-
-const SHARE_LINKS_KEY = "zee-index:share-links";
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,8 +33,11 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    await kv.hdel(SHARE_LINKS_KEY, jti);
-    await kv.del(`zee-index:share-view-count:${jti}`);
+    await db.shareLink
+      .delete({
+        where: { jti },
+      })
+      .catch(() => {});
 
     return NextResponse.json({
       success: true,

@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
+import { db } from "@/lib/db";
 import { isAccessRestricted } from "@/lib/securityUtils";
 
 async function validateShareToken(request: Request): Promise<boolean> {
@@ -118,9 +119,13 @@ export async function GET(request: Request) {
 
     const [driveResponse, allProtectedFolders] = await Promise.all([
       listFilesFromDrive(folderId, pageToken, 50, !forceRefresh),
-      kv
-        .hgetall<Record<string, unknown>>("zee-index:protected-folders")
-        .then((res) => res || {}),
+      db.protectedFolder
+        .findMany({ select: { folderId: true } })
+        .then((res) => {
+          const map: Record<string, boolean> = {};
+          res.forEach((r) => (map[r.folderId] = true));
+          return map;
+        }),
     ]);
 
     let filteredFiles: DriveFile[];

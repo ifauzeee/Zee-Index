@@ -3,6 +3,8 @@ import sharp from "sharp";
 
 export const runtime = "nodejs";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const imageUrl = url.searchParams.get("url");

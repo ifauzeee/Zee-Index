@@ -1,13 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import { kv } from "@/lib/kv";
+import { db } from "@/lib/db";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
 import { type Session } from "next-auth";
-
-const PROTECTED_FOLDERS_KEY = "zee-index:protected-folders";
 
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
 
@@ -27,22 +25,21 @@ async function isAdmin(session: Session | null): Promise<boolean> {
   return session?.user?.role === "ADMIN";
 }
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!(await isAdmin(session))) {
     return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
   }
   try {
-    const folders = (await kv.hgetall(PROTECTED_FOLDERS_KEY)) as Record<
-      string,
-      any
-    >;
+    const folders = await db.protectedFolder.findMany();
 
     const sanitizedFolders: Record<string, any> = {};
     if (folders) {
-      Object.keys(folders).forEach((key) => {
-        sanitizedFolders[key] = {
-          id: folders[key].id,
+      folders.forEach((folder) => {
+        sanitizedFolders[folder.folderId] = {
+          id: "admin",
           password: "***REDACTED***",
         };
       });
@@ -78,9 +75,12 @@ export async function POST(request: NextRequest) {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    await kv.hset(PROTECTED_FOLDERS_KEY, {
-      [folderId]: { id: id || "admin", password: hashedPassword },
+    await db.protectedFolder.upsert({
+      where: { folderId },
+      update: { password: hashedPassword },
+      create: { folderId, password: hashedPassword },
     });
+
     return NextResponse.json({
       success: true,
       message: `Folder ${folderId} berhasil dilindungi.`,
@@ -107,7 +107,13 @@ export async function DELETE(request: NextRequest) {
         { status: 400 },
       );
     }
-    await kv.hdel(PROTECTED_FOLDERS_KEY, folderId.trim());
+
+    await db.protectedFolder
+      .delete({
+        where: { folderId: folderId.trim() },
+      })
+      .catch(() => {});
+
     return NextResponse.json({
       success: true,
       message: `Perlindungan untuk folder ${folderId} telah dihapus.`,

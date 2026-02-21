@@ -5,7 +5,7 @@
 
 # Stage 1: Base - Shared base image for consistency
 FROM node:20-alpine AS base
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable && corepack prepare pnpm@latest --activate
@@ -42,8 +42,10 @@ ARG NEXT_PUBLIC_SENTRY_DSN
 ENV NEXT_PUBLIC_ROOT_FOLDER_ID=$NEXT_PUBLIC_ROOT_FOLDER_ID
 ENV NEXT_PUBLIC_ROOT_FOLDER_NAME=$NEXT_PUBLIC_ROOT_FOLDER_NAME
 ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
+ENV DATABASE_URL="file:./dev.db"
 
 # Build with cache mount for .next/cache
+RUN npx prisma generate
 RUN --mount=type=cache,id=nextjs-cache,target=/app/.next/cache \
     pnpm run build
 
@@ -59,12 +61,20 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
 # Install only runtime dependencies
-RUN apk add --no-cache curl dumb-init
+RUN apk add --no-cache curl dumb-init openssl
 
 # Copy only necessary files from builder
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma/client/libquery_engine-*.so.node ./node_modules/.prisma/client/
+
+# Entrypoint script
+RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
+    echo 'npx prisma@5.22.0 db push --accept-data-loss' >> /app/entrypoint.sh && \
+    echo 'exec "$@"' >> /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh
 
 USER nextjs
 
@@ -76,5 +86,5 @@ ENV HOSTNAME="0.0.0.0"
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:3000/api/health || exit 1
 
-ENTRYPOINT ["dumb-init", "--"]
+ENTRYPOINT ["dumb-init", "--", "/app/entrypoint.sh"]
 CMD ["node", "server.js"]

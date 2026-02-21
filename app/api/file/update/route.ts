@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse, NextRequest } from "next/server";
 import { updateFileContent } from "@/lib/drive";
 import { getServerSession } from "next-auth";

@@ -3,6 +3,8 @@ import { revalidateTag } from "next/cache";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (session?.user?.role !== "ADMIN") {

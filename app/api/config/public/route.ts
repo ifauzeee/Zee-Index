@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { kv } from "@/lib/kv";
 
 const CONFIG_KEY = "zee-index:config";
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const config: { disableGuestLogin?: boolean; hideAuthor?: boolean } | null =

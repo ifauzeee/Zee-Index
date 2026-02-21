@@ -1,5 +1,6 @@
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
+import { db } from "@/lib/db";
 import { memoryCache, CACHE_TTL } from "@/lib/memory-cache";
 import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
@@ -21,18 +22,11 @@ export async function isProtected(folderId: string): Promise<boolean> {
   if (cached !== null) return cached;
 
   try {
-    const protectedFolders = await kv.hgetall("zee-index:protected-folders");
+    const protectedFolder = await db.protectedFolder.findUnique({
+      where: { folderId: targetId },
+    });
 
-    if (!protectedFolders) {
-      memoryCache.set(cacheKey, false, CACHE_TTL.PROTECTED_FOLDERS);
-      return false;
-    }
-
-    const folders = protectedFolders as Record<string, unknown>;
-    const result = !!(
-      folders[targetId] ||
-      Object.keys(folders).some((key) => key.trim() === targetId)
-    );
+    const result = !!protectedFolder;
 
     memoryCache.set(cacheKey, result, CACHE_TTL.PROTECTED_FOLDERS);
     return result;
@@ -47,18 +41,12 @@ export async function getProtectedFolderCredentials(
   if (!folderId) return null;
   try {
     const targetId = folderId.trim();
-    const protectedFolders = await kv.hgetall<
-      Record<string, { id: string; password: string }>
-    >("zee-index:protected-folders");
+    const folder = await db.protectedFolder.findUnique({
+      where: { folderId: targetId },
+    });
 
-    if (!protectedFolders) return null;
-
-    const foundKey = Object.keys(protectedFolders).find(
-      (key) => key.trim() === targetId,
-    );
-
-    if (foundKey) {
-      return protectedFolders[foundKey];
+    if (folder && folder.password) {
+      return { id: "admin", password: folder.password };
     }
     return null;
   } catch {

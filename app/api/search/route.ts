@@ -6,6 +6,7 @@ import { validateShareToken } from "@/lib/auth";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
+import { db } from "@/lib/db";
 
 const CACHE_TTL = 3600;
 
@@ -159,9 +160,13 @@ export async function GET(request: NextRequest) {
     }
 
     const [allProtectedFolders, isPrivFolder] = await Promise.all([
-      kv
-        .hgetall<Record<string, unknown>>("zee-index:protected-folders")
-        .then((res) => res || {}),
+      db.protectedFolder
+        .findMany({ select: { folderId: true } })
+        .then((res) => {
+          const map: Record<string, boolean> = {};
+          res.forEach((r) => (map[r.folderId] = true));
+          return map;
+        }),
       import("@/lib/auth").then((m) => m.isPrivateFolder),
     ]);
 

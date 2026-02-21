@@ -1,10 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("@/lib/kv", () => ({
-  kv: {
-    zadd: vi.fn().mockResolvedValue(1),
-    zrange: vi.fn().mockResolvedValue([]),
-    zremrangebyscore: vi.fn().mockResolvedValue(0),
+vi.mock("@/lib/db", () => ({
+  db: {
+    activityLog: {
+      create: vi
+        .fn()
+        .mockImplementation((args) =>
+          Promise.resolve({ id: "mock-id", ...args.data }),
+        ),
+      findMany: vi.fn().mockResolvedValue([]),
+      deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+    },
   },
 }));
 
@@ -24,7 +30,7 @@ import {
   getActivityStats,
   type ActivityType,
 } from "@/lib/activityLogger";
-import { kv } from "@/lib/kv";
+import { db } from "@/lib/db";
 
 describe("activityLogger", () => {
   beforeEach(() => {
@@ -42,7 +48,7 @@ describe("activityLogger", () => {
       expect(result?.type).toBe("UPLOAD");
       expect(result?.itemName).toBe("test.pdf");
       expect(result?.severity).toBe("info");
-      expect(kv.zadd).toHaveBeenCalled();
+      expect(db.activityLog.create).toHaveBeenCalled();
     });
 
     it("assigns correct severity levels", async () => {
@@ -64,7 +70,7 @@ describe("activityLogger", () => {
         userEmail: "attacker@evil.com",
       });
 
-      expect(kv.zadd).toHaveBeenCalled();
+      expect(db.activityLog.create).toHaveBeenCalled();
     });
 
     it("logs admin actions to audit log", async () => {
@@ -73,7 +79,7 @@ describe("activityLogger", () => {
         targetUser: "newadmin@example.com",
       });
 
-      expect(kv.zadd).toHaveBeenCalled();
+      expect(db.activityLog.create).toHaveBeenCalled();
     });
 
     it("includes client info in logs", async () => {
@@ -92,17 +98,17 @@ describe("activityLogger", () => {
       expect(logs).toEqual([]);
     });
 
-    it("parses JSON logs correctly", async () => {
+    it("fetches from db correctly", async () => {
       const mockLogs = [
-        JSON.stringify({
+        {
           id: "1",
           type: "UPLOAD",
           timestamp: Date.now(),
           severity: "info",
-        }),
+        },
       ];
 
-      vi.mocked(kv.zrange).mockResolvedValueOnce(mockLogs);
+      vi.mocked(db.activityLog.findMany).mockResolvedValueOnce(mockLogs as any);
 
       const logs = await getActivityLogs();
       expect(logs.length).toBe(1);
@@ -114,27 +120,27 @@ describe("activityLogger", () => {
     it("calculates stats correctly", async () => {
       const now = Date.now();
       const mockLogs = [
-        JSON.stringify({
+        {
           id: "1",
           type: "UPLOAD",
           timestamp: now,
           severity: "info",
-        }),
-        JSON.stringify({
+        },
+        {
           id: "2",
           type: "DOWNLOAD",
           timestamp: now - 1000,
           severity: "info",
-        }),
-        JSON.stringify({
+        },
+        {
           id: "3",
           type: "DELETE",
           timestamp: now - 2000,
           severity: "warning",
-        }),
+        },
       ];
 
-      vi.mocked(kv.zrange).mockResolvedValueOnce(mockLogs);
+      vi.mocked(db.activityLog.findMany).mockResolvedValueOnce(mockLogs as any);
 
       const stats = await getActivityStats();
 

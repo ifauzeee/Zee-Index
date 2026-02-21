@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import { kv } from "@/lib/kv";
-import type { ActivityLog } from "@/lib/activityLogger";
+import { db } from "@/lib/db";
+import { getActivityLogs, type ActivityLog } from "@/lib/activityLogger";
 import { z } from "zod";
 
 import { type Session } from "next-auth";
@@ -17,6 +17,8 @@ const querySchema = z.object({
 async function isAdmin(session: Session | null): Promise<boolean> {
   return session?.user?.role === "ADMIN";
 }
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -38,26 +40,10 @@ export async function GET(request: NextRequest) {
   const offset = (page - 1) * limit;
 
   try {
-    const totalLogs = await kv.zcard(ACTIVITY_LOG_KEY);
+    const totalLogs = await db.activityLog.count();
     const totalPages = Math.ceil(totalLogs / limit);
 
-    const logStrings: string[] = await kv.zrange(
-      ACTIVITY_LOG_KEY,
-      offset,
-      offset + limit - 1,
-      { rev: true },
-    );
-
-    const logs: ActivityLog[] = logStrings
-      .map((logStr) => {
-        try {
-          return typeof logStr === "string" ? JSON.parse(logStr) : logStr;
-        } catch (e) {
-          console.error("Gagal mem-parsing entri log:", logStr, e);
-          return null;
-        }
-      })
-      .filter((log): log is ActivityLog => log !== null);
+    const logs = await getActivityLogs(limit, offset);
 
     return NextResponse.json({
       logs,

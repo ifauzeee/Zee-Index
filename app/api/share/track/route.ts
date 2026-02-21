@@ -1,5 +1,7 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest } from "next/server";
-import { kv } from "@/lib/kv";
+import { db } from "@/lib/db";
 import { jwtVerify } from "jose";
 
 export async function POST(req: NextRequest) {
@@ -12,8 +14,14 @@ export async function POST(req: NextRequest) {
     const jti = payload.jti;
     if (!jti) return new Response(null, { status: 204 });
 
-    const key = `zee-index:share-view-count:${jti}`;
-    await kv.incr(key);
+    await db.shareLink
+      .update({
+        where: { jti },
+        data: {
+          views: { increment: 1 },
+        },
+      })
+      .catch(() => {});
 
     return new Response(null, { status: 204 });
   } catch (error) {

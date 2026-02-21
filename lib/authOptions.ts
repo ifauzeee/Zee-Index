@@ -1,38 +1,15 @@
 import { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { kv } from "@/lib/kv";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { db } from "@/lib/db";
 import { User } from "next-auth";
+import { logger } from "@/lib/logger";
 
-const ADMIN_EMAILS_KEY = "zee-index:admins";
 const CONFIG_KEY = "zee-index:config";
 
-async function ensureInitialAdmins() {
-  try {
-    const initialAdmins =
-      process.env.ADMIN_EMAILS?.split(",")
-        .map((email) => email.trim())
-        .filter(Boolean) || [];
-    if (initialAdmins.length > 0) {
-      const existingAdmins = (await kv.smembers(ADMIN_EMAILS_KEY)) as string[];
-      const adminsToAdd = initialAdmins.filter(
-        (email) => !existingAdmins.includes(email),
-      );
-      if (adminsToAdd.length > 0) {
-        await kv.sadd(
-          ADMIN_EMAILS_KEY,
-          ...(adminsToAdd as [string, ...string[]]),
-        );
-      }
-    }
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-ensureInitialAdmins();
-
 export const authOptions: AuthOptions = {
+  adapter: PrismaAdapter(db) as any,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -47,7 +24,7 @@ export const authOptions: AuthOptions = {
       },
       async authorize(credentials): Promise<User | null> {
         if (!credentials?.email || !credentials.password) {
-          console.log("[Auth] No credentials provided");
+          logger.warn("[Auth] No credentials provided");
           return null;
         }
 
@@ -55,57 +32,61 @@ export const authOptions: AuthOptions = {
         const password = credentials.password;
 
         try {
-          const adminEmails = (await kv.smembers(ADMIN_EMAILS_KEY)) as string[];
-          const envAdminsRaw = process.env.ADMIN_EMAILS || "";
-
           const normalizedInputEmail = email.toLowerCase().trim();
+          const dbUser = await db.user.findUnique({
+            where: { email: normalizedInputEmail },
+          });
+          const envAdminsRaw = process.env.ADMIN_EMAILS || "";
           const normalizedEnvAdmins = envAdminsRaw
             .split(",")
             .map((e) => e.trim().toLowerCase().replace(/["']/g, ""));
 
-          const isAdminKV = adminEmails.some(
-            (e) => e.toLowerCase() === normalizedInputEmail,
-          );
           const isAdminEnv = normalizedEnvAdmins.includes(normalizedInputEmail);
-          const isAdmin = isAdminKV || isAdminEnv;
+          const isAdminDb = dbUser?.role === "ADMIN";
+          const isAdmin = isAdminDb || isAdminEnv;
 
           const envPass = (process.env.ADMIN_PASSWORD || "")
             .trim()
             .replace(/["']/g, "");
           const isPassValid = password === envPass;
 
-          console.log("[Auth] Login attempt:", {
-            inputEmail: normalizedInputEmail,
-            kvAdmins: adminEmails,
-            envAdmins: normalizedEnvAdmins,
-            isAdminKV,
-            isAdminEnv,
-            isAdmin,
-            isPassValid,
-            envPassLength: envPass.length,
-            inputPassLength: password.length,
-          });
+          logger.info(
+            {
+              inputEmail: normalizedInputEmail,
+              isAdminDb,
+              isAdminEnv,
+              isAdmin,
+              isPassValid,
+            },
+            "[Auth] Login attempt",
+          );
 
           if (isAdmin && isPassValid) {
-            console.log("[Auth] Login successful for:", email);
+            logger.info({ email }, "[Auth] Login successful");
+
+            if (!dbUser) {
+              await db.user.create({
+                data: {
+                  email: normalizedInputEmail,
+                  role: "ADMIN",
+                  name: normalizedInputEmail.split("@")[0],
+                },
+              });
+            }
+
             return {
-              id: email,
-              name: email.split("@")[0],
-              email: email,
+              id: dbUser?.id || normalizedInputEmail,
+              name: dbUser?.name || normalizedInputEmail.split("@")[0],
+              email: normalizedInputEmail,
               role: "ADMIN",
               isGuest: false,
             };
           }
 
-          console.log(
-            "[Auth] Login failed - isAdmin:",
-            isAdmin,
-            "isPassValid:",
-            isPassValid,
-          );
+          logger.info({ isAdmin, isPassValid }, "[Auth] Login failed");
           return null;
         } catch (error) {
-          console.error("[Auth] Error during authorization:", error);
+          logger.error({ err: error }, "[Auth] Error during authorization");
           return null;
         }
       },
@@ -116,15 +97,16 @@ export const authOptions: AuthOptions = {
       credentials: {},
       async authorize(): Promise<User | null> {
         try {
-          const config: { disableGuestLogin?: boolean } | null =
-            await kv.get(CONFIG_KEY);
-
-          if (config?.disableGuestLogin === true) {
-            return null;
+          const configEntry = await db.adminConfig.findUnique({
+            where: { key: CONFIG_KEY },
+          });
+          if (configEntry) {
+            const config = JSON.parse(configEntry.value);
+            if (config?.disableGuestLogin === true) {
+              return null;
+            }
           }
-        } catch {
-          return null;
-        }
+        } catch {}
 
         const guestId = `guest_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
         return {
@@ -155,22 +137,20 @@ export const authOptions: AuthOptions = {
         token.email = user.email;
         token.isGuest = false;
 
-        const adminEmails = (await kv.smembers(ADMIN_EMAILS_KEY)) as string[];
-        const envAdminsRaw = process.env.ADMIN_EMAILS || "";
-
         const normalizedUserEmail = user.email.toLowerCase().trim();
+        const dbUser = await db.user.findUnique({
+          where: { email: normalizedUserEmail },
+        });
+
+        const envAdminsRaw = process.env.ADMIN_EMAILS || "";
         const normalizedEnvAdmins = envAdminsRaw
           .split(",")
           .map((e) => e.trim().toLowerCase().replace(/["']/g, ""));
 
         const isAdmin =
-          adminEmails.some((e) => e.toLowerCase() === normalizedUserEmail) ||
+          dbUser?.role === "ADMIN" ||
           normalizedEnvAdmins.includes(normalizedUserEmail);
-
-        const isEditor = await kv.sismember(
-          "zee-index:editors",
-          normalizedUserEmail,
-        );
+        const isEditor = dbUser?.role === "EDITOR";
 
         if (user.role) {
           token.role = user.role as any;
@@ -178,34 +158,54 @@ export const authOptions: AuthOptions = {
           token.role = (
             isAdmin ? "ADMIN" : isEditor ? "EDITOR" : "USER"
           ) as any;
+
+          if (dbUser && dbUser.role !== token.role) {
+            await db.user.update({
+              where: { email: normalizedUserEmail },
+              data: { role: token.role as string },
+            });
+          }
         }
 
-        const is2FAEnabled = await kv.get(`2fa:enabled:${user.email}`);
-        token.twoFactorRequired = !!is2FAEnabled;
+        token.twoFactorRequired = false;
       } else if (profile?.email && !token.email) {
         token.email = profile.email;
 
-        const adminEmails = (await kv.smembers(ADMIN_EMAILS_KEY)) as string[];
-        const envAdminsRaw = process.env.ADMIN_EMAILS || "";
-
         const normalizedProfileEmail = profile.email.toLowerCase().trim();
+        let dbUser = await db.user.findUnique({
+          where: { email: normalizedProfileEmail },
+        });
+
+        if (!dbUser) {
+          dbUser = await db.user.create({
+            data: {
+              email: normalizedProfileEmail,
+              name: profile.name || normalizedProfileEmail.split("@")[0],
+              role: "USER",
+            },
+          });
+        }
+
+        const envAdminsRaw = process.env.ADMIN_EMAILS || "";
         const normalizedEnvAdmins = envAdminsRaw
           .split(",")
           .map((e) => e.trim().toLowerCase().replace(/["']/g, ""));
 
         const isAdmin =
-          adminEmails.some((e) => e.toLowerCase() === normalizedProfileEmail) ||
+          dbUser?.role === "ADMIN" ||
           normalizedEnvAdmins.includes(normalizedProfileEmail);
-
-        const isEditor = await kv.sismember(
-          "zee-index:editors",
-          normalizedProfileEmail,
-        );
+        const isEditor = dbUser?.role === "EDITOR";
 
         token.role = (isAdmin ? "ADMIN" : isEditor ? "EDITOR" : "USER") as any;
 
-        const is2FAEnabled = await kv.get(`2fa:enabled:${profile.email}`);
-        token.twoFactorRequired = !!is2FAEnabled;
+        if (dbUser.role !== token.role) {
+          await db.user.update({
+            where: { email: normalizedProfileEmail },
+            data: { role: token.role as string },
+          });
+        }
+
+        token.twoFactorRequired = false;
       }
       return token;
     },
@@ -218,7 +218,6 @@ export const authOptions: AuthOptions = {
           session.user.name = "Guest User";
         }
       }
-      return session;
       return session;
     },
   },

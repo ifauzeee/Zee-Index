@@ -18,6 +18,8 @@ async function isAdmin(session: Session | null): Promise<boolean> {
   return session?.user?.role === "ADMIN";
 }
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!(await isAdmin(session))) {

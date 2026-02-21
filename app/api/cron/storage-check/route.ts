@@ -6,6 +6,8 @@ import { kv } from "@/lib/kv";
 
 const WARNING_SENT_KEY = "zee-index:storage-warning-sent";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {

@@ -6,10 +6,10 @@ export const revalidate = 3600;
 export default async function Home() {
   const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
 
-  const [isProtected, isPrivateFolder, kv] = await Promise.all([
+  const [isProtected, isPrivateFolder, db] = await Promise.all([
     import("@/lib/auth").then((m) => m.isProtected),
     import("@/lib/auth").then((m) => m.isPrivateFolder),
-    import("@/lib/kv").then((m) => m.kv),
+    import("@/lib/db").then((m) => m.db),
   ]);
 
   let initialFiles: any[] | undefined = undefined;
@@ -21,9 +21,13 @@ export default async function Home() {
     try {
       const [data, allProtectedFolders] = await Promise.all([
         listFilesFromDrive(rootId, null, 50, true),
-        kv
-          .hgetall<Record<string, unknown>>("zee-index:protected-folders")
-          .then((res) => res || {}),
+        db.protectedFolder
+          .findMany({ select: { folderId: true } })
+          .then((res) => {
+            const map: Record<string, boolean> = {};
+            res.forEach((r) => (map[r.folderId] = true));
+            return map;
+          }),
       ]);
 
       initialFiles = data.files.map((f) => {

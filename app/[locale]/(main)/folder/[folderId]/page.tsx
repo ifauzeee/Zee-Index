@@ -58,10 +58,14 @@ export default async function FolderPage(props: {
     await Promise.all([
       getFolderPath(cleanFolderId, locale),
       isProtected(cleanFolderId),
-      import("@/lib/kv").then((m) =>
-        m.kv
-          .hgetall<Record<string, unknown>>("zee-index:protected-folders")
-          .then((res) => res || {}),
+      import("@/lib/db").then((m) =>
+        m.db.protectedFolder
+          .findMany({ select: { folderId: true } })
+          .then((res) => {
+            const map: Record<string, boolean> = {};
+            res.forEach((r) => (map[r.folderId] = true));
+            return map;
+          }),
       ),
       import("@/lib/auth").then((m) => m.isPrivateFolder),
     ]);

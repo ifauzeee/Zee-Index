@@ -1,9 +1,12 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { SignJWT, decodeJwt } from "jose";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import crypto from "crypto";
 import { kv } from "@/lib/kv";
+import { db } from "@/lib/db";
 import type { ShareLink } from "@/lib/store";
 import { sendMail } from "@/lib/mailer";
 import type { DriveFile } from "@/lib/drive";
@@ -16,8 +19,6 @@ interface ShareRequestBody {
   loginRequired?: boolean;
   items?: DriveFile[];
 }
-
-const SHARE_LINKS_KEY = "zee-index:share-links";
 
 export async function POST(req: NextRequest) {
   try {
@@ -86,18 +87,31 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const newShareLink: ShareLink = {
-      id: jti,
-      path: sharePath,
-      token,
-      jti,
-      expiresAt: new Date(decodedToken.exp * 1000).toISOString(),
-      loginRequired: loginRequired ?? false,
-      itemName: shareName,
-      isCollection: isCollection,
-    };
+    const expiresAtDate = new Date(decodedToken.exp * 1000);
 
-    await kv.hset(SHARE_LINKS_KEY, { [newShareLink.jti]: newShareLink });
+    const shareLinkRecord = await db.shareLink.create({
+      data: {
+        id: jti,
+        path: sharePath,
+        token,
+        jti,
+        expiresAt: expiresAtDate,
+        loginRequired: loginRequired ?? false,
+        itemName: shareName,
+        isCollection: isCollection,
+      },
+    });
+
+    const newShareLink: ShareLink = {
+      id: shareLinkRecord.id,
+      path: shareLinkRecord.path,
+      token: shareLinkRecord.token,
+      jti: shareLinkRecord.jti,
+      expiresAt: shareLinkRecord.expiresAt.toISOString(),
+      loginRequired: shareLinkRecord.loginRequired,
+      itemName: shareLinkRecord.itemName,
+      isCollection: shareLinkRecord.isCollection,
+    };
 
     const adminEmails =
       process.env.ADMIN_EMAILS?.split(",")
@@ -110,22 +124,20 @@ export async function POST(req: NextRequest) {
           isCollection ? "Koleksi" : "Berbagi"
         } Baru Dibuat`,
         html: `
-    
-        <p>Halo Admin,</p>
-                <p>Tautan ${
-          isCollection ? "koleksi" : "berbagi"
-        } baru telah dibuat oleh <b>${session.user.email}</b>.</p>
-                <ul>
-                    <li><b>Item:</b> ${shareName}</li>
-                    <li><b>Path:</b> ${sharePath}</li>
-                    <li><b>Kedaluwarsa pada:</b> ${new Date(
-          newShareLink.expiresAt,
-        ).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}</li>
-                    <li><b>Wajib Login:</b> ${loginRequired ? "Ya" : "Tidak"}</li>
-                </ul>
-    
-            <p>Anda dapat mengelola semua tautan di dasbor admin.</p>
-            `,
+    
+        <p>Halo Admin,</p>
+                <p>Tautan ${
+                  isCollection ? "koleksi" : "berbagi"
+                } baru telah dibuat oleh <b>${session.user.email}</b>.</p>
+                <ul>
+                    <li><b>Item:</b> ${shareName}</li>
+                    <li><b>Path:</b> ${sharePath}</li>
+                    <li><b>Kedaluwarsa pada:</b> ${expiresAtDate.toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}</li>
+                    <li><b>Wajib Login:</b> ${loginRequired ? "Ya" : "Tidak"}</li>
+                </ul>
+    
+            <p>Anda dapat mengelola semua tautan di dasbor admin.</p>
+            `,
       });
     }
 

@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/authOptions";
 
 const ADMIN_USERS_KEY = "zee-index:admins";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (session?.user?.role !== "ADMIN") {

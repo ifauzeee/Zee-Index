@@ -368,7 +368,7 @@ export default function FileBrowser({
           },
           initialPageParam: null as string | null,
         })
-        .catch(() => { });
+        .catch(() => {});
     },
     [router, shareToken, queryClient, folderTokens, refreshKey],
   );
@@ -528,8 +528,8 @@ export default function FileBrowser({
       <FileBrowserModals
         authModal={{ isOpen: false, folderId: "", folderName: "" }}
         isAuthLoading={isAuthLoading}
-        onCloseAuth={() => { }}
-        onAuthSubmit={() => { }}
+        onCloseAuth={() => {}}
+        onAuthSubmit={() => {}}
         isFileRequestModalOpen={isFileRequestModalOpen}
         setIsFileRequestModalOpen={setIsFileRequestModalOpen}
         currentFolderId={currentFolderId}

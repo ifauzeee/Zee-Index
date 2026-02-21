@@ -3,6 +3,8 @@ import { kv } from "@/lib/kv";
 
 const TAGS_PREFIX = "zee_tags:";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const fileId = searchParams.get("fileId");

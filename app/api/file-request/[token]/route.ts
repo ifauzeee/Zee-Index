@@ -10,6 +10,8 @@ interface RequestData {
   folderId: string;
 }
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   req: NextRequest,
   props: { params: Promise<{ token: string }> },

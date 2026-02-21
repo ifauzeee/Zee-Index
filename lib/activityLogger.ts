@@ -1,6 +1,6 @@
-import { kv } from "@/lib/kv";
 import { headers } from "next/headers";
 import { logger } from "@/lib/logger";
+import { db } from "@/lib/db";
 
 export type ActivityType =
   | "UPLOAD"
@@ -63,11 +63,6 @@ export interface ActivityLog extends ActivityDetails {
   severity: "info" | "warning" | "error" | "critical";
 }
 
-const ACTIVITY_LOG_KEY = "zee-index:activity-log";
-const ADMIN_AUDIT_KEY = "zee-index:admin-audit-log";
-const SECURITY_LOG_KEY = "zee-index:security-log";
-const LOG_EXPIRATION_SECONDS = 60 * 60 * 24 * 90;
-
 const SEVERITY_MAP: Record<ActivityType, ActivityLog["severity"]> = {
   UPLOAD: "info",
   DOWNLOAD: "info",
@@ -101,10 +96,6 @@ const SEVERITY_MAP: Record<ActivityType, ActivityLog["severity"]> = {
   SUSPICIOUS_ACTIVITY: "critical",
 };
 
-function generateLogId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-}
-
 async function getClientInfo(): Promise<{
   ipAddress: string;
   userAgent: string;
@@ -136,48 +127,48 @@ export async function logActivity(
     const timestamp = Date.now();
     const clientInfo = await getClientInfo();
 
-    const logEntry: ActivityLog = {
-      id: generateLogId(),
-      type,
-      timestamp,
-      severity: SEVERITY_MAP[type] || "info",
-      ipAddress: clientInfo.ipAddress,
-      userAgent: clientInfo.userAgent,
-      ...details,
-    };
-
-    await kv.zadd(ACTIVITY_LOG_KEY, {
-      score: timestamp,
-      member: JSON.stringify(logEntry),
+    const logEntry = await db.activityLog.create({
+      data: {
+        type,
+        timestamp,
+        severity: SEVERITY_MAP[type] || "info",
+        ipAddress: clientInfo.ipAddress,
+        userAgent: clientInfo.userAgent,
+        itemName: details.itemName,
+        itemId: details.itemId,
+        itemSize: details.itemSize?.toString(),
+        itemType: details.itemType,
+        userEmail: details.userEmail,
+        userId: details.userId,
+        userRole: details.userRole,
+        targetUser: details.targetUser,
+        destinationFolder: details.destinationFolder,
+        sourcePath: details.sourcePath,
+        targetPath: details.targetPath,
+        status: details.status,
+        error: details.error,
+        errorCode: details.errorCode,
+        country: details.country,
+        city: details.city,
+        metadata: details.metadata ? JSON.stringify(details.metadata) : null,
+      },
     });
 
-    if (SEVERITY_MAP[type] === "critical") {
-      await kv.zadd(ADMIN_AUDIT_KEY, {
-        score: timestamp,
-        member: JSON.stringify(logEntry),
-      });
-    }
+    const expirationTime = Date.now() - 60 * 60 * 24 * 90 * 1000;
+    db.activityLog
+      .deleteMany({
+        where: { timestamp: { lt: expirationTime } },
+      })
+      .catch((e) =>
+        logger.error({ err: e }, "Failed to clean old activity logs"),
+      );
 
-    if (
-      type === "UNAUTHORIZED_ACCESS" ||
-      type === "SUSPICIOUS_ACTIVITY" ||
-      type === "LOGIN_FAILURE" ||
-      type === "RATE_LIMITED"
-    ) {
-      await kv.zadd(SECURITY_LOG_KEY, {
-        score: timestamp,
-        member: JSON.stringify(logEntry),
-      });
-    }
-
-    const expirationTime = Date.now() - LOG_EXPIRATION_SECONDS * 1000;
-    await Promise.all([
-      kv.zremrangebyscore(ACTIVITY_LOG_KEY, 0, expirationTime),
-      kv.zremrangebyscore(ADMIN_AUDIT_KEY, 0, expirationTime),
-      kv.zremrangebyscore(SECURITY_LOG_KEY, 0, expirationTime),
-    ]);
-
-    return logEntry;
+    return {
+      ...logEntry,
+      type: logEntry.type as ActivityType,
+      severity: logEntry.severity as ActivityLog["severity"],
+      metadata: logEntry.metadata ? JSON.parse(logEntry.metadata) : undefined,
+    } as ActivityLog;
   } catch (error) {
     logger.error({ err: error }, "Failed to log activity");
     return null;
@@ -211,13 +202,18 @@ export async function getActivityLogs(
   offset: number = 0,
 ): Promise<ActivityLog[]> {
   try {
-    const logs = await kv.zrange(ACTIVITY_LOG_KEY, offset, offset + limit - 1, {
-      rev: true,
+    const logs = await db.activityLog.findMany({
+      take: limit,
+      skip: offset,
+      orderBy: { timestamp: "desc" },
     });
 
-    return logs.map((log) =>
-      typeof log === "string" ? JSON.parse(log) : log,
-    ) as ActivityLog[];
+    return logs.map((log) => ({
+      ...log,
+      type: log.type as ActivityType,
+      severity: log.severity as ActivityLog["severity"],
+      metadata: log.metadata ? JSON.parse(log.metadata) : undefined,
+    })) as ActivityLog[];
   } catch (error) {
     logger.error({ err: error }, "Failed to get activity logs");
     return [];
@@ -228,11 +224,18 @@ export async function getAdminAuditLogs(
   limit: number = 100,
 ): Promise<ActivityLog[]> {
   try {
-    const logs = await kv.zrange(ADMIN_AUDIT_KEY, 0, limit - 1, { rev: true });
+    const logs = await db.activityLog.findMany({
+      where: { severity: "critical" },
+      take: limit,
+      orderBy: { timestamp: "desc" },
+    });
 
-    return logs.map((log) =>
-      typeof log === "string" ? JSON.parse(log) : log,
-    ) as ActivityLog[];
+    return logs.map((log) => ({
+      ...log,
+      type: log.type as ActivityType,
+      severity: log.severity as ActivityLog["severity"],
+      metadata: log.metadata ? JSON.parse(log.metadata) : undefined,
+    })) as ActivityLog[];
   } catch (error) {
     logger.error({ err: error }, "Failed to get admin audit logs");
     return [];
@@ -243,11 +246,27 @@ export async function getSecurityLogs(
   limit: number = 100,
 ): Promise<ActivityLog[]> {
   try {
-    const logs = await kv.zrange(SECURITY_LOG_KEY, 0, limit - 1, { rev: true });
+    const logs = await db.activityLog.findMany({
+      where: {
+        type: {
+          in: [
+            "UNAUTHORIZED_ACCESS",
+            "SUSPICIOUS_ACTIVITY",
+            "LOGIN_FAILURE",
+            "RATE_LIMITED",
+          ],
+        },
+      },
+      take: limit,
+      orderBy: { timestamp: "desc" },
+    });
 
-    return logs.map((log) =>
-      typeof log === "string" ? JSON.parse(log) : log,
-    ) as ActivityLog[];
+    return logs.map((log) => ({
+      ...log,
+      type: log.type as ActivityType,
+      severity: log.severity as ActivityLog["severity"],
+      metadata: log.metadata ? JSON.parse(log.metadata) : undefined,
+    })) as ActivityLog[];
   } catch (error) {
     logger.error({ err: error }, "Failed to get security logs");
     return [];
@@ -258,16 +277,34 @@ export async function getLogsByUser(
   email: string,
   limit: number = 50,
 ): Promise<ActivityLog[]> {
-  const allLogs = await getActivityLogs(500);
-  return allLogs.filter((log) => log.userEmail === email).slice(0, limit);
+  const logs = await db.activityLog.findMany({
+    where: { userEmail: email },
+    take: limit,
+    orderBy: { timestamp: "desc" },
+  });
+  return logs.map((log) => ({
+    ...log,
+    type: log.type as ActivityType,
+    severity: log.severity as ActivityLog["severity"],
+    metadata: log.metadata ? JSON.parse(log.metadata) : undefined,
+  })) as ActivityLog[];
 }
 
 export async function getLogsByType(
   type: ActivityType,
   limit: number = 50,
 ): Promise<ActivityLog[]> {
-  const allLogs = await getActivityLogs(500);
-  return allLogs.filter((log) => log.type === type).slice(0, limit);
+  const logs = await db.activityLog.findMany({
+    where: { type },
+    take: limit,
+    orderBy: { timestamp: "desc" },
+  });
+  return logs.map((log) => ({
+    ...log,
+    type: log.type as ActivityType,
+    severity: log.severity as ActivityLog["severity"],
+    metadata: log.metadata ? JSON.parse(log.metadata) : undefined,
+  })) as ActivityLog[];
 }
 
 export async function getActivityStats(): Promise<{
@@ -278,7 +315,11 @@ export async function getActivityStats(): Promise<{
   last7Days: number;
 }> {
   try {
-    const allLogs = await getActivityLogs(1000);
+    const rawLogs = await db.activityLog.findMany({
+      take: 1000,
+      orderBy: { timestamp: "desc" },
+    });
+
     const now = Date.now();
     const oneDayAgo = now - 24 * 60 * 60 * 1000;
     const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
@@ -288,7 +329,7 @@ export async function getActivityStats(): Promise<{
     let last24Hours = 0;
     let last7Days = 0;
 
-    for (const log of allLogs) {
+    for (const log of rawLogs) {
       byType[log.type] = (byType[log.type] || 0) + 1;
       bySeverity[log.severity] = (bySeverity[log.severity] || 0) + 1;
 
@@ -297,7 +338,7 @@ export async function getActivityStats(): Promise<{
     }
 
     return {
-      totalLogs: allLogs.length,
+      totalLogs: rawLogs.length,
       byType,
       bySeverity,
       last24Hours,

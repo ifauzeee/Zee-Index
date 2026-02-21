@@ -1,13 +1,18 @@
-import { kv } from "@/lib/kv";
+import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 
 const CONFIG_KEY = "zee-index:config";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
-    const config = (await kv.get(CONFIG_KEY)) || {};
+    const configEntry = await db.adminConfig.findUnique({
+      where: { key: CONFIG_KEY },
+    });
+    const config = configEntry ? JSON.parse(configEntry.value) : {};
     return NextResponse.json(config);
   } catch (error) {
     console.error("Config fetch error:", error);
@@ -26,9 +31,14 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    await kv.set(CONFIG_KEY, body);
+    const updatedConfigEntry = await db.adminConfig.upsert({
+      where: { key: CONFIG_KEY },
+      update: { value: JSON.stringify(body) },
+      create: { key: CONFIG_KEY, value: JSON.stringify(body) },
+    });
 
-    const updatedConfig = await kv.get(CONFIG_KEY);
+    const updatedConfig = JSON.parse(updatedConfigEntry.value);
+
     return NextResponse.json({
       message: "Config updated",
       config: updatedConfig,

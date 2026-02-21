@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse, NextRequest } from "next/server";
 import crypto from "crypto";
 import { SignJWT } from "jose";

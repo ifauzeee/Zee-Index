@@ -1,10 +1,9 @@
 import { kv } from "@/lib/kv";
+import { db } from "@/lib/db";
 import { getFileDetailsFromDrive } from "@/lib/drive";
 import { hasUserAccess } from "@/lib/auth";
 import { getPrivateFolderIds } from "@/lib/utils";
 import { logger } from "@/lib/logger";
-
-const PROTECTED_FOLDERS_KEY = "zee-index:protected-folders";
 
 let cachedProtectedIds: string[] | null = null;
 let lastCacheUpdate = 0;
@@ -17,8 +16,10 @@ async function getRestrictedIds(): Promise<string[]> {
   }
 
   try {
-    const protectedConfigs = (await kv.hgetall(PROTECTED_FOLDERS_KEY)) || {};
-    const kvProtectedIds = Object.keys(protectedConfigs);
+    const protecteds = await db.protectedFolder.findMany({
+      select: { folderId: true },
+    });
+    const kvProtectedIds = protecteds.map((p) => p.folderId);
     const envPrivateIds = getPrivateFolderIds();
 
     cachedProtectedIds = Array.from(

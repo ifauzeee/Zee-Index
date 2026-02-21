@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { listFileRevisions } from "@/lib/drive";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   req: NextRequest,
   props: { params: Promise<{ fileId: string }> },

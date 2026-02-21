@@ -11,6 +11,8 @@ const pinSchema = z.object({
   folderId: z.string().min(1),
 });
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const pinnedIds: string[] = await kv.smembers(PINNED_KEY);

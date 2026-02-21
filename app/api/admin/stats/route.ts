@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import { kv } from "@/lib/kv";
+import { db } from "@/lib/db";
 import type { ActivityLog } from "@/lib/activityLogger";
 import type {
   AdminStats,
@@ -23,25 +23,19 @@ async function isAdmin(session: Session | null): Promise<boolean> {
 const getAdminStatsCached = unstable_cache(
   async () => {
     const ninetyDaysAgo = subDays(new Date(), 90).getTime();
-    const logMembers: unknown[] = await kv.zrange(
-      "zee-index:activity-log",
-      ninetyDaysAgo,
-      Date.now(),
-      { byScore: true },
-    );
+    const allLogsRaw = await db.activityLog.findMany({
+      where: { timestamp: { gte: ninetyDaysAgo } },
+    });
 
-    const allLogs: ActivityLog[] = logMembers
-      .map((logMember) => {
-        try {
-          return typeof logMember === "string"
-            ? (JSON.parse(logMember) as ActivityLog)
-            : (logMember as ActivityLog);
-        } catch (e) {
-          console.error("Gagal mem-parsing log statistik:", logMember, e);
-          return null;
-        }
-      })
-      .filter((log): log is ActivityLog => log !== null);
+    const allLogs = allLogsRaw.map(
+      (log) =>
+        ({
+          ...log,
+          type: log.type as any,
+          severity: log.severity as any,
+          metadata: log.metadata ? JSON.parse(log.metadata) : undefined,
+        }) as unknown as ActivityLog,
+    );
 
     const todayStart = startOfToday().getTime();
     const sevenWeeksAgo = subDays(new Date(), 49).getTime();

@@ -5,8 +5,9 @@ import { kv } from "@/lib/kv";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
+import { db } from "@/lib/db";
+
 const MANUAL_DRIVES_KEY = "zee-index:manual-drives";
-const PROTECTED_FOLDERS_KEY = "zee-index:protected-folders";
 
 const driveSchema = z.object({
   id: z
@@ -21,6 +22,8 @@ async function isAdmin() {
   const session = await getServerSession(authOptions);
   return session?.user?.role === "ADMIN";
 }
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
@@ -64,8 +67,10 @@ export async function POST(req: NextRequest) {
     let isProtected = false;
     if (password && password.trim() !== "") {
       const hashedPassword = await bcrypt.hash(password, 10);
-      await kv.hset(PROTECTED_FOLDERS_KEY, {
-        [id]: { id: "admin", password: hashedPassword },
+      await db.protectedFolder.upsert({
+        where: { folderId: id },
+        update: { password: hashedPassword },
+        create: { folderId: id, password: hashedPassword },
       });
       isProtected = true;
     }
@@ -101,7 +106,11 @@ export async function DELETE(req: NextRequest) {
     const updatedDrives = currentDrives.filter((d) => d.id !== id);
 
     await kv.set(MANUAL_DRIVES_KEY, updatedDrives);
-    await kv.hdel(PROTECTED_FOLDERS_KEY, id);
+    await db.protectedFolder
+      .delete({
+        where: { folderId: id },
+      })
+      .catch(() => {});
 
     await kv.del(`zee-index:folder-path-v6:${id}`);
 
