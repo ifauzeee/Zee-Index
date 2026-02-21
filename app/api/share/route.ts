@@ -9,6 +9,7 @@ import { kv } from "@/lib/kv";
 import { db } from "@/lib/db";
 import type { ShareLink } from "@/lib/store";
 import { sendMail } from "@/lib/mailer";
+import { getBaseUrl } from "@/lib/utils";
 import type { DriveFile } from "@/lib/drive";
 
 interface ShareRequestBody {
@@ -73,7 +74,7 @@ export async function POST(req: NextRequest) {
       .setExpirationTime(expiresIn)
       .setJti(jti)
       .sign(secret);
-    const shareableUrl = `${req.nextUrl.origin}${sharePath}?share_token=${token}`;
+    const shareableUrl = `${getBaseUrl()}${sharePath}?share_token=${token}`;
 
     const decodedToken = decodeJwt(token);
     if (!decodedToken.exp) {
@@ -120,15 +121,13 @@ export async function POST(req: NextRequest) {
     if (adminEmails.length > 0) {
       await sendMail({
         to: adminEmails,
-        subject: `[Zee Index] Tautan ${
-          isCollection ? "Koleksi" : "Berbagi"
-        } Baru Dibuat`,
+        subject: `[Zee Index] Tautan ${isCollection ? "Koleksi" : "Berbagi"
+          } Baru Dibuat`,
         html: `
     
         <p>Halo Admin,</p>
-                <p>Tautan ${
-                  isCollection ? "koleksi" : "berbagi"
-                } baru telah dibuat oleh <b>${session.user.email}</b>.</p>
+                <p>Tautan ${isCollection ? "koleksi" : "berbagi"
+          } baru telah dibuat oleh <b>${session.user.email}</b>.</p>
                 <ul>
                     <li><b>Item:</b> ${shareName}</li>
                     <li><b>Path:</b> ${sharePath}</li>

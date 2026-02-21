@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/authOptions";
 import { kv } from "@/lib/kv";
 import crypto from "crypto";
 import { z } from "zod";
+import { getBaseUrl } from "@/lib/utils";
 
 const FILE_REQUESTS_KEY = "zee-index:file-requests";
 
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     await kv.hset(FILE_REQUESTS_KEY, { [token]: requestData });
 
-    const publicUrl = `${new URL(req.url).origin}/request/${token}`;
+    const publicUrl = `${getBaseUrl()}/request/${token}`;
 
     return NextResponse.json({ success: true, token, publicUrl });
   } catch (error) {
