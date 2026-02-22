@@ -58,7 +58,6 @@ export async function middleware(request: NextRequest) {
   const pathnameWithoutLocale = pathname.replace(/^\/(en|id)/, "") || "/";
   const isApi = pathnameWithoutLocale.startsWith("/api");
 
-  // Apply Rate Limiting for API (excluding download which has its own specific limit)
   if (isApi && !pathnameWithoutLocale.startsWith("/api/health")) {
     const type: RateLimitType = pathnameWithoutLocale.startsWith("/api/admin")
       ? "ADMIN"
