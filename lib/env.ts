@@ -4,17 +4,25 @@ const envSchema = z.object({
   // Core Settings
   GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID is required"),
   GOOGLE_CLIENT_SECRET: z.string().min(1, "GOOGLE_CLIENT_SECRET is required"),
-  NEXT_PUBLIC_ROOT_FOLDER_ID: z.string().min(1, "NEXT_PUBLIC_ROOT_FOLDER_ID is required"),
+  NEXT_PUBLIC_ROOT_FOLDER_ID: z
+    .string()
+    .min(1, "NEXT_PUBLIC_ROOT_FOLDER_ID is required"),
   NEXT_PUBLIC_ROOT_FOLDER_NAME: z.string().default("Home"),
 
   // Auth
-  NEXTAUTH_SECRET: z.string().min(32, "NEXTAUTH_SECRET must be at least 32 characters"),
+  NEXTAUTH_SECRET: z
+    .string()
+    .min(32, "NEXTAUTH_SECRET must be at least 32 characters"),
   NEXTAUTH_URL: z.string().url("NEXTAUTH_URL must be a valid URL"),
-  SHARE_SECRET_KEY: z.string().min(32, "SHARE_SECRET_KEY must be at least 32 characters"),
+  SHARE_SECRET_KEY: z
+    .string()
+    .min(32, "SHARE_SECRET_KEY must be at least 32 characters"),
 
   // Admin
   ADMIN_EMAILS: z.string().min(1, "ADMIN_EMAILS is required"),
-  ADMIN_PASSWORD: z.string().min(8, "ADMIN_PASSWORD must be at least 8 characters"),
+  ADMIN_PASSWORD: z
+    .string()
+    .min(8, "ADMIN_PASSWORD must be at least 8 characters"),
 
   // Database
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
@@ -42,14 +50,19 @@ export type Env = z.infer<typeof envSchema>;
  * Validates environment variables and exits process on critical failure.
  */
 export function validateOnStartup(): Env {
-  if (process.env.NODE_ENV === "test" || process.env.SKIP_ENV_VALIDATION === "1") {
+  if (
+    process.env.NODE_ENV === "test" ||
+    process.env.SKIP_ENV_VALIDATION === "1"
+  ) {
     return process.env as any;
   }
 
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
-    console.error("\n❌ PROYEK GAGAL MENYALA: Environment Variable Tidak Valid");
+    console.error(
+      "\n❌ PROYEK GAGAL MENYALA: Environment Variable Tidak Valid",
+    );
     console.error("=========================================================");
     result.error.issues.forEach((issue) => {
       console.error(`🚩 [${issue.path.join(".")}] -> ${issue.message}`);
@@ -66,8 +79,14 @@ export function validateOnStartup(): Env {
 
   // Warnings for non-critical missing variables
   const warnings: string[] = [];
-  if (!process.env.REDIS_URL) warnings.push("REDIS_URL tidak diset. Data sementara tidak akan tersimpan secara persisten.");
-  if (!process.env.SMTP_HOST) warnings.push("Konfigurasi Email (SMTP) tidak ditemukan. Fitur email akan dinonaktifkan.");
+  if (!process.env.REDIS_URL)
+    warnings.push(
+      "REDIS_URL tidak diset. Data sementara tidak akan tersimpan secara persisten.",
+    );
+  if (!process.env.SMTP_HOST)
+    warnings.push(
+      "Konfigurasi Email (SMTP) tidak ditemukan. Fitur email akan dinonaktifkan.",
+    );
 
   if (warnings.length > 0) {
     console.warn("\n⚠️  Peringatan Konfigurasi:");
@@ -106,11 +125,7 @@ export const config = {
     ? parseFloat(env.STORAGE_WARNING_THRESHOLD)
     : 0.9,
 
-  isEmailEnabled: !!(
-    env.SMTP_HOST &&
-    env.SMTP_USER &&
-    env.SMTP_PASS
-  ),
+  isEmailEnabled: !!(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS),
   isWebhookEnabled: !!env.WEBHOOK_URL,
   isDatabaseEnabled: !!env.REDIS_URL,
 };

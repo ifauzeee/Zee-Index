@@ -25,12 +25,16 @@ export const authOptions: AuthOptions = {
       },
       async authorize(credentials, req): Promise<User | null> {
         const forwardedFor = req?.headers?.["x-forwarded-for"] as string;
-        const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : "127.0.0.1";
+        const ip = forwardedFor
+          ? forwardedFor.split(",")[0].trim()
+          : "127.0.0.1";
 
         const ratelimitResult = await authLimiter.check(ip);
         if (!ratelimitResult.success) {
           logger.warn({ ip }, "[Auth] Rate limit exceeded");
-          throw new Error("Terlalu banyak percobaan login. Silakan tunggu sebentar.");
+          throw new Error(
+            "Terlalu banyak percobaan login. Silakan tunggu sebentar.",
+          );
         }
 
         if (!credentials?.email || !credentials.password) {
@@ -116,7 +120,7 @@ export const authOptions: AuthOptions = {
               return null;
             }
           }
-        } catch { }
+        } catch {}
 
         const guestId = `guest_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
         return {

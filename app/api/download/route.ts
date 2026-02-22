@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
 
         const downloadSize = parseInt(fileDetails.size || "0", 10);
         if (downloadSize > 0) {
-          trackBandwidth(downloadSize).catch(() => { });
+          trackBandwidth(downloadSize).catch(() => {});
         }
       } else {
         logger.info(

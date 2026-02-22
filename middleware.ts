@@ -3,7 +3,11 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import createMiddleware from "next-intl/middleware";
 import { checkAuth, handleAuthRedirect } from "@/lib/auth-check";
-import { checkRateLimit, createRateLimitResponse, type RateLimitType } from "@/lib/ratelimit";
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+  type RateLimitType,
+} from "@/lib/ratelimit";
 import { ERROR_MESSAGES } from "@/lib/constants";
 
 const intlMiddleware = createMiddleware({
