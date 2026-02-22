@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const target = searchParams.get("target");
   if (target === "files") {
-    revalidateTag("files", "max");
+    revalidateTag("files");
     return NextResponse.json({
       success: true,
       message: "Cache files telah dibersihkan.",
