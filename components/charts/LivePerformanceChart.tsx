@@ -11,7 +11,10 @@ import {
   CartesianGrid,
 } from "recharts";
 
+import { useTranslations } from "next-intl";
+
 const LivePerformanceChart = () => {
+  const t = useTranslations("AdminPage");
   const [data, setData] = useState<any[]>([]);
 
   useEffect(() => {
@@ -46,15 +49,15 @@ const LivePerformanceChart = () => {
         <div className="flex gap-4 text-xs font-medium">
           <div className="flex items-center gap-1.5">
             <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-            <span>Download Speed</span>
+            <span>{t("downloadSpeed")}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
-            <span>Upload Speed</span>
+            <span>{t("uploadSpeed")}</span>
           </div>
         </div>
         <div className="text-[10px] text-muted-foreground uppercase tracking-wider animate-pulse">
-          Live Monitoring
+          {t("liveMonitoring")}
         </div>
       </div>
 
