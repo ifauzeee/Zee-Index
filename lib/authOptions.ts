@@ -53,7 +53,7 @@ export const authOptions: AuthOptions = {
           const envAdminsRaw = process.env.ADMIN_EMAILS || "";
           const normalizedEnvAdmins = envAdminsRaw
             .split(",")
-            .map((e) => e.trim().toLowerCase().replace(/["']/g, ""));
+            .map((e) => e.trim().toLowerCase().replace(/^["']|["']$/g, ""));
 
           const isAdminEnv = normalizedEnvAdmins.includes(normalizedInputEmail);
           const isAdminDb = dbUser?.role === "ADMIN";
@@ -61,7 +61,7 @@ export const authOptions: AuthOptions = {
 
           const envPass = (process.env.ADMIN_PASSWORD || "")
             .trim()
-            .replace(/["']/g, "");
+            .replace(/^["']|["']$/g, "");
           const isPassValid = password === envPass;
 
           logger.info(
@@ -120,7 +120,7 @@ export const authOptions: AuthOptions = {
               return null;
             }
           }
-        } catch {}
+        } catch { }
 
         const guestId = `guest_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
         return {
@@ -237,34 +237,5 @@ export const authOptions: AuthOptions = {
   },
   session: {
     strategy: "jwt",
-  },
-  trustHost: true,
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: false,
-      },
-    },
-    callbackUrl: {
-      name: `next-auth.callback-url`,
-      options: {
-        sameSite: "lax",
-        path: "/",
-        secure: false,
-      },
-    },
-    csrfToken: {
-      name: `next-auth.csrf-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: false,
-      },
-    },
   },
 } as AuthOptions;
