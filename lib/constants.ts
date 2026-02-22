@@ -90,8 +90,8 @@ export const RATE_LIMITS = {
     WINDOW: 60 * 60,
   },
   AUTH: {
-    LIMIT: 5,
-    WINDOW: 60 * 15,
+    LIMIT: 20,
+    WINDOW: 60 * 5,
   },
   ADMIN: {
     LIMIT: 50,

@@ -159,7 +159,7 @@ export const authOptions: AuthOptions = {
         const envAdminsRaw = process.env.ADMIN_EMAILS || "";
         const normalizedEnvAdmins = envAdminsRaw
           .split(",")
-          .map((e) => e.trim().toLowerCase().replace(/["']/g, ""));
+          .map((e) => e.trim().toLowerCase().replace(/^["']|["']$/g, ""));
 
         const isAdmin =
           dbUser?.role === "ADMIN" ||
@@ -203,7 +203,7 @@ export const authOptions: AuthOptions = {
         const envAdminsRaw = process.env.ADMIN_EMAILS || "";
         const normalizedEnvAdmins = envAdminsRaw
           .split(",")
-          .map((e) => e.trim().toLowerCase().replace(/["']/g, ""));
+          .map((e) => e.trim().toLowerCase().replace(/^["']|["']$/g, ""));
 
         const isAdmin =
           dbUser?.role === "ADMIN" ||
@@ -238,4 +238,16 @@ export const authOptions: AuthOptions = {
   session: {
     strategy: "jwt",
   },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: false, // Force false to avoid HTTPS/Proxy mismatch issues
+      },
+    },
+  },
+  secret: process.env.NEXTAUTH_SECRET,
 } as AuthOptions;
