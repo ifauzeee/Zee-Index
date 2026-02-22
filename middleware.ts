@@ -3,6 +3,8 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import createMiddleware from "next-intl/middleware";
 import { checkAuth, handleAuthRedirect } from "@/lib/auth-check";
+import { checkRateLimit, createRateLimitResponse, type RateLimitType } from "@/lib/ratelimit";
+import { ERROR_MESSAGES } from "@/lib/constants";
 
 const intlMiddleware = createMiddleware({
   locales: ["en", "id"],
@@ -50,7 +52,26 @@ export async function middleware(request: NextRequest) {
   }
 
   const pathnameWithoutLocale = pathname.replace(/^\/(en|id)/, "") || "/";
-  const isApi = pathname.startsWith("/api");
+  const isApi = pathnameWithoutLocale.startsWith("/api");
+
+  // Apply Rate Limiting for API (excluding download which has its own specific limit)
+  if (isApi && !pathnameWithoutLocale.startsWith("/api/health")) {
+    const type: RateLimitType = pathnameWithoutLocale.startsWith("/api/admin")
+      ? "ADMIN"
+      : "API";
+
+    const ratelimitResult = await checkRateLimit(request, type);
+    if (!ratelimitResult.success) {
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.RATE_LIMIT_EXCEEDED },
+        {
+          status: 429,
+          headers: createRateLimitResponse(ratelimitResult).headers,
+        },
+      );
+    }
+  }
+
   const isConfigured = !!process.env.GOOGLE_REFRESH_TOKEN;
 
   if (!isConfigured) {

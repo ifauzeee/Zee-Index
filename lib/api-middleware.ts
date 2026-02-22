@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { type Session } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+import { checkRateLimit, createRateLimitResponse } from "@/lib/ratelimit";
+import { ERROR_MESSAGES } from "@/lib/constants";
 
 type AdminApiHandler = (
   req: NextRequest,
@@ -22,6 +24,17 @@ export function withAdminSession(handler: AdminApiHandler) {
         return NextResponse.json(
           { error: "Akses ditolak. Perlu akses ADMIN." },
           { status: 403 },
+        );
+      }
+
+      const ratelimitResult = await checkRateLimit(req, "ADMIN");
+      if (!ratelimitResult.success) {
+        return NextResponse.json(
+          { error: ERROR_MESSAGES.RATE_LIMIT_EXCEEDED },
+          {
+            status: 429,
+            headers: createRateLimitResponse(ratelimitResult).headers,
+          },
         );
       }
 
@@ -50,6 +63,17 @@ export function withEditorSession(handler: AdminApiHandler) {
         return NextResponse.json(
           { error: "Akses ditolak. Perlu akses EDITOR atau ADMIN." },
           { status: 403 },
+        );
+      }
+
+      const ratelimitResult = await checkRateLimit(req, "ADMIN");
+      if (!ratelimitResult.success) {
+        return NextResponse.json(
+          { error: ERROR_MESSAGES.RATE_LIMIT_EXCEEDED },
+          {
+            status: 429,
+            headers: createRateLimitResponse(ratelimitResult).headers,
+          },
         );
       }
 
