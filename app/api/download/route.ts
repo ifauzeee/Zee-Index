@@ -123,7 +123,9 @@ export async function GET(request: NextRequest) {
     if (!range) {
       const forwardedFor = request.headers.get("x-forwarded-for");
       const realIp = request.headers.get("x-real-ip");
-      const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : (realIp || "anonymous");
+      const ip = forwardedFor
+        ? forwardedFor.split(",")[0].trim()
+        : realIp || "anonymous";
       const userIdentifier = session?.user?.email || ip;
 
       const dedupeKey = `loop_prevent:download:${fileId}:${userIdentifier}`;
@@ -136,14 +138,19 @@ export async function GET(request: NextRequest) {
           itemName: fileDetails.name,
           itemSize: fileDetails.size || "0",
           userEmail: session?.user?.email,
-        }).catch((e) => logger.error({ err: e }, "Gagal mencatat log aktivitas"));
+        }).catch((e) =>
+          logger.error({ err: e }, "Gagal mencatat log aktivitas"),
+        );
 
         const downloadSize = parseInt(fileDetails.size || "0", 10);
         if (downloadSize > 0) {
-          trackBandwidth(downloadSize).catch(() => { });
+          trackBandwidth(downloadSize).catch(() => {});
         }
       } else {
-        logger.info({ fileId, userIdentifier }, "[Download] Skipping duplicate log");
+        logger.info(
+          { fileId, userIdentifier },
+          "[Download] Skipping duplicate log",
+        );
       }
     }
 

@@ -121,13 +121,15 @@ export async function POST(req: NextRequest) {
     if (adminEmails.length > 0) {
       await sendMail({
         to: adminEmails,
-        subject: `[Zee Index] Tautan ${isCollection ? "Koleksi" : "Berbagi"
-          } Baru Dibuat`,
+        subject: `[Zee Index] Tautan ${
+          isCollection ? "Koleksi" : "Berbagi"
+        } Baru Dibuat`,
         html: `
     
         <p>Halo Admin,</p>
-                <p>Tautan ${isCollection ? "koleksi" : "berbagi"
-          } baru telah dibuat oleh <b>${session.user.email}</b>.</p>
+                <p>Tautan ${
+                  isCollection ? "koleksi" : "berbagi"
+                } baru telah dibuat oleh <b>${session.user.email}</b>.</p>
                 <ul>
                     <li><b>Item:</b> ${shareName}</li>
                     <li><b>Path:</b> ${sharePath}</li>
