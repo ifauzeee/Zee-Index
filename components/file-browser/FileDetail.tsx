@@ -326,21 +326,17 @@ export default function FileDetail({
       case "ebook":
         return <EbookPreview src={directLink} />;
       case "markdown":
-      case "text":
         if (showTextPreview && textContent) {
-          if (fileType === "markdown") {
-            return (
-              <div className="w-full h-full overflow-y-auto">
-                <MarkdownViewer content={textContent} />
-              </div>
-            );
-          }
           return (
-            <div className="w-full h-full overflow-y-auto p-4 bg-background">
-              <pre className="font-mono text-sm">{textContent}</pre>
+            <div className="w-full h-full overflow-y-auto">
+              <MarkdownViewer content={textContent} />
             </div>
           );
         }
+        break;
+      case "text":
+        if (showTextPreview)
+          return <CodePreview src={directLink} fileName={file.name} />;
         break;
       case "code":
         if (showTextPreview)
