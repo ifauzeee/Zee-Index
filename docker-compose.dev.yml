@@ -1,0 +1,42 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: zee-redis-dev
+    restart: always
+    ports:
+      - "6379:6379"
+
+  zee-index-dev:
+    image: node:20-alpine
+    container_name: zee-index-dev
+    working_dir: /app
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount the current directory to /app in the container
+      - .:/app
+      # Mount a volume for node_modules so it doesn't conflict with local machine
+      - node_modules_vol:/app/node_modules
+      - next_bundle_vol:/app/.next
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=file:./dev.db
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    command: >
+      sh -c "
+        apk add --no-cache libc6-compat openssl &&
+        npm install -g pnpm &&
+        pnpm install &&
+        pnpm exec prisma generate &&
+        pnpm exec prisma db push &&
+        pnpm run dev:webpack
+      "
+    depends_on:
+      - redis
+
+volumes:
+  node_modules_vol:
+  next_bundle_vol:

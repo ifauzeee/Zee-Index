@@ -6,6 +6,7 @@
     "dev": "dotenv -- next dev --turbopack",
     "dev:webpack": "dotenv -- next dev",
     "build": "next build",
+    "docker:dev": "docker compose -f docker-compose.dev.yml up",
     "docker:prod": "docker compose up --build",
     "docker:stop": "docker compose down",
     "start": "dotenv -- next start",
