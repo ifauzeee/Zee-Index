@@ -38,9 +38,14 @@ export default function MobileBottomNav() {
           return (
             <button
               key={item.path}
-              onClick={() => router.push(item.path)}
+              onClick={() => {
+                if ("vibrate" in navigator) {
+                  navigator.vibrate(10);
+                }
+                router.push(item.path);
+              }}
               className={cn(
-                "flex flex-col items-center justify-center w-full h-full space-y-1 active:scale-95 transition-transform duration-100",
+                "flex flex-col items-center justify-center w-full h-full space-y-1 active:scale-90 transition-all duration-100",
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground",
