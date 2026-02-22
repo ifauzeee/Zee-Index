@@ -88,3 +88,9 @@ public/swe-worker-*.js
 *.pid
 *.seed
 *.pid.lock
+
+# Prisma
+/prisma/dev.db
+/prisma/dev.db-journal
+/public/uploads/*
+!/public/uploads/.gitkeep

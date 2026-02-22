@@ -245,7 +245,7 @@ export const authOptions: AuthOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: false, // Force false to avoid HTTPS/Proxy mismatch issues
+        secure: false,
       },
     },
   },

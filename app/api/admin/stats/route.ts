@@ -91,7 +91,6 @@ const getAdminStatsCached = unstable_cache(
         if (log.itemName) {
           fileCounts.set(log.itemName, (fileCounts.get(log.itemName) || 0) + 1);
 
-          // Extract file type/extension
           const ext = log.itemName.split(".").pop()?.toUpperCase() || "UNKNOWN";
           if (ext.length <= 5) {
             typeCounts.set(ext, (typeCounts.get(ext) || 0) + 1);
