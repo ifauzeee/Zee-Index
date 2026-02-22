@@ -72,7 +72,7 @@ export async function addFavorite(fileId: string) {
 
   const userFavoritesKey = `user:${session.user.email}:favorites`;
   await kv.sadd(userFavoritesKey, fileId);
-  revalidateTag(`favorites`);
+  revalidateTag(`favorites`, "max");
 
   return { success: true, message: "Ditambahkan ke favorit." };
 }
@@ -89,7 +89,7 @@ export async function removeFavorite(fileId: string) {
 
   const userFavoritesKey = `user:${session.user.email}:favorites`;
   await kv.srem(userFavoritesKey, fileId);
-  revalidateTag(`favorites`);
+  revalidateTag(`favorites`, "max");
 
   return { success: true, message: "Dihapus dari favorit." };
 }

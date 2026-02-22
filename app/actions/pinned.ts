@@ -49,7 +49,7 @@ export async function addPin(folderId: string) {
   }
 
   await kv.sadd(PINNED_KEY, validation.data.folderId);
-  revalidateTag("pinned");
+  revalidateTag("pinned", "max");
 
   return { success: true, message: "Folder berhasil disematkan." };
 }
@@ -65,7 +65,7 @@ export async function removePin(folderId: string) {
   }
 
   await kv.srem(PINNED_KEY, folderId);
-  revalidateTag("pinned");
+  revalidateTag("pinned", "max");
 
   return { success: true, message: "Pin folder dilepas." };
 }

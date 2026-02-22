@@ -18,7 +18,7 @@ export async function addTag(fileId: string, tag: string) {
   const key = `${TAGS_PREFIX}${fileId}`;
   await kv.sadd(key, tag);
 
-  revalidateTag(`tags:${fileId}`);
+  revalidateTag(`tags:${fileId}`, "max");
   return { success: true };
 }
 
@@ -28,6 +28,6 @@ export async function removeTag(fileId: string, tag: string) {
   const key = `${TAGS_PREFIX}${fileId}`;
   await kv.srem(key, tag);
 
-  revalidateTag(`tags:${fileId}`);
+  revalidateTag(`tags:${fileId}`, "max");
   return { success: true };
 }
