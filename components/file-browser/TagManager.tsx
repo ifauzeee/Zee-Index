@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "next-intl";
+import { getTags, addTag, removeTag } from "@/app/actions/tags";
 
 interface TagManagerProps {
   fileId: string;
@@ -16,22 +17,16 @@ export default function TagManager({ fileId }: TagManagerProps) {
   const t = useTranslations("TagManager");
 
   useEffect(() => {
-    fetch(`/api/tags?fileId=${fileId}`)
-      .then((res) => res.json())
-      .then((data) => setTags(data.tags));
+    getTags(fileId).then((data) => setTags(data.tags));
   }, [fileId]);
 
   const handleUpdate = async (tag: string, action: "add" | "remove") => {
-    await fetch("/api/tags", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fileId, tag, action }),
-    });
-
     if (action === "add") {
+      await addTag(fileId, tag);
       setTags([...tags, tag]);
       setNewTag("");
     } else {
+      await removeTag(fileId, tag);
       setTags(tags.filter((t) => t !== tag));
     }
   };

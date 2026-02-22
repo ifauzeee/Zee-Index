@@ -1,6 +1,21 @@
 import { StateCreator } from "zustand";
 import { AppState, FileSlice, ShareLink, FileRequestLink } from "../types";
 import { formatBytes } from "@/lib/utils";
+import {
+  addFavorite,
+  removeFavorite,
+  getFavorites,
+} from "@/app/actions/favorites";
+import {
+  getTags,
+  addTag as addTagAction,
+  removeTag as removeTagAction,
+} from "@/app/actions/tags";
+import {
+  getPinnedFolders,
+  addPin as addPinAction,
+  removePin as removePinAction,
+} from "@/app/actions/pinned";
 
 export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
   set,
@@ -166,9 +181,7 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
   favorites: [],
   fetchFavorites: async () => {
     try {
-      const response = await fetch("/api/favorites");
-      if (!response.ok) return;
-      const files: any[] = await response.json();
+      const files = await getFavorites();
       set({ favorites: files.map((f: any) => f.id) });
     } catch (error) {
       console.error("Failed to fetch favorites:", error);
@@ -181,14 +194,12 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
       : [...originalFavorites, fileId];
     set({ favorites: newFavorites });
     try {
-      const response = await fetch("/api/favorites", {
-        method: isCurrentlyFavorite ? "DELETE" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileId }),
-      });
-      const result = await response.json();
-      if (!response.ok)
-        throw new Error(result.error || "Failed to update favorites.");
+      let result;
+      if (isCurrentlyFavorite) {
+        result = await removeFavorite(fileId);
+      } else {
+        result = await addFavorite(fileId);
+      }
       get().addToast({ message: result.message, type: "success" });
     } catch (error: any) {
       get().addToast({ message: error.message || "Error", type: "error" });
@@ -200,26 +211,19 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
   fileTags: {},
   fetchTags: async (fileId: string) => {
     try {
-      const response = await fetch(`/api/tags?fileId=${fileId}`);
-      if (response.ok) {
-        const data = await response.json();
-        const tags = Array.isArray(data) ? data : data.tags || [];
-        set((state: AppState) => ({
-          fileTags: { ...state.fileTags, [fileId]: tags },
-        }));
-      }
+      const data = await getTags(fileId);
+      const tags = Array.isArray(data) ? data : data.tags || [];
+      set((state: AppState) => ({
+        fileTags: { ...state.fileTags, [fileId]: tags },
+      }));
     } catch (error) {
       console.error("Failed to fetch tags", error);
     }
   },
   addTag: async (fileId: string, tag: string) => {
     try {
-      const response = await fetch("/api/tags", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileId, tag, action: "add" }),
-      });
-      if (response.ok) {
+      const result = await addTagAction(fileId, tag);
+      if (result.success) {
         const currentTags = get().fileTags[fileId] || [];
         if (!currentTags.includes(tag)) {
           set((state: AppState) => ({
@@ -233,12 +237,8 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
   },
   removeTag: async (fileId: string, tag: string) => {
     try {
-      const response = await fetch("/api/tags", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileId, tag, action: "remove" }),
-      });
-      if (response.ok) {
+      const result = await removeTagAction(fileId, tag);
+      if (result.success) {
         set((state: AppState) => ({
           fileTags: {
             ...state.fileTags,
@@ -255,20 +255,16 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
   pinnedFolders: [],
   fetchPinnedFolders: async () => {
     try {
-      const response = await fetch("/api/pinned");
-      if (response.ok) set({ pinnedFolders: await response.json() });
+      const data = await getPinnedFolders();
+      set({ pinnedFolders: data });
     } catch (error) {
       console.error("Failed to fetch pinned folders", error);
     }
   },
   addPin: async (folderId: string) => {
     try {
-      const response = await fetch("/api/pinned", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ folderId }),
-      });
-      if (response.ok) {
+      const result = await addPinAction(folderId);
+      if (result.success) {
         get().addToast({ message: "Folder pinned!", type: "success" });
         await get().fetchPinnedFolders();
       }
@@ -278,12 +274,8 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
   },
   removePin: async (folderId: string) => {
     try {
-      const response = await fetch("/api/pinned", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ folderId }),
-      });
-      if (response.ok) {
+      const result = await removePinAction(folderId);
+      if (result.success) {
         get().addToast({ message: "Pin removed!", type: "success" });
         await get().fetchPinnedFolders();
       }

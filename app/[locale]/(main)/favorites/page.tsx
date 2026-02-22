@@ -12,6 +12,7 @@ import React from "react";
 import EmptyState from "@/components/file-browser/EmptyState";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
+import { getFavorites } from "@/app/actions/favorites";
 
 export default function FavoritesPage() {
   const router = useRouter();
@@ -27,9 +28,7 @@ export default function FavoritesPage() {
   } = useQuery<DriveFile[]>({
     queryKey: ["favorites"],
     queryFn: async () => {
-      const response = await fetch("/api/favorites");
-      if (!response.ok) throw new Error(t("loadError"));
-      return response.json();
+      return await getFavorites();
     },
     enabled: !!user && !user.isGuest,
     initialData: [],
