@@ -29,24 +29,49 @@ export default function MoveModal({
   onConfirmMove,
   initialFolderId,
 }: MoveModalProps) {
+  const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
+  const rootName = process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Home";
+
   const [currentFolderId, setCurrentFolderId] = useState(
-    initialFolderId || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!,
+    initialFolderId || rootId,
   );
   const t = useTranslations("MoveModal");
-  const [folderStack, setFolderStack] = useState([
-    {
-      id: initialFolderId || process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!,
-      name: initialFolderId
-        ? t("current")
-        : process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Home",
-    },
-  ]);
+  const [folderStack, setFolderStack] = useState<
+    { id: string; name: string }[]
+  >([]);
   const [subfolders, setSubfolders] = useState<DriveFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMoving, setIsMoving] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const { addToast } = useAppStore();
 
   useScrollLock(true);
+
+  useEffect(() => {
+    const initPath = async () => {
+      setIsInitializing(true);
+      if (initialFolderId && initialFolderId !== rootId) {
+        try {
+          const res = await fetch(`/api/folderpath?folderId=${initialFolderId}`);
+          if (res.ok) {
+            const path = await res.json();
+            if (Array.isArray(path) && path.length > 0) {
+              setFolderStack(path);
+              setIsInitializing(false);
+              return;
+            }
+          }
+        } catch (err) {
+          console.error("Failed to fetch folder path", err);
+        }
+      }
+
+      setFolderStack([{ id: rootId, name: rootName }]);
+      setIsInitializing(false);
+    };
+
+    initPath();
+  }, [initialFolderId, rootId, rootName]);
 
   const fetchFolders = useCallback(
     async (folderId: string) => {
@@ -57,7 +82,9 @@ export default function MoveModal({
         const response = await fetch(url.toString());
         if (!response.ok) throw new Error("Failed to load folders");
         const data = await response.json();
-        setSubfolders(data.files.filter((f: DriveFile) => f.isFolder));
+        setSubfolders(
+          data.files.filter((f: DriveFile) => f.isFolder && f.id !== folderId),
+        );
       } catch (err: unknown) {
         addToast({
           message: err instanceof Error ? err.message : "Error",
@@ -71,8 +98,10 @@ export default function MoveModal({
   );
 
   useEffect(() => {
-    fetchFolders(currentFolderId);
-  }, [currentFolderId, fetchFolders]);
+    if (!isInitializing) {
+      fetchFolders(currentFolderId);
+    }
+  }, [currentFolderId, fetchFolders, isInitializing]);
 
   const handleFolderClick = (folder: DriveFile) => {
     setCurrentFolderId(folder.id);
@@ -82,8 +111,9 @@ export default function MoveModal({
   const handleBackClick = () => {
     if (folderStack.length > 1) {
       const newStack = folderStack.slice(0, -1);
+      const parentFolder = newStack[newStack.length - 1];
       setFolderStack(newStack);
-      setCurrentFolderId(newStack[newStack.length - 1].id);
+      setCurrentFolderId(parentFolder.id);
     }
   };
 
@@ -92,7 +122,8 @@ export default function MoveModal({
     await onConfirmMove(currentFolderId);
   };
 
-  const currentFolderName = folderStack[folderStack.length - 1].name;
+  const currentFolder = folderStack[folderStack.length - 1];
+  const currentFolderName = currentFolder ? currentFolder.name : "...";
 
   const targetFiles = filesToMove || (fileToMove ? [fileToMove] : []);
   const itemCount = targetFiles.length;
@@ -150,7 +181,7 @@ export default function MoveModal({
           </div>
 
           <div className="h-64 overflow-y-auto border rounded-md">
-            {isLoading ? (
+            {isLoading || isInitializing ? (
               <div className="flex items-center justify-center h-full">
                 <Loader2 className="animate-spin" />
               </div>

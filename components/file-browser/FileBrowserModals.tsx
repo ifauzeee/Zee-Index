@@ -244,7 +244,7 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
             (contextMenu.file.mimeType === "application/zip" ||
               contextMenu.file.mimeType.includes("compressed")) &&
             parseInt(contextMenu.file.size || "0", 10) <=
-              ARCHIVE_PREVIEW_LIMIT_BYTES
+            ARCHIVE_PREVIEW_LIMIT_BYTES
           }
           onArchivePreview={handleArchivePreview}
           isFolder={contextMenu.file.isFolder}
@@ -294,6 +294,7 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
             fileToMove={actionState.file}
             onClose={() => setActionState({ type: null, file: null })}
             onConfirmMove={handleMove}
+            initialFolderId={currentFolderId}
           />
         </Suspense>
       )}
