@@ -790,5 +790,3 @@ export function getKvStats() {
 export function getKvCacheStats() {
   return memoryCache.getStats();
 }
-
-export type VercelKV = KVClient;

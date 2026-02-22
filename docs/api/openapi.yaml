@@ -30,7 +30,7 @@ info:
 servers:
   - url: http://localhost:3000
     description: Development server
-  - url: https://zee-index.vercel.app
+  - url: https://zee-index.duckdns.org
     description: Production server
 
 tags:

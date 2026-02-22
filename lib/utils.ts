@@ -266,7 +266,5 @@ export function getBaseUrl(): string {
     return process.env.NEXTAUTH_URL.replace(/\/$/, "");
   }
 
-  return process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
+  return "http://localhost:3000";
 }

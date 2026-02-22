@@ -15,7 +15,7 @@
   </p>
 
   <div align="center">
-    <a href="https://zee-index.vercel.app/">🔴 Live Demo</a>
+    <a href="https://zee-index.duckdns.org">🔴 Live Demo</a>
     ·
     <a href="https://github.com/ifauzeee/Zee-Index/issues">🐛 Report Bug</a>
     ·
@@ -61,8 +61,7 @@
 - [📦 Deployment](#-deployment)
   - [Step 1: Google Cloud Setup](#step-1-google-cloud-setup)
   - [Step 2: Obtain Refresh Token](#step-2-obtain-refresh-token)
-  - [Step 3: Deploy to Vercel](#step-3-deploy-to-vercel)
-  - [Step 4: Deploy to Other Platforms](#step-4-deploy-to-other-platforms)
+  - [Step 3: Deploy to Other Platforms](#step-3-deploy-to-other-platforms)
 - [🐳 Docker Deployment](#-docker-deployment)
   - [Docker Compose (Recommended)](#docker-compose-recommended)
   - [Docker Build Arguments](#docker-build-arguments)
@@ -95,7 +94,7 @@ Zee-Index transforms your Google Drive into a powerful, self-hosted file system 
 | **Global Progress Bar**     | Visual top-loading bar for premium app-like navigation experience                                            |
 | **Smart Prefetching**       | Intelligently preloads folder contents on hover for instant navigation                                       |
 | **Turbopack Bundler**       | Uses Next.js 16's Turbopack for blazing-fast development builds                                              |
-| **Redis Caching**           | Multi-layer caching with Redis/Vercel KV for optimized API responses                                         |
+| **Redis Caching**           | Multi-layer caching with Redis for optimized API responses                                                   |
 
 ### 🎬 Media Streaming
 
@@ -176,7 +175,7 @@ Zee-Index transforms your Google Drive into a powerful, self-hosted file system 
 | Technology                                                 | Purpose        |
 | ---------------------------------------------------------- | -------------- |
 | [NextAuth.js](https://next-auth.js.org/)                   | Authentication |
-| [Vercel KV / Redis](https://vercel.com/storage/kv)         | Caching layer  |
+| [Redis](https://redis.io/)                                 | Caching layer  |
 | [Google Drive API v3](https://developers.google.com/drive) | File storage   |
 
 ### Development Tools
@@ -254,7 +253,6 @@ zee-index/
 ├── 📄 middleware.ts             # Next.js Middleware
 ├── 📄 next.config.mjs           # Next.js Configuration
 ├── 📄 tailwind.config.ts        # Tailwind Configuration
-├── 📄 vercel.json               # Vercel Configuration
 └── 📄 package.json              # Dependencies
 ```
 
@@ -390,20 +388,18 @@ These variables **must** be set for the application to function:
 
 ### Optional Variables
 
-| Variable                       | Description                         | Default                     |
-| ------------------------------ | ----------------------------------- | --------------------------- |
-| `KV_REST_API_URL`              | Redis/Vercel KV URL                 | In-memory cache if not set  |
-| `KV_REST_API_TOKEN`            | Redis/Vercel KV Token               | Required if using Vercel KV |
-| `REDIS_URL`                    | Alternative Redis connection string | `redis://localhost:6379`    |
-| `STORAGE_PROVIDER`             | Storage backend                     | `google-drive`              |
-| `NEXT_PUBLIC_ROOT_FOLDER_NAME` | Display name for root folder        | `Home`                      |
-| `NEXT_PUBLIC_MANUAL_DRIVES`    | JSON array of additional drives     | `[]`                        |
-| `PRIVATE_FOLDER_IDS`           | JSON array of private folder IDs    | `[]`                        |
-| `STORAGE_LIMIT_GB`             | Storage warning limit in GB         | `15`                        |
-| `STORAGE_WARNING_THRESHOLD`    | Warning threshold (0-1)             | `0.90`                      |
-| `NEXT_PUBLIC_SENTRY_DSN`       | Sentry error tracking DSN           | Empty                       |
-| `CRON_SECRET`                  | Secret for cron job authentication  | Random string               |
-| `SKIP_ENV_VALIDATION`          | Skip env validation during build    | `false`                     |
+| Variable                       | Description                         | Default                  |
+| ------------------------------ | ----------------------------------- | ------------------------ |
+| `REDIS_URL`                    | Alternative Redis connection string | `redis://localhost:6379` |
+| `STORAGE_PROVIDER`             | Storage backend                     | `google-drive`           |
+| `NEXT_PUBLIC_ROOT_FOLDER_NAME` | Display name for root folder        | `Home`                   |
+| `NEXT_PUBLIC_MANUAL_DRIVES`    | JSON array of additional drives     | `[]`                     |
+| `PRIVATE_FOLDER_IDS`           | JSON array of private folder IDs    | `[]`                     |
+| `STORAGE_LIMIT_GB`             | Storage warning limit in GB         | `15`                     |
+| `STORAGE_WARNING_THRESHOLD`    | Warning threshold (0-1)             | `0.90`                   |
+| `NEXT_PUBLIC_SENTRY_DSN`       | Sentry error tracking DSN           | Empty                    |
+| `CRON_SECRET`                  | Secret for cron job authentication  | Random string            |
+| `SKIP_ENV_VALIDATION`          | Skip env validation during build    | `false`                  |
 
 ### Email Configuration (Optional)
 
@@ -459,10 +455,6 @@ GOOGLE_REFRESH_TOKEN="your-refresh-token"
 # For Local Docker Redis:
 # KV_REST_API_URL="redis://localhost:6379"
 # KV_REST_API_TOKEN=""
-
-# For Vercel KV:
-# KV_REST_API_URL="https://your-instance.kv.vercel-storage.com"
-# KV_REST_API_TOKEN="your-vercel-kv-token"
 
 # ------------------------------------------------------------------------------
 # 5. LIMITS & MONITORING
@@ -543,66 +535,37 @@ SKIP_ENV_VALIDATION=false
 4. **Copy the Refresh Token** displayed and add it to your `.env`:
 
    ```bash
+
+   ```
+
+5. **Start the application** with your Google credentials in `.env`:
+
+   ```bash
+   GOOGLE_CLIENT_ID="your-client-id"
+   GOOGLE_CLIENT_SECRET="your-client-secret"
+   GOOGLE_REFRESH_TOKEN=""  # Leave empty initially
+   ```
+
+6. **Navigate to `/setup`** in your browser
+
+7. **Complete the OAuth flow** by signing in with your Google account
+
+8. **Copy the Refresh Token** displayed and add it to your `.env`:
+
+   ```bash
    GOOGLE_REFRESH_TOKEN="your-newly-obtained-refresh-token"
    ```
 
-5. **Restart the application** to apply changes
+9. **Restart the application** to apply changes
 
-### Step 3: Deploy to Vercel
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fifauzeee%2FZee-Index)
-
-**Manual Deployment:**
-
-1. **Install Vercel CLI**
-
-   ```bash
-   npm i -g vercel
-   ```
-
-2. **Deploy**
-
-   ```bash
-   vercel
-   ```
-
-3. **Add Environment Variables**
-   - Go to your project's Vercel dashboard
-   - Navigate to **Settings** → **Environment Variables**
-   - Add all required variables
-
-4. **Set Up Vercel KV**
-   - Go to **Storage** → **Create Database** → **KV**
-   - Follow the setup wizard
-   - Environment variables will be automatically added
-
-5. **Configure Cron Jobs** (Optional)
-
-   The `vercel.json` includes pre-configured cron jobs:
-
-   ```json
-   {
-     "crons": [
-       {
-         "path": "/api/cron/storage-check",
-         "schedule": "0 5 * * *"
-       },
-       {
-         "path": "/api/cron/weekly-report",
-         "schedule": "0 6 * * 0"
-       }
-     ]
-   }
-   ```
-
-### Step 4: Deploy to Other Platforms
+### Step 3: Deploy to Other Platforms
 
 #### Railway
 
-1. Create a new project on [Railway](https://railway.app/)
-2. Connect your GitHub repository
-3. Add environment variables
-4. Deploy
+1.  Create a new project on [Railway](https://railway.app/)
+2.  Connect your GitHub repository
+3.  Add environment variables
+4.  Deploy
 
 #### Render
 
@@ -912,11 +875,10 @@ graph LR
 
 ### Required Secrets
 
-| Secret            | Description             |
-| ----------------- | ----------------------- |
-| `DOCKER_USERNAME` | Docker Hub username     |
-| `DOCKER_PASSWORD` | Docker Hub password     |
-| `VERCEL_TOKEN`    | Vercel deployment token |
+| Secret            | Description         |
+| ----------------- | ------------------- |
+| `DOCKER_USERNAME` | Docker Hub username |
+| `DOCKER_PASSWORD` | Docker Hub password |
 
 ---
 
@@ -986,9 +948,7 @@ Response:
    ```
 2. Check `KV_REST_API_URL` matches your Redis setup:
    - Local Docker: `redis://localhost:6379`
-   - Vercel KV: Use provided URL
-3. If using Vercel KV, ensure token is correct
-</details>
+   </details>
 
 <details>
 <summary><strong>Google Drive API Errors</strong></summary>
@@ -1119,7 +1079,6 @@ See the [LICENSE](LICENSE) file for full details.
 ### Special Thanks To
 
 - [Next.js Team](https://nextjs.org/) - For the amazing framework
-- [Vercel](https://vercel.com/) - For hosting and deployment
 - [Radix UI](https://www.radix-ui.com/) - For accessible components
 - [TanStack](https://tanstack.com/) - For React Query and Virtual
 - [VidStack](https://www.vidstack.io/) - For the video player
@@ -1142,7 +1101,7 @@ This project is built with many amazing open source libraries. See [package.json
   <p>
     <a href="https://github.com/ifauzeee/Zee-Index">GitHub</a>
     ·
-    <a href="https://zee-index.vercel.app/">Live Demo</a>
+    <a href="https://zee-index.duckdns.org">Live Demo</a>
     ·
     <a href="https://github.com/ifauzeee/Zee-Index/issues">Issues</a>
   </p>
