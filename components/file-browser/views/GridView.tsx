@@ -17,6 +17,9 @@ export default function GridView({
   onDetailsClick,
   onDownloadClick,
   onPrefetchItem,
+  onDragStart,
+  onFileDrop,
+  isAdmin,
   isFetchingNextPage,
   nextPageToken,
   navigatingId,
@@ -166,6 +169,9 @@ export default function GridView({
                             onPrefetchItem(file);
                           }
                         }}
+                        isAdmin={isAdmin}
+                        onDragStart={(e) => onDragStart(e, file)}
+                        onFileDrop={onFileDrop}
                         isNavigating={navigatingId === file.id}
                       />
                     </div>

@@ -145,6 +145,27 @@ body.bulk-action-bar-visible {
   background: hsl(var(--muted-foreground));
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted) / 0.3) 25%,
+    hsl(var(--muted) / 0.6) 37%,
+    hsl(var(--muted) / 0.3) 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+}
+
 .transition-colors {
   transition-property:
     color, background-color, border-color, text-decoration-color, fill, stroke;

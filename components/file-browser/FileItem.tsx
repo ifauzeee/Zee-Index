@@ -132,9 +132,18 @@ function FileItem({
   };
 
   const itemVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.1 } },
-    hover: { scale: 1.01, transition: { duration: 0.1 } },
+    hidden: { opacity: 0, y: 10 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.2, ease: "easeOut" },
+    },
+    hover: {
+      scale: 1.02,
+      y: -2,
+      transition: { duration: 0.2, ease: "easeInOut" },
+    },
+    tap: { scale: 0.98, transition: { duration: 0.1 } },
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -176,7 +185,7 @@ function FileItem({
       initial="hidden"
       animate="visible"
       whileHover={!isUploading && isDesktop ? "hover" : undefined}
-      whileTap={!isUploading ? { scale: 0.98 } : undefined}
+      whileTap={!isUploading ? "tap" : undefined}
       className={cn(
         isGallery && "mb-4",
         isUploading && "opacity-80",
@@ -190,8 +199,8 @@ function FileItem({
           "group relative rounded-lg transition-all duration-200 ease-in-out cursor-pointer overflow-hidden w-full border",
           "select-none touch-pan-y touch-action-manipulation outline-none focus:outline-none focus:ring-0",
           isSelected
-            ? "bg-primary/10 border-primary"
-            : "bg-card border-border hover:shadow-md hover:bg-accent/50",
+            ? "bg-primary/10 border-primary shadow-sm"
+            : "bg-card border-border hover:shadow-lg hover:border-primary/30",
           isActive && !isBulkMode && "ring-1 ring-primary",
           view === "list"
             ? compactClass
@@ -201,7 +210,8 @@ function FileItem({
           view === "grid" &&
             "flex flex-col items-center justify-center text-center p-2 sm:p-4",
           isGallery && "p-0 border-none",
-          isDragOver && "ring-2 ring-primary ring-inset bg-primary/10",
+          isDragOver &&
+            "ring-4 ring-primary/30 bg-primary/20 scale-[1.05] z-50 shadow-2xl border-primary",
           isError && "ring-2 ring-destructive/50 bg-destructive/5",
         )}
         style={{ WebkitTapHighlightColor: "transparent" }}

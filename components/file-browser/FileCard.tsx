@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { motion, Variants } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { Folder, MoreVertical, Loader2 } from "lucide-react";
@@ -32,6 +33,9 @@ interface FileCardProps {
   onMouseEnter?: () => void;
   isNavigating?: boolean;
   onPrefetchItem?: (file: DriveFile) => void;
+  isAdmin?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onFileDrop?: (e: React.DragEvent, targetFolder: DriveFile) => void;
 }
 
 export default function FileCard({
@@ -46,7 +50,16 @@ export default function FileCard({
   onMouseEnter,
   isNavigating,
   onPrefetchItem,
+  isAdmin,
+  onDragStart,
+  onFileDrop,
 }: FileCardProps) {
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    setIsDesktop(window.matchMedia("(pointer: fine)").matches);
+  }, []);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -106,15 +119,68 @@ export default function FileCard({
   const displayThumbnail = thumbnailSrc && !isFolder && file.hasThumbnail;
   const isUploading = file.uploadStatus === "uploading";
 
+  const handleDragOver = (e: React.DragEvent) => {
+    if (isFolder && isAdmin && !isUploading) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragOver(true);
+      e.dataTransfer.dropEffect = "move";
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    if (isFolder && isAdmin && !isUploading && onFileDrop) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragOver(false);
+      onFileDrop(e, file);
+    }
+  };
+
+  const cardVariants: Variants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: { duration: 0.2, ease: "easeOut" },
+    },
+    hover: {
+      scale: 1.05,
+      y: -5,
+      transition: { duration: 0.2, ease: "easeInOut" },
+    },
+    tap: { scale: 0.98, transition: { duration: 0.1 } },
+  };
+
   return (
-    <div
+    <motion.div
+      variants={cardVariants}
+      initial="hidden"
+      animate="visible"
+      whileHover={!isUploading && isDesktop ? "hover" : undefined}
+      whileTap={!isUploading ? "tap" : undefined}
       className={cn(
-        "group relative border rounded-lg hover:shadow-md transition-all bg-card p-3 flex flex-col gap-3 h-[200px] cursor-pointer select-none",
-        isSelected && "border-primary bg-primary/5 ring-1 ring-primary",
+        "group relative border rounded-lg transition-all bg-card p-3 flex flex-col gap-3 h-[200px] cursor-pointer select-none",
+        isSelected
+          ? "border-primary bg-primary/5 shadow-md ring-1 ring-primary"
+          : "hover:shadow-xl hover:border-primary/30",
+        isDragOver &&
+          "ring-4 ring-primary/30 bg-primary/20 scale-[1.1] z-50 shadow-2xl border-primary",
       )}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
       onMouseEnter={onMouseEnter}
+      draggable={isAdmin && !isUploading && isDesktop}
+      onDragStart={onDragStart as any}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       ref={containerRef}
     >
       <div
@@ -212,6 +278,6 @@ export default function FileCard({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </div>
+    </motion.div>
   );
 }

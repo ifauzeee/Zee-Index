@@ -29,7 +29,7 @@ const FileBrowserLoading = () => {
       animate="visible"
     >
       {Array.from({ length: 12 }).map((_, index) => (
-        <FileItemSkeleton key={index} />
+        <FileItemSkeleton key={index} viewMode={view as "list" | "grid"} />
       ))}
     </motion.div>
   );

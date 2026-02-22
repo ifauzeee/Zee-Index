@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import FileList from "@/components/file-browser/FileList";
 import FileBrowserLoading from "@/components/file-browser/FileBrowserLoading";
 import FolderReadme from "@/components/file-browser/FolderReadme";
@@ -38,6 +39,7 @@ interface FileBrowserContentProps {
   nextPageToken: string | null;
   fetchNextPage: () => void;
   navigatingId: string | null;
+  currentFolderId: string | undefined;
   error: any;
 }
 
@@ -70,6 +72,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
     nextPageToken,
     fetchNextPage,
     navigatingId,
+    currentFolderId,
     error,
   } = props;
 
@@ -145,24 +148,34 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
         </div>
       )}
 
-      <FileList
-        files={sortedFiles}
-        activeFileId={activeFileId}
-        focusedIndex={focusedIndex}
-        onItemClick={onItemClick}
-        onItemContextMenu={onContextMenu}
-        onShareClick={onShareClick}
-        onDetailsClick={onDetailsClick}
-        onDownloadClick={onDownloadClick}
-        isAdmin={isAdmin}
-        onDragStart={onDragStart}
-        onFileDrop={onFileDrop}
-        onPrefetchItem={onPrefetchItem}
-        uploads={uploads}
-        isFetchingNextPage={isFetchingNextPage}
-        nextPageToken={nextPageToken}
-        navigatingId={navigatingId}
-      />
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentFolderId || "root"}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2, ease: "easeInOut" }}
+        >
+          <FileList
+            files={sortedFiles}
+            activeFileId={activeFileId}
+            focusedIndex={focusedIndex}
+            onItemClick={onItemClick}
+            onItemContextMenu={onContextMenu}
+            onShareClick={onShareClick}
+            onDetailsClick={onDetailsClick}
+            onDownloadClick={onDownloadClick}
+            isAdmin={isAdmin}
+            onDragStart={onDragStart}
+            onFileDrop={onFileDrop}
+            onPrefetchItem={onPrefetchItem}
+            uploads={uploads}
+            isFetchingNextPage={isFetchingNextPage}
+            nextPageToken={nextPageToken}
+            navigatingId={navigatingId}
+          />
+        </motion.div>
+      </AnimatePresence>
     </>
   );
 }

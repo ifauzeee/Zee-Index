@@ -522,6 +522,7 @@ export default function FileBrowser({
           nextPageToken={nextPageToken}
           fetchNextPage={fetchNextPage}
           navigatingId={navigatingId}
+          currentFolderId={currentFolderId}
         />
       </div>
 
