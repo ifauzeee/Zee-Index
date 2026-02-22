@@ -27,6 +27,7 @@ import {
   Network,
   Palette,
   BarChart3,
+  Zap,
 } from "lucide-react";
 import Loading from "@/components/common/Loading";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,10 @@ const TodayDownloadsChart = dynamic(
 );
 const DayOfWeekChart = dynamic(
   () => import("@/components/charts/DayOfWeekChart"),
+  { ssr: false },
+);
+const LivePerformanceChart = dynamic(
+  () => import("@/components/charts/LivePerformanceChart"),
   { ssr: false },
 );
 import SecurityConfig from "@/components/admin/SecurityConfig";
@@ -338,6 +343,18 @@ export default function AdminPage() {
                 </div>
               ) : stats ? (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  {/* Live Performance Chart */}
+                  <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm xl:col-span-2">
+                    <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
+                      <Zap
+                        size={18}
+                        className="text-yellow-500 fill-yellow-500"
+                      />
+                      {t("livePerformance") || "Real-time Traffic Monitor"}
+                    </h3>
+                    <LivePerformanceChart />
+                  </div>
+
                   <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm">
                     <h3 className="text-base font-semibold mb-4">
                       {t("todaysDownloads")}
