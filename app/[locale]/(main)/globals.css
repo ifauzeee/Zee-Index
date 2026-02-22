@@ -97,6 +97,19 @@
   body.scroll-locked {
     overflow: hidden !important;
   }
+
+  /* Accessibility: Better Focus States */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background transition-shadow;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    @apply ring-2 ring-primary ring-offset-2;
+  }
 }
 
 html.theme-transition,

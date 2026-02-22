@@ -112,6 +112,30 @@ const TreeNode = memo(({ id, depth = 0 }: { id: string; depth?: number }) => {
           onDrop(e, node.id);
         }}
         onClick={() => onNavigate(node.id)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onNavigate(node.id);
+          } else if (
+            e.key === "ArrowRight" &&
+            node.isFolder &&
+            !node.isExpanded
+          ) {
+            e.preventDefault();
+            onToggle(node.id);
+          } else if (
+            e.key === "ArrowLeft" &&
+            node.isFolder &&
+            node.isExpanded
+          ) {
+            e.preventDefault();
+            onToggle(node.id);
+          }
+        }}
+        role="treeitem"
+        aria-expanded={node.isFolder ? node.isExpanded : undefined}
+        aria-selected={isActuallyActive}
+        tabIndex={0}
       >
         {depth > 0 && (
           <div

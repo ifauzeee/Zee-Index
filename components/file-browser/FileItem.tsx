@@ -197,7 +197,7 @@ function FileItem({
       <div
         className={cn(
           "group relative rounded-lg transition-all duration-200 ease-in-out cursor-pointer overflow-hidden w-full border",
-          "select-none touch-pan-y touch-action-manipulation outline-none focus:outline-none focus:ring-0",
+          "select-none touch-pan-y touch-action-manipulation",
           isSelected
             ? "bg-primary/10 border-primary shadow-sm"
             : "bg-card border-border hover:shadow-lg hover:border-primary/30",
@@ -234,6 +234,8 @@ function FileItem({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        role="button"
+        tabIndex={0}
       >
         <div
           className={cn(
