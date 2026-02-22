@@ -18,10 +18,21 @@ export interface TopUser {
   count: number;
 }
 
+export interface FileTypeStat {
+  type: string;
+  count: number;
+}
+
 export interface AdminStats {
   downloadsToday: HourlyDownload[];
   topFiles: TopFile[];
   downloadsByDayOfWeek: DayOfWeekDownload[];
   topUsers: TopUser[];
   topUploadedFiles: TopFile[];
+  fileTypeDistribution: FileTypeStat[];
+  bandwidthSummary: {
+    today: number;
+    thisWeek: number;
+    thisMonth: number;
+  };
 }

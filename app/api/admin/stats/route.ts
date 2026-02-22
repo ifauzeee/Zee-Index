@@ -20,6 +20,9 @@ async function isAdmin(session: Session | null): Promise<boolean> {
   return session?.user?.role === "ADMIN";
 }
 
+import { getAnalyticsData } from "@/lib/analyticsTracker";
+import { type ActivityType } from "@/lib/activityLogger";
+
 const getAdminStatsCached = unstable_cache(
   async () => {
     const ninetyDaysAgo = subDays(new Date(), 90).getTime();
@@ -31,7 +34,7 @@ const getAdminStatsCached = unstable_cache(
       (log: any) =>
         ({
           ...log,
-          type: log.type as any,
+          type: log.type as ActivityType,
           severity: log.severity as any,
           metadata: log.metadata ? JSON.parse(log.metadata) : undefined,
         }) as unknown as ActivityLog,
@@ -50,6 +53,7 @@ const getAdminStatsCached = unstable_cache(
     const fileCounts = new Map<string, number>();
     const userCounts = new Map<string, number>();
     const uploadCounts = new Map<string, number>();
+    const typeCounts = new Map<string, number>();
 
     const downloadsByDayOfWeek: DayOfWeekDownload[] = [
       { name: "Min", downloads: 0 },
@@ -86,6 +90,14 @@ const getAdminStatsCached = unstable_cache(
 
         if (log.itemName) {
           fileCounts.set(log.itemName, (fileCounts.get(log.itemName) || 0) + 1);
+
+          // Extract file type/extension
+          const ext = log.itemName.split(".").pop()?.toUpperCase() || "UNKNOWN";
+          if (ext.length <= 5) {
+            typeCounts.set(ext, (typeCounts.get(ext) || 0) + 1);
+          } else {
+            typeCounts.set("OTHER", (typeCounts.get("OTHER") || 0) + 1);
+          }
         }
       }
     }
@@ -105,12 +117,25 @@ const getAdminStatsCached = unstable_cache(
       .slice(0, 5)
       .map(([name, count]) => ({ name, count }));
 
+    const fileTypeDistribution = Array.from(typeCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([type, count]) => ({ type, count }));
+
+    const analyticsData = await getAnalyticsData();
+
     const stats: AdminStats = {
       downloadsToday,
       topFiles,
       downloadsByDayOfWeek,
       topUsers,
       topUploadedFiles,
+      fileTypeDistribution,
+      bandwidthSummary: {
+        today: analyticsData.bandwidth.totalToday,
+        thisWeek: analyticsData.bandwidth.totalThisWeek,
+        thisMonth: analyticsData.bandwidth.totalThisMonth,
+      },
     };
 
     return stats;

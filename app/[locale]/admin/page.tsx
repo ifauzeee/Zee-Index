@@ -30,7 +30,7 @@ import {
   Zap,
 } from "lucide-react";
 import Loading from "@/components/common/Loading";
-import { cn } from "@/lib/utils";
+import { cn, formatBytes } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import TwoFactorAuthSetup from "@/components/features/TwoFactorAuthSetup";
@@ -407,6 +407,87 @@ export default function AdminPage() {
                       {t("weeklyTrend")}
                     </h3>
                     <DayOfWeekChart data={stats.downloadsByDayOfWeek} />
+                  </div>
+
+                  {/* Monthly Bandwidth Widget */}
+                  <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm">
+                    <h3 className="text-base font-semibold mb-1 flex items-center gap-2">
+                      <HardDrive size={18} className="text-amber-500" />
+                      {t("bandwidthMonthly")}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      {t("monthlyUsage")}
+                    </p>
+                    <div className="space-y-6 pt-2">
+                      <div className="flex items-end justify-between">
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground uppercase font-semibold">
+                            Today
+                          </p>
+                          <p className="text-xl font-bold text-blue-600">
+                            {formatBytes(stats.bandwidthSummary?.today || 0)}
+                          </p>
+                        </div>
+                        <div className="space-y-1 text-right">
+                          <p className="text-xs text-muted-foreground uppercase font-semibold">
+                            Total This Month
+                          </p>
+                          <p className="text-xl font-bold text-amber-600">
+                            {formatBytes(
+                              stats.bandwidthSummary?.thisMonth || 0,
+                            )}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="relative pt-1">
+                        <div className="overflow-hidden h-2 text-xs flex rounded bg-amber-500/10">
+                          <div
+                            style={{
+                              width: `${Math.min(((stats.bandwidthSummary?.thisMonth || 0) / (stats.bandwidthSummary?.thisMonth || 1)) * 100, 100)}%`,
+                            }}
+                            className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-amber-500"
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* File Type Distribution Widget */}
+                  <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm">
+                    <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
+                      <BarChart3 size={18} className="text-emerald-500" />
+                      {t("fileTypeDistribution")}
+                    </h3>
+                    <div className="space-y-4">
+                      {stats.fileTypeDistribution?.length > 0 ? (
+                        stats.fileTypeDistribution.map((item, idx) => (
+                          <div key={item.type} className="space-y-1.5">
+                            <div className="flex justify-between text-xs font-medium">
+                              <span className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                                {item.type}
+                              </span>
+                              <span className="text-muted-foreground">
+                                {item.count} files
+                              </span>
+                            </div>
+                            <div className="overflow-hidden h-1.5 text-xs flex rounded bg-emerald-500/10">
+                              <div
+                                style={{
+                                  width: `${(item.count / stats.fileTypeDistribution[0].count) * 100}%`,
+                                }}
+                                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-emerald-500"
+                              ></div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground text-sm text-center py-8">
+                          {t("noData")}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               ) : (
