@@ -149,7 +149,7 @@ export const CodePreview: React.FC<{ src: string; fileName: string }> = ({
     fetch(src)
       .then((res) => res.text())
       .then(setContent)
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setIsLoading(false));
   }, [src]);
 
@@ -160,6 +160,7 @@ export const CodePreview: React.FC<{ src: string; fileName: string }> = ({
       <CodeViewer
         content={content || ""}
         language={language}
+        fileName={fileName}
         className="h-full rounded-none border-0"
       />
     </div>
