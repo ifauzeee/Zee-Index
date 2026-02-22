@@ -44,6 +44,10 @@ const MarkdownViewer = dynamic(() => import("../file-details/MarkdownViewer"), {
   loading: () => <LoadingPreview />,
 });
 
+const AudioPlayer = dynamic(() => import("../file-details/AudioPlayer"), {
+  loading: () => <LoadingPreview />,
+});
+
 const ArchivePreviewModal = dynamic(
   () => import("@/components/modals/ArchivePreviewModal"),
 );
@@ -306,11 +310,11 @@ export default function FileDetail({
         );
       case "audio":
         return (
-          <VideoPlayer
+          <AudioPlayer
             src={directLink}
             title={file.name}
-            type="audio"
             mimeType={file.mimeType}
+            poster={file.thumbnailLink}
           />
         );
       case "image":
