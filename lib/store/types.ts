@@ -84,6 +84,8 @@ export interface UISlice {
   setConfig: (config: Partial<AppConfig>) => Promise<void>;
   hideAuthor: boolean | null;
   disableGuestLogin: boolean | null;
+  isTheaterMode: boolean;
+  toggleTheaterMode: () => void;
 }
 
 export interface AuthSlice {

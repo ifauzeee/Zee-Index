@@ -111,4 +111,7 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (
       });
     }
   },
+  isTheaterMode: false,
+  toggleTheaterMode: () =>
+    set((state: AppState) => ({ isTheaterMode: !state.isTheaterMode })),
 });
