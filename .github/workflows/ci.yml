@@ -1,5 +1,4 @@
 name: CI
-
 on:
   push:
     branches: [main, master]
@@ -7,10 +6,9 @@ on:
     branches: [main, master]
 
 jobs:
-  test:
+  check:
     name: Lint, Typecheck & Test
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -37,9 +35,40 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Test
-        run: pnpm test -- run || echo "Tests failed but continuing CI..."
-        continue-on-error: true
+      - name: Unit Tests
+        run: pnpm test -- run
+
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(pnpm list @playwright/test --depth=0 | grep @playwright/test | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright binary
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps
+
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps
+
+      - name: Run E2E Tests
+        run: pnpm test:e2e
+        env:
+          CI: true
+          GOOGLE_CLIENT_ID: "mock_client_id"
+          GOOGLE_CLIENT_SECRET: "mock_client_secret"
+          NEXTAUTH_SECRET: "super_secret_mock_key_at_least_32_chars_long"
+          NEXTAUTH_URL: "http://localhost:3000"
+          KV_REST_API_URL: "https://mock.upstash.io"
+          KV_REST_API_TOKEN: "mock_token"
 
       - name: Build
         run: pnpm build
