@@ -33,6 +33,7 @@ interface InfoPanelProps {
   subtitleTracks?: any[];
   onAddSubtitle?: (track: any) => void;
   onRemoveSubtitle?: (src: string) => void;
+  tmdbGenres?: string[];
 }
 
 const ListItem = ({ label, value }: { label: string; value: string }) => (
@@ -57,6 +58,7 @@ export default function InfoPanel({
   subtitleTracks = [],
   onAddSubtitle,
   onRemoveSubtitle,
+  tmdbGenres = [],
 }: InfoPanelProps) {
   const [newTag, setNewTag] = useState("");
   const [isAddingTag, setIsAddingTag] = useState(false);
@@ -214,6 +216,15 @@ export default function InfoPanel({
           {t("tags")}
         </h4>
         <div className="flex flex-wrap gap-2 mb-3">
+          {tmdbGenres?.map((genre) => (
+            <span
+              key={genre}
+              className="px-2 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded text-xs font-bold"
+            >
+              {genre}
+            </span>
+          ))}
+
           {tags?.map((tag) => (
             <span
               key={tag}
@@ -230,7 +241,7 @@ export default function InfoPanel({
               )}
             </span>
           ))}
-          {tags.length === 0 && (
+          {tags.length === 0 && (!tmdbGenres || tmdbGenres.length === 0) && (
             <p className="text-xs text-muted-foreground italic">
               {t("noTags")}
             </p>

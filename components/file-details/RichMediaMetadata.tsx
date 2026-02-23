@@ -9,10 +9,12 @@ import { useTranslations } from "next-intl";
 
 interface RichMediaMetadataProps {
   filename: string;
+  onMetadataLoaded?: (metadata: TMDBMetadata) => void;
 }
 
 export default function RichMediaMetadata({
   filename,
+  onMetadataLoaded,
 }: RichMediaMetadataProps) {
   const [metadata, setMetadata] = useState<TMDBMetadata | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,6 +30,7 @@ export default function RichMediaMetadata({
         if (res.ok) {
           const data = await res.json();
           setMetadata(data);
+          onMetadataLoaded?.(data);
         }
       } catch (err) {
         console.error("Failed to fetch media metadata", err);
@@ -37,7 +40,7 @@ export default function RichMediaMetadata({
     };
 
     fetchMetadata();
-  }, [filename]);
+  }, [filename, onMetadataLoaded]);
 
   if (loading) {
     return (
@@ -140,19 +143,6 @@ export default function RichMediaMetadata({
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {metadata.genres && metadata.genres.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {metadata.genres.map((genre) => (
-            <span
-              key={genre.id}
-              className="px-2 py-0.5 bg-secondary/50 text-[10px] font-medium rounded-full text-muted-foreground"
-            >
-              {genre.name}
-            </span>
-          ))}
         </div>
       )}
     </motion.div>

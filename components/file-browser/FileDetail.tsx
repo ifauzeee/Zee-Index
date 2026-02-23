@@ -121,6 +121,7 @@ export default function FileDetail({
   const [activeSubtitleTracks, setActiveSubtitleTracks] = useState<
     SubtitleTrack[]
   >(subtitleTracks || []);
+  const [tmdbGenres, setTmdbGenres] = useState<string[]>([]);
 
   useEffect(() => {
     setActiveSubtitleTracks(subtitleTracks || []);
@@ -442,6 +443,7 @@ export default function FileDetail({
                   subtitleTracks={authenticatedSubtitleTracks}
                   onAddSubtitle={handleAddSubtitle}
                   onRemoveSubtitle={handleRemoveSubtitle}
+                  tmdbGenres={tmdbGenres}
                 />
               </motion.div>
             </>
@@ -600,13 +602,19 @@ export default function FileDetail({
             subtitleTracks={authenticatedSubtitleTracks}
             onAddSubtitle={handleAddSubtitle}
             onRemoveSubtitle={handleRemoveSubtitle}
+            tmdbGenres={tmdbGenres}
           />
         )}
       </div>
 
       {fileType === "video" && !isTheaterMode && (
         <div className="mt-8 animate-in fade-in slide-in-from-bottom-4">
-          <RichMediaMetadata filename={file.name} />
+          <RichMediaMetadata
+            filename={file.name}
+            onMetadataLoaded={(data) =>
+              setTmdbGenres(data.genres?.map((g) => g.name) || [])
+            }
+          />
         </div>
       )}
 
