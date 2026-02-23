@@ -257,6 +257,53 @@ export function getPrivateFolderIds(): string[] {
     .map((id) => id.trim())
     .filter(Boolean);
 }
+export function cleanMediaTitle(filename: string): {
+  title: string;
+  year?: string;
+} {
+  const name = filename.replace(/\.[^/.]+$/, "");
+
+  const yearMatch = name.match(
+    /(?:\.|\(|\[| |^)(19\d{2}|20\d{2})(?:\.|\)|\]| |$)/,
+  );
+  const year = yearMatch ? yearMatch[1] : undefined;
+
+  const noise = [
+    /\d{3,4}p/gi,
+    /hdr(\d+)?/gi,
+    /bluray|web-?dl|webrip|brrip|dvdrip/gi,
+    /x264|x265|h264|h265|hevc/gi,
+    /dts|aac|ac3|truehd|atmos/gi,
+    /dual[- ]?audio/gi,
+    /multi/gi,
+    /sub(bed|s)?/gi,
+    /\[.*?\]/g,
+    /\(.*?\)/g,
+    /\{.*?\}/g,
+    /[._-]/g,
+  ];
+
+  let cleaned = name;
+
+  if (year) {
+    const yearIndex = cleaned.indexOf(year);
+    if (yearIndex > 0) {
+      cleaned = cleaned.substring(0, yearIndex);
+    }
+  }
+
+  noise.forEach((pattern) => {
+    cleaned = cleaned.replace(pattern, " ");
+  });
+
+  cleaned = cleaned.replace(/\s+/g, " ").trim();
+
+  return {
+    title: cleaned || filename,
+    year,
+  };
+}
+
 export function getBaseUrl(): string {
   if (typeof window !== "undefined") {
     return window.location.origin;

@@ -541,16 +541,14 @@ export default function VideoPlayer({
                 </svg>
                 <div className="text-3xl font-bold z-10">{upNextCountdown}</div>
               </div>
-              <h3 className="text-2xl font-bold mb-2">Selanjutnya...</h3>
-              <p className="text-gray-400 mb-8">
-                Memutar video berikutnya secara otomatis.
-              </p>
+              <h3 className="text-2xl font-bold mb-2">{tPlayer("upNext")}</h3>
+              <p className="text-gray-400 mb-8">{tPlayer("autoPlayNext")}</p>
               <div className="flex gap-4 justify-center">
                 <button
                   onClick={() => setUpNextCountdown(null)}
                   className="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full font-medium transition-colors"
                 >
-                  Batal
+                  {tPlayer("cancel")}
                 </button>
                 <button
                   onClick={() => {
@@ -559,7 +557,7 @@ export default function VideoPlayer({
                   }}
                   className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full font-bold transition-colors"
                 >
-                  Putar Sekarang
+                  {tPlayer("playNow")}
                 </button>
               </div>
             </div>

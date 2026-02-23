@@ -222,7 +222,9 @@
     "subtitles": "Subtitle",
     "noSubtitles": "Tidak ada subtitle yang terdeteksi",
     "addSubtitle": "Tambah dari Drive",
-    "addLocalSubtitle": "Unggah File Lokal (.srt/.vtt)"
+    "addLocalSubtitle": "Unggah File Lokal (.srt/.vtt)",
+    "mediaInfo": "Informasi Media",
+    "cast": "Pemeran"
   },
   "SubtitleSelector": {
     "title": "Pilih File Subtitle",
@@ -754,7 +756,11 @@
     "resumeTitle": "Lanjutkan Menonton?",
     "resumeMessage": "Anda menonton sampai {time} terakhir kali.",
     "resumeButton": "Lanjutkan",
-    "startOver": "Ulang dari Awal"
+    "startOver": "Ulang dari Awal",
+    "upNext": "Selanjutnya...",
+    "autoPlayNext": "Memutar video berikutnya secara otomatis.",
+    "cancel": "Batal",
+    "playNow": "Putar Sekarang"
   },
   "AnalyticsDashboard": {
     "title": "Dasbor Analitik",

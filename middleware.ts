@@ -30,6 +30,7 @@ const PUBLIC_API_PREFIXES = [
   "/api/admin/manual-drives",
   "/api/admin/analytics/track",
   "/api/health",
+  "/api/metadata",
 ];
 
 const isPublicRoute = (pathname: string) => {

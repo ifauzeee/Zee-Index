@@ -222,7 +222,9 @@
     "subtitles": "Subtitles",
     "noSubtitles": "No subtitles detected",
     "addSubtitle": "Add Drive Subtitle",
-    "addLocalSubtitle": "Add Local File (.srt/.vtt)"
+    "addLocalSubtitle": "Add Local File (.srt/.vtt)",
+    "mediaInfo": "Media Information",
+    "cast": "Cast"
   },
   "SubtitleSelector": {
     "title": "Select Subtitle File",
@@ -754,7 +756,11 @@
     "resumeTitle": "Resume Playback?",
     "resumeMessage": "You watched up to {time} last time.",
     "resumeButton": "Resume",
-    "startOver": "Start Over"
+    "startOver": "Start Over",
+    "upNext": "Up Next...",
+    "autoPlayNext": "Automatically playing next video.",
+    "cancel": "Cancel",
+    "playNow": "Play Now"
   },
   "AnalyticsDashboard": {
     "title": "Analytics Dashboard",

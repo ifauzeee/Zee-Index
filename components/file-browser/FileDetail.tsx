@@ -35,6 +35,7 @@ import {
   LoadingPreview,
   FileIconPlaceholder,
 } from "../file-details/PreviewRenderers";
+import RichMediaMetadata from "../file-details/RichMediaMetadata";
 
 const VideoPlayer = dynamic(() => import("../file-details/VideoPlayer"), {
   loading: () => <LoadingPreview />,
@@ -602,6 +603,12 @@ export default function FileDetail({
           />
         )}
       </div>
+
+      {fileType === "video" && !isTheaterMode && (
+        <div className="mt-8 animate-in fade-in slide-in-from-bottom-4">
+          <RichMediaMetadata filename={file.name} />
+        </div>
+      )}
 
       {internalPreviewOpen && (
         <FileDetail
