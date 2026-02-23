@@ -100,6 +100,7 @@ export default function FileDetail({
     folderTokens,
     setCurrentFileId,
     setCurrentFolderId,
+    isTheaterMode,
   } = useAppStore();
 
   const [internalPreviewOpen, setInternalPreviewOpen] = useState(false);
@@ -452,25 +453,44 @@ export default function FileDetail({
   const showShareButton = !shareToken && isAdmin;
 
   return (
-    <div className="container mx-auto px-4 py-6 flex flex-col h-full overflow-hidden">
-      <header className="flex items-center justify-between gap-4 mb-4">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft size={20} /> {t("back")}
-        </button>
-        {showShareButton && (
-          <ShareButton
-            path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`}
-            itemName={file.name}
-          />
-        )}
-      </header>
+    <div
+      className={cn(
+        "container mx-auto px-4 py-6 flex flex-col h-full",
+        isTheaterMode ? "max-w-none" : "overflow-hidden",
+      )}
+    >
+      {!isTheaterMode && (
+        <header className="flex items-center justify-between gap-4 mb-4 animate-in fade-in slide-in-from-top-4">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft size={20} /> {t("back")}
+          </button>
+          {showShareButton && (
+            <ShareButton
+              path={`/folder/${file.parents?.[0]}/file/${file.id}/${encodeURIComponent(file.name)}`}
+              itemName={file.name}
+            />
+          )}
+        </header>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-12 flex-1 overflow-hidden">
-        <div className="lg:col-span-2 flex flex-col flex-1 min-h-0 relative group">
-          {isEditable && (
+      <div
+        className={cn(
+          "grid grid-cols-1 lg:gap-12 flex-1 min-h-0",
+          isTheaterMode ? "lg:grid-cols-1" : "lg:grid-cols-3 overflow-hidden",
+        )}
+      >
+        <div
+          className={cn(
+            "flex flex-col flex-1 min-h-0 relative group transition-all duration-500",
+            isTheaterMode
+              ? "lg:col-span-1 h-[70vh] md:h-[85vh]"
+              : "lg:col-span-2",
+          )}
+        >
+          {isEditable && !isTheaterMode && (
             <div className="mb-2 flex justify-end gap-2">
               {isEditing && (
                 <button
@@ -563,22 +583,24 @@ export default function FileDetail({
           )}
         </div>
 
-        <InfoPanel
-          file={file}
-          isAdmin={isAdmin}
-          canShowAuthor={canShowAuthor}
-          tags={fileTags[file.id] || []}
-          directLink={directLink}
-          onAddTag={(tag) => addTag(file.id, tag)}
-          onRemoveTag={(tag) => removeTag(file.id, tag)}
-          onCopyLink={handleCopyLink}
-          onEditImage={() => setShowImageEditor(true)}
-          onShowHistory={() => setShowHistory(true)}
-          isImage={fileType === "image"}
-          subtitleTracks={authenticatedSubtitleTracks}
-          onAddSubtitle={handleAddSubtitle}
-          onRemoveSubtitle={handleRemoveSubtitle}
-        />
+        {!isTheaterMode && (
+          <InfoPanel
+            file={file}
+            isAdmin={isAdmin}
+            canShowAuthor={canShowAuthor}
+            tags={fileTags[file.id] || []}
+            directLink={directLink}
+            onAddTag={(tag) => addTag(file.id, tag)}
+            onRemoveTag={(tag) => removeTag(file.id, tag)}
+            onCopyLink={handleCopyLink}
+            onEditImage={() => setShowImageEditor(true)}
+            onShowHistory={() => setShowHistory(true)}
+            isImage={fileType === "image"}
+            subtitleTracks={authenticatedSubtitleTracks}
+            onAddSubtitle={handleAddSubtitle}
+            onRemoveSubtitle={handleRemoveSubtitle}
+          />
+        )}
       </div>
 
       {internalPreviewOpen && (
