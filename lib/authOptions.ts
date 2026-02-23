@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { User } from "next-auth";
 import { logger } from "@/lib/logger";
 import { authLimiter } from "@/lib/ratelimit";
+import { kv } from "@/lib/kv";
+import { REDIS_KEYS } from "@/lib/constants";
 
 const CONFIG_KEY = "zee-index:config";
 
@@ -51,13 +53,20 @@ export const authOptions: AuthOptions = {
             where: { email: normalizedInputEmail },
           });
           const envAdminsRaw = process.env.ADMIN_EMAILS || "";
-          const normalizedEnvAdmins = envAdminsRaw
-            .split(",")
-            .map((e) => e.trim().toLowerCase().replace(/^["']|["']$/g, ""));
+          const normalizedEnvAdmins = envAdminsRaw.split(",").map((e) =>
+            e
+              .trim()
+              .toLowerCase()
+              .replace(/^["']|["']$/g, ""),
+          );
 
           const isAdminEnv = normalizedEnvAdmins.includes(normalizedInputEmail);
           const isAdminDb = dbUser?.role === "ADMIN";
-          const isAdmin = isAdminDb || isAdminEnv;
+          const isRedisAdmin = await kv.sismember(
+            REDIS_KEYS.ADMIN_USERS,
+            normalizedInputEmail,
+          );
+          const isAdmin = isAdminDb || isAdminEnv || isRedisAdmin === 1;
 
           const envPass = (process.env.ADMIN_PASSWORD || "")
             .trim()
@@ -120,7 +129,7 @@ export const authOptions: AuthOptions = {
               return null;
             }
           }
-        } catch { }
+        } catch {}
 
         const guestId = `guest_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
         return {
@@ -139,12 +148,12 @@ export const authOptions: AuthOptions = {
   },
   callbacks: {
     async jwt({ token, profile, user }) {
-      if (user && user.isGuest) {
+      if (user && (user as any).isGuest) {
         token.id = `guest_${Date.now()}`;
         token.name = user.name;
         token.email = user.email;
-        token.role = user.role;
-        token.isGuest = user.isGuest;
+        token.role = (user as any).role;
+        token.isGuest = true;
       } else if (user && user.email) {
         token.id = user.id;
         token.name = user.name;
@@ -157,28 +166,41 @@ export const authOptions: AuthOptions = {
         });
 
         const envAdminsRaw = process.env.ADMIN_EMAILS || "";
-        const normalizedEnvAdmins = envAdminsRaw
-          .split(",")
-          .map((e) => e.trim().toLowerCase().replace(/^["']|["']$/g, ""));
+        const normalizedEnvAdmins = envAdminsRaw.split(",").map((e) =>
+          e
+            .trim()
+            .toLowerCase()
+            .replace(/^["']|["']$/g, ""),
+        );
+
+        const [isRedisAdmin, isRedisEditor] = await Promise.all([
+          kv.sismember(REDIS_KEYS.ADMIN_USERS, normalizedUserEmail),
+          kv.sismember(REDIS_KEYS.ADMIN_EDITORS, normalizedUserEmail),
+        ]);
 
         const isAdmin =
           dbUser?.role === "ADMIN" ||
-          normalizedEnvAdmins.includes(normalizedUserEmail);
-        const isEditor = dbUser?.role === "EDITOR";
+          normalizedEnvAdmins.includes(normalizedUserEmail) ||
+          isRedisAdmin === 1;
 
-        if (user.role) {
-          token.role = user.role as any;
-        } else {
-          token.role = (
-            isAdmin ? "ADMIN" : isEditor ? "EDITOR" : "USER"
-          ) as any;
+        const isEditor = dbUser?.role === "EDITOR" || isRedisEditor === 1;
 
-          if (dbUser && dbUser.role !== token.role) {
-            await db.user.update({
-              where: { email: normalizedUserEmail },
-              data: { role: token.role as string },
-            });
-          }
+        let targetRole = "USER";
+        if (isAdmin) {
+          targetRole = "ADMIN";
+        } else if (isEditor) {
+          targetRole = "EDITOR";
+        } else if (user.role && user.role !== "USER") {
+          targetRole = user.role as string;
+        }
+
+        token.role = targetRole as any;
+
+        if (dbUser && dbUser.role !== targetRole) {
+          await db.user.update({
+            where: { email: normalizedUserEmail },
+            data: { role: targetRole },
+          });
         }
 
         token.twoFactorRequired = false;
@@ -201,21 +223,32 @@ export const authOptions: AuthOptions = {
         }
 
         const envAdminsRaw = process.env.ADMIN_EMAILS || "";
-        const normalizedEnvAdmins = envAdminsRaw
-          .split(",")
-          .map((e) => e.trim().toLowerCase().replace(/^["']|["']$/g, ""));
+        const normalizedEnvAdmins = envAdminsRaw.split(",").map((e) =>
+          e
+            .trim()
+            .toLowerCase()
+            .replace(/^["']|["']$/g, ""),
+        );
+
+        const [isRedisAdmin, isRedisEditor] = await Promise.all([
+          kv.sismember(REDIS_KEYS.ADMIN_USERS, normalizedProfileEmail),
+          kv.sismember(REDIS_KEYS.ADMIN_EDITORS, normalizedProfileEmail),
+        ]);
 
         const isAdmin =
           dbUser?.role === "ADMIN" ||
-          normalizedEnvAdmins.includes(normalizedProfileEmail);
-        const isEditor = dbUser?.role === "EDITOR";
+          normalizedEnvAdmins.includes(normalizedProfileEmail) ||
+          isRedisAdmin === 1;
 
-        token.role = (isAdmin ? "ADMIN" : isEditor ? "EDITOR" : "USER") as any;
+        const isEditor = dbUser?.role === "EDITOR" || isRedisEditor === 1;
+        const targetRole = isAdmin ? "ADMIN" : isEditor ? "EDITOR" : "USER";
 
-        if (dbUser.role !== token.role) {
+        token.role = targetRole as any;
+
+        if (dbUser.role !== targetRole) {
           await db.user.update({
             where: { email: normalizedProfileEmail },
-            data: { role: token.role as string },
+            data: { role: targetRole },
           });
         }
 

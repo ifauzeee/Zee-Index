@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 const envSchema = z.object({
-  // Core Settings
   GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID is required"),
   GOOGLE_CLIENT_SECRET: z.string().min(1, "GOOGLE_CLIENT_SECRET is required"),
   NEXT_PUBLIC_ROOT_FOLDER_ID: z
@@ -9,7 +8,6 @@ const envSchema = z.object({
     .min(1, "NEXT_PUBLIC_ROOT_FOLDER_ID is required"),
   NEXT_PUBLIC_ROOT_FOLDER_NAME: z.string().default("Home"),
 
-  // Auth
   NEXTAUTH_SECRET: z
     .string()
     .min(32, "NEXTAUTH_SECRET must be at least 32 characters"),
@@ -18,17 +16,14 @@ const envSchema = z.object({
     .string()
     .min(32, "SHARE_SECRET_KEY must be at least 32 characters"),
 
-  // Admin
   ADMIN_EMAILS: z.string().min(1, "ADMIN_EMAILS is required"),
   ADMIN_PASSWORD: z
     .string()
     .min(8, "ADMIN_PASSWORD must be at least 8 characters"),
 
-  // Database
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   REDIS_URL: z.string().optional().or(z.literal("")),
 
-  // Optional Config
   GOOGLE_REFRESH_TOKEN: z.string().optional().or(z.literal("")),
   PRIVATE_FOLDER_IDS: z.string().optional(),
   STORAGE_LIMIT_GB: z.string().optional(),
@@ -36,7 +31,6 @@ const envSchema = z.object({
   CRON_SECRET: z.string().optional(),
   WEBHOOK_URL: z.string().url().optional().or(z.literal("")),
 
-  // Email
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.string().optional(),
   SMTP_USER: z.string().optional(),
@@ -46,9 +40,6 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
-/**
- * Validates environment variables and exits process on critical failure.
- */
 export function validateOnStartup(): Env {
   if (
     process.env.NODE_ENV === "test" ||
@@ -70,14 +61,12 @@ export function validateOnStartup(): Env {
     console.error("=========================================================");
     console.error("Silakan periksa kembali file .env Anda.\n");
 
-    // Fail-fast logic
     if (process.env.NODE_ENV === "production") {
       process.exit(1);
     }
     return process.env as any;
   }
 
-  // Warnings for non-critical missing variables
   const warnings: string[] = [];
   if (!process.env.REDIS_URL)
     warnings.push(
@@ -99,7 +88,6 @@ export function validateOnStartup(): Env {
   return result.data;
 }
 
-// Global Export for type-safe environment access
 export const env = validateOnStartup();
 
 export const config = {

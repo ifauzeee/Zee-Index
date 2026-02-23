@@ -43,6 +43,8 @@ export const REDIS_KEYS = {
   FOLDER_CONTENT: "zee-index:folder-content-v3:",
   FILE_DETAILS: "gdrive:file-details-v2:",
   FOLDER_PATH: "zee-index:folder-path-v7:",
+  ADMIN_USERS: "zee-index:admins",
+  ADMIN_EDITORS: "zee-index:editors",
 } as const;
 
 export const REDIS_TTL = {

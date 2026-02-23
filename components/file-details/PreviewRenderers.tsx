@@ -149,7 +149,7 @@ export const CodePreview: React.FC<{ src: string; fileName: string }> = ({
     fetch(src)
       .then((res) => res.text())
       .then(setContent)
-      .catch(() => { })
+      .catch(() => {})
       .finally(() => setIsLoading(false));
   }, [src]);
 

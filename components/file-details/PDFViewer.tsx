@@ -10,10 +10,8 @@ import {
   Loader2,
   Download,
   Maximize,
-  LayoutGrid,
   Menu,
   RotateCw,
-  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
@@ -38,7 +36,9 @@ export default function PDFViewer({ src }: PDFViewerProps) {
   }
 
   const changePage = (offset: number) => {
-    setPageNumber((prev) => Math.min(Math.max(1, prev + offset), numPages || 1));
+    setPageNumber((prev) =>
+      Math.min(Math.max(1, prev + offset), numPages || 1),
+    );
   };
 
   const handleDownload = () => {
@@ -60,7 +60,9 @@ export default function PDFViewer({ src }: PDFViewerProps) {
             onClick={() => setShowThumbnails(!showThumbnails)}
             className={cn(
               "p-2 rounded-lg transition-colors",
-              showThumbnails ? "bg-primary text-primary-foreground" : "hover:bg-white/10 text-zinc-400"
+              showThumbnails
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-white/10 text-zinc-400",
             )}
             title="Samping"
           >
@@ -87,7 +89,9 @@ export default function PDFViewer({ src }: PDFViewerProps) {
                 }}
                 className="w-10 bg-transparent text-center text-sm font-medium focus:outline-none text-white py-1"
               />
-              <span className="text-zinc-500 text-xs font-mono ml-1">/ {numPages || "--"}</span>
+              <span className="text-zinc-500 text-xs font-mono ml-1">
+                / {numPages || "--"}
+              </span>
             </div>
             <button
               onClick={() => changePage(1)}
@@ -149,7 +153,9 @@ export default function PDFViewer({ src }: PDFViewerProps) {
                   onClick={() => setPageNumber(index + 1)}
                   className={cn(
                     "cursor-pointer rounded-lg overflow-hidden border-2 transition-all p-1 bg-zinc-800",
-                    pageNumber === index + 1 ? "border-primary shadow-lg ring-2 ring-primary/20 scale-95" : "border-transparent hover:border-white/20"
+                    pageNumber === index + 1
+                      ? "border-primary shadow-lg ring-2 ring-primary/20 scale-95"
+                      : "border-transparent hover:border-white/20",
                   )}
                 >
                   <Page
@@ -158,7 +164,9 @@ export default function PDFViewer({ src }: PDFViewerProps) {
                     renderTextLayer={false}
                     renderAnnotationLayer={false}
                   />
-                  <div className="text-[10px] text-center mt-1 text-zinc-500 font-mono">{index + 1}</div>
+                  <div className="text-[10px] text-center mt-1 text-zinc-500 font-mono">
+                    {index + 1}
+                  </div>
                 </div>
               ))}
             </Document>
@@ -175,7 +183,9 @@ export default function PDFViewer({ src }: PDFViewerProps) {
             loading={
               <div className="flex flex-col items-center justify-center h-full text-zinc-500 gap-4">
                 <Loader2 className="animate-spin h-10 w-10 text-primary" />
-                <p className="text-sm font-medium animate-pulse">Menyiapkan Dokumen...</p>
+                <p className="text-sm font-medium animate-pulse">
+                  Menyiapkan Dokumen...
+                </p>
               </div>
             }
             className="shadow-2xl"

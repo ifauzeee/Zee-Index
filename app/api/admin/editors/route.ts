@@ -2,8 +2,7 @@ import { kv } from "@/lib/kv";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-
-const EDITORS_KEY = "zee-index:editors";
+import { REDIS_KEYS } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +13,7 @@ export async function GET() {
   }
 
   try {
-    const editors = await kv.smembers(EDITORS_KEY);
+    const editors = await kv.smembers(REDIS_KEYS.ADMIN_EDITORS);
     return NextResponse.json(editors || []);
   } catch (error) {
     console.error("Editors fetch error:", error);
@@ -37,7 +36,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
     }
 
-    await kv.sadd(EDITORS_KEY, email);
+    await kv.sadd(REDIS_KEYS.ADMIN_EDITORS, email);
     return NextResponse.json({ message: "Editor added", email });
   } catch (error) {
     console.error("Editor add error:", error);
@@ -60,7 +59,7 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
     }
 
-    await kv.srem(EDITORS_KEY, email);
+    await kv.srem(REDIS_KEYS.ADMIN_EDITORS, email);
     return NextResponse.json({ message: "Editor removed", email });
   } catch (error) {
     console.error("Editor remove error:", error);

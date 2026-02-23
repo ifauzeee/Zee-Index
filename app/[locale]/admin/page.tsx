@@ -461,7 +461,7 @@ export default function AdminPage() {
                     </h3>
                     <div className="space-y-4">
                       {stats.fileTypeDistribution?.length > 0 ? (
-                        stats.fileTypeDistribution.map((item, idx) => (
+                        stats.fileTypeDistribution.map((item) => (
                           <div key={item.type} className="space-y-1.5">
                             <div className="flex justify-between text-xs font-medium">
                               <span className="flex items-center gap-2">

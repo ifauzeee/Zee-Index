@@ -52,7 +52,9 @@ export default function MoveModal({
       setIsInitializing(true);
       if (initialFolderId && initialFolderId !== rootId) {
         try {
-          const res = await fetch(`/api/folderpath?folderId=${initialFolderId}`);
+          const res = await fetch(
+            `/api/folderpath?folderId=${initialFolderId}`,
+          );
           if (res.ok) {
             const path = await res.json();
             if (Array.isArray(path) && path.length > 0) {

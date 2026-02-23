@@ -3,8 +3,7 @@
 import React, { useState } from "react";
 import Editor from "@monaco-editor/react";
 import { cn } from "@/lib/utils";
-import { useTheme } from "next-themes";
-import { Copy, Check, Fullscreen, Settings2, FileCode } from "lucide-react";
+import { Copy, Check, FileCode } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 
 interface CodeViewerProps {
@@ -14,8 +13,12 @@ interface CodeViewerProps {
   fileName?: string;
 }
 
-export function CodeViewer({ content, language, className, fileName }: CodeViewerProps) {
-  const { theme } = useTheme();
+export function CodeViewer({
+  content,
+  language,
+  className,
+  fileName,
+}: CodeViewerProps) {
   const { addToast } = useAppStore();
   const [copied, setCopied] = useState(false);
   const [fontSize, setFontSize] = useState(14);
@@ -30,7 +33,12 @@ export function CodeViewer({ content, language, className, fileName }: CodeViewe
   };
 
   return (
-    <div className={cn("flex flex-col w-full h-full bg-[#1e1e1e] border border-white/10 rounded-xl overflow-hidden shadow-2xl transition-all duration-300", className)}>
+    <div
+      className={cn(
+        "flex flex-col w-full h-full bg-[#1e1e1e] border border-white/10 rounded-xl overflow-hidden shadow-2xl transition-all duration-300",
+        className,
+      )}
+    >
       <div className="flex items-center justify-between px-4 py-2.5 bg-[#252526] border-b border-white/5 z-10">
         <div className="flex items-center gap-3">
           <div className="flex gap-1.5 px-1">
@@ -41,8 +49,12 @@ export function CodeViewer({ content, language, className, fileName }: CodeViewe
           <div className="h-4 w-px bg-white/10 mx-1" />
           <div className="flex items-center gap-2 text-zinc-400">
             <FileCode size={14} className="text-blue-400" />
-            <span className="text-xs font-medium font-mono truncate max-w-[200px]">{fileName || "code.txt"}</span>
-            <span className="text-[10px] bg-white/5 px-1.5 py-0.5 rounded border border-white/5 uppercase tracking-wider text-zinc-500">{displayLanguage}</span>
+            <span className="text-xs font-medium font-mono truncate max-w-[200px]">
+              {fileName || "code.txt"}
+            </span>
+            <span className="text-[10px] bg-white/5 px-1.5 py-0.5 rounded border border-white/5 uppercase tracking-wider text-zinc-500">
+              {displayLanguage}
+            </span>
           </div>
         </div>
 
@@ -54,7 +66,9 @@ export function CodeViewer({ content, language, className, fileName }: CodeViewe
             >
               -
             </button>
-            <span className="text-[10px] text-zinc-500 font-mono w-4 text-center">{fontSize}</span>
+            <span className="text-[10px] text-zinc-500 font-mono w-4 text-center">
+              {fontSize}
+            </span>
             <button
               onClick={() => setFontSize(Math.min(24, fontSize + 1))}
               className="px-2 text-zinc-500 hover:text-white transition-colors"
@@ -67,8 +81,14 @@ export function CodeViewer({ content, language, className, fileName }: CodeViewe
             onClick={handleCopy}
             className="p-1.5 rounded-md bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-all border border-white/5 flex items-center gap-2 group"
           >
-            {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
-            <span className="text-[10px] font-bold uppercase hidden sm:inline">{copied ? "Copied" : "Copy"}</span>
+            {copied ? (
+              <Check size={14} className="text-green-500" />
+            ) : (
+              <Copy size={14} />
+            )}
+            <span className="text-[10px] font-bold uppercase hidden sm:inline">
+              {copied ? "Copied" : "Copy"}
+            </span>
           </button>
         </div>
       </div>

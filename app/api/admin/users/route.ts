@@ -2,8 +2,7 @@ import { kv } from "@/lib/kv";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-
-const ADMIN_USERS_KEY = "zee-index:admins";
+import { REDIS_KEYS } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +13,7 @@ export async function GET() {
   }
 
   try {
-    const admins = await kv.smembers(ADMIN_USERS_KEY);
+    const admins = await kv.smembers(REDIS_KEYS.ADMIN_USERS);
     return NextResponse.json(admins || []);
   } catch (error) {
     console.error("Admin users fetch error:", error);
@@ -37,7 +36,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
     }
 
-    await kv.sadd(ADMIN_USERS_KEY, email);
+    await kv.sadd(REDIS_KEYS.ADMIN_USERS, email);
     return NextResponse.json({ message: "Admin added", email });
   } catch (error) {
     console.error("Admin add error:", error);
@@ -57,7 +56,7 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
     }
 
-    await kv.srem(ADMIN_USERS_KEY, email);
+    await kv.srem(REDIS_KEYS.ADMIN_USERS, email);
     return NextResponse.json({ message: "Admin removed", email });
   } catch (error) {
     console.error("Admin remove error:", error);
