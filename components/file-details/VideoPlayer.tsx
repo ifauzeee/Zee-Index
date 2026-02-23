@@ -312,6 +312,7 @@ export default function VideoPlayer({
     <div className="relative w-full h-full bg-black flex items-center justify-center rounded-xl overflow-hidden shadow-2xl min-h-[220px] md:min-h-[400px]">
       <MediaPlayer
         ref={playerRef}
+        key={currentSrc}
         title={title}
         src={{ src: currentSrc, type: displayMimeType as any }}
         poster={poster?.replace("=s220", "=s1280")}
