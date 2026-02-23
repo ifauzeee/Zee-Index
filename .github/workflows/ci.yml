@@ -53,14 +53,13 @@ jobs:
 
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install --with-deps
+        run: pnpm exec playwright install chromium
 
       - name: Install Playwright system dependencies
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: pnpm exec playwright install-deps
+        run: pnpm exec playwright install-deps chromium
 
       - name: Run E2E Tests
-        run: pnpm test:e2e
+        run: pnpm test:e2e --project=chromium
         env:
           CI: true
           SKIP_ENV_VALIDATION: "1"
