@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect, useMemo } from "react";
+
 import {
   MediaPlayer,
   MediaProvider,
@@ -21,6 +22,7 @@ import {
   Download,
   ExternalLink,
   Loader2,
+  Tv,
 } from "lucide-react";
 import { formatDuration, cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
@@ -69,7 +71,13 @@ export default function VideoPlayer({
   onEnded,
   webViewLink,
 }: VideoAudioPreviewProps) {
-  const { videoProgress, setVideoProgress, addToast } = useAppStore();
+  const {
+    videoProgress,
+    setVideoProgress,
+    addToast,
+    isTheaterMode,
+    toggleTheaterMode,
+  } = useAppStore();
   const playerRef = useRef<MediaPlayerInstance>(null);
   const [networkError, setNetworkError] = useState(false);
   const [formatError, setFormatError] = useState(false);
@@ -81,6 +89,7 @@ export default function VideoPlayer({
   const [isMobile, setIsMobile] = useState(false);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
   const [resumeTime, setResumeTime] = useState(0);
+  const [upNextCountdown, setUpNextCountdown] = useState<number | null>(null);
   const controlsVisible = useMediaState("controlsVisible", playerRef);
   const buffering = useMediaState("waiting", playerRef);
 
@@ -101,6 +110,17 @@ export default function VideoPlayer({
       }
     };
   }, []);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (upNextCountdown !== null && upNextCountdown > 0) {
+      timer = setTimeout(() => setUpNextCountdown(upNextCountdown - 1), 1000);
+    } else if (upNextCountdown === 0) {
+      setUpNextCountdown(null);
+      onEnded?.();
+    }
+    return () => clearTimeout(timer);
+  }, [upNextCountdown, onEnded]);
 
   useEffect(() => {
     let active = true;
@@ -170,7 +190,7 @@ export default function VideoPlayer({
     setRetryCount(0);
     setHasResumed(false);
     setShowResumePrompt(false);
-    setProcessedTracks([]);
+    setUpNextCountdown(null);
   }, [src]);
 
   const handleRetry = () => {
@@ -216,17 +236,15 @@ export default function VideoPlayer({
         player.currentTime = lastTime;
       }
       player.play().catch(() => {});
+      setHasResumed(true);
     } else if (
       fileId &&
       videoProgress[fileId] &&
-      videoProgress[fileId] > 10 &&
       playerRef.current &&
       !hasResumed
     ) {
       const savedTime = videoProgress[fileId];
-      const duration = playerRef.current.duration;
-
-      if (duration > 0 && savedTime < duration * 0.95) {
+      if (savedTime > 10) {
         setResumeTime(savedTime);
         setShowResumePrompt(true);
       }
@@ -238,15 +256,28 @@ export default function VideoPlayer({
       playerRef.current.currentTime = resumeTime;
       setHasResumed(true);
       setShowResumePrompt(false);
-      playerRef.current.play().catch(() => {});
+      setTimeout(() => {
+        playerRef.current
+          ?.play()
+          .catch((e) => console.debug("Resume play failed:", e));
+      }, 100);
     }
   };
 
   const skipResume = () => {
+    if (fileId) {
+      setVideoProgress(fileId, 0);
+    }
+    setResumeTime(0);
     setShowResumePrompt(false);
     setHasResumed(true);
     if (playerRef.current) {
-      playerRef.current.play().catch(() => {});
+      playerRef.current.currentTime = 0;
+      setTimeout(() => {
+        playerRef.current
+          ?.play()
+          .catch((e) => console.debug("Start over play failed:", e));
+      }, 100);
     }
   };
 
@@ -296,7 +327,12 @@ export default function VideoPlayer({
               return;
             }
           }
-          onEnded?.();
+
+          if (onEnded && !isMobile) {
+            setUpNextCountdown(10);
+          } else {
+            onEnded?.();
+          }
         }}
         onError={handleError}
         onCanPlay={handleCanPlay}
@@ -447,9 +483,88 @@ export default function VideoPlayer({
                 <ExternalLink size={16} />
               </a>
             )}
+
+            {!isMobile && (
+              <button
+                onClick={toggleTheaterMode}
+                className={cn(
+                  "p-2 rounded-xl backdrop-blur-md border border-white/10 transition-all shadow-lg",
+                  isTheaterMode
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-black/40 hover:bg-black/80 text-white",
+                )}
+                title="Theater Mode"
+              >
+                <Tv size={16} />
+              </button>
+            )}
           </div>
         )}
       </MediaPlayer>
+
+      <AnimatePresence>
+        {upNextCountdown !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-md"
+          >
+            <div className="text-center p-8 max-w-sm w-full">
+              <div className="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90 absolute">
+                  <circle
+                    cx="48"
+                    cy="48"
+                    r="45"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="transparent"
+                    className="text-white/10"
+                  />
+                  <motion.circle
+                    cx="48"
+                    cy="48"
+                    r="45"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="transparent"
+                    strokeDasharray="283"
+                    initial={{ strokeDashoffset: 283 }}
+                    animate={{
+                      strokeDashoffset:
+                        283 - (283 * (10 - upNextCountdown)) / 10,
+                    }}
+                    className="text-primary"
+                  />
+                </svg>
+                <div className="text-3xl font-bold z-10">{upNextCountdown}</div>
+              </div>
+              <h3 className="text-2xl font-bold mb-2">Selanjutnya...</h3>
+              <p className="text-gray-400 mb-8">
+                Memutar video berikutnya secara otomatis.
+              </p>
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={() => setUpNextCountdown(null)}
+                  className="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full font-medium transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={() => {
+                    setUpNextCountdown(null);
+                    onEnded?.();
+                  }}
+                  className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full font-bold transition-colors"
+                >
+                  Putar Sekarang
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {networkError && (
@@ -549,13 +664,22 @@ export default function VideoPlayer({
       <AnimatePresence>
         {buffering && !networkError && !formatError && !showResumePrompt && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
             className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
           >
-            <div className="bg-black/50 rounded-full p-4 backdrop-blur-sm">
-              <Loader2 size={40} className="text-white animate-spin" />
+            <div className="relative">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-20 h-20 border-4 border-primary/30 border-t-primary rounded-full shadow-[0_0_20px_rgba(var(--primary),0.3)]"
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-12 h-12 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <Loader2 size={24} className="text-primary animate-spin" />
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
