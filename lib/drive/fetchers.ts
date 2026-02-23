@@ -144,12 +144,14 @@ export async function listFilesFromDrive(
 
   const fetcher = async () => {
     try {
-      const cached = await kv.get<{
-        files: DriveFile[];
-        nextPageToken: string | null;
-      }>(cacheKey);
-      if (cached) {
-        return cached;
+      if (useCache) {
+        const cached = await kv.get<{
+          files: DriveFile[];
+          nextPageToken: string | null;
+        }>(cacheKey);
+        if (cached) {
+          return cached;
+        }
       }
     } catch (e) {
       logger.warn({ err: e }, "Redis cache hit error in listFilesFromDrive");
