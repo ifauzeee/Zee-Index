@@ -206,7 +206,7 @@ export default function VideoPlayer({
   };
 
   const handleError = (detail: MediaErrorDetail) => {
-    console.error("[VideoPlayer] Error:", detail);
+    console.warn("[VideoPlayer] Event Error:", detail);
 
     if (playerRef.current && playerRef.current.currentTime > 0) {
       setLastTime(playerRef.current.currentTime);
