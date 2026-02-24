@@ -5,7 +5,7 @@ export async function invalidateFolderCache(folderId: string) {
   try {
     const patterns = [
       `zee-index:folder-content-v3:${folderId}:*`,
-      `zee-index:folder-path-v7:${folderId}:*`,
+      `zee-index:folder-path-v7:*`,
       `zee-index:folder-tree*`,
     ];
 

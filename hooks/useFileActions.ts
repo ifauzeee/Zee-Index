@@ -132,7 +132,7 @@ export function useFileActions(currentFolderId: string) {
       if (!response.ok) throw new Error(data.error || "Failed to rename");
 
       addToast({ message: "Name successfully changed!", type: "success" });
-
+      triggerRefresh();
       queryClient.invalidateQueries({ queryKey });
     } catch (err: any) {
       queryClient.setQueryData(queryKey, previousData);
@@ -176,6 +176,7 @@ export function useFileActions(currentFolderId: string) {
       if (!response.ok) throw new Error(data.error || "Failed to delete file");
 
       addToast({ message: "File successfully deleted!", type: "success" });
+      triggerRefresh();
       queryClient.invalidateQueries({ queryKey });
     } catch (err: any) {
       queryClient.setQueryData(queryKey, previousData);
@@ -227,6 +228,7 @@ export function useFileActions(currentFolderId: string) {
       if (!response.ok) throw new Error(data.error || "Failed to move file");
 
       addToast({ message: "File successfully moved!", type: "success" });
+      triggerRefresh();
       queryClient.invalidateQueries({ queryKey });
     } catch (err: any) {
       queryClient.setQueryData(queryKey, previousData);

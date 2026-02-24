@@ -68,6 +68,7 @@ export const POST = withEditorSession(
       }
 
       await invalidateFolderCache(parentId);
+      await invalidateFolderCache(fileId);
       const updatedFile = await response.json();
 
       await logActivity("RENAME", {

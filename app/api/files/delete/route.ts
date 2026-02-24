@@ -72,6 +72,7 @@ export const POST = withAdminSession(
       });
 
       await invalidateFolderCache(parentId);
+      await invalidateFolderCache(fileId);
 
       return NextResponse.json({ success: true });
     } catch (error: unknown) {
