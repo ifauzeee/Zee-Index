@@ -111,7 +111,7 @@ export function useFileFetching({
     initialData: initialFolderPath,
     retry: false,
     refetchOnWindowFocus: true,
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 5,
   });
 

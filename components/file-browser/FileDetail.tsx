@@ -22,7 +22,8 @@ import {
 import { useAppStore } from "@/lib/store";
 import type { DriveFile } from "@/lib/drive";
 import { getFileType, cn } from "@/lib/utils";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { fetchFolderPathApi } from "@/hooks/useFileFetching";
 
 import ShareButton from "@/components/file-browser/ShareButton";
 import InfoPanel from "../file-details/InfoPanel";
@@ -89,20 +90,18 @@ export default function FileDetail({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
-  const {
-    addToast,
-    user,
-    triggerRefresh,
-    hideAuthor,
-    fileTags,
-    fetchTags,
-    addTag,
-    removeTag,
-    folderTokens,
-    setCurrentFileId,
-    setCurrentFolderId,
-    isTheaterMode,
-  } = useAppStore();
+  const addToast = useAppStore((state) => state.addToast);
+  const user = useAppStore((state) => state.user);
+  const triggerRefresh = useAppStore((state) => state.triggerRefresh);
+  const hideAuthor = useAppStore((state) => state.hideAuthor);
+  const fileTags = useAppStore((state) => state.fileTags);
+  const fetchTags = useAppStore((state) => state.fetchTags);
+  const addTag = useAppStore((state) => state.addTag);
+  const removeTag = useAppStore((state) => state.removeTag);
+  const folderTokens = useAppStore((state) => state.folderTokens);
+  const setCurrentFileId = useAppStore((state) => state.setCurrentFileId);
+  const setCurrentFolderId = useAppStore((state) => state.setCurrentFolderId);
+  const isTheaterMode = useAppStore((state) => state.isTheaterMode);
 
   const [internalPreviewOpen, setInternalPreviewOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -123,9 +122,12 @@ export default function FileDetail({
   >(subtitleTracks || []);
   const [tmdbGenres, setTmdbGenres] = useState<string[]>([]);
 
+  const t = useTranslations("FileDetail");
+  const locale = useLocale();
+
   useEffect(() => {
-    setActiveSubtitleTracks(subtitleTracks || []);
-  }, [subtitleTracks]);
+    fetchTags(file.id);
+  }, [file.id, fetchTags]);
 
   useEffect(() => {
     if (!isModal) {
@@ -160,15 +162,8 @@ export default function FileDetail({
   const canShowAuthor = isAdmin || !hideAuthor;
   const fileType = getFileType(file);
   const { data: folderPathData } = useQuery({
-    queryKey: ["folderPath", currentFolderId],
-    queryFn: async () => {
-      if (!currentFolderId) return [];
-      let url = `/api/folderpath?folderId=${currentFolderId}`;
-      if (shareToken) url += `&share_token=${shareToken}`;
-      const res = await fetch(url);
-      if (!res.ok) return [];
-      return res.json();
-    },
+    queryKey: ["folderPath", currentFolderId, shareToken, undefined, locale],
+    queryFn: () => fetchFolderPathApi(currentFolderId!, shareToken, locale),
     enabled: !!currentFolderId,
     staleTime: 1000 * 60 * 5,
   });
@@ -231,11 +226,6 @@ export default function FileDetail({
     "text",
     "markdown",
   ].includes(fileType);
-  const t = useTranslations("FileDetail");
-
-  useEffect(() => {
-    fetchTags(file.id);
-  }, [file.id, fetchTags]);
 
   useEffect(() => {
     setInternalPreviewOpen(false);

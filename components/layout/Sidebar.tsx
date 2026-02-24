@@ -28,7 +28,7 @@ import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useScrollLock } from "@/hooks/useScrollLock";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { fetchFolderPathApi } from "@/hooks/useFileFetching";
 
 interface FolderNode {
@@ -236,17 +236,17 @@ TreeNode.displayName = "TreeNode";
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const {
-    isSidebarOpen,
-    setSidebarOpen,
-    currentFolderId,
-    user,
-    shareToken,
-    navigatingId,
-    setNavigatingId,
-  } = useAppStore();
+  const isSidebarOpen = useAppStore((state) => state.isSidebarOpen);
+  const setSidebarOpen = useAppStore((state) => state.setSidebarOpen);
+  const currentFolderId = useAppStore((state) => state.currentFolderId);
+  const user = useAppStore((state) => state.user);
+  const shareToken = useAppStore((state) => state.shareToken);
+  const navigatingId = useAppStore((state) => state.navigatingId);
+  const setNavigatingId = useAppStore((state) => state.setNavigatingId);
+
   const [mounted, setMounted] = useState(false);
   const t = useTranslations("Sidebar");
+  const locale = useLocale();
 
   const canEdit =
     (user?.role === "ADMIN" || user?.role === "EDITOR") && !user?.isGuest;
@@ -438,50 +438,46 @@ export default function Sidebar() {
   );
 
   useEffect(() => {
-    const initRoot = async () => {
-      const root = tree[rootFolderId];
-      if (root && root.childIds.length === 0 && !root.hasLoaded) {
-        const children = await fetchSubfolders(rootFolderId);
-        setTree((prev) => {
-          const newTree = { ...prev };
-          newTree[rootFolderId] = {
-            ...newTree[rootFolderId],
-            childIds: children.map((c: any) => c.id),
-            hasLoaded: true,
-          };
-          children.forEach((c: any) => {
-            if (!newTree[c.id]) newTree[c.id] = c;
-          });
-          return newTree;
-        });
-      }
-    };
-    if (mounted) initRoot();
-  }, [rootFolderId, mounted, fetchSubfolders, tree]);
-
-  useEffect(() => {
-    if (!currentFolderId || !mounted) return;
+    if (!mounted) return;
 
     const expandPath = async () => {
       try {
-        const path = await fetchFolderPathApi(currentFolderId);
-        if (!path || !Array.isArray(path)) return;
+        let pathIds: string[] = [];
 
-        const pathIds = path.map((p: any) => p.id);
+        if (currentFolderId && currentFolderId !== rootFolderId) {
+          const pathData = await queryClient.fetchQuery({
+            queryKey: [
+              "folderPath",
+              currentFolderId,
+              shareToken,
+              undefined,
+              locale,
+            ],
+            queryFn: () =>
+              fetchFolderPathApi(currentFolderId, shareToken, locale),
+            staleTime: 5 * 60 * 1000,
+          });
+          if (Array.isArray(pathData)) {
+            pathIds = pathData.map((p: any) => p.id);
+          }
+        }
 
         const currentTreeSnapshot = { ...treeRef.current };
         let stateChanged = false;
 
         for (const folderId of [rootFolderId, ...pathIds]) {
           const node = currentTreeSnapshot[folderId];
-          if (!node) continue;
+          if (!node) {
+            if (folderId === rootFolderId) continue;
+            break;
+          }
 
-          if (!node.isExpanded) {
+          if (node.isFolder && !node.isExpanded) {
             currentTreeSnapshot[folderId] = { ...node, isExpanded: true };
             stateChanged = true;
           }
 
-          if (node.childIds.length === 0 && !node.hasLoaded) {
+          if (node.isFolder && node.childIds.length === 0 && !node.hasLoaded) {
             const children = await fetchSubfolders(folderId);
             currentTreeSnapshot[folderId] = {
               ...currentTreeSnapshot[folderId],
@@ -504,7 +500,15 @@ export default function Sidebar() {
     };
 
     expandPath();
-  }, [currentFolderId, mounted, rootFolderId, fetchSubfolders]);
+  }, [
+    currentFolderId,
+    mounted,
+    rootFolderId,
+    fetchSubfolders,
+    queryClient,
+    shareToken,
+    locale,
+  ]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartRef.current = e.targetTouches[0].clientX;

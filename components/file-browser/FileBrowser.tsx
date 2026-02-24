@@ -49,32 +49,30 @@ export default function FileBrowser({
   );
   const [showHistory, setShowHistory] = useState(false);
 
-  const {
-    sort,
-    setSort,
-    isBulkMode,
-    setBulkMode,
-    toggleSelection,
-    view,
-    setView,
-    refreshKey,
-    addToast,
-    folderTokens,
-    setFolderToken,
-    user,
-    fetchUser,
-    shareToken,
-    setShareToken,
-    favorites,
-    fetchFavorites,
-    detailsFile,
-    setDetailsFile,
-    setCurrentFolderId,
-    playAudio,
-    navigatingId,
-    setNavigatingId,
-    setCurrentFileId,
-  } = useAppStore();
+  const sort = useAppStore((state) => state.sort);
+  const setSort = useAppStore((state) => state.setSort);
+  const isBulkMode = useAppStore((state) => state.isBulkMode);
+  const setBulkMode = useAppStore((state) => state.setBulkMode);
+  const toggleSelection = useAppStore((state) => state.toggleSelection);
+  const view = useAppStore((state) => state.view);
+  const setView = useAppStore((state) => state.setView);
+  const refreshKey = useAppStore((state) => state.refreshKey);
+  const addToast = useAppStore((state) => state.addToast);
+  const folderTokens = useAppStore((state) => state.folderTokens);
+  const setFolderToken = useAppStore((state) => state.setFolderToken);
+  const user = useAppStore((state) => state.user);
+  const fetchUser = useAppStore((state) => state.fetchUser);
+  const shareToken = useAppStore((state) => state.shareToken);
+  const setShareToken = useAppStore((state) => state.setShareToken);
+  const favorites = useAppStore((state) => state.favorites);
+  const fetchFavorites = useAppStore((state) => state.fetchFavorites);
+  const detailsFile = useAppStore((state) => state.detailsFile);
+  const setDetailsFile = useAppStore((state) => state.setDetailsFile);
+  const setCurrentFolderId = useAppStore((state) => state.setCurrentFolderId);
+  const playAudio = useAppStore((state) => state.playAudio);
+  const navigatingId = useAppStore((state) => state.navigatingId);
+  const setNavigatingId = useAppStore((state) => state.setNavigatingId);
+  const setCurrentFileId = useAppStore((state) => state.setCurrentFileId);
 
   const t = useTranslations("FileBrowser");
 
