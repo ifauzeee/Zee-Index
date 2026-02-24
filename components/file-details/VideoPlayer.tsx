@@ -205,6 +205,8 @@ export default function VideoPlayer({
   };
 
   const handleError = (detail: MediaErrorDetail) => {
+    console.error("[VideoPlayer] Error:", detail);
+
     if (playerRef.current && playerRef.current.currentTime > 0) {
       setLastTime(playerRef.current.currentTime);
     }
@@ -212,6 +214,11 @@ export default function VideoPlayer({
     if (detail.code === 4) {
       setFormatError(true);
     } else if (detail.code === 2 || detail.code === 3) {
+      if (detail.code === 3 && navigator.userAgent.includes("Firefox")) {
+        setFormatError(true);
+        return;
+      }
+
       if (retryCount < 3) {
         setRetryCount((prev) => prev + 1);
         setTimeout(() => {
@@ -220,6 +227,8 @@ export default function VideoPlayer({
       } else {
         setNetworkError(true);
       }
+    } else {
+      setFormatError(true);
     }
   };
 
