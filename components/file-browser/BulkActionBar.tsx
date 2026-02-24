@@ -18,6 +18,7 @@ export function BulkActionBar() {
     addToast,
     triggerRefresh,
     isSidebarOpen,
+    currentFolderId,
     user,
   } = useAppStore();
   const t = useTranslations("BulkActionBar");
@@ -155,13 +156,25 @@ export function BulkActionBar() {
     setIsProcessing(true);
     addToast({ message: t("moving"), type: "info" });
 
+    const currentParentId =
+      selectedFiles[0]?.parents?.[0] || currentFolderId || "";
+
+    if (!currentParentId) {
+      addToast({
+        message: "Gagal mendapatkan lokasi saat ini.",
+        type: "error",
+      });
+      setIsProcessing(false);
+      return;
+    }
+
     try {
       const response = await fetch("/api/files/bulk-move", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fileIds: selectedFiles.map((f) => f.id),
-          currentParentId: selectedFiles[0]?.parents?.[0] || "",
+          currentParentId,
           newParentId,
         }),
       });

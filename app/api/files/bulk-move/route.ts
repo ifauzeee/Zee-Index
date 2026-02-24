@@ -22,6 +22,7 @@ export const POST = withEditorSession(
       const validation = moveSchema.safeParse(body);
 
       if (!validation.success) {
+        console.error("Bulk Move Validation Error:", validation.error.issues);
         return NextResponse.json(
           { error: "Input tidak valid", details: validation.error.issues },
           { status: 400 },
