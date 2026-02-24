@@ -36,15 +36,17 @@ export function useDragAndDrop({
       newParentId: string,
     ) => {
       setIsDropMoving(true);
+      const payload = {
+        fileIds: filesToMove.map((f) => f.id),
+        currentParentId: sourceFolderId || currentFolderId,
+        newParentId,
+      };
+
       try {
         const response = await fetch("/api/files/bulk-move", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fileIds: filesToMove.map((f) => f.id),
-            currentParentId: sourceFolderId,
-            newParentId,
-          }),
+          body: JSON.stringify(payload),
         });
         const result = await response.json();
         if (!response.ok && response.status !== 207)
@@ -61,7 +63,7 @@ export function useDragAndDrop({
         setIsDropMoving(false);
       }
     },
-    [addToast, triggerRefresh, clearSelection],
+    [addToast, triggerRefresh, clearSelection, currentFolderId],
   );
 
   const handleDragStart = useCallback(
