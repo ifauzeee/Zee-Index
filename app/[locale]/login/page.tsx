@@ -342,7 +342,10 @@ function CustomLoginPage() {
             </button>
           </div>
 
-          <p className="text-center text-xs text-muted-foreground pt-12">
+          <p
+            className="text-center text-xs text-muted-foreground pt-12"
+            suppressHydrationWarning
+          >
             © {new Date().getFullYear()} - {t("footer")}{" "}
             <a
               href="https://ifauzeee.vercel.app/"
