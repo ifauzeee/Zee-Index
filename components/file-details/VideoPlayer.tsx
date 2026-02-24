@@ -40,7 +40,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MonitorPlay, Copy, Play } from "lucide-react";
+import { MonitorPlay, Copy, Play, SkipForward } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface SubtitleTrack {
   kind: string;
@@ -587,12 +588,12 @@ export default function VideoPlayer({
             <p className="text-sm text-gray-300 mb-6 max-w-xs">
               Posisi terakhir: {formatDuration(lastTime)}
             </p>
-            <button
+            <Button
               onClick={handleRetry}
-              className="px-6 py-2 bg-primary hover:bg-primary/90 rounded-full font-semibold transition-colors flex items-center gap-2"
+              className="px-6 rounded-full font-semibold flex items-center gap-2"
             >
               <History size={18} /> Sambung Ulang
-            </button>
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -606,12 +607,14 @@ export default function VideoPlayer({
             className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-zinc-900/95 text-white p-4 text-center"
           >
             <FileWarning size={48} className="mb-4 text-amber-500" />
-            <h3 className="text-xl font-bold mb-2">Format Tidak Didukung</h3>
+            <h3 className="text-xl font-bold mb-2">
+              {tPlayer("unsupportedFormat")}
+            </h3>
             <p className="text-sm text-gray-300 mb-4 max-w-sm">
-              Codec video ini tidak didukung browser.
+              {tPlayer("codecNotSupported")}
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              <button
+              <Button
                 onClick={() => {
                   const iframe = document.createElement("iframe");
                   iframe.style.display = "none";
@@ -621,10 +624,28 @@ export default function VideoPlayer({
                     document.body.removeChild(iframe);
                   }, 5000);
                 }}
-                className="px-4 py-2 bg-primary hover:bg-primary/90 rounded-lg text-sm font-medium flex items-center gap-2"
+                className="px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
               >
-                <Download size={16} /> Unduh File
-              </button>
+                <Download size={16} /> {tPlayer("downloadFile")}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  (window.location.href = `vlc://${getAbsoluteSrc()}`)
+                }
+                className="px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+              >
+                <Play size={16} /> VLC (PC)
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  (window.location.href = `intent:${getAbsoluteSrc()}#Intent;package=org.videolan.vlc;type=video/*;scheme=https;end`)
+                }
+                className="px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+              >
+                <Play size={16} /> VLC (Mobile)
+              </Button>
             </div>
           </motion.div>
         )}

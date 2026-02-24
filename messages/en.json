@@ -760,7 +760,10 @@
     "upNext": "Up Next...",
     "autoPlayNext": "Automatically playing next video.",
     "cancel": "Cancel",
-    "playNow": "Play Now"
+    "playNow": "Play Now",
+    "unsupportedFormat": "Unsupported Format",
+    "codecNotSupported": "This video codec is not supported by your browser.",
+    "downloadFile": "Download File"
   },
   "AnalyticsDashboard": {
     "title": "Analytics Dashboard",

@@ -760,7 +760,10 @@
     "upNext": "Selanjutnya...",
     "autoPlayNext": "Memutar video berikutnya secara otomatis.",
     "cancel": "Batal",
-    "playNow": "Putar Sekarang"
+    "playNow": "Putar Sekarang",
+    "unsupportedFormat": "Format Tidak Didukung",
+    "codecNotSupported": "Codec video ini tidak didukung browser.",
+    "downloadFile": "Unduh File"
   },
   "AnalyticsDashboard": {
     "title": "Dasbor Analitik",
