@@ -1,5 +1,9 @@
 import { useEffect, useMemo } from "react";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 
 interface UseFileFetchingProps {
@@ -104,8 +108,19 @@ export function useFileFetching({
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
   const currentFolderId = initialFolderId || rootFolderId;
 
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (refreshKey > 0) {
+      queryClient.invalidateQueries({
+        queryKey: ["folderPath", currentFolderId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["files", currentFolderId] });
+    }
+  }, [refreshKey, currentFolderId, queryClient]);
+
   const { data: historyData } = useQuery({
-    queryKey: ["folderPath", currentFolderId, shareToken, refreshKey, locale],
+    queryKey: ["folderPath", currentFolderId, shareToken, locale],
     queryFn: () => fetchFolderPathApi(currentFolderId, shareToken, locale),
     enabled: !!currentFolderId && currentFolderId !== rootFolderId,
     initialData: initialFolderPath,
@@ -169,7 +184,7 @@ export function useFileFetching({
     error,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ["files", currentFolderId, shareToken, bestToken, refreshKey],
+    queryKey: ["files", currentFolderId, shareToken, bestToken],
     queryFn: ({ pageParam }) =>
       fetchFilesApi({
         folderId: currentFolderId,

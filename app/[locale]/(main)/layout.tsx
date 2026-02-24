@@ -72,19 +72,17 @@ const AppFooter = () => {
 };
 
 function MainLayoutContent({ children }: { children: React.ReactNode }) {
-  const {
-    refreshKey,
-    toasts,
-    removeToast,
-    fetchUser,
-    fetchDataUsage,
-    detailsFile,
-    setDetailsFile,
-    fetchConfig,
-    isSidebarOpen,
-    setSidebarOpen,
-    addToast,
-  } = useAppStore();
+  const refreshKey = useAppStore((state) => state.refreshKey);
+  const toasts = useAppStore((state) => state.toasts);
+  const removeToast = useAppStore((state) => state.removeToast);
+  const fetchUser = useAppStore((state) => state.fetchUser);
+  const fetchDataUsage = useAppStore((state) => state.fetchDataUsage);
+  const detailsFile = useAppStore((state) => state.detailsFile);
+  const setDetailsFile = useAppStore((state) => state.setDetailsFile);
+  const fetchConfig = useAppStore((state) => state.fetchConfig);
+  const isSidebarOpen = useAppStore((state) => state.isSidebarOpen);
+  const setSidebarOpen = useAppStore((state) => state.setSidebarOpen);
+  const addToast = useAppStore((state) => state.addToast);
   const { status } = useSession();
   const pathname = usePathname();
   const searchParams = useSearchParams();

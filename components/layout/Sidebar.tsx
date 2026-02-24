@@ -446,13 +446,7 @@ export default function Sidebar() {
 
         if (currentFolderId && currentFolderId !== rootFolderId) {
           const pathData = await queryClient.fetchQuery({
-            queryKey: [
-              "folderPath",
-              currentFolderId,
-              shareToken,
-              undefined,
-              locale,
-            ],
+            queryKey: ["folderPath", currentFolderId, shareToken, locale],
             queryFn: () =>
               fetchFolderPathApi(currentFolderId, shareToken, locale),
             staleTime: 5 * 60 * 1000,

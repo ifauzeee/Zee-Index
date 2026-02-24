@@ -84,7 +84,7 @@ export const ERROR_MESSAGES = {
 
 export const RATE_LIMITS = {
   API: {
-    LIMIT: 100,
+    LIMIT: 500,
     WINDOW: 60,
   },
   DOWNLOAD: {

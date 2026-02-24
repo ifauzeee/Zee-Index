@@ -172,15 +172,15 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const { data: session, status } = useSession();
-  const {
-    triggerRefresh,
-    shareToken,
-    notifications,
-    toggleNotificationCenter,
-    toggleSidebar,
-    appName,
-    logoUrl,
-  } = useAppStore();
+  const triggerRefresh = useAppStore((state) => state.triggerRefresh);
+  const shareToken = useAppStore((state) => state.shareToken);
+  const notifications = useAppStore((state) => state.notifications);
+  const toggleNotificationCenter = useAppStore(
+    (state) => state.toggleNotificationCenter,
+  );
+  const toggleSidebar = useAppStore((state) => state.toggleSidebar);
+  const appName = useAppStore((state) => state.appName);
+  const logoUrl = useAppStore((state) => state.logoUrl);
   const { theme, setTheme } = useTheme();
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

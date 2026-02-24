@@ -162,7 +162,7 @@ export default function FileDetail({
   const canShowAuthor = isAdmin || !hideAuthor;
   const fileType = getFileType(file);
   const { data: folderPathData } = useQuery({
-    queryKey: ["folderPath", currentFolderId, shareToken, undefined, locale],
+    queryKey: ["folderPath", currentFolderId, shareToken, locale],
     queryFn: () => fetchFolderPathApi(currentFolderId!, shareToken, locale),
     enabled: !!currentFolderId,
     staleTime: 1000 * 60 * 5,

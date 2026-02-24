@@ -10,7 +10,8 @@ export default function MobileBottomNav() {
   const t = useTranslations("MobileBottomNav");
   const router = useRouter();
   const pathname = usePathname();
-  const { user, shareToken } = useAppStore();
+  const user = useAppStore((state) => state.user);
+  const shareToken = useAppStore((state) => state.shareToken);
 
   if (shareToken) return null;
 
