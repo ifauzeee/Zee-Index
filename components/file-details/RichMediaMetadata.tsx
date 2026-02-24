@@ -29,8 +29,10 @@ export default function RichMediaMetadata({
         );
         if (res.ok) {
           const data = await res.json();
-          setMetadata(data);
-          onMetadataLoaded?.(data);
+          if (data) {
+            setMetadata(data);
+            onMetadataLoaded?.(data);
+          }
         }
       } catch (err) {
         console.error("Failed to fetch media metadata", err);

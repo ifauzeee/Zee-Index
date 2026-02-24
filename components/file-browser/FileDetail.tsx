@@ -148,6 +148,10 @@ export default function FileDetail({
     setActiveSubtitleTracks((prev) => prev.filter((t) => t.src !== src));
   };
 
+  const handleMetadataLoaded = React.useCallback((data: any) => {
+    setTmdbGenres(data?.genres?.map((g: any) => g.name) || []);
+  }, []);
+
   const shareToken = useMemo(
     () => searchParams.get("share_token"),
     [searchParams],
@@ -611,9 +615,7 @@ export default function FileDetail({
         <div className="mt-8 animate-in fade-in slide-in-from-bottom-4">
           <RichMediaMetadata
             filename={file.name}
-            onMetadataLoaded={(data) =>
-              setTmdbGenres(data.genres?.map((g) => g.name) || [])
-            }
+            onMetadataLoaded={handleMetadataLoaded}
           />
         </div>
       )}
