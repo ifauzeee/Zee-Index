@@ -40,7 +40,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MonitorPlay, Copy, Play, SkipForward } from "lucide-react";
+import { MonitorPlay, Copy, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface SubtitleTrack {
