@@ -368,6 +368,9 @@ export default function Sidebar() {
           queryKey: ["folder-contents", parentId],
           queryFn: async () => {
             const res = await fetch(`/api/files?folderId=${parentId}`);
+            if (res.status === 401 || res.status === 403) {
+              return { files: [] };
+            }
             if (!res.ok) throw new Error("Failed to fetch");
             return res.json();
           },
