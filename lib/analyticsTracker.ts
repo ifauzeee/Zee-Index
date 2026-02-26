@@ -95,9 +95,6 @@ function parseUserAgent(ua: string): {
   return { browser, os, device };
 }
 
-/**
- * Track a page view. Called from middleware or API route.
- */
 export async function trackPageView(params: {
   path: string;
   ip: string;
@@ -186,9 +183,6 @@ export async function trackPageView(params: {
   }
 }
 
-/**
- * Track bandwidth usage (call when a download occurs)
- */
 export async function trackBandwidth(bytes: number): Promise<void> {
   try {
     const dayKey = getDayKey(Date.now());
@@ -202,9 +196,6 @@ export async function trackBandwidth(bytes: number): Promise<void> {
   }
 }
 
-/**
- * Get complete analytics data
- */
 export async function getAnalyticsData(): Promise<AnalyticsData> {
   const now = Date.now();
   const todayKey = getDayKey(now);

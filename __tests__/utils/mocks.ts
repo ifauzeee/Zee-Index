@@ -1,8 +1,5 @@
 import { vi } from "vitest";
 
-/**
- * Mocks for Next.js navigation
- */
 export const mockNavigation = () => {
   vi.mock("next/navigation", () => ({
     useRouter: () => ({
@@ -18,10 +15,6 @@ export const mockNavigation = () => {
   }));
 };
 
-/**
- * Mocks for console.error to keep test output clean
- * Returns a restore function
- */
 export const mockConsoleError = () => {
   const originalError = console.error;
   console.error = vi.fn();

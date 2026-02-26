@@ -8,7 +8,6 @@ let cachedProtectedIds: string[] | null = null;
 let lastCacheUpdate = 0;
 const CACHE_TTL = 10000;
 
-/** @internal */
 export function __resetCache() {
   cachedProtectedIds = null;
   lastCacheUpdate = 0;
