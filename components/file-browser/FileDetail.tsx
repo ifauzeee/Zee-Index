@@ -102,6 +102,7 @@ export default function FileDetail({
   const setCurrentFileId = useAppStore((state) => state.setCurrentFileId);
   const setCurrentFolderId = useAppStore((state) => state.setCurrentFolderId);
   const isTheaterMode = useAppStore((state) => state.isTheaterMode);
+  const sharePolicy = useAppStore((state) => state.sharePolicy);
 
   const [internalPreviewOpen, setInternalPreviewOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -291,9 +292,10 @@ export default function FileDetail({
   };
 
   const renderPreviewContent = () => {
+    let content;
     switch (fileType) {
       case "video":
-        return (
+        content = (
           <VideoPlayer
             src={directLink}
             title={file.name}
@@ -305,8 +307,9 @@ export default function FileDetail({
             onEnded={() => nextFileUrl && router.push(nextFileUrl)}
           />
         );
+        break;
       case "audio":
-        return (
+        content = (
           <AudioPlayer
             src={directLink}
             title={file.name}
@@ -314,17 +317,20 @@ export default function FileDetail({
             poster={file.thumbnailLink}
           />
         );
+        break;
       case "image":
-        return <ImagePreview src={directLink} />;
+        content = <ImagePreview src={directLink} />;
+        break;
       case "office":
       case "pdf":
-        if (showDocPreview) return <GoogleDrivePreview fileId={file.id} />;
+        if (showDocPreview) content = <GoogleDrivePreview fileId={file.id} />;
         break;
       case "ebook":
-        return <EbookPreview src={directLink} />;
+        content = <EbookPreview src={directLink} />;
+        break;
       case "markdown":
         if (showTextPreview && textContent) {
-          return (
+          content = (
             <div className="w-full h-full overflow-y-auto">
               <MarkdownViewer content={textContent} />
             </div>
@@ -332,20 +338,44 @@ export default function FileDetail({
         }
         break;
       case "text":
-        if (showTextPreview)
-          return <CodePreview src={directLink} fileName={file.name} />;
-        break;
       case "code":
         if (showTextPreview)
-          return <CodePreview src={directLink} fileName={file.name} />;
+          content = <CodePreview src={directLink} fileName={file.name} />;
         break;
     }
+
+    if (!content) {
+      content = (
+        <DefaultPreview
+          mimeType={file.mimeType}
+          fileName={file.name}
+          downloadUrl={directLink}
+        />
+      );
+    }
+
     return (
-      <DefaultPreview
-        mimeType={file.mimeType}
-        fileName={file.name}
-        downloadUrl={directLink}
-      />
+      <div className="relative w-full h-full flex items-center justify-center">
+        {content}
+        {sharePolicy?.hasWatermark &&
+          fileType !== "video" &&
+          fileType !== "pdf" && (
+            <div className="absolute inset-0 pointer-events-none z-[90] overflow-hidden flex flex-wrap justify-around items-center opacity-[0.25] mix-blend-difference w-full h-full select-none text-white/80">
+              {Array.from({ length: 15 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="text-xl sm:text-3xl font-black -rotate-[30deg] p-6 sm:p-10 whitespace-nowrap drop-shadow-md"
+                >
+                  {user?.email || user?.name || "Confidential View"}
+                  <br />
+                  <span className="text-sm sm:text-lg opacity-80">
+                    {new Date().toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+      </div>
     );
   };
 

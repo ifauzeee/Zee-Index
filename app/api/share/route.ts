@@ -19,6 +19,9 @@ interface ShareRequestBody {
   expiresIn: string;
   loginRequired?: boolean;
   items?: DriveFile[];
+  maxUses?: number | null;
+  preventDownload?: boolean;
+  hasWatermark?: boolean;
 }
 
 export async function POST(req: NextRequest) {
@@ -38,6 +41,9 @@ export async function POST(req: NextRequest) {
       expiresIn,
       loginRequired,
       items,
+      maxUses,
+      preventDownload,
+      hasWatermark,
     }: ShareRequestBody = await req.json();
     const isCollection = items && items.length > 0;
 
@@ -68,6 +74,8 @@ export async function POST(req: NextRequest) {
     const token = await new SignJWT({
       shareId: jti,
       loginRequired: loginRequired ?? false,
+      preventDownload: preventDownload ?? false,
+      hasWatermark: hasWatermark ?? false,
     })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
@@ -100,6 +108,9 @@ export async function POST(req: NextRequest) {
         loginRequired: loginRequired ?? false,
         itemName: shareName,
         isCollection: isCollection,
+        maxUses: maxUses ?? null,
+        preventDownload: preventDownload ?? false,
+        hasWatermark: hasWatermark ?? false,
       },
     });
 
@@ -112,6 +123,9 @@ export async function POST(req: NextRequest) {
       loginRequired: shareLinkRecord.loginRequired,
       itemName: shareLinkRecord.itemName,
       isCollection: shareLinkRecord.isCollection,
+      maxUses: shareLinkRecord.maxUses,
+      preventDownload: shareLinkRecord.preventDownload,
+      hasWatermark: shareLinkRecord.hasWatermark,
     };
 
     const adminEmails =

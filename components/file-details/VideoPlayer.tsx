@@ -78,6 +78,8 @@ export default function VideoPlayer({
     addToast,
     isTheaterMode,
     toggleTheaterMode,
+    sharePolicy,
+    user,
   } = useAppStore();
   const playerRef = useRef<MediaPlayerInstance>(null);
   const [networkError, setNetworkError] = useState(false);
@@ -403,83 +405,85 @@ export default function VideoPlayer({
               controlsVisible ? "opacity-100" : "opacity-0 pointer-events-none",
             )}
           >
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className="p-2 bg-black/40 hover:bg-black/80 text-white rounded-xl backdrop-blur-md border border-white/10 transition-all shadow-lg focus:outline-none"
-                  title="Stream Eksternal"
+            {!sharePolicy?.preventDownload && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="p-2 bg-black/40 hover:bg-black/80 text-white rounded-xl backdrop-blur-md border border-white/10 transition-all shadow-lg focus:outline-none"
+                    title="Stream Eksternal"
+                  >
+                    <MonitorPlay size={16} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-56 bg-zinc-950/90 border-white/10 text-white backdrop-blur-xl z-[100]"
                 >
-                  <MonitorPlay size={16} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-56 bg-zinc-950/90 border-white/10 text-white backdrop-blur-xl z-[100]"
-              >
-                <DropdownMenuLabel>External Player</DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuLabel>External Player</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-white/10" />
 
-                <DropdownMenuItem
-                  className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
-                  onClick={() => {
-                    navigator.clipboard.writeText(getAbsoluteSrc());
-                    addToast({
-                      message: "URL Stream disalin!",
-                      type: "success",
-                    });
-                  }}
-                >
-                  <Copy className="mr-2 h-4 w-4" /> Copy URL
-                </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
+                    onClick={() => {
+                      navigator.clipboard.writeText(getAbsoluteSrc());
+                      addToast({
+                        message: "URL Stream disalin!",
+                        type: "success",
+                      });
+                    }}
+                  >
+                    <Copy className="mr-2 h-4 w-4" /> Copy URL
+                  </DropdownMenuItem>
 
-                <DropdownMenuItem
-                  className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
-                  onClick={() =>
-                    (window.location.href = `vlc://${getAbsoluteSrc()}`)
-                  }
-                >
-                  <Play className="mr-2 h-4 w-4" /> Open in VLC (PC)
-                </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
+                    onClick={() =>
+                      (window.location.href = `vlc://${getAbsoluteSrc()}`)
+                    }
+                  >
+                    <Play className="mr-2 h-4 w-4" /> Open in VLC (PC)
+                  </DropdownMenuItem>
 
-                <DropdownMenuItem
-                  className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
-                  onClick={() =>
-                    (window.location.href = `intent:${getAbsoluteSrc()}#Intent;package=org.videolan.vlc;type=video/*;scheme=https;end`)
-                  }
-                >
-                  <Play className="mr-2 h-4 w-4" /> VLC (Android)
-                </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
+                    onClick={() =>
+                      (window.location.href = `intent:${getAbsoluteSrc()}#Intent;package=org.videolan.vlc;type=video/*;scheme=https;end`)
+                    }
+                  >
+                    <Play className="mr-2 h-4 w-4" /> VLC (Android)
+                  </DropdownMenuItem>
 
-                <DropdownMenuItem
-                  className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
-                  onClick={() =>
-                    (window.location.href = `intent:${getAbsoluteSrc()}#Intent;package=com.mxtech.videoplayer.ad;type=video/*;scheme=https;end`)
-                  }
-                >
-                  <Play className="mr-2 h-4 w-4" /> MX Player (Free)
-                </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
+                    onClick={() =>
+                      (window.location.href = `intent:${getAbsoluteSrc()}#Intent;package=com.mxtech.videoplayer.ad;type=video/*;scheme=https;end`)
+                    }
+                  >
+                    <Play className="mr-2 h-4 w-4" /> MX Player (Free)
+                  </DropdownMenuItem>
 
-                <DropdownMenuItem
-                  className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
-                  onClick={() =>
-                    (window.location.href = `intent:${getAbsoluteSrc()}#Intent;package=com.mxtech.videoplayer.pro;type=video/*;scheme=https;end`)
-                  }
-                >
-                  <Play className="mr-2 h-4 w-4" /> MX Player (Pro)
-                </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
+                    onClick={() =>
+                      (window.location.href = `intent:${getAbsoluteSrc()}#Intent;package=com.mxtech.videoplayer.pro;type=video/*;scheme=https;end`)
+                    }
+                  >
+                    <Play className="mr-2 h-4 w-4" /> MX Player (Pro)
+                  </DropdownMenuItem>
 
-                <DropdownMenuItem
-                  className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
-                  onClick={() =>
-                    (window.location.href = `infuse://x-callback-url/play?url=${encodeURIComponent(
-                      getAbsoluteSrc(),
-                    )}`)
-                  }
-                >
-                  <Play className="mr-2 h-4 w-4" /> Infuse (iOS/Mac)
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuItem
+                    className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
+                    onClick={() =>
+                      (window.location.href = `infuse://x-callback-url/play?url=${encodeURIComponent(
+                        getAbsoluteSrc(),
+                      )}`)
+                    }
+                  >
+                    <Play className="mr-2 h-4 w-4" /> Infuse (iOS/Mac)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
             {webViewLink && !isMobile && (
               <a
@@ -495,7 +499,7 @@ export default function VideoPlayer({
               </a>
             )}
 
-            {!isMobile && (
+            {!isMobile && !sharePolicy?.preventDownload && (
               <button
                 onClick={toggleTheaterMode}
                 className={cn(
@@ -509,6 +513,23 @@ export default function VideoPlayer({
                 <Tv size={16} />
               </button>
             )}
+          </div>
+        )}
+
+        {sharePolicy?.hasWatermark && (
+          <div className="absolute inset-0 pointer-events-none z-[90] overflow-hidden flex flex-wrap justify-around items-center opacity-[0.25] mix-blend-overlay w-full h-full select-none">
+            {Array.from({ length: 15 }).map((_, i) => (
+              <div
+                key={i}
+                className="text-white text-xl sm:text-2xl md:text-3xl font-black -rotate-[30deg] p-6 sm:p-10 whitespace-nowrap shadow-black drop-shadow-md"
+              >
+                {user?.email || user?.name || "Confidential View"}
+                <br />
+                <span className="text-sm sm:text-lg opacity-80">
+                  {new Date().toLocaleDateString()}
+                </span>
+              </div>
+            ))}
           </div>
         )}
       </MediaPlayer>

@@ -5,6 +5,7 @@ import { trackBandwidth } from "@/lib/analyticsTracker";
 import { logger } from "@/lib/logger";
 import { ERROR_MESSAGES } from "@/lib/constants";
 import { kv } from "@/lib/kv";
+import { db } from "@/lib/db";
 import {
   validateDownloadRequest,
   prepareGoogleDriveUrl,
@@ -145,6 +146,17 @@ export async function GET(request: NextRequest) {
 
       if (!isDuplicate) {
         await kv.set(dedupeKey, "1", { ex: 5 });
+
+        if (context.shareRecord) {
+          try {
+            await db.shareLink.update({
+              where: { jti: context.shareRecord.jti },
+              data: { views: { increment: 1 } },
+            });
+          } catch (e) {
+            logger.error({ err: e }, "Failed to increment sharelink uses");
+          }
+        }
 
         logActivity("DOWNLOAD", {
           itemName: fileDetails.name,

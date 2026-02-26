@@ -44,6 +44,10 @@ export default function ShareButton({
   const [customDuration, setCustomDuration] = useState<string | number>(10);
   const [customUnit, setCustomUnit] = useState<TimeUnit>("m");
   const [loginRequired, setLoginRequired] = useState(false);
+  const [preventDownload, setPreventDownload] = useState(false);
+  const [hasWatermark, setHasWatermark] = useState(false);
+  const [useMaxUses, setUseMaxUses] = useState(false);
+  const [maxUses, setMaxUses] = useState<string | number>(1);
 
   const isOpen = controlledIsOpen ?? internalIsOpen;
 
@@ -99,6 +103,13 @@ export default function ShareButton({
           expiresIn,
           loginRequired,
           items: shareItems,
+          preventDownload,
+          hasWatermark,
+          maxUses: useMaxUses
+            ? typeof maxUses === "string"
+              ? parseInt(maxUses, 10) || null
+              : maxUses
+            : null,
         }),
       });
 
@@ -139,7 +150,7 @@ export default function ShareButton({
           onClick={handleClose}
         >
           <motion.div
-            className="relative w-full max-w-md bg-background p-6 rounded-lg shadow-xl"
+            className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-background p-6 rounded-lg shadow-xl scrollbar-hide"
             variants={modalVariants}
             onClick={(e) => e.stopPropagation()}
           >
@@ -228,6 +239,110 @@ export default function ShareButton({
                   className="ml-auto h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
                 />
               </label>
+
+              <label
+                htmlFor="preventDownload"
+                className={cn(
+                  "flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors",
+                  preventDownload
+                    ? "bg-primary/10 border-primary"
+                    : "hover:bg-accent",
+                )}
+              >
+                <ShieldCheck
+                  className={cn(
+                    "transition-colors",
+                    preventDownload ? "text-primary" : "text-muted-foreground",
+                  )}
+                />
+                <div>
+                  <h4 className="font-semibold">
+                    {t("preventDownload", { defaultValue: "Prevent Download" })}
+                  </h4>
+                  <p className="text-xs text-muted-foreground">
+                    {t("preventDownloadDesc", {
+                      defaultValue: "Hide download button for viewers",
+                    })}
+                  </p>
+                </div>
+                <input
+                  id="preventDownload"
+                  type="checkbox"
+                  checked={preventDownload}
+                  onChange={(e) => setPreventDownload(e.target.checked)}
+                  className="ml-auto h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
+                />
+              </label>
+
+              <label
+                htmlFor="hasWatermark"
+                className={cn(
+                  "flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors",
+                  hasWatermark
+                    ? "bg-primary/10 border-primary"
+                    : "hover:bg-accent",
+                )}
+              >
+                <ShieldCheck
+                  className={cn(
+                    "transition-colors",
+                    hasWatermark ? "text-primary" : "text-muted-foreground",
+                  )}
+                />
+                <div>
+                  <h4 className="font-semibold">
+                    {t("hasWatermark", { defaultValue: "Dynamic Watermark" })}
+                  </h4>
+                  <p className="text-xs text-muted-foreground">
+                    {t("hasWatermarkDesc", {
+                      defaultValue: "Show watermark to prevent screen captures",
+                    })}
+                  </p>
+                </div>
+                <input
+                  id="hasWatermark"
+                  type="checkbox"
+                  checked={hasWatermark}
+                  onChange={(e) => setHasWatermark(e.target.checked)}
+                  className="ml-auto h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
+                />
+              </label>
+
+              <div className="p-4 rounded-lg border">
+                <div className="flex items-center justify-between pointer-events-auto">
+                  <div>
+                    <h4 className="font-semibold">
+                      {t("limitAccess", { defaultValue: "Limit Access" })}
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      {t("limitAccessDesc", {
+                        defaultValue:
+                          "Limit how many times this link can be accessed/downloaded",
+                      })}
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={useMaxUses}
+                    onChange={(e) => setUseMaxUses(e.target.checked)}
+                    className="ml-3 h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                  />
+                </div>
+                {useMaxUses && (
+                  <div className="flex gap-2 mt-3">
+                    <input
+                      type="number"
+                      value={maxUses}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        setMaxUses(isNaN(val) ? "" : val);
+                      }}
+                      className="w-full px-3 py-2 rounded-md border bg-background focus:ring-2 focus:ring-ring focus:outline-none text-sm"
+                      min="1"
+                    />
+                  </div>
+                )}
+              </div>
 
               <div className="flex gap-2 pt-2">
                 <button

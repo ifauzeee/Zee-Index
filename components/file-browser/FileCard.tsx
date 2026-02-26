@@ -84,8 +84,13 @@ export default function FileCard({
   const isFolder = file.mimeType === "application/vnd.google-apps.folder";
   const IconComponent = getIcon(file.mimeType);
 
-  const { isBulkMode, selectedFiles, toggleSelection, setBulkMode } =
-    useAppStore();
+  const {
+    isBulkMode,
+    selectedFiles,
+    toggleSelection,
+    setBulkMode,
+    sharePolicy,
+  } = useAppStore();
   const isSelected = selectedFiles.some((f) => f.id === file.id);
 
   const handleClick = (e: React.MouseEvent) => {
@@ -262,7 +267,7 @@ export default function FileCard({
                 {t("info")}
               </DropdownMenuItem>
             )}
-            {onDownload && !isFolder && (
+            {onDownload && !isFolder && !sharePolicy?.preventDownload && (
               <DropdownMenuItem onClick={(e) => onDownload(e as any, file)}>
                 {t("download")}
               </DropdownMenuItem>

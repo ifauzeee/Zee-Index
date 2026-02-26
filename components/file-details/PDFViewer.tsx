@@ -14,6 +14,7 @@ import {
   RotateCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/lib/store";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 
@@ -30,6 +31,7 @@ export default function PDFViewer({ src }: PDFViewerProps) {
   const [rotate, setRotate] = useState(0);
   const [showThumbnails, setShowThumbnails] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { sharePolicy, user } = useAppStore();
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
@@ -132,13 +134,15 @@ export default function PDFViewer({ src }: PDFViewerProps) {
             >
               <RotateCw size={18} />
             </button>
-            <button
-              onClick={handleDownload}
-              className="p-2 rounded-lg hover:bg-white/10 text-zinc-400 transition-colors"
-              title="Unduh"
-            >
-              <Download size={18} />
-            </button>
+            {!sharePolicy?.preventDownload && (
+              <button
+                onClick={handleDownload}
+                className="p-2 rounded-lg hover:bg-white/10 text-zinc-400 transition-colors"
+                title="Unduh"
+              >
+                <Download size={18} />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -175,8 +179,25 @@ export default function PDFViewer({ src }: PDFViewerProps) {
 
         <div
           ref={containerRef}
-          className="flex-1 overflow-auto bg-zinc-950 flex justify-center p-8 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent"
+          className="flex-1 overflow-auto bg-zinc-950 flex justify-center p-8 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent relative"
         >
+          {sharePolicy?.hasWatermark && (
+            <div className="absolute inset-0 pointer-events-none z-[90] overflow-hidden flex flex-wrap justify-around items-center opacity-[0.25] mix-blend-overlay w-full h-full select-none">
+              {Array.from({ length: 15 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="text-zinc-400 text-xl sm:text-3xl font-black -rotate-[30deg] p-6 sm:p-10 whitespace-nowrap shadow-black drop-shadow-md mix-blend-difference"
+                >
+                  {user?.email || user?.name || "Confidential View"}
+                  <br />
+                  <span className="text-sm sm:text-lg opacity-80">
+                    {new Date().toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
           <Document
             file={src}
             onLoadSuccess={onDocumentLoadSuccess}

@@ -8,6 +8,7 @@ import Counter from "yet-another-react-lightbox/plugins/counter";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/counter.css";
 import { useAppStore } from "@/lib/store";
+import { cn } from "@/lib/utils";
 import type { DriveFile } from "@/lib/drive";
 
 interface ImageGalleryProps {
@@ -23,7 +24,7 @@ export default function ImageGallery({
   isOpen,
   onClose,
 }: ImageGalleryProps) {
-  const { shareToken, folderTokens } = useAppStore();
+  const { shareToken, folderTokens, sharePolicy, user } = useAppStore();
 
   const slides = images.map((file) => {
     let src = `/api/download?fileId=${file.id}`;
@@ -45,24 +46,47 @@ export default function ImageGallery({
     };
   });
 
+  const plugins = [Zoom, Counter];
+  if (!sharePolicy?.preventDownload) {
+    plugins.push(Download);
+  }
+
   return (
-    <Lightbox
-      open={isOpen}
-      close={onClose}
-      index={initialIndex}
-      slides={slides}
-      plugins={[Zoom, Download, Counter]}
-      animation={{ fade: 300 }}
-      zoom={{
-        maxZoomPixelRatio: 3,
-        scrollToZoom: true,
-      }}
-      controller={{
-        closeOnBackdropClick: true,
-      }}
-      styles={{
-        container: { backgroundColor: "rgba(0, 0, 0, 0.9)" },
-      }}
-    />
+    <>
+      <Lightbox
+        open={isOpen}
+        close={onClose}
+        index={initialIndex}
+        slides={slides}
+        plugins={plugins}
+        animation={{ fade: 300 }}
+        zoom={{
+          maxZoomPixelRatio: 3,
+          scrollToZoom: true,
+        }}
+        controller={{
+          closeOnBackdropClick: true,
+        }}
+        styles={{
+          container: { backgroundColor: "rgba(0, 0, 0, 0.9)" },
+        }}
+      />
+      {isOpen && sharePolicy?.hasWatermark && (
+        <div className="fixed inset-0 pointer-events-none z-[9999] overflow-hidden flex flex-wrap justify-around items-center opacity-[0.25] mix-blend-difference select-none text-white">
+          {Array.from({ length: 15 }).map((_, i) => (
+            <div
+              key={i}
+              className="text-xl sm:text-3xl font-black -rotate-[30deg] p-6 sm:p-10 whitespace-nowrap drop-shadow-md"
+            >
+              {user?.email || user?.name || "Confidential View"}
+              <br />
+              <span className="text-sm sm:text-lg opacity-80">
+                {new Date().toLocaleDateString()}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
   );
 }

@@ -2,6 +2,7 @@ import { type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
 import { getServerSession } from "next-auth/next";
+import { db } from "@/lib/db";
 import { authOptions } from "@/lib/authOptions";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { isAccessRestricted } from "@/lib/securityUtils";
@@ -18,6 +19,8 @@ export interface DownloadContext {
   shareToken: string | null;
   accessTokenParam: string | null;
   range: string | null;
+  isStream: boolean;
+  shareRecord?: any;
 }
 
 export type DownloadErrorType = {
@@ -48,6 +51,7 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
   }
 
   const session = await getServerSession(authOptions);
+  let shareRecord: any = undefined;
 
   if (shareToken) {
     try {
@@ -59,6 +63,29 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
           `${REDIS_KEYS.SHARE_BLOCKED}${payload.jti}`,
         );
         if (isBlocked) throw new Error(ERROR_MESSAGES.SHARE_LINK_REVOKED);
+
+        shareRecord = await db.shareLink.findUnique({
+          // Assign to the outer shareRecord
+          where: { jti: payload.jti as string },
+        });
+
+        if (shareRecord) {
+          if (
+            shareRecord.maxUses !== null &&
+            shareRecord.views >= shareRecord.maxUses
+          ) {
+            throw new Error(
+              "Batas maksimum unduhan/akses untuk tautan ini telah tercapai.",
+            );
+          }
+          if (
+            shareRecord.preventDownload &&
+            !range &&
+            request.headers.get("sec-fetch-dest") === "document"
+          ) {
+            throw new Error("Unduhan dinonaktifkan untuk file ini.");
+          }
+        }
 
         if (payload.loginRequired && !session) {
           throw new Error("Login required.");
@@ -149,7 +176,9 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
       shareToken,
       accessTokenParam,
       range,
-    },
+      isStream: !!range,
+      shareRecord: shareRecord,
+    } as DownloadContext,
     session,
   };
 }

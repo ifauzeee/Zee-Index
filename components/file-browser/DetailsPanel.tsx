@@ -177,7 +177,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
     ? parseInt(file.videoMediaMetadata.durationMillis, 10)
     : undefined;
 
-  const { user, hideAuthor, addToast } = useAppStore();
+  const { user, hideAuthor, addToast, sharePolicy } = useAppStore();
 
   const [isMobile, setIsMobile] = useState(false);
   const controls = useAnimation();
@@ -446,16 +446,18 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 <ExternalLink size={20} />
                 {editorLink ? t("editFile") : t("openDrive")}
               </motion.a>
-              <motion.a
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                href={`/api/download?fileId=${file.id}`}
-                download
-                className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-secondary text-secondary-foreground font-semibold text-sm hover:bg-secondary/80 transition-colors border border-border/50"
-              >
-                <Download size={20} />
-                {t("download")}
-              </motion.a>
+              {!sharePolicy?.preventDownload && (
+                <motion.a
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  href={`/api/download?fileId=${file.id}`}
+                  download
+                  className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-secondary text-secondary-foreground font-semibold text-sm hover:bg-secondary/80 transition-colors border border-border/50"
+                >
+                  <Download size={20} />
+                  {t("download")}
+                </motion.a>
+              )}
             </motion.div>
 
             <div className="grid grid-cols-3 gap-3">
@@ -563,15 +565,17 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
           animate={{ y: 0, opacity: 1, transition: { delay: 0.3 } }}
           className="p-6 border-t border-border/40 bg-background"
         >
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleCopyLink}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-foreground text-background hover:bg-foreground/90 font-bold text-sm shadow-xl shadow-foreground/5 transition-all"
-          >
-            <LinkIcon size={18} />
-            {t("copyDirectLink")}
-          </motion.button>
+          {!sharePolicy?.preventDownload && (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleCopyLink}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-foreground text-background hover:bg-foreground/90 font-bold text-sm shadow-xl shadow-foreground/5 transition-all"
+            >
+              <LinkIcon size={18} />
+              {t("copyDirectLink")}
+            </motion.button>
+          )}
         </motion.div>
       </motion.div>
     </>

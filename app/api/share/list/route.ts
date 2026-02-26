@@ -26,6 +26,10 @@ export async function GET() {
       loginRequired: record.loginRequired,
       itemName: record.itemName,
       isCollection: record.isCollection,
+      maxUses: record.maxUses,
+      preventDownload: record.preventDownload,
+      hasWatermark: record.hasWatermark,
+      viewCount: record.views,
     }));
 
     return NextResponse.json(shareLinks);

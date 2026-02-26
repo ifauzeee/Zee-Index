@@ -20,6 +20,7 @@ export function BulkActionBar() {
     isSidebarOpen,
     currentFolderId,
     user,
+    sharePolicy,
   } = useAppStore();
   const t = useTranslations("BulkActionBar");
   const { confirm } = useConfirm();
@@ -249,15 +250,17 @@ export function BulkActionBar() {
                 </Button>
               </>
             )}
-            <Button
-              size="sm"
-              variant="ghost"
-              className="hover:bg-background/20 h-8 px-2 text-xs"
-              onClick={handleDownload}
-            >
-              <Download size={16} className="mr-2" />
-              {t("download")}
-            </Button>
+            {!sharePolicy?.preventDownload && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="hover:bg-background/20 h-8 px-2 text-xs"
+                onClick={handleDownload}
+              >
+                <Download size={16} className="mr-2" />
+                {t("download")}
+              </Button>
+            )}
             {isAdmin && (
               <Button
                 size="sm"

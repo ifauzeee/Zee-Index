@@ -17,6 +17,25 @@ import {
   removePin as removePinAction,
 } from "@/app/actions/pinned";
 
+function parseJwt(token: string) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      window
+        .atob(base64)
+        .split("")
+        .map(function (c) {
+          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join(""),
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    return null;
+  }
+}
+
 export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
   set,
   get,
@@ -44,10 +63,23 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
   setSelectedFiles: (files: any[]) => set({ selectedFiles: files }),
   clearSelection: () => set({ selectedFiles: [], isBulkMode: false }),
   shareToken: null,
-  setShareToken: (token: string | null) =>
+  sharePolicy: null,
+  setShareToken: (token: string | null) => {
+    let policy = null;
+    if (typeof token === "string" && token.length > 0) {
+      const payload = parseJwt(token);
+      if (payload) {
+        policy = {
+          preventDownload: payload.preventDownload,
+          hasWatermark: payload.hasWatermark,
+        };
+      }
+    }
     set({
       shareToken: typeof token === "string" && token.length > 0 ? token : null,
-    }),
+      sharePolicy: policy,
+    });
+  },
   folderTokens: {},
   setFolderToken: (folderId: string, token: string) =>
     set((state: AppState) => ({

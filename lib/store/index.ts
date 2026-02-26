@@ -30,6 +30,7 @@ export const useAppStore = create<AppState>()(
         primaryColor: state.primaryColor,
         videoProgress: state.videoProgress,
         folderTokens: state.folderTokens,
+        sharePolicy: state.sharePolicy,
       }),
     },
   ),

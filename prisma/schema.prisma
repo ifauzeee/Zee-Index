@@ -94,6 +94,10 @@ model ShareLink {
   isCollection  Boolean  @default(false)
   views         Int      @default(0)
   createdAt     DateTime @default(now())
+
+  maxUses         Int?
+  preventDownload Boolean  @default(false)
+  hasWatermark    Boolean  @default(false)
 }
 
 model ProtectedFolder {
