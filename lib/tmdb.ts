@@ -25,9 +25,6 @@ export interface TMDBMetadata {
   }[];
 }
 
-/**
- * Helper to fetch from TMDB with either v3 or v4 key
- */
 async function fetchTMDB(
   endpoint: string,
   params: Record<string, string> = {},
