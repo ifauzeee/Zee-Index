@@ -1,4 +1,22 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: zee-postgres-dev
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: zee_index
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   redis:
     image: redis:7-alpine
     container_name: zee-redis-dev
@@ -21,7 +39,7 @@ services:
       - next_bundle_vol:/app/.next
     environment:
       - REDIS_URL=redis://redis:6379
-      - DATABASE_URL=file:./dev.db
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/zee_index?schema=public
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -35,8 +53,12 @@ services:
         pnpm run dev:webpack
       "
     depends_on:
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
 volumes:
+  postgres_data:
   node_modules_vol:
   next_bundle_vol:

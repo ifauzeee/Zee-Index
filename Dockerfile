@@ -1,5 +1,5 @@
 # ==============================================================================
-# ZEE-INDEX DOCKERFILE - ROBUST
+# ZEE-INDEX DOCKERFILE - PostgreSQL + Optimized Build
 # ==============================================================================
 
 # Stage 1: Base
@@ -55,15 +55,13 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
-# Also copy Prisma CLI and engines for the entrypoint
-# We copy from the builder's node_modules/.pnpm to avoid hardcoding versions
-# BUT, pnpm structure is complex. Simplest is to copy the binary and CLI.
+# Copy node_modules (needed for Prisma CLI and client)
 COPY --from=builder /app/node_modules ./node_modules
 
 # Script to run migrations and start
 RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
     echo 'echo "Running database migrations..."' >> /app/entrypoint.sh && \
-    echo 'npx prisma db push --accept-data-loss || echo "Prisma push failed, continuing..."' >> /app/entrypoint.sh && \
+    echo 'npx prisma migrate deploy || npx prisma db push --accept-data-loss || echo "Prisma migration failed, continuing..."' >> /app/entrypoint.sh && \
     echo 'exec "$@"' >> /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh
 

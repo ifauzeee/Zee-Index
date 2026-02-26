@@ -1,4 +1,20 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: zee-postgres
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-zee_index}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   redis:
     image: redis:7-alpine
     container_name: zee-redis
@@ -28,11 +44,12 @@ services:
       - .env
     environment:
       - REDIS_URL=redis://redis:6379
-      - DATABASE_URL=file:/app/prisma/dev.db
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-zee_index}?schema=public
     volumes:
-      - ./prisma:/app/prisma
       - ./public/uploads:/app/public/uploads
     depends_on:
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
@@ -70,6 +87,7 @@ services:
         condition: service_healthy
 
 volumes:
+  postgres_data:
   redis_data:
   caddy_data:
   caddy_config:

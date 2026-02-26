@@ -3,11 +3,10 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// NextAuth Models
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -25,6 +24,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -33,6 +33,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model User {
@@ -41,7 +43,7 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  role          String    @default("USER") // ADMIN, USER, GUEST
+  role          String    @default("USER")
   accounts      Account[]
   sessions      Session[]
 }
@@ -54,14 +56,12 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// Zee-Index Models
 model ActivityLog {
   id            String   @id @default(cuid())
   type          String
   timestamp     Float
-  severity      String   // info, warning, error, critical
+  severity      String
   
-  // Details
   itemName      String?
   itemId        String?
   itemSize      String?
@@ -80,11 +80,16 @@ model ActivityLog {
   userAgent     String?
   country       String?
   city          String?
-  metadata      String?  // JSON string
+  metadata      String?
+
+  @@index([type])
+  @@index([timestamp])
+  @@index([severity])
+  @@index([userEmail])
 }
 
 model ShareLink {
-  id            String   @id @default(cuid()) // same as jti
+  id            String   @id @default(cuid())
   path          String
   token         String   @unique
   jti           String   @unique
@@ -99,16 +104,19 @@ model ShareLink {
   preventDownload Boolean  @default(false)
   hasWatermark    Boolean  @default(false)
   watermarkText   String?
+
+  @@index([expiresAt])
+  @@index([createdAt])
 }
 
 model ProtectedFolder {
   id        String   @id @default(cuid())
   folderId  String   @unique
-  password  String?  // Hashed password if protected by password
+  password  String?
   createdAt DateTime @default(now())
 }
 
 model AdminConfig {
   key   String @id
-  value String // JSON string representation
+  value String
 }
