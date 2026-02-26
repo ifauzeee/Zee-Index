@@ -26,6 +26,7 @@ export interface ShareLink {
   maxUses?: number | null;
   preventDownload?: boolean;
   hasWatermark?: boolean;
+  watermarkText?: string | null;
 }
 
 export interface FileRequestLink {
@@ -116,7 +117,11 @@ export interface FileSlice {
   setBulkMode: (isActive: boolean) => void;
   clearSelection: () => void;
   shareToken: string | null;
-  sharePolicy: { preventDownload?: boolean; hasWatermark?: boolean } | null;
+  sharePolicy: {
+    preventDownload?: boolean;
+    hasWatermark?: boolean;
+    watermarkText?: string | null;
+  } | null;
   setShareToken: (token: string | null) => void;
   folderTokens: Record<string, string>;
   setFolderToken: (folderId: string, token: string) => void;

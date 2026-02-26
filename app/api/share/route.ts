@@ -22,6 +22,7 @@ interface ShareRequestBody {
   maxUses?: number | null;
   preventDownload?: boolean;
   hasWatermark?: boolean;
+  watermarkText?: string;
 }
 
 export async function POST(req: NextRequest) {
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
       maxUses,
       preventDownload,
       hasWatermark,
+      watermarkText,
     }: ShareRequestBody = await req.json();
     const isCollection = items && items.length > 0;
 
@@ -76,6 +78,7 @@ export async function POST(req: NextRequest) {
       loginRequired: loginRequired ?? false,
       preventDownload: preventDownload ?? false,
       hasWatermark: hasWatermark ?? false,
+      watermarkText: watermarkText || null,
     })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
@@ -111,6 +114,7 @@ export async function POST(req: NextRequest) {
         maxUses: maxUses ?? null,
         preventDownload: preventDownload ?? false,
         hasWatermark: hasWatermark ?? false,
+        watermarkText: watermarkText || null,
       },
     });
 
@@ -126,6 +130,7 @@ export async function POST(req: NextRequest) {
       maxUses: shareLinkRecord.maxUses,
       preventDownload: shareLinkRecord.preventDownload,
       hasWatermark: shareLinkRecord.hasWatermark,
+      watermarkText: shareLinkRecord.watermarkText,
     };
 
     const adminEmails =

@@ -188,7 +188,10 @@ export default function PDFViewer({ src }: PDFViewerProps) {
                   key={i}
                   className="text-zinc-400 text-xl sm:text-3xl font-black -rotate-[30deg] p-6 sm:p-10 whitespace-nowrap shadow-black drop-shadow-md mix-blend-difference"
                 >
-                  {user?.email || user?.name || "Confidential View"}
+                  {sharePolicy?.watermarkText ||
+                    user?.email ||
+                    user?.name ||
+                    "Confidential View"}
                   <br />
                   <span className="text-sm sm:text-lg opacity-80">
                     {new Date().toLocaleDateString()}

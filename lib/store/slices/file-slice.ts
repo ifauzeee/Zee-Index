@@ -72,6 +72,7 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
         policy = {
           preventDownload: payload.preventDownload,
           hasWatermark: payload.hasWatermark,
+          watermarkText: payload.watermarkText,
         };
       }
     }

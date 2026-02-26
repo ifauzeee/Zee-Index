@@ -29,6 +29,7 @@ export async function GET() {
       maxUses: record.maxUses,
       preventDownload: record.preventDownload,
       hasWatermark: record.hasWatermark,
+      watermarkText: record.watermarkText,
       viewCount: record.views,
     }));
 

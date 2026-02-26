@@ -366,7 +366,10 @@ export default function FileDetail({
                   key={i}
                   className="text-xl sm:text-3xl font-black -rotate-[30deg] p-6 sm:p-10 whitespace-nowrap drop-shadow-md"
                 >
-                  {user?.email || user?.name || "Confidential View"}
+                  {sharePolicy?.watermarkText ||
+                    user?.email ||
+                    user?.name ||
+                    "Confidential View"}
                   <br />
                   <span className="text-sm sm:text-lg opacity-80">
                     {new Date().toLocaleDateString()}

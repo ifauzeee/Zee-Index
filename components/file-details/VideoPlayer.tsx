@@ -523,7 +523,10 @@ export default function VideoPlayer({
                 key={i}
                 className="text-white text-xl sm:text-2xl md:text-3xl font-black -rotate-[30deg] p-6 sm:p-10 whitespace-nowrap shadow-black drop-shadow-md"
               >
-                {user?.email || user?.name || "Confidential View"}
+                {sharePolicy?.watermarkText ||
+                  user?.email ||
+                  user?.name ||
+                  "Confidential View"}
                 <br />
                 <span className="text-sm sm:text-lg opacity-80">
                   {new Date().toLocaleDateString()}

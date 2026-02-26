@@ -46,6 +46,7 @@ export default function ShareButton({
   const [loginRequired, setLoginRequired] = useState(false);
   const [preventDownload, setPreventDownload] = useState(false);
   const [hasWatermark, setHasWatermark] = useState(false);
+  const [watermarkText, setWatermarkText] = useState("");
   const [useMaxUses, setUseMaxUses] = useState(false);
   const [maxUses, setMaxUses] = useState<string | number>(1);
 
@@ -105,6 +106,7 @@ export default function ShareButton({
           items: shareItems,
           preventDownload,
           hasWatermark,
+          watermarkText: hasWatermark ? watermarkText : null,
           maxUses: useMaxUses
             ? typeof maxUses === "string"
               ? parseInt(maxUses, 10) || null
@@ -362,32 +364,47 @@ export default function ShareButton({
                       </div>
                     </button>
 
-                    <button
-                      onClick={() => setHasWatermark(!hasWatermark)}
+                    <div
                       className={cn(
-                        "flex items-center gap-3 p-4 rounded-2xl border text-left transition-all duration-200",
+                        "flex flex-col gap-2 p-4 rounded-2xl border transition-all duration-200",
                         hasWatermark
                           ? "bg-primary/5 border-primary shadow-sm"
                           : "bg-background hover:border-border/80 hover:bg-accent/20",
                       )}
                     >
-                      <ShieldCheck
-                        className={cn(
-                          "w-5 h-5",
-                          hasWatermark
-                            ? "text-primary"
-                            : "text-muted-foreground",
-                        )}
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold">
-                          {t("hasWatermark")}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
-                          Enable visual protection
-                        </p>
-                      </div>
-                    </button>
+                      <button
+                        onClick={() => setHasWatermark(!hasWatermark)}
+                        className="flex items-center gap-3 text-left w-full"
+                      >
+                        <ShieldCheck
+                          className={cn(
+                            "w-5 h-5",
+                            hasWatermark
+                              ? "text-primary"
+                              : "text-muted-foreground",
+                          )}
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold">
+                            {t("hasWatermark")}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                            Enable visual protection
+                          </p>
+                        </div>
+                      </button>
+                      {hasWatermark && (
+                        <motion.input
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          type="text"
+                          placeholder="Custom Watermark (optional)"
+                          value={watermarkText}
+                          onChange={(e) => setWatermarkText(e.target.value)}
+                          className="w-full mt-1.5 px-3 py-1.5 rounded-lg border-2 border-primary/20 bg-background text-sm outline-none focus:border-primary/50"
+                        />
+                      )}
+                    </div>
 
                     <div
                       className={cn(
