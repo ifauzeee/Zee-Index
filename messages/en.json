@@ -502,7 +502,13 @@
     "requireLoginDesc": "Users must log in with a Google account to access this link.",
     "copyTimed": "Copy Timed Link",
     "copySession": "Copy Session Link",
-    "tooltip": "Share This Folder/File"
+    "tooltip": "Share This Folder/File",
+    "preventDownload": "Prevent Download",
+    "preventDownloadDesc": "Hide download button for viewers",
+    "hasWatermark": "Dynamic Watermark",
+    "hasWatermarkDesc": "Show watermark to prevent screen captures",
+    "limitAccess": "Limit Access",
+    "limitAccessDesc": "Limit how many times this link can be accessed/downloaded"
   },
   "NotificationCenter": {
     "title": "Notifications",

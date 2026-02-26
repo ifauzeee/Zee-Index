@@ -502,7 +502,13 @@
     "requireLoginDesc": "Pengguna harus login dengan akun Google untuk mengakses tautan ini.",
     "copyTimed": "Salin Tautan Berwaktu",
     "copySession": "Salin Tautan Sesi",
-    "tooltip": "Bagikan Folder/File Ini"
+    "tooltip": "Bagikan Folder/File Ini",
+    "preventDownload": "Cegah Unduhan",
+    "preventDownloadDesc": "Sembunyikan tombol unduh untuk pemirsa",
+    "hasWatermark": "Watermark Dinamis",
+    "hasWatermarkDesc": "Tampilkan watermark untuk mencegah tangkapan layar",
+    "limitAccess": "Batasi Akses",
+    "limitAccessDesc": "Batasi berapa kali tautan ini dapat diakses/diunduh"
   },
   "NotificationCenter": {
     "title": "Notifikasi",
