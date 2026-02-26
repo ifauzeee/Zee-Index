@@ -30,7 +30,7 @@ services:
       - REDIS_URL=redis://redis:6379
       - DATABASE_URL=file:/app/prisma/dev.db
     volumes:
-      - ./prisma/dev.db:/app/prisma/dev.db
+      - ./prisma:/app/prisma
       - ./public/uploads:/app/public/uploads
     depends_on:
       redis:

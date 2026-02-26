@@ -138,11 +138,13 @@ export default function ShareButton({
     ? t("shareCollection", { count: items.length })
     : t("shareItem", { itemName: itemName || "" });
 
+  const [activeTab, setActiveTab] = useState<"timed" | "session">("timed");
+
   const ModalContent = (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6"
           initial="hidden"
           animate="visible"
           exit="exit"
@@ -150,212 +152,308 @@ export default function ShareButton({
           onClick={handleClose}
         >
           <motion.div
-            className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-background p-6 rounded-lg shadow-xl scrollbar-hide"
+            className="relative w-full max-w-4xl bg-background/95 border border-border/50 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-auto max-h-[90vh]"
             variants={modalVariants}
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={handleClose}
-              className="absolute top-3 right-3 text-muted-foreground hover:text-foreground"
-            >
-              <X size={20} />
-            </button>
-            <h3 className="text-lg font-semibold mb-1 whitespace-normal break-words">
-              {title}
-            </h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              {t("shareTitleHelper")}
-            </p>
-
-            <div className="space-y-4">
-              <div className="p-4 rounded-lg border">
-                <div className="flex items-center gap-3 mb-3">
-                  <Clock className="text-primary" />
-                  <h4 className="font-semibold">{t("timedLink")}</h4>
+            {/* Sidebar / Left Column */}
+            <div className="w-full md:w-80 bg-accent/30 border-b md:border-b-0 md:border-r border-border/50 p-6 flex flex-col">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="p-2.5 bg-primary/10 rounded-xl">
+                  <Share2 className="text-primary w-6 h-6" />
                 </div>
-                <p className="text-xs text-muted-foreground mb-3">
-                  {t("timedLinkDesc")}
-                </p>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    value={customDuration}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value, 10);
-                      setCustomDuration(isNaN(val) ? "" : val);
-                    }}
-                    className="w-1/3 px-3 py-2 rounded-md border bg-background focus:ring-2 focus:ring-ring focus:outline-none text-sm"
-                    min="1"
+                <div>
+                  <h3 className="text-lg font-bold leading-none">
+                    {t("share")}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
+                    {itemName ||
+                      (items ? `${items.length} items` : "Collection")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2 flex-grow">
+                <button
+                  onClick={() => setActiveTab("timed")}
+                  className={cn(
+                    "w-full flex items-center gap-3 p-3.5 rounded-xl transition-all duration-200 group text-left",
+                    activeTab === "timed"
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                      : "hover:bg-accent/50 text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <Clock
+                    size={20}
+                    className={cn(
+                      "transition-transform group-hover:scale-110",
+                      activeTab === "timed"
+                        ? "text-primary-foreground"
+                        : "text-primary",
+                    )}
                   />
-                  <select
-                    value={customUnit}
-                    onChange={(e) => setCustomUnit(e.target.value as TimeUnit)}
-                    className="w-2/3 px-3 py-2 rounded-md border bg-background focus:ring-2 focus:ring-ring focus:outline-none text-sm"
-                  >
-                    <option value="s">{t("seconds")}</option>
-                    <option value="m">{t("minutes")}</option>
-                    <option value="h">{t("hours")}</option>
-                    <option value="d">{t("days")}</option>
-                  </select>
-                </div>
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-sm">
+                      {t("timedLink")}
+                    </span>
+                    <span className="text-[10px] opacity-70">
+                      Temporary access
+                    </span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("session")}
+                  className={cn(
+                    "w-full flex items-center gap-3 p-3.5 rounded-xl transition-all duration-200 group text-left",
+                    activeTab === "session"
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                      : "hover:bg-accent/50 text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <Zap
+                    size={20}
+                    className={cn(
+                      "transition-transform group-hover:scale-110",
+                      activeTab === "session"
+                        ? "text-primary-foreground"
+                        : "text-amber-400",
+                    )}
+                  />
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-sm">
+                      {t("sessionLink")}
+                    </span>
+                    <span className="text-[10px] opacity-70">
+                      Long-term access
+                    </span>
+                  </div>
+                </button>
               </div>
 
-              <div className="p-4 rounded-lg border">
-                <div className="flex items-center gap-3 mb-3">
-                  <Zap className="text-amber-500" />
-                  <h4 className="font-semibold">{t("sessionLink")}</h4>
-                </div>
-                <p className="text-xs text-muted-foreground mb-3">
-                  {t("sessionLinkDesc")}
-                </p>
+              <div className="mt-8 pt-6 border-t border-border/50 text-[11px] text-muted-foreground leading-relaxed">
+                By generating a link, you agree to track and monitor the link
+                usage in the Admin Panel.
               </div>
+            </div>
 
-              <label
-                htmlFor="loginRequired"
-                className={cn(
-                  "flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors",
-                  loginRequired
-                    ? "bg-primary/10 border-primary"
-                    : "hover:bg-accent",
-                )}
-              >
-                <ShieldCheck
-                  className={cn(
-                    "transition-colors",
-                    loginRequired ? "text-primary" : "text-muted-foreground",
-                  )}
-                />
-                <div>
-                  <h4 className="font-semibold">{t("requireLogin")}</h4>
-                  <p className="text-xs text-muted-foreground">
-                    {t("requireLoginDesc")}
-                  </p>
-                </div>
-                <input
-                  id="loginRequired"
-                  type="checkbox"
-                  checked={loginRequired}
-                  onChange={(e) => setLoginRequired(e.target.checked)}
-                  className="ml-auto h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-              </label>
-
-              <label
-                htmlFor="preventDownload"
-                className={cn(
-                  "flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors",
-                  preventDownload
-                    ? "bg-primary/10 border-primary"
-                    : "hover:bg-accent",
-                )}
-              >
-                <ShieldCheck
-                  className={cn(
-                    "transition-colors",
-                    preventDownload ? "text-primary" : "text-muted-foreground",
-                  )}
-                />
-                <div>
-                  <h4 className="font-semibold">
-                    {t("preventDownload", { defaultValue: "Prevent Download" })}
-                  </h4>
-                  <p className="text-xs text-muted-foreground">
-                    {t("preventDownloadDesc", {
-                      defaultValue: "Hide download button for viewers",
-                    })}
-                  </p>
-                </div>
-                <input
-                  id="preventDownload"
-                  type="checkbox"
-                  checked={preventDownload}
-                  onChange={(e) => setPreventDownload(e.target.checked)}
-                  className="ml-auto h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-              </label>
-
-              <label
-                htmlFor="hasWatermark"
-                className={cn(
-                  "flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors",
-                  hasWatermark
-                    ? "bg-primary/10 border-primary"
-                    : "hover:bg-accent",
-                )}
-              >
-                <ShieldCheck
-                  className={cn(
-                    "transition-colors",
-                    hasWatermark ? "text-primary" : "text-muted-foreground",
-                  )}
-                />
-                <div>
-                  <h4 className="font-semibold">
-                    {t("hasWatermark", { defaultValue: "Dynamic Watermark" })}
-                  </h4>
-                  <p className="text-xs text-muted-foreground">
-                    {t("hasWatermarkDesc", {
-                      defaultValue: "Show watermark to prevent screen captures",
-                    })}
-                  </p>
-                </div>
-                <input
-                  id="hasWatermark"
-                  type="checkbox"
-                  checked={hasWatermark}
-                  onChange={(e) => setHasWatermark(e.target.checked)}
-                  className="ml-auto h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-              </label>
-
-              <div className="p-4 rounded-lg border">
-                <div className="flex items-center justify-between pointer-events-auto">
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col h-full max-h-[70vh] md:max-h-none overflow-y-auto scrollbar-hide">
+              <div className="p-6 sm:p-8 space-y-8 flex-grow">
+                <div className="flex justify-between items-start">
                   <div>
-                    <h4 className="font-semibold">
-                      {t("limitAccess", { defaultValue: "Limit Access" })}
-                    </h4>
-                    <p className="text-xs text-muted-foreground">
-                      {t("limitAccessDesc", {
-                        defaultValue:
-                          "Limit how many times this link can be accessed/downloaded",
-                      })}
+                    <h2 className="text-2xl font-bold tracking-tight">
+                      {activeTab === "timed"
+                        ? t("timedLink")
+                        : t("sessionLink")}
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {activeTab === "timed"
+                        ? t("timedLinkDesc")
+                        : t("sessionLinkDesc")}
                     </p>
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={useMaxUses}
-                    onChange={(e) => setUseMaxUses(e.target.checked)}
-                    className="ml-3 h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                  />
+                  <button
+                    onClick={handleClose}
+                    className="p-2 hover:bg-accent rounded-full transition-colors"
+                  >
+                    <X size={20} className="text-muted-foreground" />
+                  </button>
                 </div>
-                {useMaxUses && (
-                  <div className="flex gap-2 mt-3">
-                    <input
-                      type="number"
-                      value={maxUses}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value, 10);
-                        setMaxUses(isNaN(val) ? "" : val);
-                      }}
-                      className="w-full px-3 py-2 rounded-md border bg-background focus:ring-2 focus:ring-ring focus:outline-none text-sm"
-                      min="1"
-                    />
-                  </div>
+
+                {/* Specific Config for Timed Link */}
+                {activeTab === "timed" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-5 bg-accent/20 rounded-2xl border border-border/50"
+                  >
+                    <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                      Duration Settings
+                    </h4>
+                    <div className="flex gap-3">
+                      <div className="flex-1">
+                        <input
+                          type="number"
+                          value={customDuration}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            setCustomDuration(isNaN(val) ? "" : val);
+                          }}
+                          className="w-full px-4 py-2.5 rounded-xl border-2 border-transparent bg-background/50 focus:border-primary/50 focus:ring-0 transition-all outline-none"
+                          min="1"
+                        />
+                      </div>
+                      <div className="flex-[2]">
+                        <select
+                          value={customUnit}
+                          onChange={(e) =>
+                            setCustomUnit(e.target.value as TimeUnit)
+                          }
+                          className="w-full px-4 py-2.5 rounded-xl border-2 border-transparent bg-background/50 focus:border-primary/50 focus:ring-0 transition-all outline-none"
+                        >
+                          <option value="s">{t("seconds")}</option>
+                          <option value="m">{t("minutes")}</option>
+                          <option value="h">{t("hours")}</option>
+                          <option value="d">{t("days")}</option>
+                        </select>
+                      </div>
+                    </div>
+                  </motion.div>
                 )}
+
+                {/* Security & Access Section */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70 px-1">
+                    Security & Policies
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setLoginRequired(!loginRequired)}
+                      className={cn(
+                        "flex items-center gap-3 p-4 rounded-2xl border text-left transition-all duration-200",
+                        loginRequired
+                          ? "bg-primary/5 border-primary shadow-sm"
+                          : "bg-background hover:border-border/80 hover:bg-accent/20",
+                      )}
+                    >
+                      <ShieldCheck
+                        className={cn(
+                          "w-5 h-5",
+                          loginRequired
+                            ? "text-primary"
+                            : "text-muted-foreground",
+                        )}
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold">
+                          {t("requireLogin")}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                          Protect with account
+                        </p>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => setPreventDownload(!preventDownload)}
+                      className={cn(
+                        "flex items-center gap-3 p-4 rounded-2xl border text-left transition-all duration-200",
+                        preventDownload
+                          ? "bg-primary/5 border-primary shadow-sm"
+                          : "bg-background hover:border-border/80 hover:bg-accent/20",
+                      )}
+                    >
+                      <ShieldCheck
+                        className={cn(
+                          "w-5 h-5",
+                          preventDownload
+                            ? "text-primary"
+                            : "text-muted-foreground",
+                        )}
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold">
+                          {t("preventDownload")}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                          Restrict direct saving
+                        </p>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => setHasWatermark(!hasWatermark)}
+                      className={cn(
+                        "flex items-center gap-3 p-4 rounded-2xl border text-left transition-all duration-200",
+                        hasWatermark
+                          ? "bg-primary/5 border-primary shadow-sm"
+                          : "bg-background hover:border-border/80 hover:bg-accent/20",
+                      )}
+                    >
+                      <ShieldCheck
+                        className={cn(
+                          "w-5 h-5",
+                          hasWatermark
+                            ? "text-primary"
+                            : "text-muted-foreground",
+                        )}
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold">
+                          {t("hasWatermark")}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                          Enable visual protection
+                        </p>
+                      </div>
+                    </button>
+
+                    <div
+                      className={cn(
+                        "flex flex-col gap-2 p-4 rounded-2xl border transition-all duration-200",
+                        useMaxUses
+                          ? "bg-primary/5 border-primary shadow-sm"
+                          : "bg-background",
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <ShieldCheck
+                            className={cn(
+                              "w-5 h-5",
+                              useMaxUses
+                                ? "text-primary"
+                                : "text-muted-foreground",
+                            )}
+                          />
+                          <div className="flex flex-col">
+                            <p className="text-sm font-semibold">
+                              {t("limitAccess")}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                              Max views/downloads
+                            </p>
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={useMaxUses}
+                          onChange={(e) => setUseMaxUses(e.target.checked)}
+                          className="h-4 w-4 rounded-full border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                        />
+                      </div>
+                      {useMaxUses && (
+                        <motion.input
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          type="number"
+                          value={maxUses}
+                          autoFocus
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            setMaxUses(isNaN(val) ? "" : val);
+                          }}
+                          className="w-full mt-1.5 px-3 py-1.5 rounded-lg border-2 border-primary/20 bg-background text-sm outline-none focus:border-primary/50"
+                          min="1"
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex gap-2 pt-2">
+              {/* Action Bar */}
+              <div className="p-6 sm:p-8 bg-accent/20 border-t border-border/50 flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <div className="text-[11px] text-muted-foreground text-center sm:text-left">
+                  Confirm all settings before generating the public link.
+                </div>
                 <button
-                  onClick={() => generateLink("timed")}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"
+                  onClick={() => generateLink(activeTab)}
+                  className="w-full sm:w-auto min-w-[200px] flex items-center justify-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
                 >
-                  <Copy size={16} /> {t("copyTimed")}
-                </button>
-                <button
-                  onClick={() => generateLink("session")}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"
-                >
-                  <Copy size={16} /> {t("copySession")}
+                  <Copy size={20} />
+                  {activeTab === "timed" ? t("copyTimed") : t("copySession")}
                 </button>
               </div>
             </div>

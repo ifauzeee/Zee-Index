@@ -65,7 +65,6 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
         if (isBlocked) throw new Error(ERROR_MESSAGES.SHARE_LINK_REVOKED);
 
         shareRecord = await db.shareLink.findUnique({
-          // Assign to the outer shareRecord
           where: { jti: payload.jti as string },
         });
 
