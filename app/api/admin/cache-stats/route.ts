@@ -1,10 +1,3 @@
-/**
- * Cache Statistics API
- *
- * Provides monitoring endpoint for cache performance
- * GET /api/admin/cache-stats
- */
-
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";

@@ -337,11 +337,6 @@ export default function Sidebar() {
     return [...filteredEnv, ...dbDrives];
   }, [dbDrives]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const isCurrentFolderShortcut = useMemo(() => {
-    return allManualDrives.some((d) => d.id === currentFolderId);
-  }, [allManualDrives, currentFolderId]);
-
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
