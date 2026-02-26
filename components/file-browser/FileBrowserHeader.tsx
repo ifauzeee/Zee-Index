@@ -9,7 +9,6 @@ import {
   LayoutTemplate,
   UploadCloud,
   Home,
-  ChevronRight,
   AlignJustify,
   StretchHorizontal,
   ArrowDownUp,

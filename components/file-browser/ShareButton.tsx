@@ -131,16 +131,11 @@ export default function ShareButton({
     }
   };
 
+  const [activeTab, setActiveTab] = useState<"timed" | "session">("timed");
+
   if (controlledIsOpen && user && user.role !== "ADMIN") {
     return null;
   }
-
-  const isCollection = items && items.length > 0;
-  const title = isCollection
-    ? t("shareCollection", { count: items.length })
-    : t("shareItem", { itemName: itemName || "" });
-
-  const [activeTab, setActiveTab] = useState<"timed" | "session">("timed");
 
   const ModalContent = (
     <AnimatePresence>
