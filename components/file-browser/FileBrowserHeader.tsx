@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTranslations } from "next-intl";
+import { BreadcrumbDropdown } from "./BreadcrumbDropdown";
 
 interface FileBrowserHeaderProps {
   history: { id: string; name: string }[];
@@ -158,9 +159,10 @@ export default function FileBrowserHeader({
               )}
 
               {!isLast && (
-                <ChevronRight
-                  size={14}
-                  className="text-muted-foreground mx-0 opacity-50"
+                <BreadcrumbDropdown
+                  parentId={folder.id}
+                  nextId={history[index + 1]?.id}
+                  onFolderClick={onBreadcrumbClick}
                 />
               )}
             </div>
