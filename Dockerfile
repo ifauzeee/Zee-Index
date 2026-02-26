@@ -56,7 +56,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
 # Copy node_modules (needed for Prisma CLI and client)
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 # Script to run migrations and start
 RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
