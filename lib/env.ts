@@ -36,6 +36,10 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
+
+  STORAGE_PROVIDER: z.string().optional().default("google-drive"),
+  TMDB_API_KEY: z.string().optional(),
+  ANALYZE: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -43,7 +47,8 @@ export type Env = z.infer<typeof envSchema>;
 export function validateOnStartup(): Env {
   if (
     process.env.NODE_ENV === "test" ||
-    process.env.SKIP_ENV_VALIDATION === "1"
+    process.env.SKIP_ENV_VALIDATION === "1" ||
+    process.env.SKIP_ENV_VALIDATION === "true"
   ) {
     return process.env as any;
   }
@@ -116,4 +121,6 @@ export const config = {
   isEmailEnabled: !!(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS),
   isWebhookEnabled: !!env.WEBHOOK_URL,
   isDatabaseEnabled: !!env.REDIS_URL,
+  tmdbApiKey: env.TMDB_API_KEY,
+  storageProvider: env.STORAGE_PROVIDER,
 };
