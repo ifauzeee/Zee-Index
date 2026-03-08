@@ -55,6 +55,10 @@ import SecurityConfig from "@/components/admin/SecurityConfig";
 import UserFolderAccessManager from "@/components/admin/UserFolderAccessManager";
 import ManualDrivesManager from "@/components/admin/ManualDrivesManager";
 import BrandingConfig from "@/components/admin/BrandingConfig";
+import SystemHealth from "@/components/admin/SystemHealth";
+import RealTimeOverview from "@/components/admin/RealTimeOverview";
+import StorageIntelligence from "@/components/admin/StorageIntelligence";
+import SecurityCenter from "@/components/admin/SecurityCenter";
 import { useTranslations } from "next-intl";
 
 const scrollbarHideStyles = {
@@ -335,7 +339,15 @@ export default function AdminPage() {
 
             <div>
               <h2 className="text-xl font-semibold mb-4 px-1">
-                {t("statistics")}
+                System Overview
+              </h2>
+              <div className="space-y-6 mb-8">
+                <SystemHealth />
+                <RealTimeOverview />
+              </div>
+
+              <h2 className="text-xl font-semibold mb-4 px-1">
+                {t("statistics") || "Statistics"}
               </h2>
               {isLoadingStats ? (
                 <div className="bg-card border rounded-xl p-6 h-64 flex items-center justify-center text-muted-foreground">
@@ -453,6 +465,11 @@ export default function AdminPage() {
                     </div>
                   </div>
 
+                  {/* Storage Intelligence Widget */}
+                  <div className="xl:col-span-2 mt-4">
+                    <StorageIntelligence stats={stats} />
+                  </div>
+
                   {/* File Type Distribution Widget */}
                   <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm">
                     <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
@@ -505,6 +522,10 @@ export default function AdminPage() {
           </TabsContent>
 
           <TabsContent value="security" className="mt-2 space-y-10">
+            <section className="space-y-6">
+              <SecurityCenter />
+            </section>
+
             <section className="space-y-6">
               <div className="flex items-center gap-2 border-b pb-2 mb-4">
                 <ShieldCheck className="text-primary" />
