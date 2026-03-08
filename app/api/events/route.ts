@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/auth";
-import { db } from "@/lib/db";
+import { eventBus, AppEvent } from "@/lib/events/eventBus";
 
 export const dynamic = "force-dynamic";
 
@@ -10,8 +10,11 @@ export async function GET(request: NextRequest) {
     return new Response("Unauthorized", { status: 401 });
   }
 
+  const userId = session.user.email || "guest";
+  const userRole = (session.user.role as string) || "USER";
+
   const encoder = new TextEncoder();
-  let intervalId: ReturnType<typeof setInterval> | null = null;
+  const id = crypto.randomUUID();
 
   const stream = new ReadableStream({
     start(controller) {
@@ -22,55 +25,30 @@ export async function GET(request: NextRequest) {
       })}\n\n`;
       controller.enqueue(encoder.encode(connectEvent));
 
-      intervalId = setInterval(() => {
-        try {
-          const heartbeat = `event: heartbeat\ndata: ${JSON.stringify({ timestamp: Date.now() })}\n\n`;
-          controller.enqueue(encoder.encode(heartbeat));
-        } catch {
-          if (intervalId) clearInterval(intervalId);
+      const unsubscribe = eventBus.subscribe(id, (event: AppEvent) => {
+        const isRelevant =
+          userRole === "ADMIN" ||
+          event.userId === userId ||
+          event.userEmail === session.user?.email;
+
+        if (isRelevant || userRole === "ADMIN") {
+          const sseEvent = `event: activity\ndata: ${JSON.stringify([event])}\n\n`;
+          controller.enqueue(encoder.encode(sseEvent));
         }
+      });
+
+      const heartbeatInterval = setInterval(() => {
+        const heartbeat = `event: heartbeat\ndata: ${JSON.stringify({ timestamp: Date.now() })}\n\n`;
+        controller.enqueue(encoder.encode(heartbeat));
       }, 30000);
 
-      const pollInterval = setInterval(async () => {
-        try {
-          const recentLogs = await db.activityLog.findMany({
-            where: {
-              timestamp: { gte: Date.now() - 10000 },
-            },
-            orderBy: { timestamp: "desc" },
-            take: 5,
-          });
-
-          if (recentLogs.length > 0) {
-            const notifications = recentLogs.map((log: any) => ({
-              id: log.id,
-              type: log.type,
-              message: formatActivityMessage(
-                log.type,
-                log.itemName,
-                log.userEmail,
-              ),
-              severity: log.severity,
-              timestamp: log.timestamp,
-              itemName: log.itemName,
-              userEmail: log.userEmail,
-            }));
-
-            const event = `event: activity\ndata: ${JSON.stringify(notifications)}\n\n`;
-            controller.enqueue(encoder.encode(event));
-          }
-        } catch {}
-      }, 10000);
-
       request.signal.addEventListener("abort", () => {
-        if (intervalId) clearInterval(intervalId);
-        clearInterval(pollInterval);
+        unsubscribe();
+        clearInterval(heartbeatInterval);
         controller.close();
       });
     },
-    cancel() {
-      if (intervalId) clearInterval(intervalId);
-    },
+    cancel() {},
   });
 
   return new Response(stream, {
@@ -81,34 +59,4 @@ export async function GET(request: NextRequest) {
       "X-Accel-Buffering": "no",
     },
   });
-}
-
-function formatActivityMessage(
-  type: string,
-  itemName?: string | null,
-  userEmail?: string | null,
-): string {
-  const user = userEmail ? userEmail.split("@")[0] : "Someone";
-  const item = itemName || "a file";
-
-  switch (type) {
-    case "UPLOAD":
-      return `${user} uploaded ${item}`;
-    case "DOWNLOAD":
-      return `${user} downloaded ${item}`;
-    case "DELETE":
-      return `${user} deleted ${item}`;
-    case "SHARE_CREATED":
-      return `${user} shared ${item}`;
-    case "LOGIN":
-      return `${user} logged in`;
-    case "LOGIN_FAILURE":
-      return `Failed login attempt from ${userEmail || "unknown"}`;
-    case "FOLDER_CREATED":
-      return `${user} created folder ${item}`;
-    case "MOVE":
-      return `${user} moved ${item}`;
-    default:
-      return `${user} performed ${type.toLowerCase().replace(/_/g, " ")}`;
-  }
 }

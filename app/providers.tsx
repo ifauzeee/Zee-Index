@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ModalProvider } from "@/components/providers/ModalProvider";
+import { AppInitializer } from "@/components/providers/AppInitializer";
 
 type Props = {
   children?: React.ReactNode;
@@ -50,7 +51,9 @@ export function Providers({ children }: Props) {
           enableSystem
           disableTransitionOnChange
         >
-          <ModalProvider>{children}</ModalProvider>
+          <AppInitializer>
+            <ModalProvider>{children}</ModalProvider>
+          </AppInitializer>
         </ThemeProvider>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>

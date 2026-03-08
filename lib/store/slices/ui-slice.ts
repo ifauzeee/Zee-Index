@@ -49,6 +49,14 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (
       toasts: state.toasts.filter((toast) => toast.id !== id),
     })),
   notifications: [],
+  addNotification: (notification: NotificationItem) =>
+    set((state: AppState) => {
+      if (state.notifications.some((n) => n.id === notification.id))
+        return state;
+      return {
+        notifications: [notification, ...state.notifications].slice(0, 100),
+      };
+    }),
   isNotificationOpen: false,
   toggleNotificationCenter: () =>
     set((state: AppState) => ({

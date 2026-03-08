@@ -75,6 +75,7 @@ export interface UISlice {
   addToast: (toast: Omit<Toast, "id">) => void;
   removeToast: (id: string) => void;
   notifications: NotificationItem[];
+  addNotification: (notification: NotificationItem) => void;
   isNotificationOpen: boolean;
   toggleNotificationCenter: () => void;
   markAllNotificationsRead: () => void;

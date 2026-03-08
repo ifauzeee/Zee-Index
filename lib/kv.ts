@@ -55,6 +55,7 @@ export interface KVClient {
   rpush(key: string, ...values: unknown[]): Promise<number>;
   lrange<T>(key: string, start: number, stop: number): Promise<T[]>;
   llen(key: string): Promise<number>;
+  ltrim(key: string, start: number, stop: number): Promise<string>;
   flushall(): Promise<string>;
   pipeline(): {
     sismember(key: string, member: unknown): any;
@@ -334,6 +335,10 @@ class RedisKV implements KVClient {
 
   async llen(key: string): Promise<number> {
     return await this.client.llen(key);
+  }
+
+  async ltrim(key: string, start: number, stop: number): Promise<string> {
+    return await this.client.ltrim(key, start, stop);
   }
 
   async flushall(): Promise<string> {
@@ -721,6 +726,16 @@ class InMemoryKV implements KVClient {
   async llen(key: string): Promise<number> {
     const list = this.store.get(key) as unknown[] | undefined;
     return Array.isArray(list) ? list.length : 0;
+  }
+
+  async ltrim(key: string, start: number, stop: number): Promise<string> {
+    const list = this.store.get(key) as unknown[] | undefined;
+    if (Array.isArray(list)) {
+      const actualStop = stop < 0 ? list.length + stop : stop;
+      const newList = list.slice(start, actualStop + 1);
+      this.store.set(key, newList);
+    }
+    return "OK";
   }
 
   async flushall(): Promise<string> {
