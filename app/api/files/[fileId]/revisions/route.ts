@@ -1,6 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+import { auth } from "@/auth";
 import { listFileRevisions } from "@/lib/drive";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +9,7 @@ export async function GET(
   props: { params: Promise<{ fileId: string }> },
 ) {
   const params = await props.params;
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }

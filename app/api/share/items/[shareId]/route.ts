@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
 import type { DriveFile } from "@/lib/drive";
 
 export const dynamic = "force-dynamic";
@@ -43,7 +42,7 @@ export async function GET(
     }
 
     if (payload.loginRequired) {
-      const session = await getServerSession(authOptions);
+      const session = await auth();
       if (!session) {
         return NextResponse.json(
           { error: "Login diperlukan untuk mengakses tautan ini." },

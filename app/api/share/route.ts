@@ -1,9 +1,8 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { SignJWT, decodeJwt } from "jose";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
 import crypto from "crypto";
 import { kv } from "@/lib/kv";
 import { db } from "@/lib/db";
@@ -27,7 +26,7 @@ interface ShareRequestBody {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (session?.user?.role !== "ADMIN" || !session.user.email) {
       return NextResponse.json(
         { error: "Akses ditolak. Izin admin dan email pengguna diperlukan." },

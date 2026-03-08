@@ -3,8 +3,7 @@ import { kv } from "@/lib/kv";
 import { db } from "@/lib/db";
 import { memoryCache, CACHE_TTL } from "@/lib/memory-cache";
 import { NextRequest } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
+import { auth } from "@/auth";
 import { getPrivateFolderIds } from "@/lib/utils";
 
 export function isPrivateFolder(folderId: string): boolean {
@@ -158,7 +157,7 @@ export async function validateShareToken(
     }
 
     if (payload.loginRequired) {
-      const session = await getServerSession(authOptions);
+      const session = await auth();
       return !!session;
     }
     return true;
@@ -183,7 +182,7 @@ export async function verifyShareTokenString(token: string): Promise<boolean> {
     }
 
     if (payload.loginRequired) {
-      const session = await getServerSession(authOptions);
+      const session = await auth();
       return !!session;
     }
     return true;

@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
+import { auth } from "@/auth";
 import { kv } from "@/lib/kv";
 import { z } from "zod";
 
@@ -21,7 +20,7 @@ async function isAdmin(session: Session | null): Promise<boolean> {
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!(await isAdmin(session))) {
     return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
   }
@@ -47,7 +46,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!(await isAdmin(session))) {
     return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
   }
@@ -82,7 +81,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!(await isAdmin(session))) {
     return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
   }

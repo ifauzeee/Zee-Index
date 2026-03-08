@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { getActivityLogs } from "@/lib/activityLogger";
 import { z } from "zod";
@@ -19,7 +18,7 @@ async function isAdmin(session: Session | null): Promise<boolean> {
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!(await isAdmin(session))) {
     return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
   }

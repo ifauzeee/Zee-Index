@@ -1,4 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
+import { auth } from "@/auth";
 import {
   getAccessToken,
   DriveFile,
@@ -6,8 +7,6 @@ import {
   searchFilesInFolder,
 } from "@/lib/drive";
 import { isProtected } from "@/lib/auth";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
 import { validateShareToken } from "@/lib/auth";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { jwtVerify } from "jose";
@@ -53,7 +52,7 @@ const getDateQuery = (modifiedTime?: string | null) => {
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   const isShareAuth = await validateShareToken(request);
 
   if (!session && !isShareAuth) {

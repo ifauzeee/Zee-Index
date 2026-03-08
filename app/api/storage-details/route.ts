@@ -1,13 +1,12 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
+import { auth } from "@/auth";
 import { getStorageDetails } from "@/lib/drive";
 import { isAccessRestricted } from "@/lib/securityUtils";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Akses ditolak." }, { status: 401 });
   }

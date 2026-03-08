@@ -15,8 +15,8 @@ export async function checkAuth(
   const token = await getToken({
     req: request,
     secret,
-    cookieName: "next-auth.session-token",
-    secureCookie: false,
+    cookieName: "authjs.session-token",
+    secureCookie: process.env.NODE_ENV === "production",
   });
 
   if (!token) {

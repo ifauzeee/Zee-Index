@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
+import { auth } from "@/auth";
 import { getAnalyticsData } from "@/lib/analyticsTracker";
 import { type Session } from "next-auth";
 import { unstable_cache } from "next/cache";
@@ -20,7 +19,7 @@ const getAnalyticsCached = unstable_cache(
 );
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!(await isAdmin(session))) {
     return NextResponse.json({ error: "Access denied." }, { status: 403 });
   }

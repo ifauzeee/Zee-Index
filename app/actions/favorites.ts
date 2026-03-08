@@ -1,14 +1,13 @@
 "use server";
 
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
 import { kv } from "@/lib/kv";
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { DriveFile, getFileDetailsFromDrive } from "@/lib/drive";
 import { revalidateTag } from "next/cache";
 
 export async function getFavorites() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.email) {
     throw new Error("Akses ditolak.");
   }
@@ -61,7 +60,7 @@ export async function getFavorites() {
 }
 
 export async function addFavorite(fileId: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.email) {
     throw new Error("Akses ditolak.");
   }
@@ -78,7 +77,7 @@ export async function addFavorite(fileId: string) {
 }
 
 export async function removeFavorite(fileId: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.email) {
     throw new Error("Akses ditolak.");
   }

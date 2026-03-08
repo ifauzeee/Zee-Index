@@ -1,14 +1,13 @@
 import { NextResponse, NextRequest } from "next/server";
+import { auth } from "@/auth";
 import { getFileDetailsFromDrive } from "@/lib/drive";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
 import { validateShareToken } from "@/lib/auth";
 import { isAccessRestricted } from "@/lib/securityUtils";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   const isShareAuth = await validateShareToken(request);
 
   if (!session && !isShareAuth) {

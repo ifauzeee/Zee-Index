@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
+import { auth } from "@/auth";
 import { kv } from "@/lib/kv";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
@@ -19,7 +18,7 @@ const driveSchema = z.object({
 });
 
 async function isAdmin() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   return session?.user?.role === "ADMIN";
 }
 

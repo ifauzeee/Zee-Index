@@ -1,8 +1,7 @@
 "use server";
 
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
 import { kv } from "@/lib/kv";
+import { auth } from "@/auth";
 import { getFileDetailsFromDrive, DriveFile } from "@/lib/drive";
 import { z } from "zod";
 import { revalidateTag } from "next/cache";
@@ -38,7 +37,7 @@ export async function getPinnedFolders() {
 }
 
 export async function addPin(folderId: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (session?.user?.role !== "ADMIN") {
     throw new Error("Unauthorized");
   }
@@ -55,7 +54,7 @@ export async function addPin(folderId: string) {
 }
 
 export async function removePin(folderId: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (session?.user?.role !== "ADMIN") {
     throw new Error("Unauthorized");
   }

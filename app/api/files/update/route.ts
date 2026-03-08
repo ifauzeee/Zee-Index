@@ -1,9 +1,8 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse, NextRequest } from "next/server";
+import { auth } from "@/auth";
 import { getAccessToken, getFileDetailsFromDrive } from "@/lib/drive";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
 import { z } from "zod";
 import { invalidateFolderCache } from "@/lib/cache";
 
@@ -13,7 +12,7 @@ const updateSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
   }

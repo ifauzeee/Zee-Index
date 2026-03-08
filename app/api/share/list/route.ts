@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import type { ShareLink } from "@/lib/store";
 
@@ -8,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (session?.user?.role !== "ADMIN") {
       return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
     }

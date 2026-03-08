@@ -1,9 +1,8 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { listFilesFromDrive, DriveFile } from "@/lib/drive";
 import { isPrivateFolder } from "@/lib/auth";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
 import { db } from "@/lib/db";
@@ -27,7 +26,7 @@ async function validateShareToken(request: Request): Promise<boolean> {
     }
 
     if (payload.loginRequired) {
-      const session = await getServerSession(authOptions);
+      const session = await auth();
       return !!session;
     }
     return true;
@@ -38,7 +37,7 @@ async function validateShareToken(request: Request): Promise<boolean> {
 
 export async function GET(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     const isShareAuth = await validateShareToken(request);
 
     if (new URL(request.url).searchParams.has("share_token") && !isShareAuth) {

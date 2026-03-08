@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getServerSession } from "next-auth/next";
+import { auth } from "@/auth";
 import { type Session } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
 import { checkRateLimit, createRateLimitResponse } from "@/lib/ratelimit";
 import { ERROR_MESSAGES } from "@/lib/constants";
 
@@ -14,7 +13,7 @@ type AdminApiHandler = (
 export function withAdminSession(handler: AdminApiHandler) {
   return async (req: NextRequest, context: { params?: unknown }) => {
     try {
-      const session = await getServerSession(authOptions);
+      const session = await auth();
       if (
         !session ||
         !session.user ||
@@ -55,7 +54,7 @@ export function withAdminSession(handler: AdminApiHandler) {
 export function withEditorSession(handler: AdminApiHandler) {
   return async (req: NextRequest, context: { params?: unknown }) => {
     try {
-      const session = await getServerSession(authOptions);
+      const session = await auth();
       const userRole = session?.user?.role as string;
       const isAuthorized = userRole === "ADMIN" || userRole === "EDITOR";
 

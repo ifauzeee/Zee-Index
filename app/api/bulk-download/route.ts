@@ -1,14 +1,13 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { getAccessToken } from "@/lib/drive";
 import JSZip from "jszip";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
 import { isAccessRestricted } from "@/lib/securityUtils";
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   try {
     const { fileIds } = await request.json();
     if (!fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {

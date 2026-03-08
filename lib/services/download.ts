@@ -1,9 +1,8 @@
 import { type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
-import { getServerSession } from "next-auth/next";
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { authOptions } from "@/lib/authOptions";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { logger } from "@/lib/logger";
@@ -50,7 +49,7 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
     }
   }
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   let shareRecord: any = undefined;
 
   if (shareToken) {

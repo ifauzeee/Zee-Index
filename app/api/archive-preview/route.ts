@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
+import { auth } from "@/auth";
 import { getAccessToken } from "@/lib/drive";
 import JSZip, { JSZipObject } from "jszip";
 import { isAccessRestricted } from "@/lib/securityUtils";
@@ -14,7 +13,7 @@ interface JSZipFileWithData extends JSZipObject {
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Akses ditolak." }, { status: 401 });
   }

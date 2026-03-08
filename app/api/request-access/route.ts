@@ -1,15 +1,14 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse, NextRequest } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+import { auth } from "@/auth";
 import { sendMail } from "@/lib/mailer";
 import { kv } from "@/lib/kv";
 import { logActivity } from "@/lib/activityLogger";
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session || !session.user || session.user.isGuest) {
       return NextResponse.json(

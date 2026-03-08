@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import type { ActivityLog } from "@/lib/activityLogger";
 import type {
@@ -144,7 +143,7 @@ const getAdminStatsCached = unstable_cache(
 );
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!(await isAdmin(session))) {
     return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
   }

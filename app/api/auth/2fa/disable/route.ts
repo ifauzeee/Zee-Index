@@ -1,8 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
+import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
 import { kv } from "@/lib/kv";
 import { checkRateLimit } from "@/lib/ratelimit";
 
@@ -15,7 +14,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.email) {
     return NextResponse.json({ error: "Akses ditolak." }, { status: 401 });
   }

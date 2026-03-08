@@ -1,7 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
+import { auth } from "@/auth";
 import { getAccessToken } from "@/lib/drive";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
 import { validateShareToken } from "@/lib/auth";
 import { kv } from "@/lib/kv";
 
@@ -32,7 +31,7 @@ async function fetchWithRetry(
 }
 
 export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   const isShareAuth = await validateShareToken(request);
 
   const { searchParams } = new URL(request.url);

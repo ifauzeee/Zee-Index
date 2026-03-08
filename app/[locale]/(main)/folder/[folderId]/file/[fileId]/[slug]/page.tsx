@@ -1,8 +1,7 @@
 import { getFileDetailsFromDrive, listFilesFromDrive } from "@/lib/drive";
 import FileDetailClient from "@/components/file-browser/FileDetailClient";
 import { getTranslations } from "next-intl/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
+import { auth } from "@/auth";
 import {
   isPrivateFolder,
   isProtected,
@@ -52,7 +51,7 @@ export default async function FilePage(props: {
   let file = null;
   let error = null;
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   const shareToken = searchParams?.share_token as string | undefined;
 
   if (shareToken) {
