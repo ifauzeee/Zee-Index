@@ -1,11 +1,9 @@
 import { z } from "zod";
 
 const envSchema = z.object({
-  GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID is required"),
-  GOOGLE_CLIENT_SECRET: z.string().min(1, "GOOGLE_CLIENT_SECRET is required"),
-  NEXT_PUBLIC_ROOT_FOLDER_ID: z
-    .string()
-    .min(1, "NEXT_PUBLIC_ROOT_FOLDER_ID is required"),
+  GOOGLE_CLIENT_ID: z.string().optional().or(z.literal("")),
+  GOOGLE_CLIENT_SECRET: z.string().optional().or(z.literal("")),
+  NEXT_PUBLIC_ROOT_FOLDER_ID: z.string().optional().or(z.literal("")),
   NEXT_PUBLIC_ROOT_FOLDER_NAME: z.string().default("Home"),
 
   NEXTAUTH_SECRET: z

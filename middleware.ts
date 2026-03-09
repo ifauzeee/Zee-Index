@@ -9,6 +9,7 @@ import {
   type RateLimitType,
 } from "@/lib/ratelimit";
 import { ERROR_MESSAGES } from "@/lib/constants";
+import { isAppConfigured, getRootFolderId } from "@/lib/config";
 
 const intlMiddleware = createMiddleware({
   locales: ["en", "id"],
@@ -76,7 +77,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  const isConfigured = !!process.env.GOOGLE_REFRESH_TOKEN;
+  const isConfigured = await isAppConfigured();
 
   if (!isConfigured) {
     const isSetupPage =
@@ -228,7 +229,7 @@ export async function middleware(request: NextRequest) {
       if (file.mimeType === "application/vnd.google-apps.folder") {
         destinationPath = `/folder/${file.id}`;
       } else {
-        const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID || "root";
+        const rootFolderId = (await getRootFolderId()) || "root";
         const parentId =
           file.parents && file.parents.length > 0
             ? file.parents[0]

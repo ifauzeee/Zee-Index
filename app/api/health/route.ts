@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { kv } from "@/lib/kv";
 import { getAccessToken } from "@/lib/drive";
 import { headers } from "next/headers";
+import { getRootFolderId } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ export async function GET() {
   const driveStart = performance.now();
   try {
     const token = await getAccessToken();
-    const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
+    const rootId = await getRootFolderId();
 
     if (!rootId) throw new Error("Root Folder ID not configured");
 

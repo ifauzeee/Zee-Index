@@ -1,10 +1,11 @@
 import FileBrowser from "@/components/file-browser/FileBrowser";
 import { listFilesFromDrive } from "@/lib/drive";
+import { getRootFolderId } from "@/lib/config";
 
 export const revalidate = 3600;
 
 export default async function Home() {
-  const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
+  const rootId = await getRootFolderId();
 
   const [isProtected, isPrivateFolder, db] = await Promise.all([
     import("@/lib/auth").then((m) => m.isProtected),

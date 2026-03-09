@@ -63,43 +63,10 @@ export async function POST(req: Request) {
 
     await invalidateAccessToken();
 
-    const isDev = process.env.NODE_ENV === "development";
-    let restartNeeded = false;
-
-    if (isDev) {
-      try {
-        const envPath = path.join(process.cwd(), ".env");
-        let envContent = "";
-
-        if (fs.existsSync(envPath)) {
-          envContent = fs.readFileSync(envPath, "utf8");
-        }
-
-        const updates = {
-          GOOGLE_CLIENT_ID: clientId,
-          GOOGLE_CLIENT_SECRET: clientSecret,
-          NEXT_PUBLIC_ROOT_FOLDER_ID: rootFolderId,
-          GOOGLE_REFRESH_TOKEN: tokenData.refresh_token,
-        };
-
-        Object.entries(updates).forEach(([key, value]) => {
-          const regex = new RegExp(`^${key}=.*`, "m");
-          if (regex.test(envContent)) {
-            envContent = envContent.replace(regex, `${key}=${value}`);
-          } else {
-            envContent += `\n${key}=${value}`;
-          }
-        });
-
-        fs.writeFileSync(envPath, envContent.trim() + "\n");
-        restartNeeded = true;
-      } catch {}
-    }
-
     return NextResponse.json({
       success: true,
-      restartNeeded,
-      message: "Token berhasil disimpan.",
+      restartNeeded: false,
+      message: "Token berhasil disimpan di database.",
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

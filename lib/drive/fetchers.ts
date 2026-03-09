@@ -1,6 +1,7 @@
 import { kv } from "@/lib/kv";
 import { memoryCache, CACHE_TTL } from "@/lib/memory-cache";
 import { getAccessToken } from "./auth";
+import { getRootFolderId } from "@/lib/config";
 import { fetchWithRetry } from "./client";
 import {
   DriveFile,
@@ -307,7 +308,7 @@ export async function getFolderPath(
   const accessToken = await getAccessToken();
   const path: { id: string; name: string }[] = [];
   let currentId = folderId;
-  const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID?.trim();
+  const rootId = await getRootFolderId();
   const rootName =
     process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME ||
     (locale === "id" ? "Beranda" : "Home");

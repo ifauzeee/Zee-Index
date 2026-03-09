@@ -3,10 +3,11 @@ import { getAccessToken } from "./auth";
 import { getAllDescendantFolders } from "./fetchers";
 import { DriveFile } from "./types";
 import { unstable_cache } from "next/cache";
+import { getRootFolderId } from "@/lib/config";
 
 async function fetchStorageDetails() {
   const accessToken = await getAccessToken();
-  const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
+  const rootFolderId = await getRootFolderId();
   const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3";
 
   const aboutResponse = await fetchWithRetry(
