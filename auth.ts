@@ -118,10 +118,18 @@ const authConfig: NextAuthConfig = {
           );
 
           if (isAdmin && isPassValid) {
-            logger.info({ email }, "[Auth] Login successful");
+            logger.info(
+              { email: normalizedInputEmail },
+              "[Auth] Success: Credentials match",
+            );
 
-            if (!dbUser) {
-              await db.user.create({
+            let currentUser = dbUser;
+            if (!currentUser) {
+              logger.info(
+                { email: normalizedInputEmail },
+                "[Auth] Creating missing admin user in DB",
+              );
+              currentUser = await db.user.create({
                 data: {
                   email: normalizedInputEmail,
                   role: "ADMIN",
@@ -131,18 +139,21 @@ const authConfig: NextAuthConfig = {
             }
 
             return {
-              id: dbUser?.id || normalizedInputEmail,
-              name: dbUser?.name || normalizedInputEmail.split("@")[0],
+              id: currentUser.id,
+              name: currentUser.name || normalizedInputEmail.split("@")[0],
               email: normalizedInputEmail,
               role: "ADMIN",
               isGuest: false,
             };
           }
 
-          logger.info({ isAdmin, isPassValid }, "[Auth] Login failed");
+          logger.warn(
+            { isAdmin, isPassValid, email: normalizedInputEmail },
+            "[Auth] Failed: Invalid creds or not admin",
+          );
           return null;
         } catch (error) {
-          logger.error({ err: error }, "[Auth] Error during authorization");
+          logger.error({ err: error }, "[Auth] Exception in authorize");
           return null;
         }
       },
@@ -181,6 +192,10 @@ const authConfig: NextAuthConfig = {
   },
   callbacks: {
     async jwt({ token, profile, user }) {
+      logger.debug(
+        { hasUser: !!user, hasProfile: !!profile, email: token.email },
+        "[Auth] JWT Callback Start",
+      );
       if (user && (user as any).isGuest) {
         token.id = `guest_${Date.now()}`;
         token.name = user.name;
@@ -193,19 +208,26 @@ const authConfig: NextAuthConfig = {
         token.email = user.email;
         token.isGuest = false;
 
-        const targetRole = await resolveRole(user.email);
-        token.role = targetRole;
+        try {
+          const targetRole = await resolveRole(user.email);
+          token.role = targetRole;
 
-        const normalizedUserEmail = user.email.toLowerCase().trim();
-        const dbUser = await db.user.findUnique({
-          where: { email: normalizedUserEmail },
-        });
-
-        if (dbUser && dbUser.role !== targetRole) {
-          await db.user.update({
+          const normalizedUserEmail = user.email.toLowerCase().trim();
+          const dbUser = await db.user.findUnique({
             where: { email: normalizedUserEmail },
-            data: { role: targetRole },
           });
+
+          if (dbUser && dbUser.role !== targetRole) {
+            await db.user.update({
+              where: { email: normalizedUserEmail },
+              data: { role: targetRole },
+            });
+          }
+        } catch (err) {
+          logger.error(
+            { err, email: user.email },
+            "[Auth] Error in JWT callback resolving role",
+          );
         }
 
         token.twoFactorRequired = false;
@@ -213,28 +235,35 @@ const authConfig: NextAuthConfig = {
         token.email = profile.email;
 
         const normalizedProfileEmail = profile.email.toLowerCase().trim();
-        let dbUser = await db.user.findUnique({
-          where: { email: normalizedProfileEmail },
-        });
-
-        if (!dbUser) {
-          dbUser = await db.user.create({
-            data: {
-              email: normalizedProfileEmail,
-              name: profile.name || normalizedProfileEmail.split("@")[0],
-              role: "USER",
-            },
-          });
-        }
-
-        const targetRole = await resolveRole(normalizedProfileEmail);
-        token.role = targetRole;
-
-        if (dbUser.role !== targetRole) {
-          await db.user.update({
+        try {
+          let dbUser = await db.user.findUnique({
             where: { email: normalizedProfileEmail },
-            data: { role: targetRole },
           });
+
+          if (!dbUser) {
+            dbUser = await db.user.create({
+              data: {
+                email: normalizedProfileEmail,
+                name: profile.name || normalizedProfileEmail.split("@")[0],
+                role: "USER",
+              },
+            });
+          }
+
+          const targetRole = await resolveRole(normalizedProfileEmail);
+          token.role = targetRole;
+
+          if (dbUser.role !== targetRole) {
+            await db.user.update({
+              where: { email: normalizedProfileEmail },
+              data: { role: targetRole },
+            });
+          }
+        } catch (err) {
+          logger.error(
+            { err, email: normalizedProfileEmail },
+            "[Auth] Error in JWT callback for profile",
+          );
         }
 
         token.twoFactorRequired = false;
@@ -263,7 +292,7 @@ const authConfig: NextAuthConfig = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: process.env.NODE_ENV === "production",
+        secure: process.env.NEXTAUTH_URL?.startsWith("https://") ?? false,
       },
     },
   },
