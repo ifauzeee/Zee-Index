@@ -54,19 +54,61 @@ export async function POST(req: Request) {
       );
     }
 
-    await kv.set("zee-index:credentials", {
-      clientId,
-      clientSecret,
-      refreshToken: tokenData.refresh_token,
-      rootFolderId,
-    });
+    let envPath = path.join(process.cwd(), ".env");
+    let envContent = "";
+    let canWriteEnv = true;
 
-    await invalidateAccessToken();
+    try {
+      if (fs.existsSync(envPath)) {
+        envContent = fs.readFileSync(envPath, "utf-8");
+      }
+    } catch (e) {
+      console.error("Gagal membaca .env:", e);
+    }
+
+    const updateEnv = (key: string, value: string) => {
+      const regex = new RegExp(`^${key}=.*$`, "m");
+      if (regex.test(envContent)) {
+        envContent = envContent.replace(regex, `${key}="${value}"`);
+      } else {
+        envContent += `\n${key}="${value}"`;
+      }
+    };
+
+    updateEnv("GOOGLE_CLIENT_ID", clientId);
+    updateEnv("GOOGLE_CLIENT_SECRET", clientSecret);
+    updateEnv("GOOGLE_REFRESH_TOKEN", tokenData.refresh_token);
+    updateEnv("NEXT_PUBLIC_ROOT_FOLDER_ID", rootFolderId);
+
+    try {
+      fs.writeFileSync(envPath, envContent.trim() + "\n");
+    } catch (e: any) {
+      console.error("Gagal menulis ke .env:", e);
+      if (e.code === "EACCES" || e.code === "EPERM") {
+        return NextResponse.json(
+          {
+            error:
+              "Izin ditolak (EACCES) saat menulis ke file .env. " +
+              "Jika Anda menggunakan Docker, pastikan file .env di-mount sebagai volume atau atur izin file secara manual. " +
+              "Anda juga bisa memasukkan nilai ini secara manual ke .env: " +
+              `GOOGLE_CLIENT_ID="${clientId}", GOOGLE_CLIENT_SECRET="${clientSecret}", GOOGLE_REFRESH_TOKEN="${tokenData.refresh_token}", NEXT_PUBLIC_ROOT_FOLDER_ID="${rootFolderId}"`,
+          },
+          { status: 500 },
+        );
+      }
+      throw e;
+    }
+
+    try {
+      await invalidateAccessToken();
+    } catch (e) {}
 
     return NextResponse.json({
       success: true,
-      restartNeeded: false,
-      message: "Token berhasil disimpan di database.",
+      restartNeeded: true,
+      message:
+        "Konfigurasi berhasil diperbarui di file .env. " +
+        "PENTING: Anda HARUS me-restart container/aplikasi agar perubahan ini terbaca.",
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

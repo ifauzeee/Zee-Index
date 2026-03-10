@@ -48,6 +48,7 @@ services:
       - REDIS_URL=redis://redis:6379
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-zee_index}?schema=public
     volumes:
+      - .env:/app/.env
       - ./public/uploads:/app/public/uploads
     depends_on:
       postgres:

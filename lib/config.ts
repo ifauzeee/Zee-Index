@@ -1,5 +1,3 @@
-import { kv } from "@/lib/kv";
-
 export interface AppCredentials {
   clientId: string;
   clientSecret: string;
@@ -8,15 +6,6 @@ export interface AppCredentials {
 }
 
 export async function getAppCredentials(): Promise<AppCredentials | null> {
-  try {
-    const storedConfig = await kv.get<AppCredentials>("zee-index:credentials");
-    if (storedConfig) {
-      return storedConfig;
-    }
-  } catch (error) {
-    console.error("Gagal membaca config KV:", error);
-  }
-
   if (process.env.GOOGLE_REFRESH_TOKEN) {
     return {
       clientId: process.env.GOOGLE_CLIENT_ID!,
