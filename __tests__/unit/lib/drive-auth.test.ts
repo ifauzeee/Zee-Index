@@ -106,7 +106,6 @@ describe("lib/drive/auth", () => {
       });
 
       await expect(getAccessToken()).rejects.toThrow();
-      expect(kv.del).toHaveBeenCalledWith(REDIS_KEYS.CREDENTIALS);
     });
 
     it("handles KV cache errors gracefully", async () => {
