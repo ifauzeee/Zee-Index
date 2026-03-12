@@ -315,18 +315,49 @@ export async function getFolderPath(
 
   const dbDrivesRaw = await kv.get(REDIS_KEYS.MANUAL_DRIVES);
   const dbDrives: any[] = Array.isArray(dbDrivesRaw) ? dbDrivesRaw : [];
-  const envDrives = (process.env.NEXT_PUBLIC_MANUAL_DRIVES || "")
-    .split(",")
-    .reduce<string[]>((acc, entry) => {
-      const [id] = entry.split(":");
-      if (id?.trim()) acc.push(id.trim());
-      return acc;
-    }, []);
+  const envManualDrivesRaw = process.env.NEXT_PUBLIC_MANUAL_DRIVES || "";
+  const envDrives: { id: string; name?: string }[] = [];
+
+  if (envManualDrivesRaw.trim().startsWith("[")) {
+    try {
+      const parsed = JSON.parse(envManualDrivesRaw);
+      if (Array.isArray(parsed)) {
+        parsed.forEach((entry) => {
+          if (typeof entry === "string") {
+            const id = entry.trim();
+            if (id) envDrives.push({ id });
+          } else if (entry && typeof entry === "object") {
+            const id = String((entry as any).id || "").trim();
+            const name =
+              typeof (entry as any).name === "string"
+                ? (entry as any).name.trim()
+                : undefined;
+            if (id) envDrives.push({ id, name });
+          }
+        });
+      }
+    } catch {
+      // fall back to legacy parsing
+    }
+  }
+
+  if (envDrives.length === 0 && envManualDrivesRaw.trim() !== "") {
+    envManualDrivesRaw.split(",").forEach((entry) => {
+      const [id, name] = entry.split(":");
+      const cleanId = id?.trim();
+      if (cleanId) {
+        envDrives.push({
+          id: cleanId,
+          name: name?.trim() || undefined,
+        });
+      }
+    });
+  }
 
   const shortcutMap = new Map<string, string>();
   if (rootId) shortcutMap.set(rootId, rootName);
-  envDrives.forEach((id) => {
-    if (id?.trim()) shortcutMap.set(id.trim(), "");
+  envDrives.forEach((d) => {
+    if (d.id?.trim()) shortcutMap.set(d.id.trim(), d.name || "");
   });
   dbDrives.forEach((d) => {
     if (d && d.id) shortcutMap.set(d.id.trim(), d.name || "");

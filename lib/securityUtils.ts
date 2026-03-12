@@ -5,17 +5,21 @@ import { getPrivateFolderIds } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 
 let cachedProtectedIds: string[] | null = null;
-let lastCacheUpdate = 0;
+let cachedRestrictedIds: string[] | null = null;
+let lastProtectedUpdate = 0;
+let lastRestrictedUpdate = 0;
 const CACHE_TTL = 10000;
 
 export function __resetCache() {
   cachedProtectedIds = null;
-  lastCacheUpdate = 0;
+  cachedRestrictedIds = null;
+  lastProtectedUpdate = 0;
+  lastRestrictedUpdate = 0;
 }
 
-async function getRestrictedIds(): Promise<string[]> {
+export async function getProtectedFolderIdsCached(): Promise<string[]> {
   const now = Date.now();
-  if (cachedProtectedIds && now - lastCacheUpdate < CACHE_TTL) {
+  if (cachedProtectedIds && now - lastProtectedUpdate < CACHE_TTL) {
     return cachedProtectedIds;
   }
 
@@ -23,19 +27,36 @@ async function getRestrictedIds(): Promise<string[]> {
     const protecteds = await db.protectedFolder.findMany({
       select: { folderId: true },
     });
-    const kvProtectedIds = protecteds.map(
+    const dbProtectedIds = protecteds.map(
       (p: { folderId: string }) => p.folderId,
     );
-    const envPrivateIds = getPrivateFolderIds();
-
-    cachedProtectedIds = Array.from(
-      new Set([...kvProtectedIds, ...envPrivateIds]),
-    );
-    lastCacheUpdate = now;
+    cachedProtectedIds = Array.from(new Set(dbProtectedIds));
+    lastProtectedUpdate = now;
     return cachedProtectedIds;
   } catch (e) {
     logger.error({ err: e }, "Failed to fetch restricted IDs");
     return cachedProtectedIds || [];
+  }
+}
+
+async function getRestrictedIds(): Promise<string[]> {
+  const now = Date.now();
+  if (cachedRestrictedIds && now - lastRestrictedUpdate < CACHE_TTL) {
+    return cachedRestrictedIds;
+  }
+
+  try {
+    const protectedIds = await getProtectedFolderIdsCached();
+    const envPrivateIds = getPrivateFolderIds();
+
+    cachedRestrictedIds = Array.from(
+      new Set([...protectedIds, ...envPrivateIds]),
+    );
+    lastRestrictedUpdate = now;
+    return cachedRestrictedIds;
+  } catch (e) {
+    logger.error({ err: e }, "Failed to fetch restricted IDs");
+    return cachedRestrictedIds || [];
   }
 }
 
@@ -46,11 +67,18 @@ export async function isAccessRestricted(
   depth: number = 0,
   maxDepth: number = 20,
   preFetchedRestrictedIds: string[] | null = null,
+  visited: Set<string> = new Set(),
+  accessCache: Map<string, boolean> = new Map(),
 ): Promise<boolean> {
   if (depth >= maxDepth) {
     logger.error({ fileId, depth }, "Max depth reached for security check");
     return true;
   }
+
+  if (visited.has(fileId)) {
+    return false;
+  }
+  visited.add(fileId);
 
   const allRestrictedIds =
     preFetchedRestrictedIds || (await getRestrictedIds());
@@ -58,11 +86,16 @@ export async function isAccessRestricted(
   if (allRestrictedIds.length === 0) return false;
 
   async function checkAccess(id: string) {
+    if (accessCache.has(id)) {
+      return accessCache.get(id)!;
+    }
     if (allowedTokens.includes(id)) return true;
     if (userEmail) {
       const hasAccess = await hasUserAccess(userEmail, id);
+      accessCache.set(id, hasAccess);
       if (hasAccess) return true;
     }
+    accessCache.set(id, false);
     return false;
   }
 
@@ -92,6 +125,8 @@ export async function isAccessRestricted(
         depth + 1,
         maxDepth,
         allRestrictedIds,
+        visited,
+        accessCache,
       );
       if (isParentRestricted) return true;
     }

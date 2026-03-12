@@ -1,41 +1,15 @@
-export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { auth } from "@/auth";
 import { listFilesFromDrive, DriveFile } from "@/lib/drive";
 import { isPrivateFolder } from "@/lib/auth";
-import { jwtVerify } from "jose";
-import { kv } from "@/lib/kv";
-import { db } from "@/lib/db";
 import { isAccessRestricted } from "@/lib/securityUtils";
+import { getProtectedFolderIdsCached } from "@/lib/securityUtils";
+import { validateShareToken } from "@/lib/auth";
 
-async function validateShareToken(request: Request): Promise<boolean> {
-  const { searchParams } = new URL(request.url);
-  const shareToken = searchParams.get("share_token");
-  if (!shareToken) return false;
+export const dynamic = "force-dynamic";
 
-  try {
-    const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
-    const { payload } = await jwtVerify(shareToken, secret);
-
-    if (typeof payload.jti !== "string") {
-      return false;
-    }
-    const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);
-    if (isBlocked) {
-      return false;
-    }
-
-    if (payload.loginRequired) {
-      const session = await auth();
-      return !!session;
-    }
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     const isShareAuth = await validateShareToken(request);
@@ -116,16 +90,15 @@ export async function GET(request: Request) {
       }
     }
 
-    const [driveResponse, allProtectedFolders] = await Promise.all([
+    const [driveResponse, protectedFolderIds] = await Promise.all([
       listFilesFromDrive(folderId, pageToken, 50, !forceRefresh),
-      db.protectedFolder
-        .findMany({ select: { folderId: true } })
-        .then((res: { folderId: string }[]) => {
-          const map: Record<string, boolean> = {};
-          res.forEach((r: { folderId: string }) => (map[r.folderId] = true));
-          return map;
-        }),
+      getProtectedFolderIdsCached(),
     ]);
+
+    const protectedFolderMap: Record<string, boolean> = {};
+    protectedFolderIds.forEach((id) => {
+      protectedFolderMap[id] = true;
+    });
 
     let filteredFiles: DriveFile[];
 
@@ -147,7 +120,7 @@ export async function GET(request: Request) {
 
       filteredFiles = driveResponse.files.filter((file: DriveFile) => {
         const isPriv = isPrivateFolder(file.id);
-        const isProt = !!(allProtectedFolders as any)[file.id];
+        const isProt = !!protectedFolderMap[file.id];
 
         if (!isPriv) return true;
 
@@ -161,7 +134,7 @@ export async function GET(request: Request) {
 
     const processedFiles = filteredFiles.map((file) => {
       const fileId = file.id as string;
-      const isProt = !!(allProtectedFolders as any)[fileId];
+      const isProt = !!protectedFolderMap[fileId];
       const isPriv = isPrivateFolder(fileId);
 
       return {
