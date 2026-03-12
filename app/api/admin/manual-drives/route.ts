@@ -25,6 +25,10 @@ async function isAdmin() {
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  if (!(await isAdmin())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
   try {
     const drives = (await kv.get(MANUAL_DRIVES_KEY)) || [];
     return NextResponse.json(drives);

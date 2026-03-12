@@ -27,8 +27,6 @@ const PUBLIC_API_PREFIXES = [
   "/api/tags",
   "/api/download",
   "/api/proxy-image",
-  "/api/admin/config",
-  "/api/admin/manual-drives",
   "/api/admin/analytics/track",
   "/api/health",
   "/api/metadata",
