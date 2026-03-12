@@ -14,6 +14,67 @@ export interface RateLimitResult {
 
 const RATELIMIT_PREFIX = "ratelimit";
 
+const isEdgeRuntime =
+  typeof globalThis !== "undefined" &&
+  (globalThis as Record<string, unknown>).EdgeRuntime !== undefined;
+
+const restUrl =
+  process.env.KV_REST_API_URL ||
+  process.env.UPSTASH_REDIS_REST_URL ||
+  "";
+const restToken =
+  process.env.KV_REST_API_TOKEN ||
+  process.env.UPSTASH_REDIS_REST_TOKEN ||
+  "";
+
+function getRestEndpoint(): string | null {
+  if (!restUrl || !restToken) return null;
+  if (!/^https?:\/\//i.test(restUrl)) return null;
+  return restUrl.replace(/\/$/, "");
+}
+
+async function restIncrWithExpire(
+  key: string,
+  windowSeconds: number,
+): Promise<number | null> {
+  const endpoint = getRestEndpoint();
+  if (!endpoint) return null;
+
+  const payload = [
+    ["INCR", key],
+    ["EXPIRE", key, windowSeconds, "NX"],
+  ];
+
+  const response = await fetch(`${endpoint}/pipeline`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${restToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(
+      `REST KV error: ${response.status} ${response.statusText} ${text}`.trim(),
+    );
+  }
+
+  const data: any[] = await response.json();
+  const rawCount =
+    (Array.isArray(data) && data[0]?.result !== undefined
+      ? data[0].result
+      : Array.isArray(data)
+        ? data[0]
+        : null) ?? null;
+
+  const count = Number(rawCount);
+  if (!Number.isFinite(count)) return null;
+  return count;
+}
+
 export class KVRateLimiter {
   private readonly type: RateLimitType;
   private readonly limitCount: number;
@@ -30,10 +91,25 @@ export class KVRateLimiter {
     const now = Date.now();
 
     try {
-      const currentCount = await kv.incr(key);
+      let currentCount: number | null = null;
 
-      if (currentCount === 1) {
-        await kv.expire(key, this.windowSeconds);
+      if (isEdgeRuntime) {
+        try {
+          currentCount = await restIncrWithExpire(key, this.windowSeconds);
+        } catch (error) {
+          logger.error(
+            { err: error, type: this.type, identifier },
+            "REST rate limit check failed",
+          );
+        }
+      }
+
+      if (currentCount === null) {
+        currentCount = await kv.incr(key);
+
+        if (currentCount === 1) {
+          await kv.expire(key, this.windowSeconds);
+        }
       }
 
       const reset = now + this.windowSeconds * 1000;
