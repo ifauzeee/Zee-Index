@@ -3,17 +3,7 @@
 import { useState, useEffect } from "react";
 import { formatBytes } from "@/lib/utils";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import {
-  AlertTriangle,
-  File as FileIcon,
-  Search,
-  Archive,
-  Image,
-  Music,
-  Video,
-  Code,
-  PieChart as PieChartIcon,
-} from "lucide-react";
+import { AlertTriangle, Search, PieChart as PieChartIcon } from "lucide-react";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
@@ -30,20 +20,6 @@ export default function StorageIntelligence({ stats }: { stats: any }) {
       );
     }
   }, [stats]);
-
-  const getIcon = (type: string) => {
-    if (type.includes("image"))
-      return <Image className="text-blue-500" size={16} />;
-    if (type.includes("video"))
-      return <Video className="text-purple-500" size={16} />;
-    if (type.includes("audio"))
-      return <Music className="text-yellow-500" size={16} />;
-    if (type.includes("zip") || type.includes("rar"))
-      return <Archive className="text-red-500" size={16} />;
-    if (type.includes("json") || type.includes("xml"))
-      return <Code className="text-green-500" size={16} />;
-    return <FileIcon className="text-gray-500" size={16} />;
-  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

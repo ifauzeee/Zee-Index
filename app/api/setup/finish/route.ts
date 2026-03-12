@@ -1,7 +1,6 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { kv } from "@/lib/kv";
 import fs from "fs";
 import path from "path";
 import { invalidateAccessToken } from "@/lib/drive";
@@ -54,9 +53,8 @@ export async function POST(req: Request) {
       );
     }
 
-    let envPath = path.join(process.cwd(), ".env");
+    const envPath = path.join(process.cwd(), ".env");
     let envContent = "";
-    let canWriteEnv = true;
 
     try {
       if (fs.existsSync(envPath)) {
@@ -101,7 +99,7 @@ export async function POST(req: Request) {
 
     try {
       await invalidateAccessToken();
-    } catch (e) {}
+    } catch {}
 
     return NextResponse.json({
       success: true,

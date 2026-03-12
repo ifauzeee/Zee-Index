@@ -12,13 +12,11 @@ import {
   Clock,
 } from "lucide-react";
 import { formatBytes } from "@/lib/utils";
-import { useTranslations } from "next-intl";
 
 export default function SystemHealth() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const t = useTranslations("AdminPage");
 
   const fetchHealth = async () => {
     try {

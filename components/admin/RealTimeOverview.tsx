@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Users, Activity, Eye, MousePointerClick } from "lucide-react";
+import { Activity } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
