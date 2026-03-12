@@ -11,7 +11,6 @@ import {
   prepareGoogleDriveUrl,
   prepareResponseHeaders,
 } from "@/lib/services/download";
-import { checkRateLimit, createRateLimitResponse } from "@/lib/ratelimit";
 
 export const dynamic = "force-dynamic";
 
@@ -21,17 +20,6 @@ export async function HEAD(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const ratelimitResult = await checkRateLimit(request, "DOWNLOAD");
-    if (!ratelimitResult.success) {
-      return NextResponse.json(
-        { error: ERROR_MESSAGES.RATE_LIMIT_EXCEEDED },
-        {
-          status: 429,
-          headers: createRateLimitResponse(ratelimitResult).headers,
-        },
-      );
-    }
-
     const { context, session, error } = await validateDownloadRequest(request);
     if (error) {
       return NextResponse.json(
