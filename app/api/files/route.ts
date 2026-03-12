@@ -6,6 +6,7 @@ import { isPrivateFolder } from "@/lib/auth";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { getProtectedFolderIdsCached } from "@/lib/securityUtils";
 import { validateShareToken } from "@/lib/auth";
+import { jwtVerify } from "jose";
 
 export const dynamic = "force-dynamic";
 
