@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
 
     await kv.set(MANUAL_DRIVES_KEY, updatedDrives);
 
-    await kv.del(`zee-index:folder-path-v6:${id}`);
+    await kv.del(`zee-index:folder-path-v7:${id}`);
 
     return NextResponse.json({ success: true, drives: updatedDrives });
   } catch (error) {
@@ -115,7 +115,7 @@ export async function DELETE(req: NextRequest) {
       })
       .catch(() => {});
 
-    await kv.del(`zee-index:folder-path-v6:${id}`);
+    await kv.del(`zee-index:folder-path-v7:${id}`);
 
     return NextResponse.json({ success: true, drives: updatedDrives });
   } catch (error) {
