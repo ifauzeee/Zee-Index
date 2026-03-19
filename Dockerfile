@@ -61,7 +61,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 # Script to run migrations and start
 RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
     echo 'echo "Running database migrations..."' >> /app/entrypoint.sh && \
-    echo 'npx prisma migrate deploy || npx prisma db push --accept-data-loss || echo "Prisma migration failed, continuing..."' >> /app/entrypoint.sh && \
+    echo 'if [ -d "prisma/migrations" ]; then npx prisma migrate deploy; else npx prisma db push --accept-data-loss; fi || echo "Prisma migration failed, continuing..."' >> /app/entrypoint.sh && \
     echo 'exec "$@"' >> /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh
 
