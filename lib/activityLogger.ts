@@ -222,28 +222,6 @@ export async function logActivity(
   }
 }
 
-export async function logAdminAudit(
-  action: ActivityType,
-  adminEmail: string,
-  details: Omit<ActivityDetails, "userEmail"> = {},
-) {
-  return logActivity(action, {
-    ...details,
-    userEmail: adminEmail,
-    userRole: "ADMIN",
-  });
-}
-
-export async function logSecurityEvent(
-  event: "RATE_LIMITED" | "UNAUTHORIZED_ACCESS" | "SUSPICIOUS_ACTIVITY",
-  details: ActivityDetails = {},
-) {
-  return logActivity(event, {
-    ...details,
-    status: "blocked",
-  });
-}
-
 export async function getActivityLogs(
   limit: number = 100,
   offset: number = 0,
@@ -263,28 +241,6 @@ export async function getActivityLogs(
     })) as ActivityLog[];
   } catch (error) {
     logger.error({ err: error }, "Failed to get activity logs");
-    return [];
-  }
-}
-
-export async function getAdminAuditLogs(
-  limit: number = 100,
-): Promise<ActivityLog[]> {
-  try {
-    const logs = await db.activityLog.findMany({
-      where: { severity: "critical" },
-      take: limit,
-      orderBy: { timestamp: "desc" },
-    });
-
-    return logs.map((log: any) => ({
-      ...log,
-      type: log.type as ActivityType,
-      severity: log.severity as ActivityLog["severity"],
-      metadata: log.metadata ? JSON.parse(log.metadata) : undefined,
-    })) as ActivityLog[];
-  } catch (error) {
-    logger.error({ err: error }, "Failed to get admin audit logs");
     return [];
   }
 }
@@ -318,40 +274,6 @@ export async function getSecurityLogs(
     logger.error({ err: error }, "Failed to get security logs");
     return [];
   }
-}
-
-export async function getLogsByUser(
-  email: string,
-  limit: number = 50,
-): Promise<ActivityLog[]> {
-  const logs = await db.activityLog.findMany({
-    where: { userEmail: email },
-    take: limit,
-    orderBy: { timestamp: "desc" },
-  });
-  return logs.map((log: any) => ({
-    ...log,
-    type: log.type as ActivityType,
-    severity: log.severity as ActivityLog["severity"],
-    metadata: log.metadata ? JSON.parse(log.metadata) : undefined,
-  })) as ActivityLog[];
-}
-
-export async function getLogsByType(
-  type: ActivityType,
-  limit: number = 50,
-): Promise<ActivityLog[]> {
-  const logs = await db.activityLog.findMany({
-    where: { type },
-    take: limit,
-    orderBy: { timestamp: "desc" },
-  });
-  return logs.map((log: any) => ({
-    ...log,
-    type: log.type as ActivityType,
-    severity: log.severity as ActivityLog["severity"],
-    metadata: log.metadata ? JSON.parse(log.metadata) : undefined,
-  })) as ActivityLog[];
 }
 
 export async function getActivityStats(): Promise<{
