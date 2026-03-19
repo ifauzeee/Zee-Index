@@ -19,13 +19,9 @@ const isEdgeRuntime =
   (globalThis as Record<string, unknown>).EdgeRuntime !== undefined;
 
 const restUrl =
-  process.env.KV_REST_API_URL ||
-  process.env.UPSTASH_REDIS_REST_URL ||
-  "";
+  process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "";
 const restToken =
-  process.env.KV_REST_API_TOKEN ||
-  process.env.UPSTASH_REDIS_REST_TOKEN ||
-  "";
+  process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "";
 
 function getRestEndpoint(): string | null {
   if (!restUrl || !restToken) return null;

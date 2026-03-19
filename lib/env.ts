@@ -27,7 +27,6 @@ const envSchema = z.object({
   STORAGE_LIMIT_GB: z.string().optional(),
   STORAGE_WARNING_THRESHOLD: z.string().optional(),
   CRON_SECRET: z.string().optional(),
-  WEBHOOK_URL: z.string().url().optional().or(z.literal("")),
 
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.string().optional(),
@@ -117,7 +116,6 @@ export const config = {
     : 0.9,
 
   isEmailEnabled: !!(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS),
-  isWebhookEnabled: !!env.WEBHOOK_URL,
   isDatabaseEnabled: !!env.REDIS_URL,
   tmdbApiKey: env.TMDB_API_KEY,
   storageProvider: env.STORAGE_PROVIDER,

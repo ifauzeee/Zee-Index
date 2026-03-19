@@ -131,15 +131,15 @@ Zee-Index transforms your Google Drive into a powerful, self-hosted file system 
 
 ### 🛠️ Built-in Tools
 
-| Feature                | Description                                                |
-| ---------------------- | ---------------------------------------------------------- |
-| **Code Editor**        | Syntax highlighting for 20+ programming languages          |
-| **Data Usage Monitor** | Real-time storage usage calculation with progress tracking |
-| **File Request**       | Create secure public upload links                          |
-| **Bulk Download**      | Download multiple files as ZIP archive                     |
-| **Trash Management**   | View and restore deleted files                             |
-| **Search**             | Full-text search across all accessible files               |
-| **Tags**               | Organize files with custom tags                            |
+| Feature                | Description                                                            |
+| ---------------------- | ---------------------------------------------------------------------- |
+| **Code Editor**        | Powered by Monaco Editor for professional syntax highlighting and view |
+| **Data Usage Monitor** | Real-time storage usage calculation with progress tracking             |
+| **File Request**       | Create secure public upload links                                      |
+| **Bulk Download**      | Download multiple files as ZIP archive                                 |
+| **Trash Management**   | View and restore deleted files                                         |
+| **Search**             | Full-text search across all accessible files                           |
+| **Tags**               | Organize files with custom tags                                        |
 
 ---
 
@@ -397,7 +397,6 @@ These variables **must** be set for the application to function:
 | `PRIVATE_FOLDER_IDS`           | JSON array of private folder IDs    | `[]`                     |
 | `STORAGE_LIMIT_GB`             | Storage warning limit in GB         | `15`                     |
 | `STORAGE_WARNING_THRESHOLD`    | Warning threshold (0-1)             | `0.90`                   |
-| `NEXT_PUBLIC_SENTRY_DSN`       | Sentry error tracking DSN           | Empty                    |
 | `CRON_SECRET`                  | Secret for cron job authentication  | Random string            |
 | `SKIP_ENV_VALIDATION`          | Skip env validation during build    | `false`                  |
 
@@ -462,8 +461,6 @@ GOOGLE_REFRESH_TOKEN="your-refresh-token"
 STORAGE_LIMIT_GB=15
 STORAGE_WARNING_THRESHOLD=0.90
 
-NEXT_PUBLIC_SENTRY_DSN=""
-
 # ------------------------------------------------------------------------------
 # 6. EMAIL CONFIGURATION (Optional)
 # ------------------------------------------------------------------------------
@@ -474,10 +471,9 @@ NEXT_PUBLIC_SENTRY_DSN=""
 # EMAIL_FROM="Zee Index <no-reply@example.com>"
 
 # ------------------------------------------------------------------------------
-# 7. CRON & WEBHOOKS
+# 7. CRON JOBS
 # ------------------------------------------------------------------------------
 CRON_SECRET="random-string-for-cron-protection"
-# WEBHOOK_URL=""
 
 # ------------------------------------------------------------------------------
 # 8. BUILD SETTINGS
@@ -535,28 +531,10 @@ SKIP_ENV_VALIDATION=false
 4. **Copy the Refresh Token** displayed and add it to your `.env`:
 
    ```bash
-
-   ```
-
-5. **Start the application** with your Google credentials in `.env`:
-
-   ```bash
-   GOOGLE_CLIENT_ID="your-client-id"
-   GOOGLE_CLIENT_SECRET="your-client-secret"
-   GOOGLE_REFRESH_TOKEN=""  # Leave empty initially
-   ```
-
-6. **Navigate to `/setup`** in your browser
-
-7. **Complete the OAuth flow** by signing in with your Google account
-
-8. **Copy the Refresh Token** displayed and add it to your `.env`:
-
-   ```bash
    GOOGLE_REFRESH_TOKEN="your-newly-obtained-refresh-token"
    ```
 
-9. **Restart the application** to apply changes
+5. **Restart the application** to apply changes
 
 ### Step 3: Deploy to Other Platforms
 
@@ -644,7 +622,6 @@ The Dockerfile accepts these build arguments for environment variables needed at
 | ------------------------------ | ---------------------------------- |
 | `NEXT_PUBLIC_ROOT_FOLDER_ID`   | Root folder ID (required at build) |
 | `NEXT_PUBLIC_ROOT_FOLDER_NAME` | Root folder display name           |
-| `NEXT_PUBLIC_SENTRY_DSN`       | Sentry DSN for error tracking      |
 
 ### Docker Health Checks
 
@@ -889,16 +866,6 @@ graph LR
 - Request logging with path and duration
 - Error logging with stack traces
 - Activity logging for admin actions
-
-### Sentry Integration (Optional)
-
-1. Add your Sentry DSN:
-
-   ```bash
-   NEXT_PUBLIC_SENTRY_DSN="https://xxxxx@sentry.io/xxxxx"
-   ```
-
-2. Errors will be automatically reported to Sentry
 
 ### Health Endpoint
 
