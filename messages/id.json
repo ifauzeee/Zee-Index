@@ -111,7 +111,8 @@
     "rename": "Ganti Nama",
     "delete": "Hapus",
     "cancel": "Batal",
-    "openInNewTab": "Buka di Tab Baru"
+    "openInNewTab": "Buka di Tab Baru",
+    "download": "Unduh File"
   },
   "DeleteConfirm": {
     "title": "Hapus Item",

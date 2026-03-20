@@ -404,8 +404,10 @@ export default function FileBrowser({
     handleShare(file);
   };
 
-  const handleQuickDownload = (e: React.MouseEvent, file: DriveFile) => {
-    e.stopPropagation();
+  const handleQuickDownload = (e: React.MouseEvent | null, file: DriveFile) => {
+    if (e && e.stopPropagation) {
+      e.stopPropagation();
+    }
     let url = `/api/download?fileId=${file.id}`;
     if (shareToken) {
       url += `&share_token=${shareToken}`;
@@ -545,6 +547,9 @@ export default function FileBrowser({
         handleMove={handleMove}
         handleToggleFavorite={handleToggleFavorite}
         handleCopy={handleCopy}
+        handleDownload={(file: DriveFile) =>
+          handleQuickDownload(null as any, file)
+        }
         handleArchivePreview={handleArchivePreview}
         previewFile={previewFile}
         setPreviewFile={setPreviewFile}

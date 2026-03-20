@@ -77,6 +77,7 @@ interface FileBrowserModalsProps {
   handleMove: (newParentId: string) => Promise<void>;
   handleToggleFavorite: () => void;
   handleCopy: () => void;
+  handleDownload: (file: DriveFile) => void;
   handleArchivePreview: () => void;
   previewFile: DriveFile | null;
   setPreviewFile: (file: DriveFile | null) => void;
@@ -121,6 +122,7 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
     handleMove,
     handleToggleFavorite,
     handleCopy,
+    handleDownload,
     handleArchivePreview,
     previewFile,
     setPreviewFile,
@@ -227,6 +229,10 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
           isFavorite={favorites.includes(contextMenu.file.id)}
           onToggleFavorite={handleToggleFavorite}
           onCopy={handleCopy}
+          onDownload={() => {
+            handleDownload(contextMenu.file);
+            setContextMenu(null);
+          }}
           onShowDetails={() => {
             setDetailsFile(contextMenu.file);
             setContextMenu(null);

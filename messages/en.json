@@ -111,7 +111,8 @@
     "rename": "Rename",
     "delete": "Delete",
     "cancel": "Cancel",
-    "openInNewTab": "Open in New Tab"
+    "openInNewTab": "Open in New Tab",
+    "download": "Download"
   },
   "DeleteConfirm": {
     "title": "Delete Item",

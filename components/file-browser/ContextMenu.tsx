@@ -15,6 +15,7 @@ import {
   Pin,
   PinOff,
   ExternalLink,
+  Download,
 } from "lucide-react";
 import { formatBytes, cn } from "@/lib/utils";
 import React, { useEffect, useState, useRef } from "react";
@@ -32,6 +33,7 @@ interface ContextMenuProps {
   onToggleFavorite: () => void;
   isFavorite: boolean;
   onCopy: () => void;
+  onDownload: () => void;
   onShowDetails: () => void;
   onPreview: () => void;
   isArchive: boolean;
@@ -57,6 +59,7 @@ export default function ContextMenu({
   onToggleFavorite,
   isFavorite,
   onCopy,
+  onDownload,
   onShowDetails,
   onPreview,
   isArchive,
@@ -161,6 +164,11 @@ export default function ContextMenu({
             onClick={onOpenNewTab}
             icon={ExternalLink}
             label={t("openInNewTab")}
+          />
+          <MenuItem
+            onClick={onDownload}
+            icon={Download}
+            label={t("download")}
           />
         </>
       )}
