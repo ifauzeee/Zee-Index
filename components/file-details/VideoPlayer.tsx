@@ -14,17 +14,7 @@ import {
   defaultLayoutIcons,
   DefaultAudioLayout,
 } from "@vidstack/react/player/layouts/default";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  WifiOff,
-  History,
-  FileWarning,
-  Download,
-  ExternalLink,
-  Loader2,
-  Tv,
-} from "lucide-react";
-import { formatDuration, cn } from "@/lib/utils";
+import { AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/lib/store";
 import { srtToVtt } from "@/lib/subtitleUtils";
 import { useTranslations } from "next-intl";
@@ -32,16 +22,16 @@ import { useTranslations } from "next-intl";
 import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
 import "@vidstack/react/player/styles/default/layouts/audio.css";
+
+import { VideoControlsOverlay } from "./video-player/Controls";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MonitorPlay, Copy, Play } from "lucide-react";
-import { Button } from "@/components/ui/button";
+  UpNextOverlay,
+  NetworkErrorOverlay,
+  FormatErrorOverlay,
+  ResumePromptOverlay,
+  BufferingOverlay,
+  WatermarkOverlay,
+} from "./video-player/Overlays";
 
 interface SubtitleTrack {
   kind: string;
@@ -153,10 +143,7 @@ export default function VideoPlayer({
             const blob = new Blob([vtt], { type: "text/vtt" });
             const url = URL.createObjectURL(blob);
             createdUrls.push(url);
-            return {
-              ...track,
-              src: url,
-            };
+            return { ...track, src: url };
           } catch (e) {
             console.error("Failed to convert subtitle:", e);
             return track;
@@ -171,9 +158,7 @@ export default function VideoPlayer({
 
     return () => {
       active = false;
-      createdUrls.forEach((url) => {
-        URL.revokeObjectURL(url);
-      });
+      createdUrls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [subtitleTracks]);
 
@@ -182,7 +167,6 @@ export default function VideoPlayer({
 
   const isMkv =
     mimeType.includes("matroska") || title.toLowerCase().endsWith(".mkv");
-
   const displayMimeType = isMkv ? "video/webm" : mimeType;
 
   useEffect(() => {
@@ -224,9 +208,7 @@ export default function VideoPlayer({
 
       if (retryCount < 3) {
         setRetryCount((prev) => prev + 1);
-        setTimeout(() => {
-          handleRetry();
-        }, 1000);
+        setTimeout(() => handleRetry(), 1000);
       } else {
         setNetworkError(true);
       }
@@ -247,7 +229,7 @@ export default function VideoPlayer({
       if (Math.abs(player.currentTime - lastTime) > 1) {
         player.currentTime = lastTime;
       }
-      player.play().catch(() => {});
+      player.play().catch(() => { });
       setHasResumed(true);
     } else if (
       fileId &&
@@ -277,9 +259,7 @@ export default function VideoPlayer({
   };
 
   const skipResume = () => {
-    if (fileId) {
-      setVideoProgress(fileId, 0);
-    }
+    if (fileId) setVideoProgress(fileId, 0);
     setResumeTime(0);
     setShowResumePrompt(false);
     setHasResumed(true);
@@ -301,17 +281,14 @@ export default function VideoPlayer({
     }
   };
 
-  const getHasAbsoluteUrl = (url: string) => {
-    if (typeof window === "undefined") return url;
-    if (url.startsWith("http")) return url;
-    return `${window.location.origin}${url}`;
+  const getAbsoluteSrc = () => {
+    if (typeof window === "undefined") return currentSrc;
+    if (currentSrc.startsWith("http")) return currentSrc;
+    return `${window.location.origin}${currentSrc}`;
   };
-
-  const getAbsoluteSrc = () => getHasAbsoluteUrl(currentSrc);
 
   const uniqueTracks = useMemo(() => {
     const seenLabels = new Set<string>();
-
     return processedTracks.filter((track: SubtitleTrack) => {
       const labelKey = (track.label || "Subtitle").trim().toLowerCase();
       if (seenLabels.has(labelKey)) return false;
@@ -330,15 +307,11 @@ export default function VideoPlayer({
         poster={poster?.replace("=s220", "=s1280")}
         aspectRatio={type === "video" ? "16/9" : undefined}
         onEnded={() => {
-          if (fileId) {
-            setVideoProgress(fileId, 0);
-          }
+          if (fileId) setVideoProgress(fileId, 0);
 
           if (playerRef.current) {
             const { currentTime, duration } = playerRef.current;
-            if (duration > 0 && Math.abs(duration - currentTime) > 1) {
-              return;
-            }
+            if (duration > 0 && Math.abs(duration - currentTime) > 1) return;
           }
 
           if (onEnded && !isMobile) {
@@ -350,12 +323,8 @@ export default function VideoPlayer({
         onError={handleError}
         onCanPlay={handleCanPlay}
         onTimeUpdate={handleTimeUpdate}
-        onWaiting={() => {
-          console.debug("[VideoPlayer] Buffering...");
-        }}
-        onPlaying={() => {
-          console.debug("[VideoPlayer] Playing");
-        }}
+        onWaiting={() => console.debug("[VideoPlayer] Buffering...")}
+        onPlaying={() => console.debug("[VideoPlayer] Playing")}
         logLevel="silent"
         className="w-full h-full ring-media-focus"
         crossOrigin="anonymous"
@@ -399,343 +368,77 @@ export default function VideoPlayer({
         )}
 
         {type === "video" && (
-          <div
-            className={cn(
-              "absolute top-4 right-4 flex flex-col items-end gap-3 z-20 transition-all duration-500",
-              controlsVisible ? "opacity-100" : "opacity-0 pointer-events-none",
-            )}
-          >
-            {!sharePolicy?.preventDownload && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className="p-2 bg-black/40 hover:bg-black/80 text-white rounded-xl backdrop-blur-md border border-white/10 transition-all shadow-lg focus:outline-none"
-                    title="Stream Eksternal"
-                  >
-                    <MonitorPlay size={16} />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-56 bg-zinc-950/90 border-white/10 text-white backdrop-blur-xl z-[100]"
-                >
-                  <DropdownMenuLabel>External Player</DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-white/10" />
-
-                  <DropdownMenuItem
-                    className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
-                    onClick={() => {
-                      navigator.clipboard.writeText(getAbsoluteSrc());
-                      addToast({
-                        message: "URL Stream disalin!",
-                        type: "success",
-                      });
-                    }}
-                  >
-                    <Copy className="mr-2 h-4 w-4" /> Copy URL
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem
-                    className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
-                    onClick={() =>
-                      (window.location.href = `vlc://${getAbsoluteSrc()}`)
-                    }
-                  >
-                    <Play className="mr-2 h-4 w-4" /> Open in VLC (PC)
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem
-                    className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
-                    onClick={() =>
-                      (window.location.href = `intent:${getAbsoluteSrc()}#Intent;package=org.videolan.vlc;type=video/*;scheme=https;end`)
-                    }
-                  >
-                    <Play className="mr-2 h-4 w-4" /> VLC (Android)
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem
-                    className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
-                    onClick={() =>
-                      (window.location.href = `intent:${getAbsoluteSrc()}#Intent;package=com.mxtech.videoplayer.ad;type=video/*;scheme=https;end`)
-                    }
-                  >
-                    <Play className="mr-2 h-4 w-4" /> MX Player (Free)
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem
-                    className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
-                    onClick={() =>
-                      (window.location.href = `intent:${getAbsoluteSrc()}#Intent;package=com.mxtech.videoplayer.pro;type=video/*;scheme=https;end`)
-                    }
-                  >
-                    <Play className="mr-2 h-4 w-4" /> MX Player (Pro)
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem
-                    className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
-                    onClick={() =>
-                      (window.location.href = `infuse://x-callback-url/play?url=${encodeURIComponent(
-                        getAbsoluteSrc(),
-                      )}`)
-                    }
-                  >
-                    <Play className="mr-2 h-4 w-4" /> Infuse (iOS/Mac)
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
-            {webViewLink && !isMobile && (
-              <a
-                href={webViewLink}
-                target="_blank"
-                rel="noreferrer"
-                data-prevent-nprogress="true"
-                data-nprogress="off"
-                className="p-2 bg-black/40 hover:bg-black/80 text-white rounded-xl backdrop-blur-md border border-white/10 transition-all shadow-lg"
-                title="Buka original di Google Drive"
-              >
-                <ExternalLink size={16} />
-              </a>
-            )}
-
-            {!isMobile && !sharePolicy?.preventDownload && (
-              <button
-                onClick={toggleTheaterMode}
-                className={cn(
-                  "p-2 rounded-xl backdrop-blur-md border border-white/10 transition-all shadow-lg",
-                  isTheaterMode
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-black/40 hover:bg-black/80 text-white",
-                )}
-                title="Theater Mode"
-              >
-                <Tv size={16} />
-              </button>
-            )}
-          </div>
+          <VideoControlsOverlay
+            controlsVisible={controlsVisible}
+            isMobile={isMobile}
+            isTheaterMode={isTheaterMode}
+            webViewLink={webViewLink}
+            preventDownload={sharePolicy?.preventDownload}
+            getAbsoluteSrc={getAbsoluteSrc}
+            onCopyUrl={() => {
+              navigator.clipboard.writeText(getAbsoluteSrc());
+              addToast({ message: "URL Stream disalin!", type: "success" });
+            }}
+            onToggleTheater={toggleTheaterMode}
+          />
         )}
 
         {sharePolicy?.hasWatermark && (
-          <div className="absolute inset-0 pointer-events-none z-[90] overflow-hidden flex flex-wrap justify-around items-center opacity-[0.25] mix-blend-overlay w-full h-full select-none">
-            {Array.from({ length: 15 }).map((_, i) => (
-              <div
-                key={i}
-                className="text-white text-xl sm:text-2xl md:text-3xl font-black -rotate-[30deg] p-6 sm:p-10 whitespace-nowrap shadow-black drop-shadow-md"
-              >
-                {sharePolicy?.watermarkText ||
-                  user?.email ||
-                  user?.name ||
-                  "Confidential View"}
-                <br />
-                <span className="text-sm sm:text-lg opacity-80">
-                  {new Date().toLocaleDateString()}
-                </span>
-              </div>
-            ))}
-          </div>
+          <WatermarkOverlay
+            watermarkText={sharePolicy.watermarkText}
+            userEmail={user?.email}
+            userName={user?.name}
+          />
         )}
       </MediaPlayer>
 
       <AnimatePresence>
         {upNextCountdown !== null && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-md"
-          >
-            <div className="text-center p-8 max-w-sm w-full">
-              <div className="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-90 absolute">
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="45"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="transparent"
-                    className="text-white/10"
-                  />
-                  <motion.circle
-                    cx="48"
-                    cy="48"
-                    r="45"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="transparent"
-                    strokeDasharray="283"
-                    initial={{ strokeDashoffset: 283 }}
-                    animate={{
-                      strokeDashoffset:
-                        283 - (283 * (10 - upNextCountdown)) / 10,
-                    }}
-                    className="text-primary"
-                  />
-                </svg>
-                <div className="text-3xl font-bold z-10">{upNextCountdown}</div>
-              </div>
-              <h3 className="text-2xl font-bold mb-2">{tPlayer("upNext")}</h3>
-              <p className="text-gray-400 mb-8">{tPlayer("autoPlayNext")}</p>
-              <div className="flex gap-4 justify-center">
-                <button
-                  onClick={() => setUpNextCountdown(null)}
-                  className="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full font-medium transition-colors"
-                >
-                  {tPlayer("cancel")}
-                </button>
-                <button
-                  onClick={() => {
-                    setUpNextCountdown(null);
-                    onEnded?.();
-                  }}
-                  className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full font-bold transition-colors"
-                >
-                  {tPlayer("playNow")}
-                </button>
-              </div>
-            </div>
-          </motion.div>
+          <UpNextOverlay
+            countdown={upNextCountdown}
+            onCancel={() => setUpNextCountdown(null)}
+            onPlayNow={() => {
+              setUpNextCountdown(null);
+              onEnded?.();
+            }}
+            tPlayer={tPlayer}
+          />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {networkError && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 text-white backdrop-blur-sm p-4 text-center"
-          >
-            <WifiOff size={48} className="mb-4 text-red-500" />
-            <h3 className="text-xl font-bold mb-2">Koneksi Terputus</h3>
-            <p className="text-sm text-gray-300 mb-6 max-w-xs">
-              Posisi terakhir: {formatDuration(lastTime)}
-            </p>
-            <Button
-              onClick={handleRetry}
-              className="px-6 rounded-full font-semibold flex items-center gap-2"
-            >
-              <History size={18} /> Sambung Ulang
-            </Button>
-          </motion.div>
+          <NetworkErrorOverlay lastTime={lastTime} onRetry={handleRetry} />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {formatError && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-zinc-900/95 text-white p-4 text-center"
-          >
-            <FileWarning size={48} className="mb-4 text-amber-500" />
-            <h3 className="text-xl font-bold mb-2">
-              {tPlayer("unsupportedFormat")}
-            </h3>
-            <p className="text-sm text-gray-300 mb-4 max-w-sm">
-              {tPlayer("codecNotSupported")}
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <Button
-                onClick={() => {
-                  const iframe = document.createElement("iframe");
-                  iframe.style.display = "none";
-                  iframe.src = currentSrc;
-                  document.body.appendChild(iframe);
-                  setTimeout(() => {
-                    document.body.removeChild(iframe);
-                  }, 5000);
-                }}
-                className="px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-              >
-                <Download size={16} /> {tPlayer("downloadFile")}
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() =>
-                  (window.location.href = `vlc://${getAbsoluteSrc()}`)
-                }
-                className="px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-              >
-                <Play size={16} /> VLC (PC)
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() =>
-                  (window.location.href = `intent:${getAbsoluteSrc()}#Intent;package=org.videolan.vlc;type=video/*;scheme=https;end`)
-                }
-                className="px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-              >
-                <Play size={16} /> VLC (Mobile)
-              </Button>
-            </div>
-          </motion.div>
+          <FormatErrorOverlay
+            currentSrc={currentSrc}
+            getAbsoluteSrc={getAbsoluteSrc}
+            tPlayer={tPlayer}
+          />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {showResumePrompt && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="absolute inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-[2px]"
-          >
-            <div className="bg-background border p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center">
-              <div className="mx-auto w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mb-4 text-primary">
-                <History size={24} />
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-1">
-                {tPlayer("resumeTitle")}
-              </h3>
-              <p className="text-sm text-muted-foreground mb-6">
-                {tPlayer("resumeMessage", {
-                  time: formatDuration(resumeTime),
-                })}
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={skipResume}
-                  className="px-4 py-2.5 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-xl text-sm font-medium transition-colors"
-                >
-                  {tPlayer("startOver")}
-                </button>
-                <button
-                  onClick={performResume}
-                  className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-sm font-medium transition-colors"
-                >
-                  {tPlayer("resumeButton")}
-                </button>
-              </div>
-            </div>
-          </motion.div>
+          <ResumePromptOverlay
+            resumeTime={resumeTime}
+            onResume={performResume}
+            onSkip={skipResume}
+            tPlayer={tPlayer}
+          />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
-        {buffering && !networkError && !formatError && !showResumePrompt && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
-          >
-            <div className="relative">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-20 h-20 border-4 border-primary/30 border-t-primary rounded-full shadow-[0_0_20px_rgba(var(--primary),0.3)]"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-12 h-12 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center">
-                  <Loader2 size={24} className="text-primary animate-spin" />
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
+        <BufferingOverlay
+          show={
+            buffering && !networkError && !formatError && !showResumePrompt
+          }
+        />
       </AnimatePresence>
     </div>
   );
