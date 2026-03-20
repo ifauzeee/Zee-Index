@@ -186,7 +186,7 @@ export async function listFilesFromDrive(
       const errorData = await response.json();
       throw new Error(
         errorData.error?.message ||
-          "Pastikan folder ID benar dan dapat diakses.",
+        "Pastikan folder ID benar dan dapat diakses.",
       );
     }
 
@@ -337,7 +337,6 @@ export async function getFolderPath(
         });
       }
     } catch {
-      // fall back to legacy parsing
     }
   }
 

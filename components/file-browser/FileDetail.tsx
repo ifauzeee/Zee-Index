@@ -323,7 +323,6 @@ export default function FileDetail({
         break;
       case "office":
       case "pdf":
-        // Fall through to DefaultPreview which uses our internal PDF and Office viewers
         break;
       case "ebook":
         content = <EbookPreview src={directLink} />;
