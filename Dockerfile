@@ -47,7 +47,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-RUN apk add --no-cache curl dumb-init openssl
+RUN apk add --no-cache curl dumb-init openssl postgresql-client
 
 # Copy necessary files
 COPY --from=builder /app/public ./public
@@ -60,6 +60,22 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 # Script to run migrations and start
 RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
+    echo 'set -e' >> /app/entrypoint.sh && \
+    echo 'if [ -n "$DATABASE_URL" ]; then' >> /app/entrypoint.sh && \
+    echo '  echo "Checking database existence..."' >> /app/entrypoint.sh && \
+    echo '  # Extract host, user, and db name from DATABASE_URL' >> /app/entrypoint.sh && \
+    echo '  DB_HOST=$(echo $DATABASE_URL | sed -n "s/.*@\\([^:]*\\).*/\\1/p" | cut -d/ -f1)' >> /app/entrypoint.sh && \
+    echo '  DB_USER=$(echo $DATABASE_URL | sed -n "s/.*\\/\\/\\([^:]*\\).*/\\1/p")' >> /app/entrypoint.sh && \
+    echo '  DB_NAME=$(echo $DATABASE_URL | sed -n "s/.*\\/\\([^?]*\\).*/\\1/p" | rev | cut -d/ -f1 | rev)' >> /app/entrypoint.sh && \
+    echo '  DB_PASS=$(echo $DATABASE_URL | sed -n "s/.*:\\([^@]*\\)@.*/\\1/p")' >> /app/entrypoint.sh && \
+    echo '  ' >> /app/entrypoint.sh && \
+    echo '  echo "Waiting for $DB_HOST to be ready..."' >> /app/entrypoint.sh && \
+    echo '  until PGPASSWORD=$DB_PASS psql -h "$DB_HOST" -U "$DB_USER" -d postgres -c "\\q" 2>/dev/null; do sleep 1; done' >> /app/entrypoint.sh && \
+    echo '  ' >> /app/entrypoint.sh && \
+    echo '  echo "Ensuring database $DB_NAME exists..."' >> /app/entrypoint.sh && \
+    echo '  PGPASSWORD=$DB_PASS psql -h "$DB_HOST" -U "$DB_USER" -d postgres -tc \"SELECT 1 FROM pg_database WHERE datname = \x27$DB_NAME\x27\" | grep -q 1 || \' >> /app/entrypoint.sh && \
+    echo '    PGPASSWORD=$DB_PASS psql -h "$DB_HOST" -U "$DB_USER" -d postgres -c \"CREATE DATABASE \\\"$DB_NAME\\\"\"' >> /app/entrypoint.sh && \
+    echo 'fi' >> /app/entrypoint.sh && \
     echo 'echo "Running database migrations..."' >> /app/entrypoint.sh && \
     echo 'if [ -d "prisma/migrations" ]; then npx prisma migrate deploy; else npx prisma db push --accept-data-loss; fi || echo "Prisma migration failed, continuing..."' >> /app/entrypoint.sh && \
     echo 'exec "$@"' >> /app/entrypoint.sh && \
