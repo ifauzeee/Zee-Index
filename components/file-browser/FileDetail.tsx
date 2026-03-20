@@ -323,7 +323,7 @@ export default function FileDetail({
         break;
       case "office":
       case "pdf":
-        if (showDocPreview) content = <GoogleDrivePreview fileId={file.id} />;
+        // Fall through to DefaultPreview which uses our internal PDF and Office viewers
         break;
       case "ebook":
         content = <EbookPreview src={directLink} />;

@@ -78,7 +78,13 @@ export function getFileType(file: { mimeType: string; name: string }): string {
   if (mimeType.startsWith("video/")) return "video";
   if (mimeType.startsWith("audio/")) return "audio";
   if (mimeType.startsWith("image/")) return "image";
-  if (mimeType === "application/pdf") return "pdf";
+  if (
+    mimeType === "application/pdf" ||
+    mimeType === "application/vnd.google-apps.document" ||
+    mimeType === "application/vnd.google-apps.spreadsheet" ||
+    mimeType === "application/vnd.google-apps.presentation"
+  )
+    return "pdf";
 
   if (mimeType === "text/markdown" || name.endsWith(".md")) return "markdown";
 
