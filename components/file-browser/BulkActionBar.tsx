@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/providers/ModalProvider";
 import MoveModal from "@/components/modals/MoveModal";
 import { cn } from "@/lib/utils";
-import JSZip from "jszip";
 import { useTranslations } from "next-intl";
 
 export function BulkActionBar() {
@@ -42,6 +41,14 @@ export function BulkActionBar() {
       return;
     }
 
+    if (filesToZip.length > 20) {
+      addToast({
+        message: "Maksimal 20 file per unduhan bulk sekaligus.",
+        type: "error",
+      });
+      return;
+    }
+
     addToast({
       message: t("zipping", { count: filesToZip.length }),
       type: "info",
@@ -49,45 +56,32 @@ export function BulkActionBar() {
     setIsProcessing(true);
 
     try {
-      const zip = new JSZip();
-      const folderName = "zee-index-archive";
-      const folder = zip.folder(folderName);
-
-      if (!folder) throw new Error(t("zipFolderError"));
-
-      const promises = filesToZip.map(async (file) => {
-        try {
-          const response = await fetch(`/api/download?fileId=${file.id}`);
-          if (!response.ok) throw new Error(t("networkError"));
-          const blob = await response.blob();
-          folder.file(file.name, blob);
-        } catch (error) {
-          console.error(`Failed to download ${file.name}`, error);
-          addToast({
-            message: t("skipError", { name: file.name }),
-            type: "error",
-          });
-        }
+      const response = await fetch("/api/bulk-download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileIds: filesToZip.map((f) => f.id) }),
       });
 
-      await Promise.all(promises);
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || t("zipGenError"));
+      }
 
-      const content = await zip.generateAsync({ type: "blob" });
-      const url = URL.createObjectURL(content);
-      const iframe = document.createElement("iframe");
-      iframe.style.display = "none";
-      iframe.src = url;
-      document.body.appendChild(iframe);
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-      }, 5000);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "download.zip";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
       addToast({ message: t("zipStarted"), type: "success" });
       clearSelection();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Zip error:", error);
-      addToast({ message: t("zipGenError"), type: "error" });
+      addToast({ message: error.message || t("zipGenError"), type: "error" });
     } finally {
       setIsProcessing(false);
     }
