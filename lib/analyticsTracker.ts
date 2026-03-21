@@ -1,4 +1,5 @@
 import { kv } from "@/lib/kv";
+import { randomUUID } from "crypto";
 
 const PAGEVIEW_KEY = "zee-index:analytics:pageviews";
 const VISITOR_KEY = "zee-index:analytics:visitors";
@@ -55,7 +56,7 @@ export interface AnalyticsData {
 }
 
 function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return `${Date.now()}-${randomUUID().replace(/-/g, "").substring(0, 12)}`;
 }
 
 function getDayKey(timestamp: number): string {

@@ -30,7 +30,7 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (
   setSidebarOpen: (isOpen: boolean) => set({ isSidebarOpen: isOpen }),
   toasts: [],
   addToast: (toastDetails: Omit<Toast, "id">) => {
-    const id = new Date().toISOString() + Math.random();
+    const id = crypto.randomUUID();
     const newToast = { ...toastDetails, id };
     const newNotification: NotificationItem = {
       id,
