@@ -7,6 +7,8 @@ import { logger } from "@/lib/logger";
 import { authLimiter } from "@/lib/ratelimit";
 import { kv } from "@/lib/kv";
 import { REDIS_KEYS } from "@/lib/constants";
+import bcrypt from "bcryptjs";
+import { randomUUID } from "crypto";
 
 import type { NextAuthConfig } from "next-auth";
 
@@ -101,10 +103,20 @@ const authConfig: NextAuthConfig = {
           );
           const isAdmin = isAdminDb || isAdminEnv || isRedisAdmin === 1;
 
+          const envPassHash = process.env.ADMIN_PASSWORD_HASH || "";
           const envPass = (process.env.ADMIN_PASSWORD || "")
             .trim()
             .replace(/^["']|["']$/g, "");
-          const isPassValid = password === envPass;
+
+          let isPassValid = false;
+          if (envPassHash) {
+            isPassValid = await bcrypt.compare(password, envPassHash);
+          } else if (envPass) {
+            const { timingSafeEqual } = await import("crypto");
+            const a = Buffer.from(password);
+            const b = Buffer.from(envPass);
+            isPassValid = a.length === b.length && timingSafeEqual(a, b);
+          }
 
           logger.info(
             {
@@ -175,7 +187,7 @@ const authConfig: NextAuthConfig = {
           }
         } catch {}
 
-        const guestId = `guest_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        const guestId = `guest_${Date.now()}_${randomUUID().replace(/-/g, "").substring(0, 12)}`;
         return {
           id: guestId,
           name: "Guest User",
