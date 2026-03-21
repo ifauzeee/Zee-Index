@@ -160,28 +160,43 @@
 
 ## 🏗 Architecture Overview
 
+```mermaid
+flowchart TB
+    subgraph CLIENT["🌐 Client Browser"]
+        A["React 19 + Next.js 16\nApp Router · Zustand · TanStack Query"]
+    end
+
+    subgraph CADDY["🔒 Caddy Reverse Proxy"]
+        B["Auto-HTTPS · Let's Encrypt\n:443 → :3000"]
+    end
+
+    subgraph APP["⚡ Zee-Index Application"]
+        C["API Routes"]
+        D["Middleware\nAuth · i18n · Rate Limit"]
+        E["Server Components\nStreaming SSR"]
+    end
+
+    subgraph SERVICES["📦 Backend Services"]
+        F[("🐘 PostgreSQL 16\nUsers · Shares\nActivity · Config")]
+        G[("🔴 Redis 7\nCache · KV Store\nRate Limiting")]
+        H["☁️ Google Drive API v3\nFiles · Streaming\nMetadata"]
+    end
+
+    CLIENT <-->|HTTPS| CADDY
+    CADDY <--> APP
+    C <--> F
+    C <--> G
+    C <--> H
+    D --- C
+    E --- C
+
+    style CLIENT fill:#1a1a2e,stroke:#e94560,color:#fff
+    style CADDY fill:#0f3460,stroke:#e94560,color:#fff
+    style APP fill:#16213e,stroke:#0f3460,color:#fff
+    style SERVICES fill:#1a1a2e,stroke:#533483,color:#fff
 ```
-┌─────────────────────────────────────────────────────┐
-│                    Caddy (Reverse Proxy)             │
-│                 Auto-HTTPS + Let's Encrypt           │
-└───────────────────────┬─────────────────────────────┘
-                        │ :443 → :3000
-┌───────────────────────┴─────────────────────────────┐
-│                  Zee-Index (Next.js 16)              │
-│  ┌──────────────┐  ┌──────────┐  ┌───────────────┐  │
-│  │  App Router  │  │   API    │  │  Middleware    │  │
-│  │  (React 19)  │  │  Routes  │  │ (Auth/i18n/RL)│  │
-│  └──────────────┘  └────┬─────┘  └───────────────┘  │
-└─────────────────────────┼───────────────────────────┘
-            ┌─────────────┼─────────────┐
-            ▼             ▼             ▼
-     ┌────────────┐ ┌──────────┐ ┌────────────┐
-     │ PostgreSQL │ │  Redis   │ │ Google     │
-     │   (Auth,   │ │ (Cache,  │ │ Drive API  │
-     │  Activity, │ │  KV,     │ │  (Files,   │
-     │  Shares)   │ │  Rate)   │ │  Stream)   │
-     └────────────┘ └──────────┘ └────────────┘
-```
+
+> **Live Demo:** [https://zee-index.duckdns.org](https://zee-index.duckdns.org)
 
 ---
 
@@ -391,35 +406,46 @@ pnpm test:e2e         # E2E tests (Playwright)
 
 # 1. CORE
 NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="generate-with-openssl-rand-base64-32"
-SHARE_SECRET_KEY="generate-another-with-openssl-rand-base64-32"
+NEXTAUTH_SECRET=""          # openssl rand -base64 32
+SHARE_SECRET_KEY=""         # openssl rand -base64 32
 
 ADMIN_EMAILS="admin@example.com"
 ADMIN_PASSWORD="your-secure-password"
-# ADMIN_PASSWORD_HASH=""  # Generate with: scripts/hash-password.sh
+# ADMIN_PASSWORD_HASH=""    # Generate: scripts/hash-password.sh "password"
 
 # 2. GOOGLE DRIVE
 GOOGLE_CLIENT_ID=""
 GOOGLE_CLIENT_SECRET=""
 GOOGLE_REFRESH_TOKEN=""
-
 NEXT_PUBLIC_ROOT_FOLDER_ID=""
 NEXT_PUBLIC_ROOT_FOLDER_NAME="Home"
 
 # 3. DATABASE (Docker auto-configures DATABASE_URL)
 POSTGRES_USER=postgres
-POSTGRES_PASSWORD=change-this-in-production
+POSTGRES_PASSWORD=postgres
 POSTGRES_DB=zee_index
 
-# 4. OPTIONAL
+# 4. LIMITS & MONITORING
 STORAGE_LIMIT_GB=15
 STORAGE_WARNING_THRESHOLD=0.90
 CRON_SECRET="random-string"
+
+# 5. BUILD
 SKIP_ENV_VALIDATION=false
 
-# 5. HTTPS (Optional - for VPS deployment)
+# 6. HTTPS (Optional)
 # DUCKDNS_DOMAIN="your-subdomain"
 # DUCKDNS_TOKEN="your-token"
+
+# 7. EMAIL (Optional)
+# SMTP_HOST="smtp.gmail.com"
+# SMTP_PORT="465"
+# SMTP_USER="your-email@gmail.com"
+# SMTP_PASS="your-app-password"
+# EMAIL_FROM="Zee Index <no-reply@example.com>"
+
+# 8. EXTERNAL SERVICES (Optional)
+# TMDB_API_KEY=""
 ```
 
 </details>
