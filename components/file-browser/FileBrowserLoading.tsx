@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import FileItemSkeleton from "@/components/file-browser/FileItemSkeleton";
 
 const FileBrowserLoading = () => {
-  const { view } = useAppStore();
+  const { view, density } = useAppStore();
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -17,9 +17,11 @@ const FileBrowserLoading = () => {
   };
 
   const containerClass =
-    view === "list"
-      ? "flex flex-col gap-2"
-      : "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4";
+    view === "gallery"
+      ? "flex flex-col gap-4"
+      : view === "list"
+        ? "flex flex-col gap-2"
+        : "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4";
 
   return (
     <motion.div
@@ -29,7 +31,7 @@ const FileBrowserLoading = () => {
       animate="visible"
     >
       {Array.from({ length: 12 }).map((_, index) => (
-        <FileItemSkeleton key={index} viewMode={view as "list" | "grid"} />
+        <FileItemSkeleton key={index} viewMode={view as any} density={density} />
       ))}
     </motion.div>
   );
