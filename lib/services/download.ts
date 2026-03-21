@@ -221,6 +221,7 @@ export function prepareResponseHeaders(
   secFetchDest: string | null,
   googleResponse: Response,
   isHEAD: boolean = false,
+  requestOrigin?: string | null,
 ): Headers {
   const responseHeaders = new Headers();
   const encodedFileName = encodeURIComponent(filename).replace(
@@ -254,7 +255,9 @@ export function prepareResponseHeaders(
   responseHeaders.set("X-Accel-Buffering", "no");
   responseHeaders.set("X-Content-Type-Options", "nosniff");
   responseHeaders.set("Connection", "keep-alive");
-  responseHeaders.set("Access-Control-Allow-Origin", "*");
+
+  const allowedOrigin = requestOrigin || process.env.NEXTAUTH_URL || "";
+  responseHeaders.set("Access-Control-Allow-Origin", allowedOrigin);
   responseHeaders.set(
     "Access-Control-Expose-Headers",
     "Content-Range, Content-Length, Accept-Ranges",

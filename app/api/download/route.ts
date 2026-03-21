@@ -84,6 +84,7 @@ export async function GET(request: NextRequest) {
         null,
         null as any,
         true,
+        request.headers.get("origin"),
       );
       if (fileDetails.size) headHeaders.set("Content-Length", fileDetails.size);
       headHeaders.set("Accept-Ranges", "bytes");
@@ -119,6 +120,8 @@ export async function GET(request: NextRequest) {
       range,
       request.headers.get("Sec-Fetch-Dest"),
       googleResponse,
+      false,
+      request.headers.get("origin"),
     );
 
     if (!range) {
