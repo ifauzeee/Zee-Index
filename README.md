@@ -6,31 +6,30 @@
   <h1 align="center">⚡ Zee-Index</h1>
 
   <p align="center">
-    <strong>Self-Hosted Google Drive CMS, Explorer & Streaming Platform</strong>
+    <strong>Self-Hosted Google Drive Explorer, CMS & Streaming Platform</strong>
   </p>
 
   <p align="center">
-    Transform your Google Drive into a professional portfolio website, media gallery, or file repository.<br>
-    Features <strong>Shared Drive</strong> management, <strong>Instant Navigation</strong>, and <strong>High-Performance Streaming</strong>.
+    Transform your Google Drive into a professional file manager, media gallery, and streaming server.<br>
+    <strong>Shared Drive</strong> management · <strong>Video Streaming</strong> · <strong>Password-Protected Folders</strong> · <strong>Share Links</strong>
   </p>
 
   <div align="center">
-    <a href="https://zee-index.duckdns.org">🔴 Live Demo</a>
-    ·
-    <a href="https://github.com/ifauzeee/Zee-Index/issues">🐛 Report Bug</a>
-    ·
-    <a href="https://github.com/ifauzeee/Zee-Index/pulls">✨ Request Feature</a>
+    <a href="https://zee-index.duckdns.org"><img src="https://img.shields.io/badge/🔴_Live_Demo-Visit-FF4444?style=for-the-badge" alt="Live Demo" /></a>
+    <a href="https://github.com/ifauzeee/Zee-Index/issues"><img src="https://img.shields.io/badge/🐛_Report_Bug-Issues-FFA500?style=for-the-badge" alt="Report Bug" /></a>
+    <a href="https://github.com/ifauzeee/Zee-Index/pulls"><img src="https://img.shields.io/badge/✨_Feature_Request-PRs-28A745?style=for-the-badge" alt="Feature Request" /></a>
   </div>
 
   <br />
 
   <div align="center">
-    <img src="https://img.shields.io/badge/Next.js_16-App_Router-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js" />
-    <img src="https://img.shields.io/badge/Turbopack-Fast-blue?style=for-the-badge&logo=vercel&logoColor=white" alt="Turbopack" />
-    <img src="https://img.shields.io/badge/Redis-Cache-red?style=for-the-badge&logo=redis&logoColor=white" alt="Redis" />
-    <img src="https://img.shields.io/badge/TypeScript-Strict_Mode-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
-    <img src="https://img.shields.io/badge/Tailwind_CSS-Glassmorphism-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" />
-    <img src="https://img.shields.io/badge/Docker-Optimized-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+    <img src="https://img.shields.io/badge/Next.js_16-App_Router-000000?style=flat-square&logo=next.js&logoColor=white" alt="Next.js" />
+    <img src="https://img.shields.io/badge/React_19-Concurrent-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React" />
+    <img src="https://img.shields.io/badge/TypeScript-Strict-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+    <img src="https://img.shields.io/badge/Redis-7_Alpine-DC382D?style=flat-square&logo=redis&logoColor=white" alt="Redis" />
+    <img src="https://img.shields.io/badge/Docker-Optimized-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
+    <img src="https://img.shields.io/badge/Tailwind_CSS-v3-06B6D4?style=flat-square&logo=tailwind-css&logoColor=white" alt="Tailwind" />
   </div>
 </div>
 
@@ -38,222 +37,150 @@
 
 ---
 
-## 📚 Table of Contents
+## 📑 Table of Contents
 
-- [🌟 Key Features](#-key-features)
-  - [Fast & Responsive](#-fast--responsive)
-  - [Media Streaming](#-media-streaming)
-  - [Security](#️-security)
-  - [Multi-Drive Management](#️-multi-drive-management)
-  - [Built-in Tools](#️-built-in-tools)
-- [🛠️ Tech Stack](#️-tech-stack)
-- [📂 Project Structure](#-project-structure)
-- [🚀 Getting Started](#-getting-started)
+<details>
+<summary>Click to expand</summary>
+
+- [Key Features](#-key-features)
+- [Tech Stack](#️-tech-stack)
+- [Architecture Overview](#-architecture-overview)
+- [Getting Started](#-getting-started)
   - [Prerequisites](#prerequisites)
-  - [Installation Options](#installation-options)
-    - [Local Development (Pro Mode)](#option-1-local-development-pro-mode)
-    - [Docker Development](#option-2-docker-development)
-    - [Full Docker Production](#option-3-full-docker-production)
-- [⚙️ Environment Configuration](#️-environment-configuration)
-  - [Required Variables](#required-variables)
-  - [Optional Variables](#optional-variables)
-  - [Complete .env Reference](#complete-env-reference)
-- [📦 Deployment](#-deployment)
-  - [Step 1: Google Cloud Setup](#step-1-google-cloud-setup)
-  - [Step 2: Obtain Refresh Token](#step-2-obtain-refresh-token)
-  - [Step 3: Deploy to Other Platforms](#step-3-deploy-to-other-platforms)
-- [🐳 Docker Deployment](#-docker-deployment)
-  - [Docker Compose (Recommended)](#docker-compose-recommended)
-  - [Docker Build Arguments](#docker-build-arguments)
-  - [Docker Health Checks](#docker-health-checks)
-- [🔐 Authentication & Authorization](#-authentication--authorization)
-- [📖 API Reference](#-api-reference)
-- [🖱️ Keyboard Shortcuts](#️-keyboard-shortcuts)
-- [🌍 Internationalization (i18n)](#-internationalization-i18n)
-- [🧪 Testing](#-testing)
-- [🔄 CI/CD Pipeline](#-cicd-pipeline)
-- [📈 Monitoring & Logging](#-monitoring--logging)
-- [⚠️ Troubleshooting](#️-troubleshooting)
+  - [Quick Start with Docker (Recommended)](#-quick-start-with-docker-recommended)
+  - [Local Development](#-local-development)
+- [Google Cloud Setup](#-google-cloud-setup)
+- [Environment Variables](#️-environment-variables)
+- [Deployment Guide](#-deployment-guide)
+  - [VPS / DigitalOcean](#vps--digitalocean)
+  - [Auto HTTPS with DuckDNS + Caddy](#automatic-https-with-duckdns--caddy)
+  - [Railway / Render / Vercel](#other-platforms)
+- [Security](#-security)
+  - [Authentication & Authorization](#authentication--authorization)
+  - [Password Hashing (bcrypt)](#password-hashing-bcrypt)
+  - [Security Headers & CSP](#security-headers--csp)
+- [API Reference](#-api-reference)
+- [Keyboard Shortcuts](#️-keyboard-shortcuts)
+- [Internationalization (i18n)](#-internationalization-i18n)
+- [Project Structure](#-project-structure)
+- [Testing](#-testing)
+- [Troubleshooting](#️-troubleshooting)
+- [Contributing](#-contributing)
+- [License](#-license)
+- [Acknowledgments](#-acknowledgments)
 
-- [🤝 Contributing](#-contributing)
-- [📜 License](#-license)
-- [🙏 Acknowledgments](#-acknowledgments)
+</details>
 
 ---
 
 ## 🌟 Key Features
 
-Zee-Index transforms your Google Drive into a powerful, self-hosted file system and media server.
+### ⚡ Performance & UI
 
-### ⚡ Fast & Responsive
+| Feature | Description |
+|---|---|
+| **Virtualized Rendering** | Smooth scrolling through **10,000+ files** with `@tanstack/react-virtual` |
+| **Smart Prefetching** | Preloads folder contents on hover for instant navigation |
+| **Multi-Layer Caching** | Redis + in-memory cache for blazing-fast API responses |
+| **Turbopack** | Next.js 16 Turbopack for ultra-fast development builds |
+| **PWA Support** | Installable as a Progressive Web App with offline caching |
+| **Dark/Light Mode** | Automatic theme detection with manual toggle |
 
-| Feature                     | Description                                                                                                  |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| **Virtualized Rendering**   | Built with `@tanstack/react-virtual` for smooth scrolling through folders with **10,000+ files** without lag |
-| **Instant Visual Feedback** | Immediate click response with loading spinners on all interactive elements                                   |
-| **Global Progress Bar**     | Visual top-loading bar for premium app-like navigation experience                                            |
-| **Smart Prefetching**       | Intelligently preloads folder contents on hover for instant navigation                                       |
-| **Turbopack Bundler**       | Uses Next.js 16's Turbopack for blazing-fast development builds                                              |
-| **Redis Caching**           | Multi-layer caching with Redis for optimized API responses                                                   |
+### 🎬 Media & File Previews
 
-### 🎬 Media Streaming
+| Feature | Description |
+|---|---|
+| **Video Streaming** | Direct stream with VidStack player, resume playback, theater mode |
+| **Auto Subtitles** | Automatic `.srt` / `.vtt` subtitle detection and loading |
+| **Audio Dock** | Persistent audio player that continues across navigation |
+| **Image Gallery** | Masonry grid with lightbox using `yet-another-react-lightbox` |
+| **PDF Viewer** | Built-in viewer powered by `react-pdf` |
+| **Code Editor** | Monaco Editor for syntax-highlighted code preview |
+| **Office Files** | Preview Word, Excel, PowerPoint via Google Viewer |
+| **Archive Preview** | Browse ZIP contents without downloading |
+| **Ebook Reader** | Read ePub files in-browser |
 
-| Feature                     | Description                                                                                |
-| --------------------------- | ------------------------------------------------------------------------------------------ |
-| **Direct Stream**           | Optimized headers (`Cache-Control: no-transform`) ensure video streams without re-encoding |
-| **Universal Audio Dock**    | Persistent audio player that continues playing while navigating                            |
-| **Adaptive Video Player**   | Integrated with VidStack for professional video playback experience                        |
-| **Auto-Subtitle Detection** | Automatic detection of `.srt` and `.vtt` subtitle files                                    |
-| **Modern Gallery**          | High-performance lightboxes for images using `yet-another-react-lightbox`                  |
-| **PDF Viewer**              | Built-in PDF viewer with `react-pdf` integration                                           |
-| **Archive Preview**         | Preview contents of ZIP archives without downloading                                       |
+### 🛡️ Security & Access Control
 
-### 🛡️ Security
+| Feature | Description |
+|---|---|
+| **Role-Based Access** | Admin / Editor / User / Guest roles |
+| **Folder Passwords** | Recursive folder protection with bcrypt-hashed passwords |
+| **Two-Factor Auth** | Optional TOTP-based 2FA with QR code setup |
+| **Share Links** | JWT-signed links with expiry, max uses, download prevention, watermarks |
+| **Rate Limiting** | Per-endpoint rate limiting for API, admin, auth, and download |
+| **CSP Headers** | Content Security Policy, HSTS, X-Frame-Options, and more |
+| **bcrypt Passwords** | Timing-safe password comparison with bcrypt hashing |
 
-| Feature                         | Description                                                     |
-| ------------------------------- | --------------------------------------------------------------- |
-| **Recursive Folder Protection** | Parent folder locks automatically protect all nested content    |
-| **Two-Factor Authentication**   | Optional 2FA with TOTP using `otplib`                           |
-| **Role-Based Access Control**   | Configurable Guest, User, and Admin roles                       |
-| **Rate Limiting**               | Built-in API protection with configurable rate limits           |
-| **Share Link Protection**       | JWT-signed share links with optional authentication requirement |
-| **Security Headers**            | Comprehensive security headers (X-Frame-Options, CSP, etc.)     |
+### 🗂️ Drive Management
 
-### 🗂️ Multi-Drive Management
+| Feature | Description |
+|---|---|
+| **Multi-Drive Support** | Personal, Shared, and Team Drives in unified sidebar |
+| **Manual Drives** | Add drives via config with optional password protection |
+| **Folder Aliases** | Custom display names without modifying Google Drive |
+| **Private Folders** | Hide specific folders from non-admin users |
+| **Favorites** | Pin files and folders for quick access |
+| **Drag & Drop** | Move files between folders via drag and drop |
+| **Bulk Operations** | Multi-select, bulk download (ZIP), bulk delete |
 
-| Feature                      | Description                                              |
-| ---------------------------- | -------------------------------------------------------- |
-| **Unified Sidebar**          | Consolidate multiple Personal, Shared, and Team Drives   |
-| **Folder Aliases**           | Rename folders in UI without changing Google Drive names |
-| **Private Folders**          | Configure specific folders to be hidden from non-admins  |
-| **Manual Drive Addition**    | Add additional drives via configuration                  |
-| **Favorites & Pinned Items** | Quick access to frequently used files and folders        |
+### 🛠️ Admin Dashboard
 
-### 🛠️ Built-in Tools
-
-| Feature                | Description                                                            |
-| ---------------------- | ---------------------------------------------------------------------- |
-| **Code Editor**        | Powered by Monaco Editor for professional syntax highlighting and view |
-| **Data Usage Monitor** | Real-time storage usage calculation with progress tracking             |
-| **File Request**       | Create secure public upload links                                      |
-| **Bulk Download**      | Download multiple files as ZIP archive                                 |
-| **Trash Management**   | View and restore deleted files                                         |
-| **Search**             | Full-text search across all accessible files                           |
-| **Tags**               | Organize files with custom tags                                        |
+| Feature | Description |
+|---|---|
+| **Analytics** | Page views, visitors, bandwidth, device breakdown |
+| **Activity Logs** | Track downloads, uploads, config changes |
+| **User Management** | Add editors, manage admin access via email |
+| **Storage Monitor** | Real-time storage usage with warnings |
+| **Cache Control** | Clear Redis cache, view cache stats |
+| **System Health** | Monitor database, Redis, API health |
+| **File Request** | Create public upload links |
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Core Framework
-
-| Technology                                    | Version | Purpose                         |
-| --------------------------------------------- | ------- | ------------------------------- |
-| [Next.js](https://nextjs.org/)                | 16.1.x  | React framework with App Router |
-| [React](https://react.dev/)                   | 19.x    | UI library                      |
-| [TypeScript](https://www.typescriptlang.org/) | 5.x     | Type safety                     |
-
-### Styling & UI
-
-| Technology                                      | Purpose               |
-| ----------------------------------------------- | --------------------- |
-| [Tailwind CSS](https://tailwindcss.com/)        | Utility-first CSS     |
-| [Framer Motion](https://www.framer.com/motion/) | Animations            |
-| [Radix UI](https://www.radix-ui.com/)           | Accessible components |
-| [Lucide React](https://lucide.dev/)             | Icons                 |
-
-### State Management
-
-| Technology                                   | Purpose                |
-| -------------------------------------------- | ---------------------- |
-| [Zustand](https://zustand-demo.pmnd.rs/)     | Global state           |
-| [TanStack Query](https://tanstack.com/query) | Server state & caching |
-| [SWR](https://swr.vercel.app/)               | Data fetching          |
-
-### Backend Services
-
-| Technology                                                 | Purpose        |
-| ---------------------------------------------------------- | -------------- |
-| [NextAuth.js](https://next-auth.js.org/)                   | Authentication |
-| [Redis](https://redis.io/)                                 | Caching layer  |
-| [Google Drive API v3](https://developers.google.com/drive) | File storage   |
-
-### Development Tools
-
-| Technology                                 | Purpose         |
-| ------------------------------------------ | --------------- |
-| [Vitest](https://vitest.dev/)              | Unit testing    |
-| [Playwright](https://playwright.dev/)      | E2E testing     |
-| [ESLint](https://eslint.org/)              | Linting         |
-| [Prettier](https://prettier.io/)           | Code formatting |
-| [Husky](https://typicode.github.io/husky/) | Git hooks       |
+<table>
+<tr><th>Layer</th><th>Technology</th><th>Purpose</th></tr>
+<tr><td rowspan="3"><strong>Frontend</strong></td><td>Next.js 16 + React 19</td><td>App Router, Server Components, Streaming SSR</td></tr>
+<tr><td>Tailwind CSS + Framer Motion</td><td>Styling, glassmorphism, micro-animations</td></tr>
+<tr><td>Zustand + TanStack Query</td><td>Global state + server state management</td></tr>
+<tr><td rowspan="4"><strong>Backend</strong></td><td>Next.js API Routes</td><td>REST API with edge-compatible middleware</td></tr>
+<tr><td>NextAuth.js v5 (Beta)</td><td>OAuth, credentials, guest auth, JWT sessions</td></tr>
+<tr><td>Google Drive API v3</td><td>File storage, streaming, metadata</td></tr>
+<tr><td>Prisma + PostgreSQL 16</td><td>Database ORM with migration support</td></tr>
+<tr><td rowspan="2"><strong>Infrastructure</strong></td><td>Redis 7</td><td>Caching, rate limiting, session data</td></tr>
+<tr><td>Docker + Caddy</td><td>Containerization, auto-HTTPS reverse proxy</td></tr>
+<tr><td rowspan="3"><strong>Dev Tools</strong></td><td>TypeScript 5 (strict)</td><td>Type safety across the entire codebase</td></tr>
+<tr><td>Vitest + Playwright</td><td>Unit tests + end-to-end testing</td></tr>
+<tr><td>ESLint + Prettier + Husky</td><td>Linting, formatting, git hooks</td></tr>
+</table>
 
 ---
 
-## 📂 Project Structure
+## 🏗 Architecture Overview
 
 ```
-zee-index/
-├── 📁 app/                      # Next.js App Router
-│   ├── 📁 [locale]/             # Internationalized routes
-│   │   ├── 📁 (main)/           # Main layout group
-│   │   ├── 📁 admin/            # Admin dashboard pages
-│   │   ├── 📁 folder/           # Folder view pages
-│   │   ├── 📁 share/            # Share link pages
-│   │   └── 📁 ...               # Other pages
-│   ├── 📁 api/                  # API Routes
-│   │   ├── 📁 admin/            # Admin-only APIs
-│   │   ├── 📁 auth/             # NextAuth handlers
-│   │   ├── 📁 files/            # File operations
-│   │   ├── 📁 share/            # Share link APIs
-│   │   ├── 📁 cron/             # Scheduled tasks
-│   │   └── 📁 ...               # Other API routes
-│   ├── 📄 providers.tsx         # Global providers
-│   ├── 📄 global-error.tsx      # Error boundary
-│   └── 📄 manifest.ts           # PWA manifest
-│
-├── 📁 components/               # React Components
-│   ├── 📁 admin/                # Admin dashboard components
-│   ├── 📁 charts/               # Data visualization
-│   ├── 📁 common/               # Shared components
-│   ├── 📁 features/             # Feature-specific components
-│   ├── 📁 file-browser/         # File listing & navigation
-│   ├── 📁 file-details/         # File preview & info
-│   ├── 📁 layout/               # Layout components
-│   ├── 📁 modals/               # Modal dialogs
-│   ├── 📁 providers/            # Context providers
-│   └── 📁 ui/                   # Base UI components
-│
-├── 📁 lib/                      # Utility Functions
-│   ├── 📁 drive/                # Google Drive API helpers
-│   ├── 📄 auth.ts               # Auth utilities
-│   ├── 📄 authOptions.ts        # NextAuth configuration
-│   ├── 📄 kv.ts                 # Redis/KV client
-│   ├── 📄 store.ts              # Zustand stores
-│   ├── 📄 ratelimit.ts          # Rate limiting utilities
-│   ├── 📄 env.ts                # Environment validation
-│   └── 📄 utils.ts              # General utilities
-│
-├── 📁 hooks/                    # Custom React Hooks
-├── 📁 types/                    # TypeScript Definitions
-├── 📁 messages/                 # i18n Translation Files
-│   ├── 📄 en.json               # English
-│   └── 📄 id.json               # Indonesian
-│
-├── 📁 __tests__/                # Unit Tests
-├── 📁 e2e/                      # End-to-End Tests
-├── 📁 public/                   # Static Assets
-├── 📁 .github/                  # GitHub Configuration
-│   └── 📁 workflows/            # CI/CD Pipelines
-│
-├── 📄 .env.example              # Environment Template
-├── 📄 docker-compose.yml        # Production Docker
-├── 📄 docker-compose.redis.yml  # Dev Redis Container
-├── 📄 Dockerfile                # Multi-stage Build
-├── 📄 middleware.ts             # Next.js Middleware
-├── 📄 next.config.mjs           # Next.js Configuration
-├── 📄 tailwind.config.ts        # Tailwind Configuration
-└── 📄 package.json              # Dependencies
+┌─────────────────────────────────────────────────────┐
+│                    Caddy (Reverse Proxy)             │
+│                 Auto-HTTPS + Let's Encrypt           │
+└───────────────────────┬─────────────────────────────┘
+                        │ :443 → :3000
+┌───────────────────────┴─────────────────────────────┐
+│                  Zee-Index (Next.js 16)              │
+│  ┌──────────────┐  ┌──────────┐  ┌───────────────┐  │
+│  │  App Router  │  │   API    │  │  Middleware    │  │
+│  │  (React 19)  │  │  Routes  │  │ (Auth/i18n/RL)│  │
+│  └──────────────┘  └────┬─────┘  └───────────────┘  │
+└─────────────────────────┼───────────────────────────┘
+            ┌─────────────┼─────────────┐
+            ▼             ▼             ▼
+     ┌────────────┐ ┌──────────┐ ┌────────────┐
+     │ PostgreSQL │ │  Redis   │ │ Google     │
+     │   (Auth,   │ │ (Cache,  │ │ Drive API  │
+     │  Activity, │ │  KV,     │ │  (Files,   │
+     │  Shares)   │ │  Rate)   │ │  Stream)   │
+     └────────────┘ └──────────┘ └────────────┘
 ```
 
 ---
@@ -262,523 +189,511 @@ zee-index/
 
 ### Prerequisites
 
-Before you begin, ensure you have the following installed:
+| Requirement | Version | Required |
+|---|---|---|
+| [Docker](https://docs.docker.com/get-docker/) + Docker Compose | Latest | ✅ Yes |
+| [Git](https://git-scm.com/) | Latest | ✅ Yes |
+| [Node.js](https://nodejs.org/) + pnpm | 20.x+ / 9.x+ | 🔶 Only for local dev |
+| Google Cloud Project | — | ✅ Yes |
 
-| Requirement        | Version        | Download                                                      |
-| ------------------ | -------------- | ------------------------------------------------------------- |
-| **Node.js**        | 20.x or higher | [nodejs.org](https://nodejs.org/)                             |
-| **pnpm**           | 9.x or higher  | [pnpm.io](https://pnpm.io/)                                   |
-| **Docker Desktop** | Latest         | [docker.com](https://www.docker.com/products/docker-desktop/) |
-| **Git**            | Latest         | [git-scm.com](https://git-scm.com/)                           |
+### 🐳 Quick Start with Docker (Recommended)
 
-You'll also need:
-
-- A **Google Cloud Project** with Drive API enabled
-- **OAuth 2.0 Credentials** (Client ID & Secret)
-- A **Google Drive folder** to use as root
-
-### Installation Options
-
-Choose the installation method that best fits your needs:
-
----
-
-#### Option 1: Local Development (Pro Mode)
-
-This mode runs Redis in a lightweight Docker container for persistent caching while using `pnpm dev` for hot module replacement.
+The fastest way to get Zee-Index running with **PostgreSQL**, **Redis**, **auto-HTTPS**, all preconfigured:
 
 ```bash
 # 1. Clone the repository
 git clone https://github.com/ifauzeee/Zee-Index.git
 cd Zee-Index
 
-# 2. Install dependencies
-pnpm install
-
-# 3. Configure environment
+# 2. Copy environment template
 cp .env.example .env
-# Edit .env with your credentials (see Configuration section)
 
-# 4. Start Redis container
-pnpm redis:up
+# 3. Edit .env with your credentials (see Environment Variables section)
+nano .env
 
-# 5. Start development server (in a new terminal)
-pnpm dev
+# 4. Build and start all services
+docker compose up -d --build
 
-# 6. Open http://localhost:3000 in your browser
+# 5. Open http://localhost:3000 (or your domain)
+#    Navigate to /setup to complete Google Drive configuration
 ```
 
-**Additional Commands:**
+**Useful Docker commands:**
 
 ```bash
-# Stop Redis when done
-pnpm redis:down
-
-# Run without Turbopack (if issues arise)
-pnpm dev:webpack
-
-# Type checking
-pnpm typecheck
-
-# Linting
-pnpm lint
-
-# Run all checks
-pnpm check:all
-```
-
----
-
-#### Option 2: Docker Development
-
-Build and run the entire application in Docker for a production-like environment.
-
-```bash
-# 1. Clone and configure
-git clone https://github.com/ifauzeee/Zee-Index.git
-cd Zee-Index
-cp .env.example .env
-# Edit .env with your credentials
-
-# 2. Build and start
-docker compose up --build
-
-# 3. Access at http://localhost:3000
-```
-
----
-
-#### Option 3: Full Docker Production
-
-Deploy with optimized production settings.
-
-```bash
-# Build optimized production image
-docker compose build
-
-# Run in detached mode
-docker compose up -d
-
 # View logs
 docker compose logs -f zee-index
 
-# Stop the container
+# Restart after .env changes
+docker compose up -d
+
+# Rebuild after code changes
+docker compose up -d --build
+
+# Stop all services
 docker compose down
+
+# Stop and remove all data (⚠️ destructive)
+docker compose down -v
+```
+
+### 💻 Local Development
+
+For contributors or those who prefer local development with hot reload:
+
+```bash
+# 1. Clone and install
+git clone https://github.com/ifauzeee/Zee-Index.git
+cd Zee-Index
+pnpm install
+
+# 2. Configure environment
+cp .env.example .env
+# Edit .env — set DATABASE_URL for a local PostgreSQL instance
+
+# 3. Setup database
+pnpm prisma migrate deploy   # or: pnpm prisma db push
+
+# 4. Start Redis (optional but recommended)
+docker run -d --name zee-redis -p 6379:6379 redis:7-alpine
+
+# 5. Start development server (with Turbopack)
+pnpm dev
+
+# 6. Open http://localhost:3000
+```
+
+**Development commands:**
+
+```bash
+pnpm dev              # Start with Turbopack (fast)
+pnpm dev:webpack      # Start with Webpack (fallback)
+pnpm build            # Production build
+pnpm typecheck        # TypeScript type checking
+pnpm lint             # ESLint
+pnpm format:check     # Prettier check
+pnpm check:all        # Run all checks
+pnpm test             # Unit tests (Vitest)
+pnpm test:e2e         # E2E tests (Playwright)
 ```
 
 ---
 
-## ⚙️ Environment Configuration
+## ☁️ Google Cloud Setup
+
+<details>
+<summary><strong>Step-by-step Google Cloud configuration</strong></summary>
+
+### 1. Create a Google Cloud Project
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project (or select an existing one)
+
+### 2. Enable Google Drive API
+
+1. Navigate to **APIs & Services** → **Library**
+2. Search for **"Google Drive API"**
+3. Click **Enable**
+
+### 3. Configure OAuth Consent Screen
+
+1. Go to **APIs & Services** → **OAuth consent screen**
+2. Select **External** user type
+3. Fill in app name, support email, developer email
+4. Add scopes:
+   - `https://www.googleapis.com/auth/drive`
+   - `https://www.googleapis.com/auth/drive.file`
+   - `https://www.googleapis.com/auth/userinfo.email`
+   - `https://www.googleapis.com/auth/userinfo.profile`
+5. Add your email as a test user (while in testing mode)
+
+### 4. Create OAuth 2.0 Credentials
+
+1. Go to **APIs & Services** → **Credentials**
+2. Click **Create Credentials** → **OAuth client ID**
+3. Select **Web application**
+4. Add **Authorized redirect URIs**:
+   - `http://localhost:3000/setup` (development)
+   - `https://yourdomain.com/setup` (production)
+5. Save the **Client ID** and **Client Secret**
+
+### 5. Obtain Refresh Token
+
+1. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `.env`
+2. Leave `GOOGLE_REFRESH_TOKEN` empty
+3. Start the application and navigate to `/setup`
+4. Complete the OAuth flow → copy the **Refresh Token**
+5. Add it to `.env` as `GOOGLE_REFRESH_TOKEN`
+6. Restart the application
+
+</details>
+
+---
+
+## ⚙️ Environment Variables
 
 ### Required Variables
 
-These variables **must** be set for the application to function:
+| Variable | Description | Example |
+|---|---|---|
+| `NEXTAUTH_URL` | Your application URL | `https://yourdomain.com` |
+| `NEXTAUTH_SECRET` | Encryption key (min 32 chars) | `openssl rand -base64 32` |
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID | `xxx.apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret | `GOCSPX-xxx` |
+| `GOOGLE_REFRESH_TOKEN` | OAuth Refresh Token | Obtained via `/setup` |
+| `NEXT_PUBLIC_ROOT_FOLDER_ID` | Root Google Drive folder ID | `1ABcDeFgHiJkLmNoPqRsT` |
+| `ADMIN_EMAILS` | Comma-separated admin emails | `admin@example.com` |
+| `ADMIN_PASSWORD` | Admin fallback login password | Use a strong password |
+| `SHARE_SECRET_KEY` | JWT signing key (min 32 chars) | `openssl rand -base64 32` |
 
-| Variable                     | Description                                      | Example                                             |
-| ---------------------------- | ------------------------------------------------ | --------------------------------------------------- |
-| `NEXTAUTH_URL`               | Your application URL                             | `http://localhost:3000` or `https://yourdomain.com` |
-| `NEXTAUTH_SECRET`            | Random encryption key (min 32 chars)             | Generate with `openssl rand -base64 32`             |
-| `GOOGLE_CLIENT_ID`           | OAuth Client ID from Google Cloud                | `xxx.apps.googleusercontent.com`                    |
-| `GOOGLE_CLIENT_SECRET`       | OAuth Client Secret                              | `GOCSPX-xxx`                                        |
-| `GOOGLE_REFRESH_TOKEN`       | OAuth Refresh Token                              | Obtained via `/setup` flow                          |
-| `NEXT_PUBLIC_ROOT_FOLDER_ID` | Google Drive folder ID to use as root            | `1abc...xyz`                                        |
-| `ADMIN_EMAILS`               | Comma-separated admin emails                     | `admin@example.com,owner@example.com`               |
-| `ADMIN_PASSWORD`             | Password for admin fallback login                | Strong password                                     |
-| `SHARE_SECRET_KEY`           | Random key for signing share URLs (min 32 chars) | Generate with `openssl rand -base64 32`             |
+### Database & Cache
+
+| Variable | Description | Default |
+|---|---|---|
+| `POSTGRES_USER` | PostgreSQL username | `postgres` |
+| `POSTGRES_PASSWORD` | PostgreSQL password | `postgres` |
+| `POSTGRES_DB` | Database name | `zee_index` |
+| `DATABASE_URL` | Full connection string (non-Docker) | Auto-generated in Docker |
+| `REDIS_URL` | Redis connection string | `redis://redis:6379` (Docker) |
 
 ### Optional Variables
 
-| Variable                       | Description                         | Default                  |
-| ------------------------------ | ----------------------------------- | ------------------------ |
-| `REDIS_URL`                    | Alternative Redis connection string | `redis://localhost:6379` |
-| `STORAGE_PROVIDER`             | Storage backend                     | `google-drive`           |
-| `NEXT_PUBLIC_ROOT_FOLDER_NAME` | Display name for root folder        | `Home`                   |
-| `NEXT_PUBLIC_MANUAL_DRIVES`    | JSON array of additional drives     | `[]`                     |
-| `PRIVATE_FOLDER_IDS`           | JSON array of private folder IDs    | `[]`                     |
-| `STORAGE_LIMIT_GB`             | Storage warning limit in GB         | `15`                     |
-| `STORAGE_WARNING_THRESHOLD`    | Warning threshold (0-1)             | `0.90`                   |
-| `CRON_SECRET`                  | Secret for cron job authentication  | Random string            |
-| `SKIP_ENV_VALIDATION`          | Skip env validation during build    | `false`                  |
+| Variable | Description | Default |
+|---|---|---|
+| `ADMIN_PASSWORD_HASH` | bcrypt hash of admin password (recommended) | — |
+| `NEXT_PUBLIC_ROOT_FOLDER_NAME` | Display name for root folder | `Home` |
+| `NEXT_PUBLIC_MANUAL_DRIVES` | JSON array of additional drives | `[]` |
+| `PRIVATE_FOLDER_IDS` | JSON array of private folder IDs | `[]` |
+| `STORAGE_LIMIT_GB` | Storage warning limit | `15` |
+| `STORAGE_WARNING_THRESHOLD` | Warning threshold (0–1) | `0.90` |
+| `CRON_SECRET` | Cron job authentication token | — |
+| `TMDB_API_KEY` | TMDB API key for movie metadata | — |
+| `DUCKDNS_DOMAIN` | DuckDNS subdomain | — |
+| `DUCKDNS_TOKEN` | DuckDNS authentication token | — |
 
 ### Email Configuration (Optional)
 
-| Variable     | Description                   | Default                            |
-| ------------ | ----------------------------- | ---------------------------------- |
-| `SMTP_HOST`  | SMTP server hostname          | `smtp.gmail.com`                   |
-| `SMTP_PORT`  | SMTP server port              | `465`                              |
-| `SMTP_USER`  | SMTP username/email           | -                                  |
-| `SMTP_PASS`  | SMTP password or app password | -                                  |
-| `EMAIL_FROM` | Sender email address          | `Zee Index <no-reply@example.com>` |
+| Variable | Description | Default |
+|---|---|---|
+| `SMTP_HOST` | SMTP server | `smtp.gmail.com` |
+| `SMTP_PORT` | SMTP port | `465` |
+| `SMTP_USER` | SMTP username | — |
+| `SMTP_PASS` | SMTP password / app password | — |
+| `EMAIL_FROM` | Sender email address | `Zee Index <no-reply@example.com>` |
 
-### Complete .env Reference
+<details>
+<summary><strong>📋 Complete .env template</strong></summary>
 
 ```bash
 # ==============================================================================
 # ZEE-INDEX CONFIGURATION
 # ==============================================================================
 
-# ------------------------------------------------------------------------------
-# 1. CORE APPLICATION SETTINGS
-# ------------------------------------------------------------------------------
+# 1. CORE
 NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-super-secret-key-minimum-32-characters-long"
-SHARE_SECRET_KEY="another-secret-key-minimum-32-characters-long"
+NEXTAUTH_SECRET="generate-with-openssl-rand-base64-32"
+SHARE_SECRET_KEY="generate-another-with-openssl-rand-base64-32"
 
 ADMIN_EMAILS="admin@example.com"
-ADMIN_PASSWORD="your-secure-admin-password"
+ADMIN_PASSWORD="your-secure-password"
+# ADMIN_PASSWORD_HASH=""  # Generate with: scripts/hash-password.sh
 
-# ------------------------------------------------------------------------------
-# 2. STORAGE CONFIGURATION
-# ------------------------------------------------------------------------------
-STORAGE_PROVIDER="google-drive"
+# 2. GOOGLE DRIVE
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+GOOGLE_REFRESH_TOKEN=""
 
-NEXT_PUBLIC_ROOT_FOLDER_ID="your-google-drive-folder-id"
+NEXT_PUBLIC_ROOT_FOLDER_ID=""
 NEXT_PUBLIC_ROOT_FOLDER_NAME="Home"
 
-# Optional: Add multiple drives (JSON array)
-# NEXT_PUBLIC_MANUAL_DRIVES='[{"id":"drive_id","name":"Drive Name"}]'
+# 3. DATABASE (Docker auto-configures DATABASE_URL)
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=change-this-in-production
+POSTGRES_DB=zee_index
 
-# Optional: Private folder IDs (JSON array)
-# PRIVATE_FOLDER_IDS='["folder_id_1","folder_id_2"]'
-
-# ------------------------------------------------------------------------------
-# 3. GOOGLE DRIVE PROVIDER
-# ------------------------------------------------------------------------------
-GOOGLE_CLIENT_ID="your-client-id.apps.googleusercontent.com"
-GOOGLE_CLIENT_SECRET="your-client-secret"
-GOOGLE_REFRESH_TOKEN="your-refresh-token"
-
-# ------------------------------------------------------------------------------
-# 4. REDIS/CACHE CONFIGURATION
-# ------------------------------------------------------------------------------
-# For Local Docker Redis:
-# KV_REST_API_URL="redis://localhost:6379"
-# KV_REST_API_TOKEN=""
-
-# ------------------------------------------------------------------------------
-# 5. LIMITS & MONITORING
-# ------------------------------------------------------------------------------
+# 4. OPTIONAL
 STORAGE_LIMIT_GB=15
 STORAGE_WARNING_THRESHOLD=0.90
-
-# ------------------------------------------------------------------------------
-# 6. EMAIL CONFIGURATION (Optional)
-# ------------------------------------------------------------------------------
-# SMTP_HOST="smtp.gmail.com"
-# SMTP_PORT="465"
-# SMTP_USER="your-email@gmail.com"
-# SMTP_PASS="your-app-password"
-# EMAIL_FROM="Zee Index <no-reply@example.com>"
-
-# ------------------------------------------------------------------------------
-# 7. CRON JOBS
-# ------------------------------------------------------------------------------
-CRON_SECRET="random-string-for-cron-protection"
-
-# ------------------------------------------------------------------------------
-# 8. BUILD SETTINGS
-# ------------------------------------------------------------------------------
+CRON_SECRET="random-string"
 SKIP_ENV_VALIDATION=false
+
+# 5. HTTPS (Optional - for VPS deployment)
+# DUCKDNS_DOMAIN="your-subdomain"
+# DUCKDNS_TOKEN="your-token"
 ```
 
----
-
-## 📦 Deployment
-
-### Step 1: Google Cloud Setup
-
-1. **Create a Google Cloud Project**
-   - Go to [Google Cloud Console](https://console.cloud.google.com/)
-   - Create a new project or select an existing one
-
-2. **Enable Google Drive API**
-   - Navigate to **APIs & Services** → **Library**
-   - Search for "Google Drive API"
-   - Click **Enable**
-
-3. **Create OAuth 2.0 Credentials**
-   - Go to **APIs & Services** → **Credentials**
-   - Click **Create Credentials** → **OAuth client ID**
-   - Select **Web application**
-   - Add **Authorized redirect URIs**:
-     - For development: `http://localhost:3000/setup`
-     - For production: `https://yourdomain.com/setup`
-   - Save your **Client ID** and **Client Secret**
-
-4. **Configure OAuth Consent Screen**
-   - Go to **APIs & Services** → **OAuth consent screen**
-   - Fill in required fields (App name, support email, etc.)
-   - Add scopes:
-     - `https://www.googleapis.com/auth/drive`
-     - `https://www.googleapis.com/auth/drive.file`
-     - `https://www.googleapis.com/auth/userinfo.email`
-     - `https://www.googleapis.com/auth/userinfo.profile`
-
-### Step 2: Obtain Refresh Token
-
-1. **Start the application** with your Google credentials in `.env`:
-
-   ```bash
-   GOOGLE_CLIENT_ID="your-client-id"
-   GOOGLE_CLIENT_SECRET="your-client-secret"
-   GOOGLE_REFRESH_TOKEN=""  # Leave empty initially
-   ```
-
-2. **Navigate to `/setup`** in your browser
-
-3. **Complete the OAuth flow** by signing in with your Google account
-
-4. **Copy the Refresh Token** displayed and add it to your `.env`:
-
-   ```bash
-   GOOGLE_REFRESH_TOKEN="your-newly-obtained-refresh-token"
-   ```
-
-5. **Restart the application** to apply changes
-
-### Step 3: Deploy to Other Platforms
-
-#### Railway
-
-1.  Create a new project on [Railway](https://railway.app/)
-2.  Connect your GitHub repository
-3.  Add environment variables
-4.  Deploy
-
-#### Render
-
-1. Create a new Web Service on [Render](https://render.com/)
-2. Connect your repository
-3. Set build command: `pnpm install && pnpm build`
-4. Set start command: `pnpm start`
-5. Add environment variables
-
-#### DigitalOcean App Platform
-
-1. Create a new App on [DigitalOcean](https://www.digitalocean.com/products/app-platform)
-2. Connect your repository
-3. Configure as Node.js app
-4. Add environment variables
-5. Deploy
+</details>
 
 ---
 
-## 🐳 Docker Deployment
+## 📦 Deployment Guide
 
-### Docker Compose (Recommended)
+### VPS / DigitalOcean
 
-The project includes an optimized multi-stage Dockerfile with the following features:
-
-- **Alpine-based images** for minimal size (~150MB)
-- **pnpm for efficient caching**
-- **Non-root user** for security
-- **Health checks** for reliability
-- **dumb-init** for proper signal handling
-
-**Production Deployment:**
+Zee-Index is optimized for deployment on low-resource VPS instances (1 CPU / 1 GB RAM):
 
 ```bash
-# Build and run
-docker compose up --build -d
+# 1. SSH into your server
+ssh root@your-server-ip
 
-# View logs
-docker compose logs -f
+# 2. Install Docker
+curl -fsSL https://get.docker.com | sh
 
-# Stop
-docker compose down
+# 3. Create a non-root user (recommended)
+adduser zee && usermod -aG docker zee
+su - zee
+
+# 4. Clone and configure
+git clone https://github.com/ifauzeee/Zee-Index.git
+cd Zee-Index
+cp .env.example .env
+nano .env  # Configure all required variables
+
+# 5. Deploy
+docker compose up -d --build
+
+# 6. Verify
+docker compose ps        # All containers should be "healthy"
+docker compose logs -f   # Watch startup logs
 ```
 
-**Docker Compose Configuration:**
+**Resource usage (approximate):**
 
-```yaml
-services:
-  zee-index:
-    container_name: zee-index
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_ROOT_FOLDER_ID: ${NEXT_PUBLIC_ROOT_FOLDER_ID}
-        NEXT_PUBLIC_ROOT_FOLDER_NAME: ${NEXT_PUBLIC_ROOT_FOLDER_NAME}
-        BUILDKIT_INLINE_CACHE: 1
-    restart: always
-    ports:
-      - "3000:3000"
-    env_file:
-      - .env
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-```
+| Container | Memory Limit | Typical Usage |
+|---|---|---|
+| `zee-index` | 512 MB | ~300 MB |
+| `postgres` | 200 MB | ~50 MB |
+| `redis` | 150 MB | ~20 MB |
+| `caddy` | 50 MB | ~10 MB |
+| **Total** | **~912 MB** | **~380 MB** |
 
-### Docker Build Arguments
+### Automatic HTTPS with DuckDNS + Caddy
 
-The Dockerfile accepts these build arguments for environment variables needed at build time:
+The included `docker-compose.yml` has built-in support for **free HTTPS**:
 
-| Argument                       | Description                        |
-| ------------------------------ | ---------------------------------- |
-| `NEXT_PUBLIC_ROOT_FOLDER_ID`   | Root folder ID (required at build) |
-| `NEXT_PUBLIC_ROOT_FOLDER_NAME` | Root folder display name           |
+1. **Get a DuckDNS domain** at [duckdns.org](https://www.duckdns.org/)
+2. **Add to `.env`:**
+   ```bash
+   DUCKDNS_DOMAIN="your-subdomain"
+   DUCKDNS_TOKEN="your-duckdns-token"
+   NEXTAUTH_URL="https://your-subdomain.duckdns.org"
+   ```
+3. **Create a `Caddyfile`:**
+   ```
+   your-subdomain.duckdns.org {
+     reverse_proxy zee-index:3000
+   }
+   ```
+4. **Deploy** — Caddy automatically provisions SSL via Let's Encrypt
 
-### Docker Health Checks
+### Other Platforms
 
-The container includes health checks that monitor the `/api/health` endpoint:
+<details>
+<summary><strong>Railway</strong></summary>
 
-```dockerfile
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:3000/api/health || exit 1
-```
+1. Create a project at [railway.app](https://railway.app/)
+2. Add **PostgreSQL** and **Redis** services
+3. Connect your GitHub repository
+4. Set environment variables
+5. Deploy
 
-### Automatic HTTPS with DuckDNS & Caddy
+</details>
 
-The attached `docker-compose.yml` includes built-in support for **DuckDNS** (Dynamic DNS) and **Caddy** (Reverse Proxy & Auto SSL).
+<details>
+<summary><strong>Render</strong></summary>
 
-1. **Obtain DuckDNS Token**
-   - Go to [DuckDNS](https://www.duckdns.org/)
-   - Create a domain (e.g., `my-drive.duckdns.org`)
-   - Copy your **Token**
+1. Create a Web Service at [render.com](https://render.com/)
+2. Build command: `pnpm install && pnpm prisma migrate deploy && pnpm build`
+3. Start command: `pnpm start`
+4. Add PostgreSQL database and Redis instances
+5. Set environment variables
 
-2. **Configure Environment**
-   - Add these lines to your `.env` file:
-     ```bash
-     DUCKDNS_DOMAIN="my-drive"
-     DUCKDNS_TOKEN="your-duckdns-token"
-     ```
-   - Change `NEXTAUTH_URL` in `.env` to your new HTTPS URL:
-     ```bash
-     NEXTAUTH_URL="https://my-drive.duckdns.org"
-     ```
-
-3. **Deploy**
-   - Caddy will automatically provision an SSL certificate from Let's Encrypt.
-   - DuckDNS container will keep your home IP address updated.
+</details>
 
 ---
 
-## 🔐 Authentication & Authorization
+## 🔐 Security
 
-Zee-Index supports multiple authentication methods:
+### Authentication & Authorization
 
-### Authentication Methods
+| Method | Description | Config |
+|---|---|---|
+| **Google OAuth** | Login with Google account | Set OAuth credentials |
+| **Admin Password** | Email + password login for admins | `ADMIN_EMAILS` + `ADMIN_PASSWORD` |
+| **Guest Access** | Read-only access (can be disabled) | Toggle in admin settings |
+| **Two-Factor Auth** | TOTP-based 2FA with QR code | Admin dashboard setup |
 
-| Method             | Description                 | Configuration               |
-| ------------------ | --------------------------- | --------------------------- |
-| **Google OAuth**   | Sign in with Google account | Configure OAuth credentials |
-| **Admin Password** | Fallback admin login        | Set `ADMIN_PASSWORD`        |
-| **Guest Access**   | Limited read-only access    | Enabled by default          |
-| **2FA (TOTP)**     | Optional two-factor auth    | Admin configuration         |
+**Role Hierarchy:**
 
-### Role Hierarchy
+| Role | Permissions |
+|---|---|
+| `ADMIN` | Full access — settings, user management, all files |
+| `EDITOR` | Can manage files but not system settings |
+| `USER` | Standard access to permitted folders |
+| `GUEST` | Read-only access to public content |
 
-| Role      | Permissions                                              |
-| --------- | -------------------------------------------------------- |
-| **ADMIN** | Full access to all features, settings, and configuration |
-| **USER**  | Standard access to files in permitted folders            |
-| **GUEST** | Read-only access to public folders                       |
+### Password Hashing (bcrypt)
 
-### Protected Routes
+Admin passwords support **bcrypt hashing** for production security:
 
-| Route       | Required Role | Description                            |
-| ----------- | ------------- | -------------------------------------- |
-| `/admin/*`  | ADMIN         | Admin dashboard and settings           |
-| `/folder/*` | USER+         | File browsing                          |
-| `/share/*`  | PUBLIC        | Shared links (with token)              |
-| `/setup`    | PUBLIC        | Initial setup (only when unconfigured) |
+```bash
+# Generate a bcrypt hash for your password
+docker compose exec zee-index sh /app/scripts/hash-password.sh "your-password"
+
+# Add the output to .env
+ADMIN_PASSWORD_HASH=$2a$10$...your-hash-here...
+
+# You can then remove the plaintext ADMIN_PASSWORD
+```
+
+> **Migration path:** If `ADMIN_PASSWORD_HASH` is set, bcrypt is used. Otherwise, the system falls back to timing-safe comparison of `ADMIN_PASSWORD`.
+
+### Security Headers & CSP
+
+Zee-Index includes comprehensive security headers:
+
+- **Content-Security-Policy** — Prevents XSS by restricting script/style/media sources
+- **Strict-Transport-Security** — Forces HTTPS (63072000s / ~2 years)
+- **X-Frame-Options: DENY** — Prevents clickjacking
+- **X-Content-Type-Options: nosniff** — Prevents MIME sniffing
+- **Referrer-Policy** — `strict-origin-when-cross-origin`
+- **Permissions-Policy** — Disables camera, microphone, geolocation
 
 ---
 
 ## 📖 API Reference
 
-### Public APIs (No Authentication Required)
+### Public Endpoints
 
-| Method | Endpoint             | Description                    |
-| ------ | -------------------- | ------------------------------ |
-| `GET`  | `/api/health`        | Health check endpoint          |
-| `GET`  | `/api/config/public` | Public configuration           |
-| `GET`  | `/api/files`         | List files with optional token |
-| `GET`  | `/api/download/[id]` | Download file (with token)     |
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | Health check |
+| `GET` | `/api/config/public` | Public app configuration |
+| `GET` | `/api/files` | List files (with optional share token) |
+| `GET` | `/api/download?fileId=…` | Download / stream file |
+| `GET` | `/api/folderpath?folderId=…` | Get folder breadcrumb path |
+| `GET` | `/api/metadata?fileId=…` | Get file metadata |
 
-### Authenticated APIs
+### Authenticated Endpoints
 
-| Method | Endpoint                | Description         |
-| ------ | ----------------------- | ------------------- |
-| `GET`  | `/api/folder/[id]`      | Get folder contents |
-| `GET`  | `/api/filedetails/[id]` | Get file details    |
-| `GET`  | `/api/search`           | Search files        |
-| `GET`  | `/api/datausage`        | Get storage usage   |
-| `POST` | `/api/favorites`        | Manage favorites    |
-| `POST` | `/api/share/create`     | Create share link   |
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/search?q=…` | Search files |
+| `GET` | `/api/datausage` | Storage usage info |
+| `POST` | `/api/favorites` | Toggle favorites |
+| `POST` | `/api/tags` | Manage file tags |
+| `POST` | `/api/share/create` | Create share link |
 
-### Admin APIs
+### Admin Endpoints
 
-| Method   | Endpoint                | Description          |
-| -------- | ----------------------- | -------------------- |
-| `GET`    | `/api/admin/stats`      | Dashboard statistics |
-| `GET`    | `/api/admin/activity`   | Activity logs        |
-| `POST`   | `/api/admin/config`     | Update configuration |
-| `POST`   | `/api/admin/2fa/setup`  | Configure 2FA        |
-| `DELETE` | `/api/admin/clearcache` | Clear cache          |
-
-### Cron Job APIs
-
-| Method | Endpoint                  | Description            | Schedule        |
-| ------ | ------------------------- | ---------------------- | --------------- |
-| `GET`  | `/api/cron/storage-check` | Check storage usage    | Daily at 5 AM   |
-| `GET`  | `/api/cron/weekly-report` | Generate weekly report | Sundays at 6 AM |
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/admin/analytics` | Analytics data |
+| `GET` | `/api/admin/activity` | Activity logs |
+| `GET` | `/api/admin/cache-stats` | Cache statistics |
+| `POST` | `/api/admin/config` | Update app configuration |
+| `POST` | `/api/admin/2fa/setup` | Configure 2FA |
+| `POST` | `/api/admin/protected-folders` | Manage folder passwords |
+| `POST` | `/api/admin/manual-drives` | Manage drives |
+| `DELETE` | `/api/admin/clearcache` | Clear all caches |
 
 ---
 
-## 🖱️ Keyboard Shortcuts
+## ⌨️ Keyboard Shortcuts
 
-| Key            | Function                      |
-| -------------- | ----------------------------- |
-| `Cmd/Ctrl + K` | Open Command Palette          |
-| `/`            | Focus Search                  |
-| `Space`        | Quick Preview                 |
-| `Delete`       | Delete Selected File          |
-| `Ctrl + A`     | Select All Files              |
-| `F2`           | Rename Selected File          |
-| `Escape`       | Close Modal / Clear Selection |
-| `Enter`        | Open Selected Item            |
-| `G then H`     | Go to Home                    |
+| Shortcut | Action |
+|---|---|
+| <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>K</kbd> | Open Command Palette |
+| <kbd>/</kbd> | Focus Search |
+| <kbd>Space</kbd> | Quick Preview |
+| <kbd>Ctrl</kbd> + <kbd>A</kbd> | Select All Files |
+| <kbd>Delete</kbd> | Delete Selected |
+| <kbd>F2</kbd> | Rename Selected |
+| <kbd>Enter</kbd> | Open Selected Item |
+| <kbd>Escape</kbd> | Close Modal / Clear Selection |
+| <kbd>G</kbd> then <kbd>H</kbd> | Go to Home |
 
 ---
 
 ## 🌍 Internationalization (i18n)
 
-Zee-Index supports multiple languages using `next-intl`:
+Zee-Index supports multiple languages via `next-intl`:
 
-### Supported Languages
+| Language | Code | Status |
+|---|---|---|
+| 🇬🇧 English | `en` | ✅ Complete |
+| 🇮🇩 Indonesian | `id` | ✅ Complete |
 
-| Language   | Code | File               |
-| ---------- | ---- | ------------------ |
-| English    | `en` | `messages/en.json` |
-| Indonesian | `id` | `messages/id.json` |
+**Adding a new language:**
 
-### Adding a New Language
-
-1. Create a new JSON file in `messages/`:
-
-   ```bash
-   cp messages/en.json messages/fr.json
-   ```
-
-2. Translate all strings in the new file
-
-3. Add the locale to `middleware.ts`:
-
+1. Copy `messages/en.json` → `messages/xx.json`
+2. Translate all strings
+3. Add `"xx"` to the locales array in `middleware.ts`:
    ```typescript
    const intlMiddleware = createMiddleware({
-     locales: ["en", "id", "fr"],
+     locales: ["en", "id", "xx"],
      defaultLocale: "en",
-     localePrefix: "always",
    });
    ```
 
-4. Update `i18n.ts` if needed
+---
+
+## 📂 Project Structure
+
+```
+zee-index/
+├── app/                          # Next.js App Router
+│   ├── [locale]/                 # Internationalized routes
+│   │   ├── (main)/               # Main layout (sidebar + content)
+│   │   ├── admin/                # Admin dashboard
+│   │   ├── login/                # Login page
+│   │   └── setup/                # Setup wizard
+│   └── api/                      # API Routes
+│       ├── admin/                # Admin-only APIs
+│       ├── auth/                 # NextAuth handlers
+│       ├── download/             # File download & streaming
+│       ├── files/                # File listing
+│       ├── share/                # Share link APIs
+│       └── cron/                 # Scheduled tasks
+│
+├── components/                   # React Components
+│   ├── admin/                    # Admin dashboard UI
+│   ├── file-browser/             # File listing, actions, modals
+│   │   ├── share/                # Share modal components
+│   │   └── details/              # Detail panel components
+│   ├── file-details/             # File preview & player
+│   │   └── video-player/         # Video overlays & controls
+│   ├── layout/                   # Header, Sidebar, Footer
+│   │   └── sidebar/              # Sidebar sub-components
+│   ├── common/                   # Shared UI components
+│   └── ui/                       # Radix-based primitives
+│
+├── lib/                          # Core Libraries
+│   ├── drive/                    # Google Drive API client
+│   ├── kv/                       # Redis/KV abstraction layer
+│   │   ├── index.ts              # Factory + re-exports
+│   │   ├── types.ts              # KVClient interface
+│   │   ├── redis-kv.ts           # Redis implementation
+│   │   └── memory-kv.ts          # In-memory fallback
+│   ├── store/                    # Zustand state management
+│   ├── services/                 # Business logic (download, etc.)
+│   └── *.ts                      # Utils, auth, logger, ratelimit
+│
+├── hooks/                        # Custom React Hooks
+├── types/                        # TypeScript definitions
+├── messages/                     # i18n translations (en, id)
+├── prisma/                       # Database schema & migrations
+│   ├── schema.prisma
+│   └── migrations/               # Prisma migration history
+├── scripts/                      # Utility scripts
+│   └── hash-password.sh          # bcrypt password hash generator
+│
+├── docker-compose.yml            # Production stack
+├── Dockerfile                    # Multi-stage optimized build
+├── Caddyfile                     # Reverse proxy config
+├── middleware.ts                  # Auth, i18n, rate limiting
+└── next.config.mjs               # Next.js + security headers
+```
 
 ---
 
@@ -787,254 +702,144 @@ Zee-Index supports multiple languages using `next-intl`:
 ### Unit Tests (Vitest)
 
 ```bash
-# Run tests
-pnpm test
-
-# Run in watch mode
-pnpm test -- --watch
-
-# Generate coverage report
-pnpm test -- --coverage
+pnpm test                  # Run all tests
+pnpm test -- --watch       # Watch mode
+pnpm test -- --coverage    # Coverage report
 ```
 
 ### End-to-End Tests (Playwright)
 
 ```bash
-# Install browsers (first time)
-npx playwright install
-
-# Run E2E tests
-pnpm test:e2e
-
-# Run with UI
-npx playwright test --ui
-
-# Generate HTML report
-npx playwright show-report
-```
-
-### Test Structure
-
-```
-__tests__/           # Unit tests
-  ├── components/    # Component tests
-  ├── lib/           # Utility tests
-  └── api/           # API route tests
-
-e2e/                 # End-to-end tests
-  └── *.spec.ts      # Playwright specs
-```
-
----
-
-## 🔄 CI/CD Pipeline
-
-### GitHub Actions Workflows
-
-| Workflow             | Trigger         | Description                  |
-| -------------------- | --------------- | ---------------------------- |
-| `ci.yml`             | Push/PR to main | Lint, typecheck, test, build |
-| `test.yml`           | Push/PR         | Run unit tests               |
-| `playwright.yml`     | Push/PR         | Run E2E tests                |
-| `docker-publish.yml` | Release         | Build and push Docker image  |
-
-### CI Pipeline Steps
-
-```mermaid
-graph LR
-    A[Push/PR] --> B[Install]
-    B --> C[Lint]
-    C --> D[Typecheck]
-    D --> E[Test]
-    E --> F[Build]
-    F --> G[Deploy]
-```
-
-### Required Secrets
-
-| Secret            | Description         |
-| ----------------- | ------------------- |
-| `DOCKER_USERNAME` | Docker Hub username |
-| `DOCKER_PASSWORD` | Docker Hub password |
-
----
-
-## 📈 Monitoring & Logging
-
-### Built-in Logging
-
-- Request logging with path and duration
-- Error logging with stack traces
-- Activity logging for admin actions
-
-### Health Endpoint
-
-```bash
-curl http://localhost:3000/api/health
-```
-
-Response:
-
-```json
-{
-  "status": "healthy",
-  "timestamp": "2025-01-01T00:00:00Z"
-}
+npx playwright install     # Install browsers (first time)
+pnpm test:e2e              # Run E2E tests
+npx playwright test --ui   # Run with interactive UI
+npx playwright show-report # View HTML report
 ```
 
 ---
 
 ## ⚠️ Troubleshooting
 
-### Common Issues
-
 <details>
-<summary><strong>Login Failed</strong></summary>
+<summary><strong>🔴 Container fails to start ("unhealthy")</strong></summary>
 
-**Symptoms:** Unable to login, credentials rejected
+```bash
+# Check logs for errors
+docker compose logs zee-index --tail 50
 
-**Solutions:**
-
-1. Check `ADMIN_EMAILS` in `.env` matches your email exactly
-2. Ensure `ADMIN_PASSWORD` is set correctly (no quotes around value)
-3. Clear browser cookies and try again
-4. Check server logs for specific error messages
+# Common causes:
+# 1. Database not ready — increase start_period in healthcheck
+# 2. Missing .env variables — check all required vars are set
+# 3. Port conflict — ensure 3000, 5432, 6379 are free
+```
 </details>
 
 <details>
-<summary><strong>Redis Connection Error</strong></summary>
+<summary><strong>🔴 Login fails</strong></summary>
 
-**Symptoms:** Cache errors, slow performance
-
-**Solutions:**
-
-1. For local development, ensure Redis container is running:
-   ```bash
-   pnpm redis:up
-   docker ps  # Verify container is running
-   ```
-2. Check `KV_REST_API_URL` matches your Redis setup:
-   - Local Docker: `redis://localhost:6379`
-   </details>
+1. Verify `ADMIN_EMAILS` matches your email **exactly** (case-insensitive)
+2. Check `ADMIN_PASSWORD` has no surrounding quotes in `.env`
+3. For bcrypt: ensure `ADMIN_PASSWORD_HASH` is a valid bcrypt hash
+4. Clear browser cookies and retry
+5. Check `docker compose logs zee-index` for `[Auth]` messages
+</details>
 
 <details>
-<summary><strong>Google Drive API Errors</strong></summary>
-
-**Symptoms:** Files not loading, 401/403 errors
-
-**Solutions:**
+<summary><strong>🔴 Google Drive API errors (401/403)</strong></summary>
 
 1. Verify `GOOGLE_REFRESH_TOKEN` is valid
-2. Re-run the `/setup` flow to get a new token
-3. Check API quotas in Google Cloud Console
-4. Ensure the service account has access to the folders
+2. Re-run `/setup` flow to obtain a new token
+3. Check API quota at [Google Cloud Console](https://console.cloud.google.com/apis/dashboard)
+4. Ensure the Google account has access to the target folders
 </details>
 
 <details>
-<summary><strong>Build Failures</strong></summary>
+<summary><strong>🟡 Slow performance</strong></summary>
 
-**Symptoms:** Build fails with environment variable errors
-
-**Solutions:**
-
-1. Check all required env variables are set
-2. For CI/CD, add mock values for build:
-   ```bash
-   SKIP_ENV_VALIDATION=true pnpm build
-   ```
-3. Verify `next.config.mjs` has no syntax errors
+1. Enable Redis (don't rely on in-memory fallback)
+2. Check Google Drive API quota (default: 12,000 requests/min)
+3. Monitor with `docker compose exec zee-index sh -c "cat /proc/1/status | grep VmRSS"`
+4. Increase memory limit if needed: `NODE_OPTIONS=--max-old-space-size=512`
 </details>
 
 <details>
-<summary><strong>Docker Build Issues</strong></summary>
+<summary><strong>🟡 Build fails in Docker</strong></summary>
 
-**Symptoms:** Docker build fails or container crashes
+```bash
+# Build without cache
+docker compose build --no-cache
 
-**Solutions:**
+# Check disk space
+df -h
 
-1. Ensure Docker BuildKit is enabled:
-   ```bash
-   export DOCKER_BUILDKIT=1
-   ```
-2. Check memory allocation for Docker
-3. Verify `.dockerignore` excludes `node_modules`
-4. Try building without cache:
-   ```bash
-   docker compose build --no-cache
-   ```
-   </details>
+# Ensure SKIP_ENV_VALIDATION=true is set for builds without full .env
+```
+</details>
 
 <details>
-<summary><strong>Performance Issues</strong></summary>
+<summary><strong>🟡 Database migration issues</strong></summary>
 
-**Symptoms:** Slow page loads, timeouts
+```bash
+# Check migration status
+docker compose exec zee-index npx prisma migrate status
 
-**Solutions:**
+# Force apply migration
+docker compose exec zee-index npx prisma migrate deploy
 
-1. Enable Redis caching (don't rely on in-memory cache)
-2. Check Google Drive API quotas
-3. Reduce folder sizes (virtualization helps but has limits)
-4. Enable PWA caching
+# Reset database (⚠️ destructive)
+docker compose exec zee-index npx prisma migrate reset
+```
 </details>
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions from the community! Please read our [Contributing Guide](CONTRIBUTING.md) before submitting a Pull Request.
-
-### Quick Start for Contributors
+Contributions are welcome! Here's how to get started:
 
 ```bash
-# 1. Fork the repository
-
-# 2. Clone your fork
+# 1. Fork and clone
 git clone https://github.com/YOUR_USERNAME/Zee-Index.git
+cd Zee-Index
 
-# 3. Create a feature branch
-git checkout -b feature/amazing-feature
+# 2. Create a feature branch
+git checkout -b feat/amazing-feature
 
-# 4. Make your changes
-pnpm install
-pnpm dev
+# 3. Install and develop
+pnpm install && pnpm dev
 
-# 5. Run all checks
+# 4. Run all checks before committing
 pnpm check:all
 
-# 6. Commit your changes
+# 5. Commit with conventional format
 git commit -m "feat: add amazing feature"
 
-# 7. Push and create a Pull Request
-git push origin feature/amazing-feature
+# 6. Push and open a Pull Request
+git push origin feat/amazing-feature
 ```
 
-### Commit Convention
+**Commit Convention** ([Conventional Commits](https://www.conventionalcommits.org/)):
 
-We follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-| Type       | Description                   |
-| ---------- | ----------------------------- |
-| `feat`     | New feature                   |
-| `fix`      | Bug fix                       |
-| `docs`     | Documentation only            |
-| `style`    | Code style (formatting, etc.) |
-| `refactor` | Code refactoring              |
-| `test`     | Adding tests                  |
-| `chore`    | Maintenance                   |
+| Prefix | Usage |
+|---|---|
+| `feat:` | New feature |
+| `fix:` | Bug fix |
+| `refactor:` | Code restructuring |
+| `security:` | Security improvement |
+| `docs:` | Documentation |
+| `chore:` | Maintenance |
+| `test:` | Adding/updating tests |
 
 ---
 
 ## 📜 License
 
-This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)** with an additional attribution requirement.
-
-### Key Points
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)** with an attribution requirement.
 
 - ✅ Free to use, modify, and distribute
 - ✅ Commercial use allowed
-- ⚠️ **Attribution Required**: You must display the following notice:
-  > © 2025 All rights reserved - Muhammad Ibnu Fauzi
-- ⚠️ If you host a modified version, you must share the source code
+- ⚠️ **Attribution required:** display `© 2025 Muhammad Ibnu Fauzi` in your deployment
+- ⚠️ Modified versions that are hosted must share source code
 - ⚠️ Changes must be documented
 
 See the [LICENSE](LICENSE) file for full details.
@@ -1043,16 +848,16 @@ See the [LICENSE](LICENSE) file for full details.
 
 ## 🙏 Acknowledgments
 
-### Special Thanks To
+Built with these amazing open-source projects:
 
-- [Next.js Team](https://nextjs.org/) - For the amazing framework
-- [Radix UI](https://www.radix-ui.com/) - For accessible components
-- [TanStack](https://tanstack.com/) - For React Query and Virtual
-- [VidStack](https://www.vidstack.io/) - For the video player
-
-### Open Source Libraries
-
-This project is built with many amazing open source libraries. See [package.json](package.json) for the full list.
+- [Next.js](https://nextjs.org/) — The React framework
+- [VidStack](https://www.vidstack.io/) — Video player components
+- [Radix UI](https://www.radix-ui.com/) — Accessible UI primitives
+- [TanStack](https://tanstack.com/) — React Query & Virtual
+- [Framer Motion](https://www.framer.com/motion/) — Animation library
+- [Zustand](https://zustand-demo.pmnd.rs/) — State management
+- [Prisma](https://www.prisma.io/) — Database ORM
+- [Lucide](https://lucide.dev/) — Beautiful icons
 
 ---
 
