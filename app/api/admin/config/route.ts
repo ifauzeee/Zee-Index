@@ -1,17 +1,12 @@
 import { db } from "@/lib/db";
-import { auth } from "@/auth";
 import { NextResponse } from "next/server";
+import { createAdminRoute } from "@/lib/api-middleware";
 
 const CONFIG_KEY = "zee-index:config";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const GET = createAdminRoute(async () => {
   try {
     const configEntry = await db.adminConfig.findUnique({
       where: { key: CONFIG_KEY },
@@ -25,16 +20,11 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
+});
 
-export async function POST(req: Request) {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const POST = createAdminRoute(async ({ request }) => {
   try {
-    const body = await req.json();
+    const body = await request.json();
     const updatedConfigEntry = await db.adminConfig.upsert({
       where: { key: CONFIG_KEY },
       update: { value: JSON.stringify(body) },
@@ -54,4 +44,4 @@ export async function POST(req: Request) {
       { status: 500 },
     );
   }
-}
+});

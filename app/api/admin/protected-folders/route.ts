@@ -1,10 +1,8 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-
-import { type Session } from "next-auth";
 
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
 
@@ -20,17 +18,9 @@ const folderSchema = z.object({
   password: z.string().min(1, "Password tidak boleh kosong."),
 });
 
-async function isAdmin(session: Session | null): Promise<boolean> {
-  return session?.user?.role === "ADMIN";
-}
-
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const session = await auth();
-  if (!(await isAdmin(session))) {
-    return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
-  }
+export const GET = createAdminRoute(async () => {
   try {
     const folders = await db.protectedFolder.findMany();
 
@@ -51,14 +41,9 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
+});
 
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!(await isAdmin(session))) {
-    return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
-  }
-
+export const POST = createAdminRoute(async ({ request }) => {
   try {
     const body = await request.json();
     const validation = folderSchema.safeParse(body);
@@ -91,13 +76,9 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});
 
-export async function DELETE(request: NextRequest) {
-  const session = await auth();
-  if (!(await isAdmin(session))) {
-    return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
-  }
+export const DELETE = createAdminRoute(async ({ request }) => {
   try {
     const { folderId } = await request.json();
     if (!folderId) {
@@ -124,4 +105,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

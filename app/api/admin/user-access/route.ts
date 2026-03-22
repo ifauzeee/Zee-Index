@@ -1,9 +1,7 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
 import { z } from "zod";
-
-import { type Session } from "next-auth";
 
 const FOLDERS_WITH_ACCESS_KEY = "zee-index:user-access:folders";
 const getFolderAccessKey = (folderId: string) => `folder:access:${folderId}`;
@@ -13,18 +11,9 @@ const accessSchema = z.object({
   email: z.string().email("Format email tidak valid."),
 });
 
-async function isAdmin(session: Session | null): Promise<boolean> {
-  return session?.user?.role === "ADMIN";
-}
-
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const session = await auth();
-  if (!(await isAdmin(session))) {
-    return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
-  }
-
+export const GET = createAdminRoute(async () => {
   try {
     const folderIds: string[] = await kv.smembers(FOLDERS_WITH_ACCESS_KEY);
     const permissions: Record<string, string[]> = {};
@@ -43,14 +32,9 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
+});
 
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!(await isAdmin(session))) {
-    return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
-  }
-
+export const POST = createAdminRoute(async ({ request }) => {
   try {
     const body = await request.json();
     const validation = accessSchema.safeParse(body);
@@ -78,14 +62,9 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});
 
-export async function DELETE(request: NextRequest) {
-  const session = await auth();
-  if (!(await isAdmin(session))) {
-    return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
-  }
-
+export const DELETE = createAdminRoute(async ({ request }) => {
   try {
     const body = await request.json();
     const validation = accessSchema.safeParse(body);
@@ -117,4 +96,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

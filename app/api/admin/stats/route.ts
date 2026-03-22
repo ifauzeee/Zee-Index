@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
 import type { ActivityLog } from "@/lib/activityLogger";
 import type {
@@ -10,14 +10,9 @@ import type {
   TopUser,
 } from "@/lib/adminStats";
 import { startOfToday, subDays, getDay } from "date-fns";
-import { type Session } from "next-auth";
 import { unstable_cache } from "next/cache";
 
 export const dynamic = "force-dynamic";
-
-async function isAdmin(session: Session | null): Promise<boolean> {
-  return session?.user?.role === "ADMIN";
-}
 
 import { getAnalyticsData } from "@/lib/analyticsTracker";
 import { type ActivityType } from "@/lib/activityLogger";
@@ -142,12 +137,7 @@ const getAdminStatsCached = unstable_cache(
   { revalidate: 300, tags: ["admin-stats"] },
 );
 
-export async function GET() {
-  const session = await auth();
-  if (!(await isAdmin(session))) {
-    return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
-  }
-
+export const GET = createAdminRoute(async () => {
   try {
     const stats = await getAdminStatsCached();
     return NextResponse.json(stats);
@@ -158,4 +148,4 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
+});

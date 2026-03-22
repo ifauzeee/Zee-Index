@@ -1,18 +1,10 @@
-import { NextResponse, NextRequest } from "next/server";
-import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { listFileRevisions } from "@/lib/drive";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(
-  req: NextRequest,
-  props: { params: Promise<{ fileId: string }> },
-) {
-  const params = await props.params;
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
+export const GET = createAdminRoute(async ({ params }) => {
   try {
     const revisions = await listFileRevisions(params.fileId);
     return NextResponse.json(revisions);
@@ -22,4 +14,4 @@ export async function GET(
       { status: 500 },
     );
   }
-}
+});

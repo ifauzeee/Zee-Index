@@ -1,17 +1,12 @@
 export const dynamic = "force-dynamic";
 
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
 
-export async function POST(req: NextRequest) {
+export const POST = createAdminRoute(async ({ request }) => {
   try {
-    const session = await auth();
-    if (session?.user?.role !== "ADMIN") {
-      return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
-    }
-
-    const { jti, expiresAt } = await req.json();
+    const { jti, expiresAt } = await request.json();
 
     if (!jti || !expiresAt) {
       return NextResponse.json(
@@ -48,4 +43,4 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

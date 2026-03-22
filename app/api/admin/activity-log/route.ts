@@ -1,30 +1,20 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
 import { getActivityLogs } from "@/lib/activityLogger";
 import { z } from "zod";
-
-import { type Session } from "next-auth";
 
 const querySchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(50),
 });
 
-async function isAdmin(session: Session | null): Promise<boolean> {
-  return session?.user?.role === "ADMIN";
-}
-
 export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!(await isAdmin(session))) {
-    return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
-  }
-
-  const { searchParams } = new URL(request.url);
-  const validation = querySchema.safeParse(Object.fromEntries(searchParams));
+export const GET = createAdminRoute(async ({ request }) => {
+  const validation = querySchema.safeParse(
+    Object.fromEntries(request.nextUrl.searchParams),
+  );
 
   if (!validation.success) {
     return NextResponse.json(
@@ -55,4 +45,4 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

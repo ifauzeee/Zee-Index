@@ -1,80 +1,76 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
-import { auth } from "@/auth";
+import { createPublicRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
 import type { DriveFile } from "@/lib/drive";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(
-  req: NextRequest,
-  props: { params: Promise<{ shareId: string }> },
-) {
-  const params = await props.params;
-  const { shareId } = params;
-  const shareToken = req.nextUrl.searchParams.get("share_token");
+export const GET = createPublicRoute(
+  async ({ request, params, session }) => {
+    const { shareId } = params;
+    const shareToken = request.nextUrl.searchParams.get("share_token");
 
-  if (!shareToken) {
-    return NextResponse.json(
-      { error: "Token berbagi tidak disediakan." },
-      { status: 401 },
-    );
-  }
-
-  try {
-    const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
-    const { payload } = await jwtVerify(shareToken, secret);
-
-    if (payload.jti !== shareId) {
+    if (!shareToken) {
       return NextResponse.json(
-        { error: "Token tidak cocok dengan ID koleksi." },
-        { status: 403 },
+        { error: "Token berbagi tidak disediakan." },
+        { status: 401 },
       );
     }
 
-    const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);
-    if (isBlocked) {
-      return NextResponse.json(
-        { error: "Tautan berbagi ini telah dibatalkan." },
-        { status: 403 },
-      );
-    }
+    try {
+      const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
+      const { payload } = await jwtVerify(shareToken, secret);
 
-    if (payload.loginRequired) {
-      const session = await auth();
-      if (!session) {
+      if (payload.jti !== shareId) {
+        return NextResponse.json(
+          { error: "Token tidak cocok dengan ID koleksi." },
+          { status: 403 },
+        );
+      }
+
+      const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);
+      if (isBlocked) {
+        return NextResponse.json(
+          { error: "Tautan berbagi ini telah dibatalkan." },
+          { status: 403 },
+        );
+      }
+
+      if (payload.loginRequired && !session) {
         return NextResponse.json(
           { error: "Login diperlukan untuk mengakses tautan ini." },
           { status: 401 },
         );
       }
-    }
 
-    const items: DriveFile[] | null = await kv.get(
-      `zee-index:share-items:${shareId}`,
-    );
+      const items: DriveFile[] | null = await kv.get(
+        `zee-index:share-items:${shareId}`,
+      );
 
-    if (!items) {
+      if (!items) {
+        return NextResponse.json(
+          { error: "Koleksi tidak ditemukan atau telah kedaluwarsa." },
+          { status: 404 },
+        );
+      }
+
+      const linkDetails = await db.shareLink.findUnique({
+        where: { jti: shareId },
+      });
+
+      return NextResponse.json({
+        items,
+        collectionName: linkDetails?.itemName || "Koleksi Bersama",
+      });
+    } catch (error) {
+      console.error("Gagal memvalidasi token koleksi:", error);
       return NextResponse.json(
-        { error: "Koleksi tidak ditemukan atau telah kedaluwarsa." },
-        { status: 404 },
+        { error: "Token berbagi tidak valid atau telah kedaluwarsa." },
+        { status: 401 },
       );
     }
-
-    const linkDetails = await db.shareLink.findUnique({
-      where: { jti: shareId },
-    });
-
-    return NextResponse.json({
-      items,
-      collectionName: linkDetails?.itemName || "Koleksi Bersama",
-    });
-  } catch (error) {
-    console.error("Gagal memvalidasi token koleksi:", error);
-    return NextResponse.json(
-      { error: "Token berbagi tidak valid atau telah kedaluwarsa." },
-      { status: 401 },
-    );
-  }
-}
+  },
+  { includeSession: true, rateLimit: false },
+);

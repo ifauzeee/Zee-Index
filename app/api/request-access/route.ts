@@ -1,23 +1,21 @@
 export const dynamic = "force-dynamic";
 
-import { NextResponse, NextRequest } from "next/server";
-import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { createUserRoute } from "@/lib/api-middleware";
 import { sendMail } from "@/lib/mailer";
 import { kv } from "@/lib/kv";
 import { logActivity } from "@/lib/activityLogger";
 
-export async function POST(req: NextRequest) {
+export const POST = createUserRoute(async ({ request, session }) => {
   try {
-    const session = await auth();
-
-    if (!session || !session.user || session.user.isGuest) {
+    if (!session.user || session.user.isGuest) {
       return NextResponse.json(
         { error: "Fitur ini hanya untuk pengguna terdaftar." },
         { status: 403 },
       );
     }
 
-    const { folderId, folderName } = await req.json();
+    const { folderId, folderName } = await request.json();
 
     if (!folderId || !folderName) {
       return NextResponse.json(
@@ -68,11 +66,11 @@ export async function POST(req: NextRequest) {
       success: true,
       message: "Permintaan akses dikirim ke Admin.",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Request Access Error:", error);
     return NextResponse.json(
       { error: "Gagal memproses permintaan." },
       { status: 500 },
     );
   }
-}
+});

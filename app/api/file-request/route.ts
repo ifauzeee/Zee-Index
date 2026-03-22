@@ -1,5 +1,5 @@
-import { NextResponse, NextRequest } from "next/server";
-import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
 import crypto from "crypto";
 import { z } from "zod";
@@ -14,14 +14,9 @@ const createSchema = z.object({
   expiresIn: z.number().min(1),
 });
 
-export async function POST(req: NextRequest) {
+export const POST = createAdminRoute(async ({ request, session }) => {
   try {
-    const session = await auth();
-    if (session?.user?.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
-
-    const body = await req.json();
+    const body = await request.json();
     const validation = createSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
@@ -54,17 +49,12 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-}
+});
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export const GET = createAdminRoute(async () => {
   try {
-    const session = await auth();
-    if (session?.user?.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
-
     const requests = await kv.hgetall(FILE_REQUESTS_KEY);
     const now = Date.now();
     const allRequests = Object.values(requests || {}) as Array<{
@@ -82,16 +72,11 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
+});
 
-export async function DELETE(req: NextRequest) {
+export const DELETE = createAdminRoute(async ({ request }) => {
   try {
-    const session = await auth();
-    if (session?.user?.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
-
-    const { token } = await req.json();
+    const { token } = await request.json();
     if (!token)
       return NextResponse.json({ error: "Token required" }, { status: 400 });
 
@@ -105,4 +90,4 @@ export async function DELETE(req: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

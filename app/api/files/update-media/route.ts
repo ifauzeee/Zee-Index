@@ -1,18 +1,13 @@
 export const dynamic = "force-dynamic";
 
-import { NextResponse, NextRequest } from "next/server";
-import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { getAccessToken } from "@/lib/drive";
 import { invalidateFolderCache } from "@/lib/cache";
 
-export async function PATCH(req: NextRequest) {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
-
+export const PATCH = createAdminRoute(async ({ request }) => {
   try {
-    const formData = await req.formData();
+    const formData = await request.formData();
     const file = formData.get("file") as File;
     const fileId = formData.get("fileId") as string;
     const parentId = formData.get("parentId") as string;
@@ -51,4 +46,4 @@ export async function PATCH(req: NextRequest) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
-}
+});

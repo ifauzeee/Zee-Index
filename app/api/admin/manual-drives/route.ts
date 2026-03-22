@@ -1,5 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
@@ -17,18 +17,9 @@ const driveSchema = z.object({
   password: z.string().optional(),
 });
 
-async function isAdmin() {
-  const session = await auth();
-  return session?.user?.role === "ADMIN";
-}
-
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  if (!(await isAdmin())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
-
+export const GET = createAdminRoute(async () => {
   try {
     const drives = (await kv.get(MANUAL_DRIVES_KEY)) || [];
     return NextResponse.json(drives);
@@ -39,15 +30,11 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
+});
 
-export async function POST(req: NextRequest) {
-  if (!(await isAdmin())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
-
+export const POST = createAdminRoute(async ({ request }) => {
   try {
-    const body = await req.json();
+    const body = await request.json();
     const validation = driveSchema.safeParse(body);
 
     if (!validation.success) {
@@ -93,15 +80,11 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-}
+});
 
-export async function DELETE(req: NextRequest) {
-  if (!(await isAdmin())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
-
+export const DELETE = createAdminRoute(async ({ request }) => {
   try {
-    const { id } = await req.json();
+    const { id } = await request.json();
     if (!id)
       return NextResponse.json({ error: "ID required" }, { status: 400 });
 
@@ -122,4 +105,4 @@ export async function DELETE(req: NextRequest) {
     console.error("Failed to delete manual drive:", error);
     return NextResponse.json({ error: "Gagal menghapus" }, { status: 500 });
   }
-}
+});

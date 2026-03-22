@@ -1,17 +1,12 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
 import type { ShareLink } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export const GET = createAdminRoute(async () => {
   try {
-    const session = await auth();
-    if (session?.user?.role !== "ADMIN") {
-      return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
-    }
-
     const shareLinksRecords = await db.shareLink.findMany({
       orderBy: { createdAt: "desc" },
     });
@@ -40,4 +35,4 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
+});

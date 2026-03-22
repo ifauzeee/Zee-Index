@@ -1,16 +1,11 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { createUserRoute } from "@/lib/api-middleware";
 import { getStorageDetails } from "@/lib/drive";
 import { isAccessRestricted } from "@/lib/securityUtils";
 
-export async function GET() {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: "Akses ditolak." }, { status: 401 });
-  }
-
+export const GET = createUserRoute(async ({ session }) => {
   try {
     const details = await getStorageDetails();
     const isAdmin = session.user?.role === "ADMIN";
@@ -38,4 +33,4 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
+});

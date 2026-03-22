@@ -1,15 +1,10 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { revalidateTag } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
-  }
-
+export const GET = createAdminRoute(async ({ request }) => {
   const { searchParams } = new URL(request.url);
   const target = searchParams.get("target");
   if (target === "files") {
@@ -24,4 +19,4 @@ export async function GET(request: NextRequest) {
     { success: false, message: "Invalid cache target." },
     { status: 400 },
   );
-}
+});

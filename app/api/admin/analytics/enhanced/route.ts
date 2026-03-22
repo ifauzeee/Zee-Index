@@ -1,17 +1,12 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
 import { memoryCache } from "@/lib/memory-cache";
 import { startOfToday, startOfWeek, startOfMonth, subDays } from "date-fns";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Access denied." }, { status: 403 });
-  }
-
+export const GET = createAdminRoute(async () => {
   try {
     const now = Date.now();
     const todayStart = startOfToday().getTime();
@@ -158,4 +153,4 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
+});

@@ -1,9 +1,10 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { createPublicRoute } from "@/lib/api-middleware";
 import { trackPageView } from "@/lib/analyticsTracker";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(request: NextRequest) {
+export const POST = createPublicRoute(async ({ request }) => {
   try {
     const body = await request.json();
     const path = body.path || "/";
@@ -32,4 +33,4 @@ export async function POST(request: NextRequest) {
     console.error("Failed to track page view:", error);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
-}
+});

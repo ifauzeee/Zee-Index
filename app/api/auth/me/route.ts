@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { createPublicRoute } from "@/lib/api-middleware";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const session = await auth();
+export const GET = createPublicRoute(
+  async ({ session }) => {
+    if (!session || !session.user) {
+      return NextResponse.json({ user: null });
+    }
 
-  if (!session || !session.user) {
-    return NextResponse.json({ user: null });
-  }
-
-  return NextResponse.json({ user: session.user });
-}
+    return NextResponse.json({ user: session.user });
+  },
+  { includeSession: true, rateLimit: false },
+);

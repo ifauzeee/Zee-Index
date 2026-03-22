@@ -1,14 +1,9 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { getAnalyticsData } from "@/lib/analyticsTracker";
-import { type Session } from "next-auth";
 import { unstable_cache } from "next/cache";
 
 export const dynamic = "force-dynamic";
-
-async function isAdmin(session: Session | null): Promise<boolean> {
-  return session?.user?.role === "ADMIN";
-}
 
 const getAnalyticsCached = unstable_cache(
   async () => {
@@ -18,12 +13,7 @@ const getAnalyticsCached = unstable_cache(
   { revalidate: 60, tags: ["admin-analytics"] },
 );
 
-export async function GET() {
-  const session = await auth();
-  if (!(await isAdmin(session))) {
-    return NextResponse.json({ error: "Access denied." }, { status: 403 });
-  }
-
+export const GET = createAdminRoute(async () => {
   try {
     const analytics = await getAnalyticsCached();
     return NextResponse.json(analytics);
@@ -34,4 +24,4 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
+});

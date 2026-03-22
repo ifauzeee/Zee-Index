@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createCronRoute } from "@/lib/api-middleware";
 import { getStorageDetails } from "@/lib/drive";
 import { sendMail } from "@/lib/mailer";
 import { formatBytes } from "@/lib/utils";
@@ -8,12 +9,7 @@ const WARNING_SENT_KEY = "zee-index:storage-warning-sent";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response("Unauthorized", { status: 401 });
-  }
-
+export const GET = createCronRoute(async () => {
   try {
     const threshold = parseFloat(
       process.env.STORAGE_WARNING_THRESHOLD || "0.90",
@@ -76,4 +72,4 @@ export async function GET(request: Request) {
       { status: 500 },
     );
   }
-}
+});

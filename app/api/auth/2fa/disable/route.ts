@@ -1,39 +1,37 @@
-import { NextResponse, NextRequest } from "next/server";
-import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { createUserRoute } from "@/lib/api-middleware";
 
 export const dynamic = "force-dynamic";
 import { kv } from "@/lib/kv";
 import { checkRateLimit } from "@/lib/ratelimit";
 
-export async function POST(request: NextRequest) {
-  const { success } = await checkRateLimit(request, "AUTH");
-  if (!success) {
-    return NextResponse.json(
-      { error: "Terlalu banyak permintaan. Silakan coba lagi nanti." },
-      { status: 429 },
-    );
-  }
+export const POST = createUserRoute(
+  async ({ request, session }) => {
+    const { success } = await checkRateLimit(request, "AUTH");
+    if (!success) {
+      return NextResponse.json(
+        { error: "Terlalu banyak permintaan. Silakan coba lagi nanti." },
+        { status: 429 },
+      );
+    }
 
-  const session = await auth();
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: "Akses ditolak." }, { status: 401 });
-  }
+    try {
+      const userEmail = session.user.email;
 
-  try {
-    const userEmail = session.user.email;
+      await kv.del(`2fa:secret:${userEmail}`);
+      await kv.del(`2fa:enabled:${userEmail}`);
 
-    await kv.del(`2fa:secret:${userEmail}`);
-    await kv.del(`2fa:enabled:${userEmail}`);
-
-    return NextResponse.json({
-      success: true,
-      message: "2FA berhasil dinonaktifkan.",
-    });
-  } catch (error) {
-    console.error("2FA Disable Error:", error);
-    return NextResponse.json(
-      { error: "Gagal menonaktifkan 2FA." },
-      { status: 500 },
-    );
-  }
-}
+      return NextResponse.json({
+        success: true,
+        message: "2FA berhasil dinonaktifkan.",
+      });
+    } catch (error) {
+      console.error("2FA Disable Error:", error);
+      return NextResponse.json(
+        { error: "Gagal menonaktifkan 2FA." },
+        { status: 500 },
+      );
+    }
+  },
+  { requireEmail: true, rateLimit: false },
+);

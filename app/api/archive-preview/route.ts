@@ -1,5 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { createUserRoute } from "@/lib/api-middleware";
 import { getAccessToken } from "@/lib/drive";
 import JSZip, { JSZipObject } from "jszip";
 import { isAccessRestricted } from "@/lib/securityUtils";
@@ -12,12 +12,7 @@ interface JSZipFileWithData extends JSZipObject {
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: "Akses ditolak." }, { status: 401 });
-  }
-
+export const GET = createUserRoute(async ({ request }) => {
   const { searchParams } = new URL(request.url);
   const fileId = searchParams.get("fileId");
 
@@ -68,4 +63,4 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

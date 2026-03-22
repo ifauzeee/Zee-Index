@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
 import { getAccessToken } from "@/lib/drive/auth";
 import { db } from "@/lib/db";
@@ -7,12 +7,7 @@ import { GOOGLE_DRIVE_API_BASE_URL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const GET = createAdminRoute(async () => {
   try {
     let redisStatus = "disconnected";
     try {
@@ -87,7 +82,9 @@ export async function GET() {
       responseTimes,
       timestamp: Date.now(),
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
-}
+});

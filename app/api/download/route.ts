@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { createPublicRoute } from "@/lib/api-middleware";
 import { getAccessToken, getFileDetailsFromDrive } from "@/lib/drive";
 import { logActivity } from "@/lib/activityLogger";
 import { trackBandwidth } from "@/lib/analyticsTracker";
@@ -14,11 +15,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export async function HEAD(request: NextRequest) {
-  return GET(request);
-}
-
-export async function GET(request: NextRequest) {
+async function handleDownload(request: NextRequest) {
   try {
     const { context, session, error } = await validateDownloadRequest(request);
     if (error) {
@@ -186,3 +183,17 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const GET = createPublicRoute(
+  async ({ request }) => {
+    return await handleDownload(request);
+  },
+  { rateLimit: false },
+);
+
+export const HEAD = createPublicRoute(
+  async ({ request }) => {
+    return await handleDownload(request);
+  },
+  { rateLimit: false },
+);

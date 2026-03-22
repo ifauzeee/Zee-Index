@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server";
+import { createCronRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
 import { sendMail } from "@/lib/mailer";
 import { formatBytes } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response("Unauthorized", { status: 401 });
-  }
-
+export const GET = createCronRoute(async () => {
   try {
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const logs: string[] = await kv.zrange(
@@ -75,4 +71,4 @@ export async function GET(request: Request) {
       { status: 500 },
     );
   }
-}
+});

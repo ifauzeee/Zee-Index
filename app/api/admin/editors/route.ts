@@ -1,16 +1,11 @@
 import { kv } from "@/lib/kv";
-import { auth } from "@/auth";
 import { NextResponse } from "next/server";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { REDIS_KEYS } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const GET = createAdminRoute(async () => {
   try {
     const editors = await kv.smembers(REDIS_KEYS.ADMIN_EDITORS);
     return NextResponse.json(editors || []);
@@ -21,16 +16,11 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
+});
 
-export async function POST(req: Request) {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const POST = createAdminRoute(async ({ request }) => {
   try {
-    const { email } = await req.json();
+    const { email } = await request.json();
     if (!email || typeof email !== "string") {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
     }
@@ -44,16 +34,11 @@ export async function POST(req: Request) {
       { status: 500 },
     );
   }
-}
+});
 
-export async function DELETE(req: Request) {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const DELETE = createAdminRoute(async ({ request }) => {
   try {
-    const { email } = await req.json();
+    const { email } = await request.json();
     if (!email || typeof email !== "string") {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
     }
@@ -67,4 +52,4 @@ export async function DELETE(req: Request) {
       { status: 500 },
     );
   }
-}
+});

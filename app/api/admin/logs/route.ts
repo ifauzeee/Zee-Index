@@ -1,26 +1,15 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
 
 import type { ActivityLog } from "@/lib/activityLogger";
 
-import { type Session } from "next-auth";
-
 const ACTIVITY_LOG_KEY = "zee-index:activity-log";
 const LOGS_PER_PAGE = 50;
 
-async function isAdmin(session: Session | null): Promise<boolean> {
-  return session?.user?.role === "ADMIN";
-}
-
 export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!(await isAdmin(session))) {
-    return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
-  }
-
+export const GET = createAdminRoute(async ({ request }) => {
   const { searchParams } = new URL(request.url);
   const offset = parseInt(searchParams.get("offset") || "0", 10);
 
@@ -54,4 +43,4 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

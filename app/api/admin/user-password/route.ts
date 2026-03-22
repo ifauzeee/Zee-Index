@@ -1,20 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
 import bcrypt from "bcryptjs";
 
-export async function POST(req: NextRequest) {
+export const POST = createAdminRoute(async ({ request }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user || session.user.role !== "ADMIN") {
-      return NextResponse.json(
-        { error: "Unauthorized. Admin access required." },
-        { status: 401 },
-      );
-    }
-
-    const { email, password } = await req.json();
+    const { email, password } = await request.json();
 
     if (!email || !password) {
       return NextResponse.json(
@@ -44,20 +35,11 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-}
+});
 
-export async function DELETE(req: NextRequest) {
+export const DELETE = createAdminRoute(async ({ request }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user || session.user.role !== "ADMIN") {
-      return NextResponse.json(
-        { error: "Unauthorized. Admin access required." },
-        { status: 401 },
-      );
-    }
-
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(request.url);
     const email = searchParams.get("email");
 
     if (!email) {
@@ -80,22 +62,13 @@ export async function DELETE(req: NextRequest) {
       { status: 500 },
     );
   }
-}
+});
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
+export const GET = createAdminRoute(async ({ request }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user || session.user.role !== "ADMIN") {
-      return NextResponse.json(
-        { error: "Unauthorized. Admin access required." },
-        { status: 401 },
-      );
-    }
-
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(request.url);
     const email = searchParams.get("email");
 
     if (!email) {
@@ -118,4 +91,4 @@ export async function GET(req: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

@@ -1,15 +1,10 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { listSharedDrives, listSharedWithMeFolders } from "@/lib/drive";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
-
+export const GET = createAdminRoute(async () => {
   try {
     const [teamDrives, sharedFolders] = await Promise.all([
       listSharedDrives(),
@@ -40,4 +35,4 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
+});

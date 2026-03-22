@@ -1,16 +1,10 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { getSecurityLogs } from "@/lib/activityLogger";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const session = await auth();
-
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
-
+export const GET = createAdminRoute(async () => {
   try {
     const logs = await getSecurityLogs(20);
     return NextResponse.json(logs);
@@ -21,4 +15,4 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
+});

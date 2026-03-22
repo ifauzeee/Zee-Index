@@ -1,17 +1,11 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { getActivityLogs } from "@/lib/activityLogger";
 import { kv } from "@/lib/kv";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const session = await auth();
-
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
-
+export const GET = createAdminRoute(async () => {
   try {
     const logs = await getActivityLogs(100);
     return NextResponse.json(logs);
@@ -22,15 +16,9 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
+});
 
-export async function DELETE() {
-  const session = await auth();
-
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
-
+export const DELETE = createAdminRoute(async () => {
   try {
     const ACTIVITY_LOG_KEY = "zee-index:activity-log";
     await kv.del(ACTIVITY_LOG_KEY);
@@ -41,4 +29,4 @@ export async function DELETE() {
       { status: 500 },
     );
   }
-}
+});

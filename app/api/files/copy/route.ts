@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
-import { NextResponse, NextRequest } from "next/server";
-import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { getAccessToken, getFileDetailsFromDrive } from "@/lib/drive";
 import { z } from "zod";
 import { invalidateFolderCache } from "@/lib/cache";
@@ -13,12 +13,7 @@ const copySchema = z.object({
   newName: z.string().optional(),
 });
 
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Akses ditolak." }, { status: 403 });
-  }
-
+export const POST = createAdminRoute(async ({ request, session }) => {
   try {
     const body = await request.json();
     const validation = copySchema.safeParse(body);
@@ -87,4 +82,4 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

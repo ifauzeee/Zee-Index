@@ -1,16 +1,11 @@
-import { NextResponse, NextRequest } from "next/server";
-import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
 import { logActivity } from "@/lib/activityLogger";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
-
+export const GET = createAdminRoute(async () => {
   try {
     const requests = await kv.smembers("zee-index:access-requests:v3");
 
@@ -37,16 +32,11 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
   }
-}
+});
 
-export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
-
+export const POST = createAdminRoute(async ({ request, session }) => {
   try {
-    const { action, requestData } = await req.json();
+    const { action, requestData } = await request.json();
 
     const allRequests = await kv.smembers("zee-index:access-requests:v3");
 
@@ -102,4 +92,4 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Action failed" }, { status: 500 });
   }
-}
+});

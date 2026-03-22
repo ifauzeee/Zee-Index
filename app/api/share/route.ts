@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { createAdminRoute } from "@/lib/api-middleware";
 import { SignJWT, decodeJwt } from "jose";
 import crypto from "crypto";
 import { kv } from "@/lib/kv";
@@ -24,125 +24,118 @@ interface ShareRequestBody {
   watermarkText?: string;
 }
 
-export async function POST(req: NextRequest) {
-  try {
-    const session = await auth();
-    if (session?.user?.role !== "ADMIN" || !session.user.email) {
-      return NextResponse.json(
-        { error: "Akses ditolak. Izin admin dan email pengguna diperlukan." },
-        { status: 403 },
-      );
-    }
+export const POST = createAdminRoute(
+  async ({ request, session }) => {
+    try {
+      const {
+        path,
+        itemName,
+        type,
+        expiresIn,
+        loginRequired,
+        items,
+        maxUses,
+        preventDownload,
+        hasWatermark,
+        watermarkText,
+      }: ShareRequestBody = await request.json();
+      const isCollection = items && items.length > 0;
 
-    const {
-      path,
-      itemName,
-      type,
-      expiresIn,
-      loginRequired,
-      items,
-      maxUses,
-      preventDownload,
-      hasWatermark,
-      watermarkText,
-    }: ShareRequestBody = await req.json();
-    const isCollection = items && items.length > 0;
+      if ((!isCollection && !path) || !itemName || !type || !expiresIn) {
+        return NextResponse.json(
+          { error: "Parameter yang diperlukan tidak lengkap." },
+          { status: 400 },
+        );
+      }
 
-    if ((!isCollection && !path) || !itemName || !type || !expiresIn) {
-      return NextResponse.json(
-        { error: "Parameter yang diperlukan tidak lengkap." },
-        { status: 400 },
-      );
-    }
+      const validExpireFormats = /^\d+[smhdw]$/;
+      if (!validExpireFormats.test(expiresIn)) {
+        return NextResponse.json(
+          {
+            error:
+              "Format expiresIn tidak valid. Gunakan format seperti: 1h, 7d, 30d",
+          },
+          { status: 400 },
+        );
+      }
 
-    const validExpireFormats = /^\d+[smhdw]$/;
-    if (!validExpireFormats.test(expiresIn)) {
-      return NextResponse.json(
-        {
-          error:
-            "Format expiresIn tidak valid. Gunakan format seperti: 1h, 7d, 30d",
-        },
-        { status: 400 },
-      );
-    }
+      const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
+      const jti = crypto.randomUUID();
 
-    const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
-    const jti = crypto.randomUUID();
+      const sharePath = isCollection ? `/share/${jti}` : path!;
+      const shareName = itemName;
 
-    const sharePath = isCollection ? `/share/${jti}` : path!;
-    const shareName = itemName;
-
-    const token = await new SignJWT({
-      shareId: jti,
-      loginRequired: loginRequired ?? false,
-      preventDownload: preventDownload ?? false,
-      hasWatermark: hasWatermark ?? false,
-      watermarkText: watermarkText || null,
-    })
-      .setProtectedHeader({ alg: "HS256" })
-      .setIssuedAt()
-      .setExpirationTime(expiresIn)
-      .setJti(jti)
-      .sign(secret);
-    const shareableUrl = `${getBaseUrl()}${sharePath}?share_token=${token}`;
-
-    const decodedToken = decodeJwt(token);
-    if (!decodedToken.exp) {
-      throw new Error("Token tidak memiliki waktu kedaluwarsa.");
-    }
-
-    if (isCollection) {
-      const expiresInSeconds = (decodedToken.exp * 1000 - Date.now()) / 1000;
-      await kv.set(`zee-index:share-items:${jti}`, items, {
-        ex: Math.ceil(expiresInSeconds) + 3600,
-      });
-    }
-
-    const expiresAtDate = new Date(decodedToken.exp * 1000);
-
-    const shareLinkRecord = await db.shareLink.create({
-      data: {
-        id: jti,
-        path: sharePath,
-        token,
-        jti,
-        expiresAt: expiresAtDate,
+      const token = await new SignJWT({
+        shareId: jti,
         loginRequired: loginRequired ?? false,
-        itemName: shareName,
-        isCollection: isCollection,
-        maxUses: maxUses ?? null,
         preventDownload: preventDownload ?? false,
         hasWatermark: hasWatermark ?? false,
         watermarkText: watermarkText || null,
-      },
-    });
+      })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setExpirationTime(expiresIn)
+        .setJti(jti)
+        .sign(secret);
+      const shareableUrl = `${getBaseUrl()}${sharePath}?share_token=${token}`;
 
-    const newShareLink: ShareLink = {
-      id: shareLinkRecord.id,
-      path: shareLinkRecord.path,
-      token: shareLinkRecord.token,
-      jti: shareLinkRecord.jti,
-      expiresAt: shareLinkRecord.expiresAt.toISOString(),
-      loginRequired: shareLinkRecord.loginRequired,
-      itemName: shareLinkRecord.itemName,
-      isCollection: shareLinkRecord.isCollection,
-      maxUses: shareLinkRecord.maxUses,
-      preventDownload: shareLinkRecord.preventDownload,
-      hasWatermark: shareLinkRecord.hasWatermark,
-      watermarkText: shareLinkRecord.watermarkText,
-    };
+      const decodedToken = decodeJwt(token);
+      if (!decodedToken.exp) {
+        throw new Error("Token tidak memiliki waktu kedaluwarsa.");
+      }
 
-    const adminEmails =
-      process.env.ADMIN_EMAILS?.split(",")
-        .map((email: string) => email.trim())
-        .filter(Boolean) || [];
-    if (adminEmails.length > 0) {
-      await sendMail({
-        to: adminEmails,
-        subject: `[Zee Index] Tautan ${
-          isCollection ? "Koleksi" : "Berbagi"
-        } Baru Dibuat`,
-        html: `
+      if (isCollection) {
+        const expiresInSeconds = (decodedToken.exp * 1000 - Date.now()) / 1000;
+        await kv.set(`zee-index:share-items:${jti}`, items, {
+          ex: Math.ceil(expiresInSeconds) + 3600,
+        });
+      }
+
+      const expiresAtDate = new Date(decodedToken.exp * 1000);
+
+      const shareLinkRecord = await db.shareLink.create({
+        data: {
+          id: jti,
+          path: sharePath,
+          token,
+          jti,
+          expiresAt: expiresAtDate,
+          loginRequired: loginRequired ?? false,
+          itemName: shareName,
+          isCollection: isCollection,
+          maxUses: maxUses ?? null,
+          preventDownload: preventDownload ?? false,
+          hasWatermark: hasWatermark ?? false,
+          watermarkText: watermarkText || null,
+        },
+      });
+
+      const newShareLink: ShareLink = {
+        id: shareLinkRecord.id,
+        path: shareLinkRecord.path,
+        token: shareLinkRecord.token,
+        jti: shareLinkRecord.jti,
+        expiresAt: shareLinkRecord.expiresAt.toISOString(),
+        loginRequired: shareLinkRecord.loginRequired,
+        itemName: shareLinkRecord.itemName,
+        isCollection: shareLinkRecord.isCollection,
+        maxUses: shareLinkRecord.maxUses,
+        preventDownload: shareLinkRecord.preventDownload,
+        hasWatermark: shareLinkRecord.hasWatermark,
+        watermarkText: shareLinkRecord.watermarkText,
+      };
+
+      const adminEmails =
+        process.env.ADMIN_EMAILS?.split(",")
+          .map((email: string) => email.trim())
+          .filter(Boolean) || [];
+      if (adminEmails.length > 0) {
+        await sendMail({
+          to: adminEmails,
+          subject: `[Zee Index] Tautan ${
+            isCollection ? "Koleksi" : "Berbagi"
+          } Baru Dibuat`,
+          html: `
     
         <p>Halo Admin,</p>
                 <p>Tautan ${
@@ -157,15 +150,17 @@ export async function POST(req: NextRequest) {
     
             <p>Anda dapat mengelola semua tautan di dasbor admin.</p>
             `,
-      });
-    }
+        });
+      }
 
-    return NextResponse.json({ shareableUrl, token, jti, newShareLink });
-  } catch (error) {
-    console.error("Error generating share link:", error);
-    return NextResponse.json(
-      { error: "Gagal membuat tautan berbagi." },
-      { status: 500 },
-    );
-  }
-}
+      return NextResponse.json({ shareableUrl, token, jti, newShareLink });
+    } catch (error) {
+      console.error("Error generating share link:", error);
+      return NextResponse.json(
+        { error: "Gagal membuat tautan berbagi." },
+        { status: 500 },
+      );
+    }
+  },
+  { requireEmail: true },
+);
