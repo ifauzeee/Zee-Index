@@ -2,21 +2,22 @@ openapi: 3.1.0
 info:
   title: Zee-Index API
   description: |
-    API documentation for Zee-Index - The Ultimate Self-Hosted Google Drive CMS, Explorer & Streaming Platform.
+    Core API documentation for Zee-Index - a self-hosted Google Drive CMS,
+    explorer, and streaming platform.
 
     ## Authentication
     Most endpoints require authentication via NextAuth.js session or folder-specific tokens.
 
     ## Rate Limiting
-    - General API: 100 requests per minute
-    - Download API: 30 requests per minute
+    - General API: 500 requests per minute
+    - Download API: 100 requests per hour
+    - Admin API: 50 requests per minute
 
     ## Error Responses
-    All errors follow this format:
+    Most errors follow this format:
     ```json
     {
-      "error": "Error message",
-      "code": "ERROR_CODE"
+      "error": "Error message"
     }
     ```
   version: 2.0.0
@@ -65,6 +66,24 @@ paths:
                 $ref: "#/components/schemas/HealthResponse"
         "503":
           description: One or more services unhealthy
+
+  /api/admin/system-health:
+    get:
+      tags:
+        - Admin
+        - Health
+      summary: Read operational system health
+      description: Returns measured dependency health, latency summary, and 24h error counts for the admin dashboard
+      operationId: getAdminSystemHealth
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: System health payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSystemHealthResponse"
 
   # ==============================================================================
   # FILE ENDPOINTS
@@ -344,7 +363,7 @@ paths:
   # ==============================================================================
   # SHARE ENDPOINTS
   # ==============================================================================
-  /api/share/create:
+  /api/share:
     post:
       tags:
         - Share
@@ -360,27 +379,56 @@ paths:
             schema:
               type: object
               required:
-                - path
                 - itemName
+                - type
+                - expiresIn
               properties:
                 path:
                   type: string
+                  description: Required for single-item shares
                 itemName:
                   type: string
+                type:
+                  type: string
+                  enum: [timed, session]
                 expiresIn:
-                  type: integer
-                  default: 86400
-                  description: Expiration time in seconds
+                  type: string
+                  default: 7d
+                  description: Duration string such as 1h, 7d, or 30d
                 loginRequired:
                   type: boolean
                   default: false
+                items:
+                  type: array
+                  description: Include to create a shared collection
+                  items:
+                    $ref: "#/components/schemas/DriveFile"
+                maxUses:
+                  type: integer
+                  nullable: true
+                preventDownload:
+                  type: boolean
+                hasWatermark:
+                  type: boolean
+                watermarkText:
+                  type: string
+                  nullable: true
       responses:
         "200":
           description: Share link created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ShareLink"
+                type: object
+                properties:
+                  shareableUrl:
+                    type: string
+                  token:
+                    type: string
+                  jti:
+                    type: string
+                  newShareLink:
+                    $ref: "#/components/schemas/ShareLink"
         "401":
           description: Unauthorized
 
@@ -423,6 +471,120 @@ paths:
           description: Share link deleted
         "401":
           description: Unauthorized
+
+  /api/share/revoke:
+    post:
+      tags:
+        - Share
+      summary: Revoke a share token
+      description: Blocks an existing share token until its original expiry time
+      operationId: revokeShareLink
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - jti
+                - expiresAt
+              properties:
+                jti:
+                  type: string
+                expiresAt:
+                  type: string
+                  format: date-time
+      responses:
+        "200":
+          description: Share link revoked
+
+  /api/share/status:
+    post:
+      tags:
+        - Share
+      summary: Check share token status
+      description: Validates whether a share token is still usable
+      operationId: getShareStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - shareToken
+              properties:
+                shareToken:
+                  type: string
+      responses:
+        "200":
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  error:
+                    type: string
+
+  /api/share/track:
+    post:
+      tags:
+        - Share
+      summary: Track share access
+      description: Increments the view count for a share link
+      operationId: trackShareAccess
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - shareToken
+              properties:
+                shareToken:
+                  type: string
+      responses:
+        "204":
+          description: Access tracked
+
+  /api/share/items/{shareId}:
+    get:
+      tags:
+        - Share
+      summary: Read shared collection items
+      description: Resolves the items stored for a collection share
+      operationId: getSharedCollectionItems
+      parameters:
+        - name: shareId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: share_token
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Collection contents
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DriveFile"
+                  collectionName:
+                    type: string
 
   # ==============================================================================
   # ADMIN ENDPOINTS
@@ -718,18 +880,108 @@ components:
           type: object
           properties:
             database:
+              $ref: "#/components/schemas/ServiceHealth"
+            cache:
+              allOf:
+                - $ref: "#/components/schemas/ServiceHealth"
+                - type: object
+                  properties:
+                    backend:
+                      type: string
+                      enum: [redis, memory]
+            google_drive:
+              $ref: "#/components/schemas/GoogleDriveHealth"
+
+    ServiceHealth:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy, not_configured]
+        latency:
+          type: integer
+        checkedAt:
+          type: string
+          format: date-time
+        error:
+          type: string
+
+    GoogleDriveHealth:
+      allOf:
+        - $ref: "#/components/schemas/ServiceHealth"
+        - type: object
+          properties:
+            quota:
+              type: object
+              nullable: true
+              properties:
+                usage:
+                  type: integer
+                limit:
+                  type: integer
+
+    AdminSystemHealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+        timestamp:
+          type: string
+          format: date-time
+        services:
+          type: object
+          properties:
+            database:
+              $ref: "#/components/schemas/ServiceHealth"
+            cache:
+              allOf:
+                - $ref: "#/components/schemas/ServiceHealth"
+                - type: object
+                  properties:
+                    backend:
+                      type: string
+                      enum: [redis, memory]
+            google_drive:
+              $ref: "#/components/schemas/GoogleDriveHealth"
+        errorRate:
+          type: object
+          properties:
+            last24h:
+              type: integer
+            previous24h:
+              type: integer
+            trendPercentage:
+              type: number
+        latency:
+          type: object
+          properties:
+            totalCheckMs:
+              type: integer
+            averageDependencyMs:
+              type: integer
+            fastestDependency:
               type: object
               properties:
-                status:
+                name:
                   type: string
                 latency:
                   type: integer
-            google_drive:
+            slowestDependency:
               type: object
               properties:
-                status:
+                name:
                   type: string
                 latency:
+                  type: integer
+            dependencies:
+              type: object
+              properties:
+                database:
+                  type: integer
+                cache:
+                  type: integer
+                google_drive:
                   type: integer
 
     Error:
@@ -737,5 +989,9 @@ components:
       properties:
         error:
           type: string
-        code:
-          type: string
+        details:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: object

@@ -1,185 +1,201 @@
-# 📚 Zee-Index API Documentation
+# Zee-Index API Documentation
 
 ## Overview
 
-This directory contains the API documentation for Zee-Index.
+This folder contains the maintained API reference for Zee-Index.
 
-## OpenAPI Specification
+- `openapi.yaml` documents the core public, share, auth, admin, and health endpoints that are actively maintained.
+- The complete route inventory lives under [`app/api`](/C:/Users/Ifauze/Project/zee-index/app/api).
 
-The complete API specification is available in `openapi.yaml` (OpenAPI 3.1 format).
+## How to View the OpenAPI Spec
 
-### Viewing the Documentation
-
-You can view the interactive API documentation using any OpenAPI-compatible viewer:
-
-1. **Swagger UI** (Recommended)
+1. Swagger UI
 
    ```bash
-   # Install swagger-ui-express or use online editor
-   # Visit: https://editor.swagger.io/
-   # Paste the contents of openapi.yaml
+   # Use the online editor
+   # https://editor.swagger.io/
    ```
 
-2. **Redoc**
+2. Redoc
 
    ```bash
    npx @redocly/cli preview-docs ./docs/api/openapi.yaml
    ```
 
-3. **Postman**
-   - Import `openapi.yaml` into Postman
-   - All endpoints will be automatically configured
+3. Postman
 
-## API Endpoints Summary
+   Import `docs/api/openapi.yaml`.
 
-### 🔐 Authentication
+## Route Inventory
 
-| Method | Endpoint           | Description                      |
-| ------ | ------------------ | -------------------------------- |
-| GET    | `/api/auth/me`     | Get current user                 |
-| POST   | `/api/auth/folder` | Authenticate to protected folder |
+### Authentication
 
-### 📁 Files
+| Method | Endpoint                  | Description                           |
+| ------ | ------------------------- | ------------------------------------- |
+| GET    | `/api/auth/me`            | Return the current authenticated user |
+| POST   | `/api/auth/folder`        | Unlock a protected folder             |
+| GET    | `/api/auth/2fa/status`    | Read 2FA status for the current user  |
+| POST   | `/api/auth/2fa/generate`  | Generate a new 2FA secret             |
+| POST   | `/api/auth/2fa/verify`    | Verify a 2FA code                     |
+| POST   | `/api/auth/2fa/disable`   | Disable 2FA for the current user      |
+| `*`    | `/api/auth/[...nextauth]` | NextAuth handler route                |
 
-| Method | Endpoint            | Description          |
-| ------ | ------------------- | -------------------- |
-| GET    | `/api/files`        | List files in folder |
-| GET    | `/api/filedetails`  | Get file details     |
-| GET    | `/api/download`     | Download file        |
-| GET    | `/api/search`       | Search files         |
-| POST   | `/api/files/upload` | Upload file          |
-| PATCH  | `/api/files/rename` | Rename file          |
-| DELETE | `/api/files/delete` | Delete file          |
+### Files and Search
 
-### 🔗 Share
+| Method | Endpoint                        | Description                          |
+| ------ | ------------------------------- | ------------------------------------ |
+| GET    | `/api/files`                    | List folder contents                 |
+| GET    | `/api/filedetails`              | Read file metadata                   |
+| GET    | `/api/download`                 | Stream or download a file            |
+| GET    | `/api/search`                   | Search within Drive content          |
+| GET    | `/api/search/global`            | Global search endpoint               |
+| POST   | `/api/files/upload`             | Upload a file                        |
+| PATCH  | `/api/files/rename`             | Rename a file                        |
+| PATCH  | `/api/files/move`               | Move a file                          |
+| POST   | `/api/files/copy`               | Copy a file                          |
+| POST   | `/api/files/bulk-move`          | Move multiple files                  |
+| POST   | `/api/files/bulk-delete`        | Delete multiple files                |
+| DELETE | `/api/files/delete`             | Delete a file                        |
+| PATCH  | `/api/files/update`             | Update metadata                      |
+| PATCH  | `/api/files/update-media`       | Update media-specific metadata       |
+| GET    | `/api/files/[fileId]/revisions` | Read revision history                |
+| POST   | `/api/folder/create`            | Create a folder                      |
+| GET    | `/api/folderpath`               | Resolve breadcrumb path              |
+| POST   | `/api/bulk-download`            | Download multiple files              |
+| GET    | `/api/archive-preview`          | Preview archive contents             |
+| GET    | `/api/proxy-image`              | Proxy remote image previews          |
+| GET    | `/api/metadata`                 | Resolve metadata for embeds/previews |
+| GET    | `/api/trash`                    | Read trash data                      |
 
-| Method | Endpoint            | Description       |
-| ------ | ------------------- | ----------------- |
-| POST   | `/api/share/create` | Create share link |
-| GET    | `/api/share/list`   | List share links  |
-| POST   | `/api/share/delete` | Delete share link |
+### Share
 
-### ⚙️ Admin
+| Method | Endpoint                     | Description                                        |
+| ------ | ---------------------------- | -------------------------------------------------- |
+| POST   | `/api/share`                 | Create a share link or shared collection           |
+| GET    | `/api/share/list`            | List share links                                   |
+| POST   | `/api/share/delete`          | Delete a share link and remove it from persistence |
+| POST   | `/api/share/revoke`          | Block a share token without deleting the record    |
+| POST   | `/api/share/status`          | Validate whether a share token is still active     |
+| POST   | `/api/share/track`           | Increment share view counters                      |
+| GET    | `/api/share/items/[shareId]` | Resolve the items of a shared collection           |
 
-| Method | Endpoint                  | Description          |
-| ------ | ------------------------- | -------------------- |
-| GET    | `/api/admin/config`       | Get configuration    |
-| POST   | `/api/admin/config`       | Update configuration |
-| GET    | `/api/admin/users`        | List admins          |
-| POST   | `/api/admin/users`        | Add admin            |
-| DELETE | `/api/admin/users`        | Remove admin         |
-| GET    | `/api/admin/activity-log` | Get activity logs    |
+### Public Config and Setup
 
-### 💚 Health
+| Method | Endpoint             | Description                          |
+| ------ | -------------------- | ------------------------------------ |
+| GET    | `/api/config/public` | Read public-facing app configuration |
+| POST   | `/api/setup/finish`  | Finish initial setup                 |
+| GET    | `/api/health`        | Public health endpoint               |
 
-| Method | Endpoint      | Description  |
-| ------ | ------------- | ------------ |
-| GET    | `/api/health` | Health check |
+### Admin
+
+| Method | Endpoint                        | Description                              |
+| ------ | ------------------------------- | ---------------------------------------- |
+| GET    | `/api/admin/config`             | Read app configuration                   |
+| POST   | `/api/admin/config`             | Update app configuration                 |
+| GET    | `/api/admin/system-health`      | Operational dependency and error metrics |
+| GET    | `/api/admin/stats`              | Aggregated dashboard statistics          |
+| GET    | `/api/admin/cache-stats`        | Cache and in-memory stats                |
+| GET    | `/api/admin/activity-log`       | Activity log data                        |
+| GET    | `/api/admin/logs`               | Application logs                         |
+| GET    | `/api/admin/logs/security`      | Security log feed                        |
+| GET    | `/api/admin/analytics`          | Analytics dashboard data                 |
+| GET    | `/api/admin/analytics/enhanced` | Enhanced analytics                       |
+| POST   | `/api/admin/analytics/track`    | Client analytics ingestion               |
+| GET    | `/api/admin/users`              | List admins                              |
+| POST   | `/api/admin/users`              | Add an admin                             |
+| DELETE | `/api/admin/users`              | Remove an admin                          |
+| GET    | `/api/admin/editors`            | List editors                             |
+| POST   | `/api/admin/editors`            | Add an editor                            |
+| DELETE | `/api/admin/editors`            | Remove an editor                         |
+| GET    | `/api/admin/protected-folders`  | List protected folders                   |
+| POST   | `/api/admin/protected-folders`  | Update protected folders                 |
+| GET    | `/api/admin/access-requests`    | List folder access requests              |
+| GET    | `/api/admin/user-access`        | Inspect user access                      |
+| POST   | `/api/admin/user-password`      | Rotate user password                     |
+| GET    | `/api/admin/manual-drives`      | List manually added drives               |
+| POST   | `/api/admin/manual-drives`      | Add a manual drive                       |
+| POST   | `/api/admin/drives/scan`        | Scan shared drives                       |
+| GET    | `/api/admin/audit`              | Audit data                               |
+
+### File Requests and Jobs
+
+| Method | Endpoint                    | Description                          |
+| ------ | --------------------------- | ------------------------------------ |
+| POST   | `/api/file-request`         | Create a file request                |
+| GET    | `/api/file-request/[token]` | Resolve a request by token           |
+| POST   | `/api/file-request/upload`  | Upload into a request                |
+| POST   | `/api/request-access`       | Request access to a protected folder |
+| POST   | `/api/cron/storage-check`   | Scheduled storage audit              |
+| POST   | `/api/cron/weekly-report`   | Scheduled report generation          |
 
 ## Authentication
 
-Most endpoints require authentication. Zee-Index uses NextAuth.js for session management.
+Most endpoints use one of these mechanisms:
 
-### Session Authentication
+- NextAuth session cookie
+- `share_token` query string for shared links
+- `access_token` query string or `Authorization: Bearer <token>` for protected folders
 
-```
-Cookie: next-auth.session-token=<token>
-```
+## Rate Limits
 
-### Share Token Authentication
+The API layer is standardized through the route factory in [`lib/api-middleware.ts`](/C:/Users/Ifauze/Project/zee-index/lib/api-middleware.ts).
 
-```
-?share_token=<jwt-token>
-```
+| Scope       | Limit                   |
+| ----------- | ----------------------- |
+| General API | 500 requests / minute   |
+| Download    | 100 requests / hour     |
+| Auth        | 20 requests / 5 minutes |
+| Admin       | 50 requests / minute    |
 
-### Folder Access Token
+Some public and internal endpoints explicitly disable route-factory rate limiting when a different protection model is used.
 
-```
-?access_token=<folder-token>
-```
+## Error Format
 
-## Rate Limiting
-
-| Endpoint Type | Limit               |
-| ------------- | ------------------- |
-| General API   | 100 requests/minute |
-| Download API  | 30 requests/minute  |
-
-## Error Handling
-
-All errors return a consistent format:
+Most endpoints return:
 
 ```json
 {
-  "error": "Human readable error message",
-  "code": "ERROR_CODE"
+  "error": "Human readable message"
 }
 ```
 
-### Common Error Codes
+Some standardized handlers may also return:
 
-| Code             | HTTP Status | Description        |
-| ---------------- | ----------- | ------------------ |
-| `UNAUTHORIZED`   | 401         | Not authenticated  |
-| `FORBIDDEN`      | 403         | Access denied      |
-| `NOT_FOUND`      | 404         | Resource not found |
-| `RATE_LIMITED`   | 429         | Too many requests  |
-| `INTERNAL_ERROR` | 500         | Server error       |
-
-## Examples
-
-### List Files
-
-```bash
-curl -X GET "http://localhost:3000/api/files?folderId=<folder-id>" \
-  -H "Cookie: next-auth.session-token=<token>"
+```json
+{
+  "error": "Human readable message",
+  "details": []
+}
 ```
 
-### Create Share Link
+Every route created through the shared API middleware includes an `X-Request-Id` response header for tracing.
+
+## Practical Examples
+
+### List files
 
 ```bash
-curl -X POST "http://localhost:3000/api/share/create" \
+curl -X GET "http://localhost:3000/api/files?folderId=<folder-id>"
+```
+
+### Create a share link
+
+```bash
+curl -X POST "http://localhost:3000/api/share" \
   -H "Content-Type: application/json" \
   -H "Cookie: next-auth.session-token=<token>" \
   -d '{
     "path": "/folder/<folder-id>",
     "itemName": "My Folder",
-    "expiresIn": 86400,
+    "type": "timed",
+    "expiresIn": "7d",
     "loginRequired": false
   }'
 ```
 
-### Upload File
+### Validate public health
 
 ```bash
-curl -X POST "http://localhost:3000/api/files/upload" \
-  -H "Cookie: next-auth.session-token=<token>" \
-  -F "file=@/path/to/file.pdf" \
-  -F "folderId=<folder-id>"
+curl -X GET "http://localhost:3000/api/health"
 ```
-
-## SDK / Client Libraries
-
-Currently, no official SDKs are provided. You can generate client libraries from the OpenAPI specification:
-
-```bash
-# Generate TypeScript client
-npx @openapitools/openapi-generator-cli generate \
-  -i ./docs/api/openapi.yaml \
-  -g typescript-fetch \
-  -o ./sdk/typescript
-
-# Generate Python client
-npx @openapitools/openapi-generator-cli generate \
-  -i ./docs/api/openapi.yaml \
-  -g python \
-  -o ./sdk/python
-```
-
-## Changelog
-
-### v2.0.0
-
-- Initial API documentation
-- Added OpenAPI 3.1 specification
-- Documented all endpoints
