@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import {
+  checkCacheHealth,
   checkDatabaseHealth,
   checkGoogleDriveHealth,
 } from "@/lib/services/health-service";
@@ -13,11 +14,16 @@ export const GET = createPublicRoute(
     const headersList = await headers();
     const userAgent = headersList.get("user-agent") || "unknown";
 
-    const dbHealth = await checkDatabaseHealth();
-    const driveHealth = await checkGoogleDriveHealth();
+    const [dbHealth, cacheHealth, driveHealth] = await Promise.all([
+      checkDatabaseHealth(),
+      checkCacheHealth(),
+      checkGoogleDriveHealth(),
+    ]);
 
     const tempHasError =
-      dbHealth.status === "unhealthy" || driveHealth.status === "unhealthy";
+      dbHealth.status === "unhealthy" ||
+      cacheHealth.status === "unhealthy" ||
+      driveHealth.status === "unhealthy";
 
     const healthData = {
       status: tempHasError ? "error" : "ok",
@@ -26,6 +32,7 @@ export const GET = createPublicRoute(
       environment: process.env.NODE_ENV,
       services: {
         database: dbHealth,
+        cache: cacheHealth,
         google_drive: driveHealth,
       },
       meta: {

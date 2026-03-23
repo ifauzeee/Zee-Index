@@ -10,6 +10,7 @@ test("health endpoint returns a structured payload", async ({ request }) => {
   expect(payload).toHaveProperty("timestamp");
   expect(payload).toHaveProperty("services");
   expect(payload.services).toHaveProperty("database");
+  expect(payload.services).toHaveProperty("cache");
   expect(payload.services).toHaveProperty("google_drive");
 });
 
