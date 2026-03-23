@@ -1,7 +1,7 @@
 import { StateCreator } from "zustand";
-import type { AppConfig } from "@/lib/app-config";
+import type { AppConfig } from "@/lib/app-config.shared";
 import { getErrorMessage } from "@/lib/errors";
-import { DEFAULT_APP_CONFIG } from "@/lib/app-config";
+import { DEFAULT_APP_CONFIG } from "@/lib/app-config.shared";
 import {
   AppState,
   ViewMode,

@@ -1,5 +1,5 @@
 import type { DriveFile } from "@/lib/drive";
-import type { AppConfig } from "@/lib/app-config";
+import type { AppConfig } from "@/lib/app-config.shared";
 import type {
   FileRequestLink as PersistedFileRequestLink,
   ShareTokenPayload as ParsedShareTokenPayload,
