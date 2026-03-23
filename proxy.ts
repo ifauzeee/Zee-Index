@@ -45,7 +45,7 @@ const isPublicRoute = (pathname: string) => {
   );
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (
@@ -105,7 +105,13 @@ export async function middleware(request: NextRequest) {
 
   const shareToken = request.nextUrl.searchParams.get("share_token");
   if (shareToken) {
-    return validateShareToken(request, shareToken, pathname, isApi, intlMiddleware);
+    return validateShareToken(
+      request,
+      shareToken,
+      pathname,
+      isApi,
+      intlMiddleware,
+    );
   }
 
   const { isAuthenticated, isGuest, is2FARequired } = await checkAuth(
@@ -140,7 +146,12 @@ export async function middleware(request: NextRequest) {
   }
 
   if (currentFolderId) {
-    const folderRes = await validateFolderToken(request, currentFolderId, isApi, intlMiddleware);
+    const folderRes = await validateFolderToken(
+      request,
+      currentFolderId,
+      isApi,
+      intlMiddleware,
+    );
     if (folderRes) return folderRes;
   }
 

@@ -69,10 +69,6 @@ const securityHeaders = [
 const nextConfig = {
   output: "standalone",
 
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
-
   typescript: {
     ignoreBuildErrors: false,
   },

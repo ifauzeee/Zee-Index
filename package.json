@@ -100,6 +100,7 @@
     "@typescript-eslint/parser": "^8.46.2",
     "@vitejs/plugin-react": "^5.1.2",
     "autoprefixer": "^10.4.19",
+    "baseline-browser-mapping": "^2.10.10",
     "cross-env": "^10.1.0",
     "dotenv-cli": "^7.4.2",
     "eslint": "^8.57.1",
