@@ -46,8 +46,8 @@ export async function getFavorites() {
   );
 
   const validFiles = allFiles.map((file) => {
-    const fileId = file.id as string;
-    const isProt = !!(allProtectedFolders as any)[fileId];
+    const fileId = file.id;
+    const isProt = !!allProtectedFolders[fileId];
     const isPriv = isPrivFolder(fileId);
     return {
       ...file,

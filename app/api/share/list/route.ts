@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
+import type { ShareLink as DbShareLink } from "@prisma/client";
 import { db } from "@/lib/db";
 import type { ShareLink } from "@/lib/store";
 
@@ -11,21 +12,23 @@ export const GET = createAdminRoute(async () => {
       orderBy: { createdAt: "desc" },
     });
 
-    const shareLinks: ShareLink[] = shareLinksRecords.map((record: any) => ({
-      id: record.id,
-      path: record.path,
-      token: record.token,
-      jti: record.jti,
-      expiresAt: record.expiresAt.toISOString(),
-      loginRequired: record.loginRequired,
-      itemName: record.itemName,
-      isCollection: record.isCollection,
-      maxUses: record.maxUses,
-      preventDownload: record.preventDownload,
-      hasWatermark: record.hasWatermark,
-      watermarkText: record.watermarkText,
-      viewCount: record.views,
-    }));
+    const shareLinks: ShareLink[] = shareLinksRecords.map(
+      (record: DbShareLink) => ({
+        id: record.id,
+        path: record.path,
+        token: record.token,
+        jti: record.jti,
+        expiresAt: record.expiresAt.toISOString(),
+        loginRequired: record.loginRequired,
+        itemName: record.itemName,
+        isCollection: record.isCollection,
+        maxUses: record.maxUses,
+        preventDownload: record.preventDownload,
+        hasWatermark: record.hasWatermark,
+        watermarkText: record.watermarkText,
+        viewCount: record.views,
+      }),
+    );
 
     return NextResponse.json(shareLinks);
   } catch (error) {

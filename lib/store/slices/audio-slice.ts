@@ -1,4 +1,5 @@
 import { StateCreator } from "zustand";
+import type { DriveFile } from "@/lib/drive";
 import { AppState, AudioSlice } from "../types";
 
 export const createAudioSlice: StateCreator<AppState, [], [], AudioSlice> = (
@@ -8,28 +9,29 @@ export const createAudioSlice: StateCreator<AppState, [], [], AudioSlice> = (
   activeAudioFile: null,
   audioQueue: [],
   isAudioPlaying: false,
-  playAudio: (file: any, queue: any[] = []) =>
+  playAudio: (file: DriveFile, queue: DriveFile[] = []) =>
     set({
       activeAudioFile: file,
       isAudioPlaying: true,
       audioQueue: queue.length > 0 ? queue : [file],
     }),
-  addToQueue: (files: any[]) =>
+  addToQueue: (files: DriveFile[]) =>
     set((state: AppState) => {
       const newFiles = files.filter(
-        (f: any) => !state.audioQueue.find((q: any) => q.id === f.id),
+        (file) =>
+          !state.audioQueue.find((queuedFile) => queuedFile.id === file.id),
       );
       return { audioQueue: [...state.audioQueue, ...newFiles] };
     }),
   removeFromQueue: (fileId: string) =>
     set((state: AppState) => ({
-      audioQueue: state.audioQueue.filter((f: any) => f.id !== fileId),
+      audioQueue: state.audioQueue.filter((file) => file.id !== fileId),
     })),
   playNextTrack: () => {
     const { activeAudioFile, audioQueue } = get();
     if (!activeAudioFile || audioQueue.length === 0) return;
     const currentIndex = audioQueue.findIndex(
-      (f: any) => f.id === activeAudioFile.id,
+      (file) => file.id === activeAudioFile.id,
     );
     if (currentIndex < audioQueue.length - 1) {
       set({ activeAudioFile: audioQueue[currentIndex + 1] });
@@ -39,7 +41,7 @@ export const createAudioSlice: StateCreator<AppState, [], [], AudioSlice> = (
     const { activeAudioFile, audioQueue } = get();
     if (!activeAudioFile || audioQueue.length === 0) return;
     const currentIndex = audioQueue.findIndex(
-      (f: any) => f.id === activeAudioFile.id,
+      (file) => file.id === activeAudioFile.id,
     );
     if (currentIndex > 0) {
       set({ activeAudioFile: audioQueue[currentIndex - 1] });

@@ -55,6 +55,23 @@ export interface AnalyticsData {
   };
 }
 
+interface PopularPagePayload {
+  path: string;
+  dayKey: string;
+}
+
+interface DeviceStatsPayload {
+  browser: string;
+  os: string;
+  device: string;
+  dayKey: string;
+}
+
+interface ReferrerPayload {
+  source: string;
+  dayKey: string;
+}
+
 function generateId(): string {
   return `${Date.now()}-${randomUUID().replace(/-/g, "").substring(0, 12)}`;
 }
@@ -62,6 +79,48 @@ function generateId(): string {
 function getDayKey(timestamp: number): string {
   const d = new Date(timestamp);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function parseJsonMember<T>(
+  raw: string,
+  guard: (value: unknown) => value is T,
+): T | null {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return guard(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function isPopularPagePayload(value: unknown): value is PopularPagePayload {
+  return (
+    isRecord(value) &&
+    typeof value.path === "string" &&
+    typeof value.dayKey === "string"
+  );
+}
+
+function isDeviceStatsPayload(value: unknown): value is DeviceStatsPayload {
+  return (
+    isRecord(value) &&
+    typeof value.browser === "string" &&
+    typeof value.os === "string" &&
+    typeof value.device === "string" &&
+    typeof value.dayKey === "string"
+  );
+}
+
+function isReferrerPayload(value: unknown): value is ReferrerPayload {
+  return (
+    isRecord(value) &&
+    typeof value.source === "string" &&
+    typeof value.dayKey === "string"
+  );
 }
 
 function parseUserAgent(ua: string): {
@@ -152,12 +211,20 @@ export async function trackPageView(params: {
 
     await kv.zadd(POPULAR_PAGES_KEY, {
       score: timestamp,
-      member: JSON.stringify({ path: params.path, dayKey }),
+      member: JSON.stringify({
+        path: params.path,
+        dayKey,
+      } satisfies PopularPagePayload),
     });
 
     await kv.zadd(DEVICE_STATS_KEY, {
       score: timestamp,
-      member: JSON.stringify({ browser, os, device, dayKey }),
+      member: JSON.stringify({
+        browser,
+        os,
+        device,
+        dayKey,
+      } satisfies DeviceStatsPayload),
     });
 
     if (params.referrer && params.referrer !== "") {
@@ -166,7 +233,7 @@ export async function trackPageView(params: {
         const source = refUrl.hostname || "Direct";
         await kv.zadd(REFERRER_KEY, {
           score: timestamp,
-          member: JSON.stringify({ source, dayKey }),
+          member: JSON.stringify({ source, dayKey } satisfies ReferrerPayload),
         });
       } catch {}
     }
@@ -296,11 +363,12 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
   );
   const pageCounts = new Map<string, number>();
   for (const raw of popularRaw) {
-    try {
-      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-      const path = parsed.path || "/";
-      pageCounts.set(path, (pageCounts.get(path) || 0) + 1);
-    } catch {}
+    const parsed =
+      typeof raw === "string"
+        ? parseJsonMember(raw, isPopularPagePayload)
+        : null;
+    const path = parsed?.path || "/";
+    pageCounts.set(path, (pageCounts.get(path) || 0) + 1);
   }
   const popularPages = Array.from(pageCounts.entries())
     .sort((a, b) => b[1] - a[1])
@@ -318,18 +386,20 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
   const deviceCounts = new Map<string, number>();
 
   for (const raw of deviceRaw) {
-    try {
-      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-      browserCounts.set(
-        parsed.browser,
-        (browserCounts.get(parsed.browser) || 0) + 1,
-      );
-      osCounts.set(parsed.os, (osCounts.get(parsed.os) || 0) + 1);
-      deviceCounts.set(
-        parsed.device,
-        (deviceCounts.get(parsed.device) || 0) + 1,
-      );
-    } catch {}
+    const parsed =
+      typeof raw === "string"
+        ? parseJsonMember(raw, isDeviceStatsPayload)
+        : null;
+    if (!parsed) {
+      continue;
+    }
+
+    browserCounts.set(
+      parsed.browser,
+      (browserCounts.get(parsed.browser) || 0) + 1,
+    );
+    osCounts.set(parsed.os, (osCounts.get(parsed.os) || 0) + 1);
+    deviceCounts.set(parsed.device, (deviceCounts.get(parsed.device) || 0) + 1);
   }
 
   const toSorted = (map: Map<string, number>) =>
@@ -346,13 +416,16 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
   );
   const referrerCounts = new Map<string, number>();
   for (const raw of referrerRaw) {
-    try {
-      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-      referrerCounts.set(
-        parsed.source,
-        (referrerCounts.get(parsed.source) || 0) + 1,
-      );
-    } catch {}
+    const parsed =
+      typeof raw === "string" ? parseJsonMember(raw, isReferrerPayload) : null;
+    if (!parsed) {
+      continue;
+    }
+
+    referrerCounts.set(
+      parsed.source,
+      (referrerCounts.get(parsed.source) || 0) + 1,
+    );
   }
   const topReferrers = Array.from(referrerCounts.entries())
     .sort((a, b) => b[1] - a[1])

@@ -1,5 +1,7 @@
 import { useState, useCallback } from "react";
+import type { InfiniteData } from "@tanstack/react-query";
 import type { DriveFile } from "@/lib/drive";
+import { getErrorMessage } from "@/lib/errors";
 import { useAppStore } from "@/lib/store";
 
 export type ActionState = {
@@ -14,6 +16,13 @@ export type ContextMenuState = {
 } | null;
 
 import { useQueryClient } from "@tanstack/react-query";
+
+interface FileListPage {
+  files: DriveFile[];
+  nextPageToken?: string | null;
+}
+
+type FileListQueryData = InfiniteData<FileListPage>;
 
 export function useFileActions(currentFolderId: string) {
   const queryClient = useQueryClient();
@@ -85,8 +94,11 @@ export function useFileActions(currentFolderId: string) {
         throw new Error(result.error || "Failed to create copy.");
       addToast({ message: "File successfully copied!", type: "success" });
       triggerRefresh();
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (error: unknown) {
+      addToast({
+        message: getErrorMessage(error, "Failed to create copy."),
+        type: "error",
+      });
     }
   };
 
@@ -105,13 +117,13 @@ export function useFileActions(currentFolderId: string) {
       refreshKey,
     ];
 
-    const previousData = queryClient.getQueryData(queryKey);
+    const previousData = queryClient.getQueryData<FileListQueryData>(queryKey);
 
-    queryClient.setQueryData(queryKey, (old: any) => {
+    queryClient.setQueryData<FileListQueryData>(queryKey, (old) => {
       if (!old) return old;
       return {
         ...old,
-        pages: old.pages.map((page: any) => ({
+        pages: old.pages.map((page) => ({
           ...page,
           files: page.files.map((f: DriveFile) =>
             f.id === fileToRename.id ? { ...f, name: newName } : f,
@@ -134,9 +146,12 @@ export function useFileActions(currentFolderId: string) {
       addToast({ message: "Name successfully changed!", type: "success" });
       triggerRefresh();
       queryClient.invalidateQueries({ queryKey });
-    } catch (err: any) {
+    } catch (error: unknown) {
       queryClient.setQueryData(queryKey, previousData);
-      addToast({ message: err.message, type: "error" });
+      addToast({
+        message: getErrorMessage(error, "Failed to rename"),
+        type: "error",
+      });
     }
   };
 
@@ -153,13 +168,13 @@ export function useFileActions(currentFolderId: string) {
       refreshKey,
     ];
 
-    const previousData = queryClient.getQueryData(queryKey);
+    const previousData = queryClient.getQueryData<FileListQueryData>(queryKey);
 
-    queryClient.setQueryData(queryKey, (old: any) => {
+    queryClient.setQueryData<FileListQueryData>(queryKey, (old) => {
       if (!old) return old;
       return {
         ...old,
-        pages: old.pages.map((page: any) => ({
+        pages: old.pages.map((page) => ({
           ...page,
           files: page.files.filter((f: DriveFile) => f.id !== fileToDelete.id),
         })),
@@ -178,9 +193,12 @@ export function useFileActions(currentFolderId: string) {
       addToast({ message: "File successfully deleted!", type: "success" });
       triggerRefresh();
       queryClient.invalidateQueries({ queryKey });
-    } catch (err: any) {
+    } catch (error: unknown) {
       queryClient.setQueryData(queryKey, previousData);
-      addToast({ message: err.message, type: "error" });
+      addToast({
+        message: getErrorMessage(error, "Failed to delete file"),
+        type: "error",
+      });
     }
   };
 
@@ -201,13 +219,13 @@ export function useFileActions(currentFolderId: string) {
       refreshKey,
     ];
 
-    const previousData = queryClient.getQueryData(queryKey);
+    const previousData = queryClient.getQueryData<FileListQueryData>(queryKey);
 
-    queryClient.setQueryData(queryKey, (old: any) => {
+    queryClient.setQueryData<FileListQueryData>(queryKey, (old) => {
       if (!old) return old;
       return {
         ...old,
-        pages: old.pages.map((page: any) => ({
+        pages: old.pages.map((page) => ({
           ...page,
           files: page.files.filter((f: DriveFile) => f.id !== fileToMove.id),
         })),
@@ -230,9 +248,12 @@ export function useFileActions(currentFolderId: string) {
       addToast({ message: "File successfully moved!", type: "success" });
       triggerRefresh();
       queryClient.invalidateQueries({ queryKey });
-    } catch (err: any) {
+    } catch (error: unknown) {
       queryClient.setQueryData(queryKey, previousData);
-      addToast({ message: err.message, type: "error" });
+      addToast({
+        message: getErrorMessage(error, "Failed to move file"),
+        type: "error",
+      });
     }
   };
 

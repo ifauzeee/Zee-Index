@@ -1,14 +1,31 @@
 import { useEffect, useMemo } from "react";
 import {
+  type InfiniteData,
   useInfiniteQuery,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import type { DriveFile } from "@/lib/drive";
+import {
+  ErrorResponsePayload,
+  RequestError,
+  getErrorMessage,
+} from "@/lib/errors";
+
+interface FolderPathItem {
+  id: string;
+  name: string;
+}
+
+interface FilesResponse {
+  files: DriveFile[];
+  nextPageToken?: string | null;
+}
 
 interface UseFileFetchingProps {
   initialFolderId?: string;
-  initialFolderPath?: { id: string; name: string }[];
+  initialFolderPath?: FolderPathItem[];
   shareToken: string | null;
   folderTokens: Record<string, string>;
   addToast: (toast: { message: string; type: "error" | "info" }) => void;
@@ -17,15 +34,28 @@ interface UseFileFetchingProps {
   locale: string;
 }
 
-export class ProtectedError extends Error {
-  isProtected: boolean;
-  folderId: string;
+export class ProtectedError extends RequestError {
   constructor(message: string, folderId: string) {
-    super(message);
+    super(message, {
+      status: 401,
+      isProtected: true,
+      folderId,
+    });
     this.name = "ProtectedError";
-    this.isProtected = true;
-    this.folderId = folderId;
   }
+}
+
+function createRequestError(
+  payload: ErrorResponsePayload,
+  status: number,
+  fallbackMessage: string,
+  folderId: string,
+): RequestError {
+  return new RequestError(payload.error || fallbackMessage, {
+    status,
+    isProtected: payload.protected ?? false,
+    folderId: payload.folderId || folderId,
+  });
 }
 
 const fetchFilesApi = async ({
@@ -40,7 +70,7 @@ const fetchFilesApi = async ({
   shareToken?: string | null;
   folderToken?: string;
   refresh?: boolean;
-}) => {
+}): Promise<FilesResponse> => {
   const url = new URL(window.location.origin + "/api/files");
   url.searchParams.append("folderId", folderId);
   if (pageToken) url.searchParams.append("pageToken", pageToken);
@@ -54,25 +84,31 @@ const fetchFilesApi = async ({
 
   const response = await fetch(url.toString(), { headers });
   if (!response.ok) {
-    const errorData = await response.json();
+    const errorData: ErrorResponsePayload = await response
+      .json()
+      .catch(() => ({}));
     if (response.status === 401 && errorData.protected) {
-      throw new ProtectedError(errorData.error, folderId);
+      throw new ProtectedError(
+        errorData.error || "Folder membutuhkan autentikasi.",
+        folderId,
+      );
     }
-    const err = new Error(errorData.error || "Gagal mengambil data file.");
-    (err as any).status = response.status;
-    (err as any).isProtected = errorData.protected || false;
-    (err as any).folderId = errorData.folderId || folderId;
-    throw err;
+    throw createRequestError(
+      errorData,
+      response.status,
+      "Gagal mengambil data file.",
+      folderId,
+    );
   }
 
-  return response.json();
+  return response.json() as Promise<FilesResponse>;
 };
 
 export const fetchFolderPathApi = async (
   folderId: string,
   shareToken?: string | null,
   locale?: string,
-) => {
+): Promise<FolderPathItem[]> => {
   const url = new URL(window.location.origin + "/api/folderpath");
   url.searchParams.append("folderId", folderId);
   if (shareToken) url.searchParams.append("share_token", shareToken);
@@ -80,14 +116,17 @@ export const fetchFolderPathApi = async (
 
   const response = await fetch(url.toString());
   if (!response.ok) {
-    const errorData = await response.json();
-    const err = new Error(errorData.error || "Gagal mengambil data folder.");
-    (err as any).status = response.status;
-    (err as any).isProtected = errorData.protected || false;
-    (err as any).folderId = errorData.folderId || folderId;
-    throw err;
+    const errorData: ErrorResponsePayload = await response
+      .json()
+      .catch(() => ({}));
+    throw createRequestError(
+      errorData,
+      response.status,
+      "Gagal mengambil data folder.",
+      folderId,
+    );
   }
-  return response.json();
+  return response.json() as Promise<FolderPathItem[]>;
 };
 
 export function useFileFetching({
@@ -102,7 +141,7 @@ export function useFileFetching({
   refreshKey,
   locale,
 }: UseFileFetchingProps & {
-  initialFiles?: any[];
+  initialFiles?: DriveFile[];
   initialNextPageToken?: string | null;
 }) {
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
@@ -119,7 +158,7 @@ export function useFileFetching({
     }
   }, [refreshKey, currentFolderId, queryClient]);
 
-  const { data: historyData } = useQuery({
+  const { data: historyData } = useQuery<FolderPathItem[], RequestError>({
     queryKey: ["folderPath", currentFolderId, shareToken, locale],
     queryFn: () => fetchFolderPathApi(currentFolderId, shareToken, locale),
     enabled: !!currentFolderId && currentFolderId !== rootFolderId,
@@ -183,17 +222,23 @@ export function useFileFetching({
     isLoading,
     error,
     refetch,
-  } = useInfiniteQuery({
+  } = useInfiniteQuery<
+    FilesResponse,
+    RequestError,
+    InfiniteData<FilesResponse>,
+    readonly [string, string, string | null, string | undefined],
+    string | null
+  >({
     queryKey: ["files", currentFolderId, shareToken, bestToken],
     queryFn: ({ pageParam }) =>
       fetchFilesApi({
         folderId: currentFolderId,
-        pageToken: pageParam as string | null,
+        pageToken: pageParam,
         shareToken,
         folderToken: bestToken,
         refresh: refreshKey > 0,
       }),
-    initialPageParam: null as string | null,
+    initialPageParam: null,
     initialData:
       refreshKey === 0 && initialFiles
         ? {
@@ -204,9 +249,14 @@ export function useFileFetching({
           }
         : undefined,
     getNextPageParam: (lastPage) => lastPage?.nextPageToken || undefined,
-    retry: (failureCount, error: any) => {
-      if (error instanceof ProtectedError || error?.isProtected) return false;
-      if (error?.status === 401) return false;
+    retry: (failureCount, requestError) => {
+      if (
+        requestError instanceof ProtectedError ||
+        requestError.isProtected ||
+        requestError.status === 401
+      ) {
+        return false;
+      }
       return failureCount < 2;
     },
     refetchInterval: (query) => (query.state.error ? false : 30000),
@@ -223,22 +273,20 @@ export function useFileFetching({
 
   useEffect(() => {
     if (error) {
-      const err = error as any;
-
-      if (err.isProtected) {
+      if (error.isProtected) {
         return;
       }
 
       addToast({
-        message: err.message || "Gagal memuat data.",
+        message: getErrorMessage(error, "Gagal memuat data."),
         type: "error",
       });
 
-      if (err.message?.includes("Sesi Anda telah berakhir")) {
+      if (error.message.includes("Sesi Anda telah berakhir")) {
         router.push("/login?error=SessionExpired");
       }
 
-      if (err.message === "ShareLinkExpired") {
+      if (error.message === "ShareLinkExpired") {
         const currentUrl = new URL(window.location.href);
         currentUrl.searchParams.delete("share_token");
         router.push(
@@ -248,7 +296,7 @@ export function useFileFetching({
         );
       }
 
-      if (err.status === 401 && !err.isProtected) {
+      if (error.status === 401 && !error.isProtected) {
         const currentUrl = new URL(window.location.href);
         router.push(
           `/login?callbackUrl=${encodeURIComponent(
@@ -260,15 +308,15 @@ export function useFileFetching({
   }, [error, addToast, router]);
 
   const authModalInfo = useMemo(() => {
-    const err = error as any;
-    if (err?.isProtected) {
+    if (error?.isProtected && error.folderId) {
       const folderName =
-        history.find((f) => f.id === err.folderId)?.name || "Folder Terkunci";
+        history.find((folder) => folder.id === error.folderId)?.name ||
+        "Folder Terkunci";
 
       return {
         isOpen: true,
-        folderId: err.folderId,
-        folderName: folderName,
+        folderId: error.folderId,
+        folderName,
       };
     }
     return null;

@@ -1,5 +1,13 @@
 import { StateCreator } from "zustand";
-import { AppState, FileSlice, ShareLink, FileRequestLink } from "../types";
+import type { DriveFile } from "@/lib/drive";
+import { getErrorMessage } from "@/lib/errors";
+import {
+  AppState,
+  FileSlice,
+  ShareLink,
+  FileRequestLink,
+  ShareTokenPayload,
+} from "../types";
 import { formatBytes } from "@/lib/utils";
 import {
   addFavorite,
@@ -17,7 +25,7 @@ import {
   removePin as removePinAction,
 } from "@/app/actions/pinned";
 
-function parseJwt(token: string) {
+function parseJwt(token: string): ShareTokenPayload | null {
   try {
     const base64Url = token.split(".")[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
@@ -30,7 +38,7 @@ function parseJwt(token: string) {
         })
         .join(""),
     );
-    return JSON.parse(jsonPayload);
+    return JSON.parse(jsonPayload) as ShareTokenPayload;
   } catch {
     return null;
   }
@@ -52,7 +60,7 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
       set({ isBulkMode: true });
     }
   },
-  toggleSelection: (file: any) =>
+  toggleSelection: (file: DriveFile) =>
     set((state: AppState) => {
       const isSelected = state.selectedFiles.some((f) => f.id === file.id);
       const newSelection = isSelected
@@ -60,7 +68,7 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
         : [...state.selectedFiles, file];
       return { selectedFiles: newSelection };
     }),
-  setSelectedFiles: (files: any[]) => set({ selectedFiles: files }),
+  setSelectedFiles: (files: DriveFile[]) => set({ selectedFiles: files }),
   clearSelection: () => set({ selectedFiles: [], isBulkMode: false }),
   shareToken: null,
   sharePolicy: null,
@@ -111,8 +119,11 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
           new Date(b.expiresAt).getTime() - new Date(a.expiresAt).getTime(),
       );
       set({ shareLinks: links });
-    } catch (error: any) {
-      get().addToast({ message: error.message || "Error", type: "error" });
+    } catch (error: unknown) {
+      get().addToast({
+        message: getErrorMessage(error, "Error"),
+        type: "error",
+      });
     }
   },
   addShareLink: (link: ShareLink) =>
@@ -144,8 +155,11 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
         message: "Link successfully deleted.",
         type: "success",
       });
-    } catch (error: any) {
-      get().addToast({ message: error.message || "Error", type: "error" });
+    } catch (error: unknown) {
+      get().addToast({
+        message: getErrorMessage(error, "Error"),
+        type: "error",
+      });
       set({ shareLinks: originalLinks });
     }
   },
@@ -215,7 +229,7 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
   fetchFavorites: async () => {
     try {
       const files = await getFavorites();
-      set({ favorites: files.map((f: any) => f.id) });
+      set({ favorites: files.map((file) => file.id) });
     } catch (error) {
       console.error("Failed to fetch favorites:", error);
     }
@@ -234,13 +248,16 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
         result = await addFavorite(fileId);
       }
       get().addToast({ message: result.message, type: "success" });
-    } catch (error: any) {
-      get().addToast({ message: error.message || "Error", type: "error" });
+    } catch (error: unknown) {
+      get().addToast({
+        message: getErrorMessage(error, "Error"),
+        type: "error",
+      });
       set({ favorites: originalFavorites });
     }
   },
   detailsFile: null,
-  setDetailsFile: (file: any | null) => set({ detailsFile: file }),
+  setDetailsFile: (file: DriveFile | null) => set({ detailsFile: file }),
   fileTags: {},
   fetchTags: async (fileId: string) => {
     try {

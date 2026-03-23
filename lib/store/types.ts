@@ -1,3 +1,5 @@
+import type { DriveFile } from "@/lib/drive";
+
 export interface Toast {
   id: string;
   message: string;
@@ -29,6 +31,19 @@ export interface ShareLink {
   watermarkText?: string | null;
 }
 
+export interface SharePolicy {
+  preventDownload?: boolean;
+  hasWatermark?: boolean;
+  watermarkText?: string | null;
+}
+
+export interface ShareTokenPayload extends SharePolicy {
+  exp?: number;
+  iat?: number;
+  jti?: string;
+  folderId?: string;
+}
+
 export interface FileRequestLink {
   token: string;
   folderId: string;
@@ -52,6 +67,18 @@ export type SortKey = "name" | "size" | "modifiedTime";
 export type SortOrder = "asc" | "desc";
 export type DensityMode = "comfortable" | "compact";
 
+export interface SortState {
+  key: SortKey;
+  order: SortOrder;
+}
+
+export interface UploadItem {
+  name: string;
+  progress: number;
+  status: "uploading" | "success" | "error";
+  error?: string;
+}
+
 export interface AppConfig {
   hideAuthor: boolean;
   disableGuestLogin: boolean;
@@ -66,8 +93,8 @@ export interface UISlice {
   setView: (view: ViewMode) => void;
   density: DensityMode;
   setDensity: (density: DensityMode) => void;
-  sort: { key: string; order: "asc" | "desc" };
-  setSort: (key: any) => void;
+  sort: SortState;
+  setSort: (key: SortKey) => void;
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
   setSidebarOpen: (isOpen: boolean) => void;
@@ -112,17 +139,13 @@ export interface FileSlice {
   refreshKey: number;
   triggerRefresh: () => void;
   isBulkMode: boolean;
-  selectedFiles: any[];
-  toggleSelection: (file: any) => void;
-  setSelectedFiles: (files: any[]) => void;
+  selectedFiles: DriveFile[];
+  toggleSelection: (file: DriveFile) => void;
+  setSelectedFiles: (files: DriveFile[]) => void;
   setBulkMode: (isActive: boolean) => void;
   clearSelection: () => void;
   shareToken: string | null;
-  sharePolicy: {
-    preventDownload?: boolean;
-    hasWatermark?: boolean;
-    watermarkText?: string | null;
-  } | null;
+  sharePolicy: SharePolicy | null;
   setShareToken: (token: string | null) => void;
   folderTokens: Record<string, string>;
   setFolderToken: (folderId: string, token: string) => void;
@@ -150,27 +173,19 @@ export interface FileSlice {
     fileId: string,
     isCurrentlyFavorite: boolean,
   ) => Promise<void>;
-  detailsFile: any | null;
-  setDetailsFile: (file: any | null) => void;
+  detailsFile: DriveFile | null;
+  setDetailsFile: (file: DriveFile | null) => void;
   fileTags: Record<string, string[]>;
   fetchTags: (fileId: string) => Promise<void>;
   addTag: (fileId: string, tag: string) => Promise<void>;
   removeTag: (fileId: string, tag: string) => Promise<void>;
-  pinnedFolders: any[];
+  pinnedFolders: DriveFile[];
   fetchPinnedFolders: () => Promise<void>;
   addPin: (folderId: string) => Promise<void>;
   removePin: (folderId: string) => Promise<void>;
   videoProgress: Record<string, number>;
   setVideoProgress: (fileId: string, time: number) => void;
-  uploads: Record<
-    string,
-    {
-      name: string;
-      progress: number;
-      status: "uploading" | "success" | "error";
-      error?: string;
-    }
-  >;
+  uploads: Record<string, UploadItem>;
   updateUploadProgress: (
     fileName: string,
     progress: number,
@@ -181,15 +196,15 @@ export interface FileSlice {
 }
 
 export interface AudioSlice {
-  activeAudioFile: any | null;
-  audioQueue: any[];
+  activeAudioFile: DriveFile | null;
+  audioQueue: DriveFile[];
   isAudioPlaying: boolean;
-  playAudio: (file: any, queue?: any[]) => void;
+  playAudio: (file: DriveFile, queue?: DriveFile[]) => void;
   toggleAudioPlay: () => void;
   closeAudio: () => void;
   playNextTrack: () => void;
   playPrevTrack: () => void;
-  addToQueue: (files: any[]) => void;
+  addToQueue: (files: DriveFile[]) => void;
   removeFromQueue: (fileId: string) => void;
 }
 

@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import type { ActivityLog as DbActivityLog } from "@prisma/client";
 import { logger } from "@/lib/logger";
 import { db } from "@/lib/db";
 import { eventBus, EventType } from "@/lib/events/eventBus";
@@ -42,7 +43,7 @@ export interface ActivityDetails {
   itemType?: string;
   userEmail?: string | null;
   userId?: string;
-  userRole?: "ADMIN" | "USER" | "GUEST";
+  userRole?: "ADMIN" | "USER" | "GUEST" | "EDITOR";
   targetUser?: string;
   destinationFolder?: string;
   sourcePath?: string;
@@ -96,6 +97,51 @@ const SEVERITY_MAP: Record<ActivityType, ActivityLog["severity"]> = {
   "2FA_DISABLED": "critical",
   SUSPICIOUS_ACTIVITY: "critical",
 };
+
+function parseMetadata(
+  metadata: string | null,
+): Record<string, unknown> | undefined {
+  if (!metadata) {
+    return undefined;
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(metadata);
+    return typeof parsed === "object" && parsed !== null
+      ? (parsed as Record<string, unknown>)
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function toActivityLog(log: DbActivityLog): ActivityLog {
+  return {
+    id: log.id,
+    type: log.type as ActivityType,
+    timestamp: log.timestamp,
+    severity: log.severity as ActivityLog["severity"],
+    itemName: log.itemName ?? undefined,
+    itemId: log.itemId ?? undefined,
+    itemSize: log.itemSize ?? undefined,
+    itemType: log.itemType ?? undefined,
+    userEmail: log.userEmail ?? undefined,
+    userId: log.userId ?? undefined,
+    userRole: (log.userRole as ActivityDetails["userRole"] | null) ?? undefined,
+    targetUser: log.targetUser ?? undefined,
+    destinationFolder: log.destinationFolder ?? undefined,
+    sourcePath: log.sourcePath ?? undefined,
+    targetPath: log.targetPath ?? undefined,
+    status: (log.status as ActivityDetails["status"] | null) ?? undefined,
+    error: log.error ?? undefined,
+    errorCode: log.errorCode ?? undefined,
+    ipAddress: log.ipAddress ?? undefined,
+    userAgent: log.userAgent ?? undefined,
+    country: log.country ?? undefined,
+    city: log.city ?? undefined,
+    metadata: parseMetadata(log.metadata),
+  };
+}
 
 async function getClientInfo(): Promise<{
   ipAddress: string;
@@ -206,16 +252,11 @@ export async function logActivity(
       .deleteMany({
         where: { timestamp: { lt: expirationTime } },
       })
-      .catch((e: Error | any) =>
-        logger.error({ err: e }, "Failed to clean old activity logs"),
+      .catch((error: unknown) =>
+        logger.error({ err: error }, "Failed to clean old activity logs"),
       );
 
-    return {
-      ...logEntry,
-      type: logEntry.type as ActivityType,
-      severity: logEntry.severity as ActivityLog["severity"],
-      metadata: logEntry.metadata ? JSON.parse(logEntry.metadata) : undefined,
-    } as ActivityLog;
+    return toActivityLog(logEntry);
   } catch (error) {
     logger.error({ err: error }, "Failed to log activity");
     return null;
@@ -233,12 +274,7 @@ export async function getActivityLogs(
       orderBy: { timestamp: "desc" },
     });
 
-    return logs.map((log: any) => ({
-      ...log,
-      type: log.type as ActivityType,
-      severity: log.severity as ActivityLog["severity"],
-      metadata: log.metadata ? JSON.parse(log.metadata) : undefined,
-    })) as ActivityLog[];
+    return logs.map(toActivityLog);
   } catch (error) {
     logger.error({ err: error }, "Failed to get activity logs");
     return [];
@@ -264,12 +300,7 @@ export async function getSecurityLogs(
       orderBy: { timestamp: "desc" },
     });
 
-    return logs.map((log: any) => ({
-      ...log,
-      type: log.type as ActivityType,
-      severity: log.severity as ActivityLog["severity"],
-      metadata: log.metadata ? JSON.parse(log.metadata) : undefined,
-    })) as ActivityLog[];
+    return logs.map(toActivityLog);
   } catch (error) {
     logger.error({ err: error }, "Failed to get security logs");
     return [];

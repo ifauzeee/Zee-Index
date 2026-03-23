@@ -1,4 +1,5 @@
 import { StateCreator } from "zustand";
+import { getErrorMessage } from "@/lib/errors";
 import {
   AppState,
   ViewMode,
@@ -7,6 +8,7 @@ import {
   Toast,
   NotificationItem,
   UISlice,
+  SortKey,
 } from "../types";
 
 export const createUISlice: StateCreator<AppState, [], [], UISlice> = (
@@ -18,7 +20,7 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (
   density: "comfortable",
   setDensity: (density: DensityMode) => set({ density }),
   sort: { key: "name", order: "asc" },
-  setSort: (key: string) => {
+  setSort: (key: SortKey) => {
     const currentSort = get().sort;
     const order =
       currentSort.key === key && currentSort.order === "asc" ? "desc" : "asc";
@@ -112,9 +114,9 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (
       }
       const result = await response.json();
       set((state: AppState) => ({ ...state, ...result.config }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       get().addToast({
-        message: error.message || "Error updating config",
+        message: getErrorMessage(error, "Error updating config"),
         type: "error",
       });
     }

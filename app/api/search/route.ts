@@ -173,8 +173,8 @@ export const GET = createPublicRoute(
 
       const processedFiles = (data.files || []).map((file: DriveFile) => {
         const isFolder = file.mimeType === "application/vnd.google-apps.folder";
-        const fileId = file.id as string;
-        const isProt = !!(allProtectedFolders as any)[fileId];
+        const fileId = file.id;
+        const isProt = !!allProtectedFolders[fileId];
         const isPriv = isPrivFolder(fileId);
 
         return {
@@ -185,7 +185,7 @@ export const GET = createPublicRoute(
       });
 
       const filteredFiles = await Promise.all(
-        processedFiles.map(async (file: any) => {
+        processedFiles.map(async (file: DriveFile) => {
           if (isAdmin) return file;
           const restricted = await isAccessRestricted(
             file.id,

@@ -1,4 +1,5 @@
 import { StateCreator } from "zustand";
+import { getErrorMessage } from "@/lib/errors";
 import { AppState, AuthSlice } from "../types";
 
 export const createAuthSlice: StateCreator<AppState, [], [], AuthSlice> = (
@@ -28,9 +29,9 @@ export const createAuthSlice: StateCreator<AppState, [], [], AuthSlice> = (
       if (!response.ok) throw new Error("Failed to fetch admin list");
       const emails = await response.json();
       set({ adminEmails: emails });
-    } catch (error: any) {
+    } catch (error: unknown) {
       get().addToast({
-        message: error.message || "Error",
+        message: getErrorMessage(error, "Error"),
         type: "error",
       });
     } finally {
@@ -50,9 +51,9 @@ export const createAuthSlice: StateCreator<AppState, [], [], AuthSlice> = (
         adminEmails: [...state.adminEmails, email].sort(),
       }));
       get().addToast({ message: result.message, type: "success" });
-    } catch (error: any) {
+    } catch (error: unknown) {
       get().addToast({
-        message: error.message || "Error",
+        message: getErrorMessage(error, "Error"),
         type: "error",
       });
     }
@@ -74,9 +75,9 @@ export const createAuthSlice: StateCreator<AppState, [], [], AuthSlice> = (
       if (!response.ok)
         throw new Error(result.error || "Failed to remove admin.");
       get().addToast({ message: result.message, type: "success" });
-    } catch (error: any) {
+    } catch (error: unknown) {
       get().addToast({
-        message: error.message || "Error",
+        message: getErrorMessage(error, "Error"),
         type: "error",
       });
       set({ adminEmails: originalAdmins });
@@ -91,8 +92,11 @@ export const createAuthSlice: StateCreator<AppState, [], [], AuthSlice> = (
       if (!response.ok) throw new Error("Failed to fetch editor list");
       const emails = await response.json();
       set({ editorEmails: emails });
-    } catch (error: any) {
-      get().addToast({ message: error.message || "Error", type: "error" });
+    } catch (error: unknown) {
+      get().addToast({
+        message: getErrorMessage(error, "Error"),
+        type: "error",
+      });
     } finally {
       set({ isFetchingEditors: false });
     }
@@ -111,8 +115,11 @@ export const createAuthSlice: StateCreator<AppState, [], [], AuthSlice> = (
         editorEmails: [...state.editorEmails, email].sort(),
       }));
       get().addToast({ message: result.message, type: "success" });
-    } catch (error: any) {
-      get().addToast({ message: error.message || "Error", type: "error" });
+    } catch (error: unknown) {
+      get().addToast({
+        message: getErrorMessage(error, "Error"),
+        type: "error",
+      });
     }
   },
   removeEditorEmail: async (email: string) => {
@@ -130,8 +137,11 @@ export const createAuthSlice: StateCreator<AppState, [], [], AuthSlice> = (
       if (!response.ok)
         throw new Error(result.error || "Failed to remove editor.");
       get().addToast({ message: result.message, type: "success" });
-    } catch (error: any) {
-      get().addToast({ message: error.message || "Error", type: "error" });
+    } catch (error: unknown) {
+      get().addToast({
+        message: getErrorMessage(error, "Error"),
+        type: "error",
+      });
       set({ editorEmails: originalEditors });
     }
   },
