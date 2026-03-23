@@ -8,6 +8,12 @@ import { db } from "@/lib/db";
 
 const MANUAL_DRIVES_KEY = "zee-index:manual-drives";
 
+interface ManualDriveRecord {
+  id: string;
+  name: string;
+  isProtected?: boolean;
+}
+
 const driveSchema = z.object({
   id: z
     .string()
@@ -45,7 +51,8 @@ export const POST = createAdminRoute(async ({ request }) => {
     }
 
     const { id, name, password } = validation.data;
-    const currentDrives: any[] = (await kv.get(MANUAL_DRIVES_KEY)) || [];
+    const currentDrives =
+      (await kv.get<ManualDriveRecord[]>(MANUAL_DRIVES_KEY)) || [];
 
     if (currentDrives.some((d) => d.id === id)) {
       return NextResponse.json(
@@ -88,7 +95,8 @@ export const DELETE = createAdminRoute(async ({ request }) => {
     if (!id)
       return NextResponse.json({ error: "ID required" }, { status: 400 });
 
-    const currentDrives: any[] = (await kv.get(MANUAL_DRIVES_KEY)) || [];
+    const currentDrives =
+      (await kv.get<ManualDriveRecord[]>(MANUAL_DRIVES_KEY)) || [];
     const updatedDrives = currentDrives.filter((d) => d.id !== id);
 
     await kv.set(MANUAL_DRIVES_KEY, updatedDrives);

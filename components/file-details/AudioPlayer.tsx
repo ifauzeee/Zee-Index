@@ -20,6 +20,10 @@ interface AudioPlayerProps {
   poster?: string;
 }
 
+interface WindowWithWebkitAudioContext extends Window {
+  webkitAudioContext?: typeof AudioContext;
+}
+
 export default function AudioPlayer({
   src,
   title,
@@ -39,20 +43,27 @@ export default function AudioPlayer({
 
     let audioCtx: AudioContext | null = null;
     let analyser: AnalyserNode | null = null;
-    let source: MediaElementAudioSourceNode | null = null;
     let animationId: number;
 
     const setupVisualizer = () => {
       const mediaElement = playerRef.current?.el?.querySelector("audio");
       if (!mediaElement || audioCtx) return;
 
-      audioCtx = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
-      analyser = audioCtx.createAnalyser();
-      source = audioCtx.createMediaElementSource(mediaElement);
-      source.connect(analyser);
-      analyser.connect(audioCtx.destination);
+      const audioWindow = window as WindowWithWebkitAudioContext;
+      const AudioContextConstructor =
+        globalThis.AudioContext || audioWindow.webkitAudioContext;
+      if (!AudioContextConstructor) return;
 
+      const nextAudioContext = new AudioContextConstructor();
+      const nextAnalyser = nextAudioContext.createAnalyser();
+      const nextSource =
+        nextAudioContext.createMediaElementSource(mediaElement);
+
+      nextSource.connect(nextAnalyser);
+      nextAnalyser.connect(nextAudioContext.destination);
+
+      audioCtx = nextAudioContext;
+      analyser = nextAnalyser;
       analyser.fftSize = 256;
       const bufferLength = analyser.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
@@ -144,7 +155,7 @@ export default function AudioPlayer({
         <MediaPlayer
           ref={playerRef}
           title={title}
-          src={{ src, type: mimeType as any }}
+          src={src}
           onCanPlay={() => setIsLoading(false)}
           className="w-full"
           crossOrigin="anonymous"

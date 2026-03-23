@@ -1,5 +1,9 @@
 import { logger } from "./logger";
 
+type AsyncFunction<TArgs extends unknown[] = unknown[], TResult = unknown> = (
+  ...args: TArgs
+) => Promise<TResult>;
+
 export async function measure<T>(
   name: string,
   fn: () => Promise<T>,
@@ -37,11 +41,11 @@ export async function measure<T>(
   }
 }
 
-export function withPerformance<T extends (...args: any[]) => Promise<any>>(
+export function withPerformance<TArgs extends unknown[], TResult>(
   name: string,
-  fn: T,
-): T {
-  return (async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+  fn: AsyncFunction<TArgs, TResult>,
+): AsyncFunction<TArgs, TResult> {
+  return async (...args: TArgs): Promise<TResult> => {
     return measure(name, () => fn(...args), { argsCount: args.length });
-  }) as T;
+  };
 }

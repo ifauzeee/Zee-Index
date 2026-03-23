@@ -209,7 +209,7 @@ export function useUpload({
         ? items
         : Array.from(items).map((f) => ({
             file: f,
-            path: (f as any).webkitRelativePath || f.name,
+            path: f.webkitRelativePath || f.name,
           }));
 
       for (const entry of fileList) {

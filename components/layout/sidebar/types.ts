@@ -27,5 +27,4 @@ export interface TreeContextType {
   tree: FlatTree;
   canEdit: boolean;
   rootFolderId: string;
-  t: any;
 }

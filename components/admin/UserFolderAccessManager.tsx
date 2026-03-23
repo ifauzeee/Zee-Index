@@ -22,6 +22,7 @@ import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslations } from "next-intl";
+import { getErrorMessage } from "@/lib/errors";
 
 interface FolderAccess {
   folderId: string;
@@ -59,8 +60,11 @@ export default function UserFolderAccessManager() {
 
       if (permRes.ok) setPermissions(await permRes.json());
       if (reqRes.ok) setRequests(await reqRes.json());
-    } catch (err: any) {
-      addToast({ message: t("loadError") + err.message, type: "error" });
+    } catch (error: unknown) {
+      addToast({
+        message: `${t("loadError")}${getErrorMessage(error)}`,
+        type: "error",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -90,8 +94,8 @@ export default function UserFolderAccessManager() {
       addToast({ message: result.message, type: "success" });
       setNewAccess({ folderId: "", email: "" });
       fetchData();
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (error: unknown) {
+      addToast({ message: getErrorMessage(error), type: "error" });
     } finally {
       setIsProcessing(null);
     }
@@ -115,8 +119,8 @@ export default function UserFolderAccessManager() {
 
       addToast({ message: t("accessRevoked"), type: "success" });
       fetchData();
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (error: unknown) {
+      addToast({ message: getErrorMessage(error), type: "error" });
     }
   };
 
@@ -141,8 +145,8 @@ export default function UserFolderAccessManager() {
       });
 
       await fetchData();
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (error: unknown) {
+      addToast({ message: getErrorMessage(error), type: "error" });
     } finally {
       setIsProcessing(null);
     }

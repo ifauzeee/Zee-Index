@@ -12,7 +12,7 @@ import {
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import type { FlatTree, TreeContextType } from "./types";
+import type { TreeContextType } from "./types";
 
 export const TreeContext = React.createContext<TreeContextType | null>(null);
 

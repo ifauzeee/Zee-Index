@@ -47,7 +47,7 @@ export function validateOnStartup(): Env {
     process.env.SKIP_ENV_VALIDATION === "1" ||
     process.env.SKIP_ENV_VALIDATION === "true"
   ) {
-    return process.env as any;
+    return process.env as unknown as Env;
   }
 
   const result = envSchema.safeParse(process.env);
@@ -66,7 +66,7 @@ export function validateOnStartup(): Env {
     if (process.env.NODE_ENV === "production") {
       process.exit(1);
     }
-    return process.env as any;
+    return process.env as unknown as Env;
   }
 
   const warnings: string[] = [];

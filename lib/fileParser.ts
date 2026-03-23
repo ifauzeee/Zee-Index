@@ -3,28 +3,50 @@ export interface FileEntry {
   path: string;
 }
 
+interface FileSystemEntryLike {
+  isFile: boolean;
+  isDirectory: boolean;
+  name: string;
+}
+
+interface FileSystemFileEntryLike extends FileSystemEntryLike {
+  isFile: true;
+  file: (callback: (file: File) => void) => void;
+}
+
+interface FileSystemDirectoryReaderLike {
+  readEntries: (callback: (entries: FileSystemEntryLike[]) => void) => void;
+}
+
+interface FileSystemDirectoryEntryLike extends FileSystemEntryLike {
+  isDirectory: true;
+  createReader: () => FileSystemDirectoryReaderLike;
+}
+
 async function traverseFileTree(
-  item: any,
+  item: FileSystemEntryLike,
   path: string = "",
 ): Promise<FileEntry[]> {
   if (item.isFile) {
+    const fileItem = item as FileSystemFileEntryLike;
     return new Promise((resolve) => {
-      item.file((file: File) => {
+      fileItem.file((file: File) => {
         const fullPath = path + file.name;
         resolve([{ file, path: fullPath }]);
       });
     });
   } else if (item.isDirectory) {
-    const dirReader = item.createReader();
+    const directoryItem = item as FileSystemDirectoryEntryLike;
+    const dirReader = directoryItem.createReader();
     const entries: FileEntry[] = [];
     const readEntries = async (): Promise<FileEntry[]> => {
       return new Promise((resolve) => {
-        dirReader.readEntries(async (results: any[]) => {
+        dirReader.readEntries(async (results: FileSystemEntryLike[]) => {
           if (results.length === 0) {
             resolve(entries);
           } else {
             const promises = results.map((entry) =>
-              traverseFileTree(entry, path + item.name + "/"),
+              traverseFileTree(entry, path + directoryItem.name + "/"),
             );
             const recursiveEntries = await Promise.all(promises);
             entries.push(...recursiveEntries.flat());
@@ -46,7 +68,7 @@ export async function parseDroppedItems(
   const files: FileEntry[] = [];
 
   for (let i = 0; i < items.length; i++) {
-    const item = items[i].webkitGetAsEntry();
+    const item = items[i].webkitGetAsEntry() as FileSystemEntryLike | null;
     if (item) {
       const result = await traverseFileTree(item);
       files.push(...result);

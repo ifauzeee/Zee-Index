@@ -24,14 +24,33 @@ export interface AppEvent {
 
 const REDIS_CHANNEL = "zee-index:events";
 
+interface RedisSubscriber {
+  subscribe: (channel: string, callback: (error: Error | null) => void) => void;
+  on: (
+    event: "message",
+    callback: (channel: string, message: string) => void,
+  ) => void;
+}
+
+interface RedisPublisher {
+  publish: (channel: string, message: string) => Promise<number>;
+}
+
+interface RedisConstructor {
+  new (url: string): RedisSubscriber & RedisPublisher;
+}
+
 class EventBus {
   private listeners = new Map<string, Set<(event: AppEvent) => void>>();
-  private subscriber: any = null;
-  private publisher: any = null;
+  private subscriber: RedisSubscriber | null = null;
+  private publisher: RedisPublisher | null = null;
   private isConnected = false;
+  private globalWithEdgeRuntime = globalThis as typeof globalThis & {
+    EdgeRuntime?: unknown;
+  };
   private isEdge =
     typeof globalThis !== "undefined" &&
-    (globalThis as any).EdgeRuntime !== undefined;
+    this.globalWithEdgeRuntime.EdgeRuntime !== undefined;
 
   constructor() {
     this.initRedis();
@@ -43,11 +62,11 @@ class EventBus {
     const redisUrl = process.env.REDIS_URL;
     if (redisUrl) {
       try {
-        const IORedis = require("ioredis");
+        const IORedis = require("ioredis") as RedisConstructor;
         this.subscriber = new IORedis(redisUrl);
         this.publisher = new IORedis(redisUrl);
 
-        this.subscriber.subscribe(REDIS_CHANNEL, (err: Error) => {
+        this.subscriber.subscribe(REDIS_CHANNEL, (err: Error | null) => {
           if (err) {
             logger.error(
               { err },

@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import type { DriveFile } from "@/lib/drive";
 import React from "react";
+import { getErrorMessage } from "@/lib/errors";
 
 interface UseDragAndDropProps {
   isAdmin: boolean;
@@ -57,8 +58,11 @@ export function useDragAndDrop({
         });
         triggerRefresh();
         clearSelection();
-      } catch (error: any) {
-        addToast({ message: error.message, type: "error" });
+      } catch (error: unknown) {
+        addToast({
+          message: getErrorMessage(error, "Gagal memindahkan item."),
+          type: "error",
+        });
       } finally {
         setIsDropMoving(false);
       }

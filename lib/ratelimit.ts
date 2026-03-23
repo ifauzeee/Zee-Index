@@ -23,6 +23,14 @@ const restUrl =
 const restToken =
   process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "";
 
+interface RestPipelineResult {
+  result?: unknown;
+}
+
+function isRestPipelineResult(value: unknown): value is RestPipelineResult {
+  return typeof value === "object" && value !== null && "result" in value;
+}
+
 function getRestEndpoint(): string | null {
   if (!restUrl || !restToken) return null;
   if (!/^https?:\/\//i.test(restUrl)) return null;
@@ -58,9 +66,9 @@ async function restIncrWithExpire(
     );
   }
 
-  const data: any[] = await response.json();
+  const data = (await response.json()) as Array<RestPipelineResult | unknown>;
   const rawCount =
-    (Array.isArray(data) && data[0]?.result !== undefined
+    (Array.isArray(data) && isRestPipelineResult(data[0])
       ? data[0].result
       : Array.isArray(data)
         ? data[0]

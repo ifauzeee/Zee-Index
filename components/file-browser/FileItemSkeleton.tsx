@@ -42,33 +42,30 @@ export default function FileItemSkeleton({
     );
   }
 
-  // List (comfortable or compact)
   return (
     <div className="w-full max-w-full">
       <div
         className={cn(
           "group relative rounded-lg overflow-hidden w-full border bg-card shadow-sm flex items-center",
-          compactClass ? "p-1.5 min-h-[40px]" : "p-3 min-h-[68px]"
+          compactClass ? "p-1.5 min-h-[40px]" : "p-3 min-h-[68px]",
         )}
       >
         <div className="flex items-center gap-3 w-full">
           <div
             className={cn(
               "shrink-0 rounded flex items-center justify-center shimmer",
-              compactClass ? "w-6 h-6" : "w-10 h-10"
+              compactClass ? "w-6 h-6" : "w-10 h-10",
             )}
           />
           <div className="flex-1 min-w-0">
             <div className="h-4 w-1/3 shimmer rounded-md mb-2" />
-            {!compactClass && (
-              <div className="h-3 w-1/4 shimmer rounded-md" />
-            )}
+            {!compactClass && <div className="h-3 w-1/4 shimmer rounded-md" />}
           </div>
-          
+
           <div className="hidden md:flex items-center gap-2 ml-auto shrink-0 mr-4">
-             <div className="w-8 h-8 rounded-full shimmer" />
-             <div className="w-8 h-8 rounded-full shimmer" />
-             <div className="w-8 h-8 rounded-full shimmer" />
+            <div className="w-8 h-8 rounded-full shimmer" />
+            <div className="w-8 h-8 rounded-full shimmer" />
+            <div className="w-8 h-8 rounded-full shimmer" />
           </div>
 
           <div className="md:hidden shrink-0">

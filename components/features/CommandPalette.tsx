@@ -6,6 +6,7 @@ import { useAppStore } from "@/lib/store";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useTheme } from "next-themes";
+import type { DriveFile } from "@/lib/drive";
 import {
   LayoutDashboard,
   HardDrive,
@@ -35,7 +36,9 @@ export default function CommandPalette() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const debouncedQuery = useDebounce(searchQuery, 300);
 
-  const { data: searchResults = [], isLoading: loading } = useQuery({
+  const { data: searchResults = [], isLoading: loading } = useQuery<
+    DriveFile[]
+  >({
     queryKey: ["command-search", debouncedQuery],
     queryFn: async () => {
       if (!debouncedQuery) return [];
@@ -106,7 +109,7 @@ export default function CommandPalette() {
             heading={t("headingResults")}
             className="overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
           >
-            {searchResults.map((file: any) => (
+            {searchResults.map((file) => (
               <Command.Item
                 key={file.id}
                 value={`${file.name} ${file.id}`}

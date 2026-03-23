@@ -4,6 +4,7 @@ import React from "react";
 import { useAppStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import FileItemSkeleton from "@/components/file-browser/FileItemSkeleton";
+import type { ViewMode } from "@/lib/store";
 
 const FileBrowserLoading = () => {
   const { view, density } = useAppStore();
@@ -31,7 +32,11 @@ const FileBrowserLoading = () => {
       animate="visible"
     >
       {Array.from({ length: 12 }).map((_, index) => (
-        <FileItemSkeleton key={index} viewMode={view as any} density={density} />
+        <FileItemSkeleton
+          key={index}
+          viewMode={view as ViewMode}
+          density={density}
+        />
       ))}
     </motion.div>
   );

@@ -3,12 +3,14 @@ import { jwtVerify } from "jose";
 import { checkAuth, handleAuthRedirect } from "@/lib/auth-check";
 import { getRootFolderId } from "@/lib/config";
 
+type IntlMiddleware = (request: NextRequest) => Response | Promise<Response>;
+
 export async function validateShareToken(
   request: NextRequest,
   shareToken: string,
   pathname: string,
   isApi: boolean,
-  intlMiddleware: any,
+  intlMiddleware: IntlMiddleware,
 ) {
   try {
     const shareSecretKey = process.env.SHARE_SECRET_KEY;
@@ -47,7 +49,7 @@ export async function validateFolderToken(
   request: NextRequest,
   currentFolderId: string,
   isApi: boolean,
-  intlMiddleware: any,
+  intlMiddleware: IntlMiddleware,
 ) {
   const folderToken = request.cookies.get(
     `folder_token_${currentFolderId}`,
@@ -59,7 +61,9 @@ export async function validateFolderToken(
     const { payload } = await jwtVerify(folderToken, secret);
 
     if (payload.folderId === currentFolderId) {
-      const response = isApi ? NextResponse.next() : intlMiddleware(request);
+      const response = isApi
+        ? NextResponse.next()
+        : await intlMiddleware(request);
       response.headers.set("x-folder-authorized", "true");
       return response;
     }

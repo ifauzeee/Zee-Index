@@ -4,18 +4,25 @@ import { useState, useEffect } from "react";
 import { formatBytes } from "@/lib/utils";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { AlertTriangle, Search, PieChart as PieChartIcon } from "lucide-react";
+import type { AdminStats } from "@/lib/adminStats";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
-export default function StorageIntelligence({ stats }: { stats: any }) {
-  const [data, setData] = useState<any[]>([]);
+interface StorageDataPoint {
+  [key: string]: string | number;
+  name: string;
+  value: number;
+}
+
+export default function StorageIntelligence({ stats }: { stats: AdminStats }) {
+  const [data, setData] = useState<StorageDataPoint[]>([]);
 
   useEffect(() => {
     if (stats?.fileTypeDistribution) {
       setData(
-        stats.fileTypeDistribution.map((f: any) => ({
-          name: f.type,
-          value: f.count,
+        stats.fileTypeDistribution.map((fileTypeStat) => ({
+          name: fileTypeStat.type,
+          value: fileTypeStat.count,
         })),
       );
     }

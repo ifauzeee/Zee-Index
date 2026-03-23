@@ -115,8 +115,8 @@ export const EbookPreview: React.FC<{ src: string }> = ({ src }) => {
     rendition
       .display()
       .then(() => setIsLoading(false))
-      .catch((err: any) => {
-        setError(err.message);
+      .catch((error: unknown) => {
+        setError(error instanceof Error ? error.message : t("unknownError"));
         setIsLoading(false);
       });
     return () => book.destroy();

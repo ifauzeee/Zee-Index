@@ -10,6 +10,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
+import type { DriveFile } from "@/lib/drive";
 
 interface BreadcrumbDropdownProps {
   parentId: string;
@@ -27,7 +28,7 @@ export function BreadcrumbDropdown({
 
   const folderToken = folderTokens[parentId];
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<DriveFile[]>({
     queryKey: ["sibling-folders", parentId, shareToken, folderToken],
     queryFn: async () => {
       const url = new URL(window.location.origin + "/api/files");
@@ -41,9 +42,9 @@ export function BreadcrumbDropdown({
 
       const response = await fetch(url.toString(), { headers });
       if (!response.ok) throw new Error("Failed to fetch");
-      const result = await response.json();
+      const result: { files?: DriveFile[] } = await response.json();
       return (result.files || []).filter(
-        (f: any) => f.isFolder && f.id !== nextId,
+        (file) => file.isFolder && file.id !== nextId,
       );
     },
     enabled: isOpen,
@@ -90,7 +91,7 @@ export function BreadcrumbDropdown({
           </div>
         ) : (
           <div className="grid gap-0.5">
-            {data.map((folder: any) => (
+            {data.map((folder) => (
               <DropdownMenuItem
                 key={folder.id}
                 onClick={() => onFolderClick(folder.id)}

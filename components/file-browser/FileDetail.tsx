@@ -21,6 +21,7 @@ import {
 
 import { useAppStore } from "@/lib/store";
 import type { DriveFile } from "@/lib/drive";
+import type { SubtitleTrack } from "@/lib/subtitles";
 import { getFileType, cn } from "@/lib/utils";
 import { useTranslations, useLocale } from "next-intl";
 import { fetchFolderPathApi } from "@/hooks/useFileFetching";
@@ -29,7 +30,6 @@ import ShareButton from "@/components/file-browser/ShareButton";
 import InfoPanel from "../file-details/InfoPanel";
 import {
   ImagePreview,
-  GoogleDrivePreview,
   EbookPreview,
   CodePreview,
   DefaultPreview,
@@ -60,12 +60,12 @@ const FileRevisionsModal = dynamic(
   () => import("@/components/modals/FileRevisionsModal"),
 );
 
-interface SubtitleTrack {
-  kind: string;
-  src: string;
-  srcLang: string;
-  label: string;
-  default: boolean;
+interface TmdbGenre {
+  name: string;
+}
+
+interface TmdbMetadata {
+  genres?: TmdbGenre[];
 }
 
 export default function FileDetail({
@@ -151,8 +151,8 @@ export default function FileDetail({
     setActiveSubtitleTracks((prev) => prev.filter((t) => t.src !== src));
   };
 
-  const handleMetadataLoaded = React.useCallback((data: any) => {
-    setTmdbGenres(data?.genres?.map((g: any) => g.name) || []);
+  const handleMetadataLoaded = React.useCallback((data: TmdbMetadata) => {
+    setTmdbGenres(data.genres?.map((genre) => genre.name) || []);
   }, []);
 
   const shareToken = useMemo(
@@ -301,7 +301,6 @@ export default function FileDetail({
             title={file.name}
             type="video"
             poster={file.thumbnailLink}
-            mimeType={file.mimeType}
             webViewLink={file.webViewLink}
             subtitleTracks={authenticatedSubtitleTracks}
             onEnded={() => nextFileUrl && router.push(nextFileUrl)}
@@ -564,7 +563,6 @@ export default function FileDetail({
                     title={file.name}
                     type="video"
                     poster={file.thumbnailLink}
-                    mimeType={file.mimeType}
                     webViewLink={file.webViewLink}
                     subtitleTracks={authenticatedSubtitleTracks}
                     onEnded={() => nextFileUrl && router.push(nextFileUrl)}

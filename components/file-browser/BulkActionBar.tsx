@@ -9,6 +9,7 @@ import { useConfirm } from "@/components/providers/ModalProvider";
 import MoveModal from "@/components/modals/MoveModal";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { getErrorMessage } from "@/lib/errors";
 
 export function BulkActionBar() {
   const {
@@ -79,9 +80,12 @@ export function BulkActionBar() {
 
       addToast({ message: t("zipStarted"), type: "success" });
       clearSelection();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Zip error:", error);
-      addToast({ message: error.message || t("zipGenError"), type: "error" });
+      addToast({
+        message: getErrorMessage(error, t("zipGenError")),
+        type: "error",
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -184,8 +188,11 @@ export function BulkActionBar() {
       triggerRefresh();
       clearSelection();
       setIsMoveModalOpen(false);
-    } catch (error: any) {
-      addToast({ message: error.message || t("moveFailed"), type: "error" });
+    } catch (error: unknown) {
+      addToast({
+        message: getErrorMessage(error, t("moveFailed")),
+        type: "error",
+      });
     } finally {
       setIsProcessing(false);
     }

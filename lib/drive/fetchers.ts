@@ -19,6 +19,15 @@ import {
 import { logger } from "@/lib/logger";
 import { measure } from "@/lib/performance";
 
+interface ManualDriveConfig {
+  id: string;
+  name?: string;
+}
+
+function isManualDriveConfig(value: unknown): value is ManualDriveConfig {
+  return typeof value === "object" && value !== null && "id" in value;
+}
+
 export async function listSharedDrives(): Promise<SharedDrive[]> {
   const accessToken = await getAccessToken();
   const url = `${GOOGLE_DRIVE_API_BASE_URL}/drives?pageSize=100`;
@@ -186,7 +195,7 @@ export async function listFilesFromDrive(
       const errorData = await response.json();
       throw new Error(
         errorData.error?.message ||
-        "Pastikan folder ID benar dan dapat diakses.",
+          "Pastikan folder ID benar dan dapat diakses.",
       );
     }
 
@@ -313,10 +322,12 @@ export async function getFolderPath(
     process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME ||
     (locale === "id" ? "Beranda" : "Home");
 
-  const dbDrivesRaw = await kv.get(REDIS_KEYS.MANUAL_DRIVES);
-  const dbDrives: any[] = Array.isArray(dbDrivesRaw) ? dbDrivesRaw : [];
+  const dbDrivesRaw = await kv.get<ManualDriveConfig[]>(
+    REDIS_KEYS.MANUAL_DRIVES,
+  );
+  const dbDrives = Array.isArray(dbDrivesRaw) ? dbDrivesRaw : [];
   const envManualDrivesRaw = process.env.NEXT_PUBLIC_MANUAL_DRIVES || "";
-  const envDrives: { id: string; name?: string }[] = [];
+  const envDrives: ManualDriveConfig[] = [];
 
   if (envManualDrivesRaw.trim().startsWith("[")) {
     try {
@@ -326,18 +337,15 @@ export async function getFolderPath(
           if (typeof entry === "string") {
             const id = entry.trim();
             if (id) envDrives.push({ id });
-          } else if (entry && typeof entry === "object") {
-            const id = String((entry as any).id || "").trim();
+          } else if (isManualDriveConfig(entry)) {
+            const id = String(entry.id || "").trim();
             const name =
-              typeof (entry as any).name === "string"
-                ? (entry as any).name.trim()
-                : undefined;
+              typeof entry.name === "string" ? entry.name.trim() : undefined;
             if (id) envDrives.push({ id, name });
           }
         });
       }
-    } catch {
-    }
+    } catch {}
   }
 
   if (envDrives.length === 0 && envManualDrivesRaw.trim() !== "") {

@@ -1,23 +1,24 @@
 import { memoryCache, CACHE_TTL } from "../memory-cache";
-import type { KVClient } from "./types";
+import type { KVClient, KVPipeline } from "./types";
 
 export class InMemoryKV implements KVClient {
-  pipeline() {
-    const results: any[] = [];
-    const commands: any[] = [];
-    return {
+  pipeline(): KVPipeline {
+    const results: unknown[] = [];
+    const commands: Array<() => Promise<void>> = [];
+    const pipeline: KVPipeline = {
       sismember: (key: string, member: unknown) => {
         commands.push(async () => {
           const res = await this.sismember(key, member);
           results.push(res);
         });
-        return this;
+        return pipeline;
       },
       exec: async () => {
         for (const cmd of commands) await cmd();
         return results;
       },
     };
+    return pipeline;
   }
   private store = new Map<string, unknown>();
   private expirations = new Map<string, ReturnType<typeof setTimeout>>();

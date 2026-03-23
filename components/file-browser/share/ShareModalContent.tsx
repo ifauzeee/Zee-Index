@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Clock, Zap, X, ShieldCheck } from "lucide-react";
+import { Clock, Zap, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
@@ -31,8 +31,7 @@ export function ShareSidebar({
         <div>
           <h3 className="text-lg font-bold leading-none">{t("share")}</h3>
           <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
-            {itemName ||
-              (itemCount ? `${itemCount} items` : "Collection")}
+            {itemName || (itemCount ? `${itemCount} items` : "Collection")}
           </p>
         </div>
       </div>

@@ -9,6 +9,28 @@ interface UseNotificationsOptions {
   enabled?: boolean;
 }
 
+interface ActivityNotificationEvent {
+  id: string;
+  message: string;
+  severity: "info" | "warning" | "error" | "success";
+  timestamp: number;
+  type: string;
+}
+
+function isActivityNotificationEvent(
+  value: unknown,
+): value is ActivityNotificationEvent {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    "message" in value &&
+    "severity" in value &&
+    "timestamp" in value &&
+    "type" in value
+  );
+}
+
 export function useNotifications({
   enabled = true,
 }: UseNotificationsOptions = {}) {
@@ -40,11 +62,14 @@ export function useNotifications({
 
       eventSource.addEventListener("activity", (event) => {
         try {
-          const notifications = JSON.parse(event.data);
+          const parsed: unknown = JSON.parse(event.data);
+          const notifications = Array.isArray(parsed)
+            ? parsed.filter(isActivityNotificationEvent)
+            : [];
 
-          const newEvents = notifications.filter((n: any) => {
-            if (processedIds.current.has(n.id)) return false;
-            processedIds.current.add(n.id);
+          const newEvents = notifications.filter((notification) => {
+            if (processedIds.current.has(notification.id)) return false;
+            processedIds.current.add(notification.id);
             return true;
           });
 
@@ -54,31 +79,36 @@ export function useNotifications({
           }
 
           if (newEvents.length > 0) {
-            newEvents.forEach((evt: any) => {
+            newEvents.forEach((eventItem) => {
               const notifData: NotificationItem = {
-                id: evt.id,
-                message: evt.message,
-                type: evt.severity === "warning" ? "error" : "info",
-                timestamp: evt.timestamp,
+                id: eventItem.id,
+                message: eventItem.message,
+                type: eventItem.severity === "warning" ? "error" : "info",
+                timestamp: eventItem.timestamp,
                 read: false,
               };
 
               addNotification(notifData);
 
               if (
-                ["file:upload", "file:delete", "file:move"].includes(evt.type)
+                ["file:upload", "file:delete", "file:move"].includes(
+                  eventItem.type,
+                )
               ) {
                 queryClient.invalidateQueries({ queryKey: ["files"] });
               }
 
               if (
-                evt.severity === "warning" ||
-                evt.severity === "error" ||
-                evt.severity === "success"
+                eventItem.severity === "warning" ||
+                eventItem.severity === "error" ||
+                eventItem.severity === "success"
               ) {
                 addToast({
-                  message: evt.message,
-                  type: evt.severity === "warning" ? "error" : evt.severity,
+                  message: eventItem.message,
+                  type:
+                    eventItem.severity === "warning"
+                      ? "error"
+                      : eventItem.severity,
                 });
               }
             });

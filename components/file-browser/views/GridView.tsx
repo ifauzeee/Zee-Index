@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 
 import FileCard from "../FileCard";
 import EmptyState from "../EmptyState";
-import { FileBrowserViewProps } from "./types";
+import { FileBrowserActionEvent, FileBrowserViewProps } from "./types";
 import { DriveFile } from "@/lib/drive";
 
 export default function GridView({
@@ -82,15 +82,16 @@ export default function GridView({
     return undefined;
   };
 
+  const createSyntheticClickEvent = (): FileBrowserActionEvent => ({
+    preventDefault: () => {},
+    stopPropagation: () => {},
+    shiftKey: false,
+  });
+
   const handleNavigate = (folderId: string) => {
     const folder = files.find((f) => f.id === folderId);
     if (folder) {
-      const mockEvent = {
-        preventDefault: () => {},
-        stopPropagation: () => {},
-        shiftKey: false,
-      } as React.MouseEvent;
-      onItemClick(folder, mockEvent);
+      onItemClick(folder, createSyntheticClickEvent());
     }
   };
 
@@ -152,12 +153,7 @@ export default function GridView({
                         file={file}
                         onNavigate={handleNavigate}
                         onClick={(f) => {
-                          const mockEvent = {
-                            preventDefault: () => {},
-                            stopPropagation: () => {},
-                            shiftKey: false,
-                          } as React.MouseEvent;
-                          onItemClick(f, mockEvent);
+                          onItemClick(f, createSyntheticClickEvent());
                         }}
                         onContextMenu={onItemContextMenu}
                         onShare={onShareClick}
@@ -165,7 +161,7 @@ export default function GridView({
                         onDownload={onDownloadClick}
                         thumbnailSrc={getThumbnailSrc(file)}
                         onMouseEnter={() => {
-                          if (onPrefetchItem && !(file as any).uploadStatus) {
+                          if (onPrefetchItem && !file.uploadStatus) {
                             onPrefetchItem(file);
                           }
                         }}

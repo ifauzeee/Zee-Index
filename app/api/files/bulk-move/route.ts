@@ -16,7 +16,11 @@ import { withEditorSession } from "@/lib/api-middleware";
 import { type Session } from "next-auth";
 
 export const POST = withEditorSession(
-  async (request: NextRequest, context: { params?: any }, session: Session) => {
+  async (
+    request: NextRequest,
+    _context: { params?: unknown },
+    session: Session,
+  ) => {
     try {
       const body = await request.json();
       const validation = moveSchema.safeParse(body);

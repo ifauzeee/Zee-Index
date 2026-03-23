@@ -1,8 +1,10 @@
 import FileBrowser from "@/components/file-browser/FileBrowser";
-import { listFilesFromDrive } from "@/lib/drive";
+import { listFilesFromDrive, type DriveFile } from "@/lib/drive";
 import { getRootFolderId } from "@/lib/config";
 
 export const revalidate = 3600;
+
+type ProtectedFolderMap = Record<string, boolean>;
 
 export default async function Home() {
   const rootId = await getRootFolderId();
@@ -13,7 +15,7 @@ export default async function Home() {
     import("@/lib/db").then((m) => m.db),
   ]);
 
-  let initialFiles: any[] | undefined = undefined;
+  let initialFiles: DriveFile[] | undefined;
   let initialNextPageToken: string | null = null;
 
   const isLocked = (await isProtected(rootId)) || isPrivateFolder(rootId);
@@ -25,14 +27,16 @@ export default async function Home() {
         db.protectedFolder
           .findMany({ select: { folderId: true } })
           .then((res: { folderId: string }[]) => {
-            const map: Record<string, boolean> = {};
-            res.forEach((r: { folderId: string }) => (map[r.folderId] = true));
+            const map: ProtectedFolderMap = {};
+            res.forEach((entry) => {
+              map[entry.folderId] = true;
+            });
             return map;
           }),
       ]);
 
-      initialFiles = data.files.map((f: any) => {
-        const isProt = !!(allProtectedFolders as any)[f.id];
+      initialFiles = data.files.map((f) => {
+        const isProt = !!allProtectedFolders[f.id];
         const isPriv = isPrivateFolder(f.id);
         return {
           ...f,

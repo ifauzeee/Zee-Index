@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAccessToken, invalidateAccessToken } from "@/lib/drive";
+import {
+  getAccessToken,
+  invalidateAccessToken,
+  type DriveFile,
+} from "@/lib/drive";
 
 export const runtime = "edge";
 
@@ -7,7 +11,7 @@ async function fetchFileMetadata(
   fileId: string,
   currentToken: string,
   retryCount = 0,
-): Promise<any> {
+): Promise<DriveFile | null> {
   const cleanId = fileId.split("&")[0].split("?")[0].trim();
 
   const response = await fetch(
@@ -37,7 +41,7 @@ async function fetchFileMetadata(
     return null;
   }
 
-  return response.json();
+  return (await response.json()) as DriveFile;
 }
 
 export async function GET(request: NextRequest) {

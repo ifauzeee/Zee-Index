@@ -12,9 +12,29 @@ import {
   Clock,
 } from "lucide-react";
 import { formatBytes } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/errors";
+
+interface SystemHealthResponse {
+  redis: { status: "connected" | "disconnected" };
+  drive: {
+    status: "connected" | "disconnected";
+    quota: { usage: number; limit: number } | null;
+  };
+  errorRate: {
+    last24h: number;
+    prev24h: number;
+    trend: number;
+  };
+  responseTimes: {
+    p50: number;
+    p95: number;
+    p99: number;
+  };
+  timestamp: number;
+}
 
 export default function SystemHealth() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<SystemHealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -23,8 +43,8 @@ export default function SystemHealth() {
       const res = await fetch("/api/admin/system-health");
       if (!res.ok) throw new Error("Failed to fetch system health");
       setData(await res.json());
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, "Failed to fetch system health"));
     } finally {
       setLoading(false);
     }

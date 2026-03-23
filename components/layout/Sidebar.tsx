@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import { X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter, usePathname } from "next/navigation";
@@ -10,11 +16,28 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { useTranslations, useLocale } from "next-intl";
 import { fetchFolderPathApi } from "@/hooks/useFileFetching";
+import type { DriveFile } from "@/lib/drive";
+import { getErrorMessage } from "@/lib/errors";
 
 import { TreeNode, TreeContext } from "./sidebar/TreeNode";
 import NavSection from "./sidebar/NavSection";
 import DriveList from "./sidebar/DriveList";
-import type { FlatTree, ManualDrive } from "./sidebar/types";
+import type { FlatTree, FolderNode, ManualDrive } from "./sidebar/types";
+
+interface FolderContentsResponse {
+  files?: DriveFile[];
+}
+
+interface FolderPathItem {
+  id: string;
+  name: string;
+}
+
+interface DropPayload {
+  type?: string;
+  files?: Array<Pick<DriveFile, "id">>;
+  sourceFolderId?: string;
+}
 
 export default function Sidebar() {
   const router = useRouter();
@@ -24,7 +47,6 @@ export default function Sidebar() {
   const currentFolderId = useAppStore((state) => state.currentFolderId);
   const user = useAppStore((state) => state.user);
   const shareToken = useAppStore((state) => state.shareToken);
-  const navigatingId = useAppStore((state) => state.navigatingId);
   const setNavigatingId = useAppStore((state) => state.setNavigatingId);
 
   const [mounted, setMounted] = useState(false);
@@ -82,7 +104,7 @@ export default function Sidebar() {
       try {
         const res = await fetch("/api/admin/manual-drives");
         if (res.ok) {
-          const data = await res.json();
+          const data: ManualDrive[] = await res.json();
           setDbDrives(data);
         } else if (res.status === 401) {
           console.error(
@@ -139,9 +161,9 @@ export default function Sidebar() {
   const queryClient = useQueryClient();
 
   const fetchSubfolders = useCallback(
-    async (parentId: string) => {
+    async (parentId: string): Promise<FolderNode[]> => {
       try {
-        const data = await queryClient.fetchQuery({
+        const data = await queryClient.fetchQuery<FolderContentsResponse>({
           queryKey: ["folder-contents", parentId],
           queryFn: async () => {
             const res = await fetch(`/api/files?folderId=${parentId}`);
@@ -154,15 +176,15 @@ export default function Sidebar() {
           staleTime: 60 * 1000,
         });
 
-        return (data.files || []).map((f: any) => ({
-          id: f.id,
-          name: f.name,
-          parentId: parentId,
+        return (data.files || []).map((file) => ({
+          id: file.id,
+          name: file.name,
+          parentId,
           childIds: [],
           isExpanded: false,
           isLoading: false,
-          isProtected: f.isProtected,
-          isFolder: f.isFolder,
+          isProtected: file.isProtected ?? false,
+          isFolder: file.isFolder,
           hasLoaded: false,
         }));
       } catch (error) {
@@ -192,14 +214,14 @@ export default function Sidebar() {
           const newTree = { ...prev };
           newTree[nodeId] = {
             ...newTree[nodeId],
-            childIds: children.map((c: any) => c.id),
+            childIds: children.map((child) => child.id),
             isLoading: false,
             isExpanded: true,
             hasLoaded: true,
           };
-          children.forEach((c: any) => {
-            if (!newTree[c.id]) {
-              newTree[c.id] = c;
+          children.forEach((child) => {
+            if (!newTree[child.id]) {
+              newTree[child.id] = child;
             }
           });
           return newTree;
@@ -229,7 +251,7 @@ export default function Sidebar() {
             staleTime: 5 * 60 * 1000,
           });
           if (Array.isArray(pathData)) {
-            pathIds = pathData.map((p: any) => p.id);
+            pathIds = pathData.map((pathItem: FolderPathItem) => pathItem.id);
           }
         }
 
@@ -252,11 +274,13 @@ export default function Sidebar() {
             const children = await fetchSubfolders(folderId);
             currentTreeSnapshot[folderId] = {
               ...currentTreeSnapshot[folderId],
-              childIds: children.map((c: any) => c.id),
+              childIds: children.map((child) => child.id),
               hasLoaded: true,
             };
-            children.forEach((c: any) => {
-              if (!currentTreeSnapshot[c.id]) currentTreeSnapshot[c.id] = c;
+            children.forEach((child) => {
+              if (!currentTreeSnapshot[child.id]) {
+                currentTreeSnapshot[child.id] = child;
+              }
             });
             stateChanged = true;
           }
@@ -321,15 +345,17 @@ export default function Sidebar() {
       e.stopPropagation();
       setDragOverFolderId(null);
 
-      let data;
+      let data: DropPayload;
       try {
-        data = JSON.parse(e.dataTransfer.getData("application/json"));
+        data = JSON.parse(
+          e.dataTransfer.getData("application/json"),
+        ) as DropPayload;
       } catch {
         return;
       }
 
       const handleDropMove = async (
-        filesToMove: any[],
+        filesToMove: Array<Pick<DriveFile, "id">>,
         newParentId: string,
       ) => {
         try {
@@ -350,10 +376,11 @@ export default function Sidebar() {
             type: "success",
           });
           useAppStore.getState().triggerRefresh();
-        } catch (error: any) {
-          useAppStore
-            .getState()
-            .addToast({ message: error.message, type: "error" });
+        } catch (error: unknown) {
+          useAppStore.getState().addToast({
+            message: getErrorMessage(error, "Gagal memindahkan item."),
+            type: "error",
+          });
         }
       };
 
@@ -405,7 +432,6 @@ export default function Sidebar() {
               dragOverFolderId,
               canEdit,
               rootFolderId,
-              t,
             }}
           >
             <TreeNode id={rootFolderId} />

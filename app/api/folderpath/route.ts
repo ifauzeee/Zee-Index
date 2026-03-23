@@ -6,6 +6,76 @@ import { kv } from "@/lib/kv";
 
 export const dynamic = "force-dynamic";
 
+interface ManualDrive {
+  id: string;
+  name?: string;
+}
+
+interface DrivePathNode {
+  id: string;
+  name: string;
+}
+
+interface DrivePathResponse extends DrivePathNode {
+  parents?: string[];
+}
+
+function isManualDrive(value: unknown): value is ManualDrive {
+  return typeof value === "object" && value !== null && "id" in value;
+}
+
+function parseManualDrives(value: string): ManualDrive[] {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  if (trimmed.startsWith("[")) {
+    try {
+      const parsed: unknown = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed.flatMap((entry) => {
+          if (typeof entry === "string") {
+            const id = entry.trim();
+            return id ? [{ id }] : [];
+          }
+
+          if (isManualDrive(entry)) {
+            const id = String(entry.id).trim();
+            if (!id) {
+              return [];
+            }
+
+            return [
+              {
+                id,
+                name:
+                  typeof entry.name === "string"
+                    ? entry.name.trim()
+                    : undefined,
+              },
+            ];
+          }
+
+          return [];
+        });
+      }
+    } catch {
+      return [];
+    }
+  }
+
+  return trimmed.split(",").flatMap((entry) => {
+    const [id, name] = entry.split(":");
+    const cleanId = id?.trim();
+    if (!cleanId) {
+      return [];
+    }
+
+    return [{ id: cleanId, name: name?.trim() || undefined }];
+  });
+}
+
 async function fetchWithRetry(
   url: string,
   options: RequestInit,
@@ -82,15 +152,12 @@ export const GET = createPublicRoute(
 
     try {
       const dbDrivesRaw = await kv.get("zee-index:manual-drives");
-      const dbDrives: any[] = Array.isArray(dbDrivesRaw) ? dbDrivesRaw : [];
-
-      const envDrives = (process.env.NEXT_PUBLIC_MANUAL_DRIVES || "")
-        .split(",")
-        .reduce<string[]>((acc, entry) => {
-          const [id] = entry.split(":");
-          if (id?.trim()) acc.push(id.trim());
-          return acc;
-        }, []);
+      const dbDrives = Array.isArray(dbDrivesRaw)
+        ? dbDrivesRaw.filter(isManualDrive)
+        : [];
+      const envDrives = parseManualDrives(
+        process.env.NEXT_PUBLIC_MANUAL_DRIVES || "",
+      );
 
       const shortcutMap = new Map<string, string>();
 
@@ -102,8 +169,10 @@ export const GET = createPublicRoute(
         );
       }
 
-      envDrives.forEach((id) => {
-        if (id?.trim()) shortcutMap.set(id.trim(), "");
+      envDrives.forEach((drive) => {
+        if (drive.id.trim()) {
+          shortcutMap.set(drive.id.trim(), drive.name || "");
+        }
       });
 
       dbDrives.forEach((d) => {
@@ -121,7 +190,7 @@ export const GET = createPublicRoute(
           });
 
           if (response.ok) {
-            const data = await response.json();
+            const data = (await response.json()) as DrivePathNode;
             const customName = shortcutMap.get(folderId) || data.name;
             const result = [{ id: data.id, name: customName }];
             await kv.set(cacheKey, result, { ex: 3600 });
@@ -137,7 +206,7 @@ export const GET = createPublicRoute(
         return NextResponse.json(result);
       }
 
-      const path: { id: string; name: string }[] = [];
+      const path: DrivePathNode[] = [];
       let currentId = folderId;
       let iterations = 0;
 
@@ -151,7 +220,7 @@ export const GET = createPublicRoute(
           });
 
           if (response.ok) {
-            const data = await response.json();
+            const data = (await response.json()) as DrivePathNode;
             const displayName = shortcutMap.get(currentId) || data.name;
             path.unshift({ id: data.id, name: displayName });
           } else {
@@ -171,7 +240,7 @@ export const GET = createPublicRoute(
 
         if (!response.ok) break;
 
-        const data = await response.json();
+        const data = (await response.json()) as DrivePathResponse;
         path.unshift({ id: data.id, name: data.name });
 
         if (data.parents && data.parents.length > 0) {

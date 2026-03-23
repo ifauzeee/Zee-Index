@@ -15,7 +15,13 @@ interface StorageUsageChartProps {
   data: BreakdownItem[];
 }
 
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: BreakdownItem }>;
+}) => {
   const t = useTranslations("StoragePage");
   if (active && payload && payload.length) {
     const data = payload[0].payload;

@@ -15,6 +15,10 @@ interface BandwidthChartProps {
   data: { date: string; bytes: number }[];
 }
 
+interface BandwidthTooltipPayload {
+  value?: number;
+}
+
 function formatBytes(bytes: number): string {
   if (bytes === 0) return "0 B";
   const k = 1024;
@@ -23,7 +27,15 @@ function formatBytes(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: BandwidthTooltipPayload[];
+  label?: string;
+}) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-popover border border-border text-popover-foreground p-3 rounded-lg shadow-xl text-sm">
@@ -31,7 +43,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <p className="text-xs text-muted-foreground">
           Bandwidth:{" "}
           <span className="text-foreground font-medium">
-            {formatBytes(payload[0]?.value || 0)}
+            {formatBytes(payload?.[0]?.value || 0)}
           </span>
         </p>
       </div>

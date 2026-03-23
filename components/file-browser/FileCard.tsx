@@ -13,22 +13,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTranslations } from "next-intl";
+import type {
+  BrowserFile,
+  FileBrowserActionEvent,
+} from "@/components/file-browser/views/types";
 
 interface FileCardProps {
-  file: DriveFile & {
-    uploadProgress?: number;
-    uploadStatus?: string;
-    uploadError?: string;
-  };
+  file: BrowserFile;
   onNavigate?: (folderId: string) => void;
-  onClick?: (file: DriveFile) => void;
+  onClick?: (file: BrowserFile) => void;
   onContextMenu?: (
     event: { clientX: number; clientY: number },
-    file: DriveFile,
+    file: BrowserFile,
   ) => void;
-  onShare?: (e: React.MouseEvent, file: DriveFile) => void;
-  onDetails?: (e: React.MouseEvent, file: DriveFile) => void;
-  onDownload?: (e: React.MouseEvent, file: DriveFile) => void;
+  onShare?: (e: FileBrowserActionEvent, file: BrowserFile) => void;
+  onDetails?: (e: FileBrowserActionEvent, file: BrowserFile) => void;
+  onDownload?: (e: FileBrowserActionEvent, file: BrowserFile) => void;
   thumbnailSrc?: string;
   onMouseEnter?: () => void;
   isNavigating?: boolean;
@@ -123,6 +123,13 @@ export default function FileCard({
 
   const displayThumbnail = thumbnailSrc && !isFolder && file.hasThumbnail;
   const isUploading = file.uploadStatus === "uploading";
+  const createActionEvent = (
+    event: React.MouseEvent,
+  ): FileBrowserActionEvent => ({
+    preventDefault: () => event.preventDefault(),
+    stopPropagation: () => event.stopPropagation(),
+    shiftKey: event.shiftKey,
+  });
 
   const handleDragOver = (e: React.DragEvent) => {
     if (isFolder && isAdmin && !isUploading) {
@@ -182,7 +189,7 @@ export default function FileCard({
       onContextMenu={handleContextMenu}
       onMouseEnter={onMouseEnter}
       draggable={isAdmin && !isUploading && isDesktop}
-      onDragStart={onDragStart as any}
+      onDragStartCapture={onDragStart}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -263,17 +270,23 @@ export default function FileCard({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
             {onDetails && (
-              <DropdownMenuItem onClick={(e) => onDetails(e as any, file)}>
+              <DropdownMenuItem
+                onClick={(event) => onDetails(createActionEvent(event), file)}
+              >
                 {t("info")}
               </DropdownMenuItem>
             )}
             {onDownload && !isFolder && !sharePolicy?.preventDownload && (
-              <DropdownMenuItem onClick={(e) => onDownload(e as any, file)}>
+              <DropdownMenuItem
+                onClick={(event) => onDownload(createActionEvent(event), file)}
+              >
                 {t("download")}
               </DropdownMenuItem>
             )}
             {onShare && (
-              <DropdownMenuItem onClick={(e) => onShare(e as any, file)}>
+              <DropdownMenuItem
+                onClick={(event) => onShare(createActionEvent(event), file)}
+              >
                 {t("share")}
               </DropdownMenuItem>
             )}

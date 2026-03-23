@@ -8,6 +8,7 @@ import {
   hasUserAccess,
   verifyShareTokenString,
 } from "@/lib/auth";
+import type { SubtitleTrack } from "@/lib/subtitles";
 
 const FileError = ({
   message,
@@ -32,14 +33,6 @@ const FileError = ({
 
 const createSlug = (name: string) =>
   encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
-
-interface SubtitleTrack {
-  src: string;
-  kind: string;
-  srcLang: string;
-  label: string;
-  default: boolean;
-}
 
 export default async function FilePage(props: {
   params: Promise<{ folderId: string; fileId: string; locale: string }>;
@@ -147,7 +140,7 @@ export default async function FilePage(props: {
 
             return {
               src: `/api/download?fileId=${trackFile.id}`,
-              kind: "subtitles",
+              kind: "subtitles" as const,
               srcLang: lang,
               label: label,
               default: lang === "en",

@@ -9,16 +9,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { type DriveFile } from "@/lib/drive";
+import type { SubtitleTrack } from "@/lib/subtitles";
 import { FileText, Loader2, Music, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
-
-interface SubtitleTrack {
-  kind: string;
-  src: string;
-  srcLang: string;
-  label: string;
-  default: boolean;
-}
 
 interface SubtitleSelectorModalProps {
   folderId: string;

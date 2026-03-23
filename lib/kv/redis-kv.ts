@@ -1,18 +1,80 @@
 import { memoryCache, CACHE_TTL } from "../memory-cache";
 import { logger } from "../logger";
-import type { KVClient } from "./types";
+import type { KVClient, KVPipeline } from "./types";
 
 let RedisClient: unknown = null;
 
-function getRedisConstructor() {
+interface RedisPipelineResult extends Array<unknown> {
+  0: Error | null;
+  1: unknown;
+}
+
+interface RedisPipelineClient {
+  sismember(key: string, member: string): RedisPipelineClient;
+  exec(): Promise<RedisPipelineResult[] | null>;
+}
+
+interface RedisClientLike {
+  on(event: "connect", listener: () => void): void;
+  on(event: "error", listener: (error: Error) => void): void;
+  get(key: string): Promise<string | null>;
+  setex(key: string, seconds: number, value: string): Promise<unknown>;
+  set(key: string, value: string): Promise<unknown>;
+  del(...keys: string[]): Promise<number>;
+  exists(...keys: string[]): Promise<number>;
+  keys(pattern: string): Promise<string[]>;
+  mget(...keys: string[]): Promise<Array<string | null>>;
+  mset(...values: string[]): Promise<unknown>;
+  incr(key: string): Promise<number>;
+  expire(key: string, seconds: number): Promise<number>;
+  hgetall(key: string): Promise<Record<string, string>>;
+  hset(key: string, obj: Record<string, string>): Promise<number>;
+  hget(key: string, field: string): Promise<string | null>;
+  hdel(key: string, ...fields: string[]): Promise<number>;
+  sadd(key: string, ...members: string[]): Promise<number>;
+  srem(key: string, ...members: string[]): Promise<number>;
+  sismember(key: string, member: string): Promise<number>;
+  smembers(key: string): Promise<string[]>;
+  scard(key: string): Promise<number>;
+  zadd(key: string, score: number, member: string): Promise<number>;
+  zrevrangebyscore(key: string, stop: number, start: number): Promise<string[]>;
+  zrangebyscore(key: string, start: number, stop: number): Promise<string[]>;
+  zrevrange(key: string, start: number, stop: number): Promise<string[]>;
+  zrange(key: string, start: number, stop: number): Promise<string[]>;
+  zremrangebyscore(key: string, min: number, max: number): Promise<number>;
+  zcard(key: string): Promise<number>;
+  zrem(key: string, ...members: string[]): Promise<number>;
+  zscore(key: string, member: string): Promise<string | null>;
+  lpush(key: string, ...values: string[]): Promise<number>;
+  rpush(key: string, ...values: string[]): Promise<number>;
+  lrange(key: string, start: number, stop: number): Promise<string[]>;
+  llen(key: string): Promise<number>;
+  ltrim(key: string, start: number, stop: number): Promise<string>;
+  flushall(): Promise<unknown>;
+  pipeline(): RedisPipelineClient;
+}
+
+interface RedisConstructor {
+  new (
+    url: string,
+    options: {
+      maxRetriesPerRequest: number;
+      retryStrategy: (times: number) => number | null;
+      lazyConnect: boolean;
+      enableReadyCheck: boolean;
+    },
+  ): RedisClientLike;
+}
+
+function getRedisConstructor(): RedisConstructor {
   if (!RedisClient) {
     RedisClient = require("ioredis");
   }
-  return RedisClient as any;
+  return RedisClient as RedisConstructor;
 }
 
 export class RedisKV implements KVClient {
-  private client: any;
+  private client: RedisClientLike;
 
   constructor(url: string) {
     const IORedis = getRedisConstructor();
@@ -285,9 +347,9 @@ export class RedisKV implements KVClient {
     return "OK";
   }
 
-  pipeline() {
+  pipeline(): KVPipeline {
     const pipe = this.client.pipeline();
-    const pipelineWrapper = {
+    const pipelineWrapper: KVPipeline = {
       sismember: (key: string, member: unknown) => {
         const serialized =
           typeof member === "string" ? member : JSON.stringify(member);
@@ -296,7 +358,7 @@ export class RedisKV implements KVClient {
       },
       exec: async () => {
         const results = await pipe.exec();
-        return results?.map(([, val]: [any, any]) => val) || [];
+        return results?.map(([, value]) => value) || [];
       },
     };
     return pipelineWrapper;

@@ -13,6 +13,12 @@ import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { useGallery } from "@/hooks/useGallery";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
+import { getErrorMessage } from "@/lib/errors";
+import type {
+  BrowserFile,
+  FileBrowserActionEvent,
+} from "@/components/file-browser/views/types";
+import type { ShareTokenPayload } from "@/lib/store";
 
 import FileBrowserHeader from "@/components/file-browser/FileBrowserHeader";
 import ImageGallery from "@/components/features/ImageGallery";
@@ -179,7 +185,7 @@ export default function FileBrowser({
     );
   }, [files]);
 
-  const sortedFiles = useMemo(() => {
+  const sortedFiles = useMemo<BrowserFile[]>(() => {
     return [...files]
       .map((file) => ({ ...file, isFavorite: favorites.includes(file.id) }))
       .sort((a, b) => {
@@ -223,7 +229,7 @@ export default function FileBrowser({
           .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
           .join(""),
       );
-      const payload = JSON.parse(jsonPayload);
+      const payload = JSON.parse(jsonPayload) as ShareTokenPayload;
 
       if (payload.exp) {
         const expireTime = payload.exp * 1000;
@@ -283,8 +289,11 @@ export default function FileBrowser({
       queryClient.invalidateQueries({
         queryKey: ["files", authTarget.folderId],
       });
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (error: unknown) {
+      addToast({
+        message: getErrorMessage(error, t("wrongCredentials")),
+        type: "error",
+      });
     } finally {
       setIsAuthLoading(false);
     }
@@ -293,7 +302,7 @@ export default function FileBrowser({
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
 
-  const handleItemClick = (file: DriveFile) => {
+  const handleItemClick = (file: BrowserFile) => {
     if (isBulkMode) {
       toggleSelection(file);
       return;
@@ -364,7 +373,7 @@ export default function FileBrowser({
             }
             return res.json();
           },
-          initialPageParam: null as string | null,
+          initialPageParam: null,
         })
         .catch(() => {});
     },
@@ -372,7 +381,7 @@ export default function FileBrowser({
   );
 
   const handlePrefetchItem = useCallback(
-    (file: DriveFile) => {
+    (file: BrowserFile) => {
       if (file.isFolder) {
         if (file.isProtected && !folderTokens[file.id]) return;
         handlePrefetchFolder(file.id);
@@ -390,7 +399,7 @@ export default function FileBrowser({
   );
 
   const handleContextMenuWrapper = useCallback(
-    (event: any, file: DriveFile) => {
+    (event: { clientX: number; clientY: number }, file: BrowserFile) => {
       if (isBulkMode || shareToken) return;
       setActiveFileId(file.id);
       handleContextMenu(event, file);
@@ -398,14 +407,17 @@ export default function FileBrowser({
     [isBulkMode, shareToken, handleContextMenu],
   );
 
-  const handleQuickShare = (e: React.MouseEvent, file: DriveFile) => {
+  const handleQuickShare = (e: FileBrowserActionEvent, file: BrowserFile) => {
     e.stopPropagation();
     if (!isAdmin) return;
     handleShare(file);
   };
 
-  const handleQuickDownload = (e: React.MouseEvent | null, file: DriveFile) => {
-    if (e && e.stopPropagation) {
+  const handleQuickDownload = (
+    file: BrowserFile,
+    e?: FileBrowserActionEvent,
+  ) => {
+    if (e) {
       e.stopPropagation();
     }
     let url = `/api/download?fileId=${file.id}`;
@@ -514,7 +526,7 @@ export default function FileBrowser({
             e.stopPropagation();
             setDetailsFile(file);
           }}
-          onDownloadClick={handleQuickDownload}
+          onDownloadClick={(e, file) => handleQuickDownload(file, e)}
           onDragStart={handleDragStart}
           onFileDrop={onDropOnFolder}
           onPrefetchItem={handlePrefetchItem}
@@ -547,9 +559,7 @@ export default function FileBrowser({
         handleMove={handleMove}
         handleToggleFavorite={handleToggleFavorite}
         handleCopy={handleCopy}
-        handleDownload={(file: DriveFile) =>
-          handleQuickDownload(null as any, file)
-        }
+        handleDownload={(file: DriveFile) => handleQuickDownload(file)}
         handleArchivePreview={handleArchivePreview}
         previewFile={previewFile}
         setPreviewFile={setPreviewFile}

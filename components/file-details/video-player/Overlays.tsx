@@ -1,15 +1,9 @@
 "use client";
 
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  WifiOff,
-  History,
-  FileWarning,
-  Download,
-  Loader2,
-} from "lucide-react";
-import { formatDuration, cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { WifiOff, History, FileWarning, Download, Loader2 } from "lucide-react";
+import { formatDuration } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 
@@ -133,9 +127,7 @@ export function FormatErrorOverlay({
       className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-zinc-900/95 text-white p-4 text-center"
     >
       <FileWarning size={48} className="mb-4 text-amber-500" />
-      <h3 className="text-xl font-bold mb-2">
-        {tPlayer("unsupportedFormat")}
-      </h3>
+      <h3 className="text-xl font-bold mb-2">{tPlayer("unsupportedFormat")}</h3>
       <p className="text-sm text-gray-300 mb-4 max-w-sm">
         {tPlayer("codecNotSupported")}
       </p>
@@ -156,9 +148,7 @@ export function FormatErrorOverlay({
         </Button>
         <Button
           variant="secondary"
-          onClick={() =>
-            (window.location.href = `vlc://${getAbsoluteSrc()}`)
-          }
+          onClick={() => (window.location.href = `vlc://${getAbsoluteSrc()}`)}
           className="px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
         >
           <Play size={16} /> VLC (PC)

@@ -29,12 +29,22 @@ import {
 import { useTranslations, useLocale } from "next-intl";
 import { useAppStore } from "@/lib/store";
 import { useScrollLock } from "@/hooks/useScrollLock";
-import { QuickStat, DetailRow, contentVariants, itemVariants } from "./details/DetailComponents";
+import {
+  QuickStat,
+  DetailRow,
+  contentVariants,
+  itemVariants,
+} from "./details/DetailComponents";
 import FilePreview from "./details/FilePreview";
 
 interface DetailsPanelProps {
   file: DriveFile;
   onClose: () => void;
+}
+
+interface FolderPathItem {
+  id: string;
+  name: string;
 }
 
 const panelVariants: Variants = {
@@ -121,8 +131,8 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
           `/api/folderpath?folderId=${parentId}&locale=${locale}`,
         );
         if (res.ok) {
-          const data = await res.json();
-          const path = data.map((p: any) => p.name).join(" / ");
+          const data: FolderPathItem[] = await res.json();
+          const path = data.map((pathItem) => pathItem.name).join(" / ");
           setPathString(path || t("root"));
         } else {
           setPathString(t("unknown"));

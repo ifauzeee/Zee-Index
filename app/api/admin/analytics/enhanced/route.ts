@@ -6,6 +6,8 @@ import { startOfToday, startOfWeek, startOfMonth, subDays } from "date-fns";
 
 export const dynamic = "force-dynamic";
 
+type AnalyticsLog = Awaited<ReturnType<typeof db.activityLog.findMany>>[number];
+
 export const GET = createAdminRoute(async () => {
   try {
     const now = Date.now();
@@ -20,10 +22,10 @@ export const GET = createAdminRoute(async () => {
     });
 
     const last5MinLogs = allLogs.filter(
-      (l: any) => l.timestamp >= now - 5 * 60 * 1000,
+      (log) => log.timestamp >= now - 5 * 60 * 1000,
     );
     const last1HourLogs = allLogs.filter(
-      (l: any) => l.timestamp >= now - 60 * 60 * 1000,
+      (log) => log.timestamp >= now - 60 * 60 * 1000,
     );
 
     const dailyTrend: Record<
@@ -36,7 +38,7 @@ export const GET = createAdminRoute(async () => {
       dailyTrend[key] = { downloads: 0, uploads: 0, views: 0 };
     }
 
-    allLogs.forEach((log: any) => {
+    allLogs.forEach((log: AnalyticsLog) => {
       const key = new Date(log.timestamp).toISOString().split("T")[0];
       if (dailyTrend[key]) {
         if (log.type === "DOWNLOAD") dailyTrend[key].downloads++;
@@ -47,7 +49,7 @@ export const GET = createAdminRoute(async () => {
     });
 
     const hourlyActivity = Array(24).fill(0);
-    allLogs.forEach((log: any) => {
+    allLogs.forEach((log: AnalyticsLog) => {
       const hour = new Date(log.timestamp).getHours();
       hourlyActivity[hour]++;
     });
@@ -55,54 +57,54 @@ export const GET = createAdminRoute(async () => {
 
     const uniqueUsersToday = new Set(
       allLogs
-        .filter((l: any) => l.timestamp >= todayStart && l.userEmail)
-        .map((l: any) => l.userEmail),
+        .filter((log) => log.timestamp >= todayStart && log.userEmail)
+        .map((log) => log.userEmail),
     ).size;
 
     const uniqueUsersThisWeek = new Set(
       allLogs
-        .filter((l: any) => l.timestamp >= weekStart && l.userEmail)
-        .map((l: any) => l.userEmail),
+        .filter((log) => log.timestamp >= weekStart && log.userEmail)
+        .map((log) => log.userEmail),
     ).size;
 
     const uniqueUsersThisMonth = new Set(
       allLogs
-        .filter((l: any) => l.timestamp >= monthStart && l.userEmail)
-        .map((l: any) => l.userEmail),
+        .filter((log) => log.timestamp >= monthStart && log.userEmail)
+        .map((log) => log.userEmail),
     ).size;
 
     const totalActions = allLogs.filter(
-      (l: any) => l.timestamp >= todayStart,
+      (log) => log.timestamp >= todayStart,
     ).length;
     const errorActions = allLogs.filter(
-      (l: any) =>
-        l.timestamp >= todayStart &&
-        (l.severity === "error" || l.severity === "critical"),
+      (log) =>
+        log.timestamp >= todayStart &&
+        (log.severity === "error" || log.severity === "critical"),
     ).length;
     const errorRate =
       totalActions > 0 ? (errorActions / totalActions) * 100 : 0;
 
     const activityBreakdown: Record<string, number> = {};
     allLogs
-      .filter((l: any) => l.timestamp >= todayStart)
-      .forEach((log: any) => {
+      .filter((log) => log.timestamp >= todayStart)
+      .forEach((log: AnalyticsLog) => {
         activityBreakdown[log.type] = (activityBreakdown[log.type] || 0) + 1;
       });
 
     const securityEvents = allLogs
       .filter(
-        (l: any) =>
-          l.type === "UNAUTHORIZED_ACCESS" ||
-          l.type === "LOGIN_FAILURE" ||
-          l.severity === "critical",
+        (log) =>
+          log.type === "UNAUTHORIZED_ACCESS" ||
+          log.type === "LOGIN_FAILURE" ||
+          log.severity === "critical",
       )
       .slice(0, 10)
-      .map((l: any) => ({
-        type: l.type,
-        userEmail: l.userEmail,
-        ipAddress: l.ipAddress,
-        timestamp: l.timestamp,
-        severity: l.severity,
+      .map((log: AnalyticsLog) => ({
+        type: log.type,
+        userEmail: log.userEmail,
+        ipAddress: log.ipAddress,
+        timestamp: log.timestamp,
+        severity: log.severity,
       }));
 
     const cacheStats = memoryCache.getStats();
@@ -111,8 +113,8 @@ export const GET = createAdminRoute(async () => {
       realtime: {
         activeUsersLast5Min: new Set(
           last5MinLogs
-            .filter((l: any) => l.userEmail)
-            .map((l: any) => l.userEmail),
+            .filter((log) => log.userEmail)
+            .map((log) => log.userEmail),
         ).size,
         requestsLast5Min: last5MinLogs.length,
         requestsLastHour: last1HourLogs.length,

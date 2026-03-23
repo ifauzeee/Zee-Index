@@ -15,7 +15,19 @@ interface PageViewsChartProps {
   data: { hour: string; views: number; visitors: number }[];
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface PageViewsTooltipPayload {
+  value?: number;
+}
+
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: PageViewsTooltipPayload[];
+  label?: string;
+}) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-popover border border-border text-popover-foreground p-3 rounded-lg shadow-xl text-sm">
@@ -28,7 +40,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
             />
             Views:{" "}
             <span className="font-medium text-foreground">
-              {payload[0]?.value || 0}
+              {payload?.[0]?.value || 0}
             </span>
           </p>
           <p className="flex items-center gap-2">
@@ -38,7 +50,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
             />
             Visitors:{" "}
             <span className="font-medium text-foreground">
-              {payload[1]?.value || 0}
+              {payload?.[1]?.value || 0}
             </span>
           </p>
         </div>

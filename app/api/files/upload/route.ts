@@ -10,7 +10,11 @@ import { invalidateFolderCache } from "@/lib/cache";
 export const maxDuration = 60;
 
 export const POST = withEditorSession(
-  async (request: NextRequest, context: { params?: any }, session: Session) => {
+  async (
+    request: NextRequest,
+    _context: { params?: unknown },
+    session: Session,
+  ) => {
     const searchParams = request.nextUrl.searchParams;
     const uploadType = searchParams.get("type");
 

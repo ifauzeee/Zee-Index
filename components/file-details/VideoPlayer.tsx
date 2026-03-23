@@ -16,6 +16,7 @@ import {
 } from "@vidstack/react/player/layouts/default";
 import { AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/lib/store";
+import type { SubtitleTrack } from "@/lib/subtitles";
 import { srtToVtt } from "@/lib/subtitleUtils";
 import { useTranslations } from "next-intl";
 
@@ -33,12 +34,8 @@ import {
   WatermarkOverlay,
 } from "./video-player/Overlays";
 
-interface SubtitleTrack {
-  kind: string;
-  src: string;
-  srcLang: string;
-  label: string;
-  default: boolean;
+interface TimeUpdateDetail {
+  currentTime: number;
 }
 
 interface VideoAudioPreviewProps {
@@ -46,7 +43,6 @@ interface VideoAudioPreviewProps {
   title: string;
   type: "video" | "audio";
   poster?: string;
-  mimeType: string;
   subtitleTracks?: SubtitleTrack[];
   onEnded?: () => void;
   webViewLink?: string;
@@ -57,7 +53,6 @@ export default function VideoPlayer({
   title,
   type,
   poster,
-  mimeType,
   subtitleTracks,
   onEnded,
   webViewLink,
@@ -165,10 +160,6 @@ export default function VideoPlayer({
   const fileIdMatch = src.match(/fileId=([^&]+)/);
   const fileId = fileIdMatch ? fileIdMatch[1] : null;
 
-  const isMkv =
-    mimeType.includes("matroska") || title.toLowerCase().endsWith(".mkv");
-  const displayMimeType = isMkv ? "video/webm" : mimeType;
-
   useEffect(() => {
     setCurrentSrc(src);
     setNetworkError(false);
@@ -229,7 +220,7 @@ export default function VideoPlayer({
       if (Math.abs(player.currentTime - lastTime) > 1) {
         player.currentTime = lastTime;
       }
-      player.play().catch(() => { });
+      player.play().catch(() => {});
       setHasResumed(true);
     } else if (
       fileId &&
@@ -273,7 +264,7 @@ export default function VideoPlayer({
     }
   };
 
-  const handleTimeUpdate = (detail: any) => {
+  const handleTimeUpdate = (detail: TimeUpdateDetail) => {
     if (fileId && detail.currentTime > 5 && !showResumePrompt) {
       if (Math.floor(detail.currentTime) % 10 === 0) {
         setVideoProgress(fileId, detail.currentTime);
@@ -303,7 +294,7 @@ export default function VideoPlayer({
         ref={playerRef}
         key={currentSrc}
         title={title}
-        src={{ src: currentSrc, type: displayMimeType as any }}
+        src={currentSrc}
         poster={poster?.replace("=s220", "=s1280")}
         aspectRatio={type === "video" ? "16/9" : undefined}
         onEnded={() => {
@@ -348,7 +339,7 @@ export default function VideoPlayer({
                 key={track.src}
                 id={track.src}
                 src={track.src}
-                kind={track.kind as any}
+                kind={track.kind}
                 label={track.label}
                 lang={track.srcLang}
                 default={track.default}
@@ -435,9 +426,7 @@ export default function VideoPlayer({
 
       <AnimatePresence>
         <BufferingOverlay
-          show={
-            buffering && !networkError && !formatError && !showResumePrompt
-          }
+          show={buffering && !networkError && !formatError && !showResumePrompt}
         />
       </AnimatePresence>
     </div>

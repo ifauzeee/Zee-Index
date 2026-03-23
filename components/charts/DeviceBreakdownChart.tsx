@@ -15,6 +15,12 @@ interface DeviceBreakdownChartProps {
   title: string;
 }
 
+interface DeviceTooltipPayload {
+  name?: string;
+  value?: number;
+  payload?: { fill?: string };
+}
+
 const COLORS = [
   "hsl(217, 91%, 60%)",
   "hsl(142, 71%, 45%)",
@@ -26,7 +32,13 @@ const COLORS = [
   "hsl(300, 60%, 55%)",
 ];
 
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: DeviceTooltipPayload[];
+}) => {
   if (active && payload && payload.length) {
     const data = payload[0];
     return (

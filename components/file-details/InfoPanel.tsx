@@ -17,6 +17,12 @@ import {
 import { useTranslations, useFormatter } from "next-intl";
 import SubtitleSelectorModal from "../modals/SubtitleSelectorModal";
 import { srtToVtt } from "@/lib/subtitleUtils";
+import type { SubtitleTrack } from "@/lib/subtitles";
+
+interface FolderPathItem {
+  id: string;
+  name: string;
+}
 
 interface InfoPanelProps {
   file: DriveFile;
@@ -30,8 +36,8 @@ interface InfoPanelProps {
   onEditImage?: () => void;
   onShowHistory?: () => void;
   isImage: boolean;
-  subtitleTracks?: any[];
-  onAddSubtitle?: (track: any) => void;
+  subtitleTracks?: SubtitleTrack[];
+  onAddSubtitle?: (track: SubtitleTrack) => void;
   onRemoveSubtitle?: (src: string) => void;
   tmdbGenres?: string[];
 }
@@ -127,8 +133,8 @@ export default function InfoPanel({
         const parentId = file.parents[0];
         const res = await fetch(`/api/folderpath?folderId=${parentId}`);
         if (res.ok) {
-          const data = await res.json();
-          const path = data.map((p: any) => p.name).join(" / ");
+          const data: FolderPathItem[] = await res.json();
+          const path = data.map((pathItem) => pathItem.name).join(" / ");
           setPathString(path || "Root");
         } else {
           setPathString("Unknown");

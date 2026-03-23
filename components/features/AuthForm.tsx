@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 import { useAppStore } from "@/lib/store";
 import { signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
+import { getErrorMessage } from "@/lib/errors";
 
 interface AuthFormProps {
   folderId?: string;
@@ -58,9 +59,9 @@ export default function AuthForm({
         message: t("accessRequestSuccess"),
         type: "success",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       addToast({
-        message: error.message || t("requestFail"),
+        message: getErrorMessage(error, t("requestFail")),
         type: "error",
       });
     } finally {

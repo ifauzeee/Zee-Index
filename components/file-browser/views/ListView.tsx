@@ -89,7 +89,7 @@ export default function ListView({
           if (!file) return null;
 
           const isShared =
-            !(file as any).uploadStatus &&
+            !file.uploadStatus &&
             shareLinks.some(
               (link) => !link.isCollection && link.path.includes(file.id),
             );
@@ -132,15 +132,15 @@ export default function ListView({
                   onDragStart={(e) => onDragStart(e, file)}
                   onFileDrop={onFileDrop}
                   onMouseEnter={() => {
-                    if (onPrefetchItem && !(file as any).uploadStatus) {
+                    if (onPrefetchItem && !file.uploadStatus) {
                       onPrefetchItem(file);
                     }
                   }}
                   density={density}
                   isShared={isShared}
-                  uploadProgress={(file as any).uploadProgress}
-                  uploadStatus={(file as any).uploadStatus}
-                  uploadError={(file as any).uploadError}
+                  uploadProgress={file.uploadProgress}
+                  uploadStatus={file.uploadStatus}
+                  uploadError={file.uploadError}
                   isNavigating={navigatingId === file.id}
                 />
               </div>

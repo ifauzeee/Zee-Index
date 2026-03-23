@@ -79,7 +79,7 @@ async function handleDownload(request: NextRequest) {
         filename,
         null,
         null,
-        null as any,
+        null,
         true,
         request.headers.get("origin"),
       );

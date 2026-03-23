@@ -1,4 +1,6 @@
 import { type NextRequest } from "next/server";
+import type { ShareLink as DbShareLink } from "@prisma/client";
+import type { Session } from "next-auth";
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
 import { auth } from "@/auth";
@@ -6,6 +8,8 @@ import { db } from "@/lib/db";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { logger } from "@/lib/logger";
+import type { DriveFile } from "@/lib/drive";
+import { getErrorMessage } from "@/lib/errors";
 import {
   EXPORT_TYPE_MAP,
   REDIS_KEYS,
@@ -19,7 +23,7 @@ export interface DownloadContext {
   accessTokenParam: string | null;
   range: string | null;
   isStream: boolean;
-  shareRecord?: any;
+  shareRecord?: DbShareLink;
 }
 
 export type DownloadErrorType = {
@@ -27,9 +31,19 @@ export type DownloadErrorType = {
   status: number;
 };
 
+function createEmptyDownloadContext(): DownloadContext {
+  return {
+    fileId: "",
+    shareToken: null,
+    accessTokenParam: null,
+    range: null,
+    isStream: false,
+  };
+}
+
 export async function validateDownloadRequest(request: NextRequest): Promise<{
   context: DownloadContext;
-  session: any;
+  session: Session | null;
   error?: DownloadErrorType;
 }> {
   const { searchParams } = new URL(request.url);
@@ -42,7 +56,7 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
     const { success } = await checkRateLimit(request, "DOWNLOAD");
     if (!success) {
       return {
-        context: {} as any,
+        context: createEmptyDownloadContext(),
         session: null,
         error: { error: ERROR_MESSAGES.DOWNLOAD_LIMIT_EXCEEDED, status: 429 },
       };
@@ -50,7 +64,7 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
   }
 
   const session = await auth();
-  let shareRecord: any = undefined;
+  let shareRecord: DbShareLink | undefined;
 
   if (shareToken) {
     try {
@@ -63,9 +77,10 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
         );
         if (isBlocked) throw new Error(ERROR_MESSAGES.SHARE_LINK_REVOKED);
 
-        shareRecord = await db.shareLink.findUnique({
-          where: { jti: payload.jti as string },
-        });
+        shareRecord =
+          (await db.shareLink.findUnique({
+            where: { jti: payload.jti as string },
+          })) || undefined;
 
         if (shareRecord) {
           if (
@@ -89,12 +104,12 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
           throw new Error("Login required.");
         }
       }
-    } catch (err: any) {
+    } catch (error: unknown) {
       return {
-        context: {} as any,
+        context: createEmptyDownloadContext(),
         session,
         error: {
-          error: err.message || ERROR_MESSAGES.INVALID_SHARE_TOKEN,
+          error: getErrorMessage(error, ERROR_MESSAGES.INVALID_SHARE_TOKEN),
           status: 401,
         },
       };
@@ -103,7 +118,7 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
 
   if (!fileId) {
     return {
-      context: {} as any,
+      context: createEmptyDownloadContext(),
       session,
       error: { error: ERROR_MESSAGES.MISSING_FILE_ID, status: 400 },
     };
@@ -112,7 +127,7 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
   const fileIdPattern = /^[a-zA-Z0-9_-]+$/;
   if (!fileIdPattern.test(fileId) || fileId.length > 100) {
     return {
-      context: {} as any,
+      context: createEmptyDownloadContext(),
       session,
       error: { error: ERROR_MESSAGES.INVALID_FILE_ID, status: 400 },
     };
@@ -160,7 +175,7 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
 
       if (!accessGranted) {
         return {
-          context: {} as any,
+          context: createEmptyDownloadContext(),
           session,
           error: { error: ERROR_MESSAGES.ACCESS_DENIED, status: 403 },
         };
@@ -175,15 +190,15 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
       accessTokenParam,
       range,
       isStream: !!range,
-      shareRecord: shareRecord,
-    } as DownloadContext,
+      shareRecord,
+    },
     session,
   };
 }
 
 export function prepareGoogleDriveUrl(
   fileId: string,
-  fileDetails: any,
+  fileDetails: Pick<DriveFile, "mimeType" | "name">,
 ): { url: string; mimeType: string; filename: string } {
   let downloadUrl = `${GOOGLE_DRIVE_API_BASE_URL}/files/${fileId}?alt=media&supportsAllDrives=true`;
   let responseMimeType = fileDetails.mimeType;
@@ -219,7 +234,7 @@ export function prepareResponseHeaders(
   filename: string,
   range: string | null,
   secFetchDest: string | null,
-  googleResponse: Response,
+  googleResponse: Response | null,
   isHEAD: boolean = false,
   requestOrigin?: string | null,
 ): Headers {
@@ -267,11 +282,15 @@ export function prepareResponseHeaders(
 
   responseHeaders.set("Transfer-Encoding", "chunked");
 
-  const contentRange = googleResponse.headers.get("Content-Range");
-  if (contentRange) responseHeaders.set("Content-Range", contentRange);
+  const contentRange = googleResponse?.headers.get("Content-Range");
+  if (contentRange) {
+    responseHeaders.set("Content-Range", contentRange);
+  }
 
-  const contentLength = googleResponse.headers.get("Content-Length");
-  if (contentLength) responseHeaders.set("Content-Length", contentLength);
+  const contentLength = googleResponse?.headers.get("Content-Length");
+  if (contentLength) {
+    responseHeaders.set("Content-Length", contentLength);
+  }
 
   responseHeaders.set("Accept-Ranges", "bytes");
 

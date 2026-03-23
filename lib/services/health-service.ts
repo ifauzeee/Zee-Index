@@ -1,8 +1,17 @@
 import { kv } from "@/lib/kv";
 import { getAccessToken } from "@/lib/drive";
 import { getRootFolderId } from "@/lib/config";
+import { getErrorMessage } from "@/lib/errors";
 
-export async function checkDatabaseHealth() {
+type HealthStatus = "healthy" | "unhealthy" | "not_configured";
+
+interface HealthCheckResult {
+  status: HealthStatus;
+  latency: number;
+  error?: string;
+}
+
+export async function checkDatabaseHealth(): Promise<HealthCheckResult> {
   const kvStart = performance.now();
   try {
     const testKey = `health:${Date.now()}`;
@@ -18,16 +27,16 @@ export async function checkDatabaseHealth() {
     } else {
       throw new Error("Write/Read mismatch");
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       status: "unhealthy",
       latency: Math.round(performance.now() - kvStart),
-      error: error.message,
+      error: getErrorMessage(error),
     };
   }
 }
 
-export async function checkGoogleDriveHealth() {
+export async function checkGoogleDriveHealth(): Promise<HealthCheckResult> {
   const driveStart = performance.now();
   try {
     const token = await getAccessToken();
@@ -55,18 +64,22 @@ export async function checkGoogleDriveHealth() {
       const errData = await response.json().catch(() => ({}));
       throw new Error(errData.error?.message || `API Error ${response.status}`);
     }
-  } catch (error: any) {
-    if (error.message.includes("Aplikasi belum dikonfigurasi") || error.message.includes("Root Folder ID")) {
+  } catch (error: unknown) {
+    const errorMessage = getErrorMessage(error);
+    if (
+      errorMessage.includes("Aplikasi belum dikonfigurasi") ||
+      errorMessage.includes("Root Folder ID")
+    ) {
       return {
         status: "not_configured",
         latency: Math.round(performance.now() - driveStart),
-        error: error.message,
+        error: errorMessage,
       };
     } else {
       return {
         status: "unhealthy",
         latency: Math.round(performance.now() - driveStart),
-        error: error.message,
+        error: errorMessage,
       };
     }
   }

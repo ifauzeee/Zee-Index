@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
+import { getErrorMessage } from "@/lib/errors";
 
 interface ManualDrive {
   id: string;
@@ -32,6 +33,11 @@ interface ScannedDrive {
   name: string;
   kind: "teamDrive" | "sharedFolder";
   owner?: string;
+}
+
+interface ManualDriveResponse {
+  drives: ManualDrive[];
+  error?: string;
 }
 
 export default function ManualDrivesManager() {
@@ -76,8 +82,11 @@ export default function ManualDrivesManager() {
     try {
       const res = await fetch("/api/admin/manual-drives");
       if (res.ok) {
-        const data = await res.json();
-        const taggedData = data.map((d: any) => ({ ...d, source: "db" }));
+        const data: ManualDrive[] = await res.json();
+        const taggedData = data.map((drive) => ({
+          ...drive,
+          source: "db" as const,
+        }));
         setDbDrives(taggedData);
       }
     } catch (e) {
@@ -133,14 +142,17 @@ export default function ManualDrivesManager() {
         body: JSON.stringify({ id, name, password }),
       });
 
-      const data = await res.json();
+      const data: ManualDriveResponse = await res.json();
       if (!res.ok) throw new Error(data.error);
 
       addToast({ message: t("addSuccess"), type: "success" });
-      const newDbDrives = data.drives.map((d: any) => ({ ...d, source: "db" }));
+      const newDbDrives = data.drives.map((drive) => ({
+        ...drive,
+        source: "db" as const,
+      }));
       setDbDrives(newDbDrives);
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (error: unknown) {
+      addToast({ message: getErrorMessage(error), type: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -162,10 +174,10 @@ export default function ManualDrivesManager() {
         body: JSON.stringify({ id }),
       });
       if (res.ok) {
-        const data = await res.json();
-        const newDbDrives = data.drives.map((d: any) => ({
-          ...d,
-          source: "db",
+        const data: ManualDriveResponse = await res.json();
+        const newDbDrives = data.drives.map((drive) => ({
+          ...drive,
+          source: "db" as const,
         }));
         setDbDrives(newDbDrives);
         addToast({ message: t("deleted"), type: "success" });
@@ -181,7 +193,7 @@ export default function ManualDrivesManager() {
     try {
       const res = await fetch("/api/admin/drives/scan");
       if (res.ok) {
-        const data = await res.json();
+        const data: ScannedDrive[] = await res.json();
         setScannedDrives(data);
         if (data.length === 0) {
           addToast({
@@ -192,8 +204,8 @@ export default function ManualDrivesManager() {
       } else {
         throw new Error(t("scanError"));
       }
-    } catch (e: any) {
-      addToast({ message: e.message, type: "error" });
+    } catch (error: unknown) {
+      addToast({ message: getErrorMessage(error), type: "error" });
     } finally {
       setIsScanning(false);
     }

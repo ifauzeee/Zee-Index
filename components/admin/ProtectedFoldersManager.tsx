@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
+import { getErrorMessage } from "@/lib/errors";
 
 interface ProtectedFolder {
   id: string;
@@ -35,8 +36,8 @@ export default function ProtectedFoldersManager() {
       const response = await fetch("/api/admin/protected-folders");
       if (!response.ok) throw new Error("Gagal mengambil data folder.");
       setFolders(await response.json());
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (error: unknown) {
+      addToast({ message: getErrorMessage(error), type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -65,8 +66,8 @@ export default function ProtectedFoldersManager() {
       addToast({ message: result.message, type: "success" });
       setNewFolder({ folderId: "", password: "" });
       fetchFolders();
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (error: unknown) {
+      addToast({ message: getErrorMessage(error), type: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -84,8 +85,8 @@ export default function ProtectedFoldersManager() {
       if (!response.ok) throw new Error(result.error);
       addToast({ message: result.message, type: "success" });
       fetchFolders();
-    } catch (err: any) {
-      addToast({ message: err.message, type: "error" });
+    } catch (error: unknown) {
+      addToast({ message: getErrorMessage(error), type: "error" });
     } finally {
       setFolderToDelete(null);
     }

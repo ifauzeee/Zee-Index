@@ -5,6 +5,7 @@ import { isPrivateFolder } from "@/lib/auth";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { getProtectedFolderIdsCached } from "@/lib/securityUtils";
 import { validateShareToken } from "@/lib/auth";
+import { RequestError, getErrorMessage } from "@/lib/errors";
 import { jwtVerify } from "jose";
 
 export const dynamic = "force-dynamic";
@@ -153,7 +154,7 @@ export const GET = createPublicRoute(
       };
 
       import("@/lib/activityLogger").then((m) => {
-        m.logActivity("SHARE_LINK_ACCESSED" as any, {
+        m.logActivity("SHARE_LINK_ACCESSED", {
           itemName: "Folder View",
           itemId: folderId,
           userEmail: session?.user?.email || "Guest",
@@ -163,23 +164,25 @@ export const GET = createPublicRoute(
 
       return NextResponse.json(responseData);
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan tidak dikenal.";
+      const requestError =
+        error instanceof RequestError
+          ? error
+          : new RequestError(getErrorMessage(error), {
+              cause: error,
+            });
 
-      if (!(error as any).isProtected) {
+      if (!requestError.isProtected) {
         console.error(error);
       }
 
       return NextResponse.json(
         {
           error: "Terjadi kesalahan internal pada server.",
-          details: errorMessage,
-          protected: (error as any).isProtected || false,
-          folderId: (error as any).folderId,
+          details: requestError.message,
+          protected: requestError.isProtected,
+          folderId: requestError.folderId,
         },
-        { status: (error as any).isProtected ? 401 : 500 },
+        { status: requestError.isProtected ? 401 : 500 },
       );
     }
   },

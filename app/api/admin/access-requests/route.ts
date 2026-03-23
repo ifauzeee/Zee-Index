@@ -2,31 +2,55 @@ import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
 import { logActivity } from "@/lib/activityLogger";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
+
+const accessRequestSchema = z
+  .object({
+    folderId: z.string().min(1),
+    email: z.string().min(1),
+    timestamp: z.number(),
+    folderName: z.string().optional(),
+  })
+  .passthrough();
+
+const accessRequestActionSchema = z.object({
+  action: z.enum(["approve", "reject"]),
+  requestData: accessRequestSchema,
+});
+
+type AccessRequestRecord = z.infer<typeof accessRequestSchema>;
+
+function parseAccessRequest(value: unknown): AccessRequestRecord | null {
+  if (typeof value === "string") {
+    if (value === "[object Object]") {
+      return null;
+    }
+
+    try {
+      return parseAccessRequest(JSON.parse(value));
+    } catch {
+      return null;
+    }
+  }
+
+  const parsed = accessRequestSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
+}
 
 export const GET = createAdminRoute(async () => {
   try {
     const requests = await kv.smembers("zee-index:access-requests:v3");
 
     const parsedRequests = requests
-      .map((r: any) => {
-        try {
-          if (typeof r === "object" && r !== null) {
-            return r;
-          }
-          if (typeof r === "string") {
-            if (r === "[object Object]") return null;
-            return JSON.parse(r);
-          }
-          return null;
-        } catch {
-          return null;
-        }
-      })
-      .filter((r) => r !== null);
+      .map((requestEntry) => parseAccessRequest(requestEntry))
+      .filter(
+        (requestEntry): requestEntry is AccessRequestRecord =>
+          requestEntry !== null,
+      );
 
-    parsedRequests.sort((a: any, b: any) => b.timestamp - a.timestamp);
+    parsedRequests.sort((a, b) => b.timestamp - a.timestamp);
 
     return NextResponse.json(parsedRequests);
   } catch {
@@ -36,30 +60,34 @@ export const GET = createAdminRoute(async () => {
 
 export const POST = createAdminRoute(async ({ request, session }) => {
   try {
-    const { action, requestData } = await request.json();
+    const parsedBody = accessRequestActionSchema.safeParse(
+      await request.json(),
+    );
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        { error: "Invalid request payload", details: parsedBody.error.issues },
+        { status: 400 },
+      );
+    }
+
+    const { action, requestData } = parsedBody.data;
 
     const allRequests = await kv.smembers("zee-index:access-requests:v3");
 
-    let targetToRemove = null;
+    let targetToRemove: string | null = null;
 
-    for (const r of allRequests) {
-      let parsed: any = r;
-      if (typeof r === "string") {
-        try {
-          if (r === "[object Object]") continue;
-          parsed = JSON.parse(r);
-        } catch {
-          continue;
-        }
+    for (const requestEntry of allRequests) {
+      const parsed = parseAccessRequest(requestEntry);
+      if (!parsed) {
+        continue;
       }
 
       if (
-        parsed &&
         parsed.folderId === requestData.folderId &&
         parsed.email === requestData.email &&
         parsed.timestamp === requestData.timestamp
       ) {
-        targetToRemove = r;
+        targetToRemove = requestEntry;
         break;
       }
     }

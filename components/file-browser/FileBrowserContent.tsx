@@ -10,6 +10,12 @@ import AuthForm from "@/components/features/AuthForm";
 import { Lock } from "lucide-react";
 import type { DriveFile } from "@/lib/drive";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
+import type { RequestError } from "@/lib/errors";
+import type {
+  BrowserFile,
+  FileBrowserActionEvent,
+} from "@/components/file-browser/views/types";
+import type { UploadItem } from "@/lib/store";
 
 interface FileBrowserContentProps {
   isLoading: boolean;
@@ -21,26 +27,29 @@ interface FileBrowserContentProps {
   onAuthSubmit: (id: string, pass: string) => void;
   isAuthLoading: boolean;
   readmeFile: DriveFile | undefined;
-  sortedFiles: DriveFile[];
+  sortedFiles: BrowserFile[];
   activeFileId: string | null;
   isAdmin: boolean;
-  uploads: any;
+  uploads: Record<string, UploadItem>;
 
-  onItemClick: (file: DriveFile) => void;
-  onContextMenu: (e: any, file: DriveFile) => void;
-  onShareClick: (e: React.MouseEvent, file: DriveFile) => void;
-  onDetailsClick: (e: React.MouseEvent, file: DriveFile) => void;
-  onDownloadClick: (e: React.MouseEvent, file: DriveFile) => void;
-  onDragStart: (e: React.DragEvent, file: DriveFile) => void;
-  onFileDrop: (e: React.DragEvent, target: DriveFile) => void;
-  onPrefetchItem: (file: DriveFile) => void;
+  onItemClick: (file: BrowserFile) => void;
+  onContextMenu: (
+    e: { clientX: number; clientY: number },
+    file: BrowserFile,
+  ) => void;
+  onShareClick: (e: FileBrowserActionEvent, file: BrowserFile) => void;
+  onDetailsClick: (e: FileBrowserActionEvent, file: BrowserFile) => void;
+  onDownloadClick: (e: FileBrowserActionEvent, file: BrowserFile) => void;
+  onDragStart: (e: React.DragEvent, file: BrowserFile) => void;
+  onFileDrop: (e: React.DragEvent, target: BrowserFile) => void;
+  onPrefetchItem: (file: BrowserFile) => void;
 
   isFetchingNextPage: boolean;
   nextPageToken: string | null;
   fetchNextPage: () => void;
   navigatingId: string | null;
   currentFolderId: string | undefined;
-  error: any;
+  error: RequestError | null;
 }
 
 import { useTranslations } from "next-intl";
@@ -81,7 +90,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
 
   const { focusedIndex } = useKeyboardNavigation({
     files: sortedFiles as Array<{ id: string; name: string; mimeType: string }>,
-    onFileOpen: (file) => onItemClick(file as DriveFile),
+    onFileOpen: (file) => onItemClick(file as BrowserFile),
   });
 
   const loaderRef = useRef<HTMLDivElement | null>(null);

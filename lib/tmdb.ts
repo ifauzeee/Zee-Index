@@ -26,6 +26,45 @@ export interface TMDBMetadata {
   }[];
 }
 
+interface TMDBSearchResult {
+  id: number;
+  media_type: "movie" | "tv" | string;
+}
+
+interface TMDBSearchResponse {
+  results?: TMDBSearchResult[];
+}
+
+interface TMDBCastMember {
+  id: number;
+  name: string;
+  character: string;
+  profile_path: string | null;
+}
+
+interface TMDBDetailsResponse {
+  id: number;
+  title?: string;
+  name?: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  release_date?: string;
+  first_air_date?: string;
+  vote_average: number;
+  vote_count: number;
+  genres?: { id: number; name: string }[];
+  credits?: {
+    cast?: TMDBCastMember[];
+  };
+}
+
+function isSupportedMediaType(
+  mediaType: TMDBSearchResult["media_type"],
+): mediaType is TMDBMetadata["media_type"] {
+  return mediaType === "movie" || mediaType === "tv";
+}
+
 async function fetchTMDB(
   endpoint: string,
   params: Record<string, string> = {},
@@ -95,7 +134,10 @@ export async function searchTMDB(
       searchParams.first_air_date_year = year;
     }
 
-    const data = await fetchTMDB("/search/multi", searchParams);
+    const data = (await fetchTMDB(
+      "/search/multi",
+      searchParams,
+    )) as TMDBSearchResponse;
 
     if (!data.results || data.results.length === 0) {
       console.log(`[TMDB] No results for query: ${query}`);
@@ -103,7 +145,7 @@ export async function searchTMDB(
     }
 
     const result = data.results.find(
-      (r: any) => r.media_type === "movie" || r.media_type === "tv",
+      (item) => item.media_type === "movie" || item.media_type === "tv",
     );
 
     if (!result) {
@@ -111,13 +153,18 @@ export async function searchTMDB(
       return null;
     }
 
-    const details = await fetchTMDB(`/${result.media_type}/${result.id}`, {
+    const details = (await fetchTMDB(`/${result.media_type}/${result.id}`, {
       append_to_response: "credits",
-    });
+    })) as TMDBDetailsResponse;
+
+    const title = details.title || details.name || query;
+    const mediaType = isSupportedMediaType(result.media_type)
+      ? result.media_type
+      : "movie";
 
     const metadata: TMDBMetadata = {
       id: details.id,
-      title: details.title || details.name,
+      title,
       overview: details.overview,
       poster_path: details.poster_path
         ? `https://image.tmdb.org/t/p/w500${details.poster_path}`
@@ -128,14 +175,14 @@ export async function searchTMDB(
       release_date: details.release_date || details.first_air_date,
       vote_average: details.vote_average,
       vote_count: details.vote_count,
-      media_type: result.media_type,
+      media_type: mediaType,
       genres: details.genres,
-      cast: details.credits?.cast?.slice(0, 10).map((c: any) => ({
-        id: c.id,
-        name: c.name,
-        character: c.character,
-        profile_path: c.profile_path
-          ? `https://image.tmdb.org/t/p/w185${c.profile_path}`
+      cast: details.credits?.cast?.slice(0, 10).map((castMember) => ({
+        id: castMember.id,
+        name: castMember.name,
+        character: castMember.character,
+        profile_path: castMember.profile_path
+          ? `https://image.tmdb.org/t/p/w185${castMember.profile_path}`
           : "",
       })),
     };

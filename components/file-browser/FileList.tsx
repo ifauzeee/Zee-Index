@@ -1,28 +1,29 @@
-import type { DriveFile } from "@/lib/drive";
 import { useAppStore } from "@/lib/store";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import ListView from "./views/ListView";
 import GridView from "./views/GridView";
 import GalleryView from "./views/GalleryView";
+import type { BrowserFile, FileBrowserActionEvent } from "./views/types";
+import type { UploadItem } from "@/lib/store";
 
 interface FileListProps {
-  files: DriveFile[];
-  onItemClick: (file: DriveFile) => void;
+  files: BrowserFile[];
+  onItemClick: (file: BrowserFile) => void;
   onItemContextMenu: (
     event: { clientX: number; clientY: number },
-    file: DriveFile,
+    file: BrowserFile,
   ) => void;
   activeFileId: string | null;
   focusedIndex?: number;
-  onShareClick: (e: React.MouseEvent, file: DriveFile) => void;
-  onDetailsClick: (e: React.MouseEvent, file: DriveFile) => void;
-  onDownloadClick: (e: React.MouseEvent, file: DriveFile) => void;
+  onShareClick: (e: FileBrowserActionEvent, file: BrowserFile) => void;
+  onDetailsClick: (e: FileBrowserActionEvent, file: BrowserFile) => void;
+  onDownloadClick: (e: FileBrowserActionEvent, file: BrowserFile) => void;
   isAdmin: boolean;
-  onDragStart: (e: React.DragEvent, file: DriveFile) => void;
-  onFileDrop: (e: React.DragEvent, targetFolder: DriveFile) => void;
-  onPrefetchItem?: (file: DriveFile) => void;
-  uploads?: Record<string, any>;
+  onDragStart: (e: React.DragEvent, file: BrowserFile) => void;
+  onFileDrop: (e: React.DragEvent, targetFolder: BrowserFile) => void;
+  onPrefetchItem?: (file: BrowserFile) => void;
+  uploads?: Record<string, UploadItem>;
   isFetchingNextPage?: boolean;
   nextPageToken?: string | null;
   navigatingId: string | null;
@@ -66,7 +67,10 @@ export default function FileList({
     }
   }, [isAdmin, shareLinks.length, fetchShareLinks]);
 
-  const handleItemClickWrapper = (file: DriveFile, e: React.MouseEvent) => {
+  const handleItemClickWrapper = (
+    file: BrowserFile,
+    e: FileBrowserActionEvent,
+  ) => {
     if (isAdmin && e.shiftKey && lastSelectedId.current) {
       const allFileItems = [...uploadGhostFiles, ...files];
       const currentIndex = allFileItems.findIndex((f) => f.id === file.id);
@@ -98,8 +102,8 @@ export default function FileList({
   };
 
   const handleToggleFavoriteWrapper = (
-    e: React.MouseEvent,
-    file: DriveFile,
+    e: FileBrowserActionEvent,
+    file: BrowserFile,
   ) => {
     e.stopPropagation();
     toggleFavorite(file.id, true);
@@ -108,22 +112,21 @@ export default function FileList({
   const uploadGhostFiles = useMemo(
     () =>
       Object.values(uploads).map(
-        (upload: any) =>
-          ({
-            id: `upload-${upload.name}`,
-            name: upload.name,
-            mimeType: "application/octet-stream",
-            size: "0",
-            modifiedTime: new Date().toISOString(),
-            createdTime: new Date().toISOString(),
-            webViewLink: "",
-            hasThumbnail: false,
-            isFolder: false,
-            trashed: false,
-            uploadProgress: upload.progress,
-            uploadStatus: upload.status,
-            uploadError: upload.error,
-          }) as any,
+        (upload): BrowserFile => ({
+          id: `upload-${upload.name}`,
+          name: upload.name,
+          mimeType: "application/octet-stream",
+          size: "0",
+          modifiedTime: new Date().toISOString(),
+          createdTime: new Date().toISOString(),
+          webViewLink: "",
+          hasThumbnail: false,
+          isFolder: false,
+          trashed: false,
+          uploadProgress: upload.progress,
+          uploadStatus: upload.status,
+          uploadError: upload.error,
+        }),
       ),
     [uploads],
   );

@@ -1,3 +1,8 @@
+export interface KVPipeline {
+  sismember(key: string, member: unknown): KVPipeline;
+  exec(): Promise<unknown[]>;
+}
+
 export interface KVClient {
   get<T>(key: string): Promise<T | null>;
   set(key: string, value: unknown, options?: { ex?: number }): Promise<string>;
@@ -37,8 +42,5 @@ export interface KVClient {
   llen(key: string): Promise<number>;
   ltrim(key: string, start: number, stop: number): Promise<string>;
   flushall(): Promise<string>;
-  pipeline(): {
-    sismember(key: string, member: unknown): any;
-    exec(): Promise<any[]>;
-  };
+  pipeline(): KVPipeline;
 }

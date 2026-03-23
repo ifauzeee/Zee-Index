@@ -1,9 +1,11 @@
 import FileBrowser from "@/components/file-browser/FileBrowser";
-import { getFolderPath, listFilesFromDrive } from "@/lib/drive";
+import { getFolderPath, listFilesFromDrive, type DriveFile } from "@/lib/drive";
 import { isProtected } from "@/lib/auth";
 import { Metadata } from "next";
 
 export const revalidate = 3600;
+
+type ProtectedFolderMap = Record<string, boolean>;
 
 export async function generateMetadata(props: {
   params: Promise<{ folderId: string; locale: string }>;
@@ -62,15 +64,17 @@ export default async function FolderPage(props: {
         m.db.protectedFolder
           .findMany({ select: { folderId: true } })
           .then((res: { folderId: string }[]) => {
-            const map: Record<string, boolean> = {};
-            res.forEach((r: { folderId: string }) => (map[r.folderId] = true));
+            const map: ProtectedFolderMap = {};
+            res.forEach((entry) => {
+              map[entry.folderId] = true;
+            });
             return map;
           }),
       ),
       import("@/lib/auth").then((m) => m.isPrivateFolder),
     ]);
 
-  let initialFiles: any[] | undefined = undefined;
+  let initialFiles: DriveFile[] | undefined;
   let initialNextPageToken: string | null = null;
 
   const isLocked = protectedStatus || isPrivateFolder(cleanFolderId);
@@ -79,7 +83,7 @@ export default async function FolderPage(props: {
     try {
       const data = await listFilesFromDrive(cleanFolderId, null, 50, true);
       initialFiles = data.files.map((f) => {
-        const isProt = !!(allProtectedFolders as any)[f.id];
+        const isProt = !!allProtectedFolders[f.id];
         const isPriv = isPrivateFolder(f.id);
         return {
           ...f,

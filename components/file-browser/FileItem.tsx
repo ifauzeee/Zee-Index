@@ -14,10 +14,14 @@ import {
   Loader2,
 } from "lucide-react";
 import { useTranslations, useFormatter } from "next-intl";
+import type {
+  BrowserFile,
+  FileBrowserActionEvent,
+} from "@/components/file-browser/views/types";
 
 interface FileItemProps {
-  file: DriveFile & { isFavorite?: boolean };
-  onClick: (e: React.MouseEvent) => void;
+  file: BrowserFile;
+  onClick: (e: FileBrowserActionEvent) => void;
   onContextMenu: (
     event: { clientX: number; clientY: number },
     file: DriveFile,
@@ -25,10 +29,10 @@ interface FileItemProps {
   isSelected: boolean;
   isActive: boolean;
   isBulkMode: boolean;
-  onShare: (e: React.MouseEvent) => void;
-  onShowDetails: (e: React.MouseEvent) => void;
-  onDownload: (e: React.MouseEvent) => void;
-  onToggleFavorite?: (e: React.MouseEvent) => void;
+  onShare: (e: FileBrowserActionEvent) => void;
+  onShowDetails: (e: FileBrowserActionEvent) => void;
+  onDownload: (e: FileBrowserActionEvent) => void;
+  onToggleFavorite?: (e: FileBrowserActionEvent) => void;
   isAdmin: boolean;
   onDragStart: (e: React.DragEvent) => void;
   onFileDrop: (e: React.DragEvent, targetFolder: DriveFile) => void;
@@ -124,6 +128,14 @@ function FileItem({
     const rect = (e.currentTarget as Element).getBoundingClientRect();
     onContextMenu({ clientX: rect.left, clientY: rect.bottom + 5 }, file);
   };
+
+  const createActionEvent = (
+    event: React.MouseEvent,
+  ): FileBrowserActionEvent => ({
+    preventDefault: () => event.preventDefault(),
+    stopPropagation: () => event.stopPropagation(),
+    shiftKey: event.shiftKey,
+  });
 
   const preventSelection = (e: React.MouseEvent) => {
     if (e.detail > 1) {
@@ -221,7 +233,7 @@ function FileItem({
           const target = e.target as HTMLElement;
           if (target.closest("button") || target.closest("input")) return;
 
-          onClick(e);
+          onClick(createActionEvent(e));
         }}
         onMouseDown={preventSelection}
         onDoubleClick={(e) => {
@@ -435,7 +447,7 @@ function FileItem({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    onShare(e);
+                    onShare(createActionEvent(e));
                   }}
                   title={t("share")}
                   className="p-2 rounded-full hover:bg-muted select-none"
@@ -448,7 +460,7 @@ function FileItem({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    onDownload(e);
+                    onDownload(createActionEvent(e));
                   }}
                   title={t("download")}
                   className="p-2 rounded-full hover:bg-muted select-none"
@@ -460,7 +472,7 @@ function FileItem({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  onShowDetails(e);
+                  onShowDetails(createActionEvent(e));
                 }}
                 title={t("viewDetails")}
                 className="p-2 rounded-full hover:bg-muted select-none"
