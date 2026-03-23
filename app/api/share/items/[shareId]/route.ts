@@ -3,7 +3,8 @@ import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
 import { createPublicRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
-import type { DriveFile } from "@/lib/drive";
+import { REDIS_KEYS } from "@/lib/constants";
+import { parseShareCollectionItems } from "@/lib/link-payloads";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,9 @@ export const GET = createPublicRoute(
         );
       }
 
-      const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);
+      const isBlocked = await kv.get(
+        `${REDIS_KEYS.SHARE_BLOCKED}${payload.jti}`,
+      );
       if (isBlocked) {
         return NextResponse.json(
           { error: "Tautan berbagi ini telah dibatalkan." },
@@ -45,8 +48,8 @@ export const GET = createPublicRoute(
         );
       }
 
-      const items: DriveFile[] | null = await kv.get(
-        `zee-index:share-items:${shareId}`,
+      const items = parseShareCollectionItems(
+        await kv.get(`${REDIS_KEYS.SHARE_ITEMS}${shareId}`),
       );
 
       if (!items) {

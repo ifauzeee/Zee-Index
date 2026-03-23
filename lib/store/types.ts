@@ -1,5 +1,9 @@
 import type { DriveFile } from "@/lib/drive";
 import type { AppConfig } from "@/lib/app-config";
+import type {
+  FileRequestLink as PersistedFileRequestLink,
+  ShareTokenPayload as ParsedShareTokenPayload,
+} from "@/lib/link-payloads";
 
 export interface Toast {
   id: string;
@@ -38,22 +42,9 @@ export interface SharePolicy {
   watermarkText?: string | null;
 }
 
-export interface ShareTokenPayload extends SharePolicy {
-  exp?: number;
-  iat?: number;
-  jti?: string;
-  folderId?: string;
-}
+export type ShareTokenPayload = ParsedShareTokenPayload;
 
-export interface FileRequestLink {
-  token: string;
-  folderId: string;
-  folderName: string;
-  title: string;
-  expiresAt: number;
-  createdAt: number;
-  type: "file-request";
-}
+export type FileRequestLink = PersistedFileRequestLink;
 
 export interface UserProfile {
   name?: string | null;

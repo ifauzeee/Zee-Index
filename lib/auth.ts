@@ -5,6 +5,7 @@ import { memoryCache, CACHE_TTL } from "@/lib/memory-cache";
 import { NextRequest } from "next/server";
 import { auth } from "@/auth";
 import { getPrivateFolderIds } from "@/lib/utils";
+import { REDIS_KEYS } from "@/lib/constants";
 
 export function isPrivateFolder(folderId: string): boolean {
   if (!folderId) return false;
@@ -151,7 +152,7 @@ export async function validateShareToken(
     if (typeof payload.jti !== "string") {
       return false;
     }
-    const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);
+    const isBlocked = await kv.get(`${REDIS_KEYS.SHARE_BLOCKED}${payload.jti}`);
     if (isBlocked) {
       return false;
     }
@@ -176,7 +177,7 @@ export async function verifyShareTokenString(token: string): Promise<boolean> {
     if (typeof payload.jti !== "string") {
       return false;
     }
-    const isBlocked = await kv.get(`zee-index:blocked:${payload.jti}`);
+    const isBlocked = await kv.get(`${REDIS_KEYS.SHARE_BLOCKED}${payload.jti}`);
     if (isBlocked) {
       return false;
     }

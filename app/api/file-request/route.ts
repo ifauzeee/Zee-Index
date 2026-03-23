@@ -2,42 +2,38 @@ import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
 import crypto from "crypto";
-import { z } from "zod";
 import { getBaseUrl } from "@/lib/utils";
-
-const FILE_REQUESTS_KEY = "zee-index:file-requests";
-
-const createSchema = z.object({
-  folderId: z.string().min(1),
-  folderName: z.string().min(1),
-  title: z.string().min(1),
-  expiresIn: z.number().min(1),
-});
+import { REDIS_KEYS } from "@/lib/constants";
+import {
+  fileRequestCreateSchema,
+  fileRequestDeleteSchema,
+  parseFileRequestLink,
+  serializeFileRequestLink,
+} from "@/lib/link-payloads";
 
 export const POST = createAdminRoute(async ({ request, session }) => {
   try {
-    const body = await request.json();
-    const validation = createSchema.safeParse(body);
-    if (!validation.success) {
+    const parsedBody = fileRequestCreateSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    const { folderId, folderName, title, expiresIn } = validation.data;
+    const { folderId, folderName, title, expiresIn } = parsedBody.data;
     const token = crypto.randomBytes(16).toString("hex");
     const expiresAt = Date.now() + expiresIn * 60 * 60 * 1000;
 
-    const requestData = {
+    const requestData = serializeFileRequestLink({
       token,
       folderId,
       folderName,
       title,
       createdAt: Date.now(),
       expiresAt,
-      createdBy: session.user.email,
+      createdBy: session.user.email ?? undefined,
       type: "file-request",
-    };
+    });
 
-    await kv.hset(FILE_REQUESTS_KEY, { [token]: requestData });
+    await kv.hset(REDIS_KEYS.FILE_REQUESTS, { [token]: requestData });
 
     const publicUrl = `${getBaseUrl()}/request/${token}`;
 
@@ -55,14 +51,17 @@ export const dynamic = "force-dynamic";
 
 export const GET = createAdminRoute(async () => {
   try {
-    const requests = await kv.hgetall(FILE_REQUESTS_KEY);
-    const now = Date.now();
-    const allRequests = Object.values(requests || {}) as Array<{
-      expiresAt?: number;
-    }>;
-    const activeRequests = allRequests.filter(
-      (req) => !req.expiresAt || req.expiresAt > now,
+    const requests = await kv.hgetall<Record<string, unknown>>(
+      REDIS_KEYS.FILE_REQUESTS,
     );
+    const now = Date.now();
+    const activeRequests = Object.values(requests || {})
+      .map((value) => parseFileRequestLink(value))
+      .filter(
+        (requestData): requestData is NonNullable<typeof requestData> =>
+          requestData !== null &&
+          (!requestData.expiresAt || requestData.expiresAt > now),
+      );
 
     return NextResponse.json(activeRequests);
   } catch (error) {
@@ -76,11 +75,12 @@ export const GET = createAdminRoute(async () => {
 
 export const DELETE = createAdminRoute(async ({ request }) => {
   try {
-    const { token } = await request.json();
-    if (!token)
+    const parsedBody = fileRequestDeleteSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
       return NextResponse.json({ error: "Token required" }, { status: 400 });
+    }
 
-    await kv.hdel(FILE_REQUESTS_KEY, token);
+    await kv.hdel(REDIS_KEYS.FILE_REQUESTS, parsedBody.data.token);
 
     return NextResponse.json({ success: true });
   } catch (error) {

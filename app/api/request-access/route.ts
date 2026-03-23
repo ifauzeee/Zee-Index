@@ -5,6 +5,11 @@ import { createUserRoute } from "@/lib/api-middleware";
 import { sendMail } from "@/lib/mailer";
 import { kv } from "@/lib/kv";
 import { logActivity } from "@/lib/activityLogger";
+import { REDIS_KEYS } from "@/lib/constants";
+import {
+  accessRequestCreateSchema,
+  serializeAccessRequestRecord,
+} from "@/lib/link-payloads";
 
 export const POST = createUserRoute(async ({ request, session }) => {
   try {
@@ -15,24 +20,33 @@ export const POST = createUserRoute(async ({ request, session }) => {
       );
     }
 
-    const { folderId, folderName } = await request.json();
+    if (!session.user.email) {
+      return NextResponse.json(
+        { error: "Email pengguna tidak tersedia." },
+        { status: 400 },
+      );
+    }
 
-    if (!folderId || !folderName) {
+    const parsedBody = accessRequestCreateSchema.safeParse(
+      await request.json(),
+    );
+    if (!parsedBody.success) {
       return NextResponse.json(
         { error: "Folder ID dan Nama diperlukan." },
         { status: 400 },
       );
     }
 
-    const requestData = {
+    const { folderId, folderName } = parsedBody.data;
+    const requestData = serializeAccessRequestRecord({
       folderId,
       folderName,
       email: session.user.email,
       name: session.user.name,
       timestamp: Date.now(),
-    };
+    });
 
-    await kv.sadd("zee-index:access-requests:v3", JSON.stringify(requestData));
+    await kv.sadd(REDIS_KEYS.ACCESS_REQUESTS, requestData);
 
     const adminEmails = await kv.smembers("zee-index:admins");
 

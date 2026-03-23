@@ -3,18 +3,20 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
+import { REDIS_KEYS } from "@/lib/constants";
+import { shareRevokeRequestSchema } from "@/lib/link-payloads";
 
 export const POST = createAdminRoute(async ({ request }) => {
   try {
-    const { jti, expiresAt } = await request.json();
-
-    if (!jti || !expiresAt) {
+    const parsedBody = shareRevokeRequestSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
       return NextResponse.json(
         { error: "JTI dan expiresAt diperlukan." },
         { status: 400 },
       );
     }
 
+    const { jti, expiresAt } = parsedBody.data;
     const now = new Date();
     const expirationDate = new Date(expiresAt);
     const expiresInSeconds = Math.round(
@@ -28,7 +30,7 @@ export const POST = createAdminRoute(async ({ request }) => {
       });
     }
 
-    await kv.set(`zee-index:blocked:${jti}`, "blocked", {
+    await kv.set(`${REDIS_KEYS.SHARE_BLOCKED}${jti}`, "blocked", {
       ex: expiresInSeconds,
     });
 

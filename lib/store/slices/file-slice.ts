@@ -8,6 +8,7 @@ import {
   FileRequestLink,
   ShareTokenPayload,
 } from "../types";
+import { shareTokenPayloadSchema } from "@/lib/link-payloads";
 import { formatBytes } from "@/lib/utils";
 import {
   addFavorite,
@@ -38,7 +39,10 @@ function parseJwt(token: string): ShareTokenPayload | null {
         })
         .join(""),
     );
-    return JSON.parse(jsonPayload) as ShareTokenPayload;
+    const parsed = shareTokenPayloadSchema.safeParse(
+      JSON.parse(jsonPayload) as unknown,
+    );
+    return parsed.success ? parsed.data : null;
   } catch {
     return null;
   }

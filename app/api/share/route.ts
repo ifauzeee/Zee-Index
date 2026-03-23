@@ -9,28 +9,28 @@ import { db } from "@/lib/db";
 import type { ShareLink } from "@/lib/store";
 import { sendMail } from "@/lib/mailer";
 import { getBaseUrl } from "@/lib/utils";
-import type { DriveFile } from "@/lib/drive";
-
-interface ShareRequestBody {
-  path?: string;
-  itemName: string;
-  type: "timed" | "session";
-  expiresIn: string;
-  loginRequired?: boolean;
-  items?: DriveFile[];
-  maxUses?: number | null;
-  preventDownload?: boolean;
-  hasWatermark?: boolean;
-  watermarkText?: string;
-}
+import {
+  shareCreateRequestSchema,
+  type ShareCreateRequest,
+} from "@/lib/link-payloads";
+import { REDIS_KEYS } from "@/lib/constants";
 
 export const POST = createAdminRoute(
   async ({ request, session }) => {
     try {
+      const parsedBody = shareCreateRequestSchema.safeParse(
+        await request.json(),
+      );
+      if (!parsedBody.success) {
+        return NextResponse.json(
+          { error: "Parameter yang diperlukan tidak lengkap." },
+          { status: 400 },
+        );
+      }
+
       const {
         path,
         itemName,
-        type,
         expiresIn,
         loginRequired,
         items,
@@ -38,15 +38,8 @@ export const POST = createAdminRoute(
         preventDownload,
         hasWatermark,
         watermarkText,
-      }: ShareRequestBody = await request.json();
+      }: ShareCreateRequest = parsedBody.data;
       const isCollection = items && items.length > 0;
-
-      if ((!isCollection && !path) || !itemName || !type || !expiresIn) {
-        return NextResponse.json(
-          { error: "Parameter yang diperlukan tidak lengkap." },
-          { status: 400 },
-        );
-      }
 
       const validExpireFormats = /^\d+[smhdw]$/;
       if (!validExpireFormats.test(expiresIn)) {
@@ -86,7 +79,7 @@ export const POST = createAdminRoute(
 
       if (isCollection) {
         const expiresInSeconds = (decodedToken.exp * 1000 - Date.now()) / 1000;
-        await kv.set(`zee-index:share-items:${jti}`, items, {
+        await kv.set(`${REDIS_KEYS.SHARE_ITEMS}${jti}`, items, {
           ex: Math.ceil(expiresInSeconds) + 3600,
         });
       }

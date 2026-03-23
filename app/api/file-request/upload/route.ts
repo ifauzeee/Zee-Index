@@ -5,16 +5,13 @@ import { createPublicRoute } from "@/lib/api-middleware";
 import { getAccessToken } from "@/lib/drive";
 import { kv } from "@/lib/kv";
 import { logActivity } from "@/lib/activityLogger";
+import { REDIS_KEYS } from "@/lib/constants";
+import {
+  fileRequestUploadInitSchema,
+  parseFileRequestLink,
+} from "@/lib/link-payloads";
 
 export const maxDuration = 60;
-
-const FILE_REQUESTS_KEY = "zee-index:file-requests";
-
-interface FileRequestData {
-  folderId: string;
-  expiresAt: number;
-  folderName: string;
-}
 
 export const POST = createPublicRoute(
   async ({ request }) => {
@@ -26,9 +23,8 @@ export const POST = createPublicRoute(
       return NextResponse.json({ error: "Token required" }, { status: 401 });
     }
 
-    const requestData = await kv.hget<FileRequestData>(
-      FILE_REQUESTS_KEY,
-      token,
+    const requestData = parseFileRequestLink(
+      await kv.hget(REDIS_KEYS.FILE_REQUESTS, token),
     );
     if (!requestData || Date.now() > requestData.expiresAt) {
       return NextResponse.json(
@@ -41,7 +37,17 @@ export const POST = createPublicRoute(
       const accessToken = await getAccessToken();
 
       if (uploadType === "init") {
-        const { name, mimeType, size } = await request.json();
+        const parsedBody = fileRequestUploadInitSchema.safeParse(
+          await request.json(),
+        );
+        if (!parsedBody.success) {
+          return NextResponse.json(
+            { error: "Missing params" },
+            { status: 400 },
+          );
+        }
+
+        const { name, mimeType, size } = parsedBody.data;
 
         const finalName = name;
 

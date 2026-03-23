@@ -1,15 +1,8 @@
 import { NextResponse } from "next/server";
 import { createPublicRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
-
-const FILE_REQUESTS_KEY = "zee-index:file-requests";
-
-interface RequestData {
-  title: string;
-  folderName: string;
-  expiresAt: number;
-  folderId: string;
-}
+import { REDIS_KEYS } from "@/lib/constants";
+import { parseFileRequestLink } from "@/lib/link-payloads";
 
 export const dynamic = "force-dynamic";
 
@@ -17,14 +10,16 @@ export const GET = createPublicRoute(
   async ({ params }) => {
     const { token } = params;
     try {
-      const requestData = await kv.hget<RequestData>(FILE_REQUESTS_KEY, token);
+      const requestData = parseFileRequestLink(
+        await kv.hget(REDIS_KEYS.FILE_REQUESTS, token),
+      );
 
       if (!requestData) {
         return NextResponse.json({ error: "Not found" }, { status: 404 });
       }
 
       if (Date.now() > requestData.expiresAt) {
-        await kv.hdel(FILE_REQUESTS_KEY, token);
+        await kv.hdel(REDIS_KEYS.FILE_REQUESTS, token);
         return NextResponse.json({ error: "Expired" }, { status: 410 });
       }
 

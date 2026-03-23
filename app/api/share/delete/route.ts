@@ -4,17 +4,20 @@ import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
 import { kv } from "@/lib/kv";
+import { REDIS_KEYS } from "@/lib/constants";
+import { shareDeleteRequestSchema } from "@/lib/link-payloads";
 
 export const POST = createAdminRoute(async ({ request }) => {
   try {
-    const { id, jti, expiresAt } = await request.json();
-    if (!id || !jti || !expiresAt) {
+    const parsedBody = shareDeleteRequestSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
       return NextResponse.json(
         { error: "ID, JTI, dan expiresAt diperlukan." },
         { status: 400 },
       );
     }
 
+    const { jti, expiresAt } = parsedBody.data;
     const now = new Date();
     const expirationDate = new Date(expiresAt);
     const expiresInSeconds = Math.round(
@@ -22,7 +25,7 @@ export const POST = createAdminRoute(async ({ request }) => {
     );
 
     if (expiresInSeconds > 0) {
-      await kv.set(`zee-index:blocked:${jti}`, "blocked", {
+      await kv.set(`${REDIS_KEYS.SHARE_BLOCKED}${jti}`, "blocked", {
         ex: expiresInSeconds,
       });
     }
