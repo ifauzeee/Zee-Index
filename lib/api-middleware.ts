@@ -1,15 +1,8 @@
-import { randomUUID } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Session } from "next-auth";
 import type { z } from "zod";
-import { auth } from "@/auth";
 import { ERROR_MESSAGES } from "@/lib/constants";
-import { logger } from "@/lib/logger";
-import {
-  checkRateLimit,
-  createRateLimitResponse,
-  type RateLimitType,
-} from "@/lib/ratelimit";
+import type { RateLimitType } from "@/lib/ratelimit";
 
 type MaybePromise<T> = T | Promise<T>;
 
@@ -70,6 +63,24 @@ type SessionForRole<TRole extends ApiRole> = TRole extends "public"
   ? Session | null
   : Session;
 
+async function loadAuth() {
+  const authModule = await import("@/auth");
+  return authModule.auth;
+}
+
+async function loadLogger() {
+  const loggerModule = await import("@/lib/logger");
+  return loggerModule.logger;
+}
+
+async function loadRateLimitHelpers() {
+  const ratelimitModule = await import("@/lib/ratelimit");
+  return {
+    checkRateLimit: ratelimitModule.checkRateLimit,
+    createRateLimitResponse: ratelimitModule.createRateLimitResponse,
+  };
+}
+
 function isPromiseLike(value: unknown): value is Promise<unknown> {
   return !!value && typeof value === "object" && "then" in value;
 }
@@ -126,7 +137,7 @@ function withRequestId(response: Response, requestId: string): Response {
   return response;
 }
 
-function handleRouteError(
+async function handleRouteError(
   request: NextRequest,
   requestId: string,
   error: unknown,
@@ -145,6 +156,7 @@ function handleRouteError(
     );
   }
 
+  const logger = await loadLogger();
   logger.error(
     {
       err: error,
@@ -187,11 +199,15 @@ export function createRouteHandler<
   const role = (options.role ?? "public") as TRole;
 
   return async (request: NextRequest, context: RouteContextInput = {}) => {
-    const requestId = randomUUID();
+    const requestId = crypto.randomUUID();
 
     try {
       const session =
-        role !== "public" || options.includeSession ? await auth() : null;
+        role !== "public" || options.includeSession
+          ? await (
+              await loadAuth()
+            )()
+          : null;
 
       if (role !== "public" && !session?.user) {
         return withRequestId(
@@ -220,6 +236,8 @@ export function createRouteHandler<
       const rateLimitType = options.rateLimit ?? false;
 
       if (rateLimitType) {
+        const { checkRateLimit, createRateLimitResponse } =
+          await loadRateLimitHelpers();
         const ratelimitResult = await checkRateLimit(request, rateLimitType);
         if (!ratelimitResult.success) {
           return withRequestId(
@@ -274,7 +292,7 @@ export function createRouteHandler<
       const response = await handler(parsedContext);
       return withRequestId(response, requestId);
     } catch (error) {
-      return handleRouteError(
+      return await handleRouteError(
         request,
         requestId,
         error,

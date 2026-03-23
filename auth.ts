@@ -9,9 +9,29 @@ import { kv } from "@/lib/kv";
 import { REDIS_KEYS } from "@/lib/constants";
 import { getPublicAppConfig } from "@/lib/app-config";
 import bcrypt from "bcryptjs";
-import { randomUUID } from "crypto";
 
 import type { NextAuthConfig } from "next-auth";
+
+function constantTimeEqual(a: string, b: string): boolean {
+  const encoder = new TextEncoder();
+  const encodedA = encoder.encode(a);
+  const encodedB = encoder.encode(b);
+
+  if (encodedA.length !== encodedB.length) {
+    return false;
+  }
+
+  let result = 0;
+  for (let i = 0; i < encodedA.length; i += 1) {
+    result |= encodedA[i] ^ encodedB[i];
+  }
+
+  return result === 0;
+}
+
+function generateGuestId(): string {
+  return `guest_${Date.now()}_${crypto.randomUUID().replace(/-/g, "").substring(0, 12)}`;
+}
 
 function normalizeAdminEmails(): string[] {
   const envAdminsRaw = process.env.ADMIN_EMAILS || "";
@@ -111,10 +131,7 @@ const authConfig: NextAuthConfig = {
           if (envPassHash) {
             isPassValid = await bcrypt.compare(password, envPassHash);
           } else if (envPass) {
-            const { timingSafeEqual } = await import("crypto");
-            const a = Buffer.from(password);
-            const b = Buffer.from(envPass);
-            isPassValid = a.length === b.length && timingSafeEqual(a, b);
+            isPassValid = constantTimeEqual(password, envPass);
           }
 
           logger.info(
@@ -181,7 +198,7 @@ const authConfig: NextAuthConfig = {
           }
         } catch {}
 
-        const guestId = `guest_${Date.now()}_${randomUUID().replace(/-/g, "").substring(0, 12)}`;
+        const guestId = generateGuestId();
         return {
           id: guestId,
           name: "Guest User",

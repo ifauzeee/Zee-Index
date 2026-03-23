@@ -5,7 +5,7 @@ import {
   type DriveFile,
 } from "@/lib/drive";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 async function fetchFileMetadata(
   fileId: string,
