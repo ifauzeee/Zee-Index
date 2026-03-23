@@ -90,6 +90,27 @@ describe("activityLogger", () => {
       expect(result?.ipAddress).toBeDefined();
       expect(result?.userAgent).toBeDefined();
     });
+
+    it("round-trips typed metadata for supported activity types", async () => {
+      const result = await logActivity("DOWNLOAD", {
+        itemName: "file.zip",
+        metadata: {
+          fileId: "file-123",
+          mimeType: "application/zip",
+          rangeRequest: false,
+          isShareAccess: true,
+          shareLinkId: "share-123",
+        },
+      });
+
+      expect(result?.metadata).toEqual({
+        fileId: "file-123",
+        mimeType: "application/zip",
+        rangeRequest: false,
+        isShareAccess: true,
+        shareLinkId: "share-123",
+      });
+    });
   });
 
   describe("getActivityLogs", () => {
@@ -105,6 +126,11 @@ describe("activityLogger", () => {
           type: "UPLOAD",
           timestamp: Date.now(),
           severity: "info",
+          metadata: JSON.stringify({
+            operation: "file_upload",
+            fileId: "file-1",
+            parentId: "folder-1",
+          }),
         },
       ];
 
@@ -113,6 +139,11 @@ describe("activityLogger", () => {
       const logs = await getActivityLogs();
       expect(logs.length).toBe(1);
       expect(logs[0].type).toBe("UPLOAD");
+      expect(logs[0].metadata).toEqual({
+        operation: "file_upload",
+        fileId: "file-1",
+        parentId: "folder-1",
+      });
     });
   });
 
