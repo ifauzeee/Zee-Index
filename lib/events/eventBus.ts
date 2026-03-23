@@ -1,26 +1,11 @@
 import { kv } from "@/lib/kv";
 import { logger } from "@/lib/logger";
-
-export type EventType =
-  | "file:upload"
-  | "file:delete"
-  | "file:move"
-  | "share:create"
-  | "folder:update"
-  | "storage:warning"
-  | "system:alert";
-
-export interface AppEvent {
-  id: string;
-  type: EventType;
-  message: string;
-  severity: "info" | "warning" | "error" | "success";
-  payload?: Record<string, unknown>;
-  userId?: string;
-  userEmail?: string;
-  itemName?: string;
-  timestamp: number;
-}
+import {
+  appEventSchema,
+  type AppEvent,
+  type AppEventPayloadByType,
+  type EventType,
+} from "@/lib/telemetry";
 
 const REDIS_CHANNEL = "zee-index:events";
 
@@ -83,8 +68,10 @@ class EventBus {
         this.subscriber.on("message", (channel: string, message: string) => {
           if (channel === REDIS_CHANNEL) {
             try {
-              const event: AppEvent = JSON.parse(message);
-              this.notifyLocalListeners(event);
+              const parsed = appEventSchema.safeParse(JSON.parse(message));
+              if (parsed.success) {
+                this.notifyLocalListeners(parsed.data);
+              }
             } catch (err) {
               logger.error({ err }, "[EventBus] Failed to parse event message");
             }
@@ -96,12 +83,14 @@ class EventBus {
     }
   }
 
-  async emit(event: Omit<AppEvent, "id" | "timestamp">) {
-    const fullEvent: AppEvent = {
+  async emit<T extends EventType>(
+    event: Omit<Extract<AppEvent, { type: T }>, "id" | "timestamp">,
+  ) {
+    const fullEvent = appEventSchema.parse({
       ...event,
       id: crypto.randomUUID(),
       timestamp: Date.now(),
-    };
+    });
 
     if (this.publisher && this.isConnected) {
       await this.publisher.publish(REDIS_CHANNEL, JSON.stringify(fullEvent));
@@ -154,3 +143,5 @@ export const eventBus = globalForEventBus.eventBus ?? new EventBus();
 if (process.env.NODE_ENV !== "production") {
   globalForEventBus.eventBus = eventBus;
 }
+
+export type { AppEventPayloadByType, EventType, AppEvent };

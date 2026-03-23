@@ -1,5 +1,15 @@
 import { kv } from "@/lib/kv";
 import { randomUUID } from "crypto";
+import {
+  deviceStatsPayloadSchema,
+  pageViewEventSchema,
+  parseSchemaValue,
+  popularPagePayloadSchema,
+  referrerPayloadSchema,
+  type DeviceStatsPayload,
+  type PopularPagePayload,
+  type ReferrerPayload,
+} from "@/lib/telemetry";
 
 const PAGEVIEW_KEY = "zee-index:analytics:pageviews";
 const VISITOR_KEY = "zee-index:analytics:visitors";
@@ -12,19 +22,6 @@ const BANDWIDTH_KEY = "zee-index:analytics:bandwidth";
 const ACTIVE_VISITORS_KEY = "zee-index:analytics:active-visitors";
 
 const LOG_EXPIRATION_SECONDS = 60 * 60 * 24 * 90;
-
-export interface PageViewEvent {
-  id: string;
-  path: string;
-  timestamp: number;
-  visitorId: string;
-  ip: string;
-  userAgent: string;
-  referrer: string;
-  browser: string;
-  os: string;
-  device: string;
-}
 
 export interface AnalyticsData {
   overview: {
@@ -55,23 +52,6 @@ export interface AnalyticsData {
   };
 }
 
-interface PopularPagePayload {
-  path: string;
-  dayKey: string;
-}
-
-interface DeviceStatsPayload {
-  browser: string;
-  os: string;
-  device: string;
-  dayKey: string;
-}
-
-interface ReferrerPayload {
-  source: string;
-  dayKey: string;
-}
-
 function generateId(): string {
   return `${Date.now()}-${randomUUID().replace(/-/g, "").substring(0, 12)}`;
 }
@@ -79,48 +59,6 @@ function generateId(): string {
 function getDayKey(timestamp: number): string {
   const d = new Date(timestamp);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function parseJsonMember<T>(
-  raw: string,
-  guard: (value: unknown) => value is T,
-): T | null {
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    return guard(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-function isPopularPagePayload(value: unknown): value is PopularPagePayload {
-  return (
-    isRecord(value) &&
-    typeof value.path === "string" &&
-    typeof value.dayKey === "string"
-  );
-}
-
-function isDeviceStatsPayload(value: unknown): value is DeviceStatsPayload {
-  return (
-    isRecord(value) &&
-    typeof value.browser === "string" &&
-    typeof value.os === "string" &&
-    typeof value.device === "string" &&
-    typeof value.dayKey === "string"
-  );
-}
-
-function isReferrerPayload(value: unknown): value is ReferrerPayload {
-  return (
-    isRecord(value) &&
-    typeof value.source === "string" &&
-    typeof value.dayKey === "string"
-  );
 }
 
 function parseUserAgent(ua: string): {
@@ -175,7 +113,7 @@ export async function trackPageView(params: {
     }
     const visitorId = `v-${Math.abs(hash).toString(36)}`;
 
-    const event: PageViewEvent = {
+    const event = pageViewEventSchema.parse({
       id: generateId(),
       path: params.path,
       timestamp,
@@ -186,7 +124,7 @@ export async function trackPageView(params: {
       browser,
       os,
       device,
-    };
+    });
 
     await kv.zadd(PAGEVIEW_KEY, {
       score: timestamp,
@@ -328,8 +266,13 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
   const hourlyVisitorSets = new Map<number, Set<string>>();
   for (const rawEvent of todayEvents) {
     try {
-      const event: PageViewEvent =
-        typeof rawEvent === "string" ? JSON.parse(rawEvent) : rawEvent;
+      const event =
+        typeof rawEvent === "string"
+          ? parseSchemaValue(rawEvent, pageViewEventSchema)
+          : pageViewEventSchema.safeParse(rawEvent).data;
+      if (!event) {
+        continue;
+      }
       const hour = new Date(event.timestamp).getHours();
       hourlyViews[hour].views++;
 
@@ -365,8 +308,8 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
   for (const raw of popularRaw) {
     const parsed =
       typeof raw === "string"
-        ? parseJsonMember(raw, isPopularPagePayload)
-        : null;
+        ? parseSchemaValue(raw, popularPagePayloadSchema)
+        : popularPagePayloadSchema.safeParse(raw).data;
     const path = parsed?.path || "/";
     pageCounts.set(path, (pageCounts.get(path) || 0) + 1);
   }
@@ -388,8 +331,8 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
   for (const raw of deviceRaw) {
     const parsed =
       typeof raw === "string"
-        ? parseJsonMember(raw, isDeviceStatsPayload)
-        : null;
+        ? parseSchemaValue(raw, deviceStatsPayloadSchema)
+        : deviceStatsPayloadSchema.safeParse(raw).data;
     if (!parsed) {
       continue;
     }
@@ -417,7 +360,9 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
   const referrerCounts = new Map<string, number>();
   for (const raw of referrerRaw) {
     const parsed =
-      typeof raw === "string" ? parseJsonMember(raw, isReferrerPayload) : null;
+      typeof raw === "string"
+        ? parseSchemaValue(raw, referrerPayloadSchema)
+        : referrerPayloadSchema.safeParse(raw).data;
     if (!parsed) {
       continue;
     }
