@@ -148,8 +148,16 @@ async function handleDownload(request: NextRequest) {
 
         logActivity("DOWNLOAD", {
           itemName: fileDetails.name,
+          itemId: fileId,
           itemSize: fileDetails.size || "0",
           userEmail: session?.user?.email,
+          metadata: {
+            fileId,
+            mimeType,
+            rangeRequest: false,
+            isShareAccess: !!context.shareRecord,
+            shareLinkId: context.shareRecord?.jti,
+          },
         }).catch((e) =>
           logger.error({ err: e }, "Gagal mencatat log aktivitas"),
         );

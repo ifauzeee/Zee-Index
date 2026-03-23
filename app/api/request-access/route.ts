@@ -57,9 +57,14 @@ export const POST = createUserRoute(async ({ request, session }) => {
 
     await logActivity("LOGIN_FAILURE", {
       itemName: folderName,
+      itemId: folderId,
       userEmail: session.user.email,
       status: "failure",
       error: `REQUEST_ACCESS: Meminta akses ke folder ${folderId}`,
+      metadata: {
+        reason: "request_access",
+        requestedFolderId: folderId,
+      },
     });
 
     return NextResponse.json({

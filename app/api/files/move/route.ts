@@ -62,9 +62,15 @@ export const POST = withEditorSession(
 
       await logActivity("MOVE", {
         itemName: data.name || fileId,
+        itemId: fileId,
         userEmail: session?.user?.email,
         destinationFolder: newParentId,
         status: "success",
+        metadata: {
+          fileId,
+          sourceParentId: currentParentId,
+          destinationParentId: newParentId,
+        },
       });
 
       return NextResponse.json({ success: true, data });

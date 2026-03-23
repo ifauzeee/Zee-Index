@@ -93,9 +93,17 @@ export const POST = withEditorSession(
 
           await logActivity("UPLOAD", {
             itemName: fileData.name,
+            itemId: fileData.id,
             itemSize: fileData.size,
             userEmail: session.user?.email,
             status: "success",
+            metadata: {
+              operation: "file_upload",
+              fileId: fileData.id,
+              parentId: parentId || undefined,
+              mimeType: fileData.mimeType,
+              uploadType: "chunk",
+            },
           });
           return NextResponse.json({ status: "completed", file: fileData });
         }

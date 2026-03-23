@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import type { ActivityLog as DbActivityLog } from "@prisma/client";
+import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { db } from "@/lib/db";
 import { eventBus, EventType } from "@/lib/events/eventBus";
@@ -36,7 +37,125 @@ export type ActivityType =
   | "UNAUTHORIZED_ACCESS"
   | "SUSPICIOUS_ACTIVITY";
 
-export interface ActivityDetails {
+const activityMetadataSchemas = {
+  DOWNLOAD: z.object({
+    fileId: z.string().optional(),
+    mimeType: z.string().optional(),
+    rangeRequest: z.boolean().optional(),
+    isShareAccess: z.boolean().optional(),
+    shareLinkId: z.string().optional(),
+  }),
+  UPLOAD: z.object({
+    operation: z
+      .enum(["file_upload", "folder_create", "request_upload"])
+      .optional(),
+    fileId: z.string().optional(),
+    parentId: z.string().optional(),
+    mimeType: z.string().optional(),
+    uploadType: z.enum(["resumable", "chunk"]).optional(),
+  }),
+  MOVE: z.object({
+    fileId: z.string().optional(),
+    sourceParentId: z.string().optional(),
+    destinationParentId: z.string().optional(),
+  }),
+  COPY: z.object({
+    fileId: z.string().optional(),
+    sourceParentId: z.string().optional(),
+    destinationParentId: z.string().optional(),
+  }),
+  ADMIN_ADDED: z.object({
+    source: z.string().optional(),
+    folderId: z.string().optional(),
+    targetUser: z.string().optional(),
+  }),
+  ADMIN_REMOVED: z.object({
+    source: z.string().optional(),
+    targetUser: z.string().optional(),
+  }),
+  DELETE: z.object({
+    fileId: z.string().optional(),
+    parentId: z.string().optional(),
+    operation: z.enum(["single", "bulk"]).optional(),
+  }),
+  RENAME: z.object({
+    fileId: z.string().optional(),
+    previousName: z.string().optional(),
+    nextName: z.string().optional(),
+  }),
+  SHARE_LINK_CREATED: z.object({
+    shareId: z.string().optional(),
+    sharePath: z.string().optional(),
+    isCollection: z.boolean().optional(),
+    expiresAt: z.string().optional(),
+  }),
+  SHARE_LINK_DELETED: z.object({
+    shareId: z.string().optional(),
+    sharePath: z.string().optional(),
+  }),
+  SHARE_LINK_ACCESSED: z.object({
+    folderId: z.string().optional(),
+    shareTokenPresent: z.boolean().optional(),
+  }),
+  FILE_REQUEST_CREATED: z.object({
+    requestToken: z.string().optional(),
+    folderId: z.string().optional(),
+    expiresAt: z.number().optional(),
+  }),
+  FILE_REQUEST_DELETED: z.object({
+    requestToken: z.string().optional(),
+    folderId: z.string().optional(),
+  }),
+  CONFIG_CHANGED: z.object({
+    updatedKeys: z.array(z.string()).optional(),
+  }),
+  PROTECTED_FOLDER_ADDED: z.object({
+    folderId: z.string().optional(),
+  }),
+  PROTECTED_FOLDER_REMOVED: z.object({
+    folderId: z.string().optional(),
+  }),
+  USER_ACCESS_GRANTED: z.object({
+    folderId: z.string().optional(),
+    targetUser: z.string().optional(),
+    source: z.string().optional(),
+  }),
+  USER_ACCESS_REVOKED: z.object({
+    folderId: z.string().optional(),
+    targetUser: z.string().optional(),
+    source: z.string().optional(),
+  }),
+  LOGIN_FAILURE: z.object({
+    reason: z.string().optional(),
+    requestedFolderId: z.string().optional(),
+  }),
+  UNAUTHORIZED_ACCESS: z.object({
+    resourceId: z.string().optional(),
+    resourceType: z.string().optional(),
+    reason: z.string().optional(),
+  }),
+  RATE_LIMITED: z.object({
+    scope: z.string().optional(),
+    identifier: z.string().optional(),
+  }),
+  SUSPICIOUS_ACTIVITY: z.object({
+    reason: z.string().optional(),
+    resourceId: z.string().optional(),
+  }),
+} as const;
+
+export type ActivityMetadataByType = {
+  [K in keyof typeof activityMetadataSchemas]: z.infer<
+    (typeof activityMetadataSchemas)[K]
+  >;
+};
+
+type ActivityMetadata<T extends ActivityType> =
+  T extends keyof ActivityMetadataByType
+    ? ActivityMetadataByType[T]
+    : Record<string, unknown>;
+
+export interface ActivityDetails<T extends ActivityType = ActivityType> {
   itemName?: string;
   itemId?: string;
   itemSize?: string | number;
@@ -55,10 +174,11 @@ export interface ActivityDetails {
   userAgent?: string;
   country?: string;
   city?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: ActivityMetadata<T>;
 }
 
-export interface ActivityLog extends ActivityDetails {
+export interface ActivityLog<T extends ActivityType = ActivityType>
+  extends ActivityDetails<T> {
   id: string;
   type: ActivityType;
   timestamp: number;
@@ -98,24 +218,57 @@ const SEVERITY_MAP: Record<ActivityType, ActivityLog["severity"]> = {
   SUSPICIOUS_ACTIVITY: "critical",
 };
 
-function parseMetadata(
+function parseMetadata<T extends ActivityType>(
+  type: T,
   metadata: string | null,
-): Record<string, unknown> | undefined {
+): ActivityMetadata<T> | undefined {
   if (!metadata) {
     return undefined;
   }
 
   try {
     const parsed: unknown = JSON.parse(metadata);
-    return typeof parsed === "object" && parsed !== null
-      ? (parsed as Record<string, unknown>)
-      : undefined;
+
+    if (
+      typeof parsed !== "object" ||
+      parsed === null ||
+      Array.isArray(parsed)
+    ) {
+      return undefined;
+    }
+
+    const schema =
+      activityMetadataSchemas[type as keyof typeof activityMetadataSchemas];
+    if (!schema) {
+      return parsed as ActivityMetadata<T>;
+    }
+
+    const result = schema.safeParse(parsed);
+    return result.success ? (result.data as ActivityMetadata<T>) : undefined;
   } catch {
     return undefined;
   }
 }
 
-function toActivityLog(log: DbActivityLog): ActivityLog {
+function serializeMetadata<T extends ActivityType>(
+  type: T,
+  metadata: ActivityMetadata<T> | undefined,
+): string | null {
+  if (!metadata) {
+    return null;
+  }
+
+  const schema =
+    activityMetadataSchemas[type as keyof typeof activityMetadataSchemas];
+  if (!schema) {
+    return JSON.stringify(metadata);
+  }
+
+  const result = schema.safeParse(metadata);
+  return result.success ? JSON.stringify(result.data) : null;
+}
+
+export function mapDbActivityLog(log: DbActivityLog): ActivityLog {
   return {
     id: log.id,
     type: log.type as ActivityType,
@@ -139,7 +292,7 @@ function toActivityLog(log: DbActivityLog): ActivityLog {
     userAgent: log.userAgent ?? undefined,
     country: log.country ?? undefined,
     city: log.city ?? undefined,
-    metadata: parseMetadata(log.metadata),
+    metadata: parseMetadata(log.type as ActivityType, log.metadata),
   };
 }
 
@@ -166,10 +319,10 @@ async function getClientInfo(): Promise<{
   }
 }
 
-export async function logActivity(
-  type: ActivityType,
-  details: ActivityDetails = {},
-) {
+export async function logActivity<T extends ActivityType>(
+  type: T,
+  details: ActivityDetails<T> = {},
+): Promise<ActivityLog<T> | null> {
   try {
     const timestamp = Date.now();
     const clientInfo = await getClientInfo();
@@ -197,7 +350,7 @@ export async function logActivity(
         errorCode: details.errorCode,
         country: details.country,
         city: details.city,
-        metadata: details.metadata ? JSON.stringify(details.metadata) : null,
+        metadata: serializeMetadata(type, details.metadata),
       },
     });
 
@@ -256,7 +409,7 @@ export async function logActivity(
         logger.error({ err: error }, "Failed to clean old activity logs"),
       );
 
-    return toActivityLog(logEntry);
+    return mapDbActivityLog(logEntry) as ActivityLog<T>;
   } catch (error) {
     logger.error({ err: error }, "Failed to log activity");
     return null;
@@ -274,7 +427,7 @@ export async function getActivityLogs(
       orderBy: { timestamp: "desc" },
     });
 
-    return logs.map(toActivityLog);
+    return logs.map(mapDbActivityLog);
   } catch (error) {
     logger.error({ err: error }, "Failed to get activity logs");
     return [];
@@ -300,7 +453,7 @@ export async function getSecurityLogs(
       orderBy: { timestamp: "desc" },
     });
 
-    return logs.map(toActivityLog);
+    return logs.map(mapDbActivityLog);
   } catch (error) {
     logger.error({ err: error }, "Failed to get security logs");
     return [];

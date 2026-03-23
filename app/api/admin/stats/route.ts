@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import type { ActivityLog as DbActivityLog } from "@prisma/client";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
 import type { ActivityLog } from "@/lib/activityLogger";
@@ -16,37 +15,7 @@ import { unstable_cache } from "next/cache";
 export const dynamic = "force-dynamic";
 
 import { getAnalyticsData } from "@/lib/analyticsTracker";
-import { type ActivityType } from "@/lib/activityLogger";
-
-function toActivityLog(log: DbActivityLog): ActivityLog {
-  return {
-    id: log.id,
-    type: log.type as ActivityType,
-    timestamp: log.timestamp,
-    severity: log.severity as ActivityLog["severity"],
-    itemName: log.itemName ?? undefined,
-    itemId: log.itemId ?? undefined,
-    itemSize: log.itemSize ?? undefined,
-    itemType: log.itemType ?? undefined,
-    userEmail: log.userEmail ?? undefined,
-    userId: log.userId ?? undefined,
-    userRole: (log.userRole as ActivityLog["userRole"] | null) ?? undefined,
-    targetUser: log.targetUser ?? undefined,
-    destinationFolder: log.destinationFolder ?? undefined,
-    sourcePath: log.sourcePath ?? undefined,
-    targetPath: log.targetPath ?? undefined,
-    status: (log.status as ActivityLog["status"] | null) ?? undefined,
-    error: log.error ?? undefined,
-    errorCode: log.errorCode ?? undefined,
-    ipAddress: log.ipAddress ?? undefined,
-    userAgent: log.userAgent ?? undefined,
-    country: log.country ?? undefined,
-    city: log.city ?? undefined,
-    metadata: log.metadata
-      ? (JSON.parse(log.metadata) as Record<string, unknown>)
-      : undefined,
-  };
-}
+import { mapDbActivityLog } from "@/lib/activityLogger";
 
 const getAdminStatsCached = unstable_cache(
   async () => {
@@ -55,7 +24,7 @@ const getAdminStatsCached = unstable_cache(
       where: { timestamp: { gte: ninetyDaysAgo } },
     });
 
-    const allLogs = allLogsRaw.map(toActivityLog);
+    const allLogs: ActivityLog[] = allLogsRaw.map(mapDbActivityLog);
 
     const todayStart = startOfToday().getTime();
     const sevenWeeksAgo = subDays(new Date(), 49).getTime();

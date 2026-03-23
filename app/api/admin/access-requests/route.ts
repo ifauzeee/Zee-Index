@@ -101,6 +101,11 @@ export const POST = createAdminRoute(async ({ request, session }) => {
         userEmail: session.user?.email,
         targetUser: requestData.email,
         status: "success",
+        metadata: {
+          source: "access_request_approval",
+          folderId: requestData.folderId,
+          targetUser: requestData.email,
+        },
       });
     }
 
