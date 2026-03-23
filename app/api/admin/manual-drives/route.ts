@@ -1,33 +1,21 @@
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
-import { z } from "zod";
 import bcrypt from "bcryptjs";
 
 import { db } from "@/lib/db";
-
-const MANUAL_DRIVES_KEY = "zee-index:manual-drives";
-
-interface ManualDriveRecord {
-  id: string;
-  name: string;
-  isProtected?: boolean;
-}
-
-const driveSchema = z.object({
-  id: z
-    .string()
-    .min(1)
-    .transform((val) => val.trim()),
-  name: z.string().min(1),
-  password: z.string().optional(),
-});
+import {
+  MANUAL_DRIVES_KEY,
+  manualDriveCreateSchema,
+  manualDriveDeleteSchema,
+  parseManualDriveRecords,
+} from "@/lib/manual-drives";
 
 export const dynamic = "force-dynamic";
 
 export const GET = createAdminRoute(async () => {
   try {
-    const drives = (await kv.get(MANUAL_DRIVES_KEY)) || [];
+    const drives = parseManualDriveRecords(await kv.get(MANUAL_DRIVES_KEY));
     return NextResponse.json(drives);
   } catch (error) {
     console.error("Failed to fetch manual drives:", error);
@@ -38,79 +26,75 @@ export const GET = createAdminRoute(async () => {
   }
 });
 
-export const POST = createAdminRoute(async ({ request }) => {
-  try {
-    const body = await request.json();
-    const validation = driveSchema.safeParse(body);
+export const POST = createAdminRoute(
+  async ({ body }) => {
+    try {
+      const { id, name, password } = body;
+      const currentDrives = parseManualDriveRecords(
+        await kv.get(MANUAL_DRIVES_KEY),
+      );
 
-    if (!validation.success) {
+      if (currentDrives.some((d) => d.id === id)) {
+        return NextResponse.json(
+          { error: "Folder ID ini sudah ada dalam daftar." },
+          { status: 400 },
+        );
+      }
+
+      let isProtected = false;
+      if (password && password.trim() !== "") {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await db.protectedFolder.upsert({
+          where: { folderId: id },
+          update: { password: hashedPassword },
+          create: { folderId: id, password: hashedPassword },
+        });
+        isProtected = true;
+      }
+
+      const newDrive = { id, name, isProtected };
+      const updatedDrives = [...currentDrives, newDrive];
+
+      await kv.set(MANUAL_DRIVES_KEY, updatedDrives);
+
+      await kv.del(`zee-index:folder-path-v7:${id}`);
+
+      return NextResponse.json({ success: true, drives: updatedDrives });
+    } catch (error) {
+      console.error("Failed to create manual drive:", error);
       return NextResponse.json(
-        { error: validation.error.issues[0].message },
-        { status: 400 },
+        { error: "Internal Server Error" },
+        { status: 500 },
       );
     }
+  },
+  { bodySchema: manualDriveCreateSchema },
+);
 
-    const { id, name, password } = validation.data;
-    const currentDrives =
-      (await kv.get<ManualDriveRecord[]>(MANUAL_DRIVES_KEY)) || [];
+export const DELETE = createAdminRoute(
+  async ({ body }) => {
+    try {
+      const { id } = body;
 
-    if (currentDrives.some((d) => d.id === id)) {
-      return NextResponse.json(
-        { error: "Folder ID ini sudah ada dalam daftar." },
-        { status: 400 },
+      const currentDrives = parseManualDriveRecords(
+        await kv.get(MANUAL_DRIVES_KEY),
       );
+      const updatedDrives = currentDrives.filter((d) => d.id !== id);
+
+      await kv.set(MANUAL_DRIVES_KEY, updatedDrives);
+      await db.protectedFolder
+        .delete({
+          where: { folderId: id },
+        })
+        .catch(() => {});
+
+      await kv.del(`zee-index:folder-path-v7:${id}`);
+
+      return NextResponse.json({ success: true, drives: updatedDrives });
+    } catch (error) {
+      console.error("Failed to delete manual drive:", error);
+      return NextResponse.json({ error: "Gagal menghapus" }, { status: 500 });
     }
-
-    let isProtected = false;
-    if (password && password.trim() !== "") {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      await db.protectedFolder.upsert({
-        where: { folderId: id },
-        update: { password: hashedPassword },
-        create: { folderId: id, password: hashedPassword },
-      });
-      isProtected = true;
-    }
-
-    const newDrive = { id, name, isProtected };
-    const updatedDrives = [...currentDrives, newDrive];
-
-    await kv.set(MANUAL_DRIVES_KEY, updatedDrives);
-
-    await kv.del(`zee-index:folder-path-v7:${id}`);
-
-    return NextResponse.json({ success: true, drives: updatedDrives });
-  } catch (error) {
-    console.error("Failed to create manual drive:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
-  }
-});
-
-export const DELETE = createAdminRoute(async ({ request }) => {
-  try {
-    const { id } = await request.json();
-    if (!id)
-      return NextResponse.json({ error: "ID required" }, { status: 400 });
-
-    const currentDrives =
-      (await kv.get<ManualDriveRecord[]>(MANUAL_DRIVES_KEY)) || [];
-    const updatedDrives = currentDrives.filter((d) => d.id !== id);
-
-    await kv.set(MANUAL_DRIVES_KEY, updatedDrives);
-    await db.protectedFolder
-      .delete({
-        where: { folderId: id },
-      })
-      .catch(() => {});
-
-    await kv.del(`zee-index:folder-path-v7:${id}`);
-
-    return NextResponse.json({ success: true, drives: updatedDrives });
-  } catch (error) {
-    console.error("Failed to delete manual drive:", error);
-    return NextResponse.json({ error: "Gagal menghapus" }, { status: 500 });
-  }
-});
+  },
+  { bodySchema: manualDriveDeleteSchema },
+);

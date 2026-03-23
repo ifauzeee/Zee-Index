@@ -18,15 +18,11 @@ import {
 } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { measure } from "@/lib/performance";
-
-interface ManualDriveConfig {
-  id: string;
-  name?: string;
-}
-
-function isManualDriveConfig(value: unknown): value is ManualDriveConfig {
-  return typeof value === "object" && value !== null && "id" in value;
-}
+import {
+  MANUAL_DRIVES_KEY,
+  parseManualDriveRecords,
+  parseManualDrivesFromEnv,
+} from "@/lib/manual-drives";
 
 export async function listSharedDrives(): Promise<SharedDrive[]> {
   const accessToken = await getAccessToken();
@@ -322,44 +318,10 @@ export async function getFolderPath(
     process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME ||
     (locale === "id" ? "Beranda" : "Home");
 
-  const dbDrivesRaw = await kv.get<ManualDriveConfig[]>(
-    REDIS_KEYS.MANUAL_DRIVES,
+  const dbDrives = parseManualDriveRecords(await kv.get(MANUAL_DRIVES_KEY));
+  const envDrives = parseManualDrivesFromEnv(
+    process.env.NEXT_PUBLIC_MANUAL_DRIVES,
   );
-  const dbDrives = Array.isArray(dbDrivesRaw) ? dbDrivesRaw : [];
-  const envManualDrivesRaw = process.env.NEXT_PUBLIC_MANUAL_DRIVES || "";
-  const envDrives: ManualDriveConfig[] = [];
-
-  if (envManualDrivesRaw.trim().startsWith("[")) {
-    try {
-      const parsed = JSON.parse(envManualDrivesRaw);
-      if (Array.isArray(parsed)) {
-        parsed.forEach((entry) => {
-          if (typeof entry === "string") {
-            const id = entry.trim();
-            if (id) envDrives.push({ id });
-          } else if (isManualDriveConfig(entry)) {
-            const id = String(entry.id || "").trim();
-            const name =
-              typeof entry.name === "string" ? entry.name.trim() : undefined;
-            if (id) envDrives.push({ id, name });
-          }
-        });
-      }
-    } catch {}
-  }
-
-  if (envDrives.length === 0 && envManualDrivesRaw.trim() !== "") {
-    envManualDrivesRaw.split(",").forEach((entry) => {
-      const [id, name] = entry.split(":");
-      const cleanId = id?.trim();
-      if (cleanId) {
-        envDrives.push({
-          id: cleanId,
-          name: name?.trim() || undefined,
-        });
-      }
-    });
-  }
 
   const shortcutMap = new Map<string, string>();
   if (rootId) shortcutMap.set(rootId, rootName);
