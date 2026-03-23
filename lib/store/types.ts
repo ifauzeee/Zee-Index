@@ -1,4 +1,5 @@
 import type { DriveFile } from "@/lib/drive";
+import type { AppConfig } from "@/lib/app-config";
 
 export interface Toast {
   id: string;
@@ -77,15 +78,6 @@ export interface UploadItem {
   progress: number;
   status: "uploading" | "success" | "error";
   error?: string;
-}
-
-export interface AppConfig {
-  hideAuthor: boolean;
-  disableGuestLogin: boolean;
-  appName: string;
-  logoUrl: string;
-  faviconUrl: string;
-  primaryColor: string;
 }
 
 export interface UISlice {

@@ -7,12 +7,11 @@ import { logger } from "@/lib/logger";
 import { authLimiter } from "@/lib/ratelimit";
 import { kv } from "@/lib/kv";
 import { REDIS_KEYS } from "@/lib/constants";
+import { getPublicAppConfig } from "@/lib/app-config";
 import bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 
 import type { NextAuthConfig } from "next-auth";
-
-const CONFIG_KEY = "zee-index:config";
 
 function normalizeAdminEmails(): string[] {
   const envAdminsRaw = process.env.ADMIN_EMAILS || "";
@@ -176,14 +175,9 @@ const authConfig: NextAuthConfig = {
       credentials: {},
       async authorize() {
         try {
-          const configEntry = await db.adminConfig.findUnique({
-            where: { key: CONFIG_KEY },
-          });
-          if (configEntry) {
-            const config = JSON.parse(configEntry.value);
-            if (config?.disableGuestLogin === true) {
-              return null;
-            }
+          const config = await getPublicAppConfig();
+          if (config.disableGuestLogin) {
+            return null;
           }
         } catch {}
 

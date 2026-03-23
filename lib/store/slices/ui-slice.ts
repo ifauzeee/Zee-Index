@@ -1,10 +1,11 @@
 import { StateCreator } from "zustand";
+import type { AppConfig } from "@/lib/app-config";
 import { getErrorMessage } from "@/lib/errors";
+import { DEFAULT_APP_CONFIG } from "@/lib/app-config";
 import {
   AppState,
   ViewMode,
   DensityMode,
-  AppConfig,
   Toast,
   NotificationItem,
   UISlice,
@@ -72,10 +73,10 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (
       })),
     })),
   clearNotifications: () => set({ notifications: [] }),
-  appName: "Zee Index",
-  logoUrl: "",
-  faviconUrl: "",
-  primaryColor: "",
+  appName: DEFAULT_APP_CONFIG.appName,
+  logoUrl: DEFAULT_APP_CONFIG.logoUrl,
+  faviconUrl: DEFAULT_APP_CONFIG.faviconUrl,
+  primaryColor: DEFAULT_APP_CONFIG.primaryColor,
   isConfigLoading: false,
   hideAuthor: null,
   disableGuestLogin: null,
@@ -87,16 +88,23 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (
         throw new Error(`Failed to fetch config: ${response.status}`);
       const config: AppConfig = await response.json();
       set({
-        hideAuthor: config.hideAuthor ?? false,
-        disableGuestLogin: config.disableGuestLogin ?? false,
-        appName: config.appName || "Zee Index",
-        logoUrl: config.logoUrl || "",
-        faviconUrl: config.faviconUrl || "",
-        primaryColor: config.primaryColor || "",
+        hideAuthor: config.hideAuthor,
+        disableGuestLogin: config.disableGuestLogin,
+        appName: config.appName,
+        logoUrl: config.logoUrl,
+        faviconUrl: config.faviconUrl,
+        primaryColor: config.primaryColor,
       });
     } catch (error) {
       console.error("Config fetch error:", error);
-      set({ hideAuthor: true, disableGuestLogin: true });
+      set({
+        hideAuthor: DEFAULT_APP_CONFIG.hideAuthor,
+        disableGuestLogin: DEFAULT_APP_CONFIG.disableGuestLogin,
+        appName: DEFAULT_APP_CONFIG.appName,
+        logoUrl: DEFAULT_APP_CONFIG.logoUrl,
+        faviconUrl: DEFAULT_APP_CONFIG.faviconUrl,
+        primaryColor: DEFAULT_APP_CONFIG.primaryColor,
+      });
     } finally {
       set({ isConfigLoading: false });
     }
