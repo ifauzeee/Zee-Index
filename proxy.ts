@@ -14,10 +14,15 @@ import {
   validateFolderToken,
   handleFindPath,
 } from "@/lib/middleware-helpers";
+import {
+  DEFAULT_LOCALE,
+  LOCALES,
+  stripLocaleFromPathname,
+} from "@/lib/i18n-config";
 
 const intlMiddleware = createMiddleware({
-  locales: ["en", "id"],
-  defaultLocale: "en",
+  locales: [...LOCALES],
+  defaultLocale: DEFAULT_LOCALE,
   localePrefix: "always",
 });
 
@@ -59,7 +64,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const pathnameWithoutLocale = pathname.replace(/^\/(en|id)/, "") || "/";
+  const pathnameWithoutLocale = stripLocaleFromPathname(pathname) || "/";
   const isApi = pathnameWithoutLocale.startsWith("/api");
 
   if (isApi && !pathnameWithoutLocale.startsWith("/api/health")) {

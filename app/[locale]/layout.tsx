@@ -9,6 +9,7 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import NextTopLoader from "nextjs-toploader";
 import { Inter } from "next/font/google";
+import { isLocale } from "@/lib/i18n-config";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
@@ -81,7 +82,7 @@ export default async function RootLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  if (!["en", "id"].includes(locale)) {
+  if (!isLocale(locale)) {
     notFound();
   }
 

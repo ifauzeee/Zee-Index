@@ -77,64 +77,64 @@
 
 ### ⚡ Performance & UI
 
-| Feature | Description |
-|---|---|
+| Feature                   | Description                                                               |
+| ------------------------- | ------------------------------------------------------------------------- |
 | **Virtualized Rendering** | Smooth scrolling through **10,000+ files** with `@tanstack/react-virtual` |
-| **Smart Prefetching** | Preloads folder contents on hover for instant navigation |
-| **Multi-Layer Caching** | Redis + in-memory cache for blazing-fast API responses |
-| **Turbopack** | Next.js 16 Turbopack for ultra-fast development builds |
-| **PWA Support** | Installable as a Progressive Web App with offline caching |
-| **Dark/Light Mode** | Automatic theme detection with manual toggle |
+| **Smart Prefetching**     | Preloads folder contents on hover for instant navigation                  |
+| **Multi-Layer Caching**   | Redis + in-memory cache for blazing-fast API responses                    |
+| **Turbopack**             | Next.js 16 Turbopack for ultra-fast development builds                    |
+| **PWA Support**           | Installable as a Progressive Web App with offline caching                 |
+| **Dark/Light Mode**       | Automatic theme detection with manual toggle                              |
 
 ### 🎬 Media & File Previews
 
-| Feature | Description |
-|---|---|
+| Feature             | Description                                                       |
+| ------------------- | ----------------------------------------------------------------- |
 | **Video Streaming** | Direct stream with VidStack player, resume playback, theater mode |
-| **Auto Subtitles** | Automatic `.srt` / `.vtt` subtitle detection and loading |
-| **Audio Dock** | Persistent audio player that continues across navigation |
-| **Image Gallery** | Masonry grid with lightbox using `yet-another-react-lightbox` |
-| **PDF Viewer** | Built-in viewer powered by `react-pdf` |
-| **Code Editor** | Monaco Editor for syntax-highlighted code preview |
-| **Office Files** | Preview Word, Excel, PowerPoint via Google Viewer |
-| **Archive Preview** | Browse ZIP contents without downloading |
-| **Ebook Reader** | Read ePub files in-browser |
+| **Auto Subtitles**  | Automatic `.srt` / `.vtt` subtitle detection and loading          |
+| **Audio Dock**      | Persistent audio player that continues across navigation          |
+| **Image Gallery**   | Masonry grid with lightbox using `yet-another-react-lightbox`     |
+| **PDF Viewer**      | Built-in viewer powered by `react-pdf`                            |
+| **Code Editor**     | Monaco Editor for syntax-highlighted code preview                 |
+| **Office Files**    | Preview Word, Excel, PowerPoint via Google Viewer                 |
+| **Archive Preview** | Browse ZIP contents without downloading                           |
+| **Ebook Reader**    | Read ePub files in-browser                                        |
 
 ### 🛡️ Security & Access Control
 
-| Feature | Description |
-|---|---|
-| **Role-Based Access** | Admin / Editor / User / Guest roles |
-| **Folder Passwords** | Recursive folder protection with bcrypt-hashed passwords |
-| **Two-Factor Auth** | Optional TOTP-based 2FA with QR code setup |
-| **Share Links** | JWT-signed links with expiry, max uses, download prevention, watermarks |
-| **Rate Limiting** | Per-endpoint rate limiting for API, admin, auth, and download |
-| **CSP Headers** | Content Security Policy, HSTS, X-Frame-Options, and more |
-| **bcrypt Passwords** | Timing-safe password comparison with bcrypt hashing |
+| Feature               | Description                                                             |
+| --------------------- | ----------------------------------------------------------------------- |
+| **Role-Based Access** | Admin / Editor / User / Guest roles                                     |
+| **Folder Passwords**  | Recursive folder protection with bcrypt-hashed passwords                |
+| **Two-Factor Auth**   | Optional TOTP-based 2FA with QR code setup                              |
+| **Share Links**       | JWT-signed links with expiry, max uses, download prevention, watermarks |
+| **Rate Limiting**     | Per-endpoint rate limiting for API, admin, auth, and download           |
+| **CSP Headers**       | Content Security Policy, HSTS, X-Frame-Options, and more                |
+| **bcrypt Passwords**  | Timing-safe password comparison with bcrypt hashing                     |
 
 ### 🗂️ Drive Management
 
-| Feature | Description |
-|---|---|
-| **Multi-Drive Support** | Personal, Shared, and Team Drives in unified sidebar |
-| **Manual Drives** | Add drives via config with optional password protection |
-| **Folder Aliases** | Custom display names without modifying Google Drive |
-| **Private Folders** | Hide specific folders from non-admin users |
-| **Favorites** | Pin files and folders for quick access |
-| **Drag & Drop** | Move files between folders via drag and drop |
-| **Bulk Operations** | Multi-select, bulk download (ZIP), bulk delete |
+| Feature                 | Description                                             |
+| ----------------------- | ------------------------------------------------------- |
+| **Multi-Drive Support** | Personal, Shared, and Team Drives in unified sidebar    |
+| **Manual Drives**       | Add drives via config with optional password protection |
+| **Folder Aliases**      | Custom display names without modifying Google Drive     |
+| **Private Folders**     | Hide specific folders from non-admin users              |
+| **Favorites**           | Pin files and folders for quick access                  |
+| **Drag & Drop**         | Move files between folders via drag and drop            |
+| **Bulk Operations**     | Multi-select, bulk download (ZIP), bulk delete          |
 
 ### 🛠️ Admin Dashboard
 
-| Feature | Description |
-|---|---|
-| **Analytics** | Page views, visitors, bandwidth, device breakdown |
-| **Activity Logs** | Track downloads, uploads, config changes |
-| **User Management** | Add editors, manage admin access via email |
-| **Storage Monitor** | Real-time storage usage with warnings |
-| **Cache Control** | Clear Redis cache, view cache stats |
-| **System Health** | Monitor database, Redis, API health |
-| **File Request** | Create public upload links |
+| Feature             | Description                                       |
+| ------------------- | ------------------------------------------------- |
+| **Analytics**       | Page views, visitors, bandwidth, device breakdown |
+| **Activity Logs**   | Track downloads, uploads, config changes          |
+| **User Management** | Add editors, manage admin access via email        |
+| **Storage Monitor** | Real-time storage usage with warnings             |
+| **Cache Control**   | Clear Redis cache, view cache stats               |
+| **System Health**   | Monitor database, Redis, API health               |
+| **File Request**    | Create public upload links                        |
 
 ---
 
@@ -204,12 +204,12 @@ flowchart TB
 
 ### Prerequisites
 
-| Requirement | Version | Required |
-|---|---|---|
-| [Docker](https://docs.docker.com/get-docker/) + Docker Compose | Latest | ✅ Yes |
-| [Git](https://git-scm.com/) | Latest | ✅ Yes |
-| [Node.js](https://nodejs.org/) + pnpm | 20.x+ / 9.x+ | 🔶 Only for local dev |
-| Google Cloud Project | — | ✅ Yes |
+| Requirement                                                    | Version      | Required              |
+| -------------------------------------------------------------- | ------------ | --------------------- |
+| [Docker](https://docs.docker.com/get-docker/) + Docker Compose | Latest       | ✅ Yes                |
+| [Git](https://git-scm.com/)                                    | Latest       | ✅ Yes                |
+| [Node.js](https://nodejs.org/) + pnpm                          | 20.x+ / 9.x+ | 🔶 Only for local dev |
+| Google Cloud Project                                           | —            | ✅ Yes                |
 
 ### 🐳 Quick Start with Docker (Recommended)
 
@@ -349,52 +349,52 @@ pnpm test:e2e         # E2E tests (Playwright)
 
 ### Required Variables
 
-| Variable | Description | Example |
-|---|---|---|
-| `NEXTAUTH_URL` | Your application URL | `https://yourdomain.com` |
-| `NEXTAUTH_SECRET` | Encryption key (min 32 chars) | `openssl rand -base64 32` |
-| `GOOGLE_CLIENT_ID` | Google OAuth Client ID | `xxx.apps.googleusercontent.com` |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret | `GOCSPX-xxx` |
-| `GOOGLE_REFRESH_TOKEN` | OAuth Refresh Token | Obtained via `/setup` |
-| `NEXT_PUBLIC_ROOT_FOLDER_ID` | Root Google Drive folder ID | `1ABcDeFgHiJkLmNoPqRsT` |
-| `ADMIN_EMAILS` | Comma-separated admin emails | `admin@example.com` |
-| `ADMIN_PASSWORD` | Admin fallback login password | Use a strong password |
-| `SHARE_SECRET_KEY` | JWT signing key (min 32 chars) | `openssl rand -base64 32` |
+| Variable                     | Description                    | Example                          |
+| ---------------------------- | ------------------------------ | -------------------------------- |
+| `NEXTAUTH_URL`               | Your application URL           | `https://yourdomain.com`         |
+| `NEXTAUTH_SECRET`            | Encryption key (min 32 chars)  | `openssl rand -base64 32`        |
+| `GOOGLE_CLIENT_ID`           | Google OAuth Client ID         | `xxx.apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET`       | Google OAuth Client Secret     | `GOCSPX-xxx`                     |
+| `GOOGLE_REFRESH_TOKEN`       | OAuth Refresh Token            | Obtained via `/setup`            |
+| `NEXT_PUBLIC_ROOT_FOLDER_ID` | Root Google Drive folder ID    | `1ABcDeFgHiJkLmNoPqRsT`          |
+| `ADMIN_EMAILS`               | Comma-separated admin emails   | `admin@example.com`              |
+| `ADMIN_PASSWORD`             | Admin fallback login password  | Use a strong password            |
+| `SHARE_SECRET_KEY`           | JWT signing key (min 32 chars) | `openssl rand -base64 32`        |
 
 ### Database & Cache
 
-| Variable | Description | Default |
-|---|---|---|
-| `POSTGRES_USER` | PostgreSQL username | `postgres` |
-| `POSTGRES_PASSWORD` | PostgreSQL password | `postgres` |
-| `POSTGRES_DB` | Database name | `zee_index` |
-| `DATABASE_URL` | Full connection string (non-Docker) | Auto-generated in Docker |
-| `REDIS_URL` | Redis connection string | `redis://redis:6379` (Docker) |
+| Variable            | Description                         | Default                       |
+| ------------------- | ----------------------------------- | ----------------------------- |
+| `POSTGRES_USER`     | PostgreSQL username                 | `postgres`                    |
+| `POSTGRES_PASSWORD` | PostgreSQL password                 | `postgres`                    |
+| `POSTGRES_DB`       | Database name                       | `zee_index`                   |
+| `DATABASE_URL`      | Full connection string (non-Docker) | Auto-generated in Docker      |
+| `REDIS_URL`         | Redis connection string             | `redis://redis:6379` (Docker) |
 
 ### Optional Variables
 
-| Variable | Description | Default |
-|---|---|---|
-| `ADMIN_PASSWORD_HASH` | bcrypt hash of admin password (recommended) | — |
-| `NEXT_PUBLIC_ROOT_FOLDER_NAME` | Display name for root folder | `Home` |
-| `NEXT_PUBLIC_MANUAL_DRIVES` | JSON array of additional drives | `[]` |
-| `PRIVATE_FOLDER_IDS` | JSON array of private folder IDs | `[]` |
-| `STORAGE_LIMIT_GB` | Storage warning limit | `15` |
-| `STORAGE_WARNING_THRESHOLD` | Warning threshold (0–1) | `0.90` |
-| `CRON_SECRET` | Cron job authentication token | — |
-| `TMDB_API_KEY` | TMDB API key for movie metadata | — |
-| `DUCKDNS_DOMAIN` | DuckDNS subdomain | — |
-| `DUCKDNS_TOKEN` | DuckDNS authentication token | — |
+| Variable                       | Description                                 | Default |
+| ------------------------------ | ------------------------------------------- | ------- |
+| `ADMIN_PASSWORD_HASH`          | bcrypt hash of admin password (recommended) | —       |
+| `NEXT_PUBLIC_ROOT_FOLDER_NAME` | Display name for root folder                | `Home`  |
+| `NEXT_PUBLIC_MANUAL_DRIVES`    | JSON array of additional drives             | `[]`    |
+| `PRIVATE_FOLDER_IDS`           | JSON array of private folder IDs            | `[]`    |
+| `STORAGE_LIMIT_GB`             | Storage warning limit                       | `15`    |
+| `STORAGE_WARNING_THRESHOLD`    | Warning threshold (0–1)                     | `0.90`  |
+| `CRON_SECRET`                  | Cron job authentication token               | —       |
+| `TMDB_API_KEY`                 | TMDB API key for movie metadata             | —       |
+| `DUCKDNS_DOMAIN`               | DuckDNS subdomain                           | —       |
+| `DUCKDNS_TOKEN`                | DuckDNS authentication token                | —       |
 
 ### Email Configuration (Optional)
 
-| Variable | Description | Default |
-|---|---|---|
-| `SMTP_HOST` | SMTP server | `smtp.gmail.com` |
-| `SMTP_PORT` | SMTP port | `465` |
-| `SMTP_USER` | SMTP username | — |
-| `SMTP_PASS` | SMTP password / app password | — |
-| `EMAIL_FROM` | Sender email address | `Zee Index <no-reply@example.com>` |
+| Variable     | Description                  | Default                            |
+| ------------ | ---------------------------- | ---------------------------------- |
+| `SMTP_HOST`  | SMTP server                  | `smtp.gmail.com`                   |
+| `SMTP_PORT`  | SMTP port                    | `465`                              |
+| `SMTP_USER`  | SMTP username                | —                                  |
+| `SMTP_PASS`  | SMTP password / app password | —                                  |
+| `EMAIL_FROM` | Sender email address         | `Zee Index <no-reply@example.com>` |
 
 <details>
 <summary><strong>📋 Complete .env template</strong></summary>
@@ -485,13 +485,13 @@ docker compose logs -f   # Watch startup logs
 
 **Resource usage (approximate):**
 
-| Container | Memory Limit | Typical Usage |
-|---|---|---|
-| `zee-index` | 512 MB | ~300 MB |
-| `postgres` | 200 MB | ~50 MB |
-| `redis` | 150 MB | ~20 MB |
-| `caddy` | 50 MB | ~10 MB |
-| **Total** | **~912 MB** | **~380 MB** |
+| Container   | Memory Limit | Typical Usage |
+| ----------- | ------------ | ------------- |
+| `zee-index` | 512 MB       | ~300 MB       |
+| `postgres`  | 200 MB       | ~50 MB        |
+| `redis`     | 150 MB       | ~20 MB        |
+| `caddy`     | 50 MB        | ~10 MB        |
+| **Total**   | **~912 MB**  | **~380 MB**   |
 
 ### Automatic HTTPS with DuckDNS + Caddy
 
@@ -542,21 +542,21 @@ The included `docker-compose.yml` has built-in support for **free HTTPS**:
 
 ### Authentication & Authorization
 
-| Method | Description | Config |
-|---|---|---|
-| **Google OAuth** | Login with Google account | Set OAuth credentials |
-| **Admin Password** | Email + password login for admins | `ADMIN_EMAILS` + `ADMIN_PASSWORD` |
-| **Guest Access** | Read-only access (can be disabled) | Toggle in admin settings |
-| **Two-Factor Auth** | TOTP-based 2FA with QR code | Admin dashboard setup |
+| Method              | Description                        | Config                            |
+| ------------------- | ---------------------------------- | --------------------------------- |
+| **Google OAuth**    | Login with Google account          | Set OAuth credentials             |
+| **Admin Password**  | Email + password login for admins  | `ADMIN_EMAILS` + `ADMIN_PASSWORD` |
+| **Guest Access**    | Read-only access (can be disabled) | Toggle in admin settings          |
+| **Two-Factor Auth** | TOTP-based 2FA with QR code        | Admin dashboard setup             |
 
 **Role Hierarchy:**
 
-| Role | Permissions |
-|---|---|
-| `ADMIN` | Full access — settings, user management, all files |
-| `EDITOR` | Can manage files but not system settings |
-| `USER` | Standard access to permitted folders |
-| `GUEST` | Read-only access to public content |
+| Role     | Permissions                                        |
+| -------- | -------------------------------------------------- |
+| `ADMIN`  | Full access — settings, user management, all files |
+| `EDITOR` | Can manage files but not system settings           |
+| `USER`   | Standard access to permitted folders               |
+| `GUEST`  | Read-only access to public content                 |
 
 ### Password Hashing (bcrypt)
 
@@ -591,53 +591,53 @@ Zee-Index includes comprehensive security headers:
 
 ### Public Endpoints
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/health` | Health check |
-| `GET` | `/api/config/public` | Public app configuration |
-| `GET` | `/api/files` | List files (with optional share token) |
-| `GET` | `/api/download?fileId=…` | Download / stream file |
-| `GET` | `/api/folderpath?folderId=…` | Get folder breadcrumb path |
-| `GET` | `/api/metadata?fileId=…` | Get file metadata |
+| Method | Endpoint                     | Description                            |
+| ------ | ---------------------------- | -------------------------------------- |
+| `GET`  | `/api/health`                | Health check                           |
+| `GET`  | `/api/config/public`         | Public app configuration               |
+| `GET`  | `/api/files`                 | List files (with optional share token) |
+| `GET`  | `/api/download?fileId=…`     | Download / stream file                 |
+| `GET`  | `/api/folderpath?folderId=…` | Get folder breadcrumb path             |
+| `GET`  | `/api/metadata?fileId=…`     | Get file metadata                      |
 
 ### Authenticated Endpoints
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/search?q=…` | Search files |
-| `GET` | `/api/datausage` | Storage usage info |
-| `POST` | `/api/favorites` | Toggle favorites |
-| `POST` | `/api/tags` | Manage file tags |
-| `POST` | `/api/share/create` | Create share link |
+| Method | Endpoint            | Description        |
+| ------ | ------------------- | ------------------ |
+| `GET`  | `/api/search?q=…`   | Search files       |
+| `GET`  | `/api/datausage`    | Storage usage info |
+| `POST` | `/api/favorites`    | Toggle favorites   |
+| `POST` | `/api/tags`         | Manage file tags   |
+| `POST` | `/api/share/create` | Create share link  |
 
 ### Admin Endpoints
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/admin/analytics` | Analytics data |
-| `GET` | `/api/admin/activity` | Activity logs |
-| `GET` | `/api/admin/cache-stats` | Cache statistics |
-| `POST` | `/api/admin/config` | Update app configuration |
-| `POST` | `/api/admin/2fa/setup` | Configure 2FA |
-| `POST` | `/api/admin/protected-folders` | Manage folder passwords |
-| `POST` | `/api/admin/manual-drives` | Manage drives |
-| `DELETE` | `/api/admin/clearcache` | Clear all caches |
+| Method   | Endpoint                       | Description              |
+| -------- | ------------------------------ | ------------------------ |
+| `GET`    | `/api/admin/analytics`         | Analytics data           |
+| `GET`    | `/api/admin/activity`          | Activity logs            |
+| `GET`    | `/api/admin/cache-stats`       | Cache statistics         |
+| `POST`   | `/api/admin/config`            | Update app configuration |
+| `POST`   | `/api/admin/2fa/setup`         | Configure 2FA            |
+| `POST`   | `/api/admin/protected-folders` | Manage folder passwords  |
+| `POST`   | `/api/admin/manual-drives`     | Manage drives            |
+| `DELETE` | `/api/admin/clearcache`        | Clear all caches         |
 
 ---
 
 ## ⌨️ Keyboard Shortcuts
 
-| Shortcut | Action |
-|---|---|
-| <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>K</kbd> | Open Command Palette |
-| <kbd>/</kbd> | Focus Search |
-| <kbd>Space</kbd> | Quick Preview |
-| <kbd>Ctrl</kbd> + <kbd>A</kbd> | Select All Files |
-| <kbd>Delete</kbd> | Delete Selected |
-| <kbd>F2</kbd> | Rename Selected |
-| <kbd>Enter</kbd> | Open Selected Item |
-| <kbd>Escape</kbd> | Close Modal / Clear Selection |
-| <kbd>G</kbd> then <kbd>H</kbd> | Go to Home |
+| Shortcut                                    | Action                        |
+| ------------------------------------------- | ----------------------------- |
+| <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>K</kbd> | Open Command Palette          |
+| <kbd>/</kbd>                                | Focus Search                  |
+| <kbd>Space</kbd>                            | Quick Preview                 |
+| <kbd>Ctrl</kbd> + <kbd>A</kbd>              | Select All Files              |
+| <kbd>Delete</kbd>                           | Delete Selected               |
+| <kbd>F2</kbd>                               | Rename Selected               |
+| <kbd>Enter</kbd>                            | Open Selected Item            |
+| <kbd>Escape</kbd>                           | Close Modal / Clear Selection |
+| <kbd>G</kbd> then <kbd>H</kbd>              | Go to Home                    |
 
 ---
 
@@ -645,10 +645,11 @@ Zee-Index includes comprehensive security headers:
 
 Zee-Index supports multiple languages via `next-intl`:
 
-| Language | Code | Status |
-|---|---|---|
-| 🇬🇧 English | `en` | ✅ Complete |
-| 🇮🇩 Indonesian | `id` | ✅ Complete |
+| Language                 | Code    | Status      |
+| ------------------------ | ------- | ----------- |
+| 🇬🇧 English               | `en`    | ✅ Complete |
+| 🇮🇩 Indonesian            | `id`    | ✅ Complete |
+| 🇹🇼 Chinese (Traditional) | `zh-TW` | ✅ Complete |
 
 **Adding a new language:**
 
@@ -758,6 +759,7 @@ docker compose logs zee-index --tail 50
 # 2. Missing .env variables — check all required vars are set
 # 3. Port conflict — ensure 3000, 5432, 6379 are free
 ```
+
 </details>
 
 <details>
@@ -800,6 +802,7 @@ df -h
 
 # Ensure SKIP_ENV_VALIDATION=true is set for builds without full .env
 ```
+
 </details>
 
 <details>
@@ -815,6 +818,7 @@ docker compose exec zee-index npx prisma migrate deploy
 # Reset database (⚠️ destructive)
 docker compose exec zee-index npx prisma migrate reset
 ```
+
 </details>
 
 ---
@@ -846,15 +850,15 @@ git push origin feat/amazing-feature
 
 **Commit Convention** ([Conventional Commits](https://www.conventionalcommits.org/)):
 
-| Prefix | Usage |
-|---|---|
-| `feat:` | New feature |
-| `fix:` | Bug fix |
-| `refactor:` | Code restructuring |
-| `security:` | Security improvement |
-| `docs:` | Documentation |
-| `chore:` | Maintenance |
-| `test:` | Adding/updating tests |
+| Prefix      | Usage                 |
+| ----------- | --------------------- |
+| `feat:`     | New feature           |
+| `fix:`      | Bug fix               |
+| `refactor:` | Code restructuring    |
+| `security:` | Security improvement  |
+| `docs:`     | Documentation         |
+| `chore:`    | Maintenance           |
+| `test:`     | Adding/updating tests |
 
 ---
 
