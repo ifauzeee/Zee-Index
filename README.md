@@ -651,11 +651,18 @@ Zee-Index supports multiple languages via `next-intl`:
 | 🇮🇩 Indonesian            | `id`    | ✅ Complete |
 | 🇹🇼 Chinese (Traditional) | `zh-TW` | ✅ Complete |
 
+**Switching language (UI):**
+
+- Use the **Language** button in the header to open a dropdown and select your preferred language.
+- Routes are locale-prefixed (e.g. `/en/...`, `/id/...`, `/zh-TW/...`).
+
 **Adding a new language:**
 
 1. Copy `messages/en.json` → `messages/xx.json`
 2. Translate all strings
-3. Add `"xx"` to the locales array in `middleware.ts`:
+3. Add `"xx"` to the supported locales list in `lib/i18n-config.ts` (`LOCALES`)
+4. Ensure the language file exists in `messages/xx.json`
+5. Add `"xx"` to the locales array in `middleware.ts`:
    ```typescript
    const intlMiddleware = createMiddleware({
      locales: ["en", "id", "xx"],
