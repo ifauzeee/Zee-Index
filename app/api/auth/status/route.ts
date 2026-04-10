@@ -8,7 +8,7 @@ export const GET = createPublicRoute(
   async () => {
     try {
       const driveHealth = await checkGoogleDriveHealth();
-      
+
       return NextResponse.json({
         status: driveHealth.status,
         error: driveHealth.error,
@@ -17,9 +17,9 @@ export const GET = createPublicRoute(
       console.error("[Auth Status API] Error:", error);
       return NextResponse.json(
         { status: "unhealthy", error: "Gagal memeriksa status autentikasi." },
-        { status: 500 }
+        { status: 500 },
       );
     }
   },
-  { rateLimit: false }
+  { rateLimit: false },
 );
