@@ -47,9 +47,7 @@ export function ExternalPlayerMenu({
 
         <DropdownMenuItem
           className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
-          onClick={() =>
-            (window.location.href = `vlc://${getAbsoluteSrc()}`)
-          }
+          onClick={() => (window.location.href = `vlc://${getAbsoluteSrc()}`)}
         >
           <Play className="mr-2 h-4 w-4" /> Open in VLC (PC)
         </DropdownMenuItem>

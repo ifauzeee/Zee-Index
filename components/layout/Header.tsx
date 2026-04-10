@@ -314,8 +314,8 @@ export default function Header() {
             : "border-b border-transparent bg-background"
         }`}
       >
-        <div className="container max-w-full px-4 h-16 relative flex items-center justify-center">
-          <div className="absolute left-4 flex items-center gap-3 shrink-0 z-20">
+        <div className="container max-w-full px-4 h-16 flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             {!isSharePage && !shareToken && (
               <button
                 id="header-sidebar-toggle"
@@ -353,19 +353,21 @@ export default function Header() {
           </div>
 
           <div
-            className="hidden sm:block w-full max-w-xl px-4 z-10 relative"
+            className="hidden sm:block flex-1 min-w-0 px-4"
             id="header-search-bar"
           >
-            <Suspense
-              fallback={
-                <div className="w-full h-10 bg-muted rounded-lg animate-pulse" />
-              }
-            >
-              <Search />
-            </Suspense>
+            <div className="w-full max-w-xl mx-auto min-w-0">
+              <Suspense
+                fallback={
+                  <div className="w-full h-10 bg-muted rounded-lg animate-pulse" />
+                }
+              >
+                <Search />
+              </Suspense>
+            </div>
           </div>
 
-          <div className="absolute right-4 flex items-center gap-2 z-20">
+          <div className="flex items-center gap-2 shrink-0">
             <div className="hidden sm:flex items-center gap-2">
               {shareToken ? (
                 <>

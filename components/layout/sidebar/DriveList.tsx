@@ -67,10 +67,7 @@ export default function DriveList({ drives, t }: DriveListProps) {
               >
                 <div className="flex items-center gap-3 overflow-hidden">
                   {navigatingId === drive.id ? (
-                    <Loader2
-                      size={14}
-                      className="animate-spin text-primary"
-                    />
+                    <Loader2 size={14} className="animate-spin text-primary" />
                   ) : (
                     <HardDrive
                       size={14}
