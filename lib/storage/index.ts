@@ -98,6 +98,77 @@ export async function getAnyFileDetails(
 }
 
 export async function getDownloadStream(fileId: string) {
-  if (fileId.startsWith("local-storage:")) {
+  const cleanId = decodeURIComponent(fileId);
+
+  if (cleanId.startsWith("local-storage:")) {
+    if (process.env.NEXT_PUBLIC_ENABLE_LOCAL_STORAGE !== "true") {
+      return null;
+    }
+
+    const { getLocalFilePath } = await import("./local");
+    const { getMimeType } = await import("./mime");
+    const { createReadStream } = await import("fs");
+    const { stat } = await import("fs/promises");
+    const path = await import("path");
+
+    const localPath = cleanId.replace("local-storage:", "");
+    try {
+      const absolutePath = await getLocalFilePath(localPath);
+      const fileStats = await stat(absolutePath);
+
+      if (fileStats.isDirectory()) {
+        throw new Error("Cannot download a directory");
+      }
+
+      const mimeType = getMimeType(absolutePath) || "application/octet-stream";
+      const filename = path.basename(absolutePath);
+
+      const stream = createReadStream(absolutePath);
+      const webStream = new ReadableStream({
+        start(controller) {
+          stream.on("data", (chunk) => controller.enqueue(chunk));
+          stream.on("end", () => controller.close());
+          stream.on("error", (err) => controller.error(err));
+        },
+        cancel() {
+          stream.destroy();
+        },
+      });
+
+      return {
+        stream: webStream,
+        size: fileStats.size,
+        mimeType,
+        filename,
+      };
+    } catch (error) {
+      console.error(
+        `[Storage] Error creating download stream for ${cleanId}:`,
+        error,
+      );
+      return null;
+    }
   }
+
+  return null;
+}
+
+export async function uploadFile(
+  parentId: string,
+  fileName: string,
+  buffer: Buffer,
+): Promise<ZeeFile | null> {
+  const cleanParentId = decodeURIComponent(parentId);
+
+  if (cleanParentId.startsWith("local-storage:")) {
+    if (process.env.NEXT_PUBLIC_ENABLE_LOCAL_STORAGE !== "true") {
+      throw new Error("Local storage is not enabled");
+    }
+    const { uploadLocalFile } = await import("./local");
+    return uploadLocalFile(cleanParentId, fileName, buffer);
+  }
+
+  throw new Error(
+    "Upload to this storage provider is not implemented via this method",
+  );
 }

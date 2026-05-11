@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/api-middleware", () => ({
-  createPublicRoute: vi.fn((_handler) => vi.fn()),
+  createPublicRoute: vi.fn(() => vi.fn()),
 }));
 
 vi.mock("@/lib/drive", () => ({

@@ -16,24 +16,7 @@ export function Verify2FAClient() {
   const searchParams = useSearchParams();
   const { update, status } = useSession();
 
-  let t;
-  try {
-    t = useTranslations("Auth");
-  } catch {
-    t = (key: string, options?: any) => {
-      const dict: Record<string, string> = {
-        verify2faTitle: "Verifikasi Dua Langkah",
-        verify2faDesc:
-          "Masukkan kode 6 digit dari aplikasi authenticator Anda.",
-        codeLabel: "Kode Verifikasi",
-        verifyButton: "Verifikasi",
-        verifying: "Memverifikasi...",
-        errorInvalid: "Kode tidak valid.",
-        backToLogin: "Kembali ke Login",
-      };
-      return options?.fallback || dict[key] || key;
-    };
-  }
+  const t = useTranslations("Auth");
 
   const callbackUrl = searchParams.get("callbackUrl") || "/";
 

@@ -343,7 +343,7 @@ const authConfig: NextAuthConfig = {
           if (token.twoFactorRequired) {
             token.sessionId = crypto.randomUUID();
           }
-        } catch (err) {
+        } catch {
           token.twoFactorRequired = false;
         }
       } else if (profile?.email && !token.email) {
@@ -389,7 +389,7 @@ const authConfig: NextAuthConfig = {
           if (token.twoFactorRequired) {
             token.sessionId = crypto.randomUUID();
           }
-        } catch (err) {
+        } catch {
           token.twoFactorRequired = false;
         }
       }

@@ -236,3 +236,43 @@ export async function deleteLocalFile(filePath: string): Promise<void> {
     await fs.unlink(absolutePath);
   }
 }
+
+export async function uploadLocalFile(
+  parentId: string,
+  fileName: string,
+  buffer: Buffer,
+): Promise<ZeeFile> {
+  await ensureLocalRoot();
+
+  const safeName = sanitizeLocalFileName(fileName);
+  const parentFolder = parentId.replace("local-storage:", "");
+
+  const targetDir = await getLocalFilePath(parentFolder);
+  const targetPath = path.join(targetDir, safeName);
+
+  await fs.mkdir(targetDir, { recursive: true });
+  await fs.writeFile(targetPath, buffer);
+
+  const stats = await fs.stat(targetPath);
+  const relativePath = path
+    .relative(LOCAL_ROOT, targetPath)
+    .replace(/\\/g, "/");
+  const mimeType = getMimeType(safeName) || "application/octet-stream";
+  const isImage = mimeType.startsWith("image/");
+
+  return {
+    id: `local-storage:${relativePath}`,
+    name: safeName,
+    mimeType,
+    size: String(stats.size),
+    modifiedTime: stats.mtime.toISOString(),
+    createdTime: stats.birthtime.toISOString(),
+    isFolder: false,
+    source: "local" as const,
+    hasThumbnail: isImage,
+    thumbnailLink: isImage
+      ? `/api/download?fileId=local-storage:${relativePath}`
+      : undefined,
+    path: relativePath,
+  };
+}
