@@ -6,6 +6,7 @@
     "node": ">=20 <21",
     "pnpm": ">=10 <11"
   },
+  "packageManager": "pnpm@10.33.2",
   "scripts": {
     "dev": "dotenv -- next dev --turbopack",
     "dev:webpack": "dotenv -- next dev",
