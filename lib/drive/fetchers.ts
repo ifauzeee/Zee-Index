@@ -17,7 +17,6 @@ import {
   MIME_TYPES,
 } from "@/lib/constants";
 import { logger } from "@/lib/logger";
-import { measure } from "@/lib/performance";
 import {
   MANUAL_DRIVES_KEY,
   parseManualDriveRecords,
@@ -172,7 +171,7 @@ export async function listFilesFromDrive(
       logger.warn({ err: e }, "Redis cache hit error in listFilesFromDrive");
     }
 
-    const accessToken = await measure("getAccessToken", () => getAccessToken());
+    const accessToken = await getAccessToken();
     const params = new URLSearchParams({
       q: `'${folderId}' in parents and trashed=false`,
       fields:
@@ -186,14 +185,12 @@ export async function listFilesFromDrive(
       params.append("pageToken", pageToken);
     }
 
-    const response = await measure("GoogleAPI:listFiles", () =>
-      fetchWithRetry(
-        `${GOOGLE_DRIVE_API_BASE_URL}/files?${params.toString()}`,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-          cache: "no-store",
-        },
-      ),
+    const response = await fetchWithRetry(
+      `${GOOGLE_DRIVE_API_BASE_URL}/files?${params.toString()}`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        cache: "no-store",
+      },
     );
 
     if (!response.ok) {
@@ -260,7 +257,7 @@ export async function getFileDetailsFromDrive(
       );
     }
 
-    const accessToken = await measure("getAccessToken", () => getAccessToken());
+    const accessToken = await getAccessToken();
     const driveUrl = `${GOOGLE_DRIVE_API_BASE_URL}/files/${fileId}`;
     const params = new URLSearchParams({
       fields:
@@ -268,15 +265,10 @@ export async function getFileDetailsFromDrive(
       supportsAllDrives: "true",
     });
 
-    const response = await measure(
-      "GoogleAPI:getFileDetails",
-      () =>
-        fetchWithRetry(`${driveUrl}?${params.toString()}`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-          cache: "no-store",
-        }),
-      { fileId },
-    );
+    const response = await fetchWithRetry(`${driveUrl}?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    });
 
     if (!response.ok) {
       return null;
