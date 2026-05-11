@@ -57,19 +57,19 @@ describe("app/api/admin/stats route", () => {
     mockFindMany.mockResolvedValue([
       {
         type: "DOWNLOAD",
-        timestamp: now - 60 * 60 * 1000,
+        timestamp: now - 1000, // 1 second ago
         itemName: "movie.mp4",
         userEmail: "admin@example.com",
       },
       {
         type: "DOWNLOAD",
-        timestamp: now - 2 * 60 * 60 * 1000,
+        timestamp: now - 2000, // 2 seconds ago
         itemName: "movie.mp4",
         userEmail: "admin@example.com",
       },
       {
         type: "UPLOAD",
-        timestamp: now - 3 * 60 * 60 * 1000,
+        timestamp: now - 3000, // 3 seconds ago
         itemName: "draft.docx",
         userEmail: "admin@example.com",
       },
