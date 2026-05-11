@@ -280,7 +280,23 @@ const authConfig: NextAuthConfig = {
     error: "/login",
   },
   callbacks: {
-    async jwt({ token, profile, user }) {
+    async jwt({ token, profile, user, trigger, session }) {
+      if (
+        trigger === "update" &&
+        session?.twoFactorVerified &&
+        token.sessionId
+      ) {
+        try {
+          const passed = await kv.get(`2fa_passed:${token.sessionId}`);
+          if (passed) {
+            token.twoFactorRequired = false;
+            await kv.del(`2fa_passed:${token.sessionId}`);
+          }
+        } catch (err) {
+          logger.error({ err }, "[Auth] Error verifying 2fa_passed flag");
+        }
+      }
+
       logger.debug(
         { hasUser: !!user, hasProfile: !!profile, email: token.email },
         "[Auth] JWT Callback Start",
@@ -319,7 +335,17 @@ const authConfig: NextAuthConfig = {
           );
         }
 
-        token.twoFactorRequired = false;
+        try {
+          const is2FAEnabled = await kv.get(
+            `2fa:enabled:${user.email.toLowerCase().trim()}`,
+          );
+          token.twoFactorRequired = !!is2FAEnabled;
+          if (token.twoFactorRequired) {
+            token.sessionId = crypto.randomUUID();
+          }
+        } catch (err) {
+          token.twoFactorRequired = false;
+        }
       } else if (profile?.email && !token.email) {
         token.email = profile.email;
 
@@ -355,7 +381,17 @@ const authConfig: NextAuthConfig = {
           );
         }
 
-        token.twoFactorRequired = false;
+        try {
+          const is2FAEnabled = await kv.get(
+            `2fa:enabled:${normalizedProfileEmail}`,
+          );
+          token.twoFactorRequired = !!is2FAEnabled;
+          if (token.twoFactorRequired) {
+            token.sessionId = crypto.randomUUID();
+          }
+        } catch (err) {
+          token.twoFactorRequired = false;
+        }
       }
       return token;
     },

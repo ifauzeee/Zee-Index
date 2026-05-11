@@ -132,6 +132,12 @@ export async function proxy(request: NextRequest) {
 
   const is2FAPage = pathnameWithoutLocale === "/verify-2fa";
   if (isAuthenticated && is2FARequired && !is2FAPage) {
+    if (isApi) {
+      return NextResponse.json(
+        { error: "2FA verification required" },
+        { status: 403 },
+      );
+    }
     const verifyUrl = new URL("/verify-2fa", request.url);
     verifyUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(verifyUrl);

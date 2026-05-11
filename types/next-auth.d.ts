@@ -7,6 +7,7 @@ declare module "next-auth" {
       role?: "ADMIN" | "USER" | "GUEST" | "EDITOR";
       isGuest?: boolean;
       twoFactorRequired?: boolean;
+      sessionId?: string;
     } & DefaultSession["user"];
   }
 
@@ -24,5 +25,6 @@ declare module "next-auth/jwt" {
     email?: string | null;
     isGuest?: boolean;
     twoFactorRequired?: boolean;
+    sessionId?: string;
   }
 }
