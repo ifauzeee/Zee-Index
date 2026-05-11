@@ -59,6 +59,7 @@ import SystemHealth from "@/components/admin/SystemHealth";
 import RealTimeOverview from "@/components/admin/RealTimeOverview";
 import StorageIntelligence from "@/components/admin/StorageIntelligence";
 import SecurityCenter from "@/components/admin/SecurityCenter";
+import UserPasswordManager from "@/components/admin/UserPasswordManager";
 import { useTranslations } from "next-intl";
 
 const scrollbarHideStyles = {
@@ -893,6 +894,10 @@ export default function AdminPage() {
                     )}
                   </div>
                 )}
+              </div>
+
+              <div className="p-4 sm:p-6 border-t bg-muted/5">
+                <UserPasswordManager />
               </div>
             </div>
           </TabsContent>

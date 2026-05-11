@@ -23,7 +23,7 @@ export default function ImageGallery({
   isOpen,
   onClose,
 }: ImageGalleryProps) {
-  const { shareToken, folderTokens, sharePolicy, user } = useAppStore();
+  const { shareToken, folderTokens, sharePolicy } = useAppStore();
 
   const slides = images.map((file) => {
     let src = `/api/download?fileId=${file.id}`;

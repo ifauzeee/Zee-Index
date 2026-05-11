@@ -34,7 +34,7 @@ export default function PDFViewer({ src }: PDFViewerProps) {
   const [rotate, setRotate] = useState(0);
   const [showThumbnails, setShowThumbnails] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { sharePolicy, user } = useAppStore();
+  const { sharePolicy } = useAppStore();
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
