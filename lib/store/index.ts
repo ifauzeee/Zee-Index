@@ -6,6 +6,8 @@ import { createAuthSlice } from "./slices/auth-slice";
 import { createFileSlice } from "./slices/file-slice";
 import { createAudioSlice } from "./slices/audio-slice";
 
+export * from "./types";
+
 export const useAppStore = create<AppState>()(
   persist(
     (...a) => ({
