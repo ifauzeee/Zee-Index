@@ -70,25 +70,6 @@ export default function ImageGallery({
           container: { backgroundColor: "rgba(0, 0, 0, 0.9)" },
         }}
       />
-      {isOpen && sharePolicy?.hasWatermark && (
-        <div className="fixed inset-0 pointer-events-none z-[9999] overflow-hidden flex flex-wrap justify-around items-center opacity-[0.25] mix-blend-difference select-none text-white">
-          {Array.from({ length: 15 }).map((_, i) => (
-            <div
-              key={i}
-              className="text-xl sm:text-3xl font-black -rotate-[30deg] p-6 sm:p-10 whitespace-nowrap drop-shadow-md"
-            >
-              {sharePolicy?.watermarkText ||
-                user?.email ||
-                user?.name ||
-                "Confidential View"}
-              <br />
-              <span className="text-sm sm:text-lg opacity-80">
-                {new Date().toLocaleDateString()}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
     </>
   );
 }

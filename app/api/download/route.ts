@@ -12,6 +12,7 @@ import {
   prepareGoogleDriveUrl,
   prepareResponseHeaders,
 } from "@/lib/services/download";
+import { applyWatermark } from "@/lib/watermark";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,29 @@ async function handleDownload(request: NextRequest) {
 
         const { stream: webStream, size, mimeType, filename } = downloadData;
 
+        let finalBody: BodyInit = webStream as unknown as BodyInit;
+        let finalSize = size;
+
+        if (
+          context.shareRecord?.hasWatermark &&
+          !range &&
+          (mimeType.startsWith("image/") || mimeType === "application/pdf")
+        ) {
+          const response = new Response(webStream);
+          const arrayBuffer = await response.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          const watermarked = await applyWatermark(
+            buffer,
+            mimeType,
+            context.shareRecord.watermarkText || "",
+          );
+
+          if (watermarked) {
+            finalBody = watermarked as unknown as BodyInit;
+            finalSize = watermarked.length;
+          }
+        }
+
         const responseHeaders = prepareResponseHeaders(
           mimeType,
           filename,
@@ -51,10 +75,10 @@ async function handleDownload(request: NextRequest) {
           false,
           request.headers.get("origin"),
         );
-        responseHeaders.set("Content-Length", size.toString());
+        responseHeaders.set("Content-Length", finalSize.toString());
         responseHeaders.set("Accept-Ranges", "bytes");
 
-        return new Response(webStream, {
+        return new Response(finalBody, {
           status: 200,
           headers: responseHeaders,
         });
@@ -207,7 +231,30 @@ async function handleDownload(request: NextRequest) {
       }
     }
 
-    return new Response(googleResponse.body, {
+    let finalBody: BodyInit | null = googleResponse.body;
+
+    if (
+      context.shareRecord?.hasWatermark &&
+      !range &&
+      (mimeType.startsWith("image/") || mimeType === "application/pdf")
+    ) {
+      const arrayBuffer = await googleResponse.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const watermarked = await applyWatermark(
+        buffer,
+        mimeType,
+        context.shareRecord.watermarkText || "",
+      );
+
+      if (watermarked) {
+        finalBody = watermarked as unknown as BodyInit;
+        responseHeaders.set("Content-Length", watermarked.length.toString());
+      } else {
+        finalBody = buffer as unknown as BodyInit;
+      }
+    }
+
+    return new Response(finalBody, {
       status: googleResponse.status,
       headers: responseHeaders,
     });

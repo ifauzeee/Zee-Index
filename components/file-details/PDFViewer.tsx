@@ -184,26 +184,6 @@ export default function PDFViewer({ src }: PDFViewerProps) {
           ref={containerRef}
           className="flex-1 overflow-auto bg-zinc-950 flex justify-center p-8 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent relative"
         >
-          {sharePolicy?.hasWatermark && (
-            <div className="absolute inset-0 pointer-events-none z-[90] overflow-hidden flex flex-wrap justify-around items-center opacity-[0.25] mix-blend-overlay w-full h-full select-none">
-              {Array.from({ length: 15 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="text-zinc-400 text-xl sm:text-3xl font-black -rotate-[30deg] p-6 sm:p-10 whitespace-nowrap shadow-black drop-shadow-md mix-blend-difference"
-                >
-                  {sharePolicy?.watermarkText ||
-                    user?.email ||
-                    user?.name ||
-                    "Confidential View"}
-                  <br />
-                  <span className="text-sm sm:text-lg opacity-80">
-                    {new Date().toLocaleDateString()}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-
           <Document
             file={src}
             onLoadSuccess={onDocumentLoadSuccess}
