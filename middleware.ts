@@ -93,6 +93,7 @@ export default async function middleware(request: NextRequest) {
   }
 
   if (isConfigured && pathnameWithoutLocale.startsWith("/setup")) {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   if (
