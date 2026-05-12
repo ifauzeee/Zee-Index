@@ -13,6 +13,18 @@ import type { ActivityDetails } from "@/lib/activityLogger";
 
 import type { NextAuthConfig } from "next-auth";
 
+async function setupTwoFactorForToken(email: string, token: any) {
+  try {
+    const is2FAEnabled = await kv.get(`2fa:enabled:${email}`);
+    token.twoFactorRequired = !!is2FAEnabled;
+    if (token.twoFactorRequired) {
+      token.sessionId = crypto.randomUUID();
+    }
+  } catch {
+    token.twoFactorRequired = false;
+  }
+}
+
 function constantTimeEqual(a: string, b: string): boolean {
   const encoder = new TextEncoder();
   const encodedA = encoder.encode(a);
@@ -301,11 +313,11 @@ const authConfig: NextAuthConfig = {
         { hasUser: !!user, hasProfile: !!profile, email: token.email },
         "[Auth] JWT Callback Start",
       );
-      if (user && (user as any).isGuest) {
+      if (user && user.isGuest) {
         token.id = `guest_${Date.now()}`;
         token.name = user.name;
         token.email = user.email;
-        token.role = (user as any).role;
+        token.role = user.role;
         token.isGuest = true;
       } else if (user && user.email) {
         token.id = user.id;
@@ -335,17 +347,7 @@ const authConfig: NextAuthConfig = {
           );
         }
 
-        try {
-          const is2FAEnabled = await kv.get(
-            `2fa:enabled:${user.email.toLowerCase().trim()}`,
-          );
-          token.twoFactorRequired = !!is2FAEnabled;
-          if (token.twoFactorRequired) {
-            token.sessionId = crypto.randomUUID();
-          }
-        } catch {
-          token.twoFactorRequired = false;
-        }
+        await setupTwoFactorForToken(user.email.toLowerCase().trim(), token);
       } else if (profile?.email && !token.email) {
         token.email = profile.email;
 
@@ -381,23 +383,13 @@ const authConfig: NextAuthConfig = {
           );
         }
 
-        try {
-          const is2FAEnabled = await kv.get(
-            `2fa:enabled:${normalizedProfileEmail}`,
-          );
-          token.twoFactorRequired = !!is2FAEnabled;
-          if (token.twoFactorRequired) {
-            token.sessionId = crypto.randomUUID();
-          }
-        } catch {
-          token.twoFactorRequired = false;
-        }
+        await setupTwoFactorForToken(normalizedProfileEmail, token);
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.role = (token.role as any) || "USER";
+        session.user.role = token.role || "USER";
         session.user.email = token.email as string;
         session.user.isGuest = !!token.isGuest;
         if (token.isGuest) {
