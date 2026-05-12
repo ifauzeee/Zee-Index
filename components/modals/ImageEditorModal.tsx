@@ -104,7 +104,7 @@ export default function ImageEditorModal({
       if (!croppedAreaPixels) throw new Error(t("error"));
 
       const blob = await getCroppedImg(
-        `/api/download?fileId=${file.id}`,
+        `/api/proxy-image?fileId=${file.id}`,
         croppedAreaPixels,
         rotation,
       );
@@ -156,7 +156,7 @@ export default function ImageEditorModal({
 
       <div className="relative flex-1 bg-zinc-900">
         <Cropper
-          image={`/api/download?fileId=${file.id}`}
+          image={`/api/proxy-image?fileId=${file.id}`}
           crop={crop}
           zoom={zoom}
           rotation={rotation}
