@@ -42,6 +42,7 @@ import {
   validateShareToken,
   validateFolderToken,
   handleFindPath,
+  validateDownloadTokenSignature,
 } from "@/lib/middleware-helpers";
 
 describe("lib/middleware-helpers", () => {
@@ -196,6 +197,100 @@ describe("lib/middleware-helpers", () => {
       expect(response.headers.get("location")).toBe(
         "http://localhost:3000/folder/parent-1/file/file-1/my-file.mp4?view=true",
       );
+    });
+  });
+
+  describe("validateDownloadTokenSignature", () => {
+    it("returns null when no tokens are provided", async () => {
+      const request = new NextRequest(
+        "http://localhost:3000/api/download?fileId=file-1",
+      );
+      const response = await validateDownloadTokenSignature(request);
+      expect(response).toBeNull();
+    });
+
+    it("returns null when a valid share_token is provided", async () => {
+      mockJwtVerify.mockResolvedValueOnce({ payload: { jti: "share-1" } });
+      const request = new NextRequest(
+        "http://localhost:3000/api/download?fileId=file-1&share_token=valid-token",
+      );
+      const response = await validateDownloadTokenSignature(request);
+      expect(response).toBeNull();
+      expect(mockJwtVerify).toHaveBeenCalledWith(
+        "valid-token",
+        expect.anything(),
+      );
+    });
+
+    it("returns 401 when an invalid share_token is provided", async () => {
+      mockJwtVerify.mockRejectedValueOnce(new Error("invalid signature"));
+      const request = new NextRequest(
+        "http://localhost:3000/api/download?fileId=file-1&share_token=invalid-token",
+      );
+      const response = await validateDownloadTokenSignature(request);
+      expect(response).not.toBeNull();
+      expect(response!.status).toBe(401);
+      await expect(response!.json()).resolves.toEqual({
+        error: "Invalid share token signature",
+      });
+    });
+
+    it("returns null when a valid access_token query param is provided", async () => {
+      mockJwtVerify.mockResolvedValueOnce({
+        payload: { folderId: "folder-1" },
+      });
+      const request = new NextRequest(
+        "http://localhost:3000/api/download?fileId=file-1&access_token=valid-token",
+      );
+      const response = await validateDownloadTokenSignature(request);
+      expect(response).toBeNull();
+    });
+
+    it("returns 401 when an invalid access_token query param is provided", async () => {
+      mockJwtVerify.mockRejectedValueOnce(new Error("invalid signature"));
+      const request = new NextRequest(
+        "http://localhost:3000/api/download?fileId=file-1&access_token=invalid-token",
+      );
+      const response = await validateDownloadTokenSignature(request);
+      expect(response).not.toBeNull();
+      expect(response!.status).toBe(401);
+      await expect(response!.json()).resolves.toEqual({
+        error: "Invalid access token signature",
+      });
+    });
+
+    it("returns null when a valid Authorization bearer token is provided", async () => {
+      mockJwtVerify.mockResolvedValueOnce({
+        payload: { folderId: "folder-1" },
+      });
+      const request = new NextRequest(
+        "http://localhost:3000/api/download?fileId=file-1",
+        {
+          headers: {
+            authorization: "Bearer valid-token",
+          },
+        },
+      );
+      const response = await validateDownloadTokenSignature(request);
+      expect(response).toBeNull();
+    });
+
+    it("returns 401 when an invalid Authorization bearer token is provided", async () => {
+      mockJwtVerify.mockRejectedValueOnce(new Error("invalid signature"));
+      const request = new NextRequest(
+        "http://localhost:3000/api/download?fileId=file-1",
+        {
+          headers: {
+            authorization: "Bearer invalid-token",
+          },
+        },
+      );
+      const response = await validateDownloadTokenSignature(request);
+      expect(response).not.toBeNull();
+      expect(response!.status).toBe(401);
+      await expect(response!.json()).resolves.toEqual({
+        error: "Invalid access token signature",
+      });
     });
   });
 });

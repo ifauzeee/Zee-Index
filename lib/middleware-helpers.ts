@@ -5,6 +5,56 @@ import { getRootFolderId } from "@/lib/config";
 
 type IntlMiddleware = (request: NextRequest) => Response | Promise<Response>;
 
+export async function validateDownloadTokenSignature(
+  request: NextRequest,
+): Promise<Response | null> {
+  const { searchParams } = request.nextUrl;
+  const shareToken = searchParams.get("share_token");
+  const accessTokenParam = searchParams.get("access_token");
+  const authHeader = request.headers.get("Authorization");
+  const token = authHeader?.split(" ")[1] || accessTokenParam;
+
+  const shareSecretKey = process.env.SHARE_SECRET_KEY;
+
+  if (shareToken) {
+    if (!shareSecretKey || shareSecretKey.length < 32) {
+      return NextResponse.json(
+        { error: "Invalid share token signature" },
+        { status: 401 },
+      );
+    }
+    try {
+      const secret = new TextEncoder().encode(shareSecretKey);
+      await jwtVerify(shareToken, secret);
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid share token signature" },
+        { status: 401 },
+      );
+    }
+  }
+
+  if (token) {
+    if (!shareSecretKey || shareSecretKey.length < 32) {
+      return NextResponse.json(
+        { error: "Invalid access token signature" },
+        { status: 401 },
+      );
+    }
+    try {
+      const secret = new TextEncoder().encode(shareSecretKey);
+      await jwtVerify(token, secret);
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid access token signature" },
+        { status: 401 },
+      );
+    }
+  }
+
+  return null;
+}
+
 export async function validateShareToken(
   request: NextRequest,
   shareToken: string,

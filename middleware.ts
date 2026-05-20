@@ -13,6 +13,7 @@ import {
   validateShareToken,
   validateFolderToken,
   handleFindPath,
+  validateDownloadTokenSignature,
 } from "@/lib/middleware-helpers";
 
 const intlMiddleware = createMiddleware({
@@ -53,9 +54,16 @@ export default async function middleware(request: NextRequest) {
     pathname.startsWith("/static") ||
     pathname === "/sw.js" ||
     pathname === "/manifest.webmanifest" ||
-    pathname.startsWith("/api/health") ||
-    pathname.startsWith("/api/download")
+    pathname.startsWith("/api/health")
   ) {
+    return NextResponse.next();
+  }
+
+  if (pathname.startsWith("/api/download")) {
+    const signatureError = await validateDownloadTokenSignature(request);
+    if (signatureError) {
+      return signatureError;
+    }
     return NextResponse.next();
   }
 
