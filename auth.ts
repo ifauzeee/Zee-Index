@@ -407,7 +407,7 @@ const authConfig: NextAuthConfig = {
       name: `authjs.session-token`,
       options: {
         httpOnly: true,
-        sameSite: "lax",
+        sameSite: "strict",
         path: "/",
         secure: process.env.NEXTAUTH_URL?.startsWith("https://") ?? false,
       },

@@ -83,10 +83,26 @@ export function validateOnStartup(): Env {
     warnings.push(
       "Konfigurasi Email (SMTP) tidak ditemukan. Fitur email akan dinonaktifkan.",
     );
-  if (process.env.NODE_ENV === "production" && !process.env.ADMIN_PASSWORD_HASH)
-    warnings.push(
-      "ADMIN_PASSWORD_HASH belum diset. Login admin berbasis plaintext dinonaktifkan di production.",
+  if (
+    process.env.NODE_ENV === "production" &&
+    !process.env.ADMIN_PASSWORD_HASH
+  ) {
+    console.error(
+      "\n❌ PROYEK GAGAL MENYALA: ADMIN_PASSWORD_HASH wajib diset di environment produksi demi keamanan.",
     );
+    console.error(
+      "Silakan generate hash password admin dan tambahkan ke file .env Anda.\n",
+    );
+    process.exit(1);
+  }
+  if (
+    process.env.NODE_ENV !== "production" &&
+    !process.env.ADMIN_PASSWORD_HASH
+  ) {
+    warnings.push(
+      "ADMIN_PASSWORD_HASH belum diset di development. Login admin akan menggunakan fallback ADMIN_PASSWORD plaintext.",
+    );
+  }
   if (process.env.NODE_ENV === "production" && !process.env.CRON_SECRET)
     warnings.push(
       "CRON_SECRET belum diset. Endpoint cron akan menolak semua request.",
