@@ -172,27 +172,7 @@ export async function validateShareToken(
   const { searchParams } = new URL(request.url);
   const shareToken = searchParams.get("share_token");
   if (!shareToken) return false;
-
-  try {
-    const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
-    const { payload } = await jwtVerify(shareToken, secret);
-
-    if (typeof payload.jti !== "string") {
-      return false;
-    }
-    const isBlocked = await kv.get(`${REDIS_KEYS.SHARE_BLOCKED}${payload.jti}`);
-    if (isBlocked) {
-      return false;
-    }
-
-    if (payload.loginRequired) {
-      const session = await auth();
-      return !!session;
-    }
-    return true;
-  } catch {
-    return false;
-  }
+  return verifyShareTokenString(shareToken);
 }
 
 export async function verifyShareTokenString(token: string): Promise<boolean> {
