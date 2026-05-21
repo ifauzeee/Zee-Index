@@ -184,7 +184,11 @@ export const GET = createPublicRoute(
         });
       });
 
-      return NextResponse.json(responseData);
+      return NextResponse.json(responseData, {
+        headers: {
+          "Cache-Control": "private, max-age=60, stale-while-revalidate=600",
+        },
+      });
     } catch (error: unknown) {
       const requestError =
         error instanceof RequestError

@@ -143,9 +143,15 @@ export const GET = createPublicRoute(
 
     try {
       if (folderId === "virtual-root") {
-        return NextResponse.json([
-          { id: "virtual-root", name: locale === "id" ? "Beranda" : "Home" },
-        ]);
+        return NextResponse.json(
+          [{ id: "virtual-root", name: locale === "id" ? "Beranda" : "Home" }],
+          {
+            headers: {
+              "Cache-Control":
+                "private, max-age=60, stale-while-revalidate=600",
+            },
+          },
+        );
       }
 
       if (folderId.startsWith("local-storage:")) {
@@ -164,13 +170,21 @@ export const GET = createPublicRoute(
           pathNodes.push({ id: `local-storage:${currentPath}`, name: segment });
         });
 
-        return NextResponse.json(pathNodes);
+        return NextResponse.json(pathNodes, {
+          headers: {
+            "Cache-Control": "private, max-age=60, stale-while-revalidate=600",
+          },
+        });
       }
 
       const cachedPath: { id: string; name: string }[] | null =
         await kv.get(cacheKey);
       if (cachedPath) {
-        return NextResponse.json(cachedPath);
+        return NextResponse.json(cachedPath, {
+          headers: {
+            "Cache-Control": "private, max-age=60, stale-while-revalidate=600",
+          },
+        });
       }
     } catch (e) {
       logger.error({ err: e }, "Cache fetch error");
@@ -220,7 +234,12 @@ export const GET = createPublicRoute(
             const customName = shortcutMap.get(folderId) || data.name;
             const result = [{ id: data.id, name: customName }];
             await kv.set(cacheKey, result, { ex: 3600 });
-            return NextResponse.json(result);
+            return NextResponse.json(result, {
+              headers: {
+                "Cache-Control":
+                  "private, max-age=60, stale-while-revalidate=600",
+              },
+            });
           }
         } catch (err) {
           logger.error({ err: err }, "Error fetching shortcut metadata");
@@ -229,7 +248,11 @@ export const GET = createPublicRoute(
         const result = [
           { id: folderId, name: shortcutMap.get(folderId) || driveFallback },
         ];
-        return NextResponse.json(result);
+        return NextResponse.json(result, {
+          headers: {
+            "Cache-Control": "private, max-age=60, stale-while-revalidate=600",
+          },
+        });
       }
 
       const path: DrivePathNode[] = [];
@@ -277,7 +300,11 @@ export const GET = createPublicRoute(
       }
 
       await kv.set(cacheKey, path, { ex: 3600 });
-      return NextResponse.json(path);
+      return NextResponse.json(path, {
+        headers: {
+          "Cache-Control": "private, max-age=60, stale-while-revalidate=600",
+        },
+      });
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Internal error.";

@@ -52,7 +52,11 @@ export const GET = createPublicRoute(
 
     try {
       const details = await getAnyFileDetails(fileId);
-      return NextResponse.json(details);
+      return NextResponse.json(details, {
+        headers: {
+          "Cache-Control": "private, max-age=60, stale-while-revalidate=600",
+        },
+      });
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error

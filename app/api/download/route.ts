@@ -149,7 +149,11 @@ async function handleDownload(request: NextRequest) {
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const downloadTimeout = parseInt(
+      process.env.DOWNLOAD_TIMEOUT_MS || "60000",
+      10,
+    );
+    const timeoutId = setTimeout(() => controller.abort(), downloadTimeout);
 
     const googleResponse = await fetch(url, {
       headers: googleRequestHeaders,

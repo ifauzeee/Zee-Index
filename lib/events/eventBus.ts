@@ -6,29 +6,14 @@ import {
   type AppEventPayloadByType,
   type EventType,
 } from "@/lib/telemetry";
+import Redis from "ioredis";
 
 const REDIS_CHANNEL = "zee-index:events";
 
-interface RedisSubscriber {
-  subscribe: (channel: string, callback: (error: Error | null) => void) => void;
-  on: (
-    event: "message",
-    callback: (channel: string, message: string) => void,
-  ) => void;
-}
-
-interface RedisPublisher {
-  publish: (channel: string, message: string) => Promise<number>;
-}
-
-interface RedisConstructor {
-  new (url: string): RedisSubscriber & RedisPublisher;
-}
-
 class EventBus {
   private listeners = new Map<string, Set<(event: AppEvent) => void>>();
-  private subscriber: RedisSubscriber | null = null;
-  private publisher: RedisPublisher | null = null;
+  private subscriber: Redis | null = null;
+  private publisher: Redis | null = null;
   private isConnected = false;
   private globalWithEdgeRuntime = globalThis as typeof globalThis & {
     EdgeRuntime?: unknown;
@@ -38,20 +23,19 @@ class EventBus {
     this.globalWithEdgeRuntime.EdgeRuntime !== undefined;
 
   constructor() {
-    this.initRedis();
+    // Connections will be lazily initialized when publishing or subscribing
   }
 
-  private initRedis() {
+  private ensureSubscriber() {
     if (this.isEdge || typeof window !== "undefined") return;
+    if (this.subscriber) return;
 
     const redisUrl = process.env.REDIS_URL;
     if (redisUrl) {
       try {
-        const IORedis = require("ioredis") as RedisConstructor;
-        this.subscriber = new IORedis(redisUrl);
-        this.publisher = new IORedis(redisUrl);
+        this.subscriber = new Redis(redisUrl);
 
-        this.subscriber.subscribe(REDIS_CHANNEL, (err: Error | null) => {
+        this.subscriber.subscribe(REDIS_CHANNEL, (err) => {
           if (err) {
             logger.error(
               { err },
@@ -78,12 +62,33 @@ class EventBus {
           }
         });
       } catch (err) {
-        logger.error({ err }, "[EventBus] Failed to initialize Redis Pub/Sub");
+        logger.error(
+          { err },
+          "[EventBus] Failed to initialize Redis subscriber",
+        );
+      }
+    }
+  }
+
+  private ensurePublisher() {
+    if (this.isEdge || typeof window !== "undefined") return;
+    if (this.publisher) return;
+
+    const redisUrl = process.env.REDIS_URL;
+    if (redisUrl) {
+      try {
+        this.publisher = new Redis(redisUrl);
+      } catch (err) {
+        logger.error(
+          { err },
+          "[EventBus] Failed to initialize Redis publisher",
+        );
       }
     }
   }
 
   private async publish(fullEvent: AppEvent): Promise<void> {
+    this.ensurePublisher();
     if (this.publisher && this.isConnected) {
       await this.publisher.publish(REDIS_CHANNEL, JSON.stringify(fullEvent));
     } else {
@@ -128,6 +133,8 @@ class EventBus {
       this.listeners.set(listenerId, new Set());
     }
     this.listeners.get(listenerId)!.add(callback);
+
+    this.ensureSubscriber();
 
     return () => {
       this.unsubscribe(listenerId, callback);
