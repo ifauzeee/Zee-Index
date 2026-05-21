@@ -50,9 +50,36 @@ export function validateOnStartup(): Env {
   if (
     process.env.NODE_ENV === "test" ||
     process.env.SKIP_ENV_VALIDATION === "1" ||
-    process.env.SKIP_ENV_VALIDATION === "true"
+    process.env.SKIP_ENV_VALIDATION === "true" ||
+    process.env.NEXT_PHASE === "phase-production-build"
   ) {
-    return process.env as unknown as Env;
+    // Provide fallback defaults to satisfy zod schemas during build time
+    return {
+      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "",
+      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || "",
+      NEXT_PUBLIC_ROOT_FOLDER_ID: process.env.NEXT_PUBLIC_ROOT_FOLDER_ID || "",
+      NEXT_PUBLIC_ROOT_FOLDER_NAME:
+        process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Home",
+      NEXTAUTH_SECRET:
+        process.env.NEXTAUTH_SECRET || "12345678901234567890123456789012",
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL || "http://localhost:3000",
+      SHARE_SECRET_KEY:
+        process.env.SHARE_SECRET_KEY || "12345678901234567890123456789012",
+      ADMIN_EMAILS: process.env.ADMIN_EMAILS || "admin@example.com",
+      ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || "password",
+      ADMIN_PASSWORD_HASH: process.env.ADMIN_PASSWORD_HASH || "",
+      DATABASE_URL: process.env.DATABASE_URL || "postgresql://",
+      REDIS_URL: process.env.REDIS_URL || "",
+      GOOGLE_REFRESH_TOKEN: process.env.GOOGLE_REFRESH_TOKEN || "",
+      SMTP_HOST: process.env.SMTP_HOST || "",
+      SMTP_PORT: process.env.SMTP_PORT || "",
+      SMTP_USER: process.env.SMTP_USER || "",
+      SMTP_PASS: process.env.SMTP_PASS || "",
+      EMAIL_FROM: process.env.EMAIL_FROM || "",
+      STORAGE_PROVIDER: process.env.STORAGE_PROVIDER || "google-drive",
+      TMDB_API_KEY: process.env.TMDB_API_KEY || "",
+      ANALYZE: process.env.ANALYZE || "",
+    } as Env;
   }
 
   const result = envSchema.safeParse(process.env);
