@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createPublicRoute } from "@/lib/api-middleware";
 import { trackPageView } from "@/lib/analyticsTracker";
@@ -31,7 +32,7 @@ export const POST = createPublicRoute(
 
       return NextResponse.json({ ok: true });
     } catch (error) {
-      console.error("Failed to track page view:", error);
+      logger.error({ err: error }, "Failed to track page view");
       return NextResponse.json({ ok: false }, { status: 500 });
     }
   },

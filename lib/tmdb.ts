@@ -1,6 +1,7 @@
 import { config } from "./env";
 import { kv } from "./kv";
 import { memoryCache } from "./memory-cache";
+import { logger } from "./logger";
 
 const TMDB_API_KEY = config.tmdbApiKey;
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
@@ -86,7 +87,7 @@ async function fetchTMDB(
     url.searchParams.append(key, value);
   });
 
-  console.log(
+  logger.debug(
     `[TMDB] Fetching: ${endpoint} with params ${JSON.stringify(params)}`,
   );
 
@@ -108,7 +109,7 @@ export async function searchTMDB(
   year?: string,
 ): Promise<TMDBMetadata | null> {
   if (!TMDB_API_KEY) {
-    console.warn("[TMDB] TMDB_API_KEY is not set");
+    logger.warn("[TMDB] TMDB_API_KEY is not set");
     return null;
   }
 
@@ -124,7 +125,7 @@ export async function searchTMDB(
       return kvCached;
     }
   } catch (err) {
-    console.debug("[TMDB] KV Error:", err);
+    logger.debug({ err }, "[TMDB] KV Error");
   }
 
   try {
@@ -140,7 +141,7 @@ export async function searchTMDB(
     )) as TMDBSearchResponse;
 
     if (!data.results || data.results.length === 0) {
-      console.log(`[TMDB] No results for query: ${query}`);
+      logger.debug(`[TMDB] No results for query: ${query}`);
       return null;
     }
 
@@ -149,7 +150,7 @@ export async function searchTMDB(
     );
 
     if (!result) {
-      console.log(`[TMDB] No movie/tv results for query: ${query}`);
+      logger.debug(`[TMDB] No movie/tv results for query: ${query}`);
       return null;
     }
 
@@ -187,14 +188,14 @@ export async function searchTMDB(
       })),
     };
 
-    console.log(`[TMDB] Success fetching metadata for: ${metadata.title}`);
+    logger.debug(`[TMDB] Success fetching metadata for: ${metadata.title}`);
 
     memoryCache.set(cacheKey, metadata, 3600);
     await kv.set(cacheKey, metadata, { ex: 60 * 60 * 24 * 7 });
 
     return metadata;
   } catch (error) {
-    console.error("[TMDB] Error fetching metadata:", error);
+    logger.error({ err: error, query }, "[TMDB] Error fetching metadata");
     return null;
   }
 }

@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createPublicRoute } from "@/lib/api-middleware";
 import { listAllFiles } from "@/lib/storage";
@@ -93,7 +94,7 @@ export const GET = createPublicRoute(
                 }
               }
             } catch (e) {
-              console.error("[Files API] Token verification failed:", e);
+              logger.error({ err: e }, "[Files API] Token verification failed");
             }
           }
 
@@ -193,7 +194,7 @@ export const GET = createPublicRoute(
             });
 
       if (!requestError.isProtected) {
-        console.error(error);
+        logger.error({ err: error });
       }
 
       return NextResponse.json(

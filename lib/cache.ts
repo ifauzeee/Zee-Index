@@ -1,5 +1,6 @@
 import { kv } from "@/lib/kv";
 import { memoryCache } from "@/lib/memory-cache";
+import { logger } from "@/lib/logger";
 
 export async function invalidateFolderCache(folderId: string) {
   try {
@@ -27,11 +28,11 @@ export async function invalidateFolderCache(folderId: string) {
     }
     memoryCache.delete(`auth:protected:${folderId}`);
 
-    console.log(`[Cache] Full invalidation for folder ${folderId}`);
+    logger.debug(`[Cache] Full invalidation for folder ${folderId}`);
   } catch (error) {
-    console.error(
-      `Gagal melakukan invalidasi cache untuk folder ${folderId}:`,
-      error,
+    logger.error(
+      { err: error, folderId },
+      `Gagal melakukan invalidasi cache untuk folder ${folderId}`,
     );
   }
 }

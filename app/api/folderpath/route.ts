@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createPublicRoute } from "@/lib/api-middleware";
 import { getAccessToken } from "@/lib/drive";
@@ -172,7 +173,7 @@ export const GET = createPublicRoute(
         return NextResponse.json(cachedPath);
       }
     } catch (e) {
-      console.error("Cache fetch error", e);
+      logger.error({ err: e }, "Cache fetch error");
     }
 
     try {
@@ -222,7 +223,7 @@ export const GET = createPublicRoute(
             return NextResponse.json(result);
           }
         } catch (err) {
-          console.error("Error fetching shortcut metadata", err);
+          logger.error({ err: err }, "Error fetching shortcut metadata");
         }
 
         const result = [

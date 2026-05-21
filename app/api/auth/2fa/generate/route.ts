@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -24,7 +25,7 @@ export const POST = createUserRoute(
 
       return NextResponse.json({ secret, qrCodeDataURL });
     } catch (error) {
-      console.error("2FA Generate Error:", error);
+      logger.error({ err: error }, "2FA Generate Error");
       return NextResponse.json(
         { error: "Gagal membuat kode 2FA." },
         { status: 500 },

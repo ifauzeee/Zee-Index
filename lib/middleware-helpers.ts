@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { checkAuth, handleAuthRedirect } from "@/lib/auth-check";
 import { getRootFolderId } from "@/lib/config";
+import { logger } from "@/lib/logger";
 
 type IntlMiddleware = (request: NextRequest) => Response | Promise<Response>;
 
@@ -118,7 +119,7 @@ export async function validateFolderToken(
       return response;
     }
   } catch (error) {
-    console.error("Folder token validation failed:", error);
+    logger.error({ err: error }, "Folder token validation failed");
   }
   return null;
 }
@@ -173,7 +174,7 @@ export async function handleFindPath(request: NextRequest) {
     }
     return NextResponse.redirect(destinationUrl);
   } catch (error) {
-    console.error("Middleware findpath error:", error);
+    logger.error({ err: error }, "Middleware findpath error");
     return NextResponse.redirect(new URL("/", request.url));
   }
 }

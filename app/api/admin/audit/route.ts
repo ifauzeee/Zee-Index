@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { getActivityLogs } from "@/lib/activityLogger";
@@ -12,7 +13,7 @@ export const GET = createAdminRoute(async () => {
     const logs = await getActivityLogs(100);
     return NextResponse.json(logs);
   } catch (error) {
-    console.error("[Audit API] Error:", error);
+    logger.error({ err: error }, "[Audit API] Error");
     return NextResponse.json(
       { error: "Failed to fetch logs" },
       { status: 500 },

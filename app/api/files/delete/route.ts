@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -94,7 +95,7 @@ export const POST = createAdminRoute(
         status: "failure",
         error: errorMessage,
       });
-      console.error("Delete API Error:", errorMessage);
+      logger.error({ err: errorMessage }, "Delete API Error");
       return NextResponse.json(
         { error: "Internal Server Error.", details: errorMessage },
         { status: 500 },

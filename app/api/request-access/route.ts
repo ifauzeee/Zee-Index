@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -76,7 +77,7 @@ export const POST = createUserRoute(
         message: "Permintaan akses dikirim ke Admin.",
       });
     } catch (error: unknown) {
-      console.error("Request Access Error:", error);
+      logger.error({ err: error }, "Request Access Error");
       return NextResponse.json(
         { error: "Gagal memproses permintaan." },
         { status: 500 },

@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { checkGoogleDriveHealth } from "@/lib/services/health-service";
 import { createPublicRoute } from "@/lib/api-middleware";
@@ -8,18 +9,18 @@ export const GET = createPublicRoute(
   async () => {
     try {
       const driveHealth = await checkGoogleDriveHealth();
-      
+
       return NextResponse.json({
         status: driveHealth.status,
         error: driveHealth.error,
       });
     } catch (error) {
-      console.error("[Auth Status API] Error:", error);
+      logger.error({ err: error }, "[Auth Status API] Error");
       return NextResponse.json(
         { status: "unhealthy", error: "Gagal memeriksa status autentikasi." },
-        { status: 500 }
+        { status: 500 },
       );
     }
   },
-  { rateLimit: false }
+  { rateLimit: false },
 );

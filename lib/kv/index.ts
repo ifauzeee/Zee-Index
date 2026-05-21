@@ -32,9 +32,9 @@ function createKVClient(): KVClient {
     try {
       return new RedisKV(redisUrl);
     } catch (err) {
-      console.error(
-        "[KV] Failed to initialize Redis, falling back to in-memory:",
-        err,
+      logger.error(
+        { err },
+        "[KV] Failed to initialize Redis, falling back to in-memory",
       );
       return new InMemoryKV();
     }

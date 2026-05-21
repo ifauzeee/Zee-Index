@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -67,7 +68,7 @@ export const POST = createAdminRoute(
         error instanceof Error
           ? error.message
           : "Terjadi kesalahan tidak dikenal.";
-      console.error("Copy API Error:", errorMessage);
+      logger.error({ err: errorMessage }, "Copy API Error");
       return NextResponse.json(
         { error: "Internal Server Error.", details: errorMessage },
         { status: 500 },

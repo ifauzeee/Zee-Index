@@ -1,5 +1,6 @@
 import { kv } from "@/lib/kv";
 import { randomUUID } from "crypto";
+import { logger } from "@/lib/logger";
 import {
   deviceStatsPayloadSchema,
   pageViewEventSchema,
@@ -211,7 +212,7 @@ export async function trackPageView(params: {
       publishRealtime: false,
     });
   } catch (error) {
-    console.error("[Analytics] Failed to track page view:", error);
+    logger.error({ err: error }, "[Analytics] Failed to track page view");
   }
 }
 
@@ -237,7 +238,7 @@ export async function trackBandwidth(bytes: number): Promise<void> {
       publishRealtime: false,
     });
   } catch (error) {
-    console.error("[Analytics] Failed to track bandwidth:", error);
+    logger.error({ err: error }, "[Analytics] Failed to track bandwidth");
   }
 }
 

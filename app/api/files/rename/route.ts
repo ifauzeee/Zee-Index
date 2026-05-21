@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -70,7 +71,7 @@ export const POST = createEditorRoute(
         error instanceof Error
           ? error.message
           : "Terjadi kesalahan tidak dikenal.";
-      console.error("Rename API Error:", errorMessage);
+      logger.error({ err: errorMessage }, "Rename API Error");
       return NextResponse.json(
         { error: "Internal Server Error.", details: errorMessage },
         { status: 500 },

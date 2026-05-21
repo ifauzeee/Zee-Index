@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createUserRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
@@ -12,7 +13,7 @@ export const GET = createUserRoute(
 
       return NextResponse.json({ isEnabled: !!isEnabled });
     } catch (error) {
-      console.error("2FA Status Check Error:", error);
+      logger.error({ err: error }, "2FA Status Check Error");
       return NextResponse.json(
         { error: "Gagal memeriksa status 2FA." },
         { status: 500 },

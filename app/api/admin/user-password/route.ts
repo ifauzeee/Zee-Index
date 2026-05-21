@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
@@ -25,7 +26,7 @@ export const POST = createAdminRoute(
         message: `Password for ${email} has been set successfully`,
       });
     } catch (error) {
-      console.error("Error setting password:", error);
+      logger.error({ err: error }, "Error setting password");
       return NextResponse.json(
         { error: "Failed to set password" },
         { status: 500 },
@@ -46,7 +47,7 @@ export const DELETE = createAdminRoute(
         message: `Password for ${email} has been removed`,
       });
     } catch (error) {
-      console.error("Error deleting password:", error);
+      logger.error({ err: error }, "Error deleting password");
       return NextResponse.json(
         { error: "Failed to delete password" },
         { status: 500 },
@@ -69,7 +70,7 @@ export const GET = createAdminRoute(
         hasPassword: hasPassword === 1,
       });
     } catch (error) {
-      console.error("Error checking password:", error);
+      logger.error({ err: error }, "Error checking password");
       return NextResponse.json(
         { error: "Failed to check password" },
         { status: 500 },

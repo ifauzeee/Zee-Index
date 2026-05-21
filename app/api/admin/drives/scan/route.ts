@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { listSharedDrives, listSharedWithMeFolders } from "@/lib/drive";
@@ -29,7 +30,7 @@ export const GET = createAdminRoute(async () => {
       ...formattedSharedFolders,
     ]);
   } catch (error) {
-    console.error("Failed to scan drives:", error);
+    logger.error({ err: error }, "Failed to scan drives");
     return NextResponse.json(
       { error: "Failed to scan drives" },
       { status: 500 },

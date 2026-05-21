@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createPublicRoute } from "@/lib/api-middleware";
 import {
@@ -112,7 +113,10 @@ export const GET = createPublicRoute(
         if (result.status === "fulfilled" && result.value.length > 0) {
           allFiles.push(...result.value);
         } else if (result.status === "rejected") {
-          console.error("Sebagian pencarian global gagal:", result.reason);
+          logger.error(
+            { err: result.reason },
+            "Sebagian pencarian global gagal",
+          );
         }
       }
 
@@ -173,7 +177,7 @@ export const GET = createPublicRoute(
         error instanceof Error
           ? error.message
           : "Terjadi kesalahan tidak dikenal.";
-      console.error("Global Search API Error:", errorMessage);
+      logger.error({ err: errorMessage }, "Global Search API Error");
       return NextResponse.json(
         { error: "Failed to perform global search.", details: errorMessage },
         { status: 500 },

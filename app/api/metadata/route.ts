@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createPublicRoute } from "@/lib/api-middleware";
 import { searchTMDB } from "@/lib/tmdb";
@@ -21,7 +22,7 @@ export const GET = createPublicRoute(
 
       return NextResponse.json(metadata);
     } catch (error) {
-      console.error("[API Metadata] Error:", error);
+      logger.error({ err: error }, "[API Metadata] Error");
       return NextResponse.json(
         { error: "Internal server error" },
         { status: 500 },

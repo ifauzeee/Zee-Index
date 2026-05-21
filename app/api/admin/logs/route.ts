@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
@@ -26,7 +27,7 @@ export const GET = createAdminRoute(async ({ request }) => {
         try {
           return typeof entry === "string" ? JSON.parse(entry) : entry;
         } catch (e) {
-          console.error("Gagal mem-parsing entri log:", entry, e);
+          logger.error({ err: e, entry }, "Gagal mem-parsing entri log");
           return null;
         }
       })
@@ -37,7 +38,7 @@ export const GET = createAdminRoute(async ({ request }) => {
       hasMore: logs.length === LOGS_PER_PAGE,
     });
   } catch (error) {
-    console.error("Gagal mengambil log aktivitas:", error);
+    logger.error({ err: error }, "Gagal mengambil log aktivitas");
     return NextResponse.json(
       { error: "Gagal mengambil log aktivitas." },
       { status: 500 },

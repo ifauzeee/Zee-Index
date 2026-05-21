@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { getAppConfig } from "@/lib/app-config";
 import { SignJWT } from "jose";
@@ -10,7 +11,7 @@ export async function POST(req: NextRequest) {
   try {
     const secret = getLocalStorageAuthSecret();
     if (!secret) {
-      console.error(
+      logger.error(
         "[LocalAuth] NEXTAUTH_SECRET tidak valid untuk local storage auth",
       );
       return NextResponse.json(
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: "Password salah" }, { status: 401 });
   } catch (error) {
-    console.error("[LocalAuth] Unlock error:", error);
+    logger.error({ err: error }, "[LocalAuth] Unlock error");
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

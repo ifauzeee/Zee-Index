@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -34,7 +35,7 @@ export const POST = createAdminRoute(
         message: "Tautan berhasil dibatalkan dan dihapus.",
       });
     } catch (error) {
-      console.error("Error deleting share link:", error);
+      logger.error({ err: error }, "Error deleting share link");
       return NextResponse.json(
         { error: "Gagal menghapus tautan." },
         { status: 500 },

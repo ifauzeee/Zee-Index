@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
@@ -47,7 +48,7 @@ export const POST = createAdminRoute(
         message: `Akses untuk ${email} ke folder ${folderId} telah ditambahkan.`,
       });
     } catch (error) {
-      console.error("Gagal menambah akses pengguna:", error);
+      logger.error({ err: error }, "Gagal menambah akses pengguna");
       return NextResponse.json(
         { error: "Gagal memproses permintaan." },
         { status: 500 },
@@ -74,7 +75,7 @@ export const DELETE = createAdminRoute(
         message: `Akses untuk ${email} dari folder ${folderId} telah dihapus.`,
       });
     } catch (error) {
-      console.error("Gagal menghapus akses pengguna:", error);
+      logger.error({ err: error }, "Gagal menghapus akses pengguna");
       return NextResponse.json(
         { error: "Gagal memproses permintaan." },
         { status: 500 },

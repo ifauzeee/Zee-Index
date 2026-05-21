@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { createPublicRoute } from "@/lib/api-middleware";
@@ -26,7 +27,7 @@ export const POST = createPublicRoute(
 
       return new Response(null, { status: 204 });
     } catch (error) {
-      console.error("Share link tracking error:", error);
+      logger.error({ err: error }, "Share link tracking error");
       return new Response(null, { status: 204 });
     }
   },

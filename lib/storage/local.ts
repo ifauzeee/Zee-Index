@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import { getMimeType } from "./mime";
 import { ZeeFile, ListFilesResponse } from "@/types/storage";
+import { logger } from "@/lib/logger";
 
 const LOCAL_STORAGE_PATH = process.env.LOCAL_STORAGE_PATH || "storage";
 export const LOCAL_ROOT = path.isAbsolute(LOCAL_STORAGE_PATH)
@@ -51,7 +52,7 @@ export async function ensureLocalRoot() {
   try {
     await fs.access(LOCAL_ROOT);
   } catch {
-    console.log(`[Storage] Creating local storage root: ${LOCAL_ROOT}`);
+    logger.debug(`[Storage] Creating local storage root: ${LOCAL_ROOT}`);
     await fs.mkdir(LOCAL_ROOT, { recursive: true });
   }
 
@@ -119,7 +120,7 @@ export async function getLocalFileDetails(
   try {
     absolutePath = resolveLocalTargetPath(filePath);
   } catch {
-    console.error(`[Storage] Path traversal attempt: ${filePath}`);
+    logger.error(`[Storage] Path traversal attempt: ${filePath}`);
     return null;
   }
 

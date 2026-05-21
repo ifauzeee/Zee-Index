@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createUserRoute } from "@/lib/api-middleware";
 
@@ -26,7 +27,7 @@ export const POST = createUserRoute(
         message: "2FA berhasil dinonaktifkan.",
       });
     } catch (error) {
-      console.error("2FA Disable Error:", error);
+      logger.error({ err: error }, "2FA Disable Error");
       return NextResponse.json(
         { error: "Gagal menonaktifkan 2FA." },
         { status: 500 },

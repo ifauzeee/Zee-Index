@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
@@ -35,7 +36,7 @@ export const POST = createAdminRoute(
 
       return NextResponse.json({ success: true, token, publicUrl });
     } catch (error) {
-      console.error("Create File Request Error:", error);
+      logger.error({ err: error }, "Create File Request Error");
       return NextResponse.json(
         { error: "Internal Server Error" },
         { status: 500 },
@@ -63,7 +64,7 @@ export const GET = createAdminRoute(async () => {
 
     return NextResponse.json(activeRequests);
   } catch (error) {
-    console.error("Get File Requests Error:", error);
+    logger.error({ err: error }, "Get File Requests Error");
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },
@@ -77,7 +78,7 @@ export const DELETE = createAdminRoute(
       await kv.hdel(REDIS_KEYS.FILE_REQUESTS, body.token);
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error("Delete File Request Error:", error);
+      logger.error({ err: error }, "Delete File Request Error");
       return NextResponse.json(
         { error: "Internal Server Error" },
         { status: 500 },

@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createUserRoute } from "@/lib/api-middleware";
 import { getAccessToken } from "@/lib/drive";
@@ -57,7 +58,7 @@ export const GET = createUserRoute(async ({ request }) => {
       error instanceof Error
         ? error.message
         : "Terjadi kesalahan tidak dikenal.";
-    console.error("Archive Preview API Error:", errorMessage);
+    logger.error({ err: errorMessage }, "Archive Preview API Error");
     return NextResponse.json(
       { error: "Gagal memproses file arsip.", details: errorMessage },
       { status: 500 },

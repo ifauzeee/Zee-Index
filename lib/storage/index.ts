@@ -4,6 +4,7 @@ import {
 } from "@/lib/drive/fetchers";
 import { listLocalFiles, getLocalFileDetails } from "./local";
 import { ZeeFile, ListFilesResponse, ListFilesOptions } from "@/types/storage";
+import { logger } from "@/lib/logger";
 
 export async function listAllFiles(
   options: ListFilesOptions,
@@ -75,7 +76,7 @@ export async function getAnyFileDetails(
   fileId: string,
 ): Promise<ZeeFile | null> {
   const cleanId = decodeURIComponent(fileId);
-  console.log(
+  logger.debug(
     `[Storage] getAnyFileDetails called with: ${fileId} (cleaned: ${cleanId})`,
   );
   if (cleanId.startsWith("local-storage:")) {
@@ -83,7 +84,9 @@ export async function getAnyFileDetails(
       return null;
     }
     const localPath = cleanId.replace("local-storage:", "");
-    console.log(`[Storage] Fetching local file: ${localPath} (ID: ${cleanId})`);
+    logger.debug(
+      `[Storage] Fetching local file: ${localPath} (ID: ${cleanId})`,
+    );
     return getLocalFileDetails(localPath);
   }
 
@@ -142,9 +145,9 @@ export async function getDownloadStream(fileId: string) {
         filename,
       };
     } catch (error) {
-      console.error(
-        `[Storage] Error creating download stream for ${cleanId}:`,
-        error,
+      logger.error(
+        { err: error, fileId: cleanId },
+        `[Storage] Error creating download stream`,
       );
       return null;
     }

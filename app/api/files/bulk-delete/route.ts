@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -46,7 +47,7 @@ export const POST = createAdminRoute(
       });
 
       if (failedDeletes.length > 0) {
-        console.error(`Gagal menghapus ${failedDeletes.length} item.`);
+        logger.error(`Gagal menghapus ${failedDeletes.length} item.`);
         return NextResponse.json(
           {
             success: false,
@@ -67,7 +68,7 @@ export const POST = createAdminRoute(
         error instanceof Error
           ? error.message
           : "Terjadi kesalahan tidak dikenal.";
-      console.error("Bulk Delete API Error:", errorMessage);
+      logger.error({ err: errorMessage }, "Bulk Delete API Error");
       return NextResponse.json(
         { error: "Internal Server Error.", details: errorMessage },
         { status: 500 },

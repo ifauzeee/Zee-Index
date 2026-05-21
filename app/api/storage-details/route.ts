@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -27,7 +28,7 @@ export const GET = createUserRoute(async ({ session }) => {
       error instanceof Error
         ? error.message
         : "Terjadi kesalahan tidak dikenal.";
-    console.error("Storage Details API Error:", errorMessage);
+    logger.error({ err: errorMessage }, "Storage Details API Error");
     return NextResponse.json(
       { error: "Gagal mengambil detail penyimpanan.", details: errorMessage },
       { status: 500 },

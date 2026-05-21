@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { getPublicAppConfig } from "@/lib/app-config";
 
@@ -8,7 +9,7 @@ export async function GET() {
     const config = await getPublicAppConfig();
     return NextResponse.json(config);
   } catch (error) {
-    console.error("Public config fetch error:", error);
+    logger.error({ err: error }, "Public config fetch error");
     return NextResponse.json(
       { error: "Failed to fetch public config" },
       { status: 500 },

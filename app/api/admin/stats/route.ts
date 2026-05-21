@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
@@ -134,7 +135,7 @@ export const GET = createAdminRoute(async () => {
     const stats = await getAdminStatsCached();
     return NextResponse.json(stats);
   } catch (error) {
-    console.error("Gagal mengambil statistik admin:", error);
+    logger.error({ err: error }, "Gagal mengambil statistik admin");
     return NextResponse.json(
       { error: "Gagal mengambil statistik." },
       { status: 500 },

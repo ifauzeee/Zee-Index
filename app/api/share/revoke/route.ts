@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -32,7 +33,7 @@ export const POST = createAdminRoute(
         message: "Tautan berhasil dibatalkan.",
       });
     } catch (error) {
-      console.error("Error revoking share link:", error);
+      logger.error({ err: error }, "Error revoking share link");
       return NextResponse.json(
         { error: "Gagal membatalkan tautan." },
         { status: 500 },

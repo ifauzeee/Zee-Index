@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -191,7 +192,7 @@ export const POST = createEditorRoute(
         error instanceof Error
           ? error.message
           : "Terjadi kesalahan tidak dikenal.";
-      console.error("Upload API Error:", error);
+      logger.error({ err: error }, "Upload API Error");
       return NextResponse.json(
         { error: errorMessage || "Internal Server Error." },
         { status: 500 },

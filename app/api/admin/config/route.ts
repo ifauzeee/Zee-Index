@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import {
@@ -14,7 +15,7 @@ export const GET = createAdminRoute(async () => {
     const config = await getAppConfig();
     return NextResponse.json(sanitizeAdminAppConfig(config));
   } catch (error) {
-    console.error("Config fetch error:", error);
+    logger.error({ err: error }, "Config fetch error");
     return NextResponse.json(
       { error: "Failed to fetch config" },
       { status: 500 },
@@ -32,7 +33,7 @@ export const POST = createAdminRoute(
         config: sanitizeAdminAppConfig(updatedConfig),
       });
     } catch (error) {
-      console.error("Config update error:", error);
+      logger.error({ err: error }, "Config update error");
       return NextResponse.json(
         { error: "Failed to update config" },
         { status: 500 },

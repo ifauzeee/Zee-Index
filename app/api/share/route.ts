@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -269,7 +270,7 @@ export const POST = createAdminRoute(
 
       return NextResponse.json({ shareableUrl, token, jti, newShareLink });
     } catch (error) {
-      console.error("Error generating share link:", error);
+      logger.error({ err: error }, "Error generating share link");
       return NextResponse.json({ error: t("createFail") }, { status: 500 });
     }
   },

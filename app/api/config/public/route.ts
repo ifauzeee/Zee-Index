@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createPublicRoute } from "@/lib/api-middleware";
 import { getPublicAppConfig } from "@/lib/app-config";
@@ -9,7 +10,7 @@ export const GET = createPublicRoute(
       const config = await getPublicAppConfig();
       return NextResponse.json(config);
     } catch (error) {
-      console.error("Gagal mengambil konfigurasi publik:", error);
+      logger.error({ err: error }, "Gagal mengambil konfigurasi publik");
       return NextResponse.json(
         { error: "Gagal mengambil konfigurasi." },
         { status: 500 },

@@ -1,5 +1,6 @@
 import sharp from "sharp";
 import { PDFDocument, rgb, degrees, StandardFonts } from "pdf-lib";
+import { logger } from "@/lib/logger";
 
 export async function applyWatermark(
   buffer: Buffer,
@@ -13,7 +14,7 @@ export async function applyWatermark(
       return await applyPdfWatermark(buffer, watermarkText);
     }
   } catch (error) {
-    console.error("[Watermark] Error applying watermark:", error);
+    logger.error({ err: error }, "[Watermark] Error applying watermark");
   }
   return null;
 }

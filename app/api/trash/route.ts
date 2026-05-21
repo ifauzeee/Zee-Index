@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { listTrashedFiles, restoreTrash, deleteForever } from "@/lib/drive";
@@ -24,7 +25,7 @@ export const GET = createAdminRoute(async () => {
     const files = await listTrashedFiles();
     return NextResponse.json(files);
   } catch (error) {
-    console.error("Trash GET Error:", error);
+    logger.error({ err: error }, "Trash GET Error");
     return NextResponse.json(
       { error: "Failed to fetch trash" },
       { status: 500 },
@@ -39,7 +40,7 @@ export const POST = createAdminRoute(
       await restoreTrash(idsToProcess);
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error("Trash Restore Error:", error);
+      logger.error({ err: error }, "Trash Restore Error");
       return NextResponse.json({ error: "Failed to restore" }, { status: 500 });
     }
   },
@@ -53,7 +54,7 @@ export const DELETE = createAdminRoute(
       await deleteForever(idsToProcess);
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error("Trash Delete Error:", error);
+      logger.error({ err: error }, "Trash Delete Error");
       return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
     }
   },

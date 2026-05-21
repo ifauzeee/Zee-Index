@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -65,7 +66,7 @@ export const POST = createPublicRoute(
         );
       }
     } catch (error) {
-      console.error("Folder Auth API error:", error);
+      logger.error({ err: error }, "Folder Auth API error");
       return NextResponse.json(
         { error: "Internal Server Error" },
         { status: 500 },

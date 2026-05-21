@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { getAnalyticsData } from "@/lib/analyticsTracker";
@@ -18,7 +19,7 @@ export const GET = createAdminRoute(async () => {
     const analytics = await getAnalyticsCached();
     return NextResponse.json(analytics);
   } catch (error) {
-    console.error("Failed to fetch analytics:", error);
+    logger.error({ err: error }, "Failed to fetch analytics");
     return NextResponse.json(
       { error: "Failed to fetch analytics data." },
       { status: 500 },

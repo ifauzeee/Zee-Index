@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -67,7 +68,7 @@ export const POST = createPublicRoute(
           envContent = fs.readFileSync(envPath, "utf-8");
         }
       } catch (e) {
-        console.error("Gagal membaca .env:", e);
+        logger.error({ err: e }, "Gagal membaca .env");
       }
 
       const isConfigured = await isAppConfigured();
@@ -135,9 +136,9 @@ export const POST = createPublicRoute(
         fs.writeFileSync(envPath, envContent.trim() + "\n");
         writeSuccess = true;
       } catch (e: unknown) {
-        console.error(
-          "Gagal menulis ke .env, fallback ke konfigurasi manual:",
-          e,
+        logger.error(
+          { err: e },
+          "Gagal menulis ke .env, fallback ke konfigurasi manual",
         );
       }
 

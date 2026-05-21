@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -151,7 +152,7 @@ export const POST = createPublicRoute(
         throw new Error("Chunk upload failed");
       }
     } catch (error: unknown) {
-      console.error("Public Upload Error:", error);
+      logger.error({ err: error }, "Public Upload Error");
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       return NextResponse.json({ error: errorMessage }, { status: 500 });

@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createCronRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
@@ -67,9 +68,9 @@ export const GET = createCronRoute(async () => {
       message: "Laporan mingguan berhasil dikirim.",
     });
   } catch (error: unknown) {
-    console.error(
-      "Gagal membuat laporan mingguan:",
-      error instanceof Error ? error.message : error,
+    logger.error(
+      { err: error instanceof Error ? error.message : error },
+      "Gagal membuat laporan mingguan",
     );
     return NextResponse.json(
       { error: "Gagal memproses laporan." },

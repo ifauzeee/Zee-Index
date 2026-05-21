@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
@@ -39,7 +40,7 @@ export const GET = createAdminRoute(async ({ request }) => {
       totalLogs,
     });
   } catch (error) {
-    console.error("Gagal mengambil log aktivitas:", error);
+    logger.error({ err: error }, "Gagal mengambil log aktivitas");
     return NextResponse.json(
       { error: "Gagal mengambil log aktivitas." },
       { status: 500 },

@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { kv } from "@/lib/kv";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
@@ -18,7 +19,7 @@ export const GET = createAdminRoute(async () => {
     const admins = await kv.smembers(REDIS_KEYS.ADMIN_USERS);
     return NextResponse.json(admins || []);
   } catch (error) {
-    console.error("Admin users fetch error:", error);
+    logger.error({ err: error }, "Admin users fetch error");
     return NextResponse.json(
       { error: "Failed to fetch admins" },
       { status: 500 },
@@ -33,7 +34,7 @@ export const POST = createAdminRoute(
       await kv.sadd(REDIS_KEYS.ADMIN_USERS, email);
       return NextResponse.json({ message: "Admin added", email });
     } catch (error) {
-      console.error("Admin add error:", error);
+      logger.error({ err: error }, "Admin add error");
       return NextResponse.json(
         { error: "Failed to add admin" },
         { status: 500 },
@@ -50,7 +51,7 @@ export const DELETE = createAdminRoute(
       await kv.srem(REDIS_KEYS.ADMIN_USERS, email);
       return NextResponse.json({ message: "Admin removed", email });
     } catch (error) {
-      console.error("Admin remove error:", error);
+      logger.error({ err: error }, "Admin remove error");
       return NextResponse.json(
         { error: "Failed to remove admin" },
         { status: 500 },

@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import type { ShareLink as DbShareLink } from "@prisma/client";
@@ -32,7 +33,7 @@ export const GET = createAdminRoute(async () => {
 
     return NextResponse.json(shareLinks);
   } catch (error) {
-    console.error("Error fetching share links:", error);
+    logger.error({ err: error }, "Error fetching share links");
     return NextResponse.json(
       { error: "Gagal mengambil daftar tautan." },
       { status: 500 },

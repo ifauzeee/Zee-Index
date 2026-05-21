@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { kv } from "@/lib/kv";
@@ -18,7 +19,7 @@ export const GET = createAdminRoute(async () => {
     const drives = parseManualDriveRecords(await kv.get(MANUAL_DRIVES_KEY));
     return NextResponse.json(drives);
   } catch (error) {
-    console.error("Failed to fetch manual drives:", error);
+    logger.error({ err: error }, "Failed to fetch manual drives");
     return NextResponse.json(
       { error: "Gagal mengambil data" },
       { status: 500 },
@@ -61,7 +62,7 @@ export const POST = createAdminRoute(
 
       return NextResponse.json({ success: true, drives: updatedDrives });
     } catch (error) {
-      console.error("Failed to create manual drive:", error);
+      logger.error({ err: error }, "Failed to create manual drive");
       return NextResponse.json(
         { error: "Internal Server Error" },
         { status: 500 },
@@ -92,7 +93,7 @@ export const DELETE = createAdminRoute(
 
       return NextResponse.json({ success: true, drives: updatedDrives });
     } catch (error) {
-      console.error("Failed to delete manual drive:", error);
+      logger.error({ err: error }, "Failed to delete manual drive");
       return NextResponse.json({ error: "Gagal menghapus" }, { status: 500 });
     }
   },

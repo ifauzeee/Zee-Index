@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
@@ -76,7 +77,7 @@ export const POST = createAdminRoute(
         message: `Folder ${folderId} berhasil dilindungi.`,
       });
     } catch (error) {
-      console.error("Gagal menambah folder terproteksi:", error);
+      logger.error({ err: error }, "Gagal menambah folder terproteksi");
       return NextResponse.json(
         { error: "Gagal memproses permintaan." },
         { status: 500 },
@@ -102,7 +103,7 @@ export const DELETE = createAdminRoute(
         message: `Perlindungan untuk folder ${folderId} telah dihapus.`,
       });
     } catch (error) {
-      console.error("Gagal menghapus folder terproteksi:", error);
+      logger.error({ err: error }, "Gagal menghapus folder terproteksi");
       return NextResponse.json(
         { error: "Gagal memproses permintaan." },
         { status: 500 },

@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createCronRoute } from "@/lib/api-middleware";
 import { getStorageDetails } from "@/lib/drive";
@@ -63,9 +64,9 @@ export const GET = createCronRoute(async () => {
       message: "Kapasitas penyimpanan masih aman.",
     });
   } catch (error: unknown) {
-    console.error(
-      "Gagal memeriksa penyimpanan:",
-      error instanceof Error ? error.message : error,
+    logger.error(
+      { err: error instanceof Error ? error.message : error },
+      "Gagal memeriksa penyimpanan",
     );
     return NextResponse.json(
       { error: "Gagal memproses pemeriksaan penyimpanan." },

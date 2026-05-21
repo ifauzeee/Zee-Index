@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
@@ -68,7 +69,7 @@ export const GET = createPublicRoute(
         collectionName: linkDetails?.itemName || "Koleksi Bersama",
       });
     } catch (error) {
-      console.error("Gagal memvalidasi token koleksi:", error);
+      logger.error({ err: error }, "Gagal memvalidasi token koleksi");
       return NextResponse.json(
         { error: "Token berbagi tidak valid atau telah kedaluwarsa." },
         { status: 401 },

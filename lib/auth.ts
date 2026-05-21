@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import { getPrivateFolderIds } from "@/lib/utils";
 import { REDIS_KEYS } from "@/lib/constants";
 import { getLocalStorageAuthSecret } from "@/lib/local-auth-secret";
+import { logger } from "@/lib/logger";
 
 export function isPrivateFolder(folderId: string): boolean {
   if (!folderId) return false;
@@ -157,7 +158,7 @@ export async function hasUserAccessBatch(
       );
     });
   } catch (e) {
-    console.error("[Auth] Batch access check failed:", e);
+    logger.error({ err: e }, "[Auth] Batch access check failed");
     idsToCheck.forEach((id) => {
       if (!(id in results)) results[id] = false;
     });

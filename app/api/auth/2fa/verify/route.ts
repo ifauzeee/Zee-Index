@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -52,7 +53,7 @@ export const POST = createUserRoute(
         message: "2FA berhasil diaktifkan.",
       });
     } catch (error) {
-      console.error("2FA Verify Error:", error);
+      logger.error({ err: error }, "2FA Verify Error");
       return NextResponse.json(
         { error: "Gagal memverifikasi kode 2FA." },
         { status: 500 },

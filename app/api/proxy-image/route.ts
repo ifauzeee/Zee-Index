@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createPublicRoute } from "@/lib/api-middleware";
 import sharp from "sharp";
@@ -137,7 +138,7 @@ export const GET = createPublicRoute(
         },
       });
     } catch (error) {
-      console.error("Image proxy error:", error);
+      logger.error({ err: error }, "Image proxy error");
       return new NextResponse("Internal Server Error", { status: 500 });
     }
   },

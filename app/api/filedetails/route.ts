@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createPublicRoute } from "@/lib/api-middleware";
 import { getAnyFileDetails } from "@/lib/storage";
@@ -57,7 +58,7 @@ export const GET = createPublicRoute(
         error instanceof Error
           ? error.message
           : "Terjadi kesalahan tidak dikenal.";
-      console.error("File Details API Error:", errorMessage);
+      logger.error({ err: errorMessage }, "File Details API Error");
       return NextResponse.json(
         { error: "Gagal mengambil detail file.", details: errorMessage },
         { status: 500 },

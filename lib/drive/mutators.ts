@@ -1,5 +1,6 @@
 import { getAccessToken } from "./auth";
 import { fetchWithRetry } from "./client";
+import { logger } from "@/lib/logger";
 
 export async function restoreTrash(fileId: string | string[]) {
   const accessToken = await getAccessToken();
@@ -19,7 +20,7 @@ export async function restoreTrash(fileId: string | string[]) {
   const results = await Promise.all(restorePromises);
   results.forEach((res) => {
     if (!res.ok) {
-      console.error(`Failed to restore a file: ${res.statusText}`);
+      logger.error(`Failed to restore a file: ${res.statusText}`);
     }
   });
 }
@@ -38,7 +39,7 @@ export async function deleteForever(fileId: string | string[]) {
   const results = await Promise.all(deletePromises);
   results.forEach((res) => {
     if (!res.ok) {
-      console.error(`Failed to delete a file forever: ${res.statusText}`);
+      logger.error(`Failed to delete a file forever: ${res.statusText}`);
     }
   });
 }
