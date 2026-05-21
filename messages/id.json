@@ -27,7 +27,8 @@
     "loading": "Memuat...",
     "error": "Kesalahan",
     "light": "Terang",
-    "dark": "Gelap"
+    "dark": "Gelap",
+    "skipToContent": "Lompat ke konten utama"
   },
   "AuthForm": {
     "accessRestricted": "Akses Terbatas",
@@ -84,9 +85,11 @@
     "explorer": "Penjelajah",
     "googleDrive": "Google Drive",
     "localCloud": "Penyimpanan Lokal",
-    "googleAuthError": "Autentikasi Google Drive gagal. Silakan periksa kredensial atau otorisasi ulang."
+    "googleAuthError": "Autentikasi Google Drive gagal. Silakan periksa kredensial atau otorisasi ulang.",
+    "close": "Tutup Sidebar"
   },
   "Header": {
+    "toggleSidebar": "Buka/Tutup Sidebar",
     "switchTheme": "Ganti Tema",
     "refreshPage": "Segarkan Halaman",
     "github": "GitHub",
@@ -198,7 +201,13 @@
     "cancel": "Batal",
     "saved": "Disimpan!",
     "saveFailed": "Gagal menyimpan",
-    "linkCopied": "Link disalin"
+    "linkCopied": "Link disalin",
+    "close": "Tutup",
+    "previewText": "Pratinjau Teks",
+    "previewDocument": "Pratinjau Dokumen",
+    "toggleInfoPanel": "Alihkan Panel Informasi",
+    "previousFile": "Berkas Sebelumnya",
+    "nextFile": "Berkas Berikutnya"
   },
   "RenameModal": {
     "title": "Ganti Nama File",
@@ -713,7 +722,8 @@
     "download": "Unduh",
     "share": "Bagikan",
     "delete": "Hapus",
-    "folder": "Folder"
+    "folder": "Folder",
+    "moreOptions": "Opsi lainnya"
   },
   "StoragePage": {
     "title": "Analisis Penyimpanan",

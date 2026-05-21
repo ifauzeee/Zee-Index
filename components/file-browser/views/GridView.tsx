@@ -108,7 +108,13 @@ export default function GridView({
   }
 
   return (
-    <div ref={listRef} className="relative w-full">
+    <div
+      ref={listRef}
+      className="relative w-full"
+      role="grid"
+      aria-rowcount={rowCount}
+      aria-colcount={numColumns}
+    >
       <div
         style={{
           height: `${virtualizer.getTotalSize()}px`,
@@ -134,7 +140,11 @@ export default function GridView({
                 transform: `translateY(${virtualRow.start - offset}px)`,
               }}
             >
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 pb-3 sm:pb-4">
+              <div
+                role="row"
+                aria-rowindex={virtualRow.index + 1}
+                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 pb-3 sm:pb-4"
+              >
                 {rowFiles.map((file, colIndex) => {
                   const absoluteIndex = startIndex + colIndex;
                   const isFocused = absoluteIndex === focusedIndex;
@@ -143,6 +153,8 @@ export default function GridView({
                     <div
                       key={file.id}
                       data-file-index={absoluteIndex}
+                      role="gridcell"
+                      aria-colindex={colIndex + 1}
                       className={
                         isFocused
                           ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg h-full"

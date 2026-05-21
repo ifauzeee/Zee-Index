@@ -452,6 +452,7 @@ function FileItem({
                     onShare(createActionEvent(e));
                   }}
                   title={t("share")}
+                  aria-label={t("share")}
                   className="p-2 rounded-full hover:bg-muted select-none"
                 >
                   <Share2 size={16} />
@@ -465,6 +466,7 @@ function FileItem({
                     onDownload(createActionEvent(e));
                   }}
                   title={t("download")}
+                  aria-label={t("download")}
                   className="p-2 rounded-full hover:bg-muted select-none"
                 >
                   <Download size={16} />
@@ -477,6 +479,7 @@ function FileItem({
                   onShowDetails(createActionEvent(e));
                 }}
                 title={t("viewDetails")}
+                aria-label={t("viewDetails")}
                 className="p-2 rounded-full hover:bg-muted select-none"
               >
                 <Info size={16} />

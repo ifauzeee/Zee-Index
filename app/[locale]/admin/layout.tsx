@@ -61,6 +61,7 @@ export default function MainLayout({
     fetchConfig,
   } = useAppStore();
   const { status } = useSession();
+  const tCommon = useTranslations("Common");
 
   useEffect(() => {
     fetchConfig();
@@ -77,11 +78,23 @@ export default function MainLayout({
         id="app-container"
         className={`bg-background text-foreground min-h-screen flex flex-col`}
       >
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg focus:outline-none"
+        >
+          {tCommon("skipToContent")}
+        </a>
         <Suspense fallback={<div className="h-16 bg-background" />}>
           <Header />
         </Suspense>
         <div className="container mx-auto px-4 max-w-7xl flex-grow">
-          <main className="min-h-[50vh] mb-12">{children}</main>
+          <main
+            id="main-content"
+            tabIndex={-1}
+            className="min-h-[50vh] mb-12 outline-none"
+          >
+            {children}
+          </main>
         </div>
 
         <div

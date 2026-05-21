@@ -183,6 +183,7 @@ export default function FileBrowserHeader({
               onClick={onUploadClick}
               className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-primary transition-colors shadow-sm flex items-center justify-center shrink-0"
               title={t("upload")}
+              aria-label={t("upload")}
             >
               <Upload size={18} />
             </button>
@@ -191,6 +192,7 @@ export default function FileBrowserHeader({
               onClick={onRequestFileClick}
               className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-purple-500 transition-colors shadow-sm flex items-center justify-center shrink-0"
               title={t("requestFiles")}
+              aria-label={t("requestFiles")}
             >
               <UploadCloud size={18} />
             </button>
@@ -199,6 +201,7 @@ export default function FileBrowserHeader({
               onClick={onShareFolderClick}
               className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-blue-500 transition-colors shadow-sm flex items-center justify-center shrink-0"
               title={t("shareFolder")}
+              aria-label={t("shareFolder")}
             >
               <Share2 size={18} />
             </button>
@@ -210,6 +213,7 @@ export default function FileBrowserHeader({
               disabled={!activeFileId}
               className="p-2 rounded-lg bg-card border hover:bg-accent transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hidden sm:flex items-center justify-center shrink-0"
               title={t("viewDetails")}
+              aria-label={t("viewDetails")}
             >
               <Info size={18} />
             </button>
@@ -223,6 +227,7 @@ export default function FileBrowserHeader({
                   : "bg-card hover:bg-accent border-border",
               )}
               title={t("selectMultiple")}
+              aria-label={t("selectMultiple")}
             >
               <CheckSquare size={18} />
             </button>
@@ -242,6 +247,9 @@ export default function FileBrowserHeader({
               title={
                 density === "compact" ? t("comfortableMode") : t("compactMode")
               }
+              aria-label={
+                density === "compact" ? t("comfortableMode") : t("compactMode")
+              }
             >
               {density === "compact" ? (
                 <StretchHorizontal size={18} />
@@ -256,6 +264,7 @@ export default function FileBrowserHeader({
               <button
                 className="p-1.5 rounded-md transition-all text-muted-foreground hover:text-foreground hover:bg-background border border-border flex items-center justify-center shrink-0 gap-2 px-2"
                 title={t("sortFiles")}
+                aria-label={t("sortFiles")}
               >
                 <ArrowDownUp size={18} />
                 <span className="text-sm font-medium hidden sm:inline">
@@ -293,6 +302,7 @@ export default function FileBrowserHeader({
                   "text-muted-foreground hover:text-foreground hover:bg-background",
                 )}
                 title={t("galleryView")}
+                aria-label={t("galleryView")}
               >
                 <LayoutTemplate size={18} />
               </button>

@@ -265,6 +265,7 @@ export default function FileCard({
           <DropdownMenuTrigger
             className="opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={(e) => e.stopPropagation()}
+            aria-label={t("moreOptions")}
           >
             <MoreVertical className="w-4 h-4 text-muted-foreground" />
           </DropdownMenuTrigger>

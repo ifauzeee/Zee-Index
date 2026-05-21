@@ -75,7 +75,13 @@ export default function ListView({
   }
 
   return (
-    <div ref={listRef} className="relative w-full">
+    <div
+      ref={listRef}
+      className="relative w-full"
+      role="grid"
+      aria-rowcount={files.length}
+      aria-colcount={1}
+    >
       <div
         style={{
           height: `${virtualizer.getTotalSize()}px`,
@@ -101,6 +107,8 @@ export default function ListView({
               key={virtualRow.key}
               data-index={virtualRow.index.toString()}
               ref={virtualizer.measureElement}
+              role="row"
+              aria-rowindex={virtualRow.index + 1}
               style={{
                 position: "absolute",
                 top: 0,
@@ -111,6 +119,7 @@ export default function ListView({
             >
               <div
                 data-file-index={virtualRow.index}
+                role="gridcell"
                 className={
                   isFocused
                     ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg pb-2"

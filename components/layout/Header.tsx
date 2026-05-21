@@ -321,6 +321,7 @@ export default function Header() {
                 id="header-sidebar-toggle"
                 onClick={toggleSidebar}
                 className="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground"
+                aria-label={t("toggleSidebar")}
               >
                 <PanelLeft size={20} />
               </button>
@@ -380,6 +381,7 @@ export default function Header() {
                           target={item.target}
                           rel={item.rel}
                           title={item.label}
+                          aria-label={item.label}
                           className="p-2 rounded-lg hover:bg-accent"
                         >
                           <Icon size={20} />
@@ -391,6 +393,7 @@ export default function Header() {
                               key={item.id}
                               onClick={item.onClick}
                               title={item.label}
+                              aria-label={item.label}
                               className="p-2 rounded-lg hover:bg-accent"
                             >
                               <Icon size={20} />
@@ -406,6 +409,7 @@ export default function Header() {
                     onClick={toggleNotificationCenter}
                     className="p-2 rounded-lg hover:bg-accent relative"
                     title={t("notifications")}
+                    aria-label={t("notifications")}
                     id="header-notifications-btn"
                   >
                     <Bell size={20} />
@@ -423,6 +427,7 @@ export default function Header() {
                         target={item.target}
                         rel={item.rel}
                         title={item.label}
+                        aria-label={item.label}
                         className="p-2 rounded-lg hover:bg-accent"
                       >
                         <Icon size={20} />
@@ -435,6 +440,7 @@ export default function Header() {
                             id={`header-btn-${item.id}`}
                             onClick={item.onClick}
                             title={item.label}
+                            aria-label={item.label}
                             className="p-2 rounded-lg hover:bg-accent"
                           >
                             <Icon size={20} />
@@ -453,6 +459,7 @@ export default function Header() {
                 id="header-mobile-notifications"
                 onClick={toggleNotificationCenter}
                 className="p-2 rounded-lg hover:bg-accent relative z-50"
+                aria-label={t("notifications")}
               >
                 <Bell size={20} />
                 {unreadCount > 0 && (
@@ -463,6 +470,7 @@ export default function Header() {
                 id="header-mobile-search"
                 onClick={() => setIsSearchVisible(!isSearchVisible)}
                 title={t("search")}
+                aria-label={t("search")}
                 className="p-2 rounded-lg hover:bg-accent z-50"
               >
                 {isSearchVisible ? (
@@ -476,6 +484,7 @@ export default function Header() {
                 onClick={() => setIsMobileMenuOpen(true)}
                 className="p-2 rounded-lg hover:bg-accent z-50"
                 title={t("menu")}
+                aria-label={t("menu")}
               >
                 <Menu size={20} />
               </button>

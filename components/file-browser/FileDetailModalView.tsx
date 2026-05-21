@@ -10,6 +10,7 @@ import {
   Info,
   X,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface FileDetailModalViewProps {
   previewContent: React.ReactNode;
@@ -44,11 +45,14 @@ export default function FileDetailModalView({
   onHideMobileInfo,
   mobileInfoPanel,
 }: FileDetailModalViewProps) {
+  const t = useTranslations("FileDetail");
+
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-black text-white h-full w-full animate-in fade-in">
       <div className="absolute top-0 left-0 right-0 z-20 flex justify-between p-4 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
         <button
           onClick={onClose}
+          aria-label={t("close")}
           className="pointer-events-auto p-2 bg-black/40 rounded-full hover:bg-white/20"
         >
           <X size={20} />
@@ -57,6 +61,7 @@ export default function FileDetailModalView({
           {isTextPreviewable && !showTextPreview && (
             <button
               onClick={onShowTextPreview}
+              aria-label={t("previewText")}
               className="p-2 bg-black/40 rounded-full"
             >
               <Eye size={20} />
@@ -65,6 +70,7 @@ export default function FileDetailModalView({
           {isDocPreviewable && !showDocPreview && (
             <button
               onClick={onShowDocPreview}
+              aria-label={t("previewDocument")}
               className="p-2 bg-black/40 rounded-full"
             >
               <FileText size={20} />
@@ -72,6 +78,7 @@ export default function FileDetailModalView({
           )}
           <button
             onClick={onShowMobileInfo}
+            aria-label={t("toggleInfoPanel")}
             className="p-2 bg-black/40 rounded-full hover:bg-white/20"
           >
             <Info size={20} />
@@ -83,6 +90,7 @@ export default function FileDetailModalView({
         {prevFileUrl && (
           <Link
             href={prevFileUrl}
+            aria-label={t("previousFile")}
             className="absolute left-2 md:left-4 z-10 p-3 bg-black/30 backdrop-blur-sm rounded-full hover:bg-white/20"
           >
             <ChevronLeft size={24} />
@@ -94,6 +102,7 @@ export default function FileDetailModalView({
         {nextFileUrl && (
           <Link
             href={nextFileUrl}
+            aria-label={t("nextFile")}
             className="absolute right-2 md:right-4 z-10 p-3 bg-black/30 backdrop-blur-sm rounded-full hover:bg-white/20"
           >
             <ChevronRight size={24} />

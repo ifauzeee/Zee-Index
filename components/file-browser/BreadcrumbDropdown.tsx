@@ -59,6 +59,7 @@ export function BreadcrumbDropdown({
             "p-1 hover:bg-accent rounded-md transition-all group shrink-0 mx-0.5",
             isOpen && "bg-accent",
           )}
+          aria-label="Toggle sibling folder list"
         >
           <ChevronRight
             size={14}

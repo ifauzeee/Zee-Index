@@ -39,6 +39,7 @@ export default function SidebarPanel({
         <button
           onClick={onClose}
           className="lg:hidden p-1 hover:bg-accent rounded-md"
+          aria-label={t("close")}
         >
           <X size={18} />
         </button>

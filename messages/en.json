@@ -27,7 +27,8 @@
     "loading": "Loading...",
     "error": "Error",
     "light": "Light",
-    "dark": "Dark"
+    "dark": "Dark",
+    "skipToContent": "Skip to content"
   },
   "AuthForm": {
     "accessRestricted": "Access Restricted",
@@ -84,9 +85,11 @@
     "explorer": "Explorer",
     "googleDrive": "Google Drive",
     "localCloud": "Local Storage",
-    "googleAuthError": "Google Drive authentication failed. Please check your credentials or re-authorize."
+    "googleAuthError": "Google Drive authentication failed. Please check your credentials or re-authorize.",
+    "close": "Close Sidebar"
   },
   "Header": {
+    "toggleSidebar": "Toggle Sidebar",
     "switchTheme": "Switch Theme",
     "refreshPage": "Refresh Page",
     "github": "GitHub",
@@ -198,7 +201,13 @@
     "cancel": "Cancel",
     "saved": "Saved!",
     "saveFailed": "Failed to save",
-    "linkCopied": "Link copied"
+    "linkCopied": "Link copied",
+    "close": "Close",
+    "previewText": "Preview Text",
+    "previewDocument": "Preview Document",
+    "toggleInfoPanel": "Toggle Info Panel",
+    "previousFile": "Previous File",
+    "nextFile": "Next File"
   },
   "RenameModal": {
     "title": "Rename File",
@@ -713,7 +722,8 @@
     "download": "Download",
     "share": "Share",
     "delete": "Delete",
-    "folder": "Folder"
+    "folder": "Folder",
+    "moreOptions": "More options"
   },
   "StoragePage": {
     "title": "Storage Analysis",
