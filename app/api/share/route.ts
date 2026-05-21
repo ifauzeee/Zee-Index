@@ -227,6 +227,21 @@ export const POST = createAdminRoute(
         },
       });
 
+      await kv.set(
+        `share:link:${jti}`,
+        {
+          loginRequired: loginRequired ?? false,
+          preventDownload: preventDownload ?? false,
+          hasWatermark: hasWatermark ?? false,
+          watermarkText: watermarkText || null,
+          maxUses: maxUses ?? null,
+          expiresAt: expiresAtDate.toISOString(),
+        },
+        {
+          ex: Math.ceil((expiresAtDate.getTime() - Date.now()) / 1000) + 3600,
+        },
+      );
+
       const newShareLink: ShareLink = {
         id: shareLinkRecord.id,
         path: shareLinkRecord.path,

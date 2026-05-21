@@ -167,6 +167,13 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
       set({ shareLinks: originalLinks });
     }
   },
+  updateShareLink: (updatedLink: ShareLink) =>
+    set((state: AppState) => {
+      const updatedLinks = state.shareLinks.map((link) =>
+        link.id === updatedLink.id ? updatedLink : link,
+      );
+      return { shareLinks: updatedLinks };
+    }),
   fileRequests: [],
   fetchFileRequests: async () => {
     try {

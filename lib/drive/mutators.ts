@@ -104,3 +104,60 @@ export async function updateFileContent(fileId: string, newContent: string) {
 
   return response.json();
 }
+
+export async function uploadToDrive(
+  parentId: string,
+  fileName: string,
+  buffer: Buffer,
+  mimeType: string,
+): Promise<{ id: string; name: string; mimeType: string }> {
+  const accessToken = await getAccessToken();
+  const metadata = {
+    name: fileName,
+    parents: parentId ? [parentId] : undefined,
+  };
+
+  const boundary = "314159265358979323846";
+  const delimiter = `\r\n--${boundary}\r\n`;
+  const closeDelimiter = `\r\n--${boundary}--\r\n`;
+
+  const metadataPart =
+    `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+    JSON.stringify(metadata);
+
+  const mediaPartHeader =
+    `Content-Type: ${mimeType}\r\n` +
+    `Content-Transfer-Encoding: base64\r\n\r\n`;
+
+  const mediaPartBody = buffer.toString("base64");
+
+  const multipartBody = Buffer.concat([
+    Buffer.from(delimiter),
+    Buffer.from(metadataPart),
+    Buffer.from(delimiter),
+    Buffer.from(mediaPartHeader),
+    Buffer.from(mediaPartBody),
+    Buffer.from(closeDelimiter),
+  ]);
+
+  const response = await fetch(
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": `multipart/related; boundary=${boundary}`,
+        "Content-Length": String(multipartBody.length),
+      },
+      body: multipartBody,
+    },
+  );
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    logger.error({ errorBody }, "[Drive] Multipart upload failed");
+    throw new Error(`Google Drive upload failed: ${response.statusText}`);
+  }
+
+  return response.json();
+}

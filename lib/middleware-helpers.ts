@@ -3,6 +3,7 @@ import { jwtVerify } from "jose";
 import { checkAuth, handleAuthRedirect } from "@/lib/auth-check";
 import { getRootFolderId } from "@/lib/config";
 import { logger } from "@/lib/logger";
+import { kv } from "@/lib/kv";
 
 type IntlMiddleware = (request: NextRequest) => Response | Promise<Response>;
 
@@ -72,7 +73,14 @@ export async function validateShareToken(
     const secret = new TextEncoder().encode(shareSecretKey);
     const { payload } = await jwtVerify(shareToken, secret);
 
-    if (payload.loginRequired) {
+    const liveConfig = await kv.get<{ loginRequired: boolean }>(
+      `share:link:${payload.jti}`,
+    );
+    const loginRequired = liveConfig
+      ? liveConfig.loginRequired
+      : !!payload.loginRequired;
+
+    if (loginRequired) {
       const { isAuthenticated } = await checkAuth(
         request,
         process.env.NEXTAUTH_SECRET,

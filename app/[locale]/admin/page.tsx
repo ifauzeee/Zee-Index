@@ -28,6 +28,8 @@ import {
   Palette,
   BarChart3,
   Zap,
+  Edit,
+  X,
 } from "lucide-react";
 import Loading from "@/components/common/Loading";
 import { cn, formatBytes } from "@/lib/utils";
@@ -72,6 +74,7 @@ export default function AdminPage() {
     user,
     shareLinks,
     removeShareLink,
+    updateShareLink,
     fileRequests,
     fetchFileRequests,
     removeFileRequest,
@@ -100,6 +103,80 @@ export default function AdminPage() {
   const [isSubmittingEditor, setIsSubmittingEditor] = useState(false);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+
+  const [editingShareLink, setEditingShareLink] = useState<ShareLink | null>(
+    null,
+  );
+  const [editLoginRequired, setEditLoginRequired] = useState(false);
+  const [editMaxUses, setEditMaxUses] = useState<number | "">("");
+  const [editPreventDownload, setEditPreventDownload] = useState(false);
+  const [editHasWatermark, setEditHasWatermark] = useState(false);
+  const [editWatermarkText, setEditWatermarkText] = useState("");
+  const [editExpiresAt, setEditExpiresAt] = useState("");
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  const handleEditShare = (link: ShareLink) => {
+    setEditingShareLink(link);
+    setEditLoginRequired(link.loginRequired);
+    setEditMaxUses(link.maxUses ?? "");
+    setEditPreventDownload(link.preventDownload || false);
+    setEditHasWatermark(link.hasWatermark || false);
+    setEditWatermarkText(link.watermarkText || "");
+
+    if (link.expiresAt) {
+      const date = new Date(link.expiresAt);
+      const pad = (num: number) => String(num).padStart(2, "0");
+      const localStr = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+      setEditExpiresAt(localStr);
+    } else {
+      setEditExpiresAt("");
+    }
+  };
+
+  const handleSaveEditedShare = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingShareLink) return;
+
+    setIsSavingEdit(true);
+    try {
+      const payload: Record<string, any> = {
+        loginRequired: editLoginRequired,
+        maxUses: editMaxUses === "" ? null : Number(editMaxUses),
+        preventDownload: editPreventDownload,
+        hasWatermark: editHasWatermark,
+        watermarkText: editHasWatermark ? editWatermarkText : null,
+      };
+
+      if (editExpiresAt) {
+        payload.expiresAt = new Date(editExpiresAt).toISOString();
+      }
+
+      const response = await fetch(`/api/share/${editingShareLink.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Gagal memperbarui tautan berbagi.");
+      }
+
+      updateShareLink(result.updatedShareLink);
+      addToast({
+        message: "Pengaturan tautan berhasil diperbarui.",
+        type: "success",
+      });
+      setEditingShareLink(null);
+    } catch (err: any) {
+      addToast({
+        message: err.message || "Gagal memperbarui tautan berbagi.",
+        type: "error",
+      });
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -739,12 +816,22 @@ export default function AdminPage() {
                                       { locale: id },
                                     )}
                                   </p>
-                                  <button
-                                    onClick={() => handleDelete(link, "share")}
-                                    className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg transition-colors text-xs font-medium flex items-center gap-1.5"
-                                  >
-                                    <Trash2 size={14} /> Delete
-                                  </button>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => handleEditShare(link)}
+                                      className="text-primary hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-colors text-xs font-medium flex items-center gap-1.5"
+                                    >
+                                      <Edit size={14} /> Edit
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        handleDelete(link, "share")
+                                      }
+                                      className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg transition-colors text-xs font-medium flex items-center gap-1.5"
+                                    >
+                                      <Trash2 size={14} /> Delete
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             </motion.div>
@@ -909,6 +996,194 @@ export default function AdminPage() {
           </TabsContent>
         </Tabs>
       </motion.div>
+
+      {/* Modal Edit Share Link */}
+      <AnimatePresence>
+        {editingShareLink && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-card border rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col"
+            >
+              <div className="flex items-center justify-between p-4 border-b bg-muted/20">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <Edit size={18} className="text-primary" />
+                  Edit Tautan Berbagi
+                </h3>
+                <button
+                  onClick={() => setEditingShareLink(null)}
+                  className="p-1 hover:bg-muted rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form
+                onSubmit={handleSaveEditedShare}
+                className="p-6 space-y-4 overflow-y-auto max-h-[70vh]"
+              >
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
+                    Nama Item (Readonly)
+                  </label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={editingShareLink.itemName}
+                    className="w-full px-3 py-2 bg-muted/50 border rounded-lg text-sm text-muted-foreground outline-none cursor-not-allowed"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/10">
+                  <div className="space-y-0.5">
+                    <label
+                      htmlFor="edit-login-required"
+                      className="text-sm font-semibold text-foreground cursor-pointer"
+                    >
+                      Wajib Login
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      User harus login admin/editor untuk melihat file
+                    </p>
+                  </div>
+                  <input
+                    id="edit-login-required"
+                    type="checkbox"
+                    checked={editLoginRequired}
+                    onChange={(e) => setEditLoginRequired(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/10">
+                  <div className="space-y-0.5">
+                    <label
+                      htmlFor="edit-prevent-download"
+                      className="text-sm font-semibold text-foreground cursor-pointer"
+                    >
+                      Cegah Unduhan
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      Hanya izinkan preview, matikan tombol download
+                    </p>
+                  </div>
+                  <input
+                    id="edit-prevent-download"
+                    type="checkbox"
+                    checked={editPreventDownload}
+                    onChange={(e) => setEditPreventDownload(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                  />
+                </div>
+
+                <div className="p-3 rounded-lg border bg-muted/10 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <label
+                        htmlFor="edit-has-watermark"
+                        className="text-sm font-semibold text-foreground cursor-pointer"
+                      >
+                        Gunakan Watermark
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        Tampilkan teks overlay di atas file
+                      </p>
+                    </div>
+                    <input
+                      id="edit-has-watermark"
+                      type="checkbox"
+                      checked={editHasWatermark}
+                      onChange={(e) => setEditHasWatermark(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                    />
+                  </div>
+
+                  {editHasWatermark && (
+                    <div className="animate-in slide-in-from-top-2 duration-200">
+                      <label
+                        htmlFor="edit-watermark-text"
+                        className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1"
+                      >
+                        Teks Watermark
+                      </label>
+                      <input
+                        id="edit-watermark-text"
+                        type="text"
+                        value={editWatermarkText}
+                        onChange={(e) => setEditWatermarkText(e.target.value)}
+                        placeholder="Contoh: RAHASIA / SALINAN"
+                        required
+                        className="w-full px-3 py-2 bg-background border rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="edit-max-uses"
+                    className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1"
+                  >
+                    Batas Maksimal Akses / Unduhan (Opsional)
+                  </label>
+                  <input
+                    id="edit-max-uses"
+                    type="number"
+                    min="1"
+                    value={editMaxUses}
+                    onChange={(e) =>
+                      setEditMaxUses(
+                        e.target.value === "" ? "" : Number(e.target.value),
+                      )
+                    }
+                    placeholder="Tanpa batas"
+                    className="w-full px-3 py-2 bg-background border rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="edit-expires-at"
+                    className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1"
+                  >
+                    Waktu Kedaluwarsa Baru
+                  </label>
+                  <input
+                    id="edit-expires-at"
+                    type="datetime-local"
+                    value={editExpiresAt}
+                    onChange={(e) => setEditExpiresAt(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 bg-background border rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={() => setEditingShareLink(null)}
+                    className="px-4 py-2 border rounded-lg hover:bg-muted text-sm font-medium transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingEdit}
+                    className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isSavingEdit && (
+                      <Loader2 className="animate-spin" size={16} />
+                    )}
+                    Simpan Perubahan
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

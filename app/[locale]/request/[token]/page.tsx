@@ -30,6 +30,7 @@ export default function PublicUploadPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [files, setFiles] = useState<File[]>([]);
+  const [subfolderName, setSubfolderName] = useState("");
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
     {},
   );
@@ -74,6 +75,7 @@ export default function PublicUploadPage() {
             name: file.name,
             mimeType: file.type,
             size: file.size,
+            subfolder: subfolderName,
           }),
         },
       );
@@ -216,6 +218,7 @@ export default function PublicUploadPage() {
                   onClick={() => {
                     setUploadStatus("idle");
                     setUploadProgress({});
+                    setSubfolderName("");
                   }}
                   className="text-primary font-medium hover:underline text-sm"
                 >
@@ -224,6 +227,24 @@ export default function PublicUploadPage() {
               </div>
             ) : (
               <>
+                <div className="space-y-2 mb-4">
+                  <label
+                    htmlFor="subfolder"
+                    className="text-sm font-semibold text-foreground"
+                  >
+                    Nama Pengirim / Subfolder (Opsional)
+                  </label>
+                  <input
+                    id="subfolder"
+                    type="text"
+                    value={subfolderName}
+                    onChange={(e) => setSubfolderName(e.target.value)}
+                    placeholder="Contoh: Budi Santoso atau Tugas-1"
+                    disabled={uploadStatus === "uploading"}
+                    className="w-full px-3.5 py-2.5 bg-background border rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                  />
+                </div>
+
                 <div
                   onClick={() => fileInputRef.current?.click()}
                   className="border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 rounded-xl p-8 text-center cursor-pointer transition-all"

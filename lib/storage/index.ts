@@ -160,6 +160,7 @@ export async function uploadFile(
   parentId: string,
   fileName: string,
   buffer: Buffer,
+  mimeType?: string,
 ): Promise<ZeeFile | null> {
   const cleanParentId = decodeURIComponent(parentId);
 
@@ -171,7 +172,25 @@ export async function uploadFile(
     return uploadLocalFile(cleanParentId, fileName, buffer);
   }
 
-  throw new Error(
-    "Upload to this storage provider is not implemented via this method",
+  const { uploadToDrive } = await import("@/lib/drive/mutators");
+  const { getMimeType } = await import("./mime");
+  const resolvedMimeType =
+    mimeType || getMimeType(fileName) || "application/octet-stream";
+
+  const result = await uploadToDrive(
+    cleanParentId,
+    fileName,
+    buffer,
+    resolvedMimeType,
   );
+
+  return {
+    id: result.id,
+    name: result.name,
+    mimeType: result.mimeType,
+    isFolder: result.mimeType === "application/vnd.google-apps.folder",
+    source: "google-drive" as const,
+    hasThumbnail: result.mimeType.startsWith("image/"),
+    modifiedTime: new Date().toISOString(),
+  };
 }

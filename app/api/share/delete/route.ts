@@ -24,6 +24,8 @@ export const POST = createAdminRoute(
         });
       }
 
+      await kv.del(`share:link:${jti}`);
+
       await db.shareLink
         .delete({
           where: { jti },

@@ -16,6 +16,7 @@ import {
   PinOff,
   ExternalLink,
   Download,
+  History,
 } from "lucide-react";
 import { formatBytes, cn } from "@/lib/utils";
 import React, { useEffect, useState, useRef } from "react";
@@ -46,6 +47,7 @@ interface ContextMenuProps {
   onTogglePin: () => void;
   isAdmin: boolean;
   onOpenNewTab: () => void;
+  onShowHistory?: () => void;
 }
 
 export default function ContextMenu({
@@ -72,6 +74,7 @@ export default function ContextMenu({
   onTogglePin,
   isAdmin,
   onOpenNewTab,
+  onShowHistory,
 }: ContextMenuProps) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -178,6 +181,14 @@ export default function ContextMenu({
       )}
 
       <MenuItem onClick={onShowDetails} icon={Info} label={t("viewDetails")} />
+
+      {!isFolder && isAdmin && (
+        <MenuItem
+          onClick={onShowHistory}
+          icon={History}
+          label={t("versionHistory") || "Version History"}
+        />
+      )}
 
       {isArchive && (
         <MenuItem

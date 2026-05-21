@@ -114,7 +114,10 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
           }
         }
 
-        if (payload.loginRequired && !session) {
+        const isLoginRequired = shareRecord
+          ? shareRecord.loginRequired
+          : !!payload.loginRequired;
+        if (isLoginRequired && !session) {
           throw new Error("Login required.");
         }
       }

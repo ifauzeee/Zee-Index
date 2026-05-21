@@ -131,6 +131,7 @@ export const fileRequestUploadInitSchema = z.object({
   name: z.string().min(1),
   mimeType: z.string().min(1),
   size: z.number().nonnegative(),
+  subfolder: z.string().optional(),
 });
 
 export const accessRequestRecordSchema = z

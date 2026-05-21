@@ -241,6 +241,10 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
             if (!contextMenu.file.isFolder) setPreviewFile(contextMenu.file);
             setContextMenu(null);
           }}
+          onShowHistory={() => {
+            setActionState({ type: "history", file: contextMenu.file });
+            setContextMenu(null);
+          }}
           isArchive={
             contextMenu.file.mimeType === "application/zip" ||
             contextMenu.file.mimeType.includes("compressed") ||
@@ -353,12 +357,12 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
         </Suspense>
       )}
 
-      {showHistory && contextMenu?.file && (
+      {actionState.type === "history" && actionState.file && (
         <Suspense fallback={<ModalLoading />}>
           <FileRevisionsModal
-            fileId={contextMenu.file.id}
-            fileName={contextMenu.file.name}
-            onClose={() => setShowHistory(false)}
+            fileId={actionState.file.id}
+            fileName={actionState.file.name}
+            onClose={() => setActionState({ type: null, file: null })}
           />
         </Suspense>
       )}

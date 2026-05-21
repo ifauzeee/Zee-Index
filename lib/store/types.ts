@@ -152,6 +152,7 @@ export interface FileSlice {
   fetchShareLinks: () => Promise<void>;
   addShareLink: (link: ShareLink) => void;
   removeShareLink: (link: ShareLink) => Promise<void>;
+  updateShareLink: (link: ShareLink) => void;
   fileRequests: FileRequestLink[];
   fetchFileRequests: () => Promise<void>;
   removeFileRequest: (token: string) => Promise<void>;

@@ -5,7 +5,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { useAppStore } from "@/lib/store";
 
 export type ActionState = {
-  type: "rename" | "delete" | "share" | "move" | "copy" | null;
+  type: "rename" | "delete" | "share" | "move" | "copy" | "history" | null;
   file: DriveFile | null;
 };
 
