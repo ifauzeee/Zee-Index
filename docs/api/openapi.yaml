@@ -249,11 +249,11 @@ paths:
           description: Admin access required
 
   /api/files/rename:
-    patch:
+    post:
       tags:
         - Files
       summary: Rename a file
-      description: Rename a file or folder (Admin only)
+      description: Rename a file or folder (Admin/Editor only)
       operationId: renameFile
       security:
         - sessionAuth: []
@@ -277,12 +277,76 @@ paths:
         "401":
           description: Unauthorized
 
+  /api/files/move:
+    post:
+      tags:
+        - Files
+      summary: Move a file
+      description: Move a file or folder to a new parent folder (Admin/Editor only)
+      operationId: moveFile
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fileId
+                - currentParentId
+                - newParentId
+              properties:
+                fileId:
+                  type: string
+                currentParentId:
+                  type: string
+                newParentId:
+                  type: string
+      responses:
+        "200":
+          description: Move successful
+        "401":
+          description: Unauthorized
+
+  /api/files/copy:
+    post:
+      tags:
+        - Files
+      summary: Copy a file
+      description: Copy a file to a target parent folder (Admin/Editor only)
+      operationId: copyFile
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fileId
+              properties:
+                fileId:
+                  type: string
+                destinationId:
+                  type: string
+                  description: Target parent folder ID (optional)
+                newName:
+                  type: string
+                  description: Optional new name for the copied file
+      responses:
+        "200":
+          description: Copy successful
+        "401":
+          description: Unauthorized
+
   /api/files/delete:
-    delete:
+    post:
       tags:
         - Files
       summary: Delete a file
-      description: Move file to trash (Admin only)
+      description: Move file to trash or delete from storage (Admin/Editor only)
       operationId: deleteFile
       security:
         - sessionAuth: []
@@ -586,6 +650,61 @@ paths:
                   collectionName:
                     type: string
 
+  /api/share/{id}:
+    patch:
+      tags:
+        - Share
+      summary: Update share link settings
+      description: Update settings (expiration, passwords, watermark, etc.) of an active share link (Admin only)
+      operationId: updateShareLink
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the share link to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                loginRequired:
+                  type: boolean
+                maxUses:
+                  type: integer
+                  nullable: true
+                preventDownload:
+                  type: boolean
+                hasWatermark:
+                  type: boolean
+                watermarkText:
+                  type: string
+                  nullable: true
+                expiresAt:
+                  type: string
+                  format: date-time
+      responses:
+        "200":
+          description: Share link updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  updatedShareLink:
+                    $ref: "#/components/schemas/ShareLink"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Share link not found
+
   # ==============================================================================
   # ADMIN ENDPOINTS
   # ==============================================================================
@@ -825,6 +944,16 @@ components:
           type: integer
         isCollection:
           type: boolean
+        maxUses:
+          type: integer
+          nullable: true
+        preventDownload:
+          type: boolean
+        hasWatermark:
+          type: boolean
+        watermarkText:
+          type: string
+          nullable: true
 
     AppConfig:
       type: object
