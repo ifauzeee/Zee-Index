@@ -41,8 +41,10 @@ export default function UserPasswordManager() {
       } else {
         throw new Error(data.error || "Failed to check password");
       }
-    } catch (error: any) {
-      addToast({ message: error.message, type: "error" });
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to check password";
+      addToast({ message, type: "error" });
     } finally {
       setIsChecking(false);
     }
@@ -69,8 +71,10 @@ export default function UserPasswordManager() {
       } else {
         throw new Error(data.error || "Failed to set password");
       }
-    } catch (error: any) {
-      addToast({ message: error.message, type: "error" });
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to set password";
+      addToast({ message, type: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -105,8 +109,10 @@ export default function UserPasswordManager() {
         } else {
           throw new Error(data.error || "Failed to remove password");
         }
-      } catch (error: any) {
-        addToast({ message: error.message, type: "error" });
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : "Failed to remove password";
+        addToast({ message, type: "error" });
       } finally {
         setIsSubmitting(false);
       }

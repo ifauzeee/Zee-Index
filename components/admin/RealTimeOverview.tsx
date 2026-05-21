@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { Activity } from "lucide-react";
-import { useAppStore } from "@/lib/store";
+import { useAppStore, NotificationItem } from "@/lib/store";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function RealTimeOverview() {
   const [activeUsers, setActiveUsers] = useState(1);
-  const [recentEvents, setRecentEvents] = useState<any[]>([]);
+  const [recentEvents, setRecentEvents] = useState<NotificationItem[]>([]);
   const { notifications } = useAppStore();
 
   useEffect(() => {

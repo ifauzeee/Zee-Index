@@ -5,8 +5,18 @@ import { format } from "date-fns";
 import { Shield, Clock, User, Globe, FileText, Trash2 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 
+interface AuditLog {
+  timestamp: string | number | Date;
+  email: string;
+  action: string;
+  fileName?: string;
+  fileId?: string;
+  ip: string;
+  userAgent: string;
+}
+
 export default function AuditDashboard() {
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const addToast = useAppStore((state) => state.addToast);
 

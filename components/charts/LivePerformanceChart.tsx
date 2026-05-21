@@ -13,9 +13,15 @@ import {
 
 import { useTranslations } from "next-intl";
 
+interface ChartDataPoint {
+  time: number;
+  download: number;
+  upload: number;
+}
+
 const LivePerformanceChart = () => {
   const t = useTranslations("AdminPage");
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<ChartDataPoint[]>([]);
 
   useEffect(() => {
     const initialData = Array.from({ length: 20 }).map((_, i) => ({

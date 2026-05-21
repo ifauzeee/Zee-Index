@@ -32,9 +32,10 @@ export const GET = createAdminRoute(async () => {
   try {
     const folders = await db.protectedFolder.findMany();
 
-    const sanitizedFolders: Record<string, any> = {};
+    const sanitizedFolders: Record<string, { id: string; password: string }> =
+      {};
     if (folders) {
-      folders.forEach((folder: { folderId: string }) => {
+      folders.forEach((folder) => {
         sanitizedFolders[folder.folderId] = {
           id: "admin",
           password: "***REDACTED***",

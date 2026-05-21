@@ -155,7 +155,7 @@ export const POST = createAdminRoute(
       const isSensitive =
         checkName(itemName) ||
         (isCollection &&
-          items.some((item: any) => item.name && checkName(item.name)));
+          items.some((item) => item.name && checkName(item.name)));
 
       if (isSensitive && !loginRequired) {
         return NextResponse.json(

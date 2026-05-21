@@ -43,7 +43,7 @@ async function handleDownload(request: NextRequest) {
 
         const { stream: webStream, size, mimeType, filename } = downloadData;
 
-        let finalBody: BodyInit = webStream as unknown as BodyInit;
+        let finalBody: BodyInit = webStream as ReadableStream<Uint8Array>;
         let finalSize = size;
 
         if (
@@ -61,7 +61,7 @@ async function handleDownload(request: NextRequest) {
           );
 
           if (watermarked) {
-            finalBody = watermarked as unknown as BodyInit;
+            finalBody = new Blob([watermarked as unknown as BlobPart]);
             finalSize = watermarked.length;
           }
         }
@@ -82,8 +82,11 @@ async function handleDownload(request: NextRequest) {
           status: 200,
           headers: responseHeaders,
         });
-      } catch (err: any) {
-        if (err.message === "Cannot download a directory") {
+      } catch (err: unknown) {
+        if (
+          err instanceof Error &&
+          err.message === "Cannot download a directory"
+        ) {
           return NextResponse.json(
             { error: ERROR_MESSAGES.FOLDER_DOWNLOAD_NOT_SUPPORTED },
             { status: 400 },
@@ -247,10 +250,10 @@ async function handleDownload(request: NextRequest) {
       );
 
       if (watermarked) {
-        finalBody = watermarked as unknown as BodyInit;
+        finalBody = new Blob([watermarked as unknown as BlobPart]);
         responseHeaders.set("Content-Length", watermarked.length.toString());
       } else {
-        finalBody = buffer as unknown as BodyInit;
+        finalBody = new Blob([buffer as unknown as BlobPart]);
       }
     }
 
