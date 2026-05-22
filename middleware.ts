@@ -46,6 +46,56 @@ const isPublicRoute = (pathname: string) => {
   );
 };
 
+function createNonce(): string {
+  return btoa(crypto.randomUUID());
+}
+
+function createContentSecurityPolicy(nonce: string): string {
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' https://cdn.jsdelivr.net https://www.google-analytics.com`,
+    `script-src-elem 'self' 'nonce-${nonce}' 'unsafe-eval' https://cdn.jsdelivr.net https://www.google-analytics.com`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "img-src 'self' data: blob: https://*.googleusercontent.com https://drive.google.com https://images.unsplash.com https://image.tmdb.org",
+    "media-src 'self' blob: https://*.googleapis.com",
+    "connect-src 'self' https://*.googleapis.com https://*.google.com https://cdn.jsdelivr.net https://www.google-analytics.com",
+    "frame-src 'self' https://accounts.google.com",
+    "worker-src 'self' blob: https://cdn.jsdelivr.net",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join("; ");
+}
+
+function applyCsp(request: NextRequest, response: Response): Response {
+  const nonce = createNonce();
+  const contentSecurityPolicy = createContentSecurityPolicy(nonce);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", contentSecurityPolicy);
+
+  const requestOverride = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+
+  requestOverride.headers.forEach((value, key) => {
+    if (
+      key === "x-middleware-override-headers" ||
+      key.startsWith("x-middleware-request-")
+    ) {
+      response.headers.set(key, value);
+    }
+  });
+
+  response.headers.set("Content-Security-Policy", contentSecurityPolicy);
+  response.headers.set("x-nonce", nonce);
+  return response;
+}
+
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -62,9 +112,9 @@ export default async function middleware(request: NextRequest) {
   if (pathname.startsWith("/api/download")) {
     const signatureError = await validateDownloadTokenSignature(request);
     if (signatureError) {
-      return signatureError;
+      return applyCsp(request, signatureError);
     }
-    return NextResponse.next();
+    return applyCsp(request, NextResponse.next());
   }
 
   const pathnameWithoutLocale = pathname.replace(/^\/(en|id)/, "") || "/";
@@ -77,12 +127,15 @@ export default async function middleware(request: NextRequest) {
 
     const ratelimitResult = await checkRateLimit(request, type);
     if (!ratelimitResult.success) {
-      return NextResponse.json(
-        { error: ERROR_MESSAGES.RATE_LIMIT_EXCEEDED },
-        {
-          status: 429,
-          headers: createRateLimitResponse(ratelimitResult).headers,
-        },
+      return applyCsp(
+        request,
+        NextResponse.json(
+          { error: ERROR_MESSAGES.RATE_LIMIT_EXCEEDED },
+          {
+            status: 429,
+            headers: createRateLimitResponse(ratelimitResult).headers,
+          },
+        ),
       );
     }
   }
@@ -95,30 +148,42 @@ export default async function middleware(request: NextRequest) {
       pathnameWithoutLocale.startsWith("/api/setup");
 
     if (isSetupPage) {
-      return isApi ? NextResponse.next() : intlMiddleware(request);
+      return applyCsp(
+        request,
+        isApi ? NextResponse.next() : intlMiddleware(request),
+      );
     }
-    return NextResponse.redirect(new URL("/setup", request.url));
+    return applyCsp(
+      request,
+      NextResponse.redirect(new URL("/setup", request.url)),
+    );
   }
 
   if (isConfigured && pathnameWithoutLocale.startsWith("/setup")) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return applyCsp(request, NextResponse.redirect(new URL("/", request.url)));
   }
 
   if (
     PUBLIC_PATHS.has(pathnameWithoutLocale) ||
     PUBLIC_API_PREFIXES.some((p) => pathname.startsWith(p))
   ) {
-    return isApi ? NextResponse.next() : intlMiddleware(request);
+    return applyCsp(
+      request,
+      isApi ? NextResponse.next() : intlMiddleware(request),
+    );
   }
 
   const shareToken = request.nextUrl.searchParams.get("share_token");
   if (shareToken) {
-    return validateShareToken(
+    return applyCsp(
       request,
-      shareToken,
-      pathname,
-      isApi,
-      intlMiddleware,
+      await validateShareToken(
+        request,
+        shareToken,
+        pathname,
+        isApi,
+        intlMiddleware,
+      ),
     );
   }
 
@@ -128,7 +193,7 @@ export default async function middleware(request: NextRequest) {
   );
 
   if (!isAuthenticated && !isPublicRoute(pathnameWithoutLocale)) {
-    return handleAuthRedirect(request, pathname);
+    return applyCsp(request, handleAuthRedirect(request, pathname));
   }
 
   if (
@@ -136,20 +201,26 @@ export default async function middleware(request: NextRequest) {
     isGuest &&
     pathnameWithoutLocale.startsWith("/admin")
   ) {
-    return handleAuthRedirect(request, pathname, "GuestAccessDenied");
+    return applyCsp(
+      request,
+      handleAuthRedirect(request, pathname, "GuestAccessDenied"),
+    );
   }
 
   const is2FAPage = pathnameWithoutLocale === "/verify-2fa";
   if (isAuthenticated && is2FARequired && !is2FAPage) {
     if (isApi) {
-      return NextResponse.json(
-        { error: "2FA verification required" },
-        { status: 403 },
+      return applyCsp(
+        request,
+        NextResponse.json(
+          { error: "2FA verification required" },
+          { status: 403 },
+        ),
       );
     }
     const verifyUrl = new URL("/verify-2fa", request.url);
     verifyUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(verifyUrl);
+    return applyCsp(request, NextResponse.redirect(verifyUrl));
   }
 
   let currentFolderId = "";
@@ -166,18 +237,21 @@ export default async function middleware(request: NextRequest) {
       isApi,
       intlMiddleware,
     );
-    if (folderRes) return folderRes;
+    if (folderRes) return applyCsp(request, folderRes);
   }
 
   if (!isAuthenticated && !isPublicRoute(pathnameWithoutLocale)) {
-    return handleAuthRedirect(request, pathname);
+    return applyCsp(request, handleAuthRedirect(request, pathname));
   }
 
   if (pathname.startsWith("/findpath")) {
-    return handleFindPath(request);
+    return applyCsp(request, await handleFindPath(request));
   }
 
-  return isApi ? NextResponse.next() : intlMiddleware(request);
+  return applyCsp(
+    request,
+    isApi ? NextResponse.next() : intlMiddleware(request),
+  );
 }
 
 export const config = {
