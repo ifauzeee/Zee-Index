@@ -69,6 +69,37 @@ function createContentSecurityPolicy(nonce: string): string {
   ].join("; ");
 }
 
+function mergeMiddlewareRequestHeaders(
+  response: Response,
+  requestOverride: NextResponse,
+) {
+  const existingOverrideHeaders = response.headers
+    .get("x-middleware-override-headers")
+    ?.split(",")
+    .map((header) => header.trim())
+    .filter(Boolean);
+  const overrideHeaders = requestOverride.headers
+    .get("x-middleware-override-headers")
+    ?.split(",")
+    .map((header) => header.trim())
+    .filter(Boolean);
+
+  if (overrideHeaders?.length) {
+    response.headers.set(
+      "x-middleware-override-headers",
+      Array.from(
+        new Set([...(existingOverrideHeaders || []), ...overrideHeaders]),
+      ).join(","),
+    );
+  }
+
+  requestOverride.headers.forEach((value, key) => {
+    if (key.startsWith("x-middleware-request-")) {
+      response.headers.set(key, value);
+    }
+  });
+}
+
 function applyCsp(request: NextRequest, response: Response): Response {
   const nonce = createNonce();
   const contentSecurityPolicy = createContentSecurityPolicy(nonce);
@@ -82,14 +113,7 @@ function applyCsp(request: NextRequest, response: Response): Response {
     },
   });
 
-  requestOverride.headers.forEach((value, key) => {
-    if (
-      key === "x-middleware-override-headers" ||
-      key.startsWith("x-middleware-request-")
-    ) {
-      response.headers.set(key, value);
-    }
-  });
+  mergeMiddlewareRequestHeaders(response, requestOverride);
 
   response.headers.set("Content-Security-Policy", contentSecurityPolicy);
   response.headers.set("x-nonce", nonce);
