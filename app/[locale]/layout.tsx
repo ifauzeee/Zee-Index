@@ -9,6 +9,7 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import NextTopLoader from "nextjs-toploader";
 import { Inter } from "next/font/google";
+import { headers } from "next/headers";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
@@ -86,13 +87,14 @@ export default async function RootLayout({
   }
 
   const messages = await getMessages();
+  const nonce = (await headers()).get("x-nonce") || undefined;
 
   return (
     <html lang={locale} suppressHydrationWarning>
       <head />
       <body className={inter.className}>
         <NextIntlClientProvider messages={messages}>
-          <Providers>
+          <Providers nonce={nonce}>
             <NextTopLoader
               color="#3b82f6"
               initialPosition={0.08}

@@ -9,11 +9,12 @@ import { AppInitializer } from "@/components/providers/AppInitializer";
 
 type Props = {
   children?: React.ReactNode;
+  nonce?: string;
 };
 
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
-export function Providers({ children }: Props) {
+export function Providers({ children, nonce }: Props) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -50,6 +51,7 @@ export function Providers({ children }: Props) {
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
+          nonce={nonce}
         >
           <AppInitializer>
             <ModalProvider>{children}</ModalProvider>
