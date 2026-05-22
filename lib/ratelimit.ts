@@ -13,6 +13,18 @@ export interface RateLimitResult {
 }
 
 const RATELIMIT_PREFIX = "ratelimit";
+const CIRCUIT_BREAKER_FAILURE_THRESHOLD = 3;
+const CIRCUIT_BREAKER_WINDOW_MS = 60 * 1000;
+const CIRCUIT_BREAKER_PROBE_INTERVAL_MS = 5 * 1000;
+
+interface CircuitBreakerState {
+  failures: number[];
+  isOpen: boolean;
+  openedAt: number | null;
+  nextProbeAt: number;
+}
+
+const circuitBreakers = new Map<RateLimitType, CircuitBreakerState>();
 
 const isEdgeRuntime =
   typeof globalThis !== "undefined" &&
@@ -35,6 +47,65 @@ function getRestEndpoint(): string | null {
   if (!restUrl || !restToken) return null;
   if (!/^https?:\/\//i.test(restUrl)) return null;
   return restUrl.replace(/\/$/, "");
+}
+
+function getCircuitBreakerState(type: RateLimitType): CircuitBreakerState {
+  let state = circuitBreakers.get(type);
+
+  if (!state) {
+    state = {
+      failures: [],
+      isOpen: false,
+      openedAt: null,
+      nextProbeAt: 0,
+    };
+    circuitBreakers.set(type, state);
+  }
+
+  return state;
+}
+
+function shouldShortCircuit(type: RateLimitType, now: number): boolean {
+  const state = getCircuitBreakerState(type);
+  if (!state.isOpen) return false;
+
+  if (now >= state.nextProbeAt) {
+    state.nextProbeAt = now + CIRCUIT_BREAKER_PROBE_INTERVAL_MS;
+    return false;
+  }
+
+  return true;
+}
+
+function recordRateLimitSuccess(type: RateLimitType) {
+  const state = getCircuitBreakerState(type);
+  state.failures = [];
+  state.isOpen = false;
+  state.openedAt = null;
+  state.nextProbeAt = 0;
+}
+
+function recordRateLimitFailure(type: RateLimitType, now: number): boolean {
+  const state = getCircuitBreakerState(type);
+  state.failures = state.failures.filter(
+    (failureAt) => now - failureAt <= CIRCUIT_BREAKER_WINDOW_MS,
+  );
+  state.failures.push(now);
+
+  const shouldOpen = state.failures.length >= CIRCUIT_BREAKER_FAILURE_THRESHOLD;
+  const openedNow = shouldOpen && !state.isOpen;
+
+  if (shouldOpen) {
+    state.isOpen = true;
+    state.openedAt = state.openedAt ?? now;
+    state.nextProbeAt = now + CIRCUIT_BREAKER_PROBE_INTERVAL_MS;
+  }
+
+  return openedNow;
+}
+
+export function resetRateLimitCircuitBreakers() {
+  circuitBreakers.clear();
 }
 
 async function restIncrWithExpire(
@@ -93,6 +164,16 @@ export class KVRateLimiter {
   async check(identifier: string): Promise<RateLimitResult> {
     const key = `${RATELIMIT_PREFIX}:${this.type}:${identifier}`;
     const now = Date.now();
+    const reset = now + this.windowSeconds * 1000;
+
+    if (shouldShortCircuit(this.type, now)) {
+      return {
+        success: false,
+        limit: this.limitCount,
+        remaining: 0,
+        reset,
+      };
+    }
 
     try {
       let currentCount: number | null = null;
@@ -116,10 +197,9 @@ export class KVRateLimiter {
         }
       }
 
-      const reset = now + this.windowSeconds * 1000;
-
       const remaining = Math.max(0, this.limitCount - currentCount);
       const success = currentCount <= this.limitCount;
+      recordRateLimitSuccess(this.type);
 
       return {
         success,
@@ -133,11 +213,27 @@ export class KVRateLimiter {
         "Rate limit check failed",
       );
 
+      if (recordRateLimitFailure(this.type, now)) {
+        logger.error(
+          { type: this.type },
+          "Rate limit circuit breaker opened after repeated failures",
+        );
+      }
+
+      if (shouldShortCircuit(this.type, now)) {
+        return {
+          success: false,
+          limit: this.limitCount,
+          remaining: 0,
+          reset,
+        };
+      }
+
       return {
         success: true,
         limit: this.limitCount,
         remaining: this.limitCount - 1,
-        reset: now + this.windowSeconds * 1000,
+        reset,
       };
     }
   }
