@@ -6,6 +6,7 @@ import { memoryCache } from "@/lib/memory-cache";
 import { startOfToday, startOfWeek, startOfMonth, subDays } from "date-fns";
 
 export const dynamic = "force-dynamic";
+export const ANALYTICS_ACTIVITY_LOG_TAKE_LIMIT = 10_000;
 
 type AnalyticsLog = Awaited<ReturnType<typeof db.activityLog.findMany>>[number];
 
@@ -20,6 +21,7 @@ export const GET = createAdminRoute(async () => {
     const allLogs = await db.activityLog.findMany({
       where: { timestamp: { gte: thirtyDaysAgo } },
       orderBy: { timestamp: "desc" },
+      take: ANALYTICS_ACTIVITY_LOG_TAKE_LIMIT,
     });
 
     const last5MinLogs = allLogs.filter(

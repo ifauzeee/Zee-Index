@@ -18,11 +18,15 @@ export const dynamic = "force-dynamic";
 import { getAnalyticsData } from "@/lib/analyticsTracker";
 import { mapDbActivityLog } from "@/lib/activityLogger";
 
+export const ADMIN_STATS_ACTIVITY_LOG_TAKE_LIMIT = 10_000;
+
 const getAdminStatsCached = unstable_cache(
   async () => {
     const ninetyDaysAgo = subDays(new Date(), 90).getTime();
     const allLogsRaw = await db.activityLog.findMany({
       where: { timestamp: { gte: ninetyDaysAgo } },
+      orderBy: { timestamp: "desc" },
+      take: ADMIN_STATS_ACTIVITY_LOG_TAKE_LIMIT,
     });
 
     const allLogs: ActivityLog[] = allLogsRaw.map(mapDbActivityLog);

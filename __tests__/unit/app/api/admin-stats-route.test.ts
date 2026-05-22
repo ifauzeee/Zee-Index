@@ -37,7 +37,10 @@ vi.mock("@/lib/activityLogger", () => ({
   mapDbActivityLog: mockMapDbActivityLog,
 }));
 
-import { GET } from "@/app/api/admin/stats/route";
+import {
+  ADMIN_STATS_ACTIVITY_LOG_TAKE_LIMIT,
+  GET,
+} from "@/app/api/admin/stats/route";
 
 describe("app/api/admin/stats route", () => {
   beforeEach(() => {
@@ -82,6 +85,12 @@ describe("app/api/admin/stats route", () => {
     expect(response.status).toBe(200);
     const payload = await response.json();
 
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { timestamp: "desc" },
+        take: ADMIN_STATS_ACTIVITY_LOG_TAKE_LIMIT,
+      }),
+    );
     expect(payload.bandwidthSummary).toEqual({
       today: 100,
       thisWeek: 700,
