@@ -47,6 +47,15 @@ export function isAllowedResumableUploadUrl(uploadUrl: string): boolean {
   }
 }
 
+export function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 async function sendUploadNotificationEmail(
   requestData: any,
   fileName: string,
@@ -63,6 +72,9 @@ async function sendUploadNotificationEmail(
     const { sendMail } = await import("@/lib/mailer");
     const { formatBytes } = await import("@/lib/utils");
     const sizeFormatted = formatBytes(parseInt(fileSizeStr) || 0);
+    const safeTitle = escapeHtml(requestData.title);
+    const safeFileName = escapeHtml(fileName);
+    const safeFolderName = escapeHtml(requestData.folderName);
 
     await sendMail({
       to: adminEmails,
@@ -71,10 +83,10 @@ async function sendUploadNotificationEmail(
         <h3>Notifikasi Unggah File Request</h3>
         <p>File baru telah berhasil diunggah melalui tautan File Request:</p>
         <ul>
-          <li><b>Judul Request:</b> ${requestData.title}</li>
-          <li><b>Nama File:</b> ${fileName}</li>
+          <li><b>Judul Request:</b> ${safeTitle}</li>
+          <li><b>Nama File:</b> ${safeFileName}</li>
           <li><b>Ukuran:</b> ${sizeFormatted}</li>
-          <li><b>Folder Tujuan:</b> ${requestData.folderName}</li>
+          <li><b>Folder Tujuan:</b> ${safeFolderName}</li>
           <li><b>Tanggal Unggah:</b> ${new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}</li>
         </ul>
         <p>Silakan masuk ke dashboard admin untuk memeriksa file.</p>

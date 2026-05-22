@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { logger } from "@/lib/logger";
 
 interface MailOptions {
   to: string | string[];
@@ -31,5 +32,7 @@ export async function sendMail({ to, subject, html }: MailOptions) {
       subject: subject,
       html: html,
     });
-  } catch {}
+  } catch (err) {
+    logger.error({ err }, "Failed to send mail");
+  }
 }

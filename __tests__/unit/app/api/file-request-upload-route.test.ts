@@ -19,7 +19,10 @@ vi.mock("@/lib/activityLogger", () => ({
   logActivity: vi.fn(),
 }));
 
-import { isAllowedResumableUploadUrl } from "@/app/api/file-request/upload/route";
+import {
+  escapeHtml,
+  isAllowedResumableUploadUrl,
+} from "@/app/api/file-request/upload/route";
 
 describe("app/api/file-request/upload route", () => {
   it("accepts Google resumable upload URLs", () => {
@@ -44,5 +47,11 @@ describe("app/api/file-request/upload route", () => {
         "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable",
       ),
     ).toBe(false);
+  });
+
+  it("escapes HTML before interpolating untrusted values into emails", () => {
+    expect(escapeHtml(`<img src=x onerror=alert("xss")>&'`)).toBe(
+      "&lt;img src=x onerror=alert(&quot;xss&quot;)&gt;&amp;&#39;",
+    );
   });
 });
