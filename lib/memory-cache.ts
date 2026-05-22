@@ -53,7 +53,7 @@ class MemoryCache {
     }
 
     if (cleaned > 0) {
-      console.debug(`[MemoryCache] Cleaned ${cleaned} expired entries`);
+      logger.debug({ cleaned }, "[MemoryCache] Cleaned expired entries");
     }
   }
 
