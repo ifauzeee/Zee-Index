@@ -183,12 +183,54 @@ export default async function middleware(request: NextRequest) {
     );
   }
 
-  if (isConfigured && pathnameWithoutLocale.startsWith("/setup")) {
-    return applyCsp(request, NextResponse.redirect(new URL("/", request.url)));
+  const authResult = await checkAuth(request, process.env.NEXTAUTH_SECRET);
+  const { isAuthenticated, isGuest, is2FARequired, token } = authResult;
+  const isSetupRoute =
+    pathnameWithoutLocale.startsWith("/setup") ||
+    pathnameWithoutLocale.startsWith("/api/setup");
+
+  if (isConfigured && isSetupRoute) {
+    if (!isAuthenticated) {
+      return applyCsp(request, handleAuthRedirect(request, pathname));
+    }
+
+    if (isGuest || token?.role !== "ADMIN") {
+      if (isApi) {
+        return applyCsp(
+          request,
+          NextResponse.json({ error: "Forbidden" }, { status: 403 }),
+        );
+      }
+      return applyCsp(
+        request,
+        handleAuthRedirect(request, pathname, "RootAccessDenied"),
+      );
+    }
+
+    if (is2FARequired && pathnameWithoutLocale !== "/verify-2fa") {
+      if (isApi) {
+        return applyCsp(
+          request,
+          NextResponse.json(
+            { error: "2FA verification required" },
+            { status: 403 },
+          ),
+        );
+      }
+      const verifyUrl = new URL("/verify-2fa", request.url);
+      verifyUrl.searchParams.set("callbackUrl", pathname);
+      return applyCsp(request, NextResponse.redirect(verifyUrl));
+    }
+
+    return applyCsp(
+      request,
+      isApi ? NextResponse.next() : intlMiddleware(request),
+    );
   }
 
   if (
-    PUBLIC_PATHS.has(pathnameWithoutLocale) ||
+    (PUBLIC_PATHS.has(pathnameWithoutLocale) &&
+      !pathnameWithoutLocale.startsWith("/setup")) ||
     PUBLIC_API_PREFIXES.some((p) => pathname.startsWith(p))
   ) {
     return applyCsp(
@@ -210,11 +252,6 @@ export default async function middleware(request: NextRequest) {
       ),
     );
   }
-
-  const { isAuthenticated, isGuest, is2FARequired } = await checkAuth(
-    request,
-    process.env.NEXTAUTH_SECRET,
-  );
 
   if (!isAuthenticated && !isPublicRoute(pathnameWithoutLocale)) {
     return applyCsp(request, handleAuthRedirect(request, pathname));

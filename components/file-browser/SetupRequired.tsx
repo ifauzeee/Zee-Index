@@ -21,6 +21,10 @@ export default function SetupRequired({
   type = "expired",
 }: SetupRequiredProps) {
   const isExpired = type === "expired";
+  const openSetupPage = () => {
+    const locale = window.location.pathname.match(/^\/(en|id)(\/|$)/)?.[1];
+    window.location.href = `${locale ? `/${locale}` : ""}/setup`;
+  };
 
   const containerVariants = {
     hidden: { opacity: 0, y: 12 },
@@ -87,7 +91,7 @@ export default function SetupRequired({
           className="flex flex-col w-full gap-2.5"
         >
           <button
-            onClick={() => (window.location.href = "/setup")}
+            onClick={openSetupPage}
             className="group flex items-center justify-center gap-2 h-11 px-6 bg-foreground text-background hover:opacity-90 text-[13px] font-semibold rounded-xl transition-all"
           >
             <Settings

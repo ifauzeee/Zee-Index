@@ -17,7 +17,7 @@ export async function checkAuth(
     req: request,
     secret,
     cookieName: "authjs.session-token",
-    secureCookie: process.env.NODE_ENV === "production",
+    secureCookie: process.env.NEXTAUTH_URL?.startsWith("https://") ?? false,
   });
 
   if (!token) {

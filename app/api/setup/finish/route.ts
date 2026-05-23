@@ -54,7 +54,7 @@ export function hasPersistedSetupConfig(envContent: string): boolean {
 }
 
 export const POST = createPublicRoute(
-  async ({ body, request }) => {
+  async ({ body, request, session }) => {
     try {
       if (!isAllowedSetupRequestOrigin(request)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -72,14 +72,11 @@ export const POST = createPublicRoute(
       }
 
       const isConfigured = await isAppConfigured();
-      if (isConfigured || hasPersistedSetupConfig(envContent)) {
-        return NextResponse.json(
-          {
-            error:
-              "Setup has already been completed. Reset database to re-configure.",
-          },
-          { status: 403 },
-        );
+      const hasSetupConfig = hasPersistedSetupConfig(envContent);
+      if (isConfigured || hasSetupConfig) {
+        if (session?.user?.role !== "ADMIN") {
+          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
       }
 
       const { clientId, clientSecret, authCode, redirectUri, rootFolderId } =
@@ -170,5 +167,5 @@ export const POST = createPublicRoute(
       return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   },
-  { rateLimit: false, bodySchema: setupFinishSchema },
+  { rateLimit: false, bodySchema: setupFinishSchema, includeSession: true },
 );
