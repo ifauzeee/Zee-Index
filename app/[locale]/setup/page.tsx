@@ -23,6 +23,11 @@ export default function SetupPage() {
     authCode: "",
   });
 
+  const getLocaleRootPath = () => {
+    const locale = window.location.pathname.match(/^\/(en|id)(\/|$)/)?.[1];
+    return locale ? `/${locale}` : "/";
+  };
+
   useEffect(() => {
     if (window.location.search.includes("code=") && step === 1) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -392,7 +397,7 @@ export default function SetupPage() {
               )}
 
               <button
-                onClick={() => router.push("/")}
+                onClick={() => router.push(getLocaleRootPath())}
                 className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3.5 rounded-xl font-medium transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
               >
                 {t("understand")}

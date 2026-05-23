@@ -32,8 +32,22 @@ export function isAllowedSetupRequestOrigin(request: Request): boolean {
   try {
     const originUrl = new URL(origin);
     const requestUrl = new URL(request.url);
+    const host = request.headers.get("host");
+    const forwardedHost = request.headers.get("x-forwarded-host");
+    const forwardedProto =
+      request.headers.get("x-forwarded-proto") ||
+      requestUrl.protocol.slice(0, -1);
+    const allowedOrigins = new Set([requestUrl.origin]);
 
-    return originUrl.origin === requestUrl.origin;
+    if (host) {
+      allowedOrigins.add(`${requestUrl.protocol}//${host}`);
+    }
+
+    if (forwardedHost) {
+      allowedOrigins.add(`${forwardedProto}://${forwardedHost}`);
+    }
+
+    return allowedOrigins.has(originUrl.origin);
   } catch {
     return false;
   }
