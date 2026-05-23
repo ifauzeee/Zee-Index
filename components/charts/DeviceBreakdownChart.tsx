@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { useTranslations } from "next-intl";
 
 interface DeviceBreakdownChartProps {
   data: { name: string; count: number }[];
@@ -39,6 +40,8 @@ const CustomTooltip = ({
   active?: boolean;
   payload?: DeviceTooltipPayload[];
 }) => {
+  const t = useTranslations("Charts");
+
   if (active && payload && payload.length) {
     const data = payload[0];
     return (
@@ -51,7 +54,7 @@ const CustomTooltip = ({
           {data.name}
         </p>
         <p className="text-xs text-muted-foreground">
-          Count:{" "}
+          {t("count")}:{" "}
           <span className="text-foreground font-medium">{data.value}</span>
         </p>
       </div>
@@ -63,10 +66,12 @@ const CustomTooltip = ({
 const DeviceBreakdownChart: React.FC<DeviceBreakdownChartProps> = ({
   data,
 }) => {
+  const t = useTranslations("Charts");
+
   if (!data || data.length === 0) {
     return (
       <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">
-        No data available
+        {t("noData")}
       </div>
     );
   }

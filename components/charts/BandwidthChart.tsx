@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+import { useTranslations } from "next-intl";
 
 interface BandwidthChartProps {
   data: { date: string; bytes: number }[];
@@ -36,12 +37,14 @@ const CustomTooltip = ({
   payload?: BandwidthTooltipPayload[];
   label?: string;
 }) => {
+  const t = useTranslations("Charts");
+
   if (active && payload && payload.length) {
     return (
       <div className="bg-popover border border-border text-popover-foreground p-3 rounded-lg shadow-xl text-sm">
         <p className="font-semibold mb-1">{label}</p>
         <p className="text-xs text-muted-foreground">
-          Bandwidth:{" "}
+          {t("bandwidth")}:{" "}
           <span className="text-foreground font-medium">
             {formatBytes(payload?.[0]?.value || 0)}
           </span>

@@ -128,7 +128,7 @@ export default function LocalStorageAuthForm({
 
         <div className="mt-8 text-center sm:text-right">
           <span className="text-[10px] uppercase tracking-widest text-muted-foreground/40 font-bold">
-            Zee Index Security Engine v2.0
+            {t("securityEngine")}
           </span>
         </div>
       </motion.div>

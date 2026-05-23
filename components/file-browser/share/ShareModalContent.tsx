@@ -31,7 +31,10 @@ export function ShareSidebar({
         <div>
           <h3 className="text-lg font-bold leading-none">{t("share")}</h3>
           <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
-            {itemName || (itemCount ? `${itemCount} items` : "Collection")}
+            {itemName ||
+              (itemCount
+                ? t("itemCount", { count: itemCount })
+                : t("collection"))}
           </p>
         </div>
       </div>
@@ -57,7 +60,9 @@ export function ShareSidebar({
           />
           <div className="flex flex-col">
             <span className="font-semibold text-sm">{t("timedLink")}</span>
-            <span className="text-[10px] opacity-70">Temporary access</span>
+            <span className="text-[10px] opacity-70">
+              {t("temporaryAccess")}
+            </span>
           </div>
         </button>
 
@@ -81,14 +86,15 @@ export function ShareSidebar({
           />
           <div className="flex flex-col">
             <span className="font-semibold text-sm">{t("sessionLink")}</span>
-            <span className="text-[10px] opacity-70">Long-term access</span>
+            <span className="text-[10px] opacity-70">
+              {t("longTermAccess")}
+            </span>
           </div>
         </button>
       </div>
 
       <div className="mt-8 pt-6 border-t border-border/50 text-[11px] text-muted-foreground leading-relaxed">
-        By generating a link, you agree to track and monitor the link usage in
-        the Admin Panel.
+        {t("trackingNotice")}
       </div>
     </div>
   );
@@ -128,7 +134,7 @@ export function SecurityPolicies({
   return (
     <div className="space-y-4">
       <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70 px-1">
-        Security & Policies
+        {t("securityPolicies")}
       </h4>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <button
@@ -149,7 +155,7 @@ export function SecurityPolicies({
           <div className="flex-1">
             <p className="text-sm font-semibold">{t("requireLogin")}</p>
             <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
-              Protect with account
+              {t("protectWithAccount")}
             </p>
           </div>
         </button>
@@ -172,7 +178,7 @@ export function SecurityPolicies({
           <div className="flex-1">
             <p className="text-sm font-semibold">{t("preventDownload")}</p>
             <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
-              Restrict direct saving
+              {t("restrictDirectSaving")}
             </p>
           </div>
         </button>
@@ -198,7 +204,7 @@ export function SecurityPolicies({
             <div className="flex-1">
               <p className="text-sm font-semibold">{t("hasWatermark")}</p>
               <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
-                Enable visual protection
+                {t("enableVisualProtection")}
               </p>
             </div>
           </button>
@@ -207,7 +213,7 @@ export function SecurityPolicies({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               type="text"
-              placeholder="Custom Watermark (optional)"
+              placeholder={t("customWatermarkPlaceholder")}
               value={watermarkText}
               onChange={(e) => setWatermarkText(e.target.value)}
               className="w-full mt-1.5 px-3 py-1.5 rounded-lg border-2 border-primary/20 bg-background text-sm outline-none focus:border-primary/50"
@@ -234,7 +240,7 @@ export function SecurityPolicies({
               <div className="flex flex-col">
                 <p className="text-sm font-semibold">{t("limitAccess")}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
-                  Max views/downloads
+                  {t("maxViewsDownloads")}
                 </p>
               </div>
             </div>
@@ -288,7 +294,7 @@ export function DurationSettings({
       className="p-5 bg-accent/20 rounded-2xl border border-border/50"
     >
       <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-        Duration Settings
+        {t("durationSettings")}
       </h4>
       <div className="flex gap-3">
         <div className="flex-1">

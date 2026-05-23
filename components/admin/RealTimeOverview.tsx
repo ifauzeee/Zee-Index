@@ -5,8 +5,10 @@ import { Activity } from "lucide-react";
 import { useAppStore, NotificationItem } from "@/lib/store";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 export default function RealTimeOverview() {
+  const t = useTranslations("RealTimeOverview");
   const [activeUsers, setActiveUsers] = useState(1);
   const [recentEvents, setRecentEvents] = useState<NotificationItem[]>([]);
   const { notifications } = useAppStore();
@@ -32,7 +34,7 @@ export default function RealTimeOverview() {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <div className="col-span-1 border rounded-xl shadow-sm bg-card p-4">
         <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <h3 className="text-sm font-medium">Active Users</h3>
+          <h3 className="text-sm font-medium">{t("activeUsers")}</h3>
           <div className="flex h-3 w-3 relative">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
@@ -40,14 +42,16 @@ export default function RealTimeOverview() {
         </div>
         <div>
           <div className="text-3xl font-bold">{activeUsers}</div>
-          <p className="text-xs text-muted-foreground mt-1">Currently online</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {t("currentlyOnline")}
+          </p>
         </div>
       </div>
 
       <div className="col-span-1 lg:col-span-3 border rounded-xl shadow-sm bg-muted/20 p-4">
         <div className="flex flex-row items-center gap-2 pb-2">
           <Activity className="h-4 w-4 text-blue-500" />
-          <h3 className="text-sm font-medium">Live Feed</h3>
+          <h3 className="text-sm font-medium">{t("liveFeed")}</h3>
         </div>
         <div className="px-2 py-2">
           <div className="space-y-3 relative overflow-hidden h-[120px]">
@@ -69,7 +73,7 @@ export default function RealTimeOverview() {
                 ))
               ) : (
                 <div className="text-sm text-muted-foreground flex items-center justify-center h-full">
-                  Waiting for events...
+                  {t("waiting")}
                 </div>
               )}
             </AnimatePresence>

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 
 export default function MainError({
   error,
@@ -11,6 +12,8 @@ export default function MainError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("MainError");
+
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -22,25 +25,20 @@ export default function MainError({
       </div>
 
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight">
-          Gagal Memuat Konten
-        </h2>
-        <p className="text-muted-foreground max-w-[500px]">
-          Terjadi kesalahan saat mencoba mengambil data folder atau file. Ini
-          mungkin karena masalah koneksi atau izin akses.
-        </p>
+        <h2 className="text-2xl font-bold tracking-tight">{t("title")}</h2>
+        <p className="text-muted-foreground max-w-[500px]">{t("message")}</p>
       </div>
 
       <div className="flex gap-2">
         <Button onClick={() => reset()} variant="default" className="gap-2">
           <RefreshCw className="h-4 w-4" />
-          Coba Lagi
+          {t("tryAgain")}
         </Button>
       </div>
 
       {error.digest && (
         <p className="text-xs text-muted-foreground">
-          Error ID: {error.digest}
+          {t("errorId")}: {error.digest}
         </p>
       )}
     </div>

@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+import { useTranslations } from "next-intl";
 
 interface PageViewsChartProps {
   data: { hour: string; views: number; visitors: number }[];
@@ -28,6 +29,8 @@ const CustomTooltip = ({
   payload?: PageViewsTooltipPayload[];
   label?: string;
 }) => {
+  const t = useTranslations("Charts");
+
   if (active && payload && payload.length) {
     return (
       <div className="bg-popover border border-border text-popover-foreground p-3 rounded-lg shadow-xl text-sm">
@@ -38,7 +41,7 @@ const CustomTooltip = ({
               className="w-2 h-2 rounded-full"
               style={{ backgroundColor: "hsl(217, 91%, 60%)" }}
             />
-            Views:{" "}
+            {t("views")}:{" "}
             <span className="font-medium text-foreground">
               {payload?.[0]?.value || 0}
             </span>
@@ -48,7 +51,7 @@ const CustomTooltip = ({
               className="w-2 h-2 rounded-full"
               style={{ backgroundColor: "hsl(142, 71%, 45%)" }}
             />
-            Visitors:{" "}
+            {t("visitors")}:{" "}
             <span className="font-medium text-foreground">
               {payload?.[1]?.value || 0}
             </span>

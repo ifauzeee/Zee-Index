@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
+import { useTranslations } from "next-intl";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 
@@ -28,6 +29,7 @@ interface PDFViewerProps {
 }
 
 export default function PDFViewer({ src }: PDFViewerProps) {
+  const t = useTranslations("PDFViewer");
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1.0);
@@ -69,7 +71,7 @@ export default function PDFViewer({ src }: PDFViewerProps) {
                 ? "bg-primary text-primary-foreground"
                 : "hover:bg-white/10 text-zinc-400",
             )}
-            title="Samping"
+            title={t("sidebar")}
           >
             <Menu size={18} />
           </button>
@@ -133,7 +135,7 @@ export default function PDFViewer({ src }: PDFViewerProps) {
             <button
               onClick={handleRotate}
               className="p-2 rounded-lg hover:bg-white/10 text-zinc-400 transition-colors"
-              title="Putar"
+              title={t("rotate")}
             >
               <RotateCw size={18} />
             </button>
@@ -141,7 +143,7 @@ export default function PDFViewer({ src }: PDFViewerProps) {
               <button
                 onClick={handleDownload}
                 className="p-2 rounded-lg hover:bg-white/10 text-zinc-400 transition-colors"
-                title="Unduh"
+                title={t("download")}
               >
                 <Download size={18} />
               </button>
@@ -191,7 +193,7 @@ export default function PDFViewer({ src }: PDFViewerProps) {
               <div className="flex flex-col items-center justify-center h-full text-zinc-500 gap-4">
                 <Loader2 className="animate-spin h-10 w-10 text-primary" />
                 <p className="text-sm font-medium animate-pulse">
-                  Menyiapkan Dokumen...
+                  {t("preparingDocument")}
                 </p>
               </div>
             }
@@ -214,7 +216,7 @@ export default function PDFViewer({ src }: PDFViewerProps) {
         <button
           onClick={() => setScale(1.0)}
           className="p-3 bg-zinc-900/80 backdrop-blur-md border border-white/10 text-zinc-400 rounded-full hover:bg-primary hover:text-white transition-all shadow-xl active:scale-90"
-          title="Reset Zoom"
+          title={t("resetZoom")}
         >
           <Maximize size={20} />
         </button>

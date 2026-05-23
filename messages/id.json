@@ -28,7 +28,9 @@
     "error": "Kesalahan",
     "light": "Terang",
     "dark": "Gelap",
-    "skipToContent": "Lompat ke konten utama"
+    "skipToContent": "Lompat ke konten utama",
+    "createdBy": "Dibuat oleh",
+    "close": "Tutup"
   },
   "AuthForm": {
     "accessRestricted": "Akses Terbatas",
@@ -47,7 +49,8 @@
     "loginToRequest": "Login untuk Request",
     "accessRequestSuccess": "Permintaan akses berhasil dikirim ke Admin.",
     "requestFail": "Gagal mengirim permintaan.",
-    "accessGranted": "Akses diberikan! Memuat folder..."
+    "accessGranted": "Akses diberikan! Memuat folder...",
+    "securityEngine": "Zee Index Security Engine v2.0"
   },
   "Search": {
     "searchAll": "Cari semua file...",
@@ -101,7 +104,9 @@
     "menu": "Menu",
     "notifications": "Notifikasi",
     "backToHome": "Kembali ke Beranda",
-    "tour": "Mulai Tur"
+    "tour": "Mulai Tur",
+    "driveLogoAlt": "Logo Google Drive",
+    "logoAlt": "Logo"
   },
   "ContextMenu": {
     "preview": "Pratinjau / Buka",
@@ -317,7 +322,9 @@
       "loginFailedText": "Email atau kata sandi salah. Silakan coba lagi.",
       "loginErrorTitle": "Terjadi Kesalahan",
       "loginErrorText": "Terjadi kesalahan saat masuk. Silakan coba lagi."
-    }
+    },
+    "driveLogoAlt": "Logo Google Drive",
+    "logoAlt": "Logo"
   },
   "FileList": {
     "emptyTitle": "Folder ini Kosong",
@@ -411,7 +418,38 @@
     "accessDeniedMessage": "Anda tidak memiliki izin Administrator untuk melihat halaman ini.",
     "linkCopied": "Tautan disalin ke papan klip!",
     "loadingStatsError": "Gagal memuat statistik: {error}",
-    "analytics": "Analitik"
+    "analytics": "Analitik",
+    "systemOverview": "Ringkasan Sistem",
+    "today": "Hari Ini",
+    "totalThisMonth": "Total Bulan Ini",
+    "fileCount": "{count} file",
+    "expiresShort": "Exp:",
+    "active": "Aktif",
+    "folderLabel": "Folder:",
+    "delete": "Hapus",
+    "login": "Login",
+    "edit": "Edit",
+    "manageEditors": "Kelola Editor",
+    "editorEmailPlaceholder": "Email Editor",
+    "addEditor": "Tambah Editor",
+    "editorList": "Daftar Editor",
+    "noEditors": "Belum ada editor.",
+    "editShareLink": "Edit Tautan Berbagi",
+    "itemNameReadonly": "Nama Item (Readonly)",
+    "requireLogin": "Wajib Login",
+    "requireLoginDesc": "User harus login admin/editor untuk melihat file",
+    "preventDownload": "Cegah Unduhan",
+    "preventDownloadDesc": "Hanya izinkan preview, matikan tombol download",
+    "useWatermark": "Gunakan Watermark",
+    "useWatermarkDesc": "Tampilkan teks overlay di atas file",
+    "watermarkText": "Teks Watermark",
+    "watermarkPlaceholder": "Contoh: RAHASIA / SALINAN",
+    "maxAccess": "Batas Maksimal Akses / Unduhan (Opsional)",
+    "unlimited": "Tanpa batas",
+    "newExpiration": "Waktu Kedaluwarsa Baru",
+    "cancel": "Batal",
+    "saveChanges": "Simpan Perubahan",
+    "back": "Kembali"
   },
   "Footer": {
     "dataUsage": "Total Penggunaan Data:",
@@ -431,7 +469,9 @@
     "fileTypes": "Dokumen, Foto, Video, dll.",
     "startUpload": "Mulai Unggah",
     "uploadFailed": "Gagal mengunggah sebagian file. Silakan coba lagi.",
-    "poweredBy": "Powered by Zee-Index"
+    "poweredBy": "Powered by Zee-Index",
+    "senderSubfolder": "Nama Pengirim / Subfolder (Opsional)",
+    "senderSubfolderPlaceholder": "Contoh: Budi Santoso atau Tugas-1"
   },
   "TrashPage": {
     "accessDenied": "Akses Ditolak: Halaman ini khusus Admin",
@@ -482,7 +522,8 @@
     "copied": "Disalin!",
     "understand": "Paham, Kembali ke Beranda",
     "refreshToken": "Refresh Token",
-    "envNote": "Salin semua variabel di bawah ini dan tambahkan ke file .env Anda, lalu restart container/VPS jika perlu."
+    "envNote": "Salin semua variabel di bawah ini dan tambahkan ke file .env Anda, lalu restart container/VPS jika perlu.",
+    "createdBy": "Dibuat oleh"
   },
   "DetailsPanel": {
     "copied": "Disalin!",
@@ -534,7 +575,20 @@
     "hasWatermark": "Watermark Dinamis",
     "hasWatermarkDesc": "Tampilkan watermark untuk mencegah tangkapan layar",
     "limitAccess": "Batasi Akses",
-    "limitAccessDesc": "Batasi berapa kali tautan ini dapat diakses/diunduh"
+    "limitAccessDesc": "Batasi berapa kali tautan ini dapat diakses/diunduh",
+    "itemCount": "{count} item",
+    "collection": "Koleksi",
+    "temporaryAccess": "Akses sementara",
+    "longTermAccess": "Akses jangka panjang",
+    "trackingNotice": "Dengan membuat tautan, Anda setuju untuk melacak dan memantau penggunaan tautan di Panel Admin.",
+    "securityPolicies": "Keamanan & Kebijakan",
+    "protectWithAccount": "Lindungi dengan akun",
+    "restrictDirectSaving": "Batasi penyimpanan langsung",
+    "enableVisualProtection": "Aktifkan perlindungan visual",
+    "customWatermarkPlaceholder": "Watermark kustom (opsional)",
+    "maxViewsDownloads": "Maks. tayangan/unduhan",
+    "durationSettings": "Pengaturan Durasi",
+    "confirmSettings": "Pastikan semua pengaturan sudah benar sebelum membuat tautan publik."
   },
   "NotificationCenter": {
     "title": "Notifikasi",
@@ -638,7 +692,8 @@
     "displayNamePlaceholder": "Contoh: Project X",
     "passwordPlaceholder": "Biarkan kosong jika publik",
     "folderNamePlaceholder": "Nama folder...",
-    "publicAccessPlaceholder": "Biarkan kosong untuk akses publik"
+    "publicAccessPlaceholder": "Biarkan kosong untuk akses publik",
+    "passwordProtected": "Terproteksi Password"
   },
   "SharedCollectionPage": {
     "defaultName": "Koleksi Bersama",
@@ -703,7 +758,11 @@
     "retry": "Coba Muat Ulang",
     "notFoundTitle": "File Tidak Ditemukan",
     "notFoundMessage": "File yang Anda cari tidak ada atau Google Drive sedang sibuk.",
-    "fetchError": "Terjadi masalah saat mengambil detail file. Periksa koneksi jaringan Anda atau coba lagi nanti."
+    "fetchError": "Terjadi masalah saat mengambil detail file. Periksa koneksi jaringan Anda atau coba lagi nanti.",
+    "accessDenied": "Akses Ditolak",
+    "invalidShareToken": "Token berbagi tidak valid atau login diperlukan.",
+    "noFilePermission": "Anda tidak memiliki izin untuk melihat file ini.",
+    "goHome": "Ke Beranda"
   },
   "KeyboardShortcuts": {
     "title": "Pintasan Keyboard",
@@ -720,7 +779,8 @@
     "open": "Buka Pratinjau",
     "notAvailable": "Pratinjau tidak tersedia",
     "download": "Unduh File",
-    "libraryError": "Library EpubJS belum dimuat."
+    "libraryError": "Library EpubJS belum dimuat.",
+    "preview": "Pratinjau"
   },
   "FileCard": {
     "info": "Info",
@@ -767,14 +827,34 @@
     "removeTitle": "Hapus Proteksi?",
     "removeMessage": "akan menjadi terbuka untuk umum (kecuali jika dibatasi dari Google Drive).",
     "cancel": "Batal",
-    "yesRemove": "Ya, Hapus"
+    "yesRemove": "Ya, Hapus",
+    "protectLocalRoot": "Proteksi Root Local Storage",
+    "description": "Kunci folder Google Drive atau Local Storage dengan kata sandi.",
+    "folderIdLabel": "ID Folder atau Path",
+    "passwordLabel": "Kata Sandi Baru",
+    "folderCount": "{count} Folder",
+    "connecting": "Menghubungkan ke database...",
+    "emptyHint": "Gunakan form di atas untuk menambah folder pertama.",
+    "localStorage": "Penyimpanan Lokal",
+    "encrypted": "Terenkripsi",
+    "folder": "Folder"
   },
   "AuthModal": {
     "userIdPlaceholder": "ID Pengguna",
     "passwordPlaceholder": "Kata Sandi"
   },
   "TwoFactorAuthSetup": {
-    "codePlaceholder": "123456"
+    "codePlaceholder": "123456",
+    "enabledTitle": "2FA Aktif",
+    "enabledDesc": "Akun Anda dilindungi dengan autentikasi dua faktor.",
+    "disable": "Nonaktifkan",
+    "disabledTitle": "2FA Tidak Aktif",
+    "disabledDesc": "Tingkatkan keamanan akun Anda dengan mengaktifkan 2FA.",
+    "enable": "Aktifkan 2FA",
+    "scanQr": "1. Pindai kode QR ini dengan aplikasi authenticator Anda (mis. Google Authenticator).",
+    "qrAlt": "QR Code 2FA",
+    "enterCode": "2. Masukkan kode 6 digit yang muncul di aplikasi Anda untuk menyelesaikan proses.",
+    "verify": "Verifikasi"
   },
   "TagManager": {
     "newLabelPlaceholder": "Label Baru...",
@@ -784,7 +864,20 @@
     "appNamePlaceholder": "Zee Index",
     "taglinePlaceholder": "Default (Kosong)",
     "logoUrlPlaceholder": "https://example.com/logo.png",
-    "faviconUrlPlaceholder": "https://example.com/favicon.ico"
+    "faviconUrlPlaceholder": "https://example.com/favicon.ico",
+    "title": "Branding Kustom (White Label)",
+    "appName": "Nama Aplikasi",
+    "appNameHelp": "Muncul di tab browser dan header.",
+    "primaryColor": "Warna Utama (Primary Theme)",
+    "primaryColorHelp": "Mengubah warna tombol, link aktif, dan aksen UI.",
+    "resetDefault": "Reset ke Default",
+    "logoUrl": "Logo URL (Header)",
+    "logoUrlHelp": "Format gambar (PNG/SVG). Kosongkan untuk default.",
+    "faviconUrl": "Favicon URL",
+    "faviconUrlHelp": "Ikon tab browser.",
+    "saveChanges": "Simpan Perubahan",
+    "resetToast": "Warna di-reset ke default (Simpan untuk menerapkan)",
+    "savedToast": "Branding berhasil disimpan!"
   },
   "VideoPlayer": {
     "resumeTitle": "Lanjutkan Menonton?",
@@ -797,7 +890,18 @@
     "playNow": "Putar Sekarang",
     "unsupportedFormat": "Format Tidak Didukung",
     "codecNotSupported": "Codec video ini tidak didukung browser.",
-    "downloadFile": "Unduh File"
+    "downloadFile": "Unduh File",
+    "externalStream": "Stream Eksternal",
+    "externalPlayer": "Player Eksternal",
+    "copyUrl": "Salin URL",
+    "openInVlcPc": "Buka di VLC (PC)",
+    "openOriginalDrive": "Buka original di Google Drive",
+    "theaterMode": "Mode Theater",
+    "connectionLost": "Koneksi Terputus",
+    "lastPosition": "Posisi terakhir: {time}",
+    "reconnect": "Sambung Ulang",
+    "googleDrivePlayer": "Google Drive Player",
+    "confidentialView": "Tampilan Rahasia"
   },
   "AnalyticsDashboard": {
     "title": "Dasbor Analitik",
@@ -826,7 +930,9 @@
     "bandwidthUsage": "Penggunaan Bandwidth",
     "today": "Hari Ini",
     "week": "Minggu Ini",
-    "month": "Bulan Ini"
+    "month": "Bulan Ini",
+    "viewsCount": "{count} tayangan",
+    "visitsCount": "{count} kunjungan"
   },
   "Api": {
     "Share": {
@@ -847,5 +953,188 @@
       "no": "Tidak",
       "manageText": "Anda dapat mengelola semua tautan di dasbor admin."
     }
+  },
+  "SetupRequired": {
+    "expiredTitle": "Sesi Berakhir",
+    "configTitle": "Setup Diperlukan",
+    "defaultMessage": "Koneksi ke Google Drive terputus. Silakan konfigurasi ulang untuk melanjutkan.",
+    "openSetup": "Buka Halaman Setup",
+    "tryAgain": "Coba Lagi",
+    "status": "Status"
+  },
+  "MainError": {
+    "title": "Gagal Memuat Konten",
+    "message": "Terjadi kesalahan saat mencoba mengambil data folder atau file. Ini mungkin karena masalah koneksi atau izin akses.",
+    "tryAgain": "Coba Lagi",
+    "errorId": "Error ID"
+  },
+  "AuditDashboard": {
+    "title": "Log Audit",
+    "subtitle": "Pantau aktivitas sistem dan akses file",
+    "refresh": "Segarkan",
+    "clearLogs": "Hapus Log",
+    "clearConfirm": "Yakin ingin menghapus semua log audit?",
+    "cleared": "Log audit berhasil dihapus",
+    "clearFailed": "Gagal menghapus log",
+    "time": "Waktu",
+    "user": "Pengguna",
+    "action": "Aksi",
+    "fileFolder": "File / Folder",
+    "ipDevice": "IP & Perangkat",
+    "loading": "Memuat log...",
+    "empty": "Tidak ada log."
+  },
+  "AdminActivityLogPage": {
+    "accessDenied": "Akses Ditolak",
+    "accessDeniedMessage": "Hanya admin yang dapat melihat halaman ini.",
+    "title": "Log Aktivitas Sistem",
+    "time": "Waktu",
+    "actionType": "Tipe Aksi",
+    "detail": "Detail",
+    "actor": "Pelaku",
+    "item": "Item:",
+    "target": "Target:",
+    "systemPublicLink": "Sistem / Tautan Publik",
+    "empty": "Belum ada aktivitas yang tercatat."
+  },
+  "RealTimeOverview": {
+    "activeUsers": "Pengguna Aktif",
+    "currentlyOnline": "Sedang online",
+    "liveFeed": "Feed Langsung",
+    "waiting": "Menunggu event..."
+  },
+  "SecurityCenter": {
+    "incidentCenter": "Pusat Insiden",
+    "incidentSubtitle": "Insiden keamanan terbuka dan yang sudah diakui",
+    "evaluateRules": "Evaluasi Aturan",
+    "openIncidents": "Insiden terbuka",
+    "rule": "Aturan:",
+    "count": "Jumlah:",
+    "last": "Terakhir:",
+    "acknowledge": "Akui",
+    "resolve": "Selesaikan",
+    "noIncidents": "Tidak ada insiden terdeteksi.",
+    "recentEvents": "Event Keamanan Terbaru",
+    "recentEventsSubtitle": "Log terkait keamanan dari aliran aktivitas",
+    "user": "Pengguna:",
+    "unknown": "Tidak diketahui",
+    "noAnomalies": "Tidak ada anomali terbaru.",
+    "loadFailed": "Gagal memuat data keamanan.",
+    "evaluationFailed": "Gagal menjalankan evaluasi insiden.",
+    "evaluationDone": "Evaluasi selesai: {created} dibuat, {updated} diperbarui.",
+    "updateFailed": "Gagal memperbarui status insiden.",
+    "incidentMarked": "Insiden ditandai sebagai {status}."
+  },
+  "SecurityConfig": {
+    "title": "Pengaturan Tampilan & Privasi",
+    "hideAuthor": "Sembunyikan Author",
+    "hideAuthorDesc": "Sembunyikan info \"Pemilik\" dan \"Diubah oleh\" untuk pengguna non-Admin.",
+    "disableGuestLogin": "Nonaktifkan Login Tamu",
+    "disableGuestLoginDesc": "Mencegah pengguna baru masuk sebagai \"Tamu\" di halaman login.",
+    "saveSuccess": "Pengaturan {setting} berhasil {status}.",
+    "enabled": "diaktifkan",
+    "disabled": "dinonaktifkan",
+    "saveFailed": "Gagal menyimpan pengaturan."
+  },
+  "StorageIntelligence": {
+    "duplicateTitle": "Analisis Duplikat (Mock)",
+    "identicalFiles": "File Identik Terdeteksi",
+    "wastingSpace": "Membuang sekitar {size} ruang penyimpanan",
+    "contentDistribution": "Distribusi Konten",
+    "fileCount": "{count} file",
+    "count": "Jumlah"
+  },
+  "Charts": {
+    "count": "Jumlah",
+    "noData": "Tidak ada data",
+    "views": "Tayangan",
+    "visitors": "Pengunjung",
+    "bandwidth": "Bandwidth"
+  },
+  "BreadcrumbDropdown": {
+    "toggle": "Buka/tutup daftar folder sejajar",
+    "moveToSibling": "Pindah ke Folder Lain",
+    "loading": "Memuat folder...",
+    "empty": "Tidak ada folder lain di level ini"
+  },
+  "FileUploadManager": {
+    "uploadingFiles": "Mengunggah {count} file...",
+    "uploadsComplete": "{count} unggahan selesai",
+    "uploadingProgress": "{progress}% - Mengunggah...",
+    "uploaded": "Berhasil diunggah",
+    "uploadFailed": "Gagal mengunggah"
+  },
+  "GlobalError": {
+    "title": "Terjadi Kesalahan Fatal",
+    "message": "Maaf, aplikasi mengalami kesalahan sistem yang tidak terduga. Tim kami telah dinotifikasi tentang masalah ini.",
+    "tryAgain": "Coba Lagi",
+    "backHome": "Kembali ke Beranda",
+    "errorId": "Error ID"
+  },
+  "OgImage": {
+    "fileExplorer": "Penjelajah File Performa Tinggi",
+    "secureAccess": "Akses Cloud Aman"
+  },
+  "SystemHealth": {
+    "fetchFailed": "Gagal mengambil status sistem",
+    "loadFailed": "Gagal memuat status sistem",
+    "healthy": "Sehat",
+    "attention": "Perlu Perhatian",
+    "database": "Database",
+    "online": "Online",
+    "unavailable": "Tidak Tersedia",
+    "latency": "Latensi:",
+    "cache": "Cache",
+    "apiActive": "API Aktif",
+    "needsSetup": "Perlu Setup",
+    "googleDriveQuota": "Kuota Google Drive",
+    "percentUsed": "{percent}% Terpakai",
+    "notConfigured": "Belum Dikonfigurasi",
+    "unknown": "Tidak diketahui",
+    "healthCheckLatency": "Latensi Health Check",
+    "total": "Total",
+    "average": "Rata-rata",
+    "fastest": "Tercepat",
+    "slowest": "Terlambat",
+    "up": "Naik",
+    "down": "Turun",
+    "errorRate24h": "Tingkat Error (24j)",
+    "errorsRecorded": "error tercatat",
+    "previous24h": "24j sebelumnya:"
+  },
+  "UserPasswordManager": {
+    "title": "Password Akses Pengguna",
+    "subtitle": "Kelola password individual untuk email pengguna (menimpa auth default jika dicek).",
+    "checkUserStatus": "Cek Status Pengguna",
+    "emailPlaceholder": "Masukkan email pengguna...",
+    "check": "Cek",
+    "individualPasswordSet": "Password individual sudah diset",
+    "noIndividualPassword": "Tidak ada password individual",
+    "removePassword": "Hapus Password",
+    "setUpdatePassword": "Set / Update Password",
+    "targetUserEmail": "Email Pengguna Target",
+    "newPassword": "Password Baru (min 6 karakter)",
+    "updatePassword": "Update Password",
+    "setPassword": "Set Password",
+    "howItWorks": "Cara kerja:",
+    "howItWorksDesc": "Password ini digunakan untuk pengguna yang TIDAK ada di daftar Admin/Editor default tetapi membutuhkan akses khusus. Jika password diset untuk sebuah email, sistem akan memintanya saat login atau verifikasi akses.",
+    "checkFailed": "Gagal mengecek password",
+    "passwordSet": "Password untuk {email} sudah diset.",
+    "setFailed": "Gagal menyimpan password",
+    "removeConfirm": "Yakin ingin menghapus password untuk {email}?",
+    "removeTitle": "Hapus Password Pengguna",
+    "passwordRemoved": "Password untuk {email} dihapus.",
+    "removeFailed": "Gagal menghapus password",
+    "targetEmailPlaceholder": "user@example.com"
+  },
+  "PDFViewer": {
+    "sidebar": "Panel samping",
+    "rotate": "Putar",
+    "download": "Unduh",
+    "preparingDocument": "Menyiapkan Dokumen...",
+    "resetZoom": "Reset Zoom"
+  },
+  "GlobalAudioPlayer": {
+    "queue": "Antrean Putar ({count})"
   }
 }

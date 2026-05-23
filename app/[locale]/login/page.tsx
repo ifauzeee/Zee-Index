@@ -154,7 +154,7 @@ function CustomLoginPage() {
         <div className="relative w-[18rem] h-[18rem] lg:w-[22rem] lg:h-[22rem] opacity-20">
           <Image
             src={AppIcon}
-            alt="Google Drive Logo"
+            alt={t("driveLogoAlt")}
             fill
             sizes="(max-width: 1024px) 288px, 352px"
             className="object-contain dark:invert"
@@ -168,7 +168,7 @@ function CustomLoginPage() {
             <h1 className="text-3xl font-bold flex items-center justify-center lg:justify-start">
               <Image
                 src={AppIcon}
-                alt="Logo"
+                alt={t("logoAlt")}
                 width={36}
                 height={36}
                 priority

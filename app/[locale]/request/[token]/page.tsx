@@ -232,14 +232,14 @@ export default function PublicUploadPage() {
                     htmlFor="subfolder"
                     className="text-sm font-semibold text-foreground"
                   >
-                    Nama Pengirim / Subfolder (Opsional)
+                    {t("senderSubfolder")}
                   </label>
                   <input
                     id="subfolder"
                     type="text"
                     value={subfolderName}
                     onChange={(e) => setSubfolderName(e.target.value)}
-                    placeholder="Contoh: Budi Santoso atau Tugas-1"
+                    placeholder={t("senderSubfolderPlaceholder")}
                     disabled={uploadStatus === "uploading"}
                     className="w-full px-3.5 py-2.5 bg-background border rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
                   />

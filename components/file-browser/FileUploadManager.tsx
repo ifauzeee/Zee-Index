@@ -11,8 +11,10 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 export default function FileUploadManager() {
+  const t = useTranslations("FileUploadManager");
   const { uploads, removeUpload } = useAppStore();
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -36,8 +38,8 @@ export default function FileUploadManager() {
       >
         <span className="text-sm font-semibold">
           {uploadingCount > 0
-            ? `Mengunggah ${uploadingCount} file...`
-            : `${completedCount + errorCount} Unggahan Selesai`}
+            ? t("uploadingFiles", { count: uploadingCount })
+            : t("uploadsComplete", { count: completedCount + errorCount })}
         </span>
         <div className="flex items-center gap-2">
           {isExpanded ? (
@@ -102,20 +104,22 @@ export default function FileUploadManager() {
                         />
                       </div>
                       <span className="text-[10px] text-muted-foreground mt-1">
-                        {upload.progress}% - Mengunggah...
+                        {t("uploadingProgress", {
+                          progress: upload.progress,
+                        })}
                       </span>
                     </div>
                   )}
 
                   {upload.status === "success" && (
                     <span className="text-[10px] text-green-500 font-medium">
-                      Berhasil diunggah
+                      {t("uploaded")}
                     </span>
                   )}
 
                   {upload.status === "error" && (
                     <span className="text-[10px] text-destructive font-medium truncate block">
-                      {upload.error || "Gagal mengunggah"}
+                      {upload.error || t("uploadFailed")}
                     </span>
                   )}
                 </div>

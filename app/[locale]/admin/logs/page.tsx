@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { ActivityDetails, ActivityType } from "@/lib/activityLogger";
+import { useTranslations } from "next-intl";
 
 interface LogEntry extends ActivityDetails {
   type: ActivityType;
@@ -16,6 +17,7 @@ interface LogEntry extends ActivityDetails {
 }
 
 export default function ActivityLogPage() {
+  const t = useTranslations("AdminActivityLogPage");
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { status, data: session } = useSession();
@@ -44,10 +46,8 @@ export default function ActivityLogPage() {
     return (
       <div className="text-center py-20 text-red-500">
         <AlertCircle className="h-16 w-16 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold">Akses Ditolak</h1>
-        <p className="mt-2 text-muted-foreground">
-          Hanya admin yang dapat melihat halaman ini.
-        </p>
+        <h1 className="text-2xl font-bold">{t("accessDenied")}</h1>
+        <p className="mt-2 text-muted-foreground">{t("accessDeniedMessage")}</p>
       </div>
     );
   }
@@ -66,7 +66,7 @@ export default function ActivityLogPage() {
         >
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-3xl font-bold">Log Aktivitas Sistem</h1>
+        <h1 className="text-3xl font-bold">{t("title")}</h1>
       </div>
 
       <div className="bg-card border rounded-lg overflow-hidden">
@@ -75,16 +75,16 @@ export default function ActivityLogPage() {
             <thead className="bg-muted/50">
               <tr>
                 <th scope="col" className="px-6 py-3 font-medium">
-                  Waktu
+                  {t("time")}
                 </th>
                 <th scope="col" className="px-6 py-3 font-medium">
-                  Tipe Aksi
+                  {t("actionType")}
                 </th>
                 <th scope="col" className="px-6 py-3 font-medium">
-                  Detail
+                  {t("detail")}
                 </th>
                 <th scope="col" className="px-6 py-3 font-medium">
-                  Pelaku
+                  {t("actor")}
                 </th>
               </tr>
             </thead>
@@ -107,17 +107,17 @@ export default function ActivityLogPage() {
                   <td className="px-6 py-4">
                     {log.itemName && (
                       <span>
-                        Item: <strong>{log.itemName}</strong>
+                        {t("item")} <strong>{log.itemName}</strong>
                       </span>
                     )}
                     {log.targetUser && (
                       <span>
-                        Target: <strong>{log.targetUser}</strong>
+                        {t("target")} <strong>{log.targetUser}</strong>
                       </span>
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    {log.userEmail || "Sistem / Tautan Publik"}
+                    {log.userEmail || t("systemPublicLink")}
                   </td>
                 </tr>
               ))}
@@ -126,7 +126,7 @@ export default function ActivityLogPage() {
         </div>
         {logs.length === 0 && (
           <p className="text-center py-12 text-muted-foreground">
-            Belum ada aktivitas yang tercatat.
+            {t("empty")}
           </p>
         )}
       </div>

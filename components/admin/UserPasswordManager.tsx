@@ -15,8 +15,10 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import { useConfirm } from "@/components/providers/ModalProvider";
+import { useTranslations } from "next-intl";
 
 export default function UserPasswordManager() {
+  const t = useTranslations("UserPasswordManager");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isChecking, setIsChecking] = useState(false);
@@ -39,11 +41,10 @@ export default function UserPasswordManager() {
       if (res.ok) {
         setStatus({ hasPassword: data.hasPassword, checked: true });
       } else {
-        throw new Error(data.error || "Failed to check password");
+        throw new Error(data.error || t("checkFailed"));
       }
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : "Failed to check password";
+      const message = error instanceof Error ? error.message : t("checkFailed");
       addToast({ message, type: "error" });
     } finally {
       setIsChecking(false);
@@ -63,17 +64,16 @@ export default function UserPasswordManager() {
       const data = await res.json();
       if (res.ok) {
         addToast({
-          message: `Password for ${email} has been set.`,
+          message: t("passwordSet", { email }),
           type: "success",
         });
         setPassword("");
         handleCheck(); // Refresh status
       } else {
-        throw new Error(data.error || "Failed to set password");
+        throw new Error(data.error || t("setFailed"));
       }
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : "Failed to set password";
+      const message = error instanceof Error ? error.message : t("setFailed");
       addToast({ message, type: "error" });
     } finally {
       setIsSubmitting(false);
@@ -83,13 +83,10 @@ export default function UserPasswordManager() {
   const handleDeletePassword = async () => {
     if (!email.trim()) return;
     if (
-      await confirm(
-        `Are you sure you want to remove the password for ${email}?`,
-        {
-          title: "Remove User Password",
-          variant: "destructive",
-        },
-      )
+      await confirm(t("removeConfirm", { email }), {
+        title: t("removeTitle"),
+        variant: "destructive",
+      })
     ) {
       setIsSubmitting(true);
       try {
@@ -102,16 +99,16 @@ export default function UserPasswordManager() {
         const data = await res.json();
         if (res.ok) {
           addToast({
-            message: `Password for ${email} removed.`,
+            message: t("passwordRemoved", { email }),
             type: "success",
           });
           handleCheck(); // Refresh status
         } else {
-          throw new Error(data.error || "Failed to remove password");
+          throw new Error(data.error || t("removeFailed"));
         }
       } catch (error: unknown) {
         const message =
-          error instanceof Error ? error.message : "Failed to remove password";
+          error instanceof Error ? error.message : t("removeFailed");
         addToast({ message, type: "error" });
       } finally {
         setIsSubmitting(false);
@@ -126,11 +123,8 @@ export default function UserPasswordManager() {
           <KeyRound size={20} />
         </div>
         <div>
-          <h3 className="text-lg font-bold">User Access Passwords</h3>
-          <p className="text-sm text-muted-foreground">
-            Manage individual passwords for user emails (overrides default auth
-            if checked).
-          </p>
+          <h3 className="text-lg font-bold">{t("title")}</h3>
+          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
       </div>
 
@@ -139,7 +133,7 @@ export default function UserPasswordManager() {
         <div className="space-y-4">
           <div className="bg-card border rounded-xl p-6 shadow-sm">
             <h4 className="text-sm font-semibold mb-4 uppercase tracking-wider text-muted-foreground">
-              Check User Status
+              {t("checkUserStatus")}
             </h4>
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -151,7 +145,7 @@ export default function UserPasswordManager() {
                     setEmail(e.target.value);
                     setStatus(null);
                   }}
-                  placeholder="Enter user email..."
+                  placeholder={t("emailPlaceholder")}
                   className="w-full pl-9 pr-4 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary focus:outline-none text-sm"
                   onKeyDown={(e) => e.key === "Enter" && handleCheck()}
                 />
@@ -166,7 +160,7 @@ export default function UserPasswordManager() {
                 ) : (
                   <Search size={16} />
                 )}
-                <span>Check</span>
+                <span>{t("check")}</span>
               </button>
             </div>
 
@@ -197,8 +191,8 @@ export default function UserPasswordManager() {
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {status.hasPassword
-                        ? "Individual password set"
-                        : "No individual password"}
+                        ? t("individualPasswordSet")
+                        : t("noIndividualPassword")}
                     </p>
                   </div>
                 </div>
@@ -208,7 +202,7 @@ export default function UserPasswordManager() {
                     onClick={handleDeletePassword}
                     disabled={isSubmitting}
                     className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                    title="Remove Password"
+                    title={t("removePassword")}
                   >
                     <Trash2 size={18} />
                   </button>
@@ -221,12 +215,12 @@ export default function UserPasswordManager() {
         {/* Right: Set/Update Password Form */}
         <div className="bg-card border rounded-xl p-6 shadow-sm">
           <h4 className="text-sm font-semibold mb-4 uppercase tracking-wider text-muted-foreground">
-            Set / Update Password
+            {t("setUpdatePassword")}
           </h4>
           <form onSubmit={handleSetPassword} className="space-y-4">
             <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground ml-1">
-                Target User Email
+                {t("targetUserEmail")}
               </label>
               <div className="relative">
                 <UserCircle2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -234,7 +228,7 @@ export default function UserPasswordManager() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="user@example.com"
+                  placeholder={t("targetEmailPlaceholder")}
                   required
                   className="w-full pl-9 pr-4 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary focus:outline-none text-sm"
                 />
@@ -243,7 +237,7 @@ export default function UserPasswordManager() {
 
             <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground ml-1">
-                New Password (min 6 chars)
+                {t("newPassword")}
               </label>
               <div className="relative">
                 <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -270,7 +264,7 @@ export default function UserPasswordManager() {
                 <ShieldCheck size={18} />
               )}
               <span>
-                {status?.hasPassword ? "Update Password" : "Set Password"}
+                {status?.hasPassword ? t("updatePassword") : t("setPassword")}
               </span>
             </button>
           </form>
@@ -283,13 +277,8 @@ export default function UserPasswordManager() {
           <CheckCircle2 size={16} />
         </div>
         <div className="text-xs space-y-1">
-          <p className="font-bold">How it works:</p>
-          <p>
-            These passwords are used for users who are NOT in the default
-            Admin/Editor list but need specific access. If a password is set for
-            an email, the system will prompt for it during login or access
-            verification.
-          </p>
+          <p className="font-bold">{t("howItWorks")}</p>
+          <p>{t("howItWorksDesc")}</p>
         </div>
       </div>
     </div>

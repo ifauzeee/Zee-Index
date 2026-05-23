@@ -214,7 +214,7 @@ export default function ShareButton({
 
               <div className="p-6 sm:p-8 bg-accent/20 border-t border-border/50 flex flex-col sm:flex-row gap-4 items-center justify-between">
                 <div className="text-[11px] text-muted-foreground text-center sm:text-left">
-                  Confirm all settings before generating the public link.
+                  {t("confirmSettings")}
                 </div>
                 <button
                   onClick={() => generateLink(activeTab)}

@@ -3,8 +3,10 @@
 import React, { useEffect } from "react";
 import { useAppStore } from "@/lib/store";
 import { Loader2, EyeOff, UserX } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function SecurityConfig() {
+  const t = useTranslations("SecurityConfig");
   const {
     hideAuthor,
     disableGuestLogin,
@@ -42,12 +44,15 @@ export default function SecurityConfig() {
     try {
       await setConfig({ [key]: value });
       addToast({
-        message: `Pengaturan ${key} berhasil ${value ? "diaktifkan" : "dinonaktifkan"}.`,
+        message: t("saveSuccess", {
+          setting: key,
+          status: value ? t("enabled") : t("disabled"),
+        }),
         type: "success",
       });
     } catch {
       addToast({
-        message: "Gagal menyimpan pengaturan.",
+        message: t("saveFailed"),
         type: "error",
       });
     }
@@ -55,9 +60,7 @@ export default function SecurityConfig() {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-6">
-        Pengaturan Tampilan & Privasi
-      </h2>
+      <h2 className="text-2xl font-semibold mb-6">{t("title")}</h2>
       <div className="bg-card border rounded-lg p-6 space-y-4 divide-y divide-border">
         <div className="flex items-center justify-between pt-4 first:pt-0">
           <label
@@ -66,10 +69,9 @@ export default function SecurityConfig() {
           >
             <EyeOff className="h-8 w-8 text-muted-foreground" />
             <div>
-              <p className="font-semibold">Sembunyikan Author</p>
+              <p className="font-semibold">{t("hideAuthor")}</p>
               <p className="text-sm text-muted-foreground">
-                Sembunyikan info &quot;Pemilik&quot; dan &quot;Diubah oleh&quot;
-                untuk pengguna non-Admin.
+                {t("hideAuthorDesc")}
               </p>
             </div>
           </label>
@@ -94,10 +96,9 @@ export default function SecurityConfig() {
           >
             <UserX className="h-8 w-8 text-muted-foreground" />
             <div>
-              <p className="font-semibold">Nonaktifkan Login Tamu</p>
+              <p className="font-semibold">{t("disableGuestLogin")}</p>
               <p className="text-sm text-muted-foreground">
-                Mencegah pengguna baru masuk sebagai &quot;Tamu&quot; di halaman
-                login.
+                {t("disableGuestLoginDesc")}
               </p>
             </div>
           </label>

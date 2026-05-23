@@ -108,7 +108,7 @@ export default function ProtectedFoldersManager() {
             }
             className="text-xs font-semibold bg-blue-500/10 text-blue-600 px-3 py-1.5 rounded-full border border-blue-500/20 hover:bg-blue-500/20 transition-all flex items-center gap-1.5"
           >
-            <Lock size={12} /> Proteksi Root Local Storage
+            <Lock size={12} /> {t("protectLocalRoot")}
           </button>
         </div>
 
@@ -117,14 +117,14 @@ export default function ProtectedFoldersManager() {
             <div className="flex flex-col gap-1">
               <h4 className="text-lg font-semibold">{t("addOrUpdate")}</h4>
               <p className="text-xs text-muted-foreground">
-                Kunci folder Google Drive atau Local Storage dengan kata sandi.
+                {t("description")}
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium px-1">
-                  ID Folder atau Path
+                  {t("folderIdLabel")}
                 </label>
                 <div className="relative group">
                   <FolderInput className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -140,7 +140,7 @@ export default function ProtectedFoldersManager() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium px-1">
-                  Kata Sandi Baru
+                  {t("passwordLabel")}
                 </label>
                 <div className="relative group">
                   <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -175,7 +175,7 @@ export default function ProtectedFoldersManager() {
             <div className="flex items-center justify-between mb-6">
               <h4 className="text-lg font-semibold">{t("protectedList")}</h4>
               <span className="text-xs bg-muted px-2.5 py-1 rounded-full font-medium">
-                {Object.keys(folders).length} Folder
+                {t("folderCount", { count: Object.keys(folders).length })}
               </span>
             </div>
 
@@ -183,7 +183,7 @@ export default function ProtectedFoldersManager() {
               <div className="flex flex-col items-center justify-center py-12 gap-3">
                 <Loader2 className="animate-spin text-primary" size={32} />
                 <p className="text-sm text-muted-foreground animate-pulse">
-                  Menghubungkan ke database...
+                  {t("connecting")}
                 </p>
               </div>
             ) : Object.keys(folders).length === 0 ? (
@@ -195,7 +195,7 @@ export default function ProtectedFoldersManager() {
                   {t("noProtected")}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Gunakan form di atas untuk menambah folder pertama.
+                  {t("emptyHint")}
                 </p>
               </div>
             ) : (
@@ -231,7 +231,7 @@ export default function ProtectedFoldersManager() {
                       <div className="space-y-1">
                         <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                           {isLocalStorage
-                            ? "Penyimpanan Lokal"
+                            ? t("localStorage")
                             : "Google Drive ID"}
                         </p>
                         <p className="font-mono text-sm font-semibold truncate leading-none">
@@ -246,7 +246,7 @@ export default function ProtectedFoldersManager() {
                           <CheckCircle size={10} /> {t("securelyLocked")}
                         </div>
                         <span className="text-[10px] text-muted-foreground font-medium">
-                          Encrypted
+                          {t("encrypted")}
                         </span>
                       </div>
                     </motion.li>
@@ -282,7 +282,7 @@ export default function ProtectedFoldersManager() {
                   {t("removeTitle")}
                 </h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Folder{" "}
+                  {t("folder")}{" "}
                   <span className="font-mono bg-muted px-1 rounded">
                     {folderToDelete}
                   </span>{" "}

@@ -10,6 +10,7 @@ import {
   Database,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface SetupRequiredProps {
   message?: string;
@@ -20,6 +21,7 @@ export default function SetupRequired({
   message,
   type = "expired",
 }: SetupRequiredProps) {
+  const t = useTranslations("SetupRequired");
   const isExpired = type === "expired";
   const openSetupPage = () => {
     const locale = window.location.pathname.match(/^\/(en|id)(\/|$)/)?.[1];
@@ -78,11 +80,10 @@ export default function SetupRequired({
           className="text-center space-y-2 mb-8"
         >
           <h2 className="text-xl font-bold text-foreground">
-            {isExpired ? "Sesi Berakhir" : "Setup Diperlukan"}
+            {isExpired ? t("expiredTitle") : t("configTitle")}
           </h2>
           <p className="text-[13px] text-muted-foreground leading-relaxed px-2">
-            {message ||
-              "Koneksi ke Google Drive terputus. Silakan konfigurasi ulang untuk melanjutkan."}
+            {message || t("defaultMessage")}
           </p>
         </motion.div>
 
@@ -98,7 +99,7 @@ export default function SetupRequired({
               size={15}
               className="group-hover:rotate-45 transition-transform"
             />
-            <span>Buka Halaman Setup</span>
+            <span>{t("openSetup")}</span>
             <ArrowRight size={15} />
           </button>
 
@@ -107,7 +108,7 @@ export default function SetupRequired({
             className="flex items-center justify-center gap-2 h-11 px-6 bg-transparent hover:bg-secondary/50 text-foreground border border-border text-[13px] font-medium rounded-xl transition-colors"
           >
             <RefreshCw size={14} />
-            <span>Coba Lagi</span>
+            <span>{t("tryAgain")}</span>
           </button>
         </motion.div>
 
@@ -116,7 +117,9 @@ export default function SetupRequired({
           className="mt-10 flex items-center gap-1.5 py-1 px-3 rounded-full bg-destructive/5 text-[10px] uppercase font-bold tracking-[0.05em] text-destructive/70 border border-destructive/10"
         >
           <AlertCircle size={10} />
-          <span>Status: {isExpired ? "INVALID_GRANT" : "MISSING_CONFIG"}</span>
+          <span>
+            {t("status")}: {isExpired ? "INVALID_GRANT" : "MISSING_CONFIG"}
+          </span>
         </motion.div>
       </motion.div>
     </div>

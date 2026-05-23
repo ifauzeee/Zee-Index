@@ -350,7 +350,7 @@ export default function AdminPage() {
           <button
             onClick={() => router.back()}
             className="p-2.5 rounded-full bg-card border hover:bg-accent transition-colors shadow-sm"
-            aria-label="Kembali"
+            aria-label={t("back")}
           >
             <ArrowLeft size={20} />
           </button>
@@ -426,7 +426,7 @@ export default function AdminPage() {
 
             <div>
               <h2 className="text-xl font-semibold mb-4 px-1">
-                System Overview
+                {t("systemOverview")}
               </h2>
               <div className="space-y-6 mb-8">
                 <SystemHealth />
@@ -521,7 +521,7 @@ export default function AdminPage() {
                       <div className="flex items-end justify-between">
                         <div className="space-y-1">
                           <p className="text-xs text-muted-foreground uppercase font-semibold">
-                            Today
+                            {t("today")}
                           </p>
                           <p className="text-xl font-bold text-blue-600">
                             {formatBytes(stats.bandwidthSummary?.today || 0)}
@@ -529,7 +529,7 @@ export default function AdminPage() {
                         </div>
                         <div className="space-y-1 text-right">
                           <p className="text-xs text-muted-foreground uppercase font-semibold">
-                            Total This Month
+                            {t("totalThisMonth")}
                           </p>
                           <p className="text-xl font-bold text-amber-600">
                             {formatBytes(
@@ -573,7 +573,7 @@ export default function AdminPage() {
                                 {item.type}
                               </span>
                               <span className="text-muted-foreground">
-                                {item.count} files
+                                {t("fileCount", { count: item.count })}
                               </span>
                             </div>
                             <div className="overflow-hidden h-1.5 text-xs flex rounded bg-emerald-500/10">
@@ -694,7 +694,7 @@ export default function AdminPage() {
                                       {req.title}
                                     </h4>
                                     <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                                      <Clock size={12} /> Exp:{" "}
+                                      <Clock size={12} /> {t("expiresShort")}{" "}
                                       {format(req.expiresAt, "dd MMM HH:mm", {
                                         locale: id,
                                       })}
@@ -708,7 +708,7 @@ export default function AdminPage() {
                                         : "bg-green-100 text-green-700 dark:bg-green-900/30",
                                     )}
                                   >
-                                    {isExpired ? "Expired" : "Active"}
+                                    {isExpired ? t("expired") : t("active")}
                                   </span>
                                 </div>
 
@@ -726,14 +726,14 @@ export default function AdminPage() {
 
                                 <div className="flex items-center justify-between pt-2 border-t mt-1">
                                   <span className="text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded">
-                                    Folder: {req.folderName}
+                                    {t("folderLabel")} {req.folderName}
                                   </span>
 
                                   <button
                                     onClick={() => handleDelete(req, "request")}
                                     className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium"
                                   >
-                                    <Trash2 size={16} /> Delete
+                                    <Trash2 size={16} /> {t("delete")}
                                   </button>
                                 </div>
                               </div>
@@ -779,7 +779,7 @@ export default function AdminPage() {
                                       </span>
                                       {link.loginRequired && (
                                         <span className="text-[10px] border border-blue-200 text-blue-600 px-1.5 rounded flex items-center gap-1">
-                                          <KeyRound size={10} /> Login
+                                          <KeyRound size={10} /> {t("login")}
                                         </span>
                                       )}
                                     </div>
@@ -789,7 +789,9 @@ export default function AdminPage() {
                                       "w-2 h-2 rounded-full shrink-0 mt-2",
                                       isExpired ? "bg-red-500" : "bg-green-500",
                                     )}
-                                    title={isExpired ? "Expired" : "Active"}
+                                    title={
+                                      isExpired ? t("expired") : t("active")
+                                    }
                                   />
                                 </div>
 
@@ -809,7 +811,7 @@ export default function AdminPage() {
 
                                 <div className="flex items-center justify-between pt-2 border-t border-border/50">
                                   <p className="text-xs text-muted-foreground">
-                                    Exp:{" "}
+                                    {t("expiresShort")}{" "}
                                     {format(
                                       new Date(link.expiresAt),
                                       "dd MMM yy, HH:mm",
@@ -821,7 +823,7 @@ export default function AdminPage() {
                                       onClick={() => handleEditShare(link)}
                                       className="text-primary hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-colors text-xs font-medium flex items-center gap-1.5"
                                     >
-                                      <Edit size={14} /> Edit
+                                      <Edit size={14} /> {t("edit")}
                                     </button>
                                     <button
                                       onClick={() =>
@@ -829,7 +831,7 @@ export default function AdminPage() {
                                       }
                                       className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg transition-colors text-xs font-medium flex items-center gap-1.5"
                                     >
-                                      <Trash2 size={14} /> Delete
+                                      <Trash2 size={14} /> {t("delete")}
                                     </button>
                                   </div>
                                 </div>
@@ -918,7 +920,9 @@ export default function AdminPage() {
               </div>
 
               <div className="p-4 sm:p-6 border-t">
-                <h2 className="text-lg font-semibold mb-4">Manage Editors</h2>
+                <h2 className="text-lg font-semibold mb-4">
+                  {t("manageEditors")}
+                </h2>
                 <form
                   onSubmit={handleAddEditor}
                   className="flex flex-col sm:flex-row gap-3 mb-6"
@@ -929,7 +933,7 @@ export default function AdminPage() {
                       type="email"
                       value={newEditorEmail}
                       onChange={(e) => setNewEditorEmail(e.target.value)}
-                      placeholder="Editor Email"
+                      placeholder={t("editorEmailPlaceholder")}
                       required
                       className="w-full pl-10 pr-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary focus:outline-none"
                     />
@@ -944,12 +948,12 @@ export default function AdminPage() {
                     ) : (
                       <UserPlus size={18} />
                     )}
-                    <span>Add Editor</span>
+                    <span>{t("addEditor")}</span>
                   </button>
                 </form>
 
                 <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wider">
-                  Editor List
+                  {t("editorList")}
                 </h3>
                 {isFetchingEditors ? (
                   <div className="flex justify-center py-8">
@@ -959,7 +963,7 @@ export default function AdminPage() {
                   <div className="space-y-3">
                     {editorEmails.length === 0 ? (
                       <p className="text-sm text-center py-4 text-muted-foreground">
-                        No editors configured.
+                        {t("noEditors")}
                       </p>
                     ) : (
                       editorEmails.map((email) => (
@@ -1010,7 +1014,7 @@ export default function AdminPage() {
               <div className="flex items-center justify-between p-4 border-b bg-muted/20">
                 <h3 className="font-semibold text-lg flex items-center gap-2">
                   <Edit size={18} className="text-primary" />
-                  Edit Tautan Berbagi
+                  {t("editShareLink")}
                 </h3>
                 <button
                   onClick={() => setEditingShareLink(null)}
@@ -1026,7 +1030,7 @@ export default function AdminPage() {
               >
                 <div>
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
-                    Nama Item (Readonly)
+                    {t("itemNameReadonly")}
                   </label>
                   <input
                     type="text"
@@ -1042,10 +1046,10 @@ export default function AdminPage() {
                       htmlFor="edit-login-required"
                       className="text-sm font-semibold text-foreground cursor-pointer"
                     >
-                      Wajib Login
+                      {t("requireLogin")}
                     </label>
                     <p className="text-xs text-muted-foreground">
-                      User harus login admin/editor untuk melihat file
+                      {t("requireLoginDesc")}
                     </p>
                   </div>
                   <input
@@ -1063,10 +1067,10 @@ export default function AdminPage() {
                       htmlFor="edit-prevent-download"
                       className="text-sm font-semibold text-foreground cursor-pointer"
                     >
-                      Cegah Unduhan
+                      {t("preventDownload")}
                     </label>
                     <p className="text-xs text-muted-foreground">
-                      Hanya izinkan preview, matikan tombol download
+                      {t("preventDownloadDesc")}
                     </p>
                   </div>
                   <input
@@ -1085,10 +1089,10 @@ export default function AdminPage() {
                         htmlFor="edit-has-watermark"
                         className="text-sm font-semibold text-foreground cursor-pointer"
                       >
-                        Gunakan Watermark
+                        {t("useWatermark")}
                       </label>
                       <p className="text-xs text-muted-foreground">
-                        Tampilkan teks overlay di atas file
+                        {t("useWatermarkDesc")}
                       </p>
                     </div>
                     <input
@@ -1106,14 +1110,14 @@ export default function AdminPage() {
                         htmlFor="edit-watermark-text"
                         className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1"
                       >
-                        Teks Watermark
+                        {t("watermarkText")}
                       </label>
                       <input
                         id="edit-watermark-text"
                         type="text"
                         value={editWatermarkText}
                         onChange={(e) => setEditWatermarkText(e.target.value)}
-                        placeholder="Contoh: RAHASIA / SALINAN"
+                        placeholder={t("watermarkPlaceholder")}
                         required
                         className="w-full px-3 py-2 bg-background border rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
                       />
@@ -1126,7 +1130,7 @@ export default function AdminPage() {
                     htmlFor="edit-max-uses"
                     className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1"
                   >
-                    Batas Maksimal Akses / Unduhan (Opsional)
+                    {t("maxAccess")}
                   </label>
                   <input
                     id="edit-max-uses"
@@ -1138,7 +1142,7 @@ export default function AdminPage() {
                         e.target.value === "" ? "" : Number(e.target.value),
                       )
                     }
-                    placeholder="Tanpa batas"
+                    placeholder={t("unlimited")}
                     className="w-full px-3 py-2 bg-background border rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
                   />
                 </div>
@@ -1148,7 +1152,7 @@ export default function AdminPage() {
                     htmlFor="edit-expires-at"
                     className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1"
                   >
-                    Waktu Kedaluwarsa Baru
+                    {t("newExpiration")}
                   </label>
                   <input
                     id="edit-expires-at"
@@ -1166,7 +1170,7 @@ export default function AdminPage() {
                     onClick={() => setEditingShareLink(null)}
                     className="px-4 py-2 border rounded-lg hover:bg-muted text-sm font-medium transition-colors"
                   >
-                    Batal
+                    {t("cancel")}
                   </button>
                   <button
                     type="submit"
@@ -1176,7 +1180,7 @@ export default function AdminPage() {
                     {isSavingEdit && (
                       <Loader2 className="animate-spin" size={16} />
                     )}
-                    Simpan Perubahan
+                    {t("saveChanges")}
                   </button>
                 </div>
               </form>

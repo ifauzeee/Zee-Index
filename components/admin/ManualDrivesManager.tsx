@@ -397,7 +397,7 @@ export default function ManualDrivesManager() {
                   </div>
                   <div className="flex items-center gap-2">
                     {drive.isProtected && (
-                      <div title="Terproteksi Password">
+                      <div title={t("passwordProtected")}>
                         <Lock size={14} className="text-amber-500" />
                       </div>
                     )}

@@ -28,7 +28,9 @@
     "error": "Error",
     "light": "Light",
     "dark": "Dark",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "createdBy": "Created by",
+    "close": "Close"
   },
   "AuthForm": {
     "accessRestricted": "Access Restricted",
@@ -47,7 +49,8 @@
     "loginToRequest": "Login to Request",
     "accessRequestSuccess": "Access request sent successfully to Admin.",
     "requestFail": "Failed to send request.",
-    "accessGranted": "Access granted! Loading folder..."
+    "accessGranted": "Access granted! Loading folder...",
+    "securityEngine": "Zee Index Security Engine v2.0"
   },
   "Search": {
     "searchAll": "Search all files...",
@@ -101,7 +104,9 @@
     "menu": "Menu",
     "notifications": "Notifications",
     "backToHome": "Back to Home",
-    "tour": "Start Tour"
+    "tour": "Start Tour",
+    "driveLogoAlt": "Google Drive Logo",
+    "logoAlt": "Logo"
   },
   "ContextMenu": {
     "preview": "Preview / Open",
@@ -317,7 +322,9 @@
       "loginFailedText": "Incorrect email or password. Please try again.",
       "loginErrorTitle": "An Error Occurred",
       "loginErrorText": "An error occurred during login. Please try again."
-    }
+    },
+    "driveLogoAlt": "Google Drive Logo",
+    "logoAlt": "Logo"
   },
   "FileList": {
     "emptyTitle": "This Folder is Empty",
@@ -411,7 +418,38 @@
     "accessDeniedMessage": "You do not have Administrator permission to view this page.",
     "linkCopied": "Link copied to clipboard!",
     "loadingStatsError": "Failed to load statistics: {error}",
-    "analytics": "Analytics"
+    "analytics": "Analytics",
+    "systemOverview": "System Overview",
+    "today": "Today",
+    "totalThisMonth": "Total This Month",
+    "fileCount": "{count} files",
+    "expiresShort": "Exp:",
+    "active": "Active",
+    "folderLabel": "Folder:",
+    "delete": "Delete",
+    "login": "Login",
+    "edit": "Edit",
+    "manageEditors": "Manage Editors",
+    "editorEmailPlaceholder": "Editor Email",
+    "addEditor": "Add Editor",
+    "editorList": "Editor List",
+    "noEditors": "No editors configured.",
+    "editShareLink": "Edit Share Link",
+    "itemNameReadonly": "Item Name (Readonly)",
+    "requireLogin": "Require Login",
+    "requireLoginDesc": "User must sign in as admin/editor to view the file",
+    "preventDownload": "Prevent Download",
+    "preventDownloadDesc": "Allow preview only and hide the download button",
+    "useWatermark": "Use Watermark",
+    "useWatermarkDesc": "Show text overlay on top of the file",
+    "watermarkText": "Watermark Text",
+    "watermarkPlaceholder": "Example: CONFIDENTIAL / COPY",
+    "maxAccess": "Maximum Access / Downloads (Optional)",
+    "unlimited": "Unlimited",
+    "newExpiration": "New Expiration Time",
+    "cancel": "Cancel",
+    "saveChanges": "Save Changes",
+    "back": "Back"
   },
   "Footer": {
     "dataUsage": "Total Data Usage:",
@@ -431,7 +469,9 @@
     "fileTypes": "Documents, Photos, Videos, etc.",
     "startUpload": "Start Upload",
     "uploadFailed": "Failed to upload some files. Please try again.",
-    "poweredBy": "Powered by Zee-Index"
+    "poweredBy": "Powered by Zee-Index",
+    "senderSubfolder": "Sender Name / Subfolder (Optional)",
+    "senderSubfolderPlaceholder": "Example: Budi Santoso or Assignment-1"
   },
   "TrashPage": {
     "accessDenied": "Access Denied: This page is for Admins only",
@@ -482,7 +522,8 @@
     "copied": "Copied!",
     "understand": "Understood, Back to Home",
     "refreshToken": "Refresh Token",
-    "envNote": "Copy all variables below and add them to your .env file, then restart the container/VPS if needed."
+    "envNote": "Copy all variables below and add them to your .env file, then restart the container/VPS if needed.",
+    "createdBy": "Created by"
   },
   "DetailsPanel": {
     "copied": "Copied!",
@@ -534,7 +575,20 @@
     "hasWatermark": "Dynamic Watermark",
     "hasWatermarkDesc": "Show watermark to prevent screen captures",
     "limitAccess": "Limit Access",
-    "limitAccessDesc": "Limit how many times this link can be accessed/downloaded"
+    "limitAccessDesc": "Limit how many times this link can be accessed/downloaded",
+    "itemCount": "{count} items",
+    "collection": "Collection",
+    "temporaryAccess": "Temporary access",
+    "longTermAccess": "Long-term access",
+    "trackingNotice": "By generating a link, you agree to track and monitor the link usage in the Admin Panel.",
+    "securityPolicies": "Security & Policies",
+    "protectWithAccount": "Protect with account",
+    "restrictDirectSaving": "Restrict direct saving",
+    "enableVisualProtection": "Enable visual protection",
+    "customWatermarkPlaceholder": "Custom Watermark (optional)",
+    "maxViewsDownloads": "Max views/downloads",
+    "durationSettings": "Duration Settings",
+    "confirmSettings": "Confirm all settings before generating the public link."
   },
   "NotificationCenter": {
     "title": "Notifications",
@@ -638,7 +692,8 @@
     "displayNamePlaceholder": "Example: Project X",
     "passwordPlaceholder": "Leave empty if public",
     "folderNamePlaceholder": "Folder name...",
-    "publicAccessPlaceholder": "Leave empty for public access"
+    "publicAccessPlaceholder": "Leave empty for public access",
+    "passwordProtected": "Password Protected"
   },
   "SharedCollectionPage": {
     "defaultName": "Shared Collection",
@@ -703,7 +758,11 @@
     "retry": "Try Again",
     "notFoundTitle": "File Not Found",
     "notFoundMessage": "The file you are looking for does not exist or Google Drive is busy.",
-    "fetchError": "There was a problem fetching file details. Check your network connection or try again later."
+    "fetchError": "There was a problem fetching file details. Check your network connection or try again later.",
+    "accessDenied": "Access Denied",
+    "invalidShareToken": "Invalid share token or login required.",
+    "noFilePermission": "You do not have permission to view this file.",
+    "goHome": "Go Home"
   },
   "KeyboardShortcuts": {
     "title": "Keyboard Shortcuts",
@@ -720,7 +779,8 @@
     "open": "Open Preview",
     "notAvailable": "Preview not available",
     "download": "Download File",
-    "libraryError": "EpubJS Library not loaded."
+    "libraryError": "EpubJS Library not loaded.",
+    "preview": "Preview"
   },
   "FileCard": {
     "info": "Info",
@@ -767,14 +827,34 @@
     "removeTitle": "Remove Protection?",
     "removeMessage": "will be publicly accessible (unless restricted from Google Drive).",
     "cancel": "Cancel",
-    "yesRemove": "Yes, Remove"
+    "yesRemove": "Yes, Remove",
+    "protectLocalRoot": "Protect Local Storage Root",
+    "description": "Lock Google Drive folders or Local Storage with a password.",
+    "folderIdLabel": "Folder ID or Path",
+    "passwordLabel": "New Password",
+    "folderCount": "{count} Folder",
+    "connecting": "Connecting to database...",
+    "emptyHint": "Use the form above to add the first folder.",
+    "localStorage": "Local Storage",
+    "encrypted": "Encrypted",
+    "folder": "Folder"
   },
   "AuthModal": {
     "userIdPlaceholder": "User ID",
     "passwordPlaceholder": "Password"
   },
   "TwoFactorAuthSetup": {
-    "codePlaceholder": "123456"
+    "codePlaceholder": "123456",
+    "enabledTitle": "2FA Active",
+    "enabledDesc": "Your account is protected with two-factor authentication.",
+    "disable": "Disable",
+    "disabledTitle": "2FA Inactive",
+    "disabledDesc": "Improve account security by enabling 2FA.",
+    "enable": "Enable 2FA",
+    "scanQr": "1. Scan this QR code with your authenticator app (e.g. Google Authenticator).",
+    "qrAlt": "2FA QR Code",
+    "enterCode": "2. Enter the 6-digit code shown in your app to complete setup.",
+    "verify": "Verify"
   },
   "TagManager": {
     "newLabelPlaceholder": "New Label...",
@@ -784,7 +864,20 @@
     "appNamePlaceholder": "Zee Index",
     "taglinePlaceholder": "Default (Empty)",
     "logoUrlPlaceholder": "https://example.com/logo.png",
-    "faviconUrlPlaceholder": "https://example.com/favicon.ico"
+    "faviconUrlPlaceholder": "https://example.com/favicon.ico",
+    "title": "Custom Branding (White Label)",
+    "appName": "Application Name",
+    "appNameHelp": "Shown in the browser tab and header.",
+    "primaryColor": "Primary Color (Primary Theme)",
+    "primaryColorHelp": "Changes button colors, active links, and UI accents.",
+    "resetDefault": "Reset to Default",
+    "logoUrl": "Logo URL (Header)",
+    "logoUrlHelp": "Image format (PNG/SVG). Leave empty to use the default.",
+    "faviconUrl": "Favicon URL",
+    "faviconUrlHelp": "Browser tab icon.",
+    "saveChanges": "Save Changes",
+    "resetToast": "Color reset to default (save to apply)",
+    "savedToast": "Branding saved successfully!"
   },
   "VideoPlayer": {
     "resumeTitle": "Resume Playback?",
@@ -797,7 +890,18 @@
     "playNow": "Play Now",
     "unsupportedFormat": "Unsupported Format",
     "codecNotSupported": "This video codec is not supported by your browser.",
-    "downloadFile": "Download File"
+    "downloadFile": "Download File",
+    "externalStream": "External Stream",
+    "externalPlayer": "External Player",
+    "copyUrl": "Copy URL",
+    "openInVlcPc": "Open in VLC (PC)",
+    "openOriginalDrive": "Open original in Google Drive",
+    "theaterMode": "Theater Mode",
+    "connectionLost": "Connection Lost",
+    "lastPosition": "Last position: {time}",
+    "reconnect": "Reconnect",
+    "googleDrivePlayer": "Google Drive Player",
+    "confidentialView": "Confidential View"
   },
   "AnalyticsDashboard": {
     "title": "Analytics Dashboard",
@@ -826,7 +930,9 @@
     "bandwidthUsage": "Bandwidth Usage",
     "today": "Today",
     "week": "This Week",
-    "month": "This Month"
+    "month": "This Month",
+    "viewsCount": "{count} views",
+    "visitsCount": "{count} visits"
   },
   "Api": {
     "Share": {
@@ -847,5 +953,188 @@
       "no": "No",
       "manageText": "You can manage all sharing links in the admin dashboard."
     }
+  },
+  "SetupRequired": {
+    "expiredTitle": "Session Expired",
+    "configTitle": "Setup Required",
+    "defaultMessage": "The Google Drive connection was lost. Please configure it again to continue.",
+    "openSetup": "Open Setup Page",
+    "tryAgain": "Try Again",
+    "status": "Status"
+  },
+  "MainError": {
+    "title": "Failed to Load Content",
+    "message": "An error occurred while fetching folder or file data. This may be caused by a connection or permission issue.",
+    "tryAgain": "Try Again",
+    "errorId": "Error ID"
+  },
+  "AuditDashboard": {
+    "title": "Audit Logs",
+    "subtitle": "Monitor system activities and file access",
+    "refresh": "Refresh",
+    "clearLogs": "Clear Logs",
+    "clearConfirm": "Are you sure you want to clear all audit logs?",
+    "cleared": "Audit logs cleared",
+    "clearFailed": "Failed to clear logs",
+    "time": "Time",
+    "user": "User",
+    "action": "Action",
+    "fileFolder": "File / Folder",
+    "ipDevice": "IP & Device",
+    "loading": "Loading logs...",
+    "empty": "No logs found."
+  },
+  "AdminActivityLogPage": {
+    "accessDenied": "Access Denied",
+    "accessDeniedMessage": "Only admins can view this page.",
+    "title": "System Activity Log",
+    "time": "Time",
+    "actionType": "Action Type",
+    "detail": "Detail",
+    "actor": "Actor",
+    "item": "Item:",
+    "target": "Target:",
+    "systemPublicLink": "System / Public Link",
+    "empty": "No activity has been recorded yet."
+  },
+  "RealTimeOverview": {
+    "activeUsers": "Active Users",
+    "currentlyOnline": "Currently online",
+    "liveFeed": "Live Feed",
+    "waiting": "Waiting for events..."
+  },
+  "SecurityCenter": {
+    "incidentCenter": "Incident Center",
+    "incidentSubtitle": "Open and acknowledged security incidents",
+    "evaluateRules": "Evaluate Rules",
+    "openIncidents": "Open incidents",
+    "rule": "Rule:",
+    "count": "Count:",
+    "last": "Last:",
+    "acknowledge": "Acknowledge",
+    "resolve": "Resolve",
+    "noIncidents": "No incidents detected.",
+    "recentEvents": "Recent Security Events",
+    "recentEventsSubtitle": "Security-related logs from activity stream",
+    "user": "User:",
+    "unknown": "Unknown",
+    "noAnomalies": "No recent anomalies detected.",
+    "loadFailed": "Failed to load security data.",
+    "evaluationFailed": "Failed to run incident evaluation.",
+    "evaluationDone": "Evaluation done: {created} created, {updated} updated.",
+    "updateFailed": "Failed to update incident status.",
+    "incidentMarked": "Incident marked as {status}."
+  },
+  "SecurityConfig": {
+    "title": "Display & Privacy Settings",
+    "hideAuthor": "Hide Author",
+    "hideAuthorDesc": "Hide \"Owner\" and \"Modified by\" information for non-admin users.",
+    "disableGuestLogin": "Disable Guest Login",
+    "disableGuestLoginDesc": "Prevent new users from signing in as \"Guest\" on the login page.",
+    "saveSuccess": "Setting {setting} has been {status}.",
+    "enabled": "enabled",
+    "disabled": "disabled",
+    "saveFailed": "Failed to save settings."
+  },
+  "StorageIntelligence": {
+    "duplicateTitle": "Duplicate Analysis (Mock)",
+    "identicalFiles": "Identical Files Detected",
+    "wastingSpace": "Wasting approximately {size} of storage space",
+    "contentDistribution": "Content Distribution",
+    "fileCount": "{count} files",
+    "count": "Count"
+  },
+  "Charts": {
+    "count": "Count",
+    "noData": "No data available",
+    "views": "Views",
+    "visitors": "Visitors",
+    "bandwidth": "Bandwidth"
+  },
+  "BreadcrumbDropdown": {
+    "toggle": "Toggle sibling folder list",
+    "moveToSibling": "Move to Another Folder",
+    "loading": "Loading folders...",
+    "empty": "No other folders at this level"
+  },
+  "FileUploadManager": {
+    "uploadingFiles": "Uploading {count} file...",
+    "uploadsComplete": "{count} uploads complete",
+    "uploadingProgress": "{progress}% - Uploading...",
+    "uploaded": "Uploaded successfully",
+    "uploadFailed": "Upload failed"
+  },
+  "GlobalError": {
+    "title": "Fatal Error",
+    "message": "Sorry, the application encountered an unexpected system error. Our team has been notified about this issue.",
+    "tryAgain": "Try Again",
+    "backHome": "Back to Home",
+    "errorId": "Error ID"
+  },
+  "OgImage": {
+    "fileExplorer": "High-Performance File Explorer",
+    "secureAccess": "Secure Cloud Access"
+  },
+  "SystemHealth": {
+    "fetchFailed": "Failed to fetch system health",
+    "loadFailed": "Failed to load system health",
+    "healthy": "Healthy",
+    "attention": "Attention",
+    "database": "Database",
+    "online": "Online",
+    "unavailable": "Unavailable",
+    "latency": "Latency:",
+    "cache": "Cache",
+    "apiActive": "API Active",
+    "needsSetup": "Needs Setup",
+    "googleDriveQuota": "Google Drive Quota",
+    "percentUsed": "{percent}% Used",
+    "notConfigured": "Not Configured",
+    "unknown": "unknown",
+    "healthCheckLatency": "Health Check Latency",
+    "total": "Total",
+    "average": "Average",
+    "fastest": "Fastest",
+    "slowest": "Slowest",
+    "up": "Up",
+    "down": "Down",
+    "errorRate24h": "Error Rate (24h)",
+    "errorsRecorded": "errors recorded",
+    "previous24h": "Previous 24h:"
+  },
+  "UserPasswordManager": {
+    "title": "User Access Passwords",
+    "subtitle": "Manage individual passwords for user emails (overrides default auth if checked).",
+    "checkUserStatus": "Check User Status",
+    "emailPlaceholder": "Enter user email...",
+    "check": "Check",
+    "individualPasswordSet": "Individual password set",
+    "noIndividualPassword": "No individual password",
+    "removePassword": "Remove Password",
+    "setUpdatePassword": "Set / Update Password",
+    "targetUserEmail": "Target User Email",
+    "newPassword": "New Password (min 6 chars)",
+    "updatePassword": "Update Password",
+    "setPassword": "Set Password",
+    "howItWorks": "How it works:",
+    "howItWorksDesc": "These passwords are used for users who are NOT in the default Admin/Editor list but need specific access. If a password is set for an email, the system will prompt for it during login or access verification.",
+    "checkFailed": "Failed to check password",
+    "passwordSet": "Password for {email} has been set.",
+    "setFailed": "Failed to set password",
+    "removeConfirm": "Are you sure you want to remove the password for {email}?",
+    "removeTitle": "Remove User Password",
+    "passwordRemoved": "Password for {email} removed.",
+    "removeFailed": "Failed to remove password",
+    "targetEmailPlaceholder": "user@example.com"
+  },
+  "PDFViewer": {
+    "sidebar": "Sidebar",
+    "rotate": "Rotate",
+    "download": "Download",
+    "preparingDocument": "Preparing document...",
+    "resetZoom": "Reset Zoom"
+  },
+  "GlobalAudioPlayer": {
+    "queue": "Play Queue ({count})"
   }
 }

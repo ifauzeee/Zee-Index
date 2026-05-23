@@ -52,9 +52,9 @@ export default async function FilePage(props: {
     if (!isValidShare) {
       return (
         <FileError
-          title="Access Denied"
-          message="Invalid share token or login required."
-          retry="Go Home"
+          title={t("accessDenied")}
+          message={t("invalidShareToken")}
+          retry={t("goHome")}
         />
       );
     }
@@ -77,9 +77,9 @@ export default async function FilePage(props: {
     if (!hasAccess) {
       return (
         <FileError
-          title="Access Denied"
-          message="You do not have permission to view this file."
-          retry="Go Home"
+          title={t("accessDenied")}
+          message={t("noFilePermission")}
+          retry={t("goHome")}
         />
       );
     }

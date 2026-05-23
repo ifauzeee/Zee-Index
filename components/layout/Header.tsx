@@ -336,7 +336,7 @@ export default function Header() {
               {logoUrl ? (
                 <Image
                   src={logoUrl}
-                  alt="Logo"
+                  alt={t("logoAlt")}
                   width={32}
                   height={32}
                   className="w-8 h-8 mr-3 object-contain"
@@ -345,7 +345,7 @@ export default function Header() {
               ) : (
                 <Image
                   src={AppIcon}
-                  alt="Google Drive Logo"
+                  alt={t("driveLogoAlt")}
                   className="w-8 h-8 mr-3 dark:invert"
                 />
               )}

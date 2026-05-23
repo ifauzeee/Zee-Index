@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslations } from "next-intl";
 
 interface ExternalPlayerMenuProps {
   getAbsoluteSrc: () => string;
@@ -21,12 +22,14 @@ export function ExternalPlayerMenu({
   getAbsoluteSrc,
   onCopyUrl,
 }: ExternalPlayerMenuProps) {
+  const t = useTranslations("VideoPlayer");
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           className="p-2 bg-black/40 hover:bg-black/80 text-white rounded-xl backdrop-blur-md border border-white/10 transition-all shadow-lg focus:outline-none"
-          title="Stream Eksternal"
+          title={t("externalStream")}
         >
           <MonitorPlay size={16} />
         </button>
@@ -35,23 +38,21 @@ export function ExternalPlayerMenu({
         align="end"
         className="w-56 bg-zinc-950/90 border-white/10 text-white backdrop-blur-xl z-[100]"
       >
-        <DropdownMenuLabel>External Player</DropdownMenuLabel>
+        <DropdownMenuLabel>{t("externalPlayer")}</DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-white/10" />
 
         <DropdownMenuItem
           className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
           onClick={onCopyUrl}
         >
-          <Copy className="mr-2 h-4 w-4" /> Copy URL
+          <Copy className="mr-2 h-4 w-4" /> {t("copyUrl")}
         </DropdownMenuItem>
 
         <DropdownMenuItem
           className="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white"
-          onClick={() =>
-            (window.location.href = `vlc://${getAbsoluteSrc()}`)
-          }
+          onClick={() => (window.location.href = `vlc://${getAbsoluteSrc()}`)}
         >
-          <Play className="mr-2 h-4 w-4" /> Open in VLC (PC)
+          <Play className="mr-2 h-4 w-4" /> {t("openInVlcPc")}
         </DropdownMenuItem>
 
         <DropdownMenuItem
@@ -117,6 +118,8 @@ export function VideoControlsOverlay({
   onCopyUrl,
   onToggleTheater,
 }: VideoControlsOverlayProps) {
+  const t = useTranslations("VideoPlayer");
+
   return (
     <div
       className={cn(
@@ -139,7 +142,7 @@ export function VideoControlsOverlay({
           data-prevent-nprogress="true"
           data-nprogress="off"
           className="p-2 bg-black/40 hover:bg-black/80 text-white rounded-xl backdrop-blur-md border border-white/10 transition-all shadow-lg"
-          title="Buka original di Google Drive"
+          title={t("openOriginalDrive")}
         >
           <ExternalLink size={16} />
         </a>
@@ -154,7 +157,7 @@ export function VideoControlsOverlay({
               ? "bg-primary text-primary-foreground"
               : "bg-black/40 hover:bg-black/80 text-white",
           )}
-          title="Theater Mode"
+          title={t("theaterMode")}
         >
           <Tv size={16} />
         </button>

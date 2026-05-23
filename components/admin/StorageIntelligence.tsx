@@ -5,6 +5,7 @@ import { formatBytes } from "@/lib/utils";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { AlertTriangle, Search, PieChart as PieChartIcon } from "lucide-react";
 import type { AdminStats } from "@/lib/adminStats";
+import { useTranslations } from "next-intl";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
@@ -15,6 +16,7 @@ interface StorageDataPoint {
 }
 
 export default function StorageIntelligence({ stats }: { stats: AdminStats }) {
+  const t = useTranslations("StorageIntelligence");
   const [data, setData] = useState<StorageDataPoint[]>([]);
 
   useEffect(() => {
@@ -32,26 +34,24 @@ export default function StorageIntelligence({ stats }: { stats: AdminStats }) {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div className="bg-card border rounded-xl p-5 shadow-sm">
         <h3 className="font-semibold text-lg flex items-center gap-2 mb-4">
-          <Search className="text-primary" size={20} /> Duplicate Analysis
-          (Mock)
+          <Search className="text-primary" size={20} /> {t("duplicateTitle")}
         </h3>
         <div className="bg-muted/30 border border-amber-500/30 rounded-lg p-4">
           <div className="flex justify-between items-center text-amber-600 font-medium">
-            <span>Identical Files Detected</span>
+            <span>{t("identicalFiles")}</span>
             <AlertTriangle size={18} />
           </div>
           <p className="text-2xl font-bold mt-2">14</p>
           <p className="text-xs text-muted-foreground">
-            Wasting approximately {formatBytes(1024 * 1024 * 543)} of storage
-            space
+            {t("wastingSpace", { size: formatBytes(1024 * 1024 * 543) })}
           </p>
         </div>
       </div>
 
       <div className="bg-card border rounded-xl p-5 shadow-sm">
         <h3 className="font-semibold text-lg flex items-center gap-2 mb-4">
-          <PieChartIcon className="text-green-500" size={20} /> Content
-          Distribution
+          <PieChartIcon className="text-green-500" size={20} />{" "}
+          {t("contentDistribution")}
         </h3>
         <div className="h-[200px] w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -73,7 +73,10 @@ export default function StorageIntelligence({ stats }: { stats: AdminStats }) {
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: number) => [`${value} files`, "Count"]}
+                formatter={(value: number) => [
+                  t("fileCount", { count: value }),
+                  t("count"),
+                ]}
               />
             </PieChart>
           </ResponsiveContainer>

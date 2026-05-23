@@ -293,7 +293,9 @@ export default function AnalyticsDashboard() {
                     </span>
                   </div>
                   <span className="font-mono text-muted-foreground text-xs bg-muted px-2 py-1 rounded-md shrink-0 ml-2">
-                    {page.views.toLocaleString()} views
+                    {t("viewsCount", {
+                      count: page.views.toLocaleString(),
+                    })}
                   </span>
                 </div>
               ))
@@ -337,7 +339,9 @@ export default function AnalyticsDashboard() {
                     </span>
                   </div>
                   <span className="font-mono text-muted-foreground text-xs bg-muted px-2 py-1 rounded-md shrink-0 ml-2">
-                    {ref.count.toLocaleString()} visits
+                    {t("visitsCount", {
+                      count: ref.count.toLocaleString(),
+                    })}
                   </span>
                 </div>
               ))

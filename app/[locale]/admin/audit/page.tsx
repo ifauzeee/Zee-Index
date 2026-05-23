@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { Shield, Clock, User, Globe, FileText, Trash2 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { useTranslations } from "next-intl";
 
 interface AuditLog {
   timestamp: string | number | Date;
@@ -16,6 +17,7 @@ interface AuditLog {
 }
 
 export default function AuditDashboard() {
+  const t = useTranslations("AuditDashboard");
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const addToast = useAppStore((state) => state.addToast);
@@ -35,15 +37,15 @@ export default function AuditDashboard() {
   };
 
   const clearLogs = async () => {
-    if (!confirm("Are you sure you want to clear all audit logs?")) return;
+    if (!confirm(t("clearConfirm"))) return;
     try {
       const res = await fetch("/api/admin/audit", { method: "DELETE" });
       if (res.ok) {
         setLogs([]);
-        addToast({ message: "Audit logs cleared", type: "success" });
+        addToast({ message: t("cleared"), type: "success" });
       }
     } catch {
-      addToast({ message: "Failed to clear logs", type: "error" });
+      addToast({ message: t("clearFailed"), type: "error" });
     }
   };
 
@@ -57,25 +59,23 @@ export default function AuditDashboard() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Shield className="w-6 h-6 text-blue-500" />
-            Audit Logs
+            {t("title")}
           </h1>
-          <p className="text-zinc-500 dark:text-zinc-400">
-            Monitor system activities and file access
-          </p>
+          <p className="text-zinc-500 dark:text-zinc-400">{t("subtitle")}</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={fetchLogs}
             className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
           >
-            Refresh
+            {t("refresh")}
           </button>
           <button
             onClick={clearLogs}
             className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition flex items-center gap-2"
           >
             <Trash2 className="w-4 h-4" />
-            Clear Logs
+            {t("clearLogs")}
           </button>
         </div>
       </div>
@@ -85,11 +85,11 @@ export default function AuditDashboard() {
           <table className="w-full text-left">
             <thead className="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 uppercase text-xs font-semibold tracking-wider">
               <tr>
-                <th className="px-6 py-4">Time</th>
-                <th className="px-6 py-4">User</th>
-                <th className="px-6 py-4">Action</th>
-                <th className="px-6 py-4">File / Folder</th>
-                <th className="px-6 py-4">IP & Device</th>
+                <th className="px-6 py-4">{t("time")}</th>
+                <th className="px-6 py-4">{t("user")}</th>
+                <th className="px-6 py-4">{t("action")}</th>
+                <th className="px-6 py-4">{t("fileFolder")}</th>
+                <th className="px-6 py-4">{t("ipDevice")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
@@ -99,7 +99,7 @@ export default function AuditDashboard() {
                     colSpan={5}
                     className="px-6 py-12 text-center text-zinc-500"
                   >
-                    Loading logs...
+                    {t("loading")}
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
@@ -108,7 +108,7 @@ export default function AuditDashboard() {
                     colSpan={5}
                     className="px-6 py-12 text-center text-zinc-500"
                   >
-                    No logs found.
+                    {t("empty")}
                   </td>
                 </tr>
               ) : (

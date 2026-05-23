@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og";
 import { createPublicRoute } from "@/lib/api-middleware";
+import idMessages from "@/messages/id.json";
+import enMessages from "@/messages/en.json";
 
 export const runtime = "edge";
 
@@ -11,6 +13,9 @@ export const GET = createPublicRoute(
       const { searchParams } = new URL(request.url);
       const title = searchParams.get("title") || "Zee Index";
       const appName = process.env.NEXT_PUBLIC_APP_NAME || "Zee Index";
+      const locale = searchParams.get("locale") === "id" ? "id" : "en";
+      const messages =
+        locale === "id" ? idMessages.OgImage : enMessages.OgImage;
 
       return new ImageResponse(
         (
@@ -90,7 +95,7 @@ export const GET = createPublicRoute(
                 fontSize: "18px",
               }}
             >
-              <span>High-Performance File Explorer</span>
+              <span>{messages.fileExplorer}</span>
               <div
                 style={{
                   width: "4px",
@@ -99,7 +104,7 @@ export const GET = createPublicRoute(
                   backgroundColor: "#3f3f46",
                 }}
               />
-              <span>Secure Cloud Access</span>
+              <span>{messages.secureAccess}</span>
             </div>
           </div>
         ),

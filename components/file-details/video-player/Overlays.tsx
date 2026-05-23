@@ -6,6 +6,7 @@ import { WifiOff, History, FileWarning, Download, Loader2 } from "lucide-react";
 import { formatDuration } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface UpNextOverlayProps {
   countdown: number;
@@ -86,6 +87,8 @@ export function NetworkErrorOverlay({
   lastTime,
   onRetry,
 }: NetworkErrorOverlayProps) {
+  const t = useTranslations("VideoPlayer");
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -94,15 +97,15 @@ export function NetworkErrorOverlay({
       className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 text-white backdrop-blur-sm p-4 text-center"
     >
       <WifiOff size={48} className="mb-4 text-red-500" />
-      <h3 className="text-xl font-bold mb-2">Koneksi Terputus</h3>
+      <h3 className="text-xl font-bold mb-2">{t("connectionLost")}</h3>
       <p className="text-sm text-gray-300 mb-6 max-w-xs">
-        Posisi terakhir: {formatDuration(lastTime)}
+        {t("lastPosition", { time: formatDuration(lastTime) })}
       </p>
       <Button
         onClick={onRetry}
         className="px-6 rounded-full font-semibold flex items-center gap-2"
       >
-        <History size={18} /> Sambung Ulang
+        <History size={18} /> {t("reconnect")}
       </Button>
     </motion.div>
   );
@@ -154,7 +157,7 @@ export function FormatErrorOverlay({
             onClick={() => window.open(webViewLink, "_blank")}
             className="px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
           >
-            <Play size={16} /> Google Drive Player
+            <Play size={16} /> {tPlayer("googleDrivePlayer")}
           </Button>
         )}
         <Button
@@ -306,6 +309,8 @@ export function WatermarkOverlay({
   userEmail,
   userName,
 }: WatermarkOverlayProps) {
+  const t = useTranslations("VideoPlayer");
+
   return (
     <div className="absolute inset-0 pointer-events-none z-[90] overflow-hidden flex flex-wrap justify-around items-center opacity-[0.25] mix-blend-overlay w-full h-full select-none">
       {Array.from({ length: 15 }).map((_, i) => (
@@ -313,7 +318,7 @@ export function WatermarkOverlay({
           key={i}
           className="text-white text-xl sm:text-2xl md:text-3xl font-black -rotate-[30deg] p-6 sm:p-10 whitespace-nowrap shadow-black drop-shadow-md"
         >
-          {watermarkText || userEmail || userName || "Confidential View"}
+          {watermarkText || userEmail || userName || t("confidentialView")}
           <br />
           <span className="text-sm sm:text-lg opacity-80">
             {new Date().toLocaleDateString()}

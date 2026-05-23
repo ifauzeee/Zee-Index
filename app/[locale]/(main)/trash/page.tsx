@@ -216,7 +216,7 @@ export default function TrashPage() {
             selectedFiles.length > 0 && selectedFiles.length === files.length
           }
           onCheckedChange={toggleSelectAll}
-          aria-label="Select all"
+          aria-label={t("selectAll")}
           className="mr-4"
         />
         <label htmlFor="select-all" className="font-medium">

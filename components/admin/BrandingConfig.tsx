@@ -11,7 +11,10 @@ import {
   Save,
   RotateCcw,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
+
 export default function BrandingConfig() {
+  const t = useTranslations("BrandingConfig");
   const {
     appName,
     logoUrl,
@@ -55,7 +58,7 @@ export default function BrandingConfig() {
   const handleResetColor = () => {
     setFormState((prev) => ({ ...prev, primaryColor: "" }));
     addToast({
-      message: "Warna di-reset ke default (Simpan untuk menerapkan)",
+      message: t("resetToast"),
       type: "info",
     });
   };
@@ -64,7 +67,7 @@ export default function BrandingConfig() {
     e.preventDefault();
     setIsSubmitting(true);
     await setConfig(formState);
-    addToast({ message: "Branding berhasil disimpan!", type: "success" });
+    addToast({ message: t("savedToast"), type: "success" });
     setIsSubmitting(false);
   };
 
@@ -77,31 +80,26 @@ export default function BrandingConfig() {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-6">
-        Custom Branding (White Label)
-      </h2>
+      <h2 className="text-2xl font-semibold mb-6">{t("title")}</h2>
       <div className="bg-card border rounded-lg p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <label className="text-sm font-medium flex items-center gap-2">
-              <Type size={16} className="text-primary" /> Nama Aplikasi
+              <Type size={16} className="text-primary" /> {t("appName")}
             </label>
             <input
               name="appName"
               value={formState.appName}
               onChange={handleChange}
               className="w-full px-3 py-2 bg-background border rounded-md focus:ring-2 focus:ring-primary outline-none"
-              placeholder="Zee Index"
+              placeholder={t("appNamePlaceholder")}
             />
-            <p className="text-xs text-muted-foreground">
-              Muncul di tab browser dan header.
-            </p>
+            <p className="text-xs text-muted-foreground">{t("appNameHelp")}</p>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium flex items-center gap-2">
-              <Palette size={16} className="text-primary" /> Warna Utama
-              (Primary Theme)
+              <Palette size={16} className="text-primary" /> {t("primaryColor")}
             </label>
             <div className="flex gap-4 items-center">
               <div className="relative">
@@ -119,52 +117,53 @@ export default function BrandingConfig() {
                 value={formState.primaryColor}
                 onChange={handleChange}
                 className="flex-1 px-3 py-2 bg-background border rounded-md focus:ring-2 focus:ring-primary outline-none uppercase"
-                placeholder="Default (Kosong)"
+                placeholder={t("taglinePlaceholder")}
               />
               <button
                 type="button"
                 onClick={handleResetColor}
                 className="p-2.5 bg-secondary hover:bg-secondary/80 rounded-md transition-colors"
-                title="Reset ke Default"
+                title={t("resetDefault")}
               >
                 <RotateCcw size={18} />
               </button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Mengubah warna tombol, link aktif, dan aksen UI.
+              {t("primaryColorHelp")}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-medium flex items-center gap-2">
-                <ImageIcon size={16} className="text-primary" /> Logo URL
-                (Header)
+                <ImageIcon size={16} className="text-primary" /> {t("logoUrl")}
               </label>
               <input
                 name="logoUrl"
                 value={formState.logoUrl}
                 onChange={handleChange}
                 className="w-full px-3 py-2 bg-background border rounded-md focus:ring-2 focus:ring-primary outline-none"
-                placeholder="https://example.com/logo.png"
+                placeholder={t("logoUrlPlaceholder")}
               />
               <p className="text-xs text-muted-foreground">
-                Format gambar (PNG/SVG). Kosongkan untuk default.
+                {t("logoUrlHelp")}
               </p>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium flex items-center gap-2">
-                <Globe size={16} className="text-primary" /> Favicon URL
+                <Globe size={16} className="text-primary" /> {t("faviconUrl")}
               </label>
               <input
                 name="faviconUrl"
                 value={formState.faviconUrl}
                 onChange={handleChange}
                 className="w-full px-3 py-2 bg-background border rounded-md focus:ring-2 focus:ring-primary outline-none"
-                placeholder="https://example.com/favicon.ico"
+                placeholder={t("faviconUrlPlaceholder")}
               />
-              <p className="text-xs text-muted-foreground">Ikon tab browser.</p>
+              <p className="text-xs text-muted-foreground">
+                {t("faviconUrlHelp")}
+              </p>
             </div>
           </div>
 
@@ -179,7 +178,7 @@ export default function BrandingConfig() {
               ) : (
                 <Save size={18} />
               )}
-              Simpan Perubahan
+              {t("saveChanges")}
             </button>
           </div>
         </form>

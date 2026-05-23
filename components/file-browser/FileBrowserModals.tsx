@@ -7,14 +7,18 @@ import type { DriveFile } from "@/lib/drive";
 import type { ActionState, ContextMenuState } from "@/hooks/useFileActions";
 import { useTranslations } from "next-intl";
 
-const ModalLoading = () => (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-    <div className="flex flex-col items-center gap-4 p-8 bg-background rounded-lg">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      <span className="text-sm text-muted-foreground">Loading...</span>
+const ModalLoading = () => {
+  const t = useTranslations("Common");
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="flex flex-col items-center gap-4 p-8 bg-background rounded-lg">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="text-sm text-muted-foreground">{t("loading")}</span>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const FileRequestModal = dynamic(
   () => import("@/components/modals/FileRequestModal"),

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { useAppStore } from "@/lib/store";
+import { useTranslations } from "next-intl";
 
 type IncidentStatus = "open" | "acknowledged" | "resolved";
 type IncidentSeverity = "warning" | "error" | "critical";
@@ -56,6 +57,7 @@ function statusClasses(status: IncidentStatus): string {
 }
 
 export default function SecurityCenter() {
+  const t = useTranslations("SecurityCenter");
   const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [openCount, setOpenCount] = useState(0);
@@ -91,7 +93,7 @@ export default function SecurityCenter() {
     } catch (err) {
       console.error("Failed to fetch security data", err);
       addToast({
-        message: "Failed to load security data.",
+        message: t("loadFailed"),
         type: "error",
       });
     } finally {
@@ -107,20 +109,20 @@ export default function SecurityCenter() {
       });
       const payload = await response.json();
       if (!response.ok) {
-        throw new Error(payload.error || "Failed to run incident evaluation.");
+        throw new Error(payload.error || t("evaluationFailed"));
       }
 
       addToast({
-        message: `Evaluation done: ${payload.summary.createdIncidents} created, ${payload.summary.updatedIncidents} updated.`,
+        message: t("evaluationDone", {
+          created: payload.summary.createdIncidents,
+          updated: payload.summary.updatedIncidents,
+        }),
         type: "success",
       });
       await fetchSecurityData();
     } catch (err: unknown) {
       addToast({
-        message:
-          err instanceof Error
-            ? err.message
-            : "Failed to run incident evaluation.",
+        message: err instanceof Error ? err.message : t("evaluationFailed"),
         type: "error",
       });
     } finally {
@@ -141,7 +143,7 @@ export default function SecurityCenter() {
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload.error || "Failed to update incident status.");
+        throw new Error(payload.error || t("updateFailed"));
       }
 
       setIncidents((prev) =>
@@ -150,7 +152,7 @@ export default function SecurityCenter() {
         ),
       );
       addToast({
-        message: `Incident marked as ${status}.`,
+        message: t("incidentMarked", { status }),
         type: "success",
       });
       await fetchSecurityData();
@@ -178,9 +180,9 @@ export default function SecurityCenter() {
           <div className="flex items-center gap-3">
             <Siren className="text-red-500" size={22} />
             <div>
-              <h3 className="font-bold text-lg">Incident Center</h3>
+              <h3 className="font-bold text-lg">{t("incidentCenter")}</h3>
               <p className="text-sm text-muted-foreground">
-                Open and acknowledged security incidents
+                {t("incidentSubtitle")}
               </p>
             </div>
           </div>
@@ -193,12 +195,12 @@ export default function SecurityCenter() {
               size={14}
               className={isEvaluating ? "animate-spin" : undefined}
             />
-            Evaluate Rules
+            {t("evaluateRules")}
           </button>
         </div>
 
         <div className="mb-4 p-3 rounded-lg bg-muted/30 border text-sm flex items-center justify-between">
-          <span className="text-muted-foreground">Open incidents</span>
+          <span className="text-muted-foreground">{t("openIncidents")}</span>
           <span className="font-semibold text-foreground">{openCount}</span>
         </div>
 
@@ -240,10 +242,14 @@ export default function SecurityCenter() {
                   </div>
 
                   <div className="text-xs text-muted-foreground flex flex-wrap gap-4">
-                    <span>Rule: {incident.ruleId}</span>
-                    <span>Count: {incident.triggerCount}</span>
                     <span>
-                      Last:{" "}
+                      {t("rule")} {incident.ruleId}
+                    </span>
+                    <span>
+                      {t("count")} {incident.triggerCount}
+                    </span>
+                    <span>
+                      {t("last")}{" "}
                       {format(new Date(incident.updatedAt), "dd MMM HH:mm:ss")}
                     </span>
                   </div>
@@ -256,7 +262,7 @@ export default function SecurityCenter() {
                       }
                       className="px-2.5 py-1.5 text-xs rounded-md border hover:bg-accent disabled:opacity-50"
                     >
-                      Acknowledge
+                      {t("acknowledge")}
                     </button>
                     <button
                       disabled={
@@ -267,7 +273,7 @@ export default function SecurityCenter() {
                       }
                       className="px-2.5 py-1.5 text-xs rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
                     >
-                      Resolve
+                      {t("resolve")}
                     </button>
                   </div>
                 </div>
@@ -279,7 +285,7 @@ export default function SecurityCenter() {
                 className="mx-auto mb-2 opacity-60 text-green-500"
                 size={30}
               />
-              <p className="text-sm">No incidents detected.</p>
+              <p className="text-sm">{t("noIncidents")}</p>
             </div>
           )}
         </div>
@@ -289,9 +295,9 @@ export default function SecurityCenter() {
         <div className="flex items-center gap-3 mb-5 border-b pb-3">
           <ShieldAlert className="text-red-500" size={24} />
           <div>
-            <h3 className="font-bold text-lg">Recent Security Events</h3>
+            <h3 className="font-bold text-lg">{t("recentEvents")}</h3>
             <p className="text-sm text-muted-foreground">
-              Security-related logs from activity stream
+              {t("recentEventsSubtitle")}
             </p>
           </div>
         </div>
@@ -316,7 +322,8 @@ export default function SecurityCenter() {
                     {event.type.replace(/_/g, " ")}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5 break-all">
-                    User: {event.userEmail || event.ipAddress || "Unknown"}
+                    {t("user")}{" "}
+                    {event.userEmail || event.ipAddress || t("unknown")}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {format(new Date(event.timestamp), "dd MMM, HH:mm:ss")}
@@ -330,7 +337,7 @@ export default function SecurityCenter() {
                 className="mx-auto mb-2 opacity-60 text-green-500"
                 size={30}
               />
-              <p className="text-sm">No recent anomalies detected.</p>
+              <p className="text-sm">{t("noAnomalies")}</p>
             </div>
           )}
         </div>

@@ -71,28 +71,36 @@ export const FileIconPlaceholder: React.FC<{
   );
 };
 
-export const ImagePreview: React.FC<{ src: string }> = ({ src }) => (
-  <div className="relative w-full h-full">
-    <Image
-      src={src}
-      fill
-      className="object-contain select-none"
-      alt="Preview"
-      unoptimized
-    />
-  </div>
-);
+export const ImagePreview: React.FC<{ src: string }> = ({ src }) => {
+  const t = useTranslations("Preview");
+
+  return (
+    <div className="relative w-full h-full">
+      <Image
+        src={src}
+        fill
+        className="object-contain select-none"
+        alt={t("preview")}
+        unoptimized
+      />
+    </div>
+  );
+};
 
 export const GoogleDrivePreview: React.FC<{ fileId: string }> = ({
   fileId,
-}) => (
-  <iframe
-    src={`https://drive.google.com/file/d/${fileId}/preview`}
-    className="w-full h-full border-0 bg-background"
-    allow="autoplay"
-    title="Preview"
-  />
-);
+}) => {
+  const t = useTranslations("Preview");
+
+  return (
+    <iframe
+      src={`https://drive.google.com/file/d/${fileId}/preview`}
+      className="w-full h-full border-0 bg-background"
+      allow="autoplay"
+      title={t("preview")}
+    />
+  );
+};
 
 export const EbookPreview: React.FC<{ src: string }> = ({ src }) => {
   const containerRef = useRef<HTMLDivElement>(null);

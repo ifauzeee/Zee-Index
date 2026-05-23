@@ -16,8 +16,10 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDuration } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 export default function GlobalAudioPlayer() {
+  const t = useTranslations("GlobalAudioPlayer");
   const {
     activeAudioFile,
     isAudioPlaying,
@@ -119,7 +121,7 @@ export default function GlobalAudioPlayer() {
             className="bg-card border border-border shadow-2xl rounded-xl overflow-hidden max-h-64 flex flex-col"
           >
             <div className="p-3 border-b font-semibold text-sm flex justify-between items-center bg-muted/10">
-              <span>Antrean Putar ({audioQueue.length})</span>
+              <span>{t("queue", { count: audioQueue.length })}</span>
               <button onClick={() => setShowQueue(false)}>
                 <X size={16} />
               </button>

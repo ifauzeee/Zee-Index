@@ -436,7 +436,7 @@ export default function SetupPage() {
           ) : null}
 
           <p className="text-center text-xs text-muted-foreground pt-12">
-            © {new Date().getFullYear()} - Created by{" "}
+            &copy; {new Date().getFullYear()} - {t("createdBy")}{" "}
             <a
               href="https://ifauzeee.vercel.app/"
               target="_blank"

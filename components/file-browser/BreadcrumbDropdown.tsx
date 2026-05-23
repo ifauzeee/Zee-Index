@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import type { DriveFile } from "@/lib/drive";
+import { useTranslations } from "next-intl";
 
 interface BreadcrumbDropdownProps {
   parentId: string;
@@ -23,6 +24,7 @@ export function BreadcrumbDropdown({
   nextId,
   onFolderClick,
 }: BreadcrumbDropdownProps) {
+  const t = useTranslations("BreadcrumbDropdown");
   const [isOpen, setIsOpen] = useState(false);
   const { shareToken, folderTokens } = useAppStore();
 
@@ -59,7 +61,7 @@ export function BreadcrumbDropdown({
             "p-1 hover:bg-accent rounded-md transition-all group shrink-0 mx-0.5",
             isOpen && "bg-accent",
           )}
-          aria-label="Toggle sibling folder list"
+          aria-label={t("toggle")}
         >
           <ChevronRight
             size={14}
@@ -76,19 +78,19 @@ export function BreadcrumbDropdown({
       >
         <div className="px-2 py-1.5 mb-1 border-b border-border/50">
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
-            Pindah ke Folder Lain
+            {t("moveToSibling")}
           </p>
         </div>
         {isLoading ? (
           <div className="flex flex-col items-center justify-center p-6 gap-2">
             <Loader2 className="w-4 h-4 animate-spin text-primary" />
             <span className="text-[10px] text-muted-foreground">
-              Memuat folder...
+              {t("loading")}
             </span>
           </div>
         ) : !data || data.length === 0 ? (
           <div className="p-4 text-[11px] text-muted-foreground text-center italic">
-            Tidak ada folder lain di level ini
+            {t("empty")}
           </div>
         ) : (
           <div className="grid gap-0.5">
