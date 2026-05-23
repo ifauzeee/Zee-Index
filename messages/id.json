@@ -456,6 +456,10 @@
     "setupSuccessRestart": "Setup Berhasil! Token telah disimpan ke .env.\n\nServer akan dimatikan otomatis atau silakan restart manual.",
     "setupComplete": "Setup Selesai",
     "setupSuccessRedirect": "Setup berhasil disimpan ke .env! Simpan nilai ini sebagai cadangan jika diperlukan.",
+    "restartRequiredDesc": "Token Google Drive sudah disimpan ke .env. Restart service Docker terlebih dahulu agar aplikasi memakai env baru, lalu kembali ke beranda.",
+    "restartCommandLabel": "Jalankan di terminal project",
+    "restartCommandHint": "Setelah restart selesai dan container sehat kembali, tekan tombol di bawah. Tanpa restart, halaman utama masih membaca token lama dan bisa tetap INVALID_GRANT.",
+    "restartDone": "Saya Sudah Restart",
     "success": "Sukses",
     "setupFailed": "Setup Gagal",
     "connectionError": "Terjadi kesalahan koneksi.",
@@ -475,6 +479,7 @@
     "manualConfigTitle": "Ringkasan Konfigurasi",
     "manualConfigDesc": "Gagal menulis ke .env secara otomatis. Silakan salin nilai berikut ke file .env Anda secara manual.",
     "copy": "Salin",
+    "copied": "Disalin!",
     "understand": "Paham, Kembali ke Beranda",
     "refreshToken": "Refresh Token",
     "envNote": "Salin semua variabel di bawah ini dan tambahkan ke file .env Anda, lalu restart container/VPS jika perlu."

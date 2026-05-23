@@ -456,6 +456,10 @@
     "setupSuccessRestart": "Setup Successful! Token saved to .env.\n\nServer will shutdown automatically or please restart manually.",
     "setupComplete": "Setup Complete",
     "setupSuccessRedirect": "Setup saved to .env! Copy these values as backup if needed.",
+    "restartRequiredDesc": "The Google Drive token has been saved to .env. Restart the Docker service first so the app loads the new env, then return home.",
+    "restartCommandLabel": "Run in the project terminal",
+    "restartCommandHint": "After the restart finishes and the container is healthy again, press the button below. Without a restart, the home page can still read the old token and keep showing INVALID_GRANT.",
+    "restartDone": "I Restarted",
     "success": "Success",
     "setupFailed": "Setup Failed",
     "connectionError": "Connection error occurred.",
@@ -475,6 +479,7 @@
     "manualConfigTitle": "Configuration Summary",
     "manualConfigDesc": "Failed to write to .env automatically. Please copy the following values manually to your .env file.",
     "copy": "Copy",
+    "copied": "Copied!",
     "understand": "Understood, Back to Home",
     "refreshToken": "Refresh Token",
     "envNote": "Copy all variables below and add them to your .env file, then restart the container/VPS if needed."

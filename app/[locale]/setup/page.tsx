@@ -27,6 +27,7 @@ export default function SetupPage() {
     const locale = window.location.pathname.match(/^\/(en|id)(\/|$)/)?.[1];
     return locale ? `/${locale}` : "/";
   };
+  const restartCommand = "docker compose restart zee-index";
 
   useEffect(() => {
     if (window.location.search.includes("code=") && step === 1) {
@@ -330,14 +331,43 @@ export default function SetupPage() {
                   )}
                 </div>
                 <h1 className="text-2xl font-semibold mb-2">
-                  {t("manualConfigTitle")}
+                  {writeSuccess ? t("setupComplete") : t("manualConfigTitle")}
                 </h1>
                 <p className="text-muted-foreground max-w-sm">
                   {writeSuccess
-                    ? t("setupSuccessRedirect")
+                    ? t("restartRequiredDesc")
                     : t("manualConfigDesc")}
                 </p>
               </div>
+
+              {writeSuccess && (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-xl bg-green-500/5 border border-green-500/15">
+                    <p className="text-xs font-medium uppercase tracking-wider text-green-600 dark:text-green-400 mb-3">
+                      {t("restartCommandLabel")}
+                    </p>
+                    <div className="relative group">
+                      <input
+                        readOnly
+                        value={restartCommand}
+                        className="w-full px-4 py-3 pr-20 rounded-xl border border-border bg-background font-mono text-xs focus:outline-none"
+                      />
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(restartCommand);
+                          alert(t("copied"), { title: t("success") });
+                        }}
+                        className="absolute right-2 top-1.5 px-3 py-1.5 rounded-lg bg-background border border-border text-xs font-medium hover:bg-muted transition-colors"
+                      >
+                        {t("copy")}
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed mt-3">
+                      {t("restartCommandHint")}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {!writeSuccess && (
                 <div className="space-y-4">
@@ -400,7 +430,7 @@ export default function SetupPage() {
                 onClick={() => router.push(getLocaleRootPath())}
                 className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3.5 rounded-xl font-medium transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
               >
-                {t("understand")}
+                {writeSuccess ? t("restartDone") : t("understand")}
               </button>
             </div>
           ) : null}
