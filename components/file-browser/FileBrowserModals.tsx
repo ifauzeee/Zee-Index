@@ -145,7 +145,6 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
     getSharePath,
     favorites,
     showHistory,
-    setShowHistory,
     handleTogglePin,
     isFilePinned,
     shareToken,

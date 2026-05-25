@@ -99,7 +99,7 @@ export default function SecurityCenter() {
     } finally {
       setLoading(false);
     }
-  }, [addToast]);
+  }, [addToast, t]);
 
   const runEvaluation = async () => {
     setIsEvaluating(true);

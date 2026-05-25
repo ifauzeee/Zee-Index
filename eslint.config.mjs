@@ -5,7 +5,7 @@ const config = [
   ...nextCoreWebVitals,
   ...nextTypescript,
   {
-    ignores: ["public/**", "code_context.txt", "*.py"],
+    ignores: ["public/**", "code_context.txt", "*.py", "coverage/**"],
   },
   {
     rules: {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -70,7 +70,7 @@ export default function SystemHealth() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const fetchHealth = async () => {
+  const fetchHealth = useCallback(async () => {
     try {
       const response = await fetch("/api/admin/system-health");
       if (!response.ok) throw new Error(t("fetchFailed"));
@@ -81,13 +81,13 @@ export default function SystemHealth() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     fetchHealth();
     const interval = setInterval(fetchHealth, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchHealth]);
 
   const database = data?.services.database;
   const cache = data?.services.cache;
