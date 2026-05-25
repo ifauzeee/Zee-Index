@@ -164,7 +164,12 @@ export const POST = createPublicRoute(
 
       try {
         await invalidateAccessToken();
-      } catch {}
+      } catch (error) {
+        logger.error(
+          { err: error },
+          "[Setup] Failed to invalidate access token",
+        );
+      }
 
       return NextResponse.json({
         success: true,

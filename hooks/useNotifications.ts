@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
+import { logger } from "@/lib/logger";
 import { useAppStore, NotificationItem } from "@/lib/store";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -134,7 +135,9 @@ export function useNotifications({
           }, delay);
         }
       };
-    } catch {}
+    } catch {
+      logger.error("[Notifications] EventSource connection failed");
+    }
   }, [enabled, addNotification, addToast, queryClient]);
 
   useEffect(() => {
