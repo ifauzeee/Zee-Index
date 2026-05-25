@@ -318,7 +318,9 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
 
       if (!hourlyVisitorSets.has(hour)) hourlyVisitorSets.set(hour, new Set());
       hourlyVisitorSets.get(hour)!.add(event.visitorId);
-    } catch {}
+    } catch {
+      // individual event parse failure — safely skips malformed data
+    }
   }
   for (const [hour, visitors] of hourlyVisitorSets) {
     hourlyViews[hour].visitors = visitors.size;

@@ -85,11 +85,15 @@ export const POST = createAdminRoute(
             serializeAccessRequestRecord(requestData),
           );
         }
-      } catch {}
+      } catch {
+        // cleanup failure — non-critical
+      }
 
       try {
         await kv.srem(REDIS_KEYS.ACCESS_REQUESTS, "[object Object]");
-      } catch {}
+      } catch {
+        // cleanup failure — non-critical
+      }
 
       return NextResponse.json({ success: true });
     } catch {

@@ -31,7 +31,9 @@ export default function PageViewTracker() {
 
           keepalive: true,
         });
-      } catch {}
+      } catch {
+        // page view tracking failure is non-critical
+      }
     };
 
     const timer = setTimeout(track, 300);

@@ -90,7 +90,9 @@ export const GET = createPublicRoute(
     let cachedData = null;
     try {
       cachedData = await kv.get(cacheKey);
-    } catch {}
+    } catch {
+      // cache read failure — fall through to live query
+    }
 
     if (cachedData) {
       return NextResponse.json(cachedData);
@@ -157,7 +159,9 @@ export const GET = createPublicRoute(
           if (payload.folderId) {
             allowedTokens.push(payload.folderId as string);
           }
-        } catch {}
+        } catch {
+          // JWT verify failure — no allowed tokens to pass
+        }
       }
 
       const [allProtectedFolders, isPrivFolder] = await Promise.all([
@@ -203,7 +207,9 @@ export const GET = createPublicRoute(
 
       try {
         await kv.set(cacheKey, result, { ex: CACHE_TTL });
-      } catch {}
+      } catch {
+        // cache write failure — response still valid, uncached
+      }
 
       return NextResponse.json(result);
     } catch (error: unknown) {

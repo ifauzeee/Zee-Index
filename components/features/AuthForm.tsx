@@ -88,7 +88,9 @@ export default function AuthForm({
           });
           window.location.reload();
         }
-      } catch {}
+      } catch {
+        // polling check failure is non-critical
+      }
     };
 
     const interval = setInterval(() => {

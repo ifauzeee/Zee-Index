@@ -142,7 +142,9 @@ export const GET = createPublicRoute(
           if (payload.folderId) {
             allowedTokens.push(payload.folderId as string);
           }
-        } catch {}
+        } catch {
+          // JWT verify failure — no allowed tokens to pass
+        }
       }
 
       const processedFilesPromise = Array.from(uniqueFiles.values()).map(
