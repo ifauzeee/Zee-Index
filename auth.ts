@@ -100,8 +100,8 @@ const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(db),
   providers: [
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
     }),
     Credentials({
       id: "credentials",
@@ -135,8 +135,8 @@ const authConfig: NextAuthConfig = {
           );
         }
 
-        const email = credentials?.email as string;
-        const password = credentials?.password as string;
+        const email = (credentials?.email as string) ?? "";
+        const password = (credentials?.password as string) ?? "";
 
         if (!email || !password) {
           emitAuthActivity("LOGIN_FAILURE", {
@@ -274,7 +274,9 @@ const authConfig: NextAuthConfig = {
           if (config.disableGuestLogin) {
             return null;
           }
-        } catch {}
+        } catch (error) {
+          logger.error({ err: error }, "[Auth] Guest config check failed");
+        }
 
         const guestId = generateGuestId();
         return {
@@ -390,7 +392,7 @@ const authConfig: NextAuthConfig = {
     async session({ session, token }) {
       if (session.user) {
         session.user.role = token.role || "USER";
-        session.user.email = token.email as string;
+        session.user.email = (token.email as string) ?? "";
         session.user.isGuest = !!token.isGuest;
         if (token.isGuest) {
           session.user.name = "Guest User";
