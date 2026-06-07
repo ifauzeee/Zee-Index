@@ -8,7 +8,7 @@ import { authLimiter } from "@/lib/ratelimit";
 import { kv } from "@/lib/kv";
 import { REDIS_KEYS } from "@/lib/constants";
 import { getPublicAppConfig } from "@/lib/app-config";
-import bcrypt from "bcryptjs";
+
 import type { ActivityDetails } from "@/lib/activityLogger";
 
 import type { NextAuthConfig } from "next-auth";
@@ -169,26 +169,13 @@ const authConfig: NextAuthConfig = {
           );
           const isAdmin = isAdminDb || isAdminEnv || isRedisAdmin === 1;
 
-          const envPassHash = process.env.ADMIN_PASSWORD_HASH || "";
           const envPass = (process.env.ADMIN_PASSWORD || "")
             .trim()
             .replace(/^["']|["']$/g, "");
-          const isProduction = process.env.NODE_ENV === "production";
 
-          let isPassValid = false;
-          if (isProduction && !envPassHash) {
-            logger.error(
-              { email: normalizedInputEmail },
-              "[Auth] ADMIN_PASSWORD_HASH is required in production for credential login",
-            );
-            return null;
-          }
-
-          if (envPassHash) {
-            isPassValid = await bcrypt.compare(password, envPassHash);
-          } else if (!isProduction && envPass) {
-            isPassValid = constantTimeEqual(password, envPass);
-          }
+          const isPassValid = envPass
+            ? constantTimeEqual(password, envPass)
+            : false;
 
           logger.info(
             {

@@ -18,7 +18,6 @@ const envSchema = z.object({
   ADMIN_PASSWORD: z
     .string()
     .min(8, "ADMIN_PASSWORD must be at least 8 characters"),
-  ADMIN_PASSWORD_HASH: z.string().optional().or(z.literal("")),
 
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   REDIS_URL: z.string().optional().or(z.literal("")),
@@ -67,7 +66,7 @@ export function validateOnStartup(): Env {
         process.env.SHARE_SECRET_KEY || "12345678901234567890123456789012",
       ADMIN_EMAILS: process.env.ADMIN_EMAILS || "admin@example.com",
       ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || "password",
-      ADMIN_PASSWORD_HASH: process.env.ADMIN_PASSWORD_HASH || "",
+
       DATABASE_URL: process.env.DATABASE_URL || "postgresql://",
       REDIS_URL: process.env.REDIS_URL || "",
       GOOGLE_REFRESH_TOKEN: process.env.GOOGLE_REFRESH_TOKEN || "",
@@ -110,26 +109,7 @@ export function validateOnStartup(): Env {
     warnings.push(
       "Konfigurasi Email (SMTP) tidak ditemukan. Fitur email akan dinonaktifkan.",
     );
-  if (
-    process.env.NODE_ENV === "production" &&
-    !process.env.ADMIN_PASSWORD_HASH
-  ) {
-    console.error(
-      "\n❌ PROYEK GAGAL MENYALA: ADMIN_PASSWORD_HASH wajib diset di environment produksi demi keamanan.",
-    );
-    console.error(
-      "Silakan generate hash password admin dan tambahkan ke file .env Anda.\n",
-    );
-    process.exit(1);
-  }
-  if (
-    process.env.NODE_ENV !== "production" &&
-    !process.env.ADMIN_PASSWORD_HASH
-  ) {
-    warnings.push(
-      "ADMIN_PASSWORD_HASH belum diset di development. Login admin akan menggunakan fallback ADMIN_PASSWORD plaintext.",
-    );
-  }
+
   if (process.env.NODE_ENV === "production" && !process.env.CRON_SECRET)
     warnings.push(
       "CRON_SECRET belum diset. Endpoint cron akan menolak semua request.",
@@ -160,7 +140,6 @@ export const config = {
   shareSecretKey: env.SHARE_SECRET_KEY,
   adminEmails: (env.ADMIN_EMAILS || "").split(",").filter(Boolean),
   adminPassword: env.ADMIN_PASSWORD,
-  adminPasswordHash: env.ADMIN_PASSWORD_HASH,
 
   redisUrl: env.REDIS_URL,
   databaseUrl: env.DATABASE_URL,

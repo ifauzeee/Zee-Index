@@ -19,19 +19,6 @@ There is no default admin password. You must **create and set it yourself** in t
 3. Click the **Login** button or navigate to `/login`.
 4. Enter the email and the password you defined in your `.env` file.
 
-### How do I use a hashed password instead of plaintext?
-
-For better security in production, it is recommended to use `ADMIN_PASSWORD_HASH` instead of `ADMIN_PASSWORD`.
-
-1. Run the hashing script provided via Docker:
-   ```bash
-   docker compose exec zee-index sh /app/scripts/hash-password.sh "your-password"
-   ```
-2. The script will output a hash starting with `$2a$10$...`.
-3. Copy this hash and paste it into your `.env` file as `ADMIN_PASSWORD_HASH`.
-4. You can then safely remove or comment out the plaintext `ADMIN_PASSWORD`.
-5. Restart the containers: `docker compose up -d`.
-
 ---
 
 ## Setup & Configuration

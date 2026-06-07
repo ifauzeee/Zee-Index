@@ -378,18 +378,17 @@ pnpm test:e2e         # E2E tests (Playwright)
 
 ### Optional Variables
 
-| Variable                       | Description                                 | Default |
-| ------------------------------ | ------------------------------------------- | ------- |
-| `ADMIN_PASSWORD_HASH`          | bcrypt hash of admin password (recommended) | —       |
-| `NEXT_PUBLIC_ROOT_FOLDER_NAME` | Display name for root folder                | `Home`  |
-| `NEXT_PUBLIC_MANUAL_DRIVES`    | JSON array of additional drives             | `[]`    |
-| `PRIVATE_FOLDER_IDS`           | JSON array of private folder IDs            | `[]`    |
-| `STORAGE_LIMIT_GB`             | Storage warning limit                       | `15`    |
-| `STORAGE_WARNING_THRESHOLD`    | Warning threshold (0–1)                     | `0.90`  |
-| `CRON_SECRET`                  | Cron job authentication token               | —       |
-| `TMDB_API_KEY`                 | TMDB API key for movie metadata             | —       |
-| `DUCKDNS_DOMAIN`               | DuckDNS subdomain                           | —       |
-| `DUCKDNS_TOKEN`                | DuckDNS authentication token                | —       |
+| Variable                       | Description                      | Default |
+| ------------------------------ | -------------------------------- | ------- |
+| `NEXT_PUBLIC_ROOT_FOLDER_NAME` | Display name for root folder     | `Home`  |
+| `NEXT_PUBLIC_MANUAL_DRIVES`    | JSON array of additional drives  | `[]`    |
+| `PRIVATE_FOLDER_IDS`           | JSON array of private folder IDs | `[]`    |
+| `STORAGE_LIMIT_GB`             | Storage warning limit            | `15`    |
+| `STORAGE_WARNING_THRESHOLD`    | Warning threshold (0–1)          | `0.90`  |
+| `CRON_SECRET`                  | Cron job authentication token    | —       |
+| `TMDB_API_KEY`                 | TMDB API key for movie metadata  | —       |
+| `DUCKDNS_DOMAIN`               | DuckDNS subdomain                | —       |
+| `DUCKDNS_TOKEN`                | DuckDNS authentication token     | —       |
 
 ### Email Configuration (Optional)
 
@@ -416,7 +415,6 @@ SHARE_SECRET_KEY=""         # openssl rand -base64 32
 
 ADMIN_EMAILS="admin@example.com"
 ADMIN_PASSWORD="your-secure-password"
-# ADMIN_PASSWORD_HASH=""    # Generate: scripts/hash-password.sh "password"
 
 # 2. GOOGLE DRIVE
 GOOGLE_CLIENT_ID=""
@@ -562,22 +560,6 @@ The included `docker-compose.yml` has built-in support for **free HTTPS**:
 | `EDITOR` | Can manage files but not system settings           |
 | `USER`   | Standard access to permitted folders               |
 | `GUEST`  | Read-only access to public content                 |
-
-### Password Hashing (bcrypt)
-
-Admin passwords support **bcrypt hashing** for production security:
-
-```bash
-# Generate a bcrypt hash for your password
-docker compose exec zee-index sh /app/scripts/hash-password.sh "your-password"
-
-# Add the output to .env
-ADMIN_PASSWORD_HASH=$2a$10$...your-hash-here...
-
-# You can then remove the plaintext ADMIN_PASSWORD
-```
-
-> **Migration path:** If `ADMIN_PASSWORD_HASH` is set, bcrypt is used. Otherwise, the system falls back to timing-safe comparison of `ADMIN_PASSWORD`.
 
 ### Security Headers & CSP
 
@@ -792,7 +774,7 @@ docker compose logs zee-index --tail 50
 
 1. Verify `ADMIN_EMAILS` matches your email **exactly** (case-insensitive)
 2. Check `ADMIN_PASSWORD` has no surrounding quotes in `.env`
-3. For bcrypt: ensure `ADMIN_PASSWORD_HASH` is a valid bcrypt hash
+3. Check `ADMIN_PASSWORD` is set correctly in `.env`
 4. Clear browser cookies and retry
 5. Check `docker compose logs zee-index` for `[Auth]` messages
 </details>
