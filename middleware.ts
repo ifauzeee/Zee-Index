@@ -209,24 +209,79 @@ export default async function middleware(request: NextRequest) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Access Denied</title>
+  <title>Akses Ditolak - Zee Index</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #0f172a; color: #e2e8f0; }
-    .card { background: #1e293b; padding: 3rem; border-radius: 1rem; text-align: center; max-width: 420px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-    .icon { font-size: 3rem; margin-bottom: 1rem; }
-    h1 { font-size: 1.5rem; margin-bottom: 0.75rem; }
-    p { color: #94a3b8; line-height: 1.6; margin-bottom: 1.5rem; }
-    a { display: inline-block; padding: 0.75rem 1.5rem; background: #3b82f6; color: #fff; text-decoration: none; border-radius: 0.5rem; font-weight: 500; transition: background 0.2s; }
-    a:hover { background: #2563eb; }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh;
+      background: #0b0d14;
+      color: #e2e8f0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; width: 100%; }
+    .card {
+      background: #181b26;
+      border: 1px solid #272b3b;
+      border-radius: 0.75rem;
+      padding: 3rem 2.5rem;
+      text-align: center;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    }
+    .icon-wrapper {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 4rem; height: 4rem;
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 9999px;
+      margin-bottom: 1.5rem;
+    }
+    .icon-wrapper svg { width: 2rem; height: 2rem; color: #ef4444; }
+    h1 {
+      font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(to right, #e2e8f0, #60a5fa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    p { color: #94a3b8; line-height: 1.7; margin-bottom: 2rem; font-size: 0.9375rem; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background: #e2e8f0; color: #0b0d14;
+      text-decoration: none; border-radius: 0.5rem;
+      font-weight: 600; font-size: 0.875rem;
+      transition: all 0.15s ease;
+    }
+    .btn:hover { background: #f1f5f9; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(226, 232, 240, 0.15); }
+    .btn svg { width: 1.125rem; height: 1.125rem; }
+    .footer { margin-top: 2rem; font-size: 0.75rem; color: #475569; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="icon">🔒</div>
-    <h1>Akses Ditolak</h1>
-    <p>Maaf, hanya admin yang dapat mengakses halaman Setup. Silakan login dengan akun admin.</p>
-    <a href="/login">Login sebagai Admin</a>
+  <div class="container">
+    <div class="card">
+      <div class="icon-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <h1>Akses Ditolak</h1>
+      <p>Maaf, hanya admin yang dapat mengakses halaman Setup.<br>Silakan login dengan akun admin.</p>
+      <a href="/login" class="btn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+          <polyline points="10 17 15 12 10 7"/>
+          <line x1="15" y1="12" x2="3" y2="12"/>
+        </svg>
+        Login sebagai Admin
+      </a>
+    </div>
+    <p class="footer">&copy; ${new Date().getFullYear()} Zee Index</p>
   </div>
 </body>
 </html>`,
