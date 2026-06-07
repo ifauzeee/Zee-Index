@@ -203,7 +203,38 @@ export default async function middleware(request: NextRequest) {
       }
       return applyCsp(
         request,
-        handleAuthRedirect(request, pathname, "RootAccessDenied"),
+        new NextResponse(
+          `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Access Denied</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #0f172a; color: #e2e8f0; }
+    .card { background: #1e293b; padding: 3rem; border-radius: 1rem; text-align: center; max-width: 420px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+    .icon { font-size: 3rem; margin-bottom: 1rem; }
+    h1 { font-size: 1.5rem; margin-bottom: 0.75rem; }
+    p { color: #94a3b8; line-height: 1.6; margin-bottom: 1.5rem; }
+    a { display: inline-block; padding: 0.75rem 1.5rem; background: #3b82f6; color: #fff; text-decoration: none; border-radius: 0.5rem; font-weight: 500; transition: background 0.2s; }
+    a:hover { background: #2563eb; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">🔒</div>
+    <h1>Akses Ditolak</h1>
+    <p>Maaf, hanya admin yang dapat mengakses halaman Setup. Silakan login dengan akun admin.</p>
+    <a href="/login">Login sebagai Admin</a>
+  </div>
+</body>
+</html>`,
+          {
+            status: 403,
+            headers: { "Content-Type": "text/html; charset=utf-8" },
+          },
+        ),
       );
     }
 
