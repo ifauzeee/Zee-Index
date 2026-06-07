@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { getRequestConfig } from "next-intl/server";
+import { LOCALES } from "@/lib/i18n-config";
 
-export const locales = ["en", "id"];
+export const locales = [...LOCALES];
 
 export default getRequestConfig(async ({ requestLocale }) => {
   const locale = await requestLocale;
