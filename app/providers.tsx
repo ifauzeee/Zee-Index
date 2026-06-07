@@ -30,11 +30,7 @@ export function Providers({ children, nonce }: Props) {
   );
 
   useEffect(() => {
-    if (
-      process.env.NODE_ENV === "development" &&
-      typeof window !== "undefined" &&
-      "serviceWorker" in navigator
-    ) {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
       navigator.serviceWorker.getRegistrations().then((registrations) => {
         for (const registration of registrations) {
           registration.unregister();

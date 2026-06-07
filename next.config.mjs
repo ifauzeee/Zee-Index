@@ -7,11 +7,11 @@ const withAnalyzer = withBundleAnalyzer({
 
 const withPWA = withPWAInit({
   dest: "public",
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
+  cacheOnFrontEndNav: false,
+  aggressiveFrontEndNavCaching: false,
   reloadOnOnline: true,
   swcMinify: true,
-  disable: process.env.NODE_ENV === "development",
+  disable: process.env.NODE_ENV !== "production",
   workboxOptions: {
     disableDevLogs: true,
   },
