@@ -313,7 +313,7 @@ export function prepareResponseHeaders(
 
   if (isHEAD) return responseHeaders;
 
-  responseHeaders.set("Transfer-Encoding", "chunked");
+  // responseHeaders.set("Transfer-Encoding", "chunked");
 
   const contentRange = googleResponse?.headers.get("Content-Range");
   if (contentRange) {

@@ -19,10 +19,7 @@ import { useTranslations } from "next-intl";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url,
-).toString();
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface PDFViewerProps {
   src: string;
@@ -35,11 +32,30 @@ export default function PDFViewer({ src }: PDFViewerProps) {
   const [scale, setScale] = useState(1.0);
   const [rotate, setRotate] = useState(0);
   const [showThumbnails, setShowThumbnails] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { sharePolicy } = useAppStore();
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
+    setLoadError(null);
+  }
+
+  async function onDocumentLoadError(error: Error) {
+    const message = error.message || "";
+    setLoadError(message);
+
+    if (message.includes("Unexpected server response")) {
+      try {
+        const res = await fetch(src, { method: "HEAD" });
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          if (body?.error) setLoadError(body.error);
+        }
+      } catch {
+        setLoadError(message);
+      }
+    }
   }
 
   const changePage = (offset: number) => {
@@ -186,29 +202,44 @@ export default function PDFViewer({ src }: PDFViewerProps) {
           ref={containerRef}
           className="flex-1 overflow-auto bg-zinc-950 flex justify-center p-8 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent relative"
         >
-          <Document
-            file={src}
-            onLoadSuccess={onDocumentLoadSuccess}
-            loading={
-              <div className="flex flex-col items-center justify-center h-full text-zinc-500 gap-4">
-                <Loader2 className="animate-spin h-10 w-10 text-primary" />
-                <p className="text-sm font-medium animate-pulse">
-                  {t("preparingDocument")}
-                </p>
+          {loadError ? (
+            <div className="flex flex-col items-center justify-center h-full text-zinc-500 gap-4 p-8">
+              <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
+                <span className="text-red-400 text-2xl font-bold">!</span>
               </div>
-            }
-            className="shadow-2xl"
-          >
-            <Page
-              pageNumber={pageNumber}
-              scale={scale}
-              rotate={rotate}
-              renderTextLayer={true}
-              renderAnnotationLayer={true}
-              className="transition-transform duration-300 ease-out"
-              loading={null}
-            />
-          </Document>
+              <p className="text-sm font-medium text-zinc-400 text-center">
+                {t("preparingDocument")}
+              </p>
+              <p className="text-xs text-zinc-600 text-center max-w-md">
+                {loadError}
+              </p>
+            </div>
+          ) : (
+            <Document
+              file={src}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={onDocumentLoadError}
+              loading={
+                <div className="flex flex-col items-center justify-center h-full text-zinc-500 gap-4">
+                  <Loader2 className="animate-spin h-10 w-10 text-primary" />
+                  <p className="text-sm font-medium animate-pulse">
+                    {t("preparingDocument")}
+                  </p>
+                </div>
+              }
+              className="shadow-2xl"
+            >
+              <Page
+                pageNumber={pageNumber}
+                scale={scale}
+                rotate={rotate}
+                renderTextLayer={true}
+                renderAnnotationLayer={true}
+                className="transition-transform duration-300 ease-out"
+                loading={null}
+              />
+            </Document>
+          )}
         </div>
       </div>
 

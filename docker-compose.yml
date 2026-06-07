@@ -1,4 +1,4 @@
-services:
+﻿services:
   postgres:
     image: postgres:16-alpine
     container_name: zee-postgres
@@ -29,7 +29,7 @@ services:
     restart: always
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly no --save 300 100 --maxmemory 128mb --maxmemory-policy allkeys-lru
     deploy:
       resources:
         limits:

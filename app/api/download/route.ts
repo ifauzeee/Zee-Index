@@ -145,7 +145,7 @@ async function handleDownload(request: NextRequest) {
       );
       if (fileDetails.size) headHeaders.set("Content-Length", fileDetails.size);
       headHeaders.set("Accept-Ranges", "bytes");
-      return new Response(null, { status: 200, headers: headHeaders });
+      return new Response(new Blob([]), { status: 200, headers: headHeaders });
     }
 
     const controller = new AbortController();
@@ -162,16 +162,24 @@ async function handleDownload(request: NextRequest) {
       signal: controller.signal,
     }).finally(() => clearTimeout(timeoutId));
 
-    if (!googleResponse.ok) {
-      const errorJson = await googleResponse.json().catch(() => ({}));
-      logger.error({ errorJson, fileId }, "Google Drive API Error");
+    if (!googleResponse.ok || googleResponse.status === 204) {
+      const errorJson =
+        googleResponse.status !== 204
+          ? await googleResponse.json().catch(() => ({}))
+          : {};
+      logger.error(
+        { status: googleResponse.status, errorJson, fileId },
+        "Google Drive API Error",
+      );
       return NextResponse.json(
         {
           error:
             errorJson.error?.message ||
-            "Gagal mengambil file dari Google Drive",
+            (googleResponse.status === 204
+              ? "Google Drive mengembalikan respons kosong. Mungkin token akses kedaluwarsa."
+              : "Gagal mengambil file dari Google Drive"),
         },
-        { status: googleResponse.status },
+        { status: googleResponse.status === 204 ? 502 : googleResponse.status },
       );
     }
 

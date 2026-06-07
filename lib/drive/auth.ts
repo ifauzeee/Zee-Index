@@ -48,6 +48,7 @@ export async function getAccessToken(): Promise<string> {
     logger.error({ error: errorData.error }, "OAuth token refresh failed");
 
     if (errorData.error === ERROR_MESSAGES.INVALID_GRANT) {
+      await kv.del(dynamicCacheKey);
       throw new Error(ERROR_MESSAGES.SESSION_EXPIRED);
     }
 

@@ -15,6 +15,8 @@ class EventBus {
   private subscriber: Redis | null = null;
   private publisher: Redis | null = null;
   private isConnected = false;
+  private lastRetryAt = 0;
+  private readonly RETRY_COOLDOWN = 30_000;
   private globalWithEdgeRuntime = globalThis as typeof globalThis & {
     EdgeRuntime?: unknown;
   };
@@ -30,10 +32,24 @@ class EventBus {
     if (this.isEdge || typeof window !== "undefined") return;
     if (this.subscriber) return;
 
+    const now = Date.now();
+    if (now - this.lastRetryAt < this.RETRY_COOLDOWN) return;
+    this.lastRetryAt = now;
+
     const redisUrl = process.env.REDIS_URL;
     if (redisUrl) {
       try {
         this.subscriber = new Redis(redisUrl);
+
+        this.subscriber.on("error", (err: Error) => {
+          logger.error({ err }, "[EventBus] Subscriber Redis connection error");
+          this.isConnected = false;
+        });
+
+        this.subscriber.on("end", () => {
+          this.isConnected = false;
+          this.subscriber = null;
+        });
 
         this.subscriber.subscribe(REDIS_CHANNEL, (err) => {
           if (err) {
@@ -66,6 +82,7 @@ class EventBus {
           { err },
           "[EventBus] Failed to initialize Redis subscriber",
         );
+        this.subscriber = null;
       }
     }
   }
@@ -74,15 +91,28 @@ class EventBus {
     if (this.isEdge || typeof window !== "undefined") return;
     if (this.publisher) return;
 
+    const now = Date.now();
+    if (now - this.lastRetryAt < this.RETRY_COOLDOWN) return;
+    this.lastRetryAt = now;
+
     const redisUrl = process.env.REDIS_URL;
     if (redisUrl) {
       try {
         this.publisher = new Redis(redisUrl);
+
+        this.publisher.on("error", (err: Error) => {
+          logger.error({ err }, "[EventBus] Publisher Redis connection error");
+        });
+
+        this.publisher.on("end", () => {
+          this.publisher = null;
+        });
       } catch (err) {
         logger.error(
           { err },
           "[EventBus] Failed to initialize Redis publisher",
         );
+        this.publisher = null;
       }
     }
   }

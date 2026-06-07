@@ -23,6 +23,7 @@ services:
     restart: always
     ports:
       - "6379:6379"
+    command: redis-server --appendonly no --save 300 100
 
   zee-index-dev:
     image: node:20-alpine
