@@ -65,6 +65,7 @@
 - [Project Structure](#-project-structure)
 - [Testing](#-testing)
 - [Troubleshooting](#️-troubleshooting)
+  - [FAQ (Frequently Asked Questions)](docs/FAQ.md)
 - [Contributing](#-contributing)
 - [License](#-license)
 - [Acknowledgments](#-acknowledgments)
@@ -225,6 +226,8 @@ cd Zee-Index
 cp .env.example .env
 
 # 3. Edit .env with your credentials (see Environment Variables section)
+# IMPORTANT: You must define your own ADMIN_EMAILS and ADMIN_PASSWORD here.
+# There is no default password. You create it in this file.
 nano .env
 
 # 4. Build and start all services
@@ -277,6 +280,7 @@ docker run -d --name zee-redis -p 6379:6379 redis:7-alpine
 pnpm dev
 
 # 6. Open http://localhost:3000
+#    Log in with the ADMIN_EMAILS and ADMIN_PASSWORD you set in .env
 ```
 
 **Development commands:**
@@ -543,12 +547,12 @@ The included `docker-compose.yml` has built-in support for **free HTTPS**:
 
 ### Authentication & Authorization
 
-| Method              | Description                        | Config                            |
-| ------------------- | ---------------------------------- | --------------------------------- |
-| **Google OAuth**    | Login with Google account          | Set OAuth credentials             |
-| **Admin Password**  | Email + password login for admins  | `ADMIN_EMAILS` + `ADMIN_PASSWORD` |
-| **Guest Access**    | Read-only access (can be disabled) | Toggle in admin settings          |
-| **Two-Factor Auth** | TOTP-based 2FA with QR code        | Admin dashboard setup             |
+| Method              | Description                        | Config                                                       |
+| ------------------- | ---------------------------------- | ------------------------------------------------------------ |
+| **Google OAuth**    | Login with Google account          | Set OAuth credentials                                        |
+| **Admin Password**  | Email + password login for admins  | `ADMIN_EMAILS` + `ADMIN_PASSWORD` (Defined by you in `.env`) |
+| **Guest Access**    | Read-only access (can be disabled) | Toggle in admin settings                                     |
+| **Two-Factor Auth** | TOTP-based 2FA with QR code        | Admin dashboard setup                                        |
 
 **Role Hierarchy:**
 
@@ -764,7 +768,9 @@ npx playwright show-report # View HTML report
 
 ---
 
-## ⚠️ Troubleshooting
+## ⚠️ Troubleshooting & FAQ
+
+For common questions such as **"How do I get the admin password?"** or **"How do I set up the Google Root Folder?"**, please see our **[Frequently Asked Questions (FAQ)](docs/FAQ.md)**.
 
 <details>
 <summary><strong>🔴 Container fails to start ("unhealthy")</strong></summary>
