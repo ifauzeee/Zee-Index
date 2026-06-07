@@ -15,10 +15,15 @@ import {
   handleFindPath,
   validateDownloadTokenSignature,
 } from "@/lib/middleware-helpers";
+import {
+  LOCALES,
+  DEFAULT_LOCALE,
+  stripLocaleFromPathname,
+} from "@/lib/i18n-config";
 
 const intlMiddleware = createMiddleware({
-  locales: ["en", "id"],
-  defaultLocale: "en",
+  locales: LOCALES,
+  defaultLocale: DEFAULT_LOCALE,
   localePrefix: "always",
 });
 
@@ -141,7 +146,7 @@ export default async function middleware(request: NextRequest) {
     return applyCsp(request, NextResponse.next());
   }
 
-  const pathnameWithoutLocale = pathname.replace(/^\/(en|id)/, "") || "/";
+  const pathnameWithoutLocale = stripLocaleFromPathname(pathname) || "/";
   const isApi = pathnameWithoutLocale.startsWith("/api");
 
   if (isApi && !pathnameWithoutLocale.startsWith("/api/health")) {
@@ -201,15 +206,48 @@ export default async function middleware(request: NextRequest) {
           NextResponse.json({ error: "Forbidden" }, { status: 403 }),
         );
       }
+      const requestedLocale = pathname.split("/")[1];
+      const locale = LOCALES.includes(requestedLocale as any)
+        ? requestedLocale
+        : DEFAULT_LOCALE;
+      const translations = {
+        en: {
+          title: "Access Denied - Zee Index",
+          heading: "Access Denied",
+          message:
+            "Sorry, only administrators can access the Setup page.<br>Please login with an admin account.",
+          button: "Login as Admin",
+          footer: "Zee Index",
+        },
+        id: {
+          title: "Akses Ditolak - Zee Index",
+          heading: "Akses Ditolak",
+          message:
+            "Maaf, hanya admin yang dapat mengakses halaman Setup.<br>Silakan login dengan akun admin.",
+          button: "Login sebagai Admin",
+          footer: "Zee Index",
+        },
+        "zh-TW": {
+          title: "拒絕訪問 - Zee Index",
+          heading: "拒絕訪問",
+          message:
+            "抱歉，只有管理員才能訪問設置頁面。<br>請使用管理員帳戶登錄。",
+          button: "以管理員身分登錄",
+          footer: "Zee Index",
+        },
+      };
+      const t =
+        translations[locale as keyof typeof translations] || translations.en;
+
       return applyCsp(
         request,
         new NextResponse(
           `<!DOCTYPE html>
-<html lang="en">
+<html lang="${locale}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Akses Ditolak - Zee Index</title>
+  <title>${t.title}</title>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -220,68 +258,84 @@ export default async function middleware(request: NextRequest) {
       color: #e2e8f0;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      background-image: radial-gradient(circle at top right, rgba(30, 41, 59, 0.4), transparent 50%), radial-gradient(circle at bottom left, rgba(15, 23, 42, 0.6), transparent 50%);
     }
-    .container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; width: 100%; }
-    .card {
-      background: #181b26;
-      border: 1px solid #272b3b;
-      border-radius: 0.75rem;
-      padding: 3rem 2.5rem;
-      text-align: center;
-      max-width: 420px;
-      width: 100%;
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    .container { 
+      display: flex; flex-direction: column; align-items: center; justify-content: center; 
+      padding: 2rem; width: 100%; max-width: 500px; text-align: center;
+      animation: fadeIn 0.5s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .icon-wrapper {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 4rem; height: 4rem;
+      width: 5rem; height: 5rem;
       background: rgba(239, 68, 68, 0.1);
-      border-radius: 9999px;
-      margin-bottom: 1.5rem;
+      border-radius: 50%;
+      margin-bottom: 2rem;
+      position: relative;
     }
-    .icon-wrapper svg { width: 2rem; height: 2rem; color: #ef4444; }
+    .icon-wrapper::after {
+      content: '';
+      position: absolute;
+      inset: -0.5rem;
+      border-radius: 50%;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .5; transform: scale(1.05); }
+    }
+    .icon-wrapper svg { width: 2.5rem; height: 2.5rem; color: #ef4444; }
     h1 {
-      font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em;
-      margin-bottom: 0.75rem;
-      background: linear-gradient(to right, #e2e8f0, #60a5fa);
+      font-size: 2.5rem; font-weight: 700; letter-spacing: -0.025em;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    p { color: #94a3b8; line-height: 1.7; margin-bottom: 2rem; font-size: 0.9375rem; }
+    p { color: #94a3b8; line-height: 1.6; margin-bottom: 2.5rem; font-size: 1.125rem; }
     .btn {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      padding: 0.75rem 1.5rem;
-      background: #e2e8f0; color: #0b0d14;
-      text-decoration: none; border-radius: 0.5rem;
-      font-weight: 600; font-size: 0.875rem;
-      transition: all 0.15s ease;
+      display: inline-flex; align-items: center; gap: 0.75rem;
+      padding: 0.875rem 1.75rem;
+      background: #f8fafc; color: #0f172a;
+      text-decoration: none; border-radius: 0.75rem;
+      font-weight: 600; font-size: 1rem;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .btn:hover { background: #f1f5f9; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(226, 232, 240, 0.15); }
-    .btn svg { width: 1.125rem; height: 1.125rem; }
-    .footer { margin-top: 2rem; font-size: 0.75rem; color: #475569; }
+    .btn:hover { 
+      background: #ffffff; 
+      transform: translateY(-2px); 
+      box-shadow: 0 10px 25px -5px rgba(248, 250, 252, 0.2), 0 8px 10px -6px rgba(248, 250, 252, 0.1); 
+    }
+    .btn:active { transform: translateY(0); }
+    .btn svg { width: 1.25rem; height: 1.25rem; transition: transform 0.2s; }
+    .btn:hover svg { transform: translateX(2px); }
+    .footer { margin-top: 4rem; font-size: 0.875rem; color: #475569; }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="card">
-      <div class="icon-wrapper">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-        </svg>
-      </div>
-      <h1>Akses Ditolak</h1>
-      <p>Maaf, hanya admin yang dapat mengakses halaman Setup.<br>Silakan login dengan akun admin.</p>
-      <a href="/login" class="btn">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-          <polyline points="10 17 15 12 10 7"/>
-          <line x1="15" y1="12" x2="3" y2="12"/>
-        </svg>
-        Login sebagai Admin
-      </a>
+    <div class="icon-wrapper">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
     </div>
-    <p class="footer">&copy; ${new Date().getFullYear()} Zee Index</p>
+    <h1>${t.heading}</h1>
+    <p>${t.message}</p>
+    <a href="/login" class="btn">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+        <polyline points="10 17 15 12 10 7"/>
+        <line x1="15" y1="12" x2="3" y2="12"/>
+      </svg>
+      ${t.button}
+    </a>
+    <p class="footer">&copy; ${new Date().getFullYear()} ${t.footer}</p>
   </div>
 </body>
 </html>`,
