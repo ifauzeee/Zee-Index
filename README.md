@@ -895,6 +895,14 @@ See the [LICENSE](LICENSE) file for full details.
 
 ---
 
+## Contributors
+
+<a href="https://github.com/ifauzeee/Zee-Index/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=ifauzeee/Zee-Index" />
+</a>
+
+---
+
 ## 🙏 Acknowledgments
 
 Built with these amazing open-source projects:
