@@ -176,15 +176,29 @@ export const CodePreview: React.FC<{ src: string; fileName: string }> = ({
 };
 
 export const DefaultPreview: React.FC<{
+  fileId?: string;
   mimeType: string;
   fileName: string;
   downloadUrl: string;
-}> = ({ mimeType, fileName, downloadUrl }) => {
+  previewUrl?: string;
+}> = ({ fileId, mimeType, fileName, downloadUrl, previewUrl }) => {
   const IconComponent = getIcon(mimeType);
   const t = useTranslations("Preview");
+  const isGoogleDriveFile = !!fileId && !fileId.startsWith("local-storage:");
+  const isNativePdf = mimeType === "application/pdf";
+  const isWorkspacePdfPreview = [
+    "application/vnd.google-apps.document",
+    "application/vnd.google-apps.spreadsheet",
+    "application/vnd.google-apps.presentation",
+    "application/vnd.google-apps.drawing",
+  ].includes(mimeType);
 
-  if (mimeType === "application/pdf") {
-    return <PDFViewer src={downloadUrl} />;
+  if (isNativePdf && isGoogleDriveFile) {
+    return <GoogleDrivePreview fileId={fileId} />;
+  }
+
+  if (isNativePdf || isWorkspacePdfPreview) {
+    return <PDFViewer src={previewUrl || downloadUrl} />;
   }
 
   if (
@@ -194,7 +208,9 @@ export const DefaultPreview: React.FC<{
     mimeType.includes("ms-powerpoint") ||
     fileName.match(/\.(docx|xlsx|pptx|doc|xls|ppt)$/i)
   ) {
-    return <OfficeViewer fileUrl={downloadUrl} mimeType={mimeType} />;
+    return (
+      <OfficeViewer fileId={fileId} fileUrl={downloadUrl} mimeType={mimeType} />
+    );
   }
 
   return (

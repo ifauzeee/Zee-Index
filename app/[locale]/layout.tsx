@@ -8,11 +8,8 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import NextTopLoader from "nextjs-toploader";
-import { Inter } from "next/font/google";
 import { headers } from "next/headers";
 import { isLocale } from "@/lib/i18n-config";
-
-const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const preferredRegion = "sin1";
 
@@ -93,7 +90,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <head />
-      <body className={inter.className}>
+      <body>
         <NextIntlClientProvider messages={messages}>
           <Providers nonce={nonce}>
             <NextTopLoader

@@ -8,7 +8,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useAppStore } from "@/lib/store";
 import type { DriveFile } from "@/lib/drive";
 import type { SubtitleTrack } from "@/lib/subtitles";
-import { getFileType } from "@/lib/utils";
+import { getFileType, getPreviewUrl } from "@/lib/utils";
 import { fetchFolderPathApi } from "@/hooks/useFileFetching";
 
 interface TmdbGenre {
@@ -154,6 +154,11 @@ export function useFileDetailController({
     return url;
   }, [file.id, shareToken, bestToken]);
 
+  const previewLink = useMemo(
+    () => getPreviewUrl(directLink, file.mimeType),
+    [directLink, file.mimeType],
+  );
+
   const authenticatedSubtitleTracks = useMemo(() => {
     if (!bestToken) {
       return activeSubtitleTracks;
@@ -285,6 +290,7 @@ export function useFileDetailController({
     addTag,
     removeTag,
     directLink,
+    previewLink,
     authenticatedSubtitleTracks,
     isArchivePreviewable,
     isEditable,

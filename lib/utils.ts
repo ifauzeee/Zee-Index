@@ -175,6 +175,37 @@ export function getGoogleEditorLink(
   return null;
 }
 
+function appendQueryParam(url: string, key: string, value: string): string {
+  const hashIndex = url.indexOf("#");
+  const baseUrl = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
+  const hash = hashIndex >= 0 ? url.slice(hashIndex) : "";
+  const separator = baseUrl.includes("?") ? "&" : "?";
+  return `${baseUrl}${separator}${encodeURIComponent(key)}=${encodeURIComponent(value)}${hash}`;
+}
+
+export function getPreviewUrl(downloadUrl: string, mimeType: string): string {
+  const workspacePreviewMimes = new Set([
+    "application/vnd.google-apps.document",
+    "application/vnd.google-apps.spreadsheet",
+    "application/vnd.google-apps.presentation",
+    "application/vnd.google-apps.drawing",
+  ]);
+
+  if (mimeType === "application/pdf") {
+    return appendQueryParam(downloadUrl, "preview", "1");
+  }
+
+  if (workspacePreviewMimes.has(mimeType)) {
+    return appendQueryParam(
+      appendQueryParam(downloadUrl, "export", "pdf"),
+      "preview",
+      "1",
+    );
+  }
+
+  return downloadUrl;
+}
+
 export function getLanguageFromFilename(name: string): string {
   const ext = name.split(".").pop()?.toLowerCase() || "";
   const langMap: Record<string, string> = {

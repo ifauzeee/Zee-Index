@@ -91,19 +91,39 @@
     environment:
       - CRON_SECRET=${CRON_SECRET}
       - CRON_MONITOR_INTERVAL_SECONDS=${CRON_MONITOR_INTERVAL_SECONDS:-300}
-    entrypoint: ["/bin/sh", "-c"]
-    command: |
-      while true; do
-        if [ -n "$${CRON_SECRET}" ]; then
-          echo "[cron-monitor] Running incident monitor cron..."
-          curl -fsS -H "Authorization: Bearer $${CRON_SECRET}" http://zee-index:3000/api/cron/incident-monitor || true
-          echo "[cron-monitor] Running storage check cron..."
-          curl -fsS -H "Authorization: Bearer $${CRON_SECRET}" http://zee-index:3000/api/cron/storage-check || true
-        else
-          echo "[cron-monitor] CRON_SECRET is empty. Skipping jobs."
-        fi
-        sleep "$${CRON_MONITOR_INTERVAL_SECONDS:-300}"
-      done
+    entrypoint: ["/bin/sh"]
+    command:
+      - -c
+      - |
+        echo "[cron-monitor] Waiting for zee-index health..."
+        until curl -fsS http://zee-index:3000/api/health >/dev/null 2>&1; do
+          sleep 5
+        done
+        echo "[cron-monitor] zee-index is healthy."
+
+        while true; do
+          if [ -n "$${CRON_SECRET}" ]; then
+            echo "[cron-monitor] Running incident monitor cron..."
+            if curl -fsS --connect-timeout 10 --max-time 60 -H "Authorization: Bearer $${CRON_SECRET}" http://zee-index:3000/api/cron/incident-monitor; then
+              printf '\n'
+            else
+              code=$$?
+              printf '\n'
+              echo "[cron-monitor] Incident monitor cron failed with curl exit $${code}."
+            fi
+            echo "[cron-monitor] Running storage check cron..."
+            if curl -fsS --connect-timeout 10 --max-time 60 -H "Authorization: Bearer $${CRON_SECRET}" http://zee-index:3000/api/cron/storage-check; then
+              printf '\n'
+            else
+              code=$$?
+              printf '\n'
+              echo "[cron-monitor] Storage check cron failed with curl exit $${code}."
+            fi
+          else
+            echo "[cron-monitor] CRON_SECRET is empty. Skipping jobs."
+          fi
+          sleep "$${CRON_MONITOR_INTERVAL_SECONDS:-300}"
+        done
     depends_on:
       zee-index:
         condition: service_healthy
@@ -119,6 +139,15 @@
       - SUBDOMAINS=${DUCKDNS_DOMAIN:-zee-index}
       - TOKEN=${DUCKDNS_TOKEN}
       - LOG_FILE=false
+    entrypoint: ["/bin/sh"]
+    command:
+      - -c
+      - |
+        if [ -z "$${TOKEN}" ] || [ -z "$${SUBDOMAINS}" ]; then
+          echo "[duckdns] DUCKDNS_DOMAIN or DUCKDNS_TOKEN is empty. DuckDNS updater is disabled."
+          tail -f /dev/null
+        fi
+        exec /init
     restart: unless-stopped
     deploy:
       resources:
@@ -139,6 +168,8 @@
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
+    environment:
+      - CADDY_SITE=${CADDY_SITE:-localhost}
     deploy:
       resources:
         limits:

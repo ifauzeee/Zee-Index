@@ -1,3 +1,3 @@
-zee-index.duckdns.org, localhost {
-    reverse_proxy zee-index:3000
+{$CADDY_SITE:localhost} {
+	reverse_proxy zee-index:3000
 }

@@ -439,6 +439,7 @@ SKIP_ENV_VALIDATION=false
 # 6. HTTPS (Optional)
 # DUCKDNS_DOMAIN="your-subdomain"
 # DUCKDNS_TOKEN="your-token"
+# CADDY_SITE="your-subdomain.duckdns.org"
 
 # 7. EMAIL (Optional)
 # SMTP_HOST="smtp.gmail.com"
@@ -505,11 +506,12 @@ The included `docker-compose.yml` has built-in support for **free HTTPS**:
    ```bash
    DUCKDNS_DOMAIN="your-subdomain"
    DUCKDNS_TOKEN="your-duckdns-token"
+   CADDY_SITE="your-subdomain.duckdns.org"
    NEXTAUTH_URL="https://your-subdomain.duckdns.org"
    ```
-3. **Create a `Caddyfile`:**
+3. **Use the included `Caddyfile`:**
    ```
-   your-subdomain.duckdns.org {
+   {$CADDY_SITE:localhost} {
      reverse_proxy zee-index:3000
    }
    ```

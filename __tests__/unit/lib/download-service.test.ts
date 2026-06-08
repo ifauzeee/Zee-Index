@@ -198,6 +198,22 @@ describe("lib/services/download", () => {
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       );
     });
+
+    it("exports Google docs as PDF when requested for preview", () => {
+      const result = prepareGoogleDriveUrl(
+        "file-1",
+        {
+          mimeType: "application/vnd.google-apps.document",
+          name: "Doc",
+        },
+        "pdf",
+      );
+
+      expect(result.url).toContain("/files/file-1/export");
+      expect(result.url).toContain("mimeType=application%2Fpdf");
+      expect(result.filename).toBe("Doc.pdf");
+      expect(result.mimeType).toBe("application/pdf");
+    });
   });
 
   describe("prepareResponseHeaders", () => {

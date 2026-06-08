@@ -40,7 +40,12 @@ const PUBLIC_API_PREFIXES = [
   "/api/admin/analytics/track",
   "/api/health",
   "/api/metadata",
+  "/api/cron",
 ];
+
+export function isPublicApiPath(pathname: string): boolean {
+  return PUBLIC_API_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
 
 const isPublicRoute = (pathname: string) => {
   return (
@@ -55,7 +60,7 @@ function createNonce(): string {
   return btoa(crypto.randomUUID());
 }
 
-function createContentSecurityPolicy(nonce: string): string {
+export function createContentSecurityPolicy(nonce: string): string {
   return [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' https://cdn.jsdelivr.net https://www.google-analytics.com`,
@@ -65,7 +70,7 @@ function createContentSecurityPolicy(nonce: string): string {
     "img-src 'self' data: blob: https://*.googleusercontent.com https://drive.google.com https://images.unsplash.com https://image.tmdb.org",
     "media-src 'self' blob: https://*.googleapis.com",
     "connect-src 'self' https://*.googleapis.com https://*.google.com https://cdn.jsdelivr.net https://www.google-analytics.com",
-    "frame-src 'self' https://accounts.google.com",
+    "frame-src 'self' https://accounts.google.com https://drive.google.com https://view.officeapps.live.com",
     "worker-src 'self' blob: https://cdn.jsdelivr.net",
     "object-src 'none'",
     "base-uri 'self'",
@@ -371,7 +376,7 @@ export default async function middleware(request: NextRequest) {
   if (
     (PUBLIC_PATHS.has(pathnameWithoutLocale) &&
       !pathnameWithoutLocale.startsWith("/setup")) ||
-    PUBLIC_API_PREFIXES.some((p) => pathname.startsWith(p))
+    isPublicApiPath(pathname)
   ) {
     return applyCsp(
       request,

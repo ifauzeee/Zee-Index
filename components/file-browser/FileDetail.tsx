@@ -130,9 +130,11 @@ export default function FileDetail(props: FileDetailProps) {
 
         return (
           <DefaultPreview
+            fileId={file.id}
             mimeType={file.mimeType}
             fileName={file.name}
             downloadUrl={controller.directLink}
+            previewUrl={controller.previewLink}
           />
         );
       })()}

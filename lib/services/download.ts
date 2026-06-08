@@ -227,6 +227,7 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
 export function prepareGoogleDriveUrl(
   fileId: string,
   fileDetails: Pick<DriveFile, "mimeType" | "name">,
+  exportFormat?: "pdf" | null,
 ): { url: string; mimeType: string; filename: string } {
   let downloadUrl = `${GOOGLE_DRIVE_API_BASE_URL}/files/${fileId}?alt=media&supportsAllDrives=true`;
   let responseMimeType = fileDetails.mimeType;
@@ -237,12 +238,18 @@ export function prepareGoogleDriveUrl(
   );
 
   if (isGoogleDoc) {
-    const exportInfo = EXPORT_TYPE_MAP[
-      fileDetails.mimeType as keyof typeof EXPORT_TYPE_MAP
-    ] || {
-      mime: "application/pdf",
-      ext: ".pdf",
-    };
+    const exportInfo =
+      exportFormat === "pdf"
+        ? {
+            mime: "application/pdf",
+            ext: ".pdf",
+          }
+        : EXPORT_TYPE_MAP[
+            fileDetails.mimeType as keyof typeof EXPORT_TYPE_MAP
+          ] || {
+            mime: "application/pdf",
+            ext: ".pdf",
+          };
     downloadUrl = `${GOOGLE_DRIVE_API_BASE_URL}/files/${fileId}/export?mimeType=${encodeURIComponent(exportInfo.mime)}&supportsAllDrives=true`;
     responseMimeType = exportInfo.mime;
     if (!responseFileName.endsWith(exportInfo.ext)) {

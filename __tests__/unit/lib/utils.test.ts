@@ -5,6 +5,7 @@ import {
   getFileType,
   getGoogleDriveLink,
   getGoogleEditorLink,
+  getPreviewUrl,
   getLanguageFromFilename,
   hexToHsl,
   getIcon,
@@ -249,6 +250,25 @@ describe("lib/utils", () => {
       expect(getGoogleEditorLink("789", "video/mp4")).toBeNull();
       expect(getGoogleEditorLink("789", "image/png")).toBeNull();
       expect(getGoogleEditorLink("789", "application/pdf")).toBeNull();
+    });
+  });
+
+  describe("getPreviewUrl", () => {
+    it("requests PDF export for Google Workspace document previews", () => {
+      expect(
+        getPreviewUrl(
+          "/api/download?fileId=file-1&share_token=token",
+          "application/vnd.google-apps.document",
+        ),
+      ).toBe(
+        "/api/download?fileId=file-1&share_token=token&export=pdf&preview=1",
+      );
+    });
+
+    it("uses a dedicated no-cache preview URL for regular PDFs", () => {
+      expect(
+        getPreviewUrl("/api/download?fileId=file-1", "application/pdf"),
+      ).toBe("/api/download?fileId=file-1&preview=1");
     });
   });
 

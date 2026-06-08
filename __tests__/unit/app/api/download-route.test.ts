@@ -186,6 +186,54 @@ describe("app/api/download route", () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
+  it("passes PDF export requests through for Google Workspace previews", async () => {
+    mockGetFileDetailsFromDrive.mockResolvedValue({
+      id: "file-123",
+      name: "Doc",
+      mimeType: "application/vnd.google-apps.document",
+      size: undefined,
+    });
+
+    const response = await GET(
+      new NextRequest(
+        "http://localhost:3000/api/download?fileId=file-123&export=pdf",
+      ),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrepareGoogleDriveUrl).toHaveBeenCalledWith(
+      "file-123",
+      expect.objectContaining({
+        mimeType: "application/vnd.google-apps.document",
+      }),
+      "pdf",
+    );
+  });
+
+  it("marks preview responses as inline and no-store", async () => {
+    mockPrepareResponseHeaders.mockImplementation(() => {
+      return new Headers({
+        "Content-Type": "application/pdf",
+        "Content-Disposition": 'attachment; filename="sample.pdf"',
+        "Cache-Control": "public, max-age=31536000, immutable",
+      });
+    });
+
+    const response = await GET(
+      new NextRequest(
+        "http://localhost:3000/api/download?fileId=file-123&preview=1",
+      ),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Disposition")).toBe(
+      'inline; filename="sample.pdf"',
+    );
+    expect(response.headers.get("Cache-Control")).toBe(
+      "no-store, no-cache, must-revalidate",
+    );
+  });
+
   it("streams file and records activity on successful GET", async () => {
     const response = await GET(
       new NextRequest("http://localhost:3000/api/download?fileId=file-123"),

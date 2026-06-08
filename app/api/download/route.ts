@@ -16,6 +16,17 @@ import { applyWatermark } from "@/lib/watermark";
 
 export const dynamic = "force-dynamic";
 
+function applyPreviewResponseHeaders(headers: Headers) {
+  const disposition = headers.get("Content-Disposition");
+  headers.set(
+    "Content-Disposition",
+    disposition ? disposition.replace(/^attachment\b/i, "inline") : "inline",
+  );
+  headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  headers.set("Pragma", "no-cache");
+  headers.set("Expires", "0");
+}
+
 async function handleDownload(request: NextRequest) {
   try {
     const { context, session, error } = await validateDownloadRequest(request);
@@ -27,6 +38,9 @@ async function handleDownload(request: NextRequest) {
     }
 
     const { fileId, range } = context;
+    const exportFormat =
+      request.nextUrl.searchParams.get("export") === "pdf" ? "pdf" : null;
+    const isPreview = request.nextUrl.searchParams.get("preview") === "1";
     logger.info({ fileId }, "[Download] Starting download");
 
     if (fileId.startsWith("local-storage:")) {
@@ -75,6 +89,9 @@ async function handleDownload(request: NextRequest) {
           false,
           request.headers.get("origin"),
         );
+        if (isPreview) {
+          applyPreviewResponseHeaders(responseHeaders);
+        }
         responseHeaders.set("Content-Length", finalSize.toString());
         responseHeaders.set("Accept-Ranges", "bytes");
 
@@ -118,6 +135,7 @@ async function handleDownload(request: NextRequest) {
     const { url, mimeType, filename } = prepareGoogleDriveUrl(
       fileId,
       fileDetails,
+      exportFormat,
     );
 
     const googleRequestHeaders = new Headers();
@@ -145,6 +163,9 @@ async function handleDownload(request: NextRequest) {
       );
       if (fileDetails.size) headHeaders.set("Content-Length", fileDetails.size);
       headHeaders.set("Accept-Ranges", "bytes");
+      if (isPreview) {
+        applyPreviewResponseHeaders(headHeaders);
+      }
       return new Response(new Blob([]), { status: 200, headers: headHeaders });
     }
 
@@ -192,6 +213,9 @@ async function handleDownload(request: NextRequest) {
       false,
       request.headers.get("origin"),
     );
+    if (isPreview) {
+      applyPreviewResponseHeaders(responseHeaders);
+    }
 
     if (!range) {
       const forwardedFor = request.headers.get("x-forwarded-for");
