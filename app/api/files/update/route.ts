@@ -2,7 +2,7 @@ import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { createAdminRoute } from "@/lib/api-middleware";
+import { createEditorRoute } from "@/lib/api-middleware";
 import { getAccessToken, getFileDetailsFromDrive } from "@/lib/drive";
 import { z } from "zod";
 import { invalidateFolderCache } from "@/lib/cache";
@@ -12,7 +12,7 @@ const updateSchema = z.object({
   newContent: z.string(),
 });
 
-export const POST = createAdminRoute(
+export const POST = createEditorRoute(
   async ({ body }) => {
     try {
       const { fileId, newContent } = body;
