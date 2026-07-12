@@ -73,6 +73,7 @@ describe("app/api/admin/config route", () => {
       faviconUrl: "",
       primaryColor: "",
       localStoragePassword: "",
+      notifications: { discord: false, telegram: false },
     });
     expect(mockSanitizeAdminAppConfig).toHaveBeenCalled();
   });

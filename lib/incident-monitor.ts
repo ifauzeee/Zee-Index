@@ -2,6 +2,7 @@ import { z } from "zod";
 import { kv } from "@/lib/kv";
 import { logger } from "@/lib/logger";
 import { sendMail } from "@/lib/mailer";
+import { notifyIncidentChannels } from "@/lib/notification";
 import { REDIS_KEYS } from "@/lib/constants";
 import {
   EVENT_PIPELINE_KEYS,
@@ -241,6 +242,8 @@ async function notifyIncident(incident: IncidentRecord): Promise<void> {
     subject,
     html,
   });
+
+  await notifyIncidentChannels(incident);
 
   await kv.set(cooldownKey, Date.now(), {
     ex: incident.cooldownSeconds,

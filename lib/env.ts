@@ -37,6 +37,10 @@ const envSchema = z.object({
   SMTP_PASS: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
 
+  NOTIFY_DISCORD_WEBHOOK: z.string().optional().or(z.literal("")),
+  NOTIFY_TELEGRAM_BOT_TOKEN: z.string().optional().or(z.literal("")),
+  NOTIFY_TELEGRAM_CHAT_ID: z.string().optional().or(z.literal("")),
+
   STORAGE_PROVIDER: z.string().optional().default("google-drive"),
   TMDB_API_KEY: z.string().optional(),
   ANALYZE: z.string().optional(),
@@ -75,6 +79,9 @@ export function validateOnStartup(): Env {
       SMTP_USER: process.env.SMTP_USER || "",
       SMTP_PASS: process.env.SMTP_PASS || "",
       EMAIL_FROM: process.env.EMAIL_FROM || "",
+      NOTIFY_DISCORD_WEBHOOK: process.env.NOTIFY_DISCORD_WEBHOOK || "",
+      NOTIFY_TELEGRAM_BOT_TOKEN: process.env.NOTIFY_TELEGRAM_BOT_TOKEN || "",
+      NOTIFY_TELEGRAM_CHAT_ID: process.env.NOTIFY_TELEGRAM_CHAT_ID || "",
       STORAGE_PROVIDER: process.env.STORAGE_PROVIDER || "google-drive",
       TMDB_API_KEY: process.env.TMDB_API_KEY || "",
       ANALYZE: process.env.ANALYZE || "",
@@ -179,4 +186,14 @@ export const config = {
   isDatabaseEnabled: !!env.DATABASE_URL,
   tmdbApiKey: env.TMDB_API_KEY,
   storageProvider: env.STORAGE_PROVIDER,
+
+  isDiscordNotificationEnabled: !!(
+    env.NOTIFY_DISCORD_WEBHOOK && env.NOTIFY_DISCORD_WEBHOOK.trim()
+  ),
+  isTelegramNotificationEnabled: !!(
+    env.NOTIFY_TELEGRAM_BOT_TOKEN &&
+    env.NOTIFY_TELEGRAM_BOT_TOKEN.trim() &&
+    env.NOTIFY_TELEGRAM_CHAT_ID &&
+    env.NOTIFY_TELEGRAM_CHAT_ID.trim()
+  ),
 };

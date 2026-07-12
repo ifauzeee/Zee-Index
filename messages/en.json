@@ -1034,7 +1034,11 @@
     "saveSuccess": "Setting {setting} has been {status}.",
     "enabled": "enabled",
     "disabled": "disabled",
-    "saveFailed": "Failed to save settings."
+    "saveFailed": "Failed to save settings.",
+    "notificationsTitle": "Incident Notifications",
+    "discord": "Discord",
+    "telegram": "Telegram",
+    "notConfigured": "Not configured"
   },
   "StorageIntelligence": {
     "duplicateTitle": "Duplicate Analysis (Mock)",

@@ -1034,7 +1034,11 @@
     "saveSuccess": "Pengaturan {setting} berhasil {status}.",
     "enabled": "diaktifkan",
     "disabled": "dinonaktifkan",
-    "saveFailed": "Gagal menyimpan pengaturan."
+    "saveFailed": "Gagal menyimpan pengaturan.",
+    "notificationsTitle": "Notifikasi Insiden",
+    "discord": "Discord",
+    "telegram": "Telegram",
+    "notConfigured": "Belum dikonfigurasi"
   },
   "StorageIntelligence": {
     "duplicateTitle": "Analisis Duplikat (Mock)",

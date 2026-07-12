@@ -1045,7 +1045,11 @@
     "saveSuccess": "設定 {setting} 已{status}。",
     "enabled": "啟用",
     "disabled": "停用",
-    "saveFailed": "儲存設定失敗。"
+    "saveFailed": "儲存設定失敗。",
+    "notificationsTitle": "事件通知",
+    "discord": "Discord",
+    "telegram": "Telegram",
+    "notConfigured": "尚未設定"
   },
   "StorageIntelligence": {
     "duplicateTitle": "重複分析（模擬）",
