@@ -5,13 +5,20 @@ const { mockUpsertUser } = vi.hoisted(() => ({
   mockUpsertUser: vi.fn(),
 }));
 
+type RouteHandler = (ctx: {
+  body?: unknown;
+  request: NextRequest;
+}) => Promise<Response>;
+
 vi.mock("@/lib/user-management", () => ({
   upsertUser: mockUpsertUser,
 }));
 
-const handlers = vi.hoisted(() => ({ POST: undefined as unknown as Function }));
+const handlers = vi.hoisted(() => ({
+  POST: undefined as unknown as RouteHandler,
+}));
 vi.mock("@/lib/api-middleware", () => ({
-  createAdminRoute: (handler: Function) => {
+  createAdminRoute: (handler: RouteHandler) => {
     handlers.POST = handler;
     return async (request: NextRequest) => {
       const raw = await request.json().catch(() => undefined);
@@ -28,7 +35,7 @@ vi.mock("@/lib/api-middleware", () => ({
   },
 }));
 
-import { POST, inviteSchema } from "@/app/api/admin/invite/route";
+import { POST } from "@/app/api/admin/invite/route";
 
 function makeRequest(body: unknown) {
   return new NextRequest("http://localhost/api/admin/invite", {

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import { LogIn, KeyRound, Loader2 } from "lucide-react";
@@ -9,8 +8,7 @@ import { useTranslations } from "next-intl";
 import EmptyState from "@/components/file-browser/EmptyState";
 
 export default function ProfilePage() {
-  const router = useRouter();
-  const { user, addToast } = useAppStore();
+  const { user } = useAppStore();
   const t = useTranslations("ProfilePage");
 
   const [currentPassword, setCurrentPassword] = useState("");

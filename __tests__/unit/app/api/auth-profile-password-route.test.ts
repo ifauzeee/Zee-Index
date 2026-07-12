@@ -5,13 +5,21 @@ const { mockChangeOwnPassword } = vi.hoisted(() => ({
   mockChangeOwnPassword: vi.fn(),
 }));
 
+type RouteHandler = (ctx: {
+  body?: unknown;
+  request: NextRequest;
+  session: { user: { email: string } };
+}) => Promise<Response>;
+
 vi.mock("@/lib/user-management", () => ({
   changeOwnPassword: mockChangeOwnPassword,
 }));
 
-const handlers = vi.hoisted(() => ({ POST: undefined as unknown as Function }));
+const handlers = vi.hoisted(() => ({
+  POST: undefined as unknown as RouteHandler,
+}));
 vi.mock("@/lib/api-middleware", () => ({
-  createPublicRoute: (handler: Function) => {
+  createPublicRoute: (handler: RouteHandler) => {
     handlers.POST = handler;
     return async (request: NextRequest) => {
       const raw = await request.json().catch(() => undefined);
@@ -32,7 +40,7 @@ vi.mock("@/lib/api-middleware", () => ({
   },
 }));
 
-import { POST, passwordSchema } from "@/app/api/auth/profile/password/route";
+import { POST } from "@/app/api/auth/profile/password/route";
 
 function makeRequest(body: unknown) {
   return new NextRequest("http://localhost/api/auth/profile/password", {

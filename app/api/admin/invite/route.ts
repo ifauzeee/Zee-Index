@@ -29,7 +29,7 @@ export const POST = createAdminRoute(
       };
       const user = await upsertUser(email, role, password);
       return NextResponse.json({ message: "User invited", user });
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { error: "Failed to invite user" },
         { status: 500 },

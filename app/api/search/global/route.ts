@@ -172,7 +172,7 @@ export const GET = createPublicRoute(
         }),
       );
 
-      let merged = filteredFiles.filter((f) => f !== null) as DriveFile[];
+      const merged = filteredFiles.filter((f) => f !== null) as DriveFile[];
 
       // Merge durable Postgres index results (works even without Drive scope).
       try {

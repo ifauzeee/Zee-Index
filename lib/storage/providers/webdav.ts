@@ -5,7 +5,7 @@ import {
   type ResponseDataDetailed,
 } from "webdav";
 import { Readable } from "stream";
-import type { StorageProvider, ListFilesOptions } from "./types";
+import type { StorageProvider } from "./types";
 import { getMimeType } from "../mime";
 import { logger } from "@/lib/logger";
 
@@ -54,10 +54,7 @@ export class WebDavStorageProvider implements StorageProvider {
     return `${this.idPrefix}${rel}`;
   }
 
-  async listFiles(
-    folderId: string,
-    options?: ListFilesOptions,
-  ): Promise<{
+  async listFiles(folderId: string): Promise<{
     files: import("@/types/storage").ZeeFile[];
     nextPageToken: string | null;
   }> {
@@ -104,9 +101,7 @@ export class WebDavStorageProvider implements StorageProvider {
     }
   }
 
-  async getDownload(
-    fileId: string,
-  ): Promise<{
+  async getDownload(fileId: string): Promise<{
     stream: ReadableStream<Uint8Array>;
     size: number;
     mimeType: string;
