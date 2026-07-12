@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Loader2,
   Server,
+  User,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -100,6 +101,19 @@ export default function NavSection({ t }: NavSectionProps) {
         )}{" "}
         {t("storage")}
       </button>
+      {!user?.isGuest && (
+        <button
+          onClick={() => handleNav("profile", "/profile")}
+          id="sidebar-nav-profile"
+          className={cn(
+            "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
+            pathname.includes("/profile") &&
+              "bg-accent font-medium text-primary",
+          )}
+        >
+          <User size={16} /> {t("profile")}
+        </button>
+      )}
       {user?.role === "ADMIN" && (
         <>
           <button

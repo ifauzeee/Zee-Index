@@ -89,7 +89,8 @@
     "googleDrive": "Google Drive",
     "localCloud": "本機儲存空間",
     "googleAuthError": "Google Drive 驗證失敗。請檢查憑證或重新授權。",
-    "close": "關閉側邊欄"
+    "close": "關閉側邊欄",
+    "profile": "個人檔案"
   },
   "Header": {
     "switchTheme": "切換主題",
@@ -451,7 +452,17 @@
     "newExpiration": "新到期時間",
     "cancel": "取消",
     "saveChanges": "儲存變更",
-    "back": "返回"
+    "back": "返回",
+    "inviteUser": "邀請使用者",
+    "inviteDesc": "建立具備角色與選填初始密碼的使用者帳戶。",
+    "role": "角色",
+    "invitePasswordPlaceholder": "初始密碼（選填，至少 6 個字元）",
+    "inviteButton": "邀請",
+    "inviteSuccess": "使用者邀請成功",
+    "inviteFailed": "邀請使用者失敗",
+    "roleUser": "使用者",
+    "roleEditor": "編輯者",
+    "roleAdmin": "管理員"
   },
   "Footer": {
     "dataUsage": "總資料使用量：",
@@ -1151,5 +1162,16 @@
   },
   "GlobalAudioPlayer": {
     "queue": "播放佇列（{count}）"
+  },
+  "ProfilePage": {
+    "title": "我的個人檔案",
+    "currentPassword": "目前密碼",
+    "newPassword": "新密碼",
+    "submit": "更新密碼",
+    "success": "密碼已成功更新",
+    "error": "更新密碼失敗",
+    "incorrect": "目前密碼不正確",
+    "requiresLogin": "請先登入以管理您的個人檔案",
+    "signIn": "登入"
   }
 }

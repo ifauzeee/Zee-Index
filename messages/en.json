@@ -89,7 +89,8 @@
     "googleDrive": "Google Drive",
     "localCloud": "Local Storage",
     "googleAuthError": "Google Drive authentication failed. Please check your credentials or re-authorize.",
-    "close": "Close Sidebar"
+    "close": "Close Sidebar",
+    "profile": "Profile"
   },
   "Header": {
     "toggleSidebar": "Toggle Sidebar",
@@ -449,7 +450,17 @@
     "newExpiration": "New Expiration Time",
     "cancel": "Cancel",
     "saveChanges": "Save Changes",
-    "back": "Back"
+    "back": "Back",
+    "inviteUser": "Invite User",
+    "inviteDesc": "Create a user account with a role and optional initial password.",
+    "role": "Role",
+    "invitePasswordPlaceholder": "Initial password (optional, min 6 chars)",
+    "inviteButton": "Invite",
+    "inviteSuccess": "User invited successfully",
+    "inviteFailed": "Failed to invite user",
+    "roleUser": "User",
+    "roleEditor": "Editor",
+    "roleAdmin": "Admin"
   },
   "Footer": {
     "dataUsage": "Total Data Usage:",
@@ -1140,5 +1151,16 @@
   },
   "GlobalAudioPlayer": {
     "queue": "Play Queue ({count})"
+  },
+  "ProfilePage": {
+    "title": "My Profile",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "submit": "Update Password",
+    "success": "Password updated successfully",
+    "error": "Failed to update password",
+    "incorrect": "Current password is incorrect",
+    "requiresLogin": "Please sign in to manage your profile",
+    "signIn": "Sign In"
   }
 }

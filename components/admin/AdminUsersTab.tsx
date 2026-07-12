@@ -30,6 +30,17 @@ export default function AdminUsersTab() {
   const [newEditorEmail, setNewEditorEmail] = useState("");
   const [isSubmittingEditor, setIsSubmittingEditor] = useState(false);
 
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<"ADMIN" | "EDITOR" | "USER">(
+    "USER",
+  );
+  const [invitePassword, setInvitePassword] = useState("");
+  const [isSubmittingInvite, setIsSubmittingInvite] = useState(false);
+  const [inviteMessage, setInviteMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
   useEffect(() => {
     fetchAdminEmails();
     fetchEditorEmails();
@@ -75,6 +86,35 @@ export default function AdminUsersTab() {
       )
     ) {
       await removeEditorEmail(email);
+    }
+  };
+
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteEmail.trim()) return;
+    setIsSubmittingInvite(true);
+    setInviteMessage(null);
+    try {
+      const res = await fetch("/api/admin/invite", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          email: inviteEmail,
+          role: inviteRole,
+          password: invitePassword || undefined,
+        }),
+      });
+      if (res.ok) {
+        setInviteMessage({ type: "success", text: t("inviteSuccess") });
+        setInviteEmail("");
+        setInvitePassword("");
+      } else {
+        setInviteMessage({ type: "error", text: t("inviteFailed") });
+      }
+    } catch {
+      setInviteMessage({ type: "error", text: t("inviteFailed") });
+    } finally {
+      setIsSubmittingInvite(false);
     }
   };
 
@@ -209,6 +249,68 @@ export default function AdminUsersTab() {
             )}
           </div>
         )}
+      </div>
+
+      <div className="p-4 sm:p-6 border-t bg-muted/5">
+        <h2 className="text-lg font-semibold mb-1">{t("inviteUser")}</h2>
+        <p className="text-sm text-muted-foreground mb-4">{t("inviteDesc")}</p>
+        <form onSubmit={handleInvite} className="space-y-3">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-grow">
+              <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <input
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder={t("inviteEmailPlaceholder")}
+                required
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary focus:outline-none"
+              />
+            </div>
+            <select
+              value={inviteRole}
+              onChange={(e) =>
+                setInviteRole(e.target.value as "ADMIN" | "EDITOR" | "USER")
+              }
+              className="sm:w-40 px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary focus:outline-none"
+              aria-label={t("role")}
+            >
+              <option value="USER">{t("roleUser")}</option>
+              <option value="EDITOR">{t("roleEditor")}</option>
+              <option value="ADMIN">{t("roleAdmin")}</option>
+            </select>
+          </div>
+          <input
+            type="password"
+            value={invitePassword}
+            onChange={(e) => setInvitePassword(e.target.value)}
+            placeholder={t("invitePasswordPlaceholder")}
+            className="w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary focus:outline-none"
+          />
+          {inviteMessage && (
+            <p
+              className={
+                inviteMessage.type === "success"
+                  ? "text-sm text-green-600"
+                  : "text-sm text-red-600"
+              }
+            >
+              {inviteMessage.text}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={isSubmittingInvite}
+            className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {isSubmittingInvite ? (
+              <Loader2 className="animate-spin" size={18} />
+            ) : (
+              <UserPlus size={18} />
+            )}
+            <span>{t("inviteButton")}</span>
+          </button>
+        </form>
       </div>
 
       <div className="p-4 sm:p-6 border-t bg-muted/5">

@@ -89,7 +89,8 @@
     "googleDrive": "Google Drive",
     "localCloud": "Penyimpanan Lokal",
     "googleAuthError": "Autentikasi Google Drive gagal. Silakan periksa kredensial atau otorisasi ulang.",
-    "close": "Tutup Sidebar"
+    "close": "Tutup Sidebar",
+    "profile": "Profil"
   },
   "Header": {
     "toggleSidebar": "Buka/Tutup Sidebar",
@@ -449,7 +450,17 @@
     "newExpiration": "Waktu Kedaluwarsa Baru",
     "cancel": "Batal",
     "saveChanges": "Simpan Perubahan",
-    "back": "Kembali"
+    "back": "Kembali",
+    "inviteUser": "Undang Pengguna",
+    "inviteDesc": "Buat akun pengguna dengan peran dan kata sandi awal opsional.",
+    "role": "Peran",
+    "invitePasswordPlaceholder": "Kata sandi awal (opsional, min 6 karakter)",
+    "inviteButton": "Undang",
+    "inviteSuccess": "Pengguna berhasil diundang",
+    "inviteFailed": "Gagal mengundang pengguna",
+    "roleUser": "Pengguna",
+    "roleEditor": "Editor",
+    "roleAdmin": "Admin"
   },
   "Footer": {
     "dataUsage": "Total Penggunaan Data:",
@@ -1140,5 +1151,16 @@
   },
   "GlobalAudioPlayer": {
     "queue": "Antrean Putar ({count})"
+  },
+  "ProfilePage": {
+    "title": "Profil Saya",
+    "currentPassword": "Kata Sandi Saat Ini",
+    "newPassword": "Kata Sandi Baru",
+    "submit": "Perbarui Kata Sandi",
+    "success": "Kata sandi berhasil diperbarui",
+    "error": "Gagal memperbarui kata sandi",
+    "incorrect": "Kata sandi saat ini salah",
+    "requiresLogin": "Silakan masuk untuk mengelola profil Anda",
+    "signIn": "Masuk"
   }
 }
