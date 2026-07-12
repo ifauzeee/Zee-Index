@@ -3,6 +3,7 @@ import {
   getFileDetailsFromDrive,
 } from "@/lib/drive/fetchers";
 import { listLocalFiles, getLocalFileDetails } from "./local";
+import { getActiveProvider, isProviderId } from "./providers";
 import { ZeeFile, ListFilesResponse, ListFilesOptions } from "@/types/storage";
 import { logger } from "@/lib/logger";
 
@@ -11,6 +12,7 @@ export async function listAllFiles(
 ): Promise<ListFilesResponse> {
   const { folderId: rawFolderId, pageToken, pageSize, useCache } = options;
   const folderId = decodeURIComponent(rawFolderId);
+  const provider = getActiveProvider();
 
   if (folderId === "virtual-root") {
     const driveRoot = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID || "";
@@ -20,7 +22,17 @@ export async function listAllFiles(
 
     const files: ZeeFile[] = [];
 
-    if (driveRoot) {
+    if (provider) {
+      files.push({
+        id: provider.rootId,
+        name: provider.rootName,
+        mimeType: "application/vnd.google-apps.folder",
+        isFolder: true,
+        source: provider.source,
+        hasThumbnail: false,
+        modifiedTime: new Date().toISOString(),
+      });
+    } else if (driveRoot) {
       files.push({
         id: driveRoot,
         name: "Google Drive",
@@ -45,6 +57,14 @@ export async function listAllFiles(
     }
 
     return { files, nextPageToken: null };
+  }
+
+  if (
+    provider &&
+    (folderId === provider.rootId || folderId.startsWith(provider.idPrefix))
+  ) {
+    const result = await provider.listFiles(folderId, { pageToken, pageSize });
+    return { files: result.files, nextPageToken: result.nextPageToken };
   }
 
   if (folderId.startsWith("local-storage:")) {
@@ -76,9 +96,16 @@ export async function getAnyFileDetails(
   fileId: string,
 ): Promise<ZeeFile | null> {
   const cleanId = decodeURIComponent(fileId);
+  const provider = getActiveProvider();
   logger.debug(
     `[Storage] getAnyFileDetails called with: ${fileId} (cleaned: ${cleanId})`,
   );
+
+  if (provider && isProviderId(cleanId)) {
+    const details = await provider.getFileDetails(cleanId);
+    if (details) return details;
+  }
+
   if (cleanId.startsWith("local-storage:")) {
     if (process.env.NEXT_PUBLIC_ENABLE_LOCAL_STORAGE !== "true") {
       return null;
@@ -102,6 +129,18 @@ export async function getAnyFileDetails(
 
 export async function getDownloadStream(fileId: string) {
   const cleanId = decodeURIComponent(fileId);
+  const provider = getActiveProvider();
+
+  if (provider && isProviderId(cleanId)) {
+    const download = await provider.getDownload(cleanId);
+    if (!download) return null;
+    return {
+      stream: download.stream,
+      size: download.size,
+      mimeType: download.mimeType,
+      filename: download.filename,
+    };
+  }
 
   if (cleanId.startsWith("local-storage:")) {
     if (process.env.NEXT_PUBLIC_ENABLE_LOCAL_STORAGE !== "true") {
@@ -163,6 +202,11 @@ export async function uploadFile(
   mimeType?: string,
 ): Promise<ZeeFile | null> {
   const cleanParentId = decodeURIComponent(parentId);
+  const provider = getActiveProvider();
+
+  if (provider && isProviderId(cleanParentId)) {
+    return provider.uploadFile(cleanParentId, fileName, buffer, mimeType);
+  }
 
   if (cleanParentId.startsWith("local-storage:")) {
     if (process.env.NEXT_PUBLIC_ENABLE_LOCAL_STORAGE !== "true") {

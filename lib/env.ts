@@ -42,6 +42,18 @@ const envSchema = z.object({
   NOTIFY_TELEGRAM_CHAT_ID: z.string().optional().or(z.literal("")),
 
   STORAGE_PROVIDER: z.string().optional().default("google-drive"),
+  STORAGE_S3_ENDPOINT: z.string().optional().or(z.literal("")),
+  STORAGE_S3_REGION: z.string().optional().or(z.literal("")),
+  STORAGE_S3_BUCKET: z.string().optional().or(z.literal("")),
+  STORAGE_S3_ACCESS_KEY_ID: z.string().optional().or(z.literal("")),
+  STORAGE_S3_SECRET_ACCESS_KEY: z.string().optional().or(z.literal("")),
+  STORAGE_S3_FORCE_PATH_STYLE: z.string().optional().or(z.literal("")),
+  STORAGE_S3_ROOT_NAME: z.string().optional().or(z.literal("")),
+  STORAGE_WEBDAV_URL: z.string().optional().or(z.literal("")),
+  STORAGE_WEBDAV_USERNAME: z.string().optional().or(z.literal("")),
+  STORAGE_WEBDAV_PASSWORD: z.string().optional().or(z.literal("")),
+  STORAGE_WEBDAV_BASEPATH: z.string().optional().or(z.literal("")),
+  STORAGE_WEBDAV_ROOT_NAME: z.string().optional().or(z.literal("")),
   TMDB_API_KEY: z.string().optional(),
   ANALYZE: z.string().optional(),
 });
@@ -83,6 +95,20 @@ export function validateOnStartup(): Env {
       NOTIFY_TELEGRAM_BOT_TOKEN: process.env.NOTIFY_TELEGRAM_BOT_TOKEN || "",
       NOTIFY_TELEGRAM_CHAT_ID: process.env.NOTIFY_TELEGRAM_CHAT_ID || "",
       STORAGE_PROVIDER: process.env.STORAGE_PROVIDER || "google-drive",
+      STORAGE_S3_ENDPOINT: process.env.STORAGE_S3_ENDPOINT || "",
+      STORAGE_S3_REGION: process.env.STORAGE_S3_REGION || "",
+      STORAGE_S3_BUCKET: process.env.STORAGE_S3_BUCKET || "",
+      STORAGE_S3_ACCESS_KEY_ID: process.env.STORAGE_S3_ACCESS_KEY_ID || "",
+      STORAGE_S3_SECRET_ACCESS_KEY:
+        process.env.STORAGE_S3_SECRET_ACCESS_KEY || "",
+      STORAGE_S3_FORCE_PATH_STYLE:
+        process.env.STORAGE_S3_FORCE_PATH_STYLE || "",
+      STORAGE_S3_ROOT_NAME: process.env.STORAGE_S3_ROOT_NAME || "",
+      STORAGE_WEBDAV_URL: process.env.STORAGE_WEBDAV_URL || "",
+      STORAGE_WEBDAV_USERNAME: process.env.STORAGE_WEBDAV_USERNAME || "",
+      STORAGE_WEBDAV_PASSWORD: process.env.STORAGE_WEBDAV_PASSWORD || "",
+      STORAGE_WEBDAV_BASEPATH: process.env.STORAGE_WEBDAV_BASEPATH || "",
+      STORAGE_WEBDAV_ROOT_NAME: process.env.STORAGE_WEBDAV_ROOT_NAME || "",
       TMDB_API_KEY: process.env.TMDB_API_KEY || "",
       ANALYZE: process.env.ANALYZE || "",
     } as Env;
@@ -196,4 +222,8 @@ export const config = {
     env.NOTIFY_TELEGRAM_CHAT_ID &&
     env.NOTIFY_TELEGRAM_CHAT_ID.trim()
   ),
+
+  isS3StorageEnabled: !!env.STORAGE_S3_BUCKET && env.STORAGE_PROVIDER === "s3",
+  isWebDavStorageEnabled:
+    !!env.STORAGE_WEBDAV_URL && env.STORAGE_PROVIDER === "webdav",
 };
