@@ -401,6 +401,30 @@ pnpm test:e2e         # E2E tests (Playwright)
 | `SMTP_PASS`  | SMTP password / app password | —                                  |
 | `EMAIL_FROM` | Sender email address         | `Zee Index <no-reply@example.com>` |
 
+### Storage Providers (Optional)
+
+By default Zee-Index serves files from **Google Drive**. You can instead (or in addition) mount an **S3 / Cloudflare R2** bucket or a **WebDAV** server (e.g. Nextcloud) by setting `STORAGE_PROVIDER` and the matching credentials. Files from the active provider appear under a virtual root in the file browser, alongside the Google Drive root.
+
+| Variable                       | Description                                                            | Default        |
+| ------------------------------ | ---------------------------------------------------------------------- | -------------- |
+| `STORAGE_PROVIDER`             | `google-drive` (default), `s3`, or `webdav`                            | `google-drive` |
+| `STORAGE_S3_ENDPOINT`          | S3-compatible endpoint (R2: `https://<acct>.r2.cloudflarestorage.com`) | —              |
+| `STORAGE_S3_REGION`            | S3 region (R2: `auto`)                                                 | —              |
+| `STORAGE_S3_BUCKET`            | Bucket name (required to enable S3)                                    | —              |
+| `STORAGE_S3_ACCESS_KEY_ID`     | Access key ID                                                          | —              |
+| `STORAGE_S3_SECRET_ACCESS_KEY` | Secret access key                                                      | —              |
+| `STORAGE_S3_FORCE_PATH_STYLE`  | Use path-style URLs (required for R2)                                  | `true`         |
+| `STORAGE_S3_ROOT_NAME`         | Display name for the S3 root                                           | `S3 Storage`   |
+| `STORAGE_WEBDAV_URL`           | WebDAV base URL (required to enable WebDAV)                            | —              |
+| `STORAGE_WEBDAV_USERNAME`      | WebDAV username                                                        | —              |
+| `STORAGE_WEBDAV_PASSWORD`      | WebDAV password                                                        | —              |
+| `STORAGE_WEBDAV_BASEPATH`      | Base path on the server                                                | `/`            |
+| `STORAGE_WEBDAV_ROOT_NAME`     | Display name for the WebDAV root                                       | `WebDAV`       |
+
+> Secrets are read from environment variables only and are **never exposed** to the
+> browser or the API responses (the admin **Storage** panel shows a masked summary and a
+> "Test Connection" button). Restart the server after changing any storage variable.
+
 <details>
 <summary><strong>📋 Complete .env template</strong></summary>
 
@@ -453,6 +477,26 @@ SKIP_ENV_VALIDATION=false
 
 # 8. EXTERNAL SERVICES (Optional)
 # TMDB_API_KEY=""
+
+# 9. STORAGE PROVIDERS (Optional)
+# Set STORAGE_PROVIDER to "s3" or "webdav" to mount an external backend.
+# STORAGE_PROVIDER="google-drive"
+
+# S3 / Cloudflare R2
+# STORAGE_S3_ENDPOINT="https://<account>.r2.cloudflarestorage.com"
+# STORAGE_S3_REGION="auto"
+# STORAGE_S3_BUCKET="my-bucket"
+# STORAGE_S3_ACCESS_KEY_ID=""
+# STORAGE_S3_SECRET_ACCESS_KEY=""
+# STORAGE_S3_FORCE_PATH_STYLE="true"
+# STORAGE_S3_ROOT_NAME="S3 Storage"
+
+# WebDAV (Nextcloud, nginx WebDAV, ...)
+# STORAGE_WEBDAV_URL="https://dav.example.com"
+# STORAGE_WEBDAV_USERNAME=""
+# STORAGE_WEBDAV_PASSWORD=""
+# STORAGE_WEBDAV_BASEPATH="/"
+# STORAGE_WEBDAV_ROOT_NAME="WebDAV"
 ```
 
 </details>

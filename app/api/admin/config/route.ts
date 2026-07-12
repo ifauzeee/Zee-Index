@@ -8,6 +8,7 @@ import {
   updateAppConfig,
 } from "@/lib/app-config";
 import { getNotificationChannelStatus } from "@/lib/notification";
+import { getStorageStatus } from "@/lib/storage/status";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ export const GET = createAdminRoute(async () => {
     return NextResponse.json({
       ...sanitizeAdminAppConfig(config),
       notifications: getNotificationChannelStatus(),
+      storage: getStorageStatus(),
     });
   } catch (error) {
     logger.error({ err: error }, "Config fetch error");

@@ -4,6 +4,7 @@ import { ShieldCheck, FolderLock, HardDrive } from "lucide-react";
 import TwoFactorAuthSetup from "@/components/features/TwoFactorAuthSetup";
 import ProtectedFoldersManager from "@/components/admin/ProtectedFoldersManager";
 import SecurityConfig from "@/components/admin/SecurityConfig";
+import StorageConfig from "@/components/admin/StorageConfig";
 import UserFolderAccessManager from "@/components/admin/UserFolderAccessManager";
 import ManualDrivesManager from "@/components/admin/ManualDrivesManager";
 import SecurityCenter from "@/components/admin/SecurityCenter";
@@ -53,6 +54,14 @@ export default function AdminSecurityTab() {
           <h3 className="text-lg font-bold">{t("sharedDrives")}</h3>
         </div>
         <ManualDrivesManager />
+      </section>
+
+      <section className="space-y-6">
+        <div className="flex items-center gap-2 border-b pb-2 mb-4">
+          <HardDrive className="text-blue-500" />
+          <h3 className="text-lg font-bold">{t("storage")}</h3>
+        </div>
+        <StorageConfig />
       </section>
 
       <ActiveLinksManager />

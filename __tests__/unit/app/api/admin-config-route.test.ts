@@ -65,16 +65,20 @@ describe("app/api/admin/config route", () => {
     );
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({
-      hideAuthor: false,
-      disableGuestLogin: false,
-      appName: "Zee Index",
-      logoUrl: "",
-      faviconUrl: "",
-      primaryColor: "",
-      localStoragePassword: "",
-      notifications: { discord: false, telegram: false },
-    });
+    const body = await response.json();
+    expect(body).toEqual(
+      expect.objectContaining({
+        hideAuthor: false,
+        disableGuestLogin: false,
+        appName: "Zee Index",
+        logoUrl: "",
+        faviconUrl: "",
+        primaryColor: "",
+        localStoragePassword: "",
+        notifications: { discord: false, telegram: false },
+        storage: expect.objectContaining({ provider: expect.any(String) }),
+      }),
+    );
     expect(mockSanitizeAdminAppConfig).toHaveBeenCalled();
   });
 
