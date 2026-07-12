@@ -7,14 +7,18 @@
 There is no default admin password. You must **create and set it yourself** in the `.env` file before starting the application.
 
 1. Open the `.env` file in your project directory.
-2. Find the line `ADMIN_PASSWORD="your-secure-password"`.
-3. Replace `"your-secure-password"` with a strong password of your choice.
-4. If you have already started the container, you will need to restart it (`docker compose up -d`) to apply the changes.
-5. Log in using the email specified in `ADMIN_EMAILS` and the password you just set.
+2. Set either:
+   - `ADMIN_PASSWORD="your-secure-password"` (min 8 chars; fine for local/dev), or
+   - `ADMIN_PASSWORD_HASH` with a bcrypt hash (recommended for production):
+     ```bash
+     node -e "require('bcryptjs').hash('your-password',10).then(console.log)"
+     ```
+3. If you have already started the container, restart it (`docker compose up -d`) to apply the changes.
+4. Log in using the email specified in `ADMIN_EMAILS` and the password you set.
 
 ### How do I log in for the first time?
 
-1. Make sure your `.env` has both `ADMIN_EMAILS` and `ADMIN_PASSWORD` filled out.
+1. Make sure your `.env` has `ADMIN_EMAILS` and either `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH`.
 2. Open your Zee-Index site (e.g., `http://localhost:3000`).
 3. Click the **Login** button or navigate to `/login`.
 4. Enter the email and the password you defined in your `.env` file.

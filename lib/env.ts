@@ -15,9 +15,8 @@ const envSchema = z.object({
     .min(32, "SHARE_SECRET_KEY must be at least 32 characters"),
 
   ADMIN_EMAILS: z.string().min(1, "ADMIN_EMAILS is required"),
-  ADMIN_PASSWORD: z
-    .string()
-    .min(8, "ADMIN_PASSWORD must be at least 8 characters"),
+  ADMIN_PASSWORD: z.string().optional().or(z.literal("")),
+  ADMIN_PASSWORD_HASH: z.string().optional().or(z.literal("")),
 
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   REDIS_URL: z.string().optional().or(z.literal("")),
@@ -66,6 +65,7 @@ export function validateOnStartup(): Env {
         process.env.SHARE_SECRET_KEY || "12345678901234567890123456789012",
       ADMIN_EMAILS: process.env.ADMIN_EMAILS || "admin@example.com",
       ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || "password",
+      ADMIN_PASSWORD_HASH: process.env.ADMIN_PASSWORD_HASH || "",
 
       DATABASE_URL: process.env.DATABASE_URL || "postgresql://",
       REDIS_URL: process.env.REDIS_URL || "",
@@ -100,27 +100,52 @@ export function validateOnStartup(): Env {
     return process.env as unknown as Env;
   }
 
+  const adminPassword = (result.data.ADMIN_PASSWORD || "").trim();
+  const adminPasswordHash = (result.data.ADMIN_PASSWORD_HASH || "").trim();
+
+  if (!adminPassword && !adminPasswordHash) {
+    console.error(
+      "\n❌ ADMIN_PASSWORD or ADMIN_PASSWORD_HASH is required for admin login.",
+    );
+    if (process.env.NODE_ENV === "production") {
+      process.exit(1);
+    }
+  } else if (adminPassword && adminPassword.length < 8 && !adminPasswordHash) {
+    console.error(
+      "\n❌ ADMIN_PASSWORD must be at least 8 characters (or set ADMIN_PASSWORD_HASH).",
+    );
+    if (process.env.NODE_ENV === "production") {
+      process.exit(1);
+    }
+  } else if (
+    process.env.NODE_ENV === "production" &&
+    adminPassword &&
+    !adminPasswordHash
+  ) {
+    console.warn(
+      "\n⚠️  ADMIN_PASSWORD is plaintext. Prefer ADMIN_PASSWORD_HASH (bcrypt) in production.",
+    );
+  }
+
   const warnings: string[] = [];
   if (!process.env.REDIS_URL)
     warnings.push(
-      "REDIS_URL tidak diset. Data sementara tidak akan tersimpan secara persisten.",
+      "REDIS_URL is not set. Temporary data will not persist across restarts.",
     );
   if (!process.env.SMTP_HOST)
-    warnings.push(
-      "Konfigurasi Email (SMTP) tidak ditemukan. Fitur email akan dinonaktifkan.",
-    );
+    warnings.push("SMTP is not configured. Email features will be disabled.");
 
   if (process.env.NODE_ENV === "production" && !process.env.CRON_SECRET)
     warnings.push(
-      "CRON_SECRET belum diset. Endpoint cron akan menolak semua request.",
+      "CRON_SECRET is not set. Cron endpoints will reject all requests.",
     );
 
   if (warnings.length > 0) {
-    console.warn("\n⚠️  Peringatan Konfigurasi:");
+    console.warn("\n⚠️  Configuration warnings:");
     warnings.forEach((w) => console.warn(`   - ${w}`));
     console.warn("");
   } else {
-    console.log("✅ Validasi Environment Berhasil\n");
+    console.log("✅ Environment validation passed\n");
   }
 
   return result.data;
@@ -140,6 +165,7 @@ export const config = {
   shareSecretKey: env.SHARE_SECRET_KEY,
   adminEmails: (env.ADMIN_EMAILS || "").split(",").filter(Boolean),
   adminPassword: env.ADMIN_PASSWORD,
+  adminPasswordHash: env.ADMIN_PASSWORD_HASH,
 
   redisUrl: env.REDIS_URL,
   databaseUrl: env.DATABASE_URL,

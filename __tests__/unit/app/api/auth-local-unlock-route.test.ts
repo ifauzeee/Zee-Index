@@ -53,6 +53,12 @@ vi.mock("jose", () => ({
   },
 }));
 
+vi.mock("@/lib/ratelimit", () => ({
+  checkRateLimit: vi.fn().mockResolvedValue({ success: true }),
+  createRateLimitResponse: vi.fn().mockReturnValue({ headers: new Headers() }),
+  authLimiter: { check: vi.fn().mockResolvedValue({ success: true }) },
+}));
+
 import { POST } from "@/app/api/auth/local/unlock/route";
 
 describe("app/api/auth/local/unlock route", () => {

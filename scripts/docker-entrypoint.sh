@@ -26,6 +26,6 @@ if [ -d "prisma/migrations" ]; then
   prisma migrate deploy
 else
   prisma db push --accept-data-loss
-fi || echo "Prisma migration failed, continuing..."
+fi
 
 exec "$@"

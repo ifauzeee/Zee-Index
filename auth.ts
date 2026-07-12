@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { authLimiter } from "@/lib/ratelimit";
@@ -20,8 +21,14 @@ async function setupTwoFactorForToken(email: string, token: any) {
     if (token.twoFactorRequired) {
       token.sessionId = crypto.randomUUID();
     }
-  } catch {
-    token.twoFactorRequired = false;
+  } catch (error) {
+    // Fail closed: if we cannot verify 2FA state, require verification.
+    logger.error(
+      { err: error, email },
+      "[Auth] Failed to read 2FA state; requiring 2FA verification",
+    );
+    token.twoFactorRequired = true;
+    token.sessionId = token.sessionId || crypto.randomUUID();
   }
 }
 
@@ -172,10 +179,31 @@ const authConfig: NextAuthConfig = {
           const envPass = (process.env.ADMIN_PASSWORD || "")
             .trim()
             .replace(/^["']|["']$/g, "");
+          const envPassHash = (process.env.ADMIN_PASSWORD_HASH || "")
+            .trim()
+            .replace(/^["']|["']$/g, "");
 
-          const isPassValid = envPass
-            ? constantTimeEqual(password, envPass)
-            : false;
+          let isPassValid = false;
+          if (isAdmin) {
+            if (envPassHash) {
+              isPassValid = await bcrypt.compare(password, envPassHash);
+            } else if (envPass) {
+              // Legacy plaintext ADMIN_PASSWORD (prefer ADMIN_PASSWORD_HASH).
+              isPassValid = constantTimeEqual(password, envPass);
+            }
+          }
+
+          if (!isPassValid) {
+            const storedUserPassword = await kv.get(
+              `password:${normalizedInputEmail}`,
+            );
+            if (
+              typeof storedUserPassword === "string" &&
+              storedUserPassword.length > 0
+            ) {
+              isPassValid = await bcrypt.compare(password, storedUserPassword);
+            }
+          }
 
           logger.info(
             {
@@ -183,7 +211,7 @@ const authConfig: NextAuthConfig = {
               isAdminDb,
               isAdminEnv,
               isAdmin,
-              isPassValid,
+              passwordValid: isPassValid,
             },
             "[Auth] Login attempt",
           );
@@ -223,9 +251,45 @@ const authConfig: NextAuthConfig = {
             };
           }
 
+          if (!isAdmin && isPassValid) {
+            const role = await resolveRole(normalizedInputEmail);
+            let currentUser = dbUser;
+            if (!currentUser) {
+              currentUser = await db.user.create({
+                data: {
+                  email: normalizedInputEmail,
+                  role,
+                  name: normalizedInputEmail.split("@")[0],
+                },
+              });
+            }
+
+            emitAuthActivity("LOGIN_SUCCESS", {
+              userEmail: normalizedInputEmail,
+              userRole: role,
+              status: "success",
+            });
+            logger.info(
+              { email: normalizedInputEmail, role },
+              "[Auth] Success: User password match",
+            );
+
+            return {
+              id: currentUser.id,
+              name: currentUser.name || normalizedInputEmail.split("@")[0],
+              email: normalizedInputEmail,
+              role,
+              isGuest: false,
+            };
+          }
+
           logger.warn(
-            { isAdmin, isPassValid, email: normalizedInputEmail },
-            "[Auth] Failed: Invalid creds or not admin",
+            {
+              isAdmin,
+              passwordValid: isPassValid,
+              email: normalizedInputEmail,
+            },
+            "[Auth] Failed: Invalid credentials",
           );
           emitAuthActivity("LOGIN_FAILURE", {
             userEmail: normalizedInputEmail,

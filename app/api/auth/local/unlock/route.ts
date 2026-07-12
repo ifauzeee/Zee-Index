@@ -1,26 +1,32 @@
 import { logger } from "@/lib/logger";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { z } from "zod";
 import { getAppConfig } from "@/lib/app-config";
 import { SignJWT } from "jose";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { getLocalStorageAuthSecret } from "@/lib/local-auth-secret";
 import { isHashedLocalStoragePassword } from "@/lib/app-config";
+import { createPublicRoute, ApiRouteError } from "@/lib/api-middleware";
 
-export async function POST(req: NextRequest) {
-  try {
+const unlockBodySchema = z.object({
+  password: z.string().min(1, "Password is required"),
+});
+
+export const POST = createPublicRoute(
+  async ({ body, request }) => {
     const secret = getLocalStorageAuthSecret();
     if (!secret) {
       logger.error(
-        "[LocalAuth] NEXTAUTH_SECRET tidak valid untuk local storage auth",
+        "[LocalAuth] NEXTAUTH_SECRET is invalid for local storage auth",
       );
-      return NextResponse.json(
-        { error: "Server authentication secret is not configured." },
-        { status: 503 },
+      throw new ApiRouteError(
+        503,
+        "Server authentication secret is not configured.",
       );
     }
 
-    const { password } = await req.json();
+    const { password } = body;
     const config = await getAppConfig();
 
     const dbProtected = await db.protectedFolder.findUnique({
@@ -32,11 +38,18 @@ export async function POST(req: NextRequest) {
     if (dbProtected && dbProtected.password) {
       isPasswordCorrect = await bcrypt.compare(password, dbProtected.password);
     } else if (config.localStorageAuthEnabled && config.localStoragePassword) {
-      isPasswordCorrect = isHashedLocalStoragePassword(
-        config.localStoragePassword,
-      )
-        ? await bcrypt.compare(password, config.localStoragePassword)
-        : password === config.localStoragePassword;
+      if (isHashedLocalStoragePassword(config.localStoragePassword)) {
+        isPasswordCorrect = await bcrypt.compare(
+          password,
+          config.localStoragePassword,
+        );
+      } else {
+        // Legacy plaintext config still accepted for unlock, but never preferred.
+        logger.warn(
+          "[LocalAuth] Using legacy plaintext local storage password; migrate to bcrypt hash",
+        );
+        isPasswordCorrect = password === config.localStoragePassword;
+      }
     } else {
       return NextResponse.json({ success: true, message: "Not protected" });
     }
@@ -50,9 +63,9 @@ export async function POST(req: NextRequest) {
 
       const response = NextResponse.json({ success: true });
       const isLocal =
-        req.nextUrl.hostname === "localhost" ||
-        req.nextUrl.hostname === "127.0.0.1" ||
-        req.nextUrl.hostname.startsWith("192.168.");
+        request.nextUrl.hostname === "localhost" ||
+        request.nextUrl.hostname === "127.0.0.1" ||
+        request.nextUrl.hostname.startsWith("192.168.");
       const isSecure = process.env.NODE_ENV === "production" && !isLocal;
       response.cookies.set("local_storage_token", token, {
         httpOnly: true,
@@ -65,12 +78,13 @@ export async function POST(req: NextRequest) {
       return response;
     }
 
-    return NextResponse.json({ error: "Password salah" }, { status: 401 });
-  } catch (error) {
-    logger.error({ err: error }, "[LocalAuth] Unlock error");
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
-  }
-}
+    throw new ApiRouteError(401, "Invalid password");
+  },
+  {
+    bodySchema: unlockBodySchema,
+    rateLimit: "AUTH",
+    includeSession: false,
+  },
+);
+
+export const dynamic = "force-dynamic";

@@ -36,5 +36,5 @@ export const POST = createPublicRoute(
       return NextResponse.json({ ok: false }, { status: 500 });
     }
   },
-  { bodySchema: analyticsTrackRequestSchema, rateLimit: false },
+  { bodySchema: analyticsTrackRequestSchema, rateLimit: "API" },
 );

@@ -110,17 +110,21 @@ async function resolveParams<TParams>(params: unknown): Promise<TParams> {
   return (params ?? {}) as TParams;
 }
 
-function isAuthorized(role: ApiRole, session: Session | null): boolean {
+export function isAuthorized(role: ApiRole, session: Session | null): boolean {
   if (role === "public") return true;
   if (!session?.user) return false;
 
   const userRole = session.user.role;
-  if (role === "user") return true;
+  const isGuest = session.user.isGuest === true || userRole === "GUEST";
+
+  if (role === "user") {
+    return !isGuest;
+  }
   if (role === "editor") {
-    return userRole === "ADMIN" || userRole === "EDITOR";
+    return !isGuest && (userRole === "ADMIN" || userRole === "EDITOR");
   }
 
-  return userRole === "ADMIN";
+  return !isGuest && userRole === "ADMIN";
 }
 
 function parseWithSchema<TSchema extends ZodSchema | undefined>(

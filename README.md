@@ -354,17 +354,18 @@ pnpm test:e2e         # E2E tests (Playwright)
 
 ### Required Variables
 
-| Variable                     | Description                    | Example                          |
-| ---------------------------- | ------------------------------ | -------------------------------- |
-| `NEXTAUTH_URL`               | Your application URL           | `https://yourdomain.com`         |
-| `NEXTAUTH_SECRET`            | Encryption key (min 32 chars)  | `openssl rand -base64 32`        |
-| `GOOGLE_CLIENT_ID`           | Google OAuth Client ID         | `xxx.apps.googleusercontent.com` |
-| `GOOGLE_CLIENT_SECRET`       | Google OAuth Client Secret     | `GOCSPX-xxx`                     |
-| `GOOGLE_REFRESH_TOKEN`       | OAuth Refresh Token            | Obtained via `/setup`            |
-| `NEXT_PUBLIC_ROOT_FOLDER_ID` | Root Google Drive folder ID    | `1ABcDeFgHiJkLmNoPqRsT`          |
-| `ADMIN_EMAILS`               | Comma-separated admin emails   | `admin@example.com`              |
-| `ADMIN_PASSWORD`             | Admin fallback login password  | Use a strong password            |
-| `SHARE_SECRET_KEY`           | JWT signing key (min 32 chars) | `openssl rand -base64 32`        |
+| Variable                     | Description                                       | Example                          |
+| ---------------------------- | ------------------------------------------------- | -------------------------------- |
+| `NEXTAUTH_URL`               | Your application URL                              | `https://yourdomain.com`         |
+| `NEXTAUTH_SECRET`            | Encryption key (min 32 chars)                     | `openssl rand -base64 32`        |
+| `GOOGLE_CLIENT_ID`           | Google OAuth Client ID                            | `xxx.apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET`       | Google OAuth Client Secret                        | `GOCSPX-xxx`                     |
+| `GOOGLE_REFRESH_TOKEN`       | OAuth Refresh Token                               | Obtained via `/setup`            |
+| `NEXT_PUBLIC_ROOT_FOLDER_ID` | Root Google Drive folder ID                       | `1ABcDeFgHiJkLmNoPqRsT`          |
+| `ADMIN_EMAILS`               | Comma-separated admin emails                      | `admin@example.com`              |
+| `ADMIN_PASSWORD`             | Admin login password (dev/local; min 8)           | Strong password                  |
+| `ADMIN_PASSWORD_HASH`        | bcrypt hash of admin password (preferred in prod) | `bcryptjs.hash(...)`             |
+| `SHARE_SECRET_KEY`           | JWT signing key (min 32 chars)                    | `openssl rand -base64 32`        |
 
 ### Database & Cache
 
@@ -415,6 +416,8 @@ SHARE_SECRET_KEY=""         # openssl rand -base64 32
 
 ADMIN_EMAILS="admin@example.com"
 ADMIN_PASSWORD="your-secure-password"
+# Prefer for production:
+# ADMIN_PASSWORD_HASH="$2a$10$..."
 
 # 2. GOOGLE DRIVE
 GOOGLE_CLIENT_ID=""
@@ -547,12 +550,12 @@ The included `docker-compose.yml` has built-in support for **free HTTPS**:
 
 ### Authentication & Authorization
 
-| Method              | Description                        | Config                                                       |
-| ------------------- | ---------------------------------- | ------------------------------------------------------------ |
-| **Google OAuth**    | Login with Google account          | Set OAuth credentials                                        |
-| **Admin Password**  | Email + password login for admins  | `ADMIN_EMAILS` + `ADMIN_PASSWORD` (Defined by you in `.env`) |
-| **Guest Access**    | Read-only access (can be disabled) | Toggle in admin settings                                     |
-| **Two-Factor Auth** | TOTP-based 2FA with QR code        | Admin dashboard setup                                        |
+| Method              | Description                        | Config                                                     |
+| ------------------- | ---------------------------------- | ---------------------------------------------------------- |
+| **Google OAuth**    | Login with Google account          | Set OAuth credentials                                      |
+| **Admin Password**  | Email + password login for admins  | `ADMIN_EMAILS` + `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH` |
+| **Guest Access**    | Read-only access (can be disabled) | Toggle in admin settings                                   |
+| **Two-Factor Auth** | TOTP-based 2FA with QR code        | Admin dashboard setup                                      |
 
 **Role Hierarchy:**
 
