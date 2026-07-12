@@ -30,7 +30,9 @@ export const POST = createAdminRoute(
         .delete({
           where: { jti },
         })
-        .catch(() => {});
+        .catch((err) =>
+          logger.warn({ err, jti }, "ShareLink DB row missing on delete"),
+        );
 
       return NextResponse.json({
         success: true,

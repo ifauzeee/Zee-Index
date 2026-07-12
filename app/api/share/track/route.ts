@@ -23,7 +23,9 @@ export const POST = createPublicRoute(
             views: { increment: 1 },
           },
         })
-        .catch(() => {});
+        .catch((err) =>
+          logger.warn({ err, jti }, "Share view increment failed"),
+        );
 
       return new Response(null, { status: 204 });
     } catch (error) {

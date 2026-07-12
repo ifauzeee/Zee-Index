@@ -43,6 +43,7 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  /// ADMIN | EDITOR | USER (session may also use GUEST)
   role          String    @default("USER")
   accounts      Account[]
   sessions      Session[]
@@ -99,6 +100,7 @@ model ShareLink {
   isCollection  Boolean  @default(false)
   views         Int      @default(0)
   createdAt     DateTime @default(now())
+  createdBy     String?
 
   maxUses         Int?
   preventDownload Boolean  @default(false)
@@ -107,6 +109,19 @@ model ShareLink {
 
   @@index([expiresAt])
   @@index([createdAt])
+  @@index([createdBy])
+}
+
+/// Durable folder ACL (source of truth). Redis `folder:access:*` is a cache.
+model FolderAccess {
+  id        String   @id @default(cuid())
+  folderId  String
+  email     String
+  createdAt DateTime @default(now())
+
+  @@unique([folderId, email])
+  @@index([email])
+  @@index([folderId])
 }
 
 model ProtectedFolder {

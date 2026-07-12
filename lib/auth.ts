@@ -104,14 +104,38 @@ export async function hasUserAccess(
   if (!folderId || !email) return false;
 
   const cleanId = folderId.trim();
-  const cacheKey = `auth:access:${cleanId}:${email}`;
+  const normalizedEmail = email.toLowerCase().trim();
+  const cacheKey = `auth:access:${cleanId}:${normalizedEmail}`;
 
   const cached = memoryCache.get<boolean>(cacheKey);
   if (cached !== null) return cached;
 
   try {
-    const result = await kv.sismember(`folder:access:${cleanId}`, email);
-    const hasAccess = result === 1;
+    const result = await kv.sismember(
+      `folder:access:${cleanId}`,
+      normalizedEmail,
+    );
+    if (result === 1) {
+      memoryCache.set(cacheKey, true, CACHE_TTL.USER_ACCESS);
+      return true;
+    }
+
+    // Fallback to durable Postgres ACL if Redis misses (e.g. after flush).
+    const row = await db.folderAccess.findUnique({
+      where: {
+        folderId_email: { folderId: cleanId, email: normalizedEmail },
+      },
+      select: { id: true },
+    });
+    const hasAccess = !!row;
+    if (hasAccess) {
+      // Rehydrate Redis cache for subsequent checks.
+      await kv
+        .sadd(`folder:access:${cleanId}`, normalizedEmail)
+        .catch((err) =>
+          logger.warn({ err, cleanId }, "Failed to rehydrate folder ACL cache"),
+        );
+    }
     memoryCache.set(cacheKey, hasAccess, CACHE_TTL.USER_ACCESS);
     return hasAccess;
   } catch {

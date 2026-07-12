@@ -260,7 +260,9 @@ async function handleDownload(request: NextRequest) {
 
         const downloadSize = parseInt(fileDetails.size || "0", 10);
         if (downloadSize > 0) {
-          trackBandwidth(downloadSize).catch(() => {});
+          trackBandwidth(downloadSize).catch((err) =>
+            logger.warn({ err, fileId }, "Failed to track bandwidth"),
+          );
         }
       } else {
         logger.info(

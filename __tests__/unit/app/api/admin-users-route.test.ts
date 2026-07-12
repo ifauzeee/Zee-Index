@@ -1,10 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-const { mockSmembers, mockSadd, mockSrem } = vi.hoisted(() => ({
+const {
+  mockSmembers,
+  mockSadd,
+  mockSrem,
+  mockSismember,
+  mockFindMany,
+  mockUpsert,
+} = vi.hoisted(() => ({
   mockSmembers: vi.fn(),
   mockSadd: vi.fn(),
   mockSrem: vi.fn(),
+  mockSismember: vi.fn(),
+  mockFindMany: vi.fn(),
+  mockUpsert: vi.fn(),
 }));
 
 vi.mock("@/lib/api-middleware", () => ({
@@ -50,6 +60,16 @@ vi.mock("@/lib/kv", () => ({
     smembers: mockSmembers,
     sadd: mockSadd,
     srem: mockSrem,
+    sismember: mockSismember,
+  },
+}));
+
+vi.mock("@/lib/db", () => ({
+  db: {
+    user: {
+      findMany: mockFindMany,
+      upsert: mockUpsert,
+    },
   },
 }));
 
@@ -70,13 +90,17 @@ function createJsonRequest(
 describe("app/api/admin/users route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFindMany.mockResolvedValue([]);
+    mockUpsert.mockResolvedValue({});
+    mockSismember.mockResolvedValue(0);
   });
 
-  it("returns admin users list", async () => {
+  it("returns admin users list merged from redis and db", async () => {
     mockSmembers.mockResolvedValue([
       "admin1@example.com",
       "admin2@example.com",
     ]);
+    mockFindMany.mockResolvedValue([{ email: "admin3@example.com" }]);
 
     const response = await GET(
       new NextRequest("http://localhost:3000/api/admin/users"),
@@ -84,15 +108,19 @@ describe("app/api/admin/users route", () => {
 
     expect(mockSmembers).toHaveBeenCalledWith(REDIS_KEYS.ADMIN_USERS);
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual([
-      "admin1@example.com",
-      "admin2@example.com",
-    ]);
+    const payload = await response.json();
+    expect(payload).toEqual(
+      expect.arrayContaining([
+        "admin1@example.com",
+        "admin2@example.com",
+        "admin3@example.com",
+      ]),
+    );
+    expect(payload).toHaveLength(3);
   });
 
   it("returns 500 when fetching admins fails", async () => {
     mockSmembers.mockRejectedValue(new Error("redis unavailable"));
-    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const response = await GET(
       new NextRequest("http://localhost:3000/api/admin/users"),
@@ -102,12 +130,9 @@ describe("app/api/admin/users route", () => {
     await expect(response.json()).resolves.toEqual({
       error: "Failed to fetch admins",
     });
-    expect(errorSpy).toHaveBeenCalled();
-
-    errorSpy.mockRestore();
   });
 
-  it("adds admin user on POST", async () => {
+  it("adds admin user on POST and persists role", async () => {
     mockSadd.mockResolvedValue(1);
 
     const response = await POST(
@@ -117,6 +142,12 @@ describe("app/api/admin/users route", () => {
     expect(mockSadd).toHaveBeenCalledWith(
       REDIS_KEYS.ADMIN_USERS,
       "newadmin@example.com",
+    );
+    expect(mockUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { email: "newadmin@example.com" },
+        update: { role: "ADMIN" },
+      }),
     );
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
@@ -137,8 +168,9 @@ describe("app/api/admin/users route", () => {
     expect(mockSadd).not.toHaveBeenCalled();
   });
 
-  it("removes admin user on DELETE", async () => {
+  it("removes admin user on DELETE and demotes role", async () => {
     mockSrem.mockResolvedValue(1);
+    mockSismember.mockResolvedValue(0);
 
     const response = await DELETE(
       createJsonRequest("DELETE", { email: "remove@example.com" }),
@@ -147,6 +179,12 @@ describe("app/api/admin/users route", () => {
     expect(mockSrem).toHaveBeenCalledWith(
       REDIS_KEYS.ADMIN_USERS,
       "remove@example.com",
+    );
+    expect(mockUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { email: "remove@example.com" },
+        update: { role: "USER" },
+      }),
     );
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({

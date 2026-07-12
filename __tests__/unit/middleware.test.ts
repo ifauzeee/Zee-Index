@@ -29,4 +29,19 @@ describe("middleware content security policy", () => {
       "frame-src 'self' https://accounts.google.com https://drive.google.com https://view.officeapps.live.com",
     );
   });
+
+  it("can omit unsafe-eval for production CSP", () => {
+    const csp = createContentSecurityPolicy("nonce-prod", {
+      allowUnsafeEval: false,
+    });
+    expect(csp).not.toContain("unsafe-eval");
+    expect(csp).toContain("nonce-prod");
+  });
+
+  it("includes unsafe-eval when explicitly allowed", () => {
+    const csp = createContentSecurityPolicy("nonce-dev", {
+      allowUnsafeEval: true,
+    });
+    expect(csp).toContain("unsafe-eval");
+  });
 });

@@ -69,11 +69,19 @@ function createNonce(): string {
   return btoa(crypto.randomUUID());
 }
 
-export function createContentSecurityPolicy(nonce: string): string {
+export function createContentSecurityPolicy(
+  nonce: string,
+  options?: { allowUnsafeEval?: boolean },
+): string {
+  // unsafe-eval is needed by some dev tooling / Monaco; omit in production.
+  const allowUnsafeEval =
+    options?.allowUnsafeEval ?? process.env.NODE_ENV !== "production";
+  const scriptEval = allowUnsafeEval ? " 'unsafe-eval'" : "";
+
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' https://cdn.jsdelivr.net https://www.google-analytics.com`,
-    `script-src-elem 'self' 'nonce-${nonce}' 'unsafe-eval' https://cdn.jsdelivr.net https://www.google-analytics.com`,
+    `script-src 'self' 'nonce-${nonce}'${scriptEval} https://cdn.jsdelivr.net https://www.google-analytics.com`,
+    `script-src-elem 'self' 'nonce-${nonce}'${scriptEval} https://cdn.jsdelivr.net https://www.google-analytics.com`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
     "font-src 'self' data: https://fonts.gstatic.com",
     "img-src 'self' data: blob: https://*.googleusercontent.com https://drive.google.com https://images.unsplash.com https://image.tmdb.org",

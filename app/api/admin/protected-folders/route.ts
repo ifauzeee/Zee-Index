@@ -97,7 +97,12 @@ export const DELETE = createAdminRoute(
         .delete({
           where: { folderId },
         })
-        .catch(() => {});
+        .catch((err) =>
+          logger.warn(
+            { err, folderId },
+            "ProtectedFolder row missing on delete",
+          ),
+        );
 
       return NextResponse.json({
         success: true,

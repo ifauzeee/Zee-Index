@@ -87,7 +87,12 @@ export const DELETE = createAdminRoute(
         .delete({
           where: { folderId: id },
         })
-        .catch(() => {});
+        .catch((err) =>
+          logger.warn(
+            { err, folderId: id },
+            "ProtectedFolder row missing on manual drive delete",
+          ),
+        );
 
       await kv.del(`zee-index:folder-path-v7:${id}`);
 
