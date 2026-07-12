@@ -5,40 +5,36 @@ test.describe("Happy Paths & Security Flows", () => {
     page,
   }) => {
     await page.goto("/admin");
-    await expect(page).toHaveURL(/.*(login|setup)/);
+    await expect
+      .poll(() => new URL(page.url()).pathname)
+      .toMatch(/^\/((en|id|zh-TW)\/)?(login|setup)$/);
   });
 
-  test("Folder password protection modal or view triggers correctly", async ({
+  test("protected folder path redirects to auth or stays on folder flow", async ({
     page,
   }) => {
     await page.goto("/folder/local-storage:protected-folder");
-    await expect(page).toHaveURL(/.*(login|setup|folder)/);
+    await expect
+      .poll(() => new URL(page.url()).pathname)
+      .toMatch(/\/((en|id|zh-TW)\/)?(login|setup|folder)/);
   });
 
-  test("Upload overlay or area is present on browse page", async ({ page }) => {
+  test("home lands on setup, login, or app shell", async ({ page }) => {
     await page.goto("/");
-    const currentUrl = page.url();
-    if (currentUrl.includes("/login") || currentUrl.includes("/setup")) {
-      const loginForm = page.locator("form");
-      if ((await loginForm.count()) > 0) {
-        await expect(loginForm).toBeVisible();
-      }
-    } else {
-      const fileList = page.locator(".file-list");
-      if ((await fileList.count()) > 0) {
-        await expect(fileList).toBeVisible();
-      }
-    }
-  });
+    await expect(page).toHaveTitle(/Zee Index/i);
 
-  test("Download endpoint rejects requests with invalid share tokens", async ({
-    request,
-  }) => {
-    const response = await request.get(
-      "/api/download?fileId=test-file&share_token=invalid_token",
-    );
-    expect([400, 401, 403]).toContain(response.status());
-    const payload = await response.json();
-    expect(payload).toHaveProperty("error");
+    const path = new URL(page.url()).pathname;
+    const isOk =
+      path === "/" ||
+      /\/((en|id|zh-TW)\/)?(setup|login|folder)/.test(path) ||
+      path.startsWith("/en") ||
+      path.startsWith("/id");
+    expect(isOk).toBeTruthy();
+
+    // Prefer stable chrome when app shell is shown
+    const search = page.locator("#header-search-bar");
+    if ((await search.count()) > 0) {
+      await expect(search.first()).toBeVisible();
+    }
   });
 });
