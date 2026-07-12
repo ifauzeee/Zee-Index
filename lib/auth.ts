@@ -149,43 +149,71 @@ export async function hasUserAccessBatch(
 ): Promise<Record<string, boolean>> {
   if (!email || !ids.length) return {};
 
+  const normalizedEmail = email.toLowerCase().trim();
   const results: Record<string, boolean> = {};
   const idsToCheck: string[] = [];
 
   for (const id of ids) {
     const cleanId = id.trim();
-    const cacheKey = `auth:access:${cleanId}:${email}`;
+    const cacheKey = `auth:access:${cleanId}:${normalizedEmail}`;
     const cached = memoryCache.get<boolean>(cacheKey);
     if (cached !== null) {
       results[cleanId] = cached;
     } else {
+      results[cleanId] = false;
       idsToCheck.push(cleanId);
     }
   }
 
   if (idsToCheck.length === 0) return results;
 
+  let pipelineOk = true;
   try {
     const pipeline = kv.pipeline();
     for (const id of idsToCheck) {
-      pipeline.sismember(`folder:access:${id}`, email);
+      pipeline.sismember(`folder:access:${id}`, normalizedEmail);
     }
     const pipelineResults = await pipeline.exec();
-
     idsToCheck.forEach((id, index) => {
-      const hasAccess = pipelineResults[index] === 1;
-      results[id] = hasAccess;
-      memoryCache.set(
-        `auth:access:${id}:${email}`,
-        hasAccess,
-        CACHE_TTL.USER_ACCESS,
-      );
+      results[id] = pipelineResults[index] === 1;
     });
   } catch (e) {
+    pipelineOk = false;
     logger.error({ err: e }, "[Auth] Batch access check failed");
-    idsToCheck.forEach((id) => {
-      if (!(id in results)) results[id] = false;
-    });
+  }
+
+  // Fallback to durable Postgres ACL when Redis misses or errors.
+  const needDb = pipelineOk
+    ? idsToCheck.filter((id) => !results[id])
+    : idsToCheck;
+  if (needDb.length) {
+    try {
+      const rows = await db.folderAccess.findMany({
+        where: { folderId: { in: needDb }, email: normalizedEmail },
+        select: { folderId: true },
+      });
+      const accessible = new Set(rows.map((r) => r.folderId));
+      for (const id of needDb) {
+        if (accessible.has(id)) {
+          results[id] = true;
+          await kv
+            .sadd(`folder:access:${id}`, normalizedEmail)
+            .catch((err) =>
+              logger.warn({ err, id }, "Failed to rehydrate folder ACL cache"),
+            );
+        }
+      }
+    } catch (e) {
+      logger.error({ err: e }, "[Auth] Batch ACL DB fallback failed");
+    }
+  }
+
+  for (const id of idsToCheck) {
+    memoryCache.set(
+      `auth:access:${id}:${normalizedEmail}`,
+      results[id],
+      CACHE_TTL.USER_ACCESS,
+    );
   }
 
   return results;
