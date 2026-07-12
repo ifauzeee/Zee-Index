@@ -196,6 +196,18 @@ export default async function middleware(request: NextRequest) {
         isApi ? NextResponse.next() : intlMiddleware(request),
       );
     }
+
+    // APIs must not follow HTML redirects — return a JSON error instead.
+    if (isApi) {
+      return applyCsp(
+        request,
+        NextResponse.json(
+          { error: ERROR_MESSAGES.APP_NOT_CONFIGURED },
+          { status: 503 },
+        ),
+      );
+    }
+
     return applyCsp(
       request,
       NextResponse.redirect(new URL("/setup", request.url)),

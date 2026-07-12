@@ -35,8 +35,14 @@ test.describe("Public API security contracts", () => {
     expect([400, 401, 403, 404]).toContain(response.status());
   });
 
-  test("admin analytics requires admin session", async ({ request }) => {
+  test("admin stats rejects unauthenticated access", async ({ request }) => {
     const response = await request.get("/api/admin/stats");
-    expect([401, 403]).toContain(response.status());
+    // 401/403 when configured without session; 503 when app still in setup mode
+    expect([401, 403, 503]).toContain(response.status());
+    const contentType = response.headers()["content-type"] || "";
+    if (contentType.includes("application/json")) {
+      const payload = await response.json();
+      expect(payload).toHaveProperty("error");
+    }
   });
 });
