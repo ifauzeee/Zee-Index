@@ -10,9 +10,9 @@ export const GET = createPublicRoute(
       const config = await getPublicAppConfig();
       return NextResponse.json(config);
     } catch (error) {
-      logger.error({ err: error }, "Gagal mengambil konfigurasi publik");
+      logger.error({ err: error }, "Failed to fetch public config");
       return NextResponse.json(
-        { error: "Gagal mengambil konfigurasi." },
+        { error: "Failed to fetch configuration." },
         { status: 500 },
       );
     }

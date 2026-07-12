@@ -67,21 +67,19 @@ export const MEMORY_CACHE_KEYS = {
 export const ERROR_MESSAGES = {
   INVALID_GRANT: "invalid_grant",
   SESSION_EXPIRED:
-    "Sesi Google Drive kadaluarsa. Silakan lakukan Setup ulang di /setup",
+    "Google Drive session expired. Please re-run setup at /setup.",
   APP_NOT_CONFIGURED:
-    "Aplikasi belum dikonfigurasi. Silakan jalankan Setup Wizard.",
-  AUTH_FAILED: "Otentikasi Gagal",
-  FILE_NOT_FOUND: "File tidak ditemukan di Google Drive.",
-  FOLDER_DOWNLOAD_NOT_SUPPORTED:
-    "Tidak dapat mengunduh folder secara langsung.",
-  INVALID_FILE_ID: "Format fileId tidak valid.",
-  MISSING_FILE_ID: "Parameter fileId tidak ditemukan.",
+    "Application is not configured. Please run the Setup Wizard.",
+  AUTH_FAILED: "Authentication failed",
+  FILE_NOT_FOUND: "File not found on Google Drive.",
+  FOLDER_DOWNLOAD_NOT_SUPPORTED: "Folders cannot be downloaded directly.",
+  INVALID_FILE_ID: "Invalid fileId format.",
+  MISSING_FILE_ID: "Missing fileId parameter.",
   ACCESS_DENIED: "Access Denied: File is protected.",
-  DOWNLOAD_LIMIT_EXCEEDED:
-    "Terlalu banyak permintaan unduhan. Silakan tunggu sebentar.",
-  RATE_LIMIT_EXCEEDED: "Terlalu banyak permintaan. Silakan coba lagi nanti.",
+  DOWNLOAD_LIMIT_EXCEEDED: "Too many download requests. Please wait a moment.",
+  RATE_LIMIT_EXCEEDED: "Too many requests. Please try again later.",
   INVALID_SHARE_TOKEN: "Invalid share token or authentication required.",
-  SHARE_LINK_REVOKED: "Tautan ini telah dibatalkan.",
+  SHARE_LINK_REVOKED: "This link has been revoked.",
   INTERNAL_SERVER_ERROR: "Internal Server Error.",
 } as const;
 

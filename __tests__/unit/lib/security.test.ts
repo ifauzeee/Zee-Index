@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+﻿import { describe, it, expect, vi, beforeEach } from "vitest";
 import { isAccessRestricted, __resetCache } from "@/lib/securityUtils";
 
 vi.mock("@/lib/db", () => ({

@@ -84,15 +84,13 @@ export function validateOnStartup(): Env {
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
-    console.error(
-      "\n❌ PROYEK GAGAL MENYALA: Environment Variable Tidak Valid",
-    );
+    console.error("\n❌ Startup failed: invalid environment variables");
     console.error("=========================================================");
     result.error.issues.forEach((issue) => {
       console.error(`🚩 [${issue.path.join(".")}] -> ${issue.message}`);
     });
     console.error("=========================================================");
-    console.error("Silakan periksa kembali file .env Anda.\n");
+    console.error("Please check your .env file.\n");
 
     if (process.env.NODE_ENV === "production") {
       process.exit(1);

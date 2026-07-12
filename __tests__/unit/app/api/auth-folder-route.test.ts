@@ -48,7 +48,7 @@ vi.mock("@/lib/api-middleware", () => ({
         if (!parsedBody.success) {
           return Response.json(
             {
-              error: "Input tidak valid.",
+              error: "Invalid request body.",
               details: parsedBody.error?.issues ?? [],
             },
             { status: 400 },
@@ -153,7 +153,7 @@ describe("app/api/auth/folder POST", () => {
 
     expect(response.status).toBe(429);
     await expect(response.json()).resolves.toEqual({
-      error: "Terlalu banyak percobaan. Silakan coba lagi nanti.",
+      error: "Too many requests. Please try again later.",
     });
   });
 
@@ -162,7 +162,7 @@ describe("app/api/auth/folder POST", () => {
 
     expect(response.status).toBe(400);
     const payload = await response.json();
-    expect(payload.error).toBe("Input tidak valid.");
+    expect(payload.error).toBe("Invalid request body.");
   });
 
   it("returns 404 when the folder is not configured", async () => {
@@ -179,7 +179,7 @@ describe("app/api/auth/folder POST", () => {
     expect(response.status).toBe(404);
     await expect(response.json()).resolves.toEqual({
       error:
-        "Folder ini tidak dikonfigurasi untuk perlindungan atau tidak ditemukan.",
+        "This folder is not configured for password protection or was not found.",
     });
   });
 
@@ -221,7 +221,7 @@ describe("app/api/auth/folder POST", () => {
 
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toEqual({
-      error: "ID atau password salah.",
+      error: "Invalid ID or password.",
     });
   });
 });

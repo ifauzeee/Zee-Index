@@ -50,7 +50,7 @@ vi.mock("@/lib/api-middleware", () => ({
         if (!parsedBody.success) {
           return Response.json(
             {
-              error: "Input tidak valid.",
+              error: "Invalid request body.",
               details: parsedBody.error?.issues ?? [],
             },
             { status: 400 },
@@ -186,7 +186,7 @@ describe("app/api/share POST", () => {
 
     expect(response.status).toBe(400);
     const payload = await response.json();
-    expect(payload.error).toBe("Input tidak valid.");
+    expect(payload.error).toBe("Invalid request body.");
   });
 
   it("returns 400 for invalid expiration formats", async () => {

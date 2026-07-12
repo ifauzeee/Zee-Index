@@ -28,18 +28,27 @@ const intlMiddleware = createMiddleware({
 });
 
 const PUBLIC_PATHS = new Set(["/login", "/verify-2fa", "/setup", "/request"]);
+// Public only when the route itself enforces auth/share checks.
+// Prefer exact prefixes for read-only public surfaces; mutations use create*Route.
 const PUBLIC_API_PREFIXES = [
   "/api/auth",
   "/api/config/public",
+  "/api/config",
   "/api/setup",
   "/api/files",
   "/api/folderpath",
-  "/api/tags",
+  "/api/filedetails",
   "/api/download",
+  "/api/bulk-download",
   "/api/proxy-image",
   "/api/admin/analytics/track",
   "/api/health",
   "/api/metadata",
+  "/api/search",
+  "/api/manual-drives",
+  "/api/share/track",
+  "/api/share/items",
+  "/api/file-request/upload",
   "/api/cron",
 ];
 

@@ -3,6 +3,7 @@ import type { Session } from "next-auth";
 import type { z } from "zod";
 import { ERROR_MESSAGES } from "@/lib/constants";
 import type { RateLimitType } from "@/lib/ratelimit";
+import { constantTimeEqual } from "@/lib/security";
 
 type MaybePromise<T> = T | Promise<T>;
 
@@ -83,23 +84,6 @@ async function loadRateLimitHelpers() {
 
 function isPromiseLike(value: unknown): value is Promise<unknown> {
   return !!value && typeof value === "object" && "then" in value;
-}
-
-function constantTimeEqual(a: string, b: string): boolean {
-  const encoder = new TextEncoder();
-  const encodedA = encoder.encode(a);
-  const encodedB = encoder.encode(b);
-
-  if (encodedA.length !== encodedB.length) {
-    return false;
-  }
-
-  let result = 0;
-  for (let i = 0; i < encodedA.length; i += 1) {
-    result |= encodedA[i] ^ encodedB[i];
-  }
-
-  return result === 0;
 }
 
 async function resolveParams<TParams>(params: unknown): Promise<TParams> {
@@ -191,7 +175,7 @@ async function handleRouteError(
   return withRequestId(
     NextResponse.json(
       {
-        error: internalErrorMessage || "Terjadi kesalahan server internal.",
+        error: internalErrorMessage || ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
       },
       { status: 500 },
     ),
@@ -287,18 +271,18 @@ export function createRouteHandler<
         body: parseWithSchema(
           options.bodySchema,
           rawBody,
-          "Input tidak valid.",
+          "Invalid request body.",
         ),
         query: parseWithSchema(
           options.querySchema,
           Object.fromEntries(request.nextUrl.searchParams),
-          "Parameter query tidak valid.",
+          "Invalid query parameters.",
         ),
         params:
           parseWithSchema(
             options.paramsSchema,
             params,
-            "Parameter route tidak valid.",
+            "Invalid route parameters.",
           ) ?? params,
         requestId,
       } as RouteHandlerContext<

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
 
 const { mockGetPublicAppConfig } = vi.hoisted(() => ({
   mockGetPublicAppConfig: vi.fn(),
@@ -8,7 +9,16 @@ vi.mock("@/lib/app-config", () => ({
   getPublicAppConfig: mockGetPublicAppConfig,
 }));
 
+vi.mock("@/lib/ratelimit", () => ({
+  checkRateLimit: vi.fn().mockResolvedValue({ success: true }),
+  createRateLimitResponse: vi.fn().mockReturnValue({ headers: new Headers() }),
+}));
+
 import { GET } from "@/app/api/config/route";
+
+function makeRequest() {
+  return new NextRequest("http://localhost:3000/api/config");
+}
 
 describe("app/api/config route", () => {
   beforeEach(() => {
@@ -21,7 +31,7 @@ describe("app/api/config route", () => {
       disableGuestLogin: false,
     });
 
-    const response = await GET();
+    const response = await GET(makeRequest());
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
@@ -32,16 +42,12 @@ describe("app/api/config route", () => {
 
   it("returns 500 when config fetch fails", async () => {
     mockGetPublicAppConfig.mockRejectedValue(new Error("db unavailable"));
-    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    const response = await GET();
+    const response = await GET(makeRequest());
 
     expect(response.status).toBe(500);
     await expect(response.json()).resolves.toEqual({
       error: "Failed to fetch public config",
     });
-    expect(errorSpy).toHaveBeenCalled();
-
-    errorSpy.mockRestore();
   });
 });

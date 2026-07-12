@@ -7,6 +7,7 @@ import { SignJWT } from "jose";
 import { createPublicRoute } from "@/lib/api-middleware";
 import { getProtectedFolderCredentials } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { ERROR_MESSAGES } from "@/lib/constants";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -21,7 +22,7 @@ export const POST = createPublicRoute(
     const { success } = await checkRateLimit(request, "AUTH");
     if (!success) {
       return NextResponse.json(
-        { error: "Terlalu banyak percobaan. Silakan coba lagi nanti." },
+        { error: ERROR_MESSAGES.RATE_LIMIT_EXCEEDED },
         { status: 429 },
       );
     }
@@ -34,7 +35,7 @@ export const POST = createPublicRoute(
         return NextResponse.json(
           {
             error:
-              "Folder ini tidak dikonfigurasi untuk perlindungan atau tidak ditemukan.",
+              "This folder is not configured for password protection or was not found.",
           },
           { status: 404 },
         );
@@ -61,14 +62,14 @@ export const POST = createPublicRoute(
         return NextResponse.json({ success: true, token }, { status: 200 });
       } else {
         return NextResponse.json(
-          { error: "ID atau password salah." },
+          { error: "Invalid ID or password." },
           { status: 401 },
         );
       }
     } catch (error) {
       logger.error({ err: error }, "Folder Auth API error");
       return NextResponse.json(
-        { error: "Internal Server Error" },
+        { error: ERROR_MESSAGES.INTERNAL_SERVER_ERROR },
         { status: 500 },
       );
     }

@@ -32,7 +32,7 @@ vi.mock("@/lib/api-middleware", () => ({
         if (!parsedBody.success) {
           return Response.json(
             {
-              error: "Input tidak valid.",
+              error: "Invalid request body.",
               details: parsedBody.error?.issues ?? [],
             },
             { status: 400 },
@@ -129,7 +129,7 @@ describe("app/api/admin/protected-folders route", () => {
 
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toMatchObject({
-      error: "Input tidak valid.",
+      error: "Invalid request body.",
     });
     expect(mockUpsert).not.toHaveBeenCalled();
   });

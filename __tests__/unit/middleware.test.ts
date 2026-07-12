@@ -11,6 +11,14 @@ describe("middleware public API paths", () => {
     expect(isPublicApiPath("/api/cron/incident-monitor")).toBe(true);
     expect(isPublicApiPath("/api/cron/storage-check")).toBe(true);
   });
+
+  it("exposes only intended public read surfaces", () => {
+    expect(isPublicApiPath("/api/config/public")).toBe(true);
+    expect(isPublicApiPath("/api/manual-drives")).toBe(true);
+    expect(isPublicApiPath("/api/search")).toBe(true);
+    expect(isPublicApiPath("/api/tags")).toBe(false);
+    expect(isPublicApiPath("/api/admin/users")).toBe(false);
+  });
 });
 
 describe("middleware content security policy", () => {

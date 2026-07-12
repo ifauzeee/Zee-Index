@@ -9,6 +9,7 @@ import { authLimiter } from "@/lib/ratelimit";
 import { kv } from "@/lib/kv";
 import { REDIS_KEYS } from "@/lib/constants";
 import { getPublicAppConfig } from "@/lib/app-config";
+import { constantTimeEqual } from "@/lib/security";
 
 import type { ActivityDetails } from "@/lib/activityLogger";
 
@@ -30,23 +31,6 @@ async function setupTwoFactorForToken(email: string, token: any) {
     token.twoFactorRequired = true;
     token.sessionId = token.sessionId || crypto.randomUUID();
   }
-}
-
-function constantTimeEqual(a: string, b: string): boolean {
-  const encoder = new TextEncoder();
-  const encodedA = encoder.encode(a);
-  const encodedB = encoder.encode(b);
-
-  if (encodedA.length !== encodedB.length) {
-    return false;
-  }
-
-  let result = 0;
-  for (let i = 0; i < encodedA.length; i += 1) {
-    result |= encodedA[i] ^ encodedB[i];
-  }
-
-  return result === 0;
 }
 
 function generateGuestId(): string {
@@ -138,7 +122,7 @@ const authConfig: NextAuthConfig = {
           });
           logger.warn({ ip }, "[Auth] Rate limit exceeded");
           throw new Error(
-            "Terlalu banyak percobaan login. Silakan tunggu sebentar.",
+            "Too many login attempts. Please wait a moment and try again.",
           );
         }
 
