@@ -224,7 +224,14 @@ describe("app/api/share POST", () => {
     );
     expect(payload.token).toBe("signed-share-token");
     expect(payload.newShareLink.itemName).toBe("Demo File");
-    expect(mockShareLinkCreate).toHaveBeenCalled();
+    expect(mockShareLinkCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          createdBy: "admin@example.com",
+          itemName: "Demo File",
+        }),
+      }),
+    );
     expect(mockSendMail).toHaveBeenCalled();
   });
 

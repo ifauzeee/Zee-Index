@@ -224,6 +224,7 @@ export const POST = createAdminRoute(
           preventDownload: preventDownload ?? false,
           hasWatermark: hasWatermark ?? false,
           watermarkText: watermarkText || null,
+          createdBy: session.user?.email?.toLowerCase().trim() || null,
         },
       });
 

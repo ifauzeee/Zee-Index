@@ -12,6 +12,44 @@ jobs:
   check:
     name: Lint, Typecheck & Test
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: zee_index_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d zee_index_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/zee_index_test?schema=public
+      REDIS_URL: redis://localhost:6379
+      NEXTAUTH_SECRET: super_secret_mock_key_at_least_32_chars_long
+      NEXTAUTH_URL: http://localhost:3000
+      SHARE_SECRET_KEY: super_secret_share_key_at_least_32_chars
+      ADMIN_EMAILS: admin@example.com
+      ADMIN_PASSWORD: testpass123
+      GOOGLE_CLIENT_ID: mock_client_id
+      GOOGLE_CLIENT_SECRET: mock_client_secret
+      # Dummy token so middleware treats the app as configured (no real Drive calls in these e2e paths).
+      GOOGLE_REFRESH_TOKEN: dummy_refresh_token_for_ci
+      NEXT_PUBLIC_ROOT_FOLDER_ID: root-folder-id
+      NEXT_PUBLIC_ENABLE_LOCAL_STORAGE: "true"
+      SKIP_ENV_VALIDATION: "1"
     steps:
       - uses: actions/checkout@v4
 
@@ -29,6 +67,9 @@ jobs:
 
       - name: Generate Prisma Client
         run: pnpm prisma generate
+
+      - name: Apply database migrations
+        run: pnpm prisma migrate deploy
 
       - name: Lint
         run: pnpm lint
@@ -63,21 +104,8 @@ jobs:
         run: pnpm test:e2e --project=chromium
         env:
           CI: true
-          SKIP_ENV_VALIDATION: "1"
-          GOOGLE_CLIENT_ID: "mock_client_id"
-          GOOGLE_CLIENT_SECRET: "mock_client_secret"
-          NEXTAUTH_SECRET: "super_secret_mock_key_at_least_32_chars_long"
-          NEXTAUTH_URL: "http://localhost:3000"
-          KV_REST_API_URL: "https://mock.upstash.io"
-          KV_REST_API_TOKEN: "mock_token"
+          E2E_ADMIN_EMAIL: admin@example.com
+          E2E_ADMIN_PASSWORD: testpass123
 
       - name: Build
         run: pnpm build
-        env:
-          SKIP_ENV_VALIDATION: "1"
-          GOOGLE_CLIENT_ID: "mock_client_id"
-          GOOGLE_CLIENT_SECRET: "mock_client_secret"
-          NEXTAUTH_SECRET: "super_secret_mock_key_at_least_32_chars_long"
-          NEXTAUTH_URL: "http://localhost:3000"
-          KV_REST_API_URL: "https://mock.upstash.io"
-          KV_REST_API_TOKEN: "mock_token"
