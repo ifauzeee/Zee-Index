@@ -10,6 +10,7 @@ import {
 import { isProtected } from "@/lib/auth";
 import { validateShareToken } from "@/lib/auth";
 import { isAccessRestricted } from "@/lib/securityUtils";
+import { searchIndexedFiles } from "@/lib/search-index";
 import { jwtVerify } from "jose";
 
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
@@ -171,9 +172,40 @@ export const GET = createPublicRoute(
         }),
       );
 
-      return NextResponse.json({
-        files: filteredFiles.filter((f) => f !== null),
-      });
+      let merged = filteredFiles.filter((f) => f !== null) as DriveFile[];
+
+      // Merge durable Postgres index results (works even without Drive scope).
+      try {
+        const indexedFiles = await searchIndexedFiles({
+          query: sanitizedSearchTerm,
+          mimeType,
+          limit: 100,
+        });
+        const fromIndex: DriveFile[] = indexedFiles.map(
+          (f) =>
+            ({
+              id: f.id,
+              name: f.name,
+              mimeType: f.mimeType,
+              parents: [f.folderId],
+              modifiedTime: f.modifiedTime.toISOString(),
+              source: f.source,
+              hasThumbnail: f.mimeType.startsWith("image/"),
+              isFolder: f.mimeType === "application/vnd.google-apps.folder",
+            }) as DriveFile,
+        );
+        const seen = new Set(merged.map((f) => f.id));
+        for (const file of fromIndex) {
+          if (!seen.has(file.id)) {
+            seen.add(file.id);
+            merged.push(file);
+          }
+        }
+      } catch (err) {
+        logger.warn({ err }, "Postgres index search skipped");
+      }
+
+      return NextResponse.json({ files: merged });
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error

@@ -131,6 +131,22 @@ model ProtectedFolder {
   createdAt DateTime @default(now())
 }
 
+/// Durable search index for files (populated via reindex or on access).
+model FileIndex {
+  id          String   @id
+  name        String
+  mimeType    String
+  folderId    String
+  source      String
+  size        Int?
+  modifiedTime DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([name])
+  @@index([folderId])
+  @@index([mimeType])
+}
+
 model AdminConfig {
   key   String @id
   value String
