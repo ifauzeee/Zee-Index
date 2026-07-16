@@ -1,0 +1,41 @@
+# Lockfiles
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Build output
+.next
+out
+build
+dist
+
+# Coverage
+coverage
+
+# Generated files
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/swe-worker-*.js
+
+# Minified assets
+*.min.js
+*.min.css
+
+# Docs (auto-generated)
+CHANGELOG.md
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+
+# Environment
+.env
+.env.*
+
+# Tooling
+.omo
+
+# IDE
+.idea
+.vscode
