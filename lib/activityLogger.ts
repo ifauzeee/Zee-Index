@@ -4,6 +4,7 @@ import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { db } from "@/lib/db";
 import { publishActivityEvent } from "@/lib/events/pipeline";
+import { cleanupOldActivityLogs } from "@/lib/activity-cleanup";
 
 export type ActivityType =
   | "UPLOAD"
@@ -358,14 +359,11 @@ export async function logActivity<T extends ActivityType>(
 
     await publishActivityEvent(mappedLog);
 
-    const expirationTime = Date.now() - 60 * 60 * 24 * 90 * 1000;
-    db.activityLog
-      .deleteMany({
-        where: { timestamp: { lt: expirationTime } },
-      })
-      .catch((error: unknown) =>
-        logger.error({ err: error }, "Failed to clean old activity logs"),
-      );
+    // Sampling safety net: ~1% of writes trigger cleanup.
+    // Primary cleanup runs via the cron endpoint (api/cron/activity-cleanup).
+    if (Math.random() < 0.01) {
+      cleanupOldActivityLogs().catch(() => {});
+    }
 
     return mappedLog;
   } catch (error) {

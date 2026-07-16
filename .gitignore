@@ -53,6 +53,9 @@ lerna-debug.log*
 .cache
 .turbo
 .eslintcache
+
+# Tooling
+.omo/
 .stylelintcache
 .parcel-cache
 

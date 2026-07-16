@@ -119,6 +119,14 @@
               printf '\n'
               echo "[cron-monitor] Storage check cron failed with curl exit $${code}."
             fi
+            echo "[cron-monitor] Running activity log cleanup cron..."
+            if curl -fsS --connect-timeout 10 --max-time 60 -H "Authorization: Bearer $${CRON_SECRET}" http://zee-index:3000/api/cron/activity-cleanup; then
+              printf '\n'
+            else
+              code=$$?
+              printf '\n'
+              echo "[cron-monitor] Activity log cleanup cron failed with curl exit $${code}."
+            fi
           else
             echo "[cron-monitor] CRON_SECRET is empty. Skipping jobs."
           fi
