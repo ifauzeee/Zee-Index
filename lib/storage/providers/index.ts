@@ -4,6 +4,11 @@ import { WebDavStorageProvider } from "./webdav";
 
 let cached: StorageProvider | null | undefined;
 
+/** Reset the cached provider so the next call re-reads env vars. */
+export function invalidateActiveProvider(): void {
+  cached = undefined;
+}
+
 export function getActiveProvider(): StorageProvider | null {
   if (cached !== undefined) return cached;
   const provider = (process.env.STORAGE_PROVIDER || "google-drive").trim();

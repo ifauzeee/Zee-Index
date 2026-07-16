@@ -8,6 +8,7 @@ import {
   updateAppConfig,
 } from "@/lib/app-config";
 import { getNotificationChannelStatus } from "@/lib/notification";
+import { invalidateActiveProvider } from "@/lib/storage/providers";
 import { getStorageStatus } from "@/lib/storage/status";
 
 export const dynamic = "force-dynamic";
@@ -33,6 +34,9 @@ export const POST = createAdminRoute(
   async ({ body }) => {
     try {
       const updatedConfig = await updateAppConfig(body);
+
+      // Invalidate cached storage provider so env changes take effect
+      invalidateActiveProvider();
 
       return NextResponse.json({
         message: "Config updated",
