@@ -1186,5 +1186,18 @@
     "incorrect": "Kata sandi saat ini salah",
     "requiresLogin": "Silakan masuk untuk mengelola profil Anda",
     "signIn": "Masuk"
+  },
+  "ServerActions": {
+    "accessDenied": "Akses ditolak.",
+    "fileIdRequired": "fileId diperlukan.",
+    "addedToFavorites": "Ditambahkan ke favorit.",
+    "removedFromFavorites": "Dihapus dari favorit.",
+    "unauthorized": "Tidak diizinkan",
+    "invalidInput": "Input tidak valid",
+    "folderPinned": "Folder berhasil disematkan.",
+    "pinRemoved": "Pin folder dilepas.",
+    "folderIdRequired": "Folder ID diperlukan.",
+    "missingFileId": "FileId tidak ada",
+    "missingData": "Data tidak lengkap"
   }
 }

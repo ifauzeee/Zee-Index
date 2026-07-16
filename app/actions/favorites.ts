@@ -5,11 +5,13 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { DriveFile, getFileDetailsFromDrive } from "@/lib/drive";
 import { revalidateTag } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 export async function getFavorites() {
+  const t = await getTranslations("ServerActions");
   const session = await auth();
   if (!session?.user?.email) {
-    throw new Error("Akses ditolak.");
+    throw new Error(t("accessDenied"));
   }
 
   const userFavoritesKey = `user:${session.user.email}:favorites`;
@@ -60,35 +62,37 @@ export async function getFavorites() {
 }
 
 export async function addFavorite(fileId: string) {
+  const t = await getTranslations("ServerActions");
   const session = await auth();
   if (!session?.user?.email) {
-    throw new Error("Akses ditolak.");
+    throw new Error(t("accessDenied"));
   }
 
   if (!fileId) {
-    throw new Error("fileId diperlukan.");
+    throw new Error(t("fileIdRequired"));
   }
 
   const userFavoritesKey = `user:${session.user.email}:favorites`;
   await kv.sadd(userFavoritesKey, fileId);
   revalidateTag(`favorites`, "max");
 
-  return { success: true, message: "Ditambahkan ke favorit." };
+  return { success: true, message: t("addedToFavorites") };
 }
 
 export async function removeFavorite(fileId: string) {
+  const t = await getTranslations("ServerActions");
   const session = await auth();
   if (!session?.user?.email) {
-    throw new Error("Akses ditolak.");
+    throw new Error(t("accessDenied"));
   }
 
   if (!fileId) {
-    throw new Error("fileId diperlukan.");
+    throw new Error(t("fileIdRequired"));
   }
 
   const userFavoritesKey = `user:${session.user.email}:favorites`;
   await kv.srem(userFavoritesKey, fileId);
   revalidateTag(`favorites`, "max");
 
-  return { success: true, message: "Dihapus dari favorit." };
+  return { success: true, message: t("removedFromFavorites") };
 }

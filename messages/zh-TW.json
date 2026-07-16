@@ -1197,5 +1197,18 @@
     "incorrect": "目前密碼不正確",
     "requiresLogin": "請先登入以管理您的個人檔案",
     "signIn": "登入"
+  },
+  "ServerActions": {
+    "accessDenied": "拒絕訪問",
+    "fileIdRequired": "需要 fileId",
+    "addedToFavorites": "已加入收藏",
+    "removedFromFavorites": "已從收藏中移除",
+    "unauthorized": "未經授權",
+    "invalidInput": "輸入無效",
+    "folderPinned": "資料夾已成功固定",
+    "pinRemoved": "已移除固定資料夾",
+    "folderIdRequired": "需要資料夾 ID",
+    "missingFileId": "缺少 fileId",
+    "missingData": "缺少數據"
   }
 }

@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { getFileDetailsFromDrive, DriveFile } from "@/lib/drive";
 import { z } from "zod";
 import { revalidateTag } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 const PINNED_KEY = "zee-index:pinned-folders";
 
@@ -37,34 +38,36 @@ export async function getPinnedFolders() {
 }
 
 export async function addPin(folderId: string) {
+  const t = await getTranslations("ServerActions");
   const session = await auth();
   if (session?.user?.role !== "ADMIN") {
-    throw new Error("Unauthorized");
+    throw new Error(t("unauthorized"));
   }
 
   const validation = pinSchema.safeParse({ folderId });
   if (!validation.success) {
-    throw new Error("Invalid input");
+    throw new Error(t("invalidInput"));
   }
 
   await kv.sadd(PINNED_KEY, validation.data.folderId);
   revalidateTag("pinned", "max");
 
-  return { success: true, message: "Folder berhasil disematkan." };
+  return { success: true, message: t("folderPinned") };
 }
 
 export async function removePin(folderId: string) {
+  const t = await getTranslations("ServerActions");
   const session = await auth();
   if (session?.user?.role !== "ADMIN") {
-    throw new Error("Unauthorized");
+    throw new Error(t("unauthorized"));
   }
 
   if (!folderId) {
-    throw new Error("Folder ID required");
+    throw new Error(t("folderIdRequired"));
   }
 
   await kv.srem(PINNED_KEY, folderId);
   revalidateTag("pinned", "max");
 
-  return { success: true, message: "Pin folder dilepas." };
+  return { success: true, message: t("pinRemoved") };
 }

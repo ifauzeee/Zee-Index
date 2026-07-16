@@ -1186,5 +1186,18 @@
     "incorrect": "Current password is incorrect",
     "requiresLogin": "Please sign in to manage your profile",
     "signIn": "Sign In"
+  },
+  "ServerActions": {
+    "accessDenied": "Access denied.",
+    "fileIdRequired": "fileId is required.",
+    "addedToFavorites": "Added to favorites.",
+    "removedFromFavorites": "Removed from favorites.",
+    "unauthorized": "Unauthorized",
+    "invalidInput": "Invalid input",
+    "folderPinned": "Folder pinned successfully.",
+    "pinRemoved": "Pin folder removed.",
+    "folderIdRequired": "Folder ID is required.",
+    "missingFileId": "Missing fileId",
+    "missingData": "Missing data"
   }
 }
