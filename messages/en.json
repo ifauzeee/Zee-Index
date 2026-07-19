@@ -989,13 +989,19 @@
     "clearConfirm": "Are you sure you want to clear all audit logs?",
     "cleared": "Audit logs cleared",
     "clearFailed": "Failed to clear logs",
+    "searchPlaceholder": "Search by email, action, or file...",
+    "noResults": "No results",
+    "noResultsMessage": "No logs match your search criteria.",
     "time": "Time",
     "user": "User",
     "action": "Action",
     "fileFolder": "File / Folder",
     "ipDevice": "IP & Device",
     "loading": "Loading logs...",
-    "empty": "No logs found."
+    "empty": "No logs found.",
+    "prev": "Prev",
+    "next": "Next",
+    "pageInfo": "Page {current} of {total}"
   },
   "AdminActivityLogPage": {
     "accessDenied": "Access Denied",

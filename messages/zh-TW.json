@@ -1000,13 +1000,19 @@
     "clearConfirm": "您確定要清除所有稽核紀錄嗎？",
     "cleared": "稽核紀錄已清除",
     "clearFailed": "清除紀錄失敗",
+    "searchPlaceholder": "搜尋電子郵件、動作或檔案...",
+    "noResults": "無結果",
+    "noResultsMessage": "沒有符合搜尋條件的紀錄。",
     "time": "時間",
     "user": "使用者",
     "action": "動作",
     "fileFolder": "檔案 / 資料夾",
     "ipDevice": "IP 與裝置",
     "loading": "正在載入紀錄...",
-    "empty": "找不到紀錄。"
+    "empty": "找不到紀錄。",
+    "prev": "上一頁",
+    "next": "下一頁",
+    "pageInfo": "第 {current} 頁，共 {total} 頁"
   },
   "AdminActivityLogPage": {
     "accessDenied": "存取遭拒",

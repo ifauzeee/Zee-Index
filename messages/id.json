@@ -989,13 +989,19 @@
     "clearConfirm": "Yakin ingin menghapus semua log audit?",
     "cleared": "Log audit berhasil dihapus",
     "clearFailed": "Gagal menghapus log",
+    "searchPlaceholder": "Cari berdasarkan email, aksi, atau file...",
+    "noResults": "Tidak ada hasil",
+    "noResultsMessage": "Tidak ada log yang cocok dengan pencarian Anda.",
     "time": "Waktu",
     "user": "Pengguna",
     "action": "Aksi",
     "fileFolder": "File / Folder",
     "ipDevice": "IP & Perangkat",
     "loading": "Memuat log...",
-    "empty": "Tidak ada log."
+    "empty": "Tidak ada log.",
+    "prev": "Sebelumnya",
+    "next": "Berikutnya",
+    "pageInfo": "Halaman {current} dari {total}"
   },
   "AdminActivityLogPage": {
     "accessDenied": "Akses Ditolak",
