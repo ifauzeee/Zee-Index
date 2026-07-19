@@ -1179,6 +1179,11 @@
   },
   "ProfilePage": {
     "title": "My Profile",
+    "profileInfo": "Profile Information",
+    "details": "Account Details",
+    "email": "Email",
+    "role": "Role",
+    "passwordSecurity": "Password & Security",
     "currentPassword": "Current Password",
     "newPassword": "New Password",
     "submit": "Update Password",

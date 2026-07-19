@@ -1190,6 +1190,11 @@
   },
   "ProfilePage": {
     "title": "我的個人檔案",
+    "profileInfo": "個人資訊",
+    "details": "帳戶詳細資料",
+    "email": "電子郵件",
+    "role": "角色",
+    "passwordSecurity": "密碼與安全",
     "currentPassword": "目前密碼",
     "newPassword": "新密碼",
     "submit": "更新密碼",

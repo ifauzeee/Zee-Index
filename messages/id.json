@@ -1179,6 +1179,11 @@
   },
   "ProfilePage": {
     "title": "Profil Saya",
+    "profileInfo": "Informasi Profil",
+    "details": "Detail Akun",
+    "email": "Email",
+    "role": "Peran",
+    "passwordSecurity": "Kata Sandi & Keamanan",
     "currentPassword": "Kata Sandi Saat Ini",
     "newPassword": "Kata Sandi Baru",
     "submit": "Perbarui Kata Sandi",
