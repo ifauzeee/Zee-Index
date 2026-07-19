@@ -258,7 +258,9 @@
     "share": "Bagikan",
     "download": "Unduh",
     "viewDetails": "Lihat Detail",
-    "moreOptions": "Opsi lainnya"
+    "moreOptions": "Opsi lainnya",
+    "addToFavorites": "Tambah ke Favorit",
+    "removeFromFavorites": "Hapus dari Favorit"
   },
   "FileBrowserModals": {
     "dropToUpload": "Lepas untuk Mengunggah",

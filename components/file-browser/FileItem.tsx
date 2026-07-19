@@ -32,7 +32,7 @@ interface FileItemProps {
   onShare: (e: FileBrowserActionEvent) => void;
   onShowDetails: (e: FileBrowserActionEvent) => void;
   onDownload: (e: FileBrowserActionEvent) => void;
-  onToggleFavorite?: (e: FileBrowserActionEvent) => void;
+  onToggleFavorite?: (e: FileBrowserActionEvent, file: DriveFile) => void;
   isAdmin: boolean;
   onDragStart: (e: React.DragEvent) => void;
   onFileDrop: (e: React.DragEvent, targetFolder: DriveFile) => void;
@@ -56,6 +56,7 @@ function FileItem({
   onShare,
   onShowDetails,
   onDownload,
+  onToggleFavorite,
   isAdmin,
   onDragStart,
   onFileDrop,
@@ -472,6 +473,33 @@ function FileItem({
                   <Download size={16} />
                 </button>
               )}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onToggleFavorite?.(createActionEvent(e), file);
+                }}
+                title={
+                  file.isFavorite
+                    ? t("removeFromFavorites")
+                    : t("addToFavorites")
+                }
+                aria-label={
+                  file.isFavorite
+                    ? t("removeFromFavorites")
+                    : t("addToFavorites")
+                }
+                className="p-2 rounded-full hover:bg-muted select-none"
+              >
+                <Star
+                  size={16}
+                  className={
+                    file.isFavorite
+                      ? "text-yellow-400 fill-yellow-400"
+                      : "text-muted-foreground"
+                  }
+                />
+              </button>
               <button
                 onClick={(e) => {
                   e.preventDefault();

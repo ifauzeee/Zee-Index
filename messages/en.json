@@ -258,7 +258,9 @@
     "share": "Share",
     "download": "Download",
     "viewDetails": "View Details",
-    "moreOptions": "More options"
+    "moreOptions": "More options",
+    "addToFavorites": "Add to Favorites",
+    "removeFromFavorites": "Remove from Favorites"
   },
   "FileBrowserModals": {
     "dropToUpload": "Drop to Upload",

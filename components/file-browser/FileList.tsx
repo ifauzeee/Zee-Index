@@ -106,7 +106,7 @@ export default function FileList({
     file: BrowserFile,
   ) => {
     e.stopPropagation();
-    toggleFavorite(file.id, true);
+    toggleFavorite(file.id, !!file.isFavorite);
   };
 
   const uploadGhostFiles = useMemo(() => {
