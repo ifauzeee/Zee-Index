@@ -27,7 +27,7 @@ export default function SetupPage() {
     const locale = window.location.pathname.match(/^\/(en|id)(\/|$)/)?.[1];
     return locale ? `/${locale}` : "/";
   };
-  const restartCommand = "docker compose restart zee-index";
+  const restartCommand = "docker compose up -d --build";
 
   useEffect(() => {
     if (window.location.search.includes("code=") && step === 1) {

@@ -542,10 +542,10 @@
     "nextAuthOptionalDesc": "若你使用 Google 登入，請填入 Google Cloud Console 的 OAuth Client ID 與 Secret。",
     "fillServiceAccountFields": "請輸入服務帳號電子郵件、私鑰與根資料夾 ID。",
     "copied": "已複製！",
-    "restartRequiredDesc": "Google Drive 權杖已儲存至 .env。請先重新啟動 Docker 服務，讓應用程式載入新的環境變數，再返回首頁。",
+    "restartRequiredDesc": "Google Drive 權杖已儲存至 .env。請先重建 Docker 映像，讓應用程式載入新的環境變數，再返回首頁。",
     "restartCommandLabel": "在專案終端機執行",
-    "restartCommandHint": "重新啟動完成且容器恢復健康後，請按下方的按鈕。若未重新啟動，首頁仍會讀取舊權杖並持續顯示 INVALID_GRANT。",
-    "restartDone": "我已重新啟動",
+    "restartCommandHint": "重建完成且容器恢復健康後，請按下方的按鈕。若未重建，首頁仍會讀取舊權杖並持續顯示 INVALID_GRANT。",
+    "restartDone": "我已重建完成",
     "createdBy": "建立者："
   },
   "DetailsPanel": {
