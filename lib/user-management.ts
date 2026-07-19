@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import { kv } from "@/lib/kv";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { constantTimeEqual } from "@/lib/security";
 
 export type UserRole = "ADMIN" | "EDITOR" | "USER";
 
@@ -23,19 +24,54 @@ export async function setUserPassword(
   await kv.set(`${USER_PASSWORD_PREFIX}${normalized}`, hash);
 }
 
+function normalizeAdminEmails(): string[] {
+  return (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((e) =>
+      e
+        .trim()
+        .toLowerCase()
+        .replace(/^["']|["']$/g, ""),
+    )
+    .filter(Boolean);
+}
+
 export async function verifyUserPassword(
   email: string,
   password: string,
 ): Promise<boolean> {
   const normalized = email.toLowerCase().trim();
+
+  // 1. Check Redis-stored password (for users who set one via profile)
   const hash = await kv.get<string>(`${USER_PASSWORD_PREFIX}${normalized}`);
-  if (!hash) return false;
-  try {
-    return await bcrypt.compare(password, hash);
-  } catch (err) {
-    logger.error({ err, email: normalized }, "Failed to verify user password");
-    return false;
+  if (hash) {
+    try {
+      if (await bcrypt.compare(password, hash)) return true;
+    } catch (err) {
+      logger.error(
+        { err, email: normalized },
+        "Failed to verify user password",
+      );
+    }
   }
+
+  // 2. Check env var passwords (for admin users from ADMIN_PASSWORD/ADMIN_PASSWORD_HASH)
+  if (normalizeAdminEmails().includes(normalized)) {
+    const envPassHash = (process.env.ADMIN_PASSWORD_HASH || "")
+      .trim()
+      .replace(/^["']|["']$/g, "");
+    if (envPassHash) {
+      return bcrypt.compare(password, envPassHash);
+    }
+    const envPass = (process.env.ADMIN_PASSWORD || "")
+      .trim()
+      .replace(/^["']|["']$/g, "");
+    if (envPass) {
+      return constantTimeEqual(password, envPass);
+    }
+  }
+
+  return false;
 }
 
 export async function hasUserPassword(email: string): Promise<boolean> {
