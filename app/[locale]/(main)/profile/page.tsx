@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAppStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import {
@@ -16,6 +16,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useSession } from "next-auth/react";
+import Loading from "@/components/common/Loading";
 import EmptyState from "@/components/file-browser/EmptyState";
 
 const container = {
@@ -32,7 +34,8 @@ const item = {
 };
 
 export default function ProfilePage() {
-  const { user } = useAppStore();
+  const { user, fetchUser } = useAppStore();
+  const { status } = useSession();
   const t = useTranslations("ProfilePage");
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -43,7 +46,17 @@ export default function ProfilePage() {
     text: string;
   } | null>(null);
 
-  if (!user || user.isGuest) {
+  useEffect(() => {
+    if (status === "authenticated" && !user) {
+      fetchUser();
+    }
+  }, [status, fetchUser, user]);
+
+  if (status === "loading" || (status === "authenticated" && !user)) {
+    return <Loading />;
+  }
+
+  if (!user || user.isGuest || status === "unauthenticated") {
     return (
       <motion.div
         initial={{ opacity: 0 }}
