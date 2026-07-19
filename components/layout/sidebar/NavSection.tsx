@@ -10,6 +10,7 @@ import {
   Loader2,
   Server,
   User,
+  LayoutDashboard,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -51,6 +52,25 @@ export default function NavSection({ t }: NavSectionProps) {
         )}{" "}
         {t("home")}
       </button>
+
+      {!user?.isGuest && (
+        <button
+          onClick={() => handleNav("dashboard", "/dashboard")}
+          id="sidebar-nav-dashboard"
+          className={cn(
+            "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
+            pathname.includes("/dashboard") &&
+              "bg-accent font-medium text-primary",
+          )}
+        >
+          {navigatingId === "dashboard" ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : (
+            <LayoutDashboard size={16} />
+          )}{" "}
+          {t("dashboard")}
+        </button>
+      )}
 
       {/* Local Storage Folder */}
       {process.env.NEXT_PUBLIC_ENABLE_LOCAL_STORAGE === "true" && (

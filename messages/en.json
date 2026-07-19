@@ -90,7 +90,8 @@
     "localCloud": "Local Storage",
     "googleAuthError": "Google Drive authentication failed. Please check your credentials or re-authorize.",
     "close": "Close Sidebar",
-    "profile": "Profile"
+    "profile": "Profile",
+    "dashboard": "Dashboard"
   },
   "Header": {
     "toggleSidebar": "Toggle Sidebar",
@@ -1186,6 +1187,29 @@
     "incorrect": "Current password is incorrect",
     "requiresLogin": "Please sign in to manage your profile",
     "signIn": "Sign In"
+  },
+  "DashboardPage": {
+    "title": "Dashboard",
+    "welcome": "Welcome back, {name}",
+    "storageUsage": "Storage Usage",
+    "downloads": "Downloads",
+    "favorites": "Favorites",
+    "activities": "Activities",
+    "role": "Role",
+    "recentActivity": "Recent Activity",
+    "viewAll": "View All",
+    "noActivityTitle": "No Recent Activity",
+    "noActivityMessage": "Your recent actions will appear here.",
+    "noFavoritesTitle": "No Favorites Yet",
+    "noFavoritesMessage": "Star files to add them to favorites.",
+    "folder": "Folder",
+    "file": "File",
+    "quickLinks": "Quick Links",
+    "home": "Home",
+    "profile": "Profile",
+    "storage": "Storage",
+    "requireAccountTitle": "Sign In Required",
+    "requireAccountMessage": "Please sign in to view your dashboard."
   },
   "ServerActions": {
     "accessDenied": "Access denied.",

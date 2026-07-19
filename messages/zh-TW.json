@@ -90,7 +90,8 @@
     "localCloud": "本機儲存空間",
     "googleAuthError": "Google Drive 驗證失敗。請檢查憑證或重新授權。",
     "close": "關閉側邊欄",
-    "profile": "個人檔案"
+    "profile": "個人檔案",
+    "dashboard": "儀表板"
   },
   "Header": {
     "switchTheme": "切換主題",
@@ -1197,6 +1198,29 @@
     "incorrect": "目前密碼不正確",
     "requiresLogin": "請先登入以管理您的個人檔案",
     "signIn": "登入"
+  },
+  "DashboardPage": {
+    "title": "儀表板",
+    "welcome": "歡迎回來, {name}",
+    "storageUsage": "儲存空間使用量",
+    "downloads": "下載",
+    "favorites": "收藏",
+    "activities": "活動",
+    "role": "角色",
+    "recentActivity": "最近的活動",
+    "viewAll": "檢視全部",
+    "noActivityTitle": "尚無活動",
+    "noActivityMessage": "您最近的動作將顯示在這裡。",
+    "noFavoritesTitle": "尚無收藏",
+    "noFavoritesMessage": "為檔案加上星號以加入收藏。",
+    "folder": "資料夾",
+    "file": "檔案",
+    "quickLinks": "快速連結",
+    "home": "首頁",
+    "profile": "個人檔案",
+    "storage": "儲存空間",
+    "requireAccountTitle": "需要登入",
+    "requireAccountMessage": "請登入以檢視您的儀表板。"
   },
   "ServerActions": {
     "accessDenied": "拒絕訪問",

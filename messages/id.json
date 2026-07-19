@@ -90,7 +90,8 @@
     "localCloud": "Penyimpanan Lokal",
     "googleAuthError": "Autentikasi Google Drive gagal. Silakan periksa kredensial atau otorisasi ulang.",
     "close": "Tutup Sidebar",
-    "profile": "Profil"
+    "profile": "Profil",
+    "dashboard": "Dasbor"
   },
   "Header": {
     "toggleSidebar": "Buka/Tutup Sidebar",
@@ -1186,6 +1187,29 @@
     "incorrect": "Kata sandi saat ini salah",
     "requiresLogin": "Silakan masuk untuk mengelola profil Anda",
     "signIn": "Masuk"
+  },
+  "DashboardPage": {
+    "title": "Dasbor",
+    "welcome": "Selamat datang kembali, {name}",
+    "storageUsage": "Penggunaan Penyimpanan",
+    "downloads": "Unduhan",
+    "favorites": "Favorit",
+    "activities": "Aktivitas",
+    "role": "Peran",
+    "recentActivity": "Aktivitas Terbaru",
+    "viewAll": "Lihat Semua",
+    "noActivityTitle": "Belum Ada Aktivitas",
+    "noActivityMessage": "Aksi terbaru Anda akan muncul di sini.",
+    "noFavoritesTitle": "Belum Ada Favorit",
+    "noFavoritesMessage": "Bintangi file untuk menambahkannya ke favorit.",
+    "folder": "Folder",
+    "file": "Berkas",
+    "quickLinks": "Tautan Cepat",
+    "home": "Beranda",
+    "profile": "Profil",
+    "storage": "Penyimpanan",
+    "requireAccountTitle": "Butuh Masuk",
+    "requireAccountMessage": "Silakan masuk untuk melihat dasbor Anda."
   },
   "ServerActions": {
     "accessDenied": "Akses ditolak.",
