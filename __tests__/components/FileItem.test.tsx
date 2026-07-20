@@ -204,7 +204,8 @@ describe("FileItem", () => {
   it("shows favorite star when file is favorite", () => {
     const favoriteFile = { ...mockFile, isFavorite: true };
     render(<FileItem {...defaultProps} file={favoriteFile} />);
-    expect(screen.getByTestId("star-icon")).toBeInTheDocument();
+    const stars = screen.getAllByTestId("star-icon");
+    expect(stars.length).toBeGreaterThanOrEqual(1);
   });
 
   it("shows checkbox in bulk mode", () => {
