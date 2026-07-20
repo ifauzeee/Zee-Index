@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://github.com/ifauzeee/Zee-Index">
-    <img src="/Zee-Index-Logo.png" alt="Zee-Index Logo" width="200" height="200">
+    <img src="https://raw.githubusercontent.com/ifauzeee/Zee-Index/main/public/Zee-Index-Logo.png" alt="Zee-Index Logo" width="200" height="200">
   </a>
 
   <h1 align="center">⚡ Zee-Index</h1>
