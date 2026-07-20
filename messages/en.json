@@ -30,7 +30,9 @@
     "dark": "Dark",
     "skipToContent": "Skip to content",
     "createdBy": "Created by",
-    "close": "Close"
+    "close": "Close",
+    "dropToUpload": "Drop files to upload",
+    "toThisFolder": "to this folder"
   },
   "AuthForm": {
     "accessRestricted": "Access Restricted",
@@ -50,7 +52,8 @@
     "accessRequestSuccess": "Access request sent successfully to Admin.",
     "requestFail": "Failed to send request.",
     "accessGranted": "Access granted! Loading folder...",
-    "securityEngine": "Zee Index Security Engine v2.0"
+    "securityEngine": "Zee Index Security Engine v2.0",
+    "loginFailedText": "Invalid credentials"
   },
   "Search": {
     "searchAll": "Search all files...",
@@ -127,7 +130,8 @@
     "delete": "Delete",
     "cancel": "Cancel",
     "openInNewTab": "Open in New Tab",
-    "download": "Download"
+    "download": "Download",
+    "versionHistory": "Version History"
   },
   "DeleteConfirm": {
     "title": "Delete Item",
@@ -415,6 +419,7 @@
     "adminList": "Admin List",
     "removeAdminConfirm": "Are you sure you want to remove {email} from the admin list?",
     "removeAdminTitle": "Remove Admin",
+    "removeEditorTitle": "Remove Editor",
     "revokeConfirm": "This action will permanently revoke the link. Users will no longer be able to access it.",
     "revokeTitle": "Delete Link?",
     "revokeButton": "Yes, Delete",
@@ -457,6 +462,7 @@
     "back": "Back",
     "inviteUser": "Invite User",
     "inviteDesc": "Create a user account with a role and optional initial password.",
+    "inviteEmailPlaceholder": "User Email",
     "role": "Role",
     "invitePasswordPlaceholder": "Initial password (optional, min 6 chars)",
     "inviteButton": "Invite",
@@ -605,7 +611,10 @@
     "customWatermarkPlaceholder": "Custom Watermark (optional)",
     "maxViewsDownloads": "Max views/downloads",
     "durationSettings": "Duration Settings",
-    "confirmSettings": "Confirm all settings before generating the public link."
+    "confirmSettings": "Confirm all settings before generating the public link.",
+    "cancel": "Cancel",
+    "creating": "Creating...",
+    "expiresIn": "Expires in"
   },
   "NotificationCenter": {
     "title": "Notifications",
@@ -701,6 +710,7 @@
     "overwriteTitle": "Confirm Overwrite",
     "yesOverwrite": "Yes, Overwrite",
     "confirmDelete": "Delete this drive shortcut from Database?",
+    "delete": "Delete",
     "deleteTitle": "Confirm Delete",
     "deleted": "Deleted.",
     "deleteFailed": "Failed to delete.",
@@ -797,7 +807,8 @@
     "notAvailable": "Preview not available",
     "download": "Download File",
     "libraryError": "EpubJS Library not loaded.",
-    "preview": "Preview"
+    "preview": "Preview",
+    "unknownError": "An unknown error occurred"
   },
   "FileCard": {
     "info": "Info",

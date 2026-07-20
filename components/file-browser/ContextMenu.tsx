@@ -186,7 +186,7 @@ export default function ContextMenu({
         <MenuItem
           onClick={onShowHistory}
           icon={History}
-          label={t("versionHistory") || "Version History"}
+          label={t("versionHistory")}
         />
       )}
 

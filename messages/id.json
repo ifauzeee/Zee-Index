@@ -30,7 +30,9 @@
     "dark": "Gelap",
     "skipToContent": "Lompat ke konten utama",
     "createdBy": "Dibuat oleh",
-    "close": "Tutup"
+    "close": "Tutup",
+    "dropToUpload": "Jatuhkan file untuk mengunggah",
+    "toThisFolder": "ke folder ini"
   },
   "AuthForm": {
     "accessRestricted": "Akses Terbatas",
@@ -50,7 +52,8 @@
     "accessRequestSuccess": "Permintaan akses berhasil dikirim ke Admin.",
     "requestFail": "Gagal mengirim permintaan.",
     "accessGranted": "Akses diberikan! Memuat folder...",
-    "securityEngine": "Zee Index Security Engine v2.0"
+    "securityEngine": "Zee Index Security Engine v2.0",
+    "loginFailedText": "Kredensial salah"
   },
   "Search": {
     "searchAll": "Cari semua file...",
@@ -127,7 +130,8 @@
     "delete": "Hapus",
     "cancel": "Batal",
     "openInNewTab": "Buka di Tab Baru",
-    "download": "Unduh File"
+    "download": "Unduh File",
+    "versionHistory": "Riwayat Versi"
   },
   "DeleteConfirm": {
     "title": "Hapus Item",
@@ -415,6 +419,7 @@
     "adminList": "Daftar Admin",
     "removeAdminConfirm": "Apakah Anda yakin ingin menghapus {email} dari daftar admin?",
     "removeAdminTitle": "Hapus Admin",
+    "removeEditorTitle": "Hapus Editor",
     "revokeConfirm": "Tindakan ini akan mencabut tautan secara permanen. Pengguna tidak akan dapat mengaksesnya lagi.",
     "revokeTitle": "Hapus Tautan?",
     "revokeButton": "Ya, Hapus",
@@ -457,6 +462,7 @@
     "back": "Kembali",
     "inviteUser": "Undang Pengguna",
     "inviteDesc": "Buat akun pengguna dengan peran dan kata sandi awal opsional.",
+    "inviteEmailPlaceholder": "Email Pengguna",
     "role": "Peran",
     "invitePasswordPlaceholder": "Kata sandi awal (opsional, min 6 karakter)",
     "inviteButton": "Undang",
@@ -605,7 +611,10 @@
     "customWatermarkPlaceholder": "Watermark kustom (opsional)",
     "maxViewsDownloads": "Maks. tayangan/unduhan",
     "durationSettings": "Pengaturan Durasi",
-    "confirmSettings": "Pastikan semua pengaturan sudah benar sebelum membuat tautan publik."
+    "confirmSettings": "Pastikan semua pengaturan sudah benar sebelum membuat tautan publik.",
+    "cancel": "Batal",
+    "creating": "Membuat...",
+    "expiresIn": "Kedaluwarsa dalam"
   },
   "NotificationCenter": {
     "title": "Notifikasi",
@@ -701,6 +710,7 @@
     "overwriteTitle": "Konfirmasi Overwrite",
     "yesOverwrite": "Ya, Timpa",
     "confirmDelete": "Hapus shortcut drive ini dari Database?",
+    "delete": "Hapus",
     "deleteTitle": "Konfirmasi Hapus",
     "deleted": "Dihapus.",
     "deleteFailed": "Gagal menghapus.",
@@ -797,7 +807,8 @@
     "notAvailable": "Pratinjau tidak tersedia",
     "download": "Unduh File",
     "libraryError": "Library EpubJS belum dimuat.",
-    "preview": "Pratinjau"
+    "preview": "Pratinjau",
+    "unknownError": "Terjadi kesalahan yang tidak diketahui"
   },
   "FileCard": {
     "info": "Info",

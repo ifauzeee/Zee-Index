@@ -80,7 +80,7 @@ export default function AdminUsersTab() {
       await confirm(
         t("removeEditorConfirm", { email }) || `Remove ${email} from Editors?`,
         {
-          title: t("removeEditorTitle") || "Remove Editor",
+          title: t("removeEditorTitle"),
           variant: "destructive",
         },
       )

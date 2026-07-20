@@ -1,16 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Share2, X, Copy } from "lucide-react";
+import { Share2, X, Copy, Clock, Zap } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import type { DriveFile } from "@/lib/drive";
 import { useTranslations } from "next-intl";
-import {
-  ShareSidebar,
-  SecurityPolicies,
-  DurationSettings,
-} from "./share/ShareModalContent";
+import { cn } from "@/lib/utils";
+import { SecurityPolicies, DurationSettings } from "./share/ShareModalContent";
 
 interface ShareButtonProps {
   path?: string;
@@ -21,18 +18,6 @@ interface ShareButtonProps {
 }
 
 type TimeUnit = "s" | "m" | "h" | "d";
-
-const modalVariants = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: { opacity: 1, scale: 1 },
-  exit: { opacity: 0, scale: 0.95 },
-};
-
-const overlayVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1 },
-  exit: { opacity: 0 },
-};
 
 export default function ShareButton({
   path,
@@ -55,6 +40,7 @@ export default function ShareButton({
   const [maxUses, setMaxUses] = useState<string | number>(1);
   const [directDownload, setDirectDownload] = useState(false);
   const [activeTab, setActiveTab] = useState<"timed" | "session">("timed");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const isOpen = controlledIsOpen ?? internalIsOpen;
 
@@ -82,6 +68,7 @@ export default function ShareButton({
   };
 
   const generateLink = async (type: "timed" | "session") => {
+    setIsGenerating(true);
     try {
       const durationValue =
         typeof customDuration === "string"
@@ -133,6 +120,8 @@ export default function ShareButton({
       handleClose();
     } catch (error) {
       addToast({ message: (error as Error).message, type: "error" });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -144,90 +133,119 @@ export default function ShareButton({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6"
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-          variants={overlayVariants}
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           onClick={handleClose}
         >
           <motion.div
-            className="relative w-full max-w-4xl bg-background/95 border border-border/50 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-auto max-h-[90vh]"
-            variants={modalVariants}
+            className="relative w-full max-w-lg bg-background rounded-lg shadow-xl"
+            initial={{ scale: 0.95, y: 10 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.95, y: 10 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <ShareSidebar
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              itemName={itemName}
-              itemCount={items?.length}
-              t={t}
-            />
-
-            <div className="flex-1 flex flex-col h-full max-h-[70vh] md:max-h-none overflow-y-auto scrollbar-hide">
-              <div className="p-6 sm:p-8 space-y-8 flex-grow">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h2 className="text-2xl font-bold tracking-tight">
-                      {activeTab === "timed"
-                        ? t("timedLink")
-                        : t("sessionLink")}
-                    </h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {activeTab === "timed"
-                        ? t("timedLinkDesc")
-                        : t("sessionLinkDesc")}
-                    </p>
-                  </div>
-                  <button
-                    onClick={handleClose}
-                    className="p-2 hover:bg-accent rounded-full transition-colors"
-                  >
-                    <X size={20} className="text-muted-foreground" />
-                  </button>
-                </div>
-
-                {activeTab === "timed" && (
-                  <DurationSettings
-                    customDuration={customDuration}
-                    setCustomDuration={setCustomDuration}
-                    customUnit={customUnit}
-                    setCustomUnit={setCustomUnit}
-                    t={t}
-                  />
-                )}
-
-                <SecurityPolicies
-                  loginRequired={loginRequired}
-                  setLoginRequired={setLoginRequired}
-                  preventDownload={preventDownload}
-                  setPreventDownload={setPreventDownload}
-                  directDownload={directDownload}
-                  setDirectDownload={setDirectDownload}
-                  hasWatermark={hasWatermark}
-                  setHasWatermark={setHasWatermark}
-                  watermarkText={watermarkText}
-                  setWatermarkText={setWatermarkText}
-                  useMaxUses={useMaxUses}
-                  setUseMaxUses={setUseMaxUses}
-                  maxUses={maxUses}
-                  setMaxUses={setMaxUses}
-                  t={t}
-                />
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-2">
+              <div>
+                <h3 className="text-lg font-semibold">{t("share")}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {itemName ||
+                    (items?.length
+                      ? t("shareCollection", { count: items.length })
+                      : "")}
+                </p>
               </div>
+              <button
+                onClick={handleClose}
+                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-              <div className="p-6 sm:p-8 bg-accent/20 border-t border-border/50 flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <div className="text-[11px] text-muted-foreground text-center sm:text-left">
-                  {t("confirmSettings")}
-                </div>
+            {/* Tab picker */}
+            <div className="px-6 py-3">
+              <div className="flex bg-accent rounded-lg p-0.5">
                 <button
-                  onClick={() => generateLink(activeTab)}
-                  className="w-full sm:w-auto min-w-[200px] flex items-center justify-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                  onClick={() => setActiveTab("timed")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-md transition-all",
+                    activeTab === "timed"
+                      ? "bg-background shadow-sm font-medium text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
                 >
-                  <Copy size={20} />
-                  {activeTab === "timed" ? t("copyTimed") : t("copySession")}
+                  <Clock size={14} />
+                  {t("timedLink")}
+                </button>
+                <button
+                  onClick={() => setActiveTab("session")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-md transition-all",
+                    activeTab === "session"
+                      ? "bg-background shadow-sm font-medium text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <Zap size={14} />
+                  {t("sessionLink")}
                 </button>
               </div>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 pb-4 space-y-5">
+              {activeTab === "timed" && (
+                <DurationSettings
+                  customDuration={customDuration}
+                  setCustomDuration={setCustomDuration}
+                  customUnit={customUnit}
+                  setCustomUnit={setCustomUnit}
+                  t={t}
+                />
+              )}
+
+              <SecurityPolicies
+                loginRequired={loginRequired}
+                setLoginRequired={setLoginRequired}
+                preventDownload={preventDownload}
+                setPreventDownload={setPreventDownload}
+                directDownload={directDownload}
+                setDirectDownload={setDirectDownload}
+                hasWatermark={hasWatermark}
+                setHasWatermark={setHasWatermark}
+                watermarkText={watermarkText}
+                setWatermarkText={setWatermarkText}
+                useMaxUses={useMaxUses}
+                setUseMaxUses={setUseMaxUses}
+                maxUses={maxUses}
+                setMaxUses={setMaxUses}
+                t={t}
+              />
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border/50">
+              <button
+                onClick={handleClose}
+                className="px-4 py-2 text-sm rounded-md hover:bg-accent transition-colors text-muted-foreground"
+              >
+                {t("cancel")}
+              </button>
+              <button
+                onClick={() => generateLink(activeTab)}
+                disabled={isGenerating}
+                className="flex items-center gap-2 px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                <Copy size={15} />
+                {isGenerating
+                  ? t("creating")
+                  : activeTab === "timed"
+                    ? t("copyTimed")
+                    : t("copySession")}
+              </button>
             </div>
           </motion.div>
         </motion.div>
