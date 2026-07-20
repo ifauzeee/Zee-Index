@@ -106,6 +106,7 @@ model ShareLink {
   preventDownload Boolean  @default(false)
   hasWatermark    Boolean  @default(false)
   watermarkText   String?
+  directDownload  Boolean  @default(false)
 
   @@index([expiresAt])
   @@index([createdAt])

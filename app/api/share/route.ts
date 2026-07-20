@@ -17,6 +17,11 @@ import {
 import { REDIS_KEYS } from "@/lib/constants";
 import { getTranslations } from "next-intl/server";
 
+function extractFileIdFromPath(path: string): string | null {
+  const match = path.match(/\/file\/([^/]+)/);
+  return match ? match[1] : null;
+}
+
 type ShareTranslationKey =
   | "securityPolicySensitive"
   | "invalidExpire"
@@ -126,6 +131,7 @@ export const POST = createAdminRoute(
         items,
         maxUses,
         preventDownload,
+        directDownload,
         hasWatermark,
         watermarkText,
       }: ShareCreateRequest = body;
@@ -186,6 +192,7 @@ export const POST = createAdminRoute(
         shareId: jti,
         loginRequired: loginRequired ?? false,
         preventDownload: preventDownload ?? false,
+        directDownload: directDownload ?? false,
         hasWatermark: hasWatermark ?? false,
         watermarkText: watermarkText || null,
       })
@@ -194,7 +201,18 @@ export const POST = createAdminRoute(
         .setExpirationTime(expiresIn)
         .setJti(jti)
         .sign(secret);
-      const shareableUrl = `${getBaseUrl()}${sharePath}?share_token=${token}`;
+
+      let shareableUrl: string;
+      if (directDownload && !isCollection && path) {
+        const fileId = extractFileIdFromPath(path);
+        if (fileId) {
+          shareableUrl = `${getBaseUrl()}/api/download?fileId=${fileId}&share_token=${token}`;
+        } else {
+          shareableUrl = `${getBaseUrl()}${sharePath}?share_token=${token}`;
+        }
+      } else {
+        shareableUrl = `${getBaseUrl()}${sharePath}?share_token=${token}`;
+      }
 
       const decodedToken = decodeJwt(token);
       if (!decodedToken.exp) {
@@ -222,6 +240,7 @@ export const POST = createAdminRoute(
           isCollection: isCollection,
           maxUses: maxUses ?? null,
           preventDownload: preventDownload ?? false,
+          directDownload: directDownload ?? false,
           hasWatermark: hasWatermark ?? false,
           watermarkText: watermarkText || null,
           createdBy: session.user?.email?.toLowerCase().trim() || null,
@@ -233,6 +252,7 @@ export const POST = createAdminRoute(
         {
           loginRequired: loginRequired ?? false,
           preventDownload: preventDownload ?? false,
+          directDownload: directDownload ?? false,
           hasWatermark: hasWatermark ?? false,
           watermarkText: watermarkText || null,
           maxUses: maxUses ?? null,
@@ -254,6 +274,7 @@ export const POST = createAdminRoute(
         isCollection: shareLinkRecord.isCollection,
         maxUses: shareLinkRecord.maxUses,
         preventDownload: shareLinkRecord.preventDownload,
+        directDownload: shareLinkRecord.directDownload,
         hasWatermark: shareLinkRecord.hasWatermark,
         watermarkText: shareLinkRecord.watermarkText,
       };

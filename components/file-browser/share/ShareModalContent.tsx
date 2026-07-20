@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Clock, Zap, ShieldCheck } from "lucide-react";
+import { Clock, Download, Zap, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
@@ -105,6 +105,8 @@ interface SecurityPoliciesProps {
   setLoginRequired: (v: boolean) => void;
   preventDownload: boolean;
   setPreventDownload: (v: boolean) => void;
+  directDownload: boolean;
+  setDirectDownload: (v: boolean) => void;
   hasWatermark: boolean;
   setHasWatermark: (v: boolean) => void;
   watermarkText: string;
@@ -121,6 +123,8 @@ export function SecurityPolicies({
   setLoginRequired,
   preventDownload,
   setPreventDownload,
+  directDownload,
+  setDirectDownload,
   hasWatermark,
   setHasWatermark,
   watermarkText,
@@ -179,6 +183,29 @@ export function SecurityPolicies({
             <p className="text-sm font-semibold">{t("preventDownload")}</p>
             <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
               {t("restrictDirectSaving")}
+            </p>
+          </div>
+        </button>
+
+        <button
+          onClick={() => setDirectDownload(!directDownload)}
+          className={cn(
+            "flex items-center gap-3 p-4 rounded-2xl border text-left transition-all duration-200",
+            directDownload
+              ? "bg-primary/5 border-primary shadow-sm"
+              : "bg-background hover:border-border/80 hover:bg-accent/20",
+          )}
+        >
+          <Download
+            className={cn(
+              "w-5 h-5",
+              directDownload ? "text-primary" : "text-muted-foreground",
+            )}
+          />
+          <div className="flex-1">
+            <p className="text-sm font-semibold">{t("directDownload")}</p>
+            <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+              {t("directDownloadDesc")}
             </p>
           </div>
         </button>

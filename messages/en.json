@@ -587,6 +587,8 @@
     "tooltip": "Share This Folder/File",
     "preventDownload": "Prevent Download",
     "preventDownloadDesc": "Hide download button for viewers",
+    "directDownload": "Direct Download",
+    "directDownloadDesc": "Skip preview, go straight to download",
     "hasWatermark": "Dynamic Watermark",
     "hasWatermarkDesc": "Show watermark to prevent screen captures",
     "limitAccess": "Limit Access",

@@ -8,6 +8,7 @@ export const shareTokenPayloadSchema = z
     folderId: z.string().min(1).optional(),
     loginRequired: z.boolean().optional(),
     preventDownload: z.boolean().optional(),
+    directDownload: z.boolean().optional(),
     hasWatermark: z.boolean().optional(),
     watermarkText: z.string().nullable().optional(),
   })
@@ -76,6 +77,7 @@ export const shareCreateRequestSchema = z
     items: shareCollectionItemsSchema.optional(),
     maxUses: z.number().int().positive().nullable().optional(),
     preventDownload: z.boolean().optional(),
+    directDownload: z.boolean().optional(),
     hasWatermark: z.boolean().optional(),
     watermarkText: z.string().nullable().optional(),
   })

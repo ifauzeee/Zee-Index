@@ -587,6 +587,8 @@
     "tooltip": "Bagikan Folder/File Ini",
     "preventDownload": "Cegah Unduhan",
     "preventDownloadDesc": "Sembunyikan tombol unduh untuk pemirsa",
+    "directDownload": "Unduhan Langsung",
+    "directDownloadDesc": "Lewati pratinjau, langsung unduh",
     "hasWatermark": "Watermark Dinamis",
     "hasWatermarkDesc": "Tampilkan watermark untuk mencegah tangkapan layar",
     "limitAccess": "Batasi Akses",

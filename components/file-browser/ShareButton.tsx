@@ -53,6 +53,7 @@ export default function ShareButton({
   const [watermarkText, setWatermarkText] = useState("");
   const [useMaxUses, setUseMaxUses] = useState(false);
   const [maxUses, setMaxUses] = useState<string | number>(1);
+  const [directDownload, setDirectDownload] = useState(false);
   const [activeTab, setActiveTab] = useState<"timed" | "session">("timed");
 
   const isOpen = controlledIsOpen ?? internalIsOpen;
@@ -108,6 +109,7 @@ export default function ShareButton({
           loginRequired,
           items: shareItems,
           preventDownload,
+          directDownload,
           hasWatermark,
           watermarkText: hasWatermark ? watermarkText : null,
           maxUses: useMaxUses
@@ -200,6 +202,8 @@ export default function ShareButton({
                   setLoginRequired={setLoginRequired}
                   preventDownload={preventDownload}
                   setPreventDownload={setPreventDownload}
+                  directDownload={directDownload}
+                  setDirectDownload={setDirectDownload}
                   hasWatermark={hasWatermark}
                   setHasWatermark={setHasWatermark}
                   watermarkText={watermarkText}

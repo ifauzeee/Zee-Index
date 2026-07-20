@@ -32,12 +32,14 @@ export interface ShareLink {
   isCollection?: boolean;
   maxUses?: number | null;
   preventDownload?: boolean;
+  directDownload?: boolean;
   hasWatermark?: boolean;
   watermarkText?: string | null;
 }
 
 export interface SharePolicy {
   preventDownload?: boolean;
+  directDownload?: boolean;
   hasWatermark?: boolean;
   watermarkText?: string | null;
 }
