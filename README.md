@@ -85,22 +85,27 @@
 | **Multi-Layer Caching**   | Redis + in-memory cache for blazing-fast API responses                    |
 | **Turbopack**             | Next.js 16 Turbopack for ultra-fast development builds                    |
 | **PWA Support**           | Installable as a Progressive Web App with offline caching                 |
+| **Command Palette**       | Quick actions with <kbd>Ctrl+K</kbd> powered by `cmdk`                    |
+| **Tour Guide**            | Interactive onboarding with `driver.js`                                   |
 | **Dark/Light Mode**       | Automatic theme detection with manual toggle                              |
 
 ### 🎬 Media & File Previews
 
-| Feature             | Description                                                       |
-| ------------------- | ----------------------------------------------------------------- |
-| **Video Streaming** | Direct stream with VidStack player, resume playback, theater mode |
-| **Auto Subtitles**  | Automatic `.srt` / `.vtt` subtitle detection and loading          |
-| **Audio Dock**      | Persistent audio player that continues across navigation          |
-| **Image Gallery**   | Masonry grid with lightbox using `yet-another-react-lightbox`     |
-| **PDF Viewer**      | Built-in viewer powered by `react-pdf`                            |
-| **Code Editor**     | Monaco Editor for syntax-highlighted code preview                 |
-| **Office Files**    | Preview Word, Excel, PowerPoint via Google Viewer                 |
-| **Archive Preview** | Browse ZIP contents without downloading                           |
-| **Ebook Reader**    | Read ePub files in-browser                                        |
-| **Movie Metadata**  | Rich movie/TV metadata via TMDB integration (requires API key)    |
+| Feature             | Description                                                           |
+| ------------------- | --------------------------------------------------------------------- |
+| **Video Streaming** | Direct stream with VidStack player, resume playback, theater mode     |
+| **Auto Subtitles**  | Automatic `.srt` / `.vtt` subtitle detection and loading              |
+| **Audio Dock**      | Persistent audio player that continues across navigation              |
+| **Image Gallery**   | Masonry grid with lightbox using `yet-another-react-lightbox`         |
+| **Image Editor**    | Crop, resize, and rotate images inline with `react-easy-crop`         |
+| **PDF Viewer**      | Built-in viewer powered by `react-pdf`                                |
+| **Code Editor**     | Monaco Editor for syntax-highlighted code preview with inline editing |
+| **Office Files**    | Preview Word, Excel, PowerPoint via Google Viewer                     |
+| **Archive Preview** | Browse ZIP contents without downloading                               |
+| **Ebook Reader**    | Read ePub files in-browser                                            |
+| **Markdown Viewer** | Render README.md and Markdown files inline                            |
+| **Movie Metadata**  | Rich movie/TV metadata via TMDB integration (requires API key)        |
+| **File Tag System** | Add and search custom tags on files                                   |
 
 ### 🛡️ Security & Access Control
 
@@ -110,33 +115,43 @@
 | **Folder Passwords**  | Recursive folder protection with bcrypt-hashed passwords                |
 | **Two-Factor Auth**   | Optional TOTP-based 2FA with QR code setup                              |
 | **Share Links**       | JWT-signed links with expiry, max uses, download prevention, watermarks |
+| **Direct Download**   | Generate share links that skip the preview page and start download      |
+| **Access Requests**   | Users can request access to protected folders; admin approves/denies    |
 | **Rate Limiting**     | Per-endpoint rate limiting for API, admin, auth, and download           |
 | **CSP Headers**       | Content Security Policy, HSTS, X-Frame-Options, and more                |
+| **Proxy Image**       | Secure image proxy with access control for thumbnails                   |
 | **bcrypt Passwords**  | Timing-safe password comparison with bcrypt hashing                     |
 
 ### 🗂️ Drive Management
 
-| Feature                 | Description                                             |
-| ----------------------- | ------------------------------------------------------- |
-| **Multi-Drive Support** | Personal, Shared, and Team Drives in unified sidebar    |
-| **Manual Drives**       | Add drives via config with optional password protection |
-| **Folder Aliases**      | Custom display names without modifying Google Drive     |
-| **Private Folders**     | Hide specific folders from non-admin users              |
-| **Favorites**           | Pin files and folders for quick access                  |
-| **Drag & Drop**         | Move files between folders via drag and drop            |
-| **Bulk Operations**     | Multi-select, bulk download (ZIP), bulk delete          |
+| Feature                 | Description                                               |
+| ----------------------- | --------------------------------------------------------- |
+| **Multi-Drive Support** | Personal, Shared, and Team Drives in unified sidebar      |
+| **Manual Drives**       | Add drives via config with optional password protection   |
+| **Local Storage**       | Mount local filesystem alongside Google Drive             |
+| **Folder Aliases**      | Custom display names without modifying Google Drive       |
+| **Private Folders**     | Hide specific folders from non-admin users                |
+| **Favorites**           | Pin files and folders for quick access                    |
+| **Drag & Drop**         | Move files between folders via drag and drop              |
+| **Bulk Operations**     | Multi-select, bulk download (ZIP), bulk delete, bulk move |
+| **File Revisions**      | View and restore previous versions of editable files      |
 
 ### 🛠️ Admin Dashboard
 
-| Feature             | Description                                       |
-| ------------------- | ------------------------------------------------- |
-| **Analytics**       | Page views, visitors, bandwidth, device breakdown |
-| **Activity Logs**   | Track downloads, uploads, config changes          |
-| **User Management** | Add editors, manage admin access via email        |
-| **Storage Monitor** | Real-time storage usage with warnings             |
-| **Cache Control**   | Clear Redis cache, view cache stats               |
-| **System Health**   | Monitor database, Redis, API health               |
-| **File Request**    | Create public upload links                        |
+| Feature                  | Description                                       |
+| ------------------------ | ------------------------------------------------- |
+| **Analytics & Tracking** | Page views, visitors, bandwidth, device breakdown |
+| **Activity Logs**        | Track downloads, uploads, config changes          |
+| **Audit Trail**          | Detailed security event logs for compliance       |
+| **User Management**      | Add editors, invite users, manage admin access    |
+| **Incident Monitor**     | Auto-detect issues with Discord/Telegram alerts   |
+| **Storage Monitor**      | Real-time storage usage with warnings             |
+| **Cache Control**        | Clear Redis cache, view cache stats               |
+| **System Health**        | Monitor database, Redis, API health               |
+| **File Request**         | Create public upload links with expiry            |
+| **Storage Test**         | Test provider connections from admin panel        |
+| **Protected Folders**    | Set folder passwords from the dashboard           |
+| **Access Requests**      | Approve or deny user folder access requests       |
 
 ---
 
@@ -289,12 +304,20 @@ pnpm dev
 pnpm dev              # Start with Turbopack (fast)
 pnpm dev:webpack      # Start with Webpack (fallback)
 pnpm build            # Production build
+pnpm start            # Production server
 pnpm typecheck        # TypeScript type checking
 pnpm lint             # ESLint
 pnpm format:check     # Prettier check
-pnpm check:all        # Run all checks
+pnpm format:fix       # Prettier format (write)
+pnpm check:all        # typecheck → format:check → lint (sequential)
+pnpm fix:all          # format:fix + lint --fix
+pnpm check            # Run custom check-all.sh script
+pnpm prepush          # typecheck only (pre-push hook)
 pnpm test             # Unit tests (Vitest)
-pnpm test:e2e         # E2E tests (Playwright)
+pnpm test:e2e         # E2E tests (Playwright) — requires `npx playwright install` first
+pnpm analyze          # Bundle analyzer (ANALYZE=true next build)
+pnpm docker:dev       # Docker Compose dev stack
+pnpm docker:prod      # Docker Compose production stack
 ```
 
 ---
@@ -379,17 +402,29 @@ pnpm test:e2e         # E2E tests (Playwright)
 
 ### Optional Variables
 
-| Variable                       | Description                      | Default |
-| ------------------------------ | -------------------------------- | ------- |
-| `NEXT_PUBLIC_ROOT_FOLDER_NAME` | Display name for root folder     | `Home`  |
-| `NEXT_PUBLIC_MANUAL_DRIVES`    | JSON array of additional drives  | `[]`    |
-| `PRIVATE_FOLDER_IDS`           | JSON array of private folder IDs | `[]`    |
-| `STORAGE_LIMIT_GB`             | Storage warning limit            | `15`    |
-| `STORAGE_WARNING_THRESHOLD`    | Warning threshold (0–1)          | `0.90`  |
-| `CRON_SECRET`                  | Cron job authentication token    | —       |
-| `TMDB_API_KEY`                 | TMDB API key for movie metadata  | —       |
-| `DUCKDNS_DOMAIN`               | DuckDNS subdomain                | —       |
-| `DUCKDNS_TOKEN`                | DuckDNS authentication token     | —       |
+| Variable                           | Description                            | Default     |
+| ---------------------------------- | -------------------------------------- | ----------- |
+| `NEXT_PUBLIC_ROOT_FOLDER_NAME`     | Display name for root folder           | `Home`      |
+| `NEXT_PUBLIC_APP_NAME`             | Custom application name                | `Zee Index` |
+| `NEXT_PUBLIC_MANUAL_DRIVES`        | JSON array of additional drives        | `[]`        |
+| `NEXT_PUBLIC_ENABLE_LOCAL_STORAGE` | Enable local filesystem provider       | —           |
+| `PRIVATE_FOLDER_IDS`               | JSON array of private folder IDs       | `[]`        |
+| `STORAGE_LIMIT_GB`                 | Storage warning limit                  | `15`        |
+| `STORAGE_WARNING_THRESHOLD`        | Warning threshold (0–1)                | `0.90`      |
+| `CRON_SECRET`                      | Cron job authentication token (min 16) | —           |
+| `TMDB_API_KEY`                     | TMDB API key for movie metadata        | —           |
+| `DUCKDNS_DOMAIN`                   | DuckDNS subdomain                      | —           |
+| `DUCKDNS_TOKEN`                    | DuckDNS authentication token           | —           |
+
+### Notifications (Optional)
+
+Send alerts when the incident monitor detects issues (storage full, service down, etc.):
+
+| Variable                    | Description         | Default |
+| --------------------------- | ------------------- | ------- |
+| `NOTIFY_DISCORD_WEBHOOK`    | Discord webhook URL | —       |
+| `NOTIFY_TELEGRAM_BOT_TOKEN` | Telegram bot token  | —       |
+| `NOTIFY_TELEGRAM_CHAT_ID`   | Telegram chat ID    | —       |
 
 ### Email Configuration (Optional)
 
@@ -475,10 +510,18 @@ SKIP_ENV_VALIDATION=false
 # SMTP_PASS="your-app-password"
 # EMAIL_FROM="Zee Index <no-reply@example.com>"
 
-# 8. EXTERNAL SERVICES (Optional)
+# 8. NOTIFICATIONS (Optional)
+# NOTIFY_DISCORD_WEBHOOK="https://discord.com/api/webhooks/..."
+# NOTIFY_TELEGRAM_BOT_TOKEN=""
+# NOTIFY_TELEGRAM_CHAT_ID=""
+
+# 9. EXTERNAL SERVICES (Optional)
 # TMDB_API_KEY=""
 
-# 9. STORAGE PROVIDERS (Optional)
+# 10. LOCAL STORAGE (Optional — requires server restart)
+# NEXT_PUBLIC_ENABLE_LOCAL_STORAGE="true"
+
+# 11. STORAGE PROVIDERS (Optional)
 # Set STORAGE_PROVIDER to "s3" or "webdav" to mount an external backend.
 # STORAGE_PROVIDER="google-drive"
 
@@ -631,33 +674,114 @@ Zee-Index includes comprehensive security headers:
 | ------ | ---------------------------- | -------------------------------------- |
 | `GET`  | `/api/health`                | Health check                           |
 | `GET`  | `/api/config/public`         | Public app configuration               |
+| `GET`  | `/api/config`                | Full app configuration                 |
 | `GET`  | `/api/files`                 | List files (with optional share token) |
+| `GET`  | `/api/filedetails`           | Get single file details                |
 | `GET`  | `/api/download?fileId=…`     | Download / stream file                 |
 | `GET`  | `/api/folderpath?folderId=…` | Get folder breadcrumb path             |
 | `GET`  | `/api/metadata?fileId=…`     | Get file metadata                      |
+| `GET`  | `/api/proxy-image`           | Secure image proxy for thumbnails      |
+| `GET`  | `/api/events`                | Server-sent events                     |
+| `POST` | `/api/analytics/track`       | Track page view                        |
 
 ### Authenticated Endpoints
 
-| Method | Endpoint            | Description        |
-| ------ | ------------------- | ------------------ |
-| `GET`  | `/api/search?q=…`   | Search files       |
-| `GET`  | `/api/datausage`    | Storage usage info |
-| `POST` | `/api/favorites`    | Toggle favorites   |
-| `POST` | `/api/tags`         | Manage file tags   |
-| `POST` | `/api/share/create` | Create share link  |
+| Method | Endpoint                        | Description                        |
+| ------ | ------------------------------- | ---------------------------------- |
+| `GET`  | `/api/search?q=…`               | Search files                       |
+| `GET`  | `/api/search/global`            | Global search across all drives    |
+| `GET`  | `/api/datausage`                | Storage usage info                 |
+| `GET`  | `/api/storage-details`          | Detailed storage breakdown         |
+| `GET`  | `/api/trash`                    | List trashed files                 |
+| `GET`  | `/api/manual-drives`            | List configured manual drives      |
+| `GET`  | `/api/share/list`               | List all share links               |
+| `GET`  | `/api/share/[id]`               | Get share link details             |
+| `GET`  | `/api/share/status`             | Check share token status           |
+| `GET`  | `/api/archive-preview`          | Browse ZIP archive contents        |
+| `POST` | `/api/files/upload`             | Upload file                        |
+| `POST` | `/api/files/move`               | Move file                          |
+| `POST` | `/api/files/copy`               | Copy file                          |
+| `POST` | `/api/files/delete`             | Delete file                        |
+| `POST` | `/api/files/rename`             | Rename file                        |
+| `POST` | `/api/files/update`             | Update file content                |
+| `POST` | `/api/files/update-media`       | Update media metadata              |
+| `POST` | `/api/files/bulk-delete`        | Bulk delete files                  |
+| `POST` | `/api/files/bulk-move`          | Bulk move files                    |
+| `POST` | `/api/files/[fileId]/revisions` | Get file revision history          |
+| `POST` | `/api/bulk-download`            | Bulk download as ZIP archive       |
+| `POST` | `/api/folder/create`            | Create new folder                  |
+| `POST` | `/api/favorites`                | Toggle favorite status             |
+| `POST` | `/api/tags`                     | Manage file tags                   |
+| `POST` | `/api/share/create`             | Create share link                  |
+| `POST` | `/api/share/delete`             | Delete share link                  |
+| `POST` | `/api/share/revoke`             | Revoke share link                  |
+| `POST` | `/api/share/track`              | Track share link view              |
+| `POST` | `/api/share/items/[shareId]`    | Manage share collection items      |
+| `POST` | `/api/request-access`           | Request access to protected folder |
+| `POST` | `/api/file-request`             | Create file request link           |
+| `POST` | `/api/file-request/[token]`     | Get file request info              |
+| `POST` | `/api/file-request/upload`      | Upload to file request             |
+| `POST` | `/api/clearcache`               | Clear server cache                 |
 
 ### Admin Endpoints
 
-| Method   | Endpoint                       | Description              |
-| -------- | ------------------------------ | ------------------------ |
-| `GET`    | `/api/admin/analytics`         | Analytics data           |
-| `GET`    | `/api/admin/activity`          | Activity logs            |
-| `GET`    | `/api/admin/cache-stats`       | Cache statistics         |
-| `POST`   | `/api/admin/config`            | Update app configuration |
-| `POST`   | `/api/admin/2fa/setup`         | Configure 2FA            |
-| `POST`   | `/api/admin/protected-folders` | Manage folder passwords  |
-| `POST`   | `/api/admin/manual-drives`     | Manage drives            |
-| `DELETE` | `/api/admin/clearcache`        | Clear all caches         |
+| Method   | Endpoint                        | Description                      |
+| -------- | ------------------------------- | -------------------------------- |
+| `GET`    | `/api/admin/analytics`          | Analytics data                   |
+| `GET`    | `/api/admin/analytics/enhanced` | Enhanced analytics with trends   |
+| `GET`    | `/api/admin/activity-log`       | Activity logs                    |
+| `GET`    | `/api/admin/audit`              | Security audit trail             |
+| `GET`    | `/api/admin/logs`               | System logs                      |
+| `GET`    | `/api/admin/logs/security`      | Security event logs              |
+| `GET`    | `/api/admin/cache-stats`        | Cache statistics                 |
+| `GET`    | `/api/admin/config`             | Get app configuration            |
+| `GET`    | `/api/admin/editors`            | List editors                     |
+| `GET`    | `/api/admin/users`              | List all users                   |
+| `GET`    | `/api/admin/incidents`          | List incidents                   |
+| `GET`    | `/api/admin/stats`              | System statistics                |
+| `GET`    | `/api/admin/system-health`      | System health check              |
+| `GET`    | `/api/admin/storage/test`       | Test storage provider connection |
+| `GET`    | `/api/admin/user-access`        | Manage user access               |
+| `GET`    | `/api/admin/access-requests`    | List access requests             |
+| `POST`   | `/api/admin/config`             | Update app configuration         |
+| `POST`   | `/api/admin/protected-folders`  | Manage folder passwords          |
+| `POST`   | `/api/admin/manual-drives`      | Manage manual drives             |
+| `POST`   | `/api/admin/invite`             | Invite user by email             |
+| `POST`   | `/api/admin/editors`            | Add editor                       |
+| `POST`   | `/api/admin/incidents/evaluate` | Evaluate incident rules          |
+| `POST`   | `/api/admin/reindex`            | Reindex files                    |
+| `POST`   | `/api/admin/drives/scan`        | Scan remote drives               |
+| `POST`   | `/api/admin/user-password`      | Change user password             |
+| `POST`   | `/api/admin/access-requests`    | Approve/deny access requests     |
+| `DELETE` | `/api/admin/editors`            | Remove editor                    |
+
+### Auth Endpoints
+
+| Method | Endpoint                     | Description                     |
+| ------ | ---------------------------- | ------------------------------- |
+| `GET`  | `/api/auth/me`               | Current user profile            |
+| `GET`  | `/api/auth/status`           | Authentication status           |
+| `GET`  | `/api/auth/2fa/status`       | 2FA configuration status        |
+| `POST` | `/api/auth/2fa/generate`     | Generate 2FA secret + QR code   |
+| `POST` | `/api/auth/2fa/verify`       | Verify 2FA setup token          |
+| `POST` | `/api/auth/2fa/verify-login` | Verify 2FA during login         |
+| `POST` | `/api/auth/2fa/disable`      | Disable 2FA                     |
+| `POST` | `/api/auth/folder`           | Authenticate folder access      |
+| `POST` | `/api/auth/local/check`      | Check local storage auth status |
+| `POST` | `/api/auth/local/unlock`     | Unlock local storage            |
+| `POST` | `/api/auth/local/logout`     | Logout from local storage       |
+| `POST` | `/api/auth/profile/password` | Change own password             |
+
+### Cron Endpoints
+
+| Method | Endpoint                     | Description                     |
+| ------ | ---------------------------- | ------------------------------- |
+| `GET`  | `/api/cron/activity-cleanup` | Cleanup old activity logs       |
+| `GET`  | `/api/cron/incident-monitor` | Run incident monitoring checks  |
+| `GET`  | `/api/cron/storage-check`    | Check storage usage limits      |
+| `GET`  | `/api/cron/weekly-report`    | Generate weekly activity report |
+
+> Cron endpoints require a valid `CRON_SECRET` Bearer token. All API routes use `export const dynamic = "force-dynamic"`. Nonce-based CSP is applied in middleware — route handlers should not set CSP manually.
 
 ---
 
@@ -726,48 +850,65 @@ zee-index/
 ├── app/                          # Next.js App Router
 │   ├── [locale]/                 # Internationalized routes
 │   │   ├── (main)/               # Main layout (sidebar + content)
+│   │   │   └── folder/           # Folder & file browsing routes
 │   │   ├── admin/                # Admin dashboard
 │   │   ├── login/                # Login page
 │   │   └── setup/                # Setup wizard
-│   └── api/                      # API Routes
+│   └── api/                      # API Routes (~70+ endpoints)
 │       ├── admin/                # Admin-only APIs
-│       ├── auth/                 # NextAuth handlers
+│       ├── auth/                 # Auth & 2FA handlers
+│       ├── cron/                 # Scheduled tasks
 │       ├── download/             # File download & streaming
-│       ├── files/                # File listing
-│       ├── share/                # Share link APIs
-│       └── cron/                 # Scheduled tasks
+│       ├── files/                # File CRUD & bulk operations
+│       ├── share/                # Share link CRUD
+│       └── ...                   # Health, config, search, etc.
 │
 ├── components/                   # React Components
 │   ├── admin/                    # Admin dashboard UI
-│   ├── file-browser/             # File listing, actions, modals
+│   ├── charts/                   # Recharts analytics components
+│   ├── common/                   # Loading, error, empty states
+│   ├── features/                 # CommandPalette, AudioPlayer, TourGuide
+│   ├── file-browser/             # File listing, bulk actions, modals
+│   │   ├── details/              # Detail panel & info panel
 │   │   ├── share/                # Share modal components
-│   │   └── details/              # Detail panel components
+│   │   └── views/                # ListView, GridView, GalleryView
 │   ├── file-details/             # File preview & player
 │   │   └── video-player/         # Video overlays & controls
 │   ├── layout/                   # Header, Sidebar, Footer
 │   │   └── sidebar/              # Sidebar sub-components
-│   ├── common/                   # Shared UI components
+│   ├── modals/                   # Move, Rename, Revisions, ImageEditor
+│   ├── providers/                # ModalProvider, context providers
 │   └── ui/                       # Radix-based primitives
 │
 ├── lib/                          # Core Libraries
 │   ├── drive/                    # Google Drive API client
+│   ├── events/                   # Event pipeline & publishing
 │   ├── kv/                       # Redis/KV abstraction layer
 │   │   ├── index.ts              # Factory + re-exports
 │   │   ├── types.ts              # KVClient interface
 │   │   ├── redis-kv.ts           # Redis implementation
 │   │   └── memory-kv.ts          # In-memory fallback
+│   ├── services/                 # Download, health, analytics
+│   ├── storage/                  # Provider abstraction
+│   │   └── providers/            # Google Drive, S3, WebDAV
 │   ├── store/                    # Zustand state management
-│   ├── services/                 # Business logic (download, etc.)
 │   └── *.ts                      # Utils, auth, logger, ratelimit
 │
 ├── hooks/                        # Custom React Hooks
 ├── types/                        # TypeScript definitions
-├── messages/                     # i18n translations (en, id)
+├── messages/                     # i18n translations (en, id, zh-TW)
 ├── prisma/                       # Database schema & migrations
 │   ├── schema.prisma
 │   └── migrations/               # Prisma migration history
 ├── scripts/                      # Utility scripts
+│   ├── check-all.sh              # CI check runner
+│   ├── docker-entrypoint.sh      # Docker startup script
 │   └── hash-password.sh          # bcrypt password hash generator
+│
+├── __tests__/                    # Unit tests (Vitest)
+├── e2e/                          # E2E tests (Playwright)
+├── test/                         # Test setup & mocks
+├── .github/                      # CI workflows
 │
 ├── docker-compose.yml            # Production stack
 ├── Dockerfile                    # Multi-stage optimized build
@@ -924,7 +1065,7 @@ This project is licensed under the **GNU Affero General Public License v3.0 (AGP
 
 - ✅ Free to use, modify, and distribute
 - ✅ Commercial use allowed
-- ⚠️ **Attribution required:** display `© 2025 Muhammad Ibnu Fauzi` in your deployment
+- ⚠️ **Attribution required:** display `© 2025-2026 Muhammad Ibnu Fauzi` in your deployment
 - ⚠️ Modified versions that are hosted must share source code
 - ⚠️ Changes must be documented
 
