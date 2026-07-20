@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://github.com/ifauzeee/Zee-Index">
-    <img src="https://cdn-icons-png.freepik.com/512/2991/2991248.png" alt="Zee-Index Logo" width="130" height="130">
+    <img src="https://cdn.simpleicons.org/googledrive" alt="Zee-Index Logo" width="200" height="200">
   </a>
 
   <h1 align="center">⚡ Zee-Index</h1>
@@ -15,7 +15,7 @@
   </p>
 
   <div align="center">
-    <a href="https://zee-index.duckdns.org"><img src="https://img.shields.io/badge/🔴_Live_Demo-Visit-FF4444?style=for-the-badge" alt="Live Demo" /></a>
+    <a href="https://ifauzeee.vercel.app/projects/zee-index/preview"><img src="https://img.shields.io/badge/🔎_Preview-View-8A2BE2?style=for-the-badge" alt="Preview" /></a>
     <a href="https://github.com/ifauzeee/Zee-Index/issues"><img src="https://img.shields.io/badge/🐛_Report_Bug-Issues-FFA500?style=for-the-badge" alt="Report Bug" /></a>
     <a href="https://github.com/ifauzeee/Zee-Index/pulls"><img src="https://img.shields.io/badge/✨_Feature_Request-PRs-28A745?style=for-the-badge" alt="Feature Request" /></a>
   </div>
@@ -213,7 +213,7 @@ flowchart TB
     style SERVICES fill:#1a1a2e,stroke:#533483,color:#fff
 ```
 
-> **Live Demo:** [https://zee-index.duckdns.org](https://zee-index.duckdns.org)
+> **Preview:** [https://ifauzeee.vercel.app/projects/zee-index/preview](https://ifauzeee.vercel.app/projects/zee-index/preview)
 
 ---
 
@@ -1108,7 +1108,7 @@ Built with these amazing open-source projects:
   <p>
     <a href="https://github.com/ifauzeee/Zee-Index">GitHub</a>
     ·
-    <a href="https://zee-index.duckdns.org">Live Demo</a>
+    <a href="https://ifauzeee.vercel.app/projects/zee-index/preview">Preview</a>
     ·
     <a href="https://github.com/ifauzeee/Zee-Index/issues">Issues</a>
   </p>

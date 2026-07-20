@@ -30,7 +30,9 @@
     "dark": "深色",
     "skipToContent": "跳至內容",
     "createdBy": "建立者",
-    "close": "關閉"
+    "close": "關閉",
+    "dropToUpload": "拖放檔案以上傳",
+    "toThisFolder": "到此資料夾"
   },
   "AuthForm": {
     "accessRestricted": "存取受限",
@@ -50,7 +52,8 @@
     "accessRequestSuccess": "已成功向管理員送出存取請求。",
     "requestFail": "送出請求失敗。",
     "accessGranted": "已授權存取！正在載入資料夾...",
-    "securityEngine": "安全引擎"
+    "securityEngine": "Zee Index 安全引擎 v2.0",
+    "loginFailedText": "憑證無效"
   },
   "Search": {
     "searchAll": "搜尋所有檔案...",
@@ -127,7 +130,8 @@
     "delete": "刪除",
     "cancel": "取消",
     "openInNewTab": "在新分頁開啟",
-    "download": "下載"
+    "download": "下載",
+    "versionHistory": "版本歷史"
   },
   "DeleteConfirm": {
     "title": "刪除項目",
@@ -258,7 +262,9 @@
     "share": "分享",
     "download": "下載",
     "viewDetails": "檢視詳細資訊",
-    "moreOptions": "更多選項"
+    "moreOptions": "更多選項",
+    "addToFavorites": "加入收藏",
+    "removeFromFavorites": "從收藏移除"
   },
   "FileBrowserModals": {
     "dropToUpload": "放開即可上傳",
@@ -415,6 +421,7 @@
     "adminList": "管理員清單",
     "removeAdminConfirm": "確定要將 {email} 從管理員清單中移除嗎？",
     "removeAdminTitle": "移除管理員",
+    "removeEditorTitle": "移除編輯者",
     "revokeConfirm": "此動作將永久撤銷此連結，使用者將無法再存取。",
     "revokeTitle": "刪除連結？",
     "revokeButton": "是，刪除",
@@ -457,6 +464,7 @@
     "back": "返回",
     "inviteUser": "邀請使用者",
     "inviteDesc": "建立具備角色與選填初始密碼的使用者帳戶。",
+    "inviteEmailPlaceholder": "使用者電子郵件",
     "role": "角色",
     "invitePasswordPlaceholder": "初始密碼（選填，至少 6 個字元）",
     "inviteButton": "邀請",
@@ -612,7 +620,12 @@
     "customWatermarkPlaceholder": "自訂浮水印（選填）",
     "maxViewsDownloads": "最多檢視 / 下載次數",
     "durationSettings": "期限設定",
-    "confirmSettings": "產生公開連結前，請確認所有設定。"
+    "confirmSettings": "產生公開連結前，請確認所有設定。",
+    "directDownload": "直接下載",
+    "directDownloadDesc": "略過預覽，直接下載",
+    "expiresIn": "到期時間",
+    "cancel": "取消",
+    "creating": "建立中..."
   },
   "NotificationCenter": {
     "title": "通知",
@@ -708,6 +721,7 @@
     "overwriteTitle": "確認覆寫",
     "yesOverwrite": "是，覆寫",
     "confirmDelete": "要從資料庫刪除此雲端硬碟捷徑嗎？",
+    "delete": "刪除",
     "deleteTitle": "確認刪除",
     "deleted": "已刪除。",
     "deleteFailed": "刪除失敗。",
@@ -804,7 +818,8 @@
     "notAvailable": "無法預覽",
     "download": "下載檔案",
     "libraryError": "尚未載入 EpubJS 函式庫。",
-    "preview": "預覽"
+    "preview": "預覽",
+    "unknownError": "發生未知錯誤"
   },
   "FileCard": {
     "info": "資訊",
