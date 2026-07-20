@@ -10,6 +10,7 @@ import type { DriveFile } from "@/lib/drive";
 import type { SubtitleTrack } from "@/lib/subtitles";
 import { getFileType, getPreviewUrl } from "@/lib/utils";
 import { fetchFolderPathApi } from "@/hooks/useFileFetching";
+import type { ShareTokenPayload } from "@/lib/store/types";
 
 interface TmdbGenre {
   name: string;
@@ -116,6 +117,55 @@ export function useFileDetailController({
     () => searchParams.get("share_token"),
     [searchParams],
   );
+
+  useEffect(() => {
+    if (!shareToken) return;
+
+    try {
+      const [, payloadBase64] = shareToken.split(".");
+      if (!payloadBase64) return;
+
+      const base64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((char) => {
+            return "%" + ("00" + char.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join(""),
+      );
+      const payload = JSON.parse(jsonPayload) as ShareTokenPayload;
+
+      if (!payload.exp) {
+        return;
+      }
+
+      const expireTime = payload.exp * 1000;
+      const currentTime = Date.now();
+      const timeLeft = expireTime - currentTime;
+
+      const handleRedirect = () => {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete("share_token");
+        router.push(
+          `/login?error=ShareLinkExpired&callbackUrl=${encodeURIComponent(
+            currentUrl.pathname + currentUrl.search,
+          )}`,
+        );
+      };
+
+      if (timeLeft <= 0) {
+        handleRedirect();
+        return;
+      }
+
+      const timeoutId = setTimeout(handleRedirect, timeLeft + 500);
+      return () => clearTimeout(timeoutId);
+    } catch (error) {
+      console.error("Auto-redirect timer error:", error);
+    }
+  }, [shareToken, router]);
+
   const isAdmin = user?.role === "ADMIN" || session?.user?.role === "ADMIN";
   const canShowAuthor = isAdmin || !hideAuthor;
   const fileType = getFileType(file);
