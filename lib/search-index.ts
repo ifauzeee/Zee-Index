@@ -88,43 +88,45 @@ export async function searchIndexedFiles(opts: {
   if (!q) return [];
 
   const mime = mimeFilter(opts.mimeType);
-
-  if (opts.fullText) {
-    // Full-text search: match in name OR contentText
-    const where: Record<string, unknown> = {
-      OR: [
-        { name: { contains: q, mode: "insensitive" } },
-        { contentText: { contains: q, mode: "insensitive" } },
-      ],
-    };
-    if (mime) Object.assign(where, mime);
-
-    try {
-      const rows = await db.fileIndex.findMany({
-        where,
-        orderBy: { modifiedTime: "desc" },
-        take: opts.limit ?? 50,
-      });
-      return rows as IndexedFile[];
-    } catch (err) {
-      logger.error({ err }, "Postgres full-text search failed");
-      return [];
-    }
-  }
-
-  // Legacy name-only search
-  const where: Record<string, unknown> = {
-    name: { contains: q, mode: "insensitive" },
-  };
-  if (mime) Object.assign(where, mime);
+  const limit = opts.limit ?? 50;
 
   try {
-    const rows = await db.fileIndex.findMany({
-      where,
+    const nameWhere: Record<string, unknown> = {
+      name: { contains: q, mode: "insensitive" },
+    };
+    if (mime) Object.assign(nameWhere, mime);
+
+    const nameMatches = await db.fileIndex.findMany({
+      where: nameWhere,
       orderBy: { modifiedTime: "desc" },
-      take: opts.limit ?? 50,
+      take: limit,
     });
-    return rows as IndexedFile[];
+
+    if (!opts.fullText) {
+      return nameMatches as IndexedFile[];
+    }
+
+    if (nameMatches.length >= limit) {
+      return nameMatches as IndexedFile[];
+    }
+
+    const excludeIds = nameMatches.map((r) => r.id);
+    const contentWhere: Record<string, unknown> = {
+      contentText: { contains: q, mode: "insensitive" },
+      NOT: { id: { in: excludeIds } },
+    };
+    if (mime) Object.assign(contentWhere, mime);
+
+    const contentMatches = await db.fileIndex.findMany({
+      where: contentWhere,
+      orderBy: { modifiedTime: "desc" },
+      take: limit - nameMatches.length,
+    });
+
+    return [
+      ...(nameMatches as IndexedFile[]),
+      ...(contentMatches as IndexedFile[]),
+    ];
   } catch (err) {
     logger.error({ err }, "Postgres file search failed");
     return [];
