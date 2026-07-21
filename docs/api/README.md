@@ -131,6 +131,9 @@ This folder contains the maintained API reference for Zee-Index.
 | GET    | `/api/admin/audit`              | Audit data                               |
 | GET    | `/api/admin/incidents`          | List system incident logs                |
 | POST   | `/api/admin/incidents/evaluate` | Manually run incident evaluation check   |
+| GET    | `/api/admin/api-keys`           | List all API keys (masked hashes)        |
+| POST   | `/api/admin/api-keys`           | Create a new API key (returned once)     |
+| DELETE | `/api/admin/api-keys/[id]`      | Revoke an API key                        |
 
 ### File Requests and Jobs
 
@@ -151,6 +154,7 @@ Most endpoints use one of these mechanisms:
 - NextAuth session cookie
 - `share_token` query string for shared links
 - `access_token` query string or `Authorization: Bearer <token>` for protected folders
+- `Authorization: Bearer <api_key>` — API key authentication (see [Key Features → API Key Authentication](/C:/Users/Ifauze/Project/zee-index/README.md#-api-key-authentication) in the main README)
 
 ## Rate Limits
 
@@ -162,6 +166,7 @@ The API layer is standardized through the route factory in [`lib/api-middleware.
 | Download    | 100 requests / hour     |
 | Auth        | 20 requests / 5 minutes |
 | Admin       | 50 requests / minute    |
+| API Key     | 1000 requests / minute  |
 
 Some public and internal endpoints explicitly disable route-factory rate limiting when a different protection model is used.
 

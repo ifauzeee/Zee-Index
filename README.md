@@ -138,20 +138,21 @@
 
 ### 🛠️ Admin Dashboard
 
-| Feature                  | Description                                       |
-| ------------------------ | ------------------------------------------------- |
-| **Analytics & Tracking** | Page views, visitors, bandwidth, device breakdown |
-| **Activity Logs**        | Track downloads, uploads, config changes          |
-| **Audit Trail**          | Detailed security event logs for compliance       |
-| **User Management**      | Add editors, invite users, manage admin access    |
-| **Incident Monitor**     | Auto-detect issues with Discord/Telegram alerts   |
-| **Storage Monitor**      | Real-time storage usage with warnings             |
-| **Cache Control**        | Clear Redis cache, view cache stats               |
-| **System Health**        | Monitor database, Redis, API health               |
-| **File Request**         | Create public upload links with expiry            |
-| **Storage Test**         | Test provider connections from admin panel        |
-| **Protected Folders**    | Set folder passwords from the dashboard           |
-| **Access Requests**      | Approve or deny user folder access requests       |
+| Feature                  | Description                                                   |
+| ------------------------ | ------------------------------------------------------------- |
+| **Analytics & Tracking** | Page views, visitors, bandwidth, device breakdown             |
+| **Activity Logs**        | Track downloads, uploads, config changes                      |
+| **Audit Trail**          | Detailed security event logs for compliance                   |
+| **User Management**      | Add editors, invite users, manage admin access                |
+| **Incident Monitor**     | Auto-detect issues with Discord/Telegram alerts               |
+| **Storage Monitor**      | Real-time storage usage with warnings                         |
+| **Cache Control**        | Clear Redis cache, view cache stats                           |
+| **System Health**        | Monitor database, Redis, API health                           |
+| **File Request**         | Create public upload links with expiry                        |
+| **Storage Test**         | Test provider connections from admin panel                    |
+| **Protected Folders**    | Set folder passwords from the dashboard                       |
+| **Access Requests**      | Approve or deny user folder access requests                   |
+| **API Key Management**   | Create, revoke, and manage API keys with granular permissions |
 
 ---
 
@@ -666,6 +667,58 @@ Zee-Index includes comprehensive security headers:
 
 ---
 
+## 🔑 API Key Authentication
+
+Zee-Index supports **API key authentication** for programmatic access to its REST API — ideal for scripts, integrations, and third-party tools.
+
+### Managing API Keys
+
+1. **Log in** as an Admin.
+2. Navigate to **Admin Dashboard → API Keys** (`/admin/api-keys`).
+3. Click **Create API Key**, give it a name, and select the permissions you want.
+4. **Copy the raw key immediately** — it is shown only once and cannot be retrieved later.
+
+### Permissions
+
+| Permission    | Description                                     |
+| ------------- | ----------------------------------------------- |
+| `files:read`  | List files, search, view file details           |
+| `files:write` | Upload, move, copy, delete, rename files        |
+| `share:read`  | List and view share links                       |
+| `share:write` | Create, delete, and revoke share links          |
+| `admin:read`  | Access admin read-only endpoints (stats, logs)  |
+| `admin:write` | Access admin write endpoints (config, settings) |
+
+### Using an API Key
+
+Include the key in the `Authorization` header:
+
+```bash
+curl -H "Authorization: Bearer zk_abc123...def" \
+  https://yourdomain.com/api/files
+```
+
+The key replaces session-based authentication — you don't need to log in. API key requests:
+
+- **Skip session checks** — no cookie or OAuth session required
+- **Use a dedicated rate limit tier** (`API_KEY` tier, 1000 requests/min)
+- **Are logged** in the activity log as API key usage
+- **Can be revoked** individually from the admin panel
+
+### Best Practices
+
+| Practice                     | Reason                                                                     |
+| ---------------------------- | -------------------------------------------------------------------------- |
+| **Use granular permissions** | Give each key only the permissions it needs (principle of least privilege) |
+| **Name keys by purpose**     | e.g. "CI/CD Deploy", "Backup Script", "Monitoring"                         |
+| **Rotate keys regularly**    | Create a new key, update your scripts, revoke the old one                  |
+| **Store keys securely**      | Use environment variables or a secrets manager, never hardcode             |
+| **Revoke unused keys**       | Clean up stale keys from the admin panel                                   |
+
+API keys are bcrypt-hashed at rest and never exposed in API responses (the admin panel shows the key prefix and masked hash only).
+
+---
+
 ## 📖 API Reference
 
 ### Public Endpoints
@@ -725,35 +778,38 @@ Zee-Index includes comprehensive security headers:
 
 ### Admin Endpoints
 
-| Method   | Endpoint                        | Description                      |
-| -------- | ------------------------------- | -------------------------------- |
-| `GET`    | `/api/admin/analytics`          | Analytics data                   |
-| `GET`    | `/api/admin/analytics/enhanced` | Enhanced analytics with trends   |
-| `GET`    | `/api/admin/activity-log`       | Activity logs                    |
-| `GET`    | `/api/admin/audit`              | Security audit trail             |
-| `GET`    | `/api/admin/logs`               | System logs                      |
-| `GET`    | `/api/admin/logs/security`      | Security event logs              |
-| `GET`    | `/api/admin/cache-stats`        | Cache statistics                 |
-| `GET`    | `/api/admin/config`             | Get app configuration            |
-| `GET`    | `/api/admin/editors`            | List editors                     |
-| `GET`    | `/api/admin/users`              | List all users                   |
-| `GET`    | `/api/admin/incidents`          | List incidents                   |
-| `GET`    | `/api/admin/stats`              | System statistics                |
-| `GET`    | `/api/admin/system-health`      | System health check              |
-| `GET`    | `/api/admin/storage/test`       | Test storage provider connection |
-| `GET`    | `/api/admin/user-access`        | Manage user access               |
-| `GET`    | `/api/admin/access-requests`    | List access requests             |
-| `POST`   | `/api/admin/config`             | Update app configuration         |
-| `POST`   | `/api/admin/protected-folders`  | Manage folder passwords          |
-| `POST`   | `/api/admin/manual-drives`      | Manage manual drives             |
-| `POST`   | `/api/admin/invite`             | Invite user by email             |
-| `POST`   | `/api/admin/editors`            | Add editor                       |
-| `POST`   | `/api/admin/incidents/evaluate` | Evaluate incident rules          |
-| `POST`   | `/api/admin/reindex`            | Reindex files                    |
-| `POST`   | `/api/admin/drives/scan`        | Scan remote drives               |
-| `POST`   | `/api/admin/user-password`      | Change user password             |
-| `POST`   | `/api/admin/access-requests`    | Approve/deny access requests     |
-| `DELETE` | `/api/admin/editors`            | Remove editor                    |
+| Method   | Endpoint                        | Description                          |
+| -------- | ------------------------------- | ------------------------------------ |
+| `GET`    | `/api/admin/analytics`          | Analytics data                       |
+| `GET`    | `/api/admin/analytics/enhanced` | Enhanced analytics with trends       |
+| `GET`    | `/api/admin/activity-log`       | Activity logs                        |
+| `GET`    | `/api/admin/audit`              | Security audit trail                 |
+| `GET`    | `/api/admin/logs`               | System logs                          |
+| `GET`    | `/api/admin/logs/security`      | Security event logs                  |
+| `GET`    | `/api/admin/cache-stats`        | Cache statistics                     |
+| `GET`    | `/api/admin/config`             | Get app configuration                |
+| `GET`    | `/api/admin/editors`            | List editors                         |
+| `GET`    | `/api/admin/users`              | List all users                       |
+| `GET`    | `/api/admin/incidents`          | List incidents                       |
+| `GET`    | `/api/admin/stats`              | System statistics                    |
+| `GET`    | `/api/admin/system-health`      | System health check                  |
+| `GET`    | `/api/admin/storage/test`       | Test storage provider connection     |
+| `GET`    | `/api/admin/user-access`        | Manage user access                   |
+| `GET`    | `/api/admin/access-requests`    | List access requests                 |
+| `POST`   | `/api/admin/config`             | Update app configuration             |
+| `POST`   | `/api/admin/protected-folders`  | Manage folder passwords              |
+| `POST`   | `/api/admin/manual-drives`      | Manage manual drives                 |
+| `POST`   | `/api/admin/invite`             | Invite user by email                 |
+| `POST`   | `/api/admin/editors`            | Add editor                           |
+| `POST`   | `/api/admin/incidents/evaluate` | Evaluate incident rules              |
+| `POST`   | `/api/admin/reindex`            | Reindex files                        |
+| `POST`   | `/api/admin/drives/scan`        | Scan remote drives                   |
+| `POST`   | `/api/admin/user-password`      | Change user password                 |
+| `POST`   | `/api/admin/access-requests`    | Approve/deny access requests         |
+| `GET`    | `/api/admin/api-keys`           | List all API keys (masked hashes)    |
+| `POST`   | `/api/admin/api-keys`           | Create a new API key (returned once) |
+| `DELETE` | `/api/admin/api-keys/[id]`      | Revoke an API key                    |
+| `DELETE` | `/api/admin/editors`            | Remove editor                        |
 
 ### Auth Endpoints
 
