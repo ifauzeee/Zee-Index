@@ -14,6 +14,9 @@ import { useTranslations } from "next-intl";
 const Header = dynamic(() => import("@/components/layout/Header"), {
   ssr: false,
 });
+const AdminSubNav = dynamic(() => import("@/components/admin/AdminSubNav"), {
+  ssr: false,
+});
 const DetailsPanel = dynamic(
   () => import("@/components/file-browser/DetailsPanel"),
   {
@@ -86,6 +89,9 @@ export default function MainLayout({
         </a>
         <Suspense fallback={<div className="h-16 bg-background" />}>
           <Header />
+        </Suspense>
+        <Suspense fallback={null}>
+          <AdminSubNav />
         </Suspense>
         <div className="container mx-auto px-4 max-w-7xl flex-grow">
           <main
