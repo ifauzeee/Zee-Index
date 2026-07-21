@@ -15,6 +15,7 @@ import {
   Zap,
   ExternalLink,
   Key,
+  Lock,
 } from "lucide-react";
 import { cn, formatBytes } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -171,6 +172,14 @@ export default function AdminSummaryTab() {
         >
           <Activity size={16} className="text-purple-500" />
           Audit Trail
+          <ExternalLink size={12} className="text-muted-foreground" />
+        </button>
+        <button
+          onClick={() => router.push("/admin/protected-folders")}
+          className="flex items-center gap-2 px-4 py-2.5 bg-card border rounded-xl text-sm font-medium hover:bg-accent/50 transition-colors"
+        >
+          <Lock size={16} className="text-emerald-500" />
+          Protected Folders
           <ExternalLink size={12} className="text-muted-foreground" />
         </button>
       </div>
