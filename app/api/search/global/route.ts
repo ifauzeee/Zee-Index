@@ -179,6 +179,7 @@ export const GET = createPublicRoute(
         const indexedFiles = await searchIndexedFiles({
           query: sanitizedSearchTerm,
           mimeType,
+          fullText: searchType === "fullText",
           limit: 100,
         });
         const fromIndex: DriveFile[] = indexedFiles.map(

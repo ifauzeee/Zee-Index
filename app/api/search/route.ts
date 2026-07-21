@@ -6,6 +6,8 @@ import { isAccessRestricted } from "@/lib/securityUtils";
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
 import { db } from "@/lib/db";
+import { searchIndexedFiles } from "@/lib/search-index";
+import { logger } from "@/lib/logger";
 
 const CACHE_TTL = 3600;
 
@@ -200,8 +202,38 @@ export const GET = createPublicRoute(
         }),
       );
 
+      const driveFiles = filteredFiles.filter((f) => f !== null);
+
+      // When searchType=fullText, also merge local Postgres index results
+      // (catches files whose Drive fullText index hasn't caught up).
+      if (searchType === "fullText" && searchTerm) {
+        try {
+          const indexedFiles = await searchIndexedFiles({
+            query: sanitizedSearchTerm,
+            mimeType,
+            fullText: true,
+            limit: 50,
+          });
+          const seen = new Set(driveFiles.map((f: DriveFile) => f.id));
+          for (const f of indexedFiles) {
+            if (!seen.has(f.id)) {
+              seen.add(f.id);
+              driveFiles.push({
+                ...f,
+                parents: [f.folderId],
+                modifiedTime: f.modifiedTime.toISOString(),
+                hasThumbnail: f.mimeType.startsWith("image/"),
+                isFolder: f.mimeType === "application/vnd.google-apps.folder",
+              } as unknown as DriveFile);
+            }
+          }
+        } catch (err) {
+          logger.warn({ err }, "Local full-text index search failed");
+        }
+      }
+
       const result = {
-        files: filteredFiles.filter((f) => f !== null),
+        files: driveFiles,
         nextPageToken: data.nextPageToken,
       };
 
