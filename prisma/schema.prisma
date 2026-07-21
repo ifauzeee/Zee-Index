@@ -132,6 +132,20 @@ model ProtectedFolder {
   createdAt DateTime @default(now())
 }
 
+/// Admin-managed API keys for external app access (scoped, revocable).
+model ApiKey {
+  id          String   @id @default(cuid())
+  name        String
+  keyPrefix   String   @unique
+  keyHash     String
+  permissions String[]
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  createdBy   String
+  revoked     Boolean  @default(false)
+}
+
 /// Durable search index for files (populated via reindex or on access).
 model FileIndex {
   id          String   @id
