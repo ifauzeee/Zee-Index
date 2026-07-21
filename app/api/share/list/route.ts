@@ -13,23 +13,26 @@ export const GET = createAdminRoute(async () => {
       orderBy: { createdAt: "desc" },
     });
 
-    const shareLinks: ShareLink[] = shareLinksRecords.map(
-      (record: DbShareLink) => ({
-        id: record.id,
-        path: record.path,
-        token: record.token,
-        jti: record.jti,
-        expiresAt: record.expiresAt.toISOString(),
-        loginRequired: record.loginRequired,
-        itemName: record.itemName,
-        isCollection: record.isCollection,
-        maxUses: record.maxUses,
-        preventDownload: record.preventDownload,
-        hasWatermark: record.hasWatermark,
-        watermarkText: record.watermarkText,
-        viewCount: record.views,
-      }),
-    );
+    const shareLinks: (ShareLink & {
+      createdAt: string;
+      createdBy: string | null;
+    })[] = shareLinksRecords.map((record: DbShareLink) => ({
+      id: record.id,
+      path: record.path,
+      token: record.token,
+      jti: record.jti,
+      expiresAt: record.expiresAt.toISOString(),
+      loginRequired: record.loginRequired,
+      itemName: record.itemName,
+      isCollection: record.isCollection,
+      maxUses: record.maxUses,
+      preventDownload: record.preventDownload,
+      hasWatermark: record.hasWatermark,
+      watermarkText: record.watermarkText,
+      viewCount: record.views,
+      createdAt: record.createdAt.toISOString(),
+      createdBy: record.createdBy,
+    }));
 
     return NextResponse.json(shareLinks);
   } catch (error) {
