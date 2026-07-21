@@ -13,8 +13,11 @@ import {
   Loader2,
   BarChart3,
   Zap,
+  ExternalLink,
+  Key,
 } from "lucide-react";
 import { cn, formatBytes } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 import type { AdminStats } from "@/lib/adminStats";
 import SystemHealth from "@/components/admin/SystemHealth";
 import RealTimeOverview from "@/components/admin/RealTimeOverview";
@@ -47,6 +50,7 @@ export default function AdminSummaryTab() {
   const t = useTranslations("AdminPage");
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     fetchShareLinks();
@@ -94,7 +98,10 @@ export default function AdminSummaryTab() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-        <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm flex flex-col items-center sm:items-start text-center sm:text-left">
+        <button
+          onClick={() => router.push("/admin/share-links")}
+          className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm flex flex-col items-center sm:items-start text-center sm:text-left hover:bg-accent/50 transition-colors cursor-pointer"
+        >
           <div className="p-3 bg-blue-500/10 rounded-full text-blue-600 mb-3">
             <LinkIcon size={24} />
           </div>
@@ -102,7 +109,7 @@ export default function AdminSummaryTab() {
             {t("totalLinks")}
           </p>
           <p className="text-2xl font-bold">{shareLinks.length}</p>
-        </div>
+        </button>
 
         <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm flex flex-col items-center sm:items-start text-center sm:text-left">
           <div className="p-3 bg-purple-500/10 rounded-full text-purple-600 mb-3">
@@ -116,7 +123,10 @@ export default function AdminSummaryTab() {
           </p>
         </div>
 
-        <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm flex flex-col items-center sm:items-start text-center sm:text-left">
+        <button
+          onClick={() => router.push("/admin/share-links")}
+          className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm flex flex-col items-center sm:items-start text-center sm:text-left hover:bg-accent/50 transition-colors cursor-pointer"
+        >
           <div className="p-3 bg-red-500/10 rounded-full text-red-600 mb-3">
             <Hourglass size={24} />
           </div>
@@ -124,7 +134,7 @@ export default function AdminSummaryTab() {
             {t("expired")}
           </p>
           <p className="text-2xl font-bold">{expiredLinks.length}</p>
-        </div>
+        </button>
 
         <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm flex flex-col items-center sm:items-start text-center sm:text-left">
           <div className="p-3 bg-indigo-500/10 rounded-full text-indigo-600 mb-3">
@@ -135,6 +145,34 @@ export default function AdminSummaryTab() {
           </p>
           <p className="text-2xl font-bold">{adminEmails.length}</p>
         </div>
+      </div>
+
+      {/* Quick Navigation */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => router.push("/admin/share-links")}
+          className="flex items-center gap-2 px-4 py-2.5 bg-card border rounded-xl text-sm font-medium hover:bg-accent/50 transition-colors"
+        >
+          <LinkIcon size={16} className="text-blue-500" />
+          Share Links
+          <ExternalLink size={12} className="text-muted-foreground" />
+        </button>
+        <button
+          onClick={() => router.push("/admin/api-keys")}
+          className="flex items-center gap-2 px-4 py-2.5 bg-card border rounded-xl text-sm font-medium hover:bg-accent/50 transition-colors"
+        >
+          <Key size={16} className="text-amber-500" />
+          API Keys
+          <ExternalLink size={12} className="text-muted-foreground" />
+        </button>
+        <button
+          onClick={() => router.push("/admin/audit")}
+          className="flex items-center gap-2 px-4 py-2.5 bg-card border rounded-xl text-sm font-medium hover:bg-accent/50 transition-colors"
+        >
+          <Activity size={16} className="text-purple-500" />
+          Audit Trail
+          <ExternalLink size={12} className="text-muted-foreground" />
+        </button>
       </div>
 
       <div>
