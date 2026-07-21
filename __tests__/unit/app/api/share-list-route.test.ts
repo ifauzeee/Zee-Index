@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { NextRequest } from "next/server";
 
 const { mockShareLinkFindMany } = vi.hoisted(() => ({
   mockShareLinkFindMany: vi.fn(),
@@ -43,7 +44,7 @@ describe("app/api/share/list route", () => {
       },
     ]);
 
-    const response = await GET();
+    const response = await GET(new NextRequest("http://localhost:3000"));
 
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -55,7 +56,7 @@ describe("app/api/share/list route", () => {
   it("returns empty array when no shares", async () => {
     mockShareLinkFindMany.mockResolvedValue([]);
 
-    const response = await GET();
+    const response = await GET(new NextRequest("http://localhost:3000"));
 
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -65,7 +66,7 @@ describe("app/api/share/list route", () => {
   it("returns 500 on database error", async () => {
     mockShareLinkFindMany.mockRejectedValue(new Error("DB error"));
 
-    const response = await GET();
+    const response = await GET(new NextRequest("http://localhost:3000"));
 
     expect(response.status).toBe(500);
   });

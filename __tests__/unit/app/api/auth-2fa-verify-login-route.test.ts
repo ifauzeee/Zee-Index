@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { NextRequest } from "next/server";
 
 const {
   mockAuthenticator,
@@ -29,7 +30,7 @@ vi.mock("@/lib/api-middleware", () => ({
     handler: (ctx: any) => Promise<Response>,
     options?: { bodySchema?: { safeParse: (v: unknown) => any } },
   ) => {
-    return async (request: Request) => {
+    return async (request: NextRequest) => {
       let body = {};
       if (options?.bodySchema) {
         const raw = await request.json();
@@ -81,7 +82,7 @@ describe("app/api/auth/2fa/verify-login route", () => {
 
   it("verifies 2FA during login", async () => {
     const response = await POST(
-      new Request("http://localhost:3000", {
+      new NextRequest("http://localhost:3000", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ token: "123456" }),
@@ -100,7 +101,7 @@ describe("app/api/auth/2fa/verify-login route", () => {
     mockCheckRateLimit.mockResolvedValue({ success: false });
 
     const response = await POST(
-      new Request("http://localhost:3000", {
+      new NextRequest("http://localhost:3000", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ token: "123456" }),
@@ -117,7 +118,7 @@ describe("app/api/auth/2fa/verify-login route", () => {
     });
 
     const response = await POST(
-      new Request("http://localhost:3000", {
+      new NextRequest("http://localhost:3000", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ token: "123456" }),
@@ -133,7 +134,7 @@ describe("app/api/auth/2fa/verify-login route", () => {
     mockGetToken.mockResolvedValue(null);
 
     const response = await POST(
-      new Request("http://localhost:3000", {
+      new NextRequest("http://localhost:3000", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ token: "123456" }),
@@ -147,7 +148,7 @@ describe("app/api/auth/2fa/verify-login route", () => {
     mockKvGet.mockResolvedValue(null);
 
     const response = await POST(
-      new Request("http://localhost:3000", {
+      new NextRequest("http://localhost:3000", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ token: "123456" }),
@@ -163,7 +164,7 @@ describe("app/api/auth/2fa/verify-login route", () => {
     mockAuthenticator.check.mockReturnValue(false);
 
     const response = await POST(
-      new Request("http://localhost:3000", {
+      new NextRequest("http://localhost:3000", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ token: "000000" }),
@@ -177,7 +178,7 @@ describe("app/api/auth/2fa/verify-login route", () => {
     mockGetToken.mockRejectedValue(new Error("JWT error"));
 
     const response = await POST(
-      new Request("http://localhost:3000", {
+      new NextRequest("http://localhost:3000", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ token: "123456" }),

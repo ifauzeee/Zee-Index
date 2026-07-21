@@ -19,9 +19,8 @@ vi.mock("@/lib/api-middleware", () => ({
     handlers.POST = handler;
     return async (request: NextRequest) => {
       const raw = await request.json().catch(() => undefined);
-      const parsed = (
-        await import("@/app/api/admin/analytics/track/route")
-      ).analyticsTrackRequestSchema?.safeParse?.(raw);
+      const { analyticsTrackRequestSchema } = await import("@/lib/telemetry");
+      const parsed = analyticsTrackRequestSchema?.safeParse?.(raw);
       if (parsed && !parsed.success) {
         return NextResponse.json({ ok: false }, { status: 400 });
       }

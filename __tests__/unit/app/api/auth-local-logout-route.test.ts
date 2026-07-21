@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { NextRequest } from "next/server";
 
 vi.mock("@/lib/api-middleware", () => ({
   createPublicRoute: (handler: (ctx: any) => Promise<Response>) => {
@@ -14,7 +15,7 @@ describe("app/api/auth/local/logout route", () => {
   });
 
   it("clears local storage auth cookie", async () => {
-    const response = await POST(new Request("http://localhost:3000"));
+    const response = await POST(new NextRequest("http://localhost:3000"));
 
     expect(response.status).toBe(200);
     const data = await response.json();

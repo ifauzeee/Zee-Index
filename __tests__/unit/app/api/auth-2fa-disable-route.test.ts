@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { NextRequest } from "next/server";
 
 const { mockKvDel, mockCheckRateLimit } = vi.hoisted(() => ({
   mockKvDel: vi.fn(),
@@ -7,7 +8,7 @@ const { mockKvDel, mockCheckRateLimit } = vi.hoisted(() => ({
 
 vi.mock("@/lib/api-middleware", () => ({
   createUserRoute: (handler: (ctx: any) => Promise<Response>) => {
-    return async (request: Request) =>
+    return async (request: NextRequest) =>
       handler({
         request,
         session: { user: { email: "user@test.com" } },
@@ -33,7 +34,7 @@ describe("app/api/auth/2fa/disable route", () => {
   });
 
   it("disables 2FA successfully", async () => {
-    const response = await POST(new Request("http://localhost:3000"));
+    const response = await POST(new NextRequest("http://localhost:3000"));
 
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -45,7 +46,7 @@ describe("app/api/auth/2fa/disable route", () => {
   it("returns 429 when rate limited", async () => {
     mockCheckRateLimit.mockResolvedValue({ success: false });
 
-    const response = await POST(new Request("http://localhost:3000"));
+    const response = await POST(new NextRequest("http://localhost:3000"));
 
     expect(response.status).toBe(429);
   });
@@ -53,7 +54,7 @@ describe("app/api/auth/2fa/disable route", () => {
   it("returns 500 on kv error", async () => {
     mockKvDel.mockRejectedValue(new Error("KV error"));
 
-    const response = await POST(new Request("http://localhost:3000"));
+    const response = await POST(new NextRequest("http://localhost:3000"));
 
     expect(response.status).toBe(500);
   });

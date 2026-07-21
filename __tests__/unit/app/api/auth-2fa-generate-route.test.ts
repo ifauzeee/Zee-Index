@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { NextRequest } from "next/server";
 
 const { mockAuthenticator, mockQrCode, mockKvSet } = vi.hoisted(() => ({
   mockAuthenticator: { generateSecret: vi.fn(), keyuri: vi.fn() },
@@ -39,7 +40,7 @@ describe("app/api/auth/2fa/generate route", () => {
   });
 
   it("generates 2FA secret and QR code", async () => {
-    const response = await POST(new Request("http://localhost:3000"));
+    const response = await POST(new NextRequest("http://localhost:3000"));
 
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -57,7 +58,7 @@ describe("app/api/auth/2fa/generate route", () => {
       throw new Error("Generation failed");
     });
 
-    const response = await POST(new Request("http://localhost:3000"));
+    const response = await POST(new NextRequest("http://localhost:3000"));
 
     expect(response.status).toBe(500);
   });

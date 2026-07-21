@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { NextRequest } from "next/server";
 
 const { mockKvGet } = vi.hoisted(() => ({
   mockKvGet: vi.fn(),
@@ -27,7 +28,7 @@ describe("app/api/auth/2fa/status route", () => {
   it("returns enabled when 2fa:enabled key exists", async () => {
     mockKvGet.mockResolvedValue("true");
 
-    const response = await GET();
+    const response = await GET(new NextRequest("http://localhost:3000"));
 
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -37,7 +38,7 @@ describe("app/api/auth/2fa/status route", () => {
   it("returns disabled when 2fa:enabled key is null", async () => {
     mockKvGet.mockResolvedValue(null);
 
-    const response = await GET();
+    const response = await GET(new NextRequest("http://localhost:3000"));
 
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -47,7 +48,7 @@ describe("app/api/auth/2fa/status route", () => {
   it("returns 500 on kv error", async () => {
     mockKvGet.mockRejectedValue(new Error("KV error"));
 
-    const response = await GET();
+    const response = await GET(new NextRequest("http://localhost:3000"));
 
     expect(response.status).toBe(500);
   });
