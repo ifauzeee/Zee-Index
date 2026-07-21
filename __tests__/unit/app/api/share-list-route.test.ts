@@ -41,6 +41,8 @@ describe("app/api/share/list route", () => {
         hasWatermark: false,
         watermarkText: null,
         views: 5,
+        createdAt: new Date("2025-01-01"),
+        createdBy: "admin@test.com",
       },
     ]);
 
