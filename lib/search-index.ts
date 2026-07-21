@@ -9,6 +9,8 @@ export interface IndexedFile {
   source: string;
   size: number | null;
   modifiedTime: Date;
+  /** Extracted full-text content (nullable). */
+  contentText?: string | null;
 }
 
 interface UpsertInput {
@@ -19,6 +21,7 @@ interface UpsertInput {
   source: string;
   modifiedTime?: string | Date;
   size?: number | null;
+  contentText?: string | null;
 }
 
 export async function upsertIndexedFile(file: UpsertInput): Promise<void> {
@@ -26,25 +29,22 @@ export async function upsertIndexedFile(file: UpsertInput): Promise<void> {
     const modifiedTime = file.modifiedTime
       ? new Date(file.modifiedTime)
       : new Date();
+    const data = {
+      name: file.name,
+      mimeType: file.mimeType,
+      folderId: file.folderId,
+      source: file.source,
+      modifiedTime,
+      size: file.size ?? null,
+      ...(file.contentText !== undefined
+        ? { contentText: file.contentText }
+        : {}),
+    };
+
     await db.fileIndex.upsert({
       where: { id: file.id },
-      create: {
-        id: file.id,
-        name: file.name,
-        mimeType: file.mimeType,
-        folderId: file.folderId,
-        source: file.source,
-        modifiedTime,
-        size: file.size ?? null,
-      },
-      update: {
-        name: file.name,
-        mimeType: file.mimeType,
-        folderId: file.folderId,
-        source: file.source,
-        modifiedTime,
-        size: file.size ?? null,
-      },
+      create: { id: file.id, ...data },
+      update: data,
     });
   } catch (err) {
     logger.error({ err, id: file.id }, "Failed to index file");
@@ -81,14 +81,41 @@ export async function searchIndexedFiles(opts: {
   query: string;
   mimeType?: string | null;
   limit?: number;
+  /** When true, also search in `contentText` (full-text content). Defaults to false. */
+  fullText?: boolean;
 }): Promise<IndexedFile[]> {
   const q = opts.query.trim();
   if (!q) return [];
 
+  const mime = mimeFilter(opts.mimeType);
+
+  if (opts.fullText) {
+    // Full-text search: match in name OR contentText
+    const where: Record<string, unknown> = {
+      OR: [
+        { name: { contains: q, mode: "insensitive" } },
+        { contentText: { contains: q, mode: "insensitive" } },
+      ],
+    };
+    if (mime) Object.assign(where, mime);
+
+    try {
+      const rows = await db.fileIndex.findMany({
+        where,
+        orderBy: { modifiedTime: "desc" },
+        take: opts.limit ?? 50,
+      });
+      return rows as IndexedFile[];
+    } catch (err) {
+      logger.error({ err }, "Postgres full-text search failed");
+      return [];
+    }
+  }
+
+  // Legacy name-only search
   const where: Record<string, unknown> = {
     name: { contains: q, mode: "insensitive" },
   };
-  const mime = mimeFilter(opts.mimeType);
   if (mime) Object.assign(where, mime);
 
   try {

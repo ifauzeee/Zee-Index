@@ -142,10 +142,13 @@ model FileIndex {
   size        Int?
   modifiedTime DateTime @default(now())
   createdAt   DateTime @default(now())
+  /// Extracted full-text content for PDF/DOCX/TXT files (nullable).
+  contentText String?
 
   @@index([name])
   @@index([folderId])
   @@index([mimeType])
+  @@index([contentText])
 }
 
 model AdminConfig {
