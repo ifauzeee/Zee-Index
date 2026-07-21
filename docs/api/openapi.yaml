@@ -6,12 +6,18 @@ info:
     explorer, and streaming platform.
 
     ## Authentication
-    Most endpoints require authentication via NextAuth.js session or folder-specific tokens.
+    Most endpoints support one of:
+    - **sessionAuth** — NextAuth.js JWT session cookie (`next-auth.session-token`)
+    - **apiKeyAuth** — `Authorization: Bearer <zk_xxx>` header (see API Keys section)
+    - **shareToken** — `share_token` query parameter for shared links
+    - **accessToken** — `access_token` query parameter for protected folders
 
     ## Rate Limiting
     - General API: 500 requests per minute
     - Download API: 100 requests per hour
+    - Auth API: 20 requests per 5 minutes
     - Admin API: 50 requests per minute
+    - **API Key**: 1000 requests per minute
 
     ## Error Responses
     Most errors follow this format:
@@ -43,6 +49,10 @@ tags:
     description: Admin-only operations
   - name: Share
     description: Share link management
+  - name: Search
+    description: File search operations (including full-text content search)
+  - name: API Keys
+    description: API key management for programmatic access
   - name: Health
     description: Health check endpoints
 
@@ -189,8 +199,9 @@ paths:
     get:
       tags:
         - Files
-      summary: Search files
-      description: Search for files within a folder
+        - Search
+      summary: Search files within a folder
+      description: Search for files within a specific folder. Supports name and full-text search.
       operationId: searchFiles
       parameters:
         - name: q
@@ -201,23 +212,135 @@ paths:
           description: Search query
         - name: folderId
           in: query
-          required: true
           schema:
             type: string
-        - name: type
+          description: Folder ID to search within (optional, searches root if omitted)
+        - name: searchType
           in: query
           schema:
             type: string
-            enum: [image, video, audio, document, all]
+            enum: [name, fullText]
+            default: name
+          description: Search mode — "name" searches file names, "fullText" searches file names + extracted content (PDF/DOCX/TXT)
+        - name: mimeType
+          in: query
+          schema:
+            type: string
+            enum: [image, video, audio, pdf, folder]
+          description: Filter by file type
+        - name: modifiedTime
+          in: query
+          schema:
+            type: string
+            enum: [today, week, month]
+          description: Filter by last modified time
+        - name: minSize
+          in: query
+          schema:
+            type: integer
+          description: Minimum file size in MB
+      responses:
+        "200":
+          description: Search results (files array + pagination token)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  files:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DriveFile"
+                  nextPageToken:
+                    type: string
+                    nullable: true
+        "400":
+          description: Missing search criteria
+
+  /api/search/global:
+    get:
+      tags:
+        - Files
+        - Search
+      summary: Global search across all drives
+      description: Search across all descendant folders of the root. Merges Google Drive results with local Postgres full-text index.
+      operationId: searchGlobal
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search query
+        - name: searchType
+          in: query
+          schema:
+            type: string
+            enum: [name, fullText]
+            default: name
+          description: Search mode
+        - name: mimeType
+          in: query
+          schema:
+            type: string
+            enum: [image, video, audio, pdf, folder]
+          description: Filter by file type
+        - name: modifiedTime
+          in: query
+          schema:
+            type: string
+            enum: [today, week, month]
+          description: Filter by last modified time
       responses:
         "200":
           description: Search results
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/DriveFile"
+                type: object
+                properties:
+                  files:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DriveFile"
+        "400":
+          description: Missing search term
+
+  /api/search/index:
+    post:
+      tags:
+        - Search
+      summary: Index file content for full-text search
+      description: Extract text content from files (PDF, DOCX, TXT, code) and store in the Postgres search index. Accepts an optional fileId or indexes all pending files.
+      operationId: indexFileContent
+      security:
+        - sessionAuth: []
+        - apiKeyAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fileId:
+                  type: string
+                  description: Specific file ID to index. If omitted, indexes all pending files.
+      responses:
+        "200":
+          description: Indexing complete
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  indexed:
+                    type: integer
+                    description: Number of files indexed
+                  errors:
+                    type: integer
+                    description: Number of files that failed to index
+        "401":
+          description: Unauthorized
 
   /api/files/upload:
     post:
@@ -843,6 +966,84 @@ paths:
                 items:
                   $ref: "#/components/schemas/ActivityLog"
 
+  /api/admin/api-keys:
+    get:
+      tags:
+        - Admin
+        - API Keys
+      summary: List API keys
+      description: Get all API keys with masked hashes. Only admins can access this.
+      operationId: listApiKeys
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: List of API keys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ApiKey"
+        "401":
+          description: Unauthorized
+    post:
+      tags:
+        - Admin
+        - API Keys
+      summary: Create API key
+      description: Create a new API key with specified permissions. The raw key is returned **only once** in the response.
+      operationId: createApiKey
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateApiKeyRequest"
+      responses:
+        "200":
+          description: API key created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateApiKeyResponse"
+        "401":
+          description: Unauthorized
+
+  /api/admin/api-keys/{id}:
+    delete:
+      tags:
+        - Admin
+        - API Keys
+      summary: Revoke API key
+      description: Revoke (soft-delete) an API key. Clears its Redis cache entry.
+      operationId: revokeApiKey
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: API key ID to revoke
+      responses:
+        "200":
+          description: API key revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        "401":
+          description: Unauthorized
+        "404":
+          description: API key not found
+
 # ==============================================================================
 # COMPONENTS
 # ==============================================================================
@@ -853,6 +1054,11 @@ components:
       in: cookie
       name: next-auth.session-token
       description: NextAuth.js session cookie
+    apiKeyAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: zk_
+      description: API key with bearer format (zk_ prefix). Create one from the admin panel.
 
   schemas:
     DriveFile:
@@ -1112,6 +1318,91 @@ components:
                   type: integer
                 google_drive:
                   type: integer
+
+    ApiKey:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          description: Human-friendly label for the key
+        keyPrefix:
+          type: string
+          description: First 8 characters of the raw key (zk_abc123...)
+        permissions:
+          type: array
+          items:
+            type: string
+            enum: [files:read, files:write, share:read, share:write, admin:read, admin:write]
+          description: Granular permissions assigned to this key
+        status:
+          type: string
+          enum: [active, revoked]
+        lastUsedAt:
+          type: string
+          format: date-time
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - keyPrefix
+        - permissions
+        - status
+
+    CreateApiKeyRequest:
+      type: object
+      required:
+        - name
+        - permissions
+      properties:
+        name:
+          type: string
+          description: Label for the key (e.g. "CI/CD Deploy")
+        permissions:
+          type: array
+          items:
+            type: string
+            enum: [files:read, files:write, share:read, share:write, admin:read, admin:write]
+          description: One or more permissions
+        expiresAt:
+          type: string
+          format: date-time
+          description: Optional expiration date
+
+    CreateApiKeyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        keyPrefix:
+          type: string
+        rawKey:
+          type: string
+          description: "⚠️ The full raw API key. Shown only once — save it immediately."
+        permissions:
+          type: array
+          items:
+            type: string
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - name
+        - keyPrefix
+        - rawKey
+        - permissions
 
     Error:
       type: object
