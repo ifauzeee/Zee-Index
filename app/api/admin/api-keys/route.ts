@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
 import { generateApiKey } from "@/lib/api-key";
 import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
+
+const createApiKeySchema = z.object({
+  name: z.string().min(1, "Name is required."),
+  permissions: z
+    .array(z.string())
+    .min(1, "At least one permission is required."),
+  expiresAt: z.string().nullable().optional(),
+});
 
 /** List all API keys (without hashes). */
 export const GET = createAdminRoute(async () => {
@@ -27,43 +36,33 @@ export const GET = createAdminRoute(async () => {
 });
 
 /** Create a new API key. */
-export const POST = createAdminRoute(async ({ body, session }) => {
-  const { name, permissions, expiresAt } = (body || {}) as {
-    name?: string;
-    permissions?: string[];
-    expiresAt?: string | null;
-  };
+export const POST = createAdminRoute(
+  async ({ body, session }) => {
+    const { name, permissions, expiresAt } = body;
 
-  if (!name || typeof name !== "string" || name.trim().length === 0) {
-    return NextResponse.json({ error: "Name is required." }, { status: 400 });
-  }
+    const { raw, prefix, hash } = generateApiKey();
 
-  if (!Array.isArray(permissions) || permissions.length === 0) {
-    return NextResponse.json(
-      { error: "At least one permission is required." },
-      { status: 400 },
-    );
-  }
+    await db.apiKey.create({
+      data: {
+        name: name.trim(),
+        keyPrefix: prefix,
+        keyHash: hash,
+        permissions,
+        createdBy: session?.user?.email || "unknown",
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
+      },
+    });
 
-  const { raw, prefix, hash } = generateApiKey();
+    logger.info({ keyPrefix: prefix }, "API key created");
 
-  await db.apiKey.create({
-    data: {
+    return NextResponse.json({
+      apiKey: raw,
+      prefix,
       name: name.trim(),
-      keyPrefix: prefix,
-      keyHash: hash,
       permissions,
-      createdBy: session?.user?.email || "unknown",
-      expiresAt: expiresAt ? new Date(expiresAt) : null,
-    },
-  });
-
-  logger.info({ keyPrefix: prefix }, "API key created");
-
-  return NextResponse.json({
-    apiKey: raw,
-    prefix,
-    name: name.trim(),
-    permissions,
-  });
-});
+    });
+  },
+  {
+    bodySchema: createApiKeySchema,
+  },
+);
