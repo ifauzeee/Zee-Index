@@ -28,6 +28,8 @@ export interface ZeeFile {
   md5Checksum?: string;
   sharedWithMeTime?: string;
   shortcutDetails?: { targetId: string; targetMimeType: string };
+  /** Extracted text content for full-text search (from Postgres FileIndex). */
+  contentText?: string | null;
 }
 
 export interface ListFilesOptions {

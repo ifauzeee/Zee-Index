@@ -193,6 +193,7 @@ export const GET = createPublicRoute(
               source: f.source,
               hasThumbnail: f.mimeType.startsWith("image/"),
               isFolder: f.mimeType === "application/vnd.google-apps.folder",
+              contentText: f.contentText,
             }) as DriveFile,
         );
         const seen = new Set(merged.map((f) => f.id));

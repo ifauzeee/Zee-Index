@@ -224,6 +224,7 @@ export const GET = createPublicRoute(
                 modifiedTime: f.modifiedTime.toISOString(),
                 hasThumbnail: f.mimeType.startsWith("image/"),
                 isFolder: f.mimeType === "application/vnd.google-apps.folder",
+                contentText: f.contentText,
               } as unknown as DriveFile);
             }
           }

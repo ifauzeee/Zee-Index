@@ -18,6 +18,7 @@ export default function SearchResultsList() {
   const searchParams = useSearchParams();
   const searchTerm = searchParams.get("q");
   const folderId = searchParams.get("folderId");
+  const searchType = searchParams.get("searchType") || "name";
   const { shareToken, addToast, currentFolderId, user } = useAppStore();
   const t = useTranslations("SearchResultsList");
 
@@ -26,7 +27,13 @@ export default function SearchResultsList() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["search-page-results", searchTerm, folderId, shareToken],
+    queryKey: [
+      "search-page-results",
+      searchTerm,
+      folderId,
+      searchType,
+      shareToken,
+    ],
     queryFn: async () => {
       if (!searchTerm) return [];
 
@@ -35,6 +42,7 @@ export default function SearchResultsList() {
 
       const url = new URL(apiPath, window.location.origin);
       url.searchParams.append("q", searchTerm);
+      url.searchParams.append("searchType", searchType);
 
       if (!isGlobalSearch && folderId) {
         url.searchParams.append("folderId", folderId);

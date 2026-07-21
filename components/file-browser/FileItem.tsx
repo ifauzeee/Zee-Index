@@ -19,6 +19,15 @@ import type {
   FileBrowserActionEvent,
 } from "@/components/file-browser/views/types";
 
+/** Truncate text to ~maxLen chars at a word boundary, preserving the first portion. */
+function extractExcerpt(text: string, maxLen: number): string {
+  const cleaned = text.replace(/\s+/g, " ").trim();
+  if (cleaned.length <= maxLen) return cleaned;
+  const truncated = cleaned.slice(0, maxLen);
+  const lastSpace = truncated.lastIndexOf(" ");
+  return lastSpace > 0 ? truncated.slice(0, lastSpace) + "…" : truncated + "…";
+}
+
 interface FileItemProps {
   file: BrowserFile;
   onClick: (e: FileBrowserActionEvent) => void;
@@ -422,6 +431,15 @@ function FileItem({
                     : "-"}
                 </p>
               )}
+
+            {view === "list" && file.contentText && !compactClass && (
+              <p
+                className="text-xs text-muted-foreground/70 mt-1 text-left line-clamp-2 select-none italic leading-relaxed"
+                onMouseDown={preventSelection}
+              >
+                {extractExcerpt(file.contentText, 200)}
+              </p>
+            )}
 
             {(isUploading || isError) && (
               <div className="w-full mt-2">
