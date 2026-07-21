@@ -7,6 +7,7 @@ import {
   createRateLimitResponse,
   type RateLimitType,
 } from "@/lib/ratelimit";
+import { validateApiKey } from "@/lib/api-key";
 import { ERROR_MESSAGES } from "@/lib/constants";
 import { isAppConfigured } from "@/lib/config";
 import {
@@ -171,23 +172,72 @@ export default async function middleware(request: NextRequest) {
   const pathnameWithoutLocale = stripLocaleFromPathname(pathname) || "/";
   const isApi = pathnameWithoutLocale.startsWith("/api");
 
-  if (isApi && !pathnameWithoutLocale.startsWith("/api/health")) {
-    const type: RateLimitType = pathnameWithoutLocale.startsWith("/api/admin")
-      ? "ADMIN"
-      : "API";
+  // API key authentication (runs for all API routes).
+  // If valid, sets x-auth-method=api-key headers and skips session auth downstream.
+  let isApiKeyRequest = false;
+  let apiKeyRequestOverride: NextResponse | null = null;
 
-    const ratelimitResult = await checkRateLimit(request, type);
-    if (!ratelimitResult.success) {
-      return applyCsp(
-        request,
-        NextResponse.json(
-          { error: ERROR_MESSAGES.RATE_LIMIT_EXCEEDED },
-          {
-            status: 429,
-            headers: createRateLimitResponse(ratelimitResult).headers,
-          },
-        ),
-      );
+  if (isApi) {
+    const authHeader = request.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const rawKey = authHeader.slice(7);
+      if (rawKey.length >= 16) {
+        const apiKeyData = await validateApiKey(rawKey);
+        if (apiKeyData) {
+          isApiKeyRequest = true;
+          const requestHeaders = new Headers(request.headers);
+          requestHeaders.set("x-auth-method", "api-key");
+          requestHeaders.set("x-api-key-id", apiKeyData.id);
+          requestHeaders.set("x-api-key-name", apiKeyData.name);
+          requestHeaders.set(
+            "x-api-key-permissions",
+            apiKeyData.permissions.join(","),
+          );
+          apiKeyRequestOverride = NextResponse.next({
+            request: { headers: requestHeaders },
+          });
+        }
+      }
+    }
+
+    // Rate limiting: API key requests use API_KEY tier with key ID as identifier;
+    // non-API-key requests use IP-based limiting.
+    if (isApiKeyRequest && apiKeyRequestOverride) {
+      const apiKeyId =
+        apiKeyRequestOverride.headers.get(
+          "x-middleware-request-x-api-key-id",
+        ) || "unknown";
+      const type: RateLimitType = "API_KEY";
+      const ratelimitResult = await checkRateLimit(request, type, apiKeyId);
+      if (!ratelimitResult.success) {
+        return applyCsp(
+          request,
+          NextResponse.json(
+            { error: ERROR_MESSAGES.RATE_LIMIT_EXCEEDED },
+            {
+              status: 429,
+              headers: createRateLimitResponse(ratelimitResult).headers,
+            },
+          ),
+        );
+      }
+    } else {
+      const type: RateLimitType = pathnameWithoutLocale.startsWith("/api/admin")
+        ? "ADMIN"
+        : "API";
+      const ratelimitResult = await checkRateLimit(request, type);
+      if (!ratelimitResult.success) {
+        return applyCsp(
+          request,
+          NextResponse.json(
+            { error: ERROR_MESSAGES.RATE_LIMIT_EXCEEDED },
+            {
+              status: 429,
+              headers: createRateLimitResponse(ratelimitResult).headers,
+            },
+          ),
+        );
+      }
     }
   }
 
@@ -220,6 +270,11 @@ export default async function middleware(request: NextRequest) {
       request,
       NextResponse.redirect(new URL("/setup", request.url)),
     );
+  }
+
+  // API key requests skip session auth — route handlers check permissions via headers.
+  if (isApiKeyRequest && apiKeyRequestOverride) {
+    return applyCsp(request, apiKeyRequestOverride);
   }
 
   const authResult = await checkAuth(request, process.env.NEXTAUTH_SECRET);

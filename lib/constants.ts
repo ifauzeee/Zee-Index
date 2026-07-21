@@ -48,6 +48,7 @@ export const REDIS_KEYS = {
   FOLDER_PATH: "zee-index:folder-path-v7:",
   ADMIN_USERS: "zee-index:admins",
   ADMIN_EDITORS: "zee-index:editors",
+  API_KEY_CACHE: "zee-index:api-key:",
 } as const;
 
 export const REDIS_TTL = {
@@ -98,6 +99,10 @@ export const RATE_LIMITS = {
   },
   ADMIN: {
     LIMIT: 200,
+    WINDOW: 60,
+  },
+  API_KEY: {
+    LIMIT: 1000,
     WINDOW: 60,
   },
 } as const;
