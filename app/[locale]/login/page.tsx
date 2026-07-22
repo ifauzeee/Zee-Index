@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { User, LockKeyhole } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import AppIcon from "@/app/icon.png";
 import { useTranslations } from "next-intl";
@@ -327,7 +328,7 @@ function CustomLoginPage() {
                 }`}
             >
               {isLoadingConfig ? (
-                <span className="animate-pulse">{t("loading")}</span>
+                <Skeleton className="h-6 w-32" />
               ) : isGuestLoginDisabled ? (
                 <>
                   <LockKeyhole size={20} />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { useAppStore } from "@/lib/store";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import {
@@ -16,6 +17,7 @@ import {
   Share2,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { TableSkeleton } from "@/components/admin/skeletons";
 
 interface ShareLinkItem {
   id: string;
@@ -45,9 +47,12 @@ export default function ShareLinkManager() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [isRefetching, setIsRefetching] = useState(false);
+  const { addToast } = useAppStore();
 
-  const fetchLinks = useCallback(async () => {
-    setLoading(true);
+  const fetchLinks = useCallback(async (isBackground = false) => {
+    if (isBackground) setIsRefetching(true);
+    else setLoading(true);
     setError("");
     try {
       const res = await fetch("/api/share/list");
@@ -57,7 +62,8 @@ export default function ShareLinkManager() {
     } catch {
       setError("Gagal memuat daftar tautan berbagi");
     } finally {
-      setLoading(false);
+      if (isBackground) setIsRefetching(false);
+      else setLoading(false);
     }
   }, []);
 
@@ -95,6 +101,10 @@ export default function ShareLinkManager() {
   const handleRevoke = async (link: ShareLinkItem) => {
     if (!confirm(`Cabut tautan berbagi untuk "${link.itemName}"?`)) return;
     setActionLoading(link.id);
+
+    // Optimistic update
+    setLinks((prev) => prev.filter((l) => l.id !== link.id));
+
     try {
       const res = await fetch("/api/share/revoke", {
         method: "POST",
@@ -102,9 +112,10 @@ export default function ShareLinkManager() {
         body: JSON.stringify({ jti: link.jti, expiresAt: link.expiresAt }),
       });
       if (!res.ok) throw new Error("Failed to revoke");
-      await fetchLinks();
+      await fetchLinks(true);
     } catch {
-      setError("Gagal mencabut tautan");
+      await fetchLinks(true);
+      addToast({ message: "Gagal mencabut tautan", type: "error" });
     } finally {
       setActionLoading(null);
     }
@@ -114,6 +125,10 @@ export default function ShareLinkManager() {
     if (!confirm(`Hapus permanen tautan berbagi untuk "${link.itemName}"?`))
       return;
     setActionLoading(link.id);
+
+    // Optimistic update
+    setLinks((prev) => prev.filter((l) => l.id !== link.id));
+
     try {
       const res = await fetch("/api/share/delete", {
         method: "POST",
@@ -125,9 +140,10 @@ export default function ShareLinkManager() {
         }),
       });
       if (!res.ok) throw new Error("Failed to delete");
-      await fetchLinks();
+      await fetchLinks(true);
     } catch {
-      setError("Gagal menghapus tautan");
+      await fetchLinks(true);
+      addToast({ message: "Gagal menghapus tautan", type: "error" });
     } finally {
       setActionLoading(null);
     }
@@ -159,8 +175,11 @@ export default function ShareLinkManager() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">
+          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
             Share Links
+            {isRefetching && (
+              <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+            )}
           </h1>
           <p className="text-gray-400 mt-1">
             Kelola semua tautan berbagi yang telah dibuat
@@ -215,9 +234,7 @@ export default function ShareLinkManager() {
 
       {/* Table */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
-        </div>
+        <TableSkeleton rows={8} columns={6} />
       ) : filteredLinks.length === 0 ? (
         <div className="text-center py-20 text-gray-500">
           <Share2 className="w-12 h-12 mx-auto mb-3 opacity-50" />

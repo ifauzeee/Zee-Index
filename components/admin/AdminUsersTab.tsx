@@ -6,6 +6,7 @@ import { useConfirm } from "@/components/providers/ModalProvider";
 import { Trash2, UserPlus, Loader2, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
 import UserPasswordManager from "@/components/admin/UserPasswordManager";
+import { UserListSkeleton } from "@/components/admin/skeletons";
 import { useTranslations } from "next-intl";
 
 export default function AdminUsersTab() {
@@ -157,9 +158,7 @@ export default function AdminUsersTab() {
           {t("adminList")}
         </h3>
         {isFetchingAdmins ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="animate-spin text-muted-foreground" />
-          </div>
+          <UserListSkeleton count={3} />
         ) : (
           <div className="space-y-3">
             {adminEmails.map((email) => (
@@ -220,9 +219,7 @@ export default function AdminUsersTab() {
           {t("editorList")}
         </h3>
         {isFetchingEditors ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="animate-spin text-muted-foreground" />
-          </div>
+          <UserListSkeleton count={3} />
         ) : (
           <div className="space-y-3">
             {editorEmails.length === 0 ? (

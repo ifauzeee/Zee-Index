@@ -25,6 +25,7 @@ import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import type { ActivityLog, ActivityType } from "@/lib/activityLogger";
 import EmptyState from "@/components/file-browser/EmptyState";
+import { LogListSkeleton } from "@/components/admin/skeletons";
 import { useTranslations } from "next-intl";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -104,6 +105,7 @@ export default function ActivityLogDashboard() {
   const { addToast } = useAppStore();
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFetchingPage, setIsFetchingPage] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filterType, setFilterType] = useState<ActivityType | "ALL">(ALL_TYPES);
@@ -111,8 +113,9 @@ export default function ActivityLogDashboard() {
   const t = useTranslations("ActivityLogDashboard");
 
   const fetchLogs = useCallback(
-    async (page: number) => {
-      setIsLoading(true);
+    async (page: number, background = false) => {
+      if (background) setIsFetchingPage(true);
+      else setIsLoading(true);
       try {
         const response = await fetch(
           `/api/admin/activity-log?page=${page}&limit=${LOGS_PER_PAGE}`,
@@ -129,7 +132,8 @@ export default function ActivityLogDashboard() {
           type: "error",
         });
       } finally {
-        setIsLoading(false);
+        if (background) setIsFetchingPage(false);
+        else setIsLoading(false);
       }
     },
     [addToast, t],
@@ -141,7 +145,7 @@ export default function ActivityLogDashboard() {
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
-      fetchLogs(newPage);
+      fetchLogs(newPage, true);
     }
   };
 
@@ -206,9 +210,7 @@ export default function ActivityLogDashboard() {
 
       <div className="bg-card border rounded-lg overflow-hidden shadow-sm">
         {isLoading ? (
-          <div className="flex justify-center items-center h-48">
-            <Loader2 className="animate-spin text-muted-foreground" />
-          </div>
+          <LogListSkeleton count={8} />
         ) : filteredLogs.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
             <EmptyState
@@ -218,7 +220,9 @@ export default function ActivityLogDashboard() {
             />
           </div>
         ) : (
-          <div className="divide-y divide-border">
+          <div
+            className={`divide-y divide-border transition-opacity duration-300 ${isFetchingPage ? "opacity-50 pointer-events-none" : ""}`}
+          >
             {filteredLogs.map((log, index) => {
               const Icon = iconMap[log.type] || AlertCircle;
               return (
@@ -261,7 +265,7 @@ export default function ActivityLogDashboard() {
           <div className="p-4 border-t border-border flex justify-between items-center bg-muted/20">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
+              disabled={currentPage === 1 || isFetchingPage}
               className="px-3 py-1 text-sm font-medium rounded-md hover:bg-accent disabled:opacity-50 flex items-center gap-1 transition-colors"
             >
               <ChevronLeft size={16} />
@@ -272,7 +276,7 @@ export default function ActivityLogDashboard() {
             </span>
             <button
               onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
+              disabled={currentPage === totalPages || isFetchingPage}
               className="px-3 py-1 text-sm font-medium rounded-md hover:bg-accent disabled:opacity-50 flex items-center gap-1 transition-colors"
             >
               {t("next")}

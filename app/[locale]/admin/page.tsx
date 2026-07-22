@@ -18,31 +18,50 @@ import Loading from "@/components/common/Loading";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AdminDashboardSkeleton,
+  StatCardSkeleton,
+  ChartSkeleton,
+  UserListSkeleton,
+  FormSkeleton,
+  LogListSkeleton,
+} from "@/components/admin/skeletons";
 import { useTranslations } from "next-intl";
 
 const AdminSummaryTab = dynamic(
   () => import("@/components/admin/AdminSummaryTab"),
-  { ssr: false },
+  { ssr: false, loading: () => <AdminDashboardSkeleton /> },
 );
 const AnalyticsDashboard = dynamic(
   () => import("@/components/admin/AnalyticsDashboard"),
-  { ssr: false },
+  {
+    ssr: false,
+    loading: () => (
+      <>
+        <StatCardSkeleton count={6} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <ChartSkeleton />
+          <ChartSkeleton />
+        </div>
+      </>
+    ),
+  },
 );
 const AdminUsersTab = dynamic(
   () => import("@/components/admin/AdminUsersTab"),
-  { ssr: false },
+  { ssr: false, loading: () => <UserListSkeleton count={6} /> },
 );
 const AdminSecurityTab = dynamic(
   () => import("@/components/admin/AdminSecurityTab"),
-  { ssr: false },
+  { ssr: false, loading: () => <FormSkeleton fields={6} /> },
 );
 const BrandingConfig = dynamic(
   () => import("@/components/admin/BrandingConfig"),
-  { ssr: false },
+  { ssr: false, loading: () => <FormSkeleton fields={4} /> },
 );
 const ActivityLogDashboard = dynamic(
   () => import("@/components/admin/ActivityLogDashboard"),
-  { ssr: false },
+  { ssr: false, loading: () => <LogListSkeleton /> },
 );
 
 const scrollbarHideStyles = {

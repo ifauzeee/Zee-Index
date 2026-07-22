@@ -29,6 +29,7 @@ import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import EmptyState from "@/components/file-browser/EmptyState";
+import { TableSkeleton } from "@/components/admin/skeletons";
 
 interface AuditLog {
   id: string;
@@ -91,11 +92,13 @@ export default function AuditDashboard() {
   const t = useTranslations("AuditDashboard");
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefetching, setIsRefetching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const fetchLogs = useCallback(async () => {
-    setLoading(true);
+  const fetchLogs = useCallback(async (isBackground = false) => {
+    if (isBackground) setIsRefetching(true);
+    else setLoading(true);
     try {
       const res = await fetch("/api/admin/audit");
       if (res.ok) {
@@ -105,7 +108,8 @@ export default function AuditDashboard() {
     } catch (error) {
       console.error(error);
     } finally {
-      setLoading(false);
+      if (isBackground) setIsRefetching(false);
+      else setLoading(false);
     }
   }, []);
 
@@ -199,13 +203,13 @@ export default function AuditDashboard() {
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
               <button
-                onClick={fetchLogs}
-                disabled={loading}
+                onClick={() => fetchLogs(true)}
+                disabled={loading || isRefetching}
                 className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card hover:bg-accent/50 transition-all text-sm font-medium disabled:opacity-50 active:scale-[0.98]"
               >
                 <RefreshCw
                   size={16}
-                  className={loading ? "animate-spin" : ""}
+                  className={loading || isRefetching ? "animate-spin" : ""}
                 />
                 <span className="hidden sm:inline">{t("refresh")}</span>
               </button>
@@ -232,12 +236,7 @@ export default function AuditDashboard() {
       <motion.div variants={item}>
         <div className="bg-card border rounded-2xl overflow-hidden shadow-sm">
           {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                <Loader2 className="animate-spin h-6 w-6" />
-                <span className="text-sm">{t("loading")}</span>
-              </div>
-            </div>
+            <TableSkeleton rows={10} columns={5} />
           ) : filteredLogs.length === 0 ? (
             <div className="py-12">
               <EmptyState
@@ -259,7 +258,9 @@ export default function AuditDashboard() {
                       <th className="px-5 py-4">{t("ipDevice")}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody
+                    className={`divide-y divide-border transition-opacity duration-300 ${isRefetching ? "opacity-50 pointer-events-none" : ""}`}
+                  >
                     {paginatedLogs.map((log, i) => {
                       const ActionIcon = getActionIcon(log.type);
                       return (

@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
-import Loading from "@/components/common/Loading";
 import FileList from "@/components/file-browser/FileList";
 import type { DriveFile } from "@/lib/drive";
 import { motion } from "framer-motion";
@@ -97,7 +96,32 @@ function SharedCollectionPage() {
   }, [shareId, shareToken, addToast, router, t]);
 
   if (isLoading) {
-    return <Loading />;
+    return (
+      <motion.div
+        className="py-3"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <h1 className="text-xl font-bold mb-8 flex items-center gap-2">
+          <Link size={20} /> {collectionName}
+        </h1>
+        <div className="flex flex-col gap-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 border bg-card rounded-lg p-3 min-h-[68px]"
+            >
+              <div className="w-10 h-10 shrink-0 rounded shimmer" />
+              <div className="flex-1 min-w-0">
+                <div className="h-4 w-1/3 shimmer rounded-md mb-2" />
+                <div className="h-3 w-1/4 shimmer rounded-md" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    );
   }
 
   return (
@@ -143,7 +167,34 @@ function SharedCollectionPage() {
 
 export default function SharedCollectionPageSuspense() {
   return (
-    <Suspense fallback={<Loading />}>
+    <Suspense
+      fallback={
+        <motion.div
+          className="py-3"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <h1 className="text-xl font-bold mb-8 flex items-center gap-2">
+            <div className="h-7 w-48 shimmer rounded-md bg-muted" />
+          </h1>
+          <div className="flex flex-col gap-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 border bg-card rounded-lg p-3 min-h-[68px]"
+              >
+                <div className="w-10 h-10 shrink-0 rounded shimmer" />
+                <div className="flex-1 min-w-0">
+                  <div className="h-4 w-1/3 shimmer rounded-md mb-2" />
+                  <div className="h-3 w-1/4 shimmer rounded-md" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      }
+    >
       <SharedCollectionPage />
     </Suspense>
   );

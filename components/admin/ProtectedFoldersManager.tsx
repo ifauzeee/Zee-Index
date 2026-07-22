@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
+import { ListSkeleton } from "@/components/admin/skeletons";
 import { getErrorMessage } from "@/lib/errors";
 
 interface ProtectedFolder {
@@ -180,12 +181,7 @@ export default function ProtectedFoldersManager() {
             </div>
 
             {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-12 gap-3">
-                <Loader2 className="animate-spin text-primary" size={32} />
-                <p className="text-sm text-muted-foreground animate-pulse">
-                  {t("connecting")}
-                </p>
-              </div>
+              <ListSkeleton count={4} columns={2} />
             ) : Object.keys(folders).length === 0 ? (
               <div className="text-center py-16 bg-muted/30 border border-dashed rounded-2xl">
                 <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 opacity-50">

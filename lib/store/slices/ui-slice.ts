@@ -130,7 +130,21 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (
     }
   },
   setConfig: async (config: Partial<AppConfig>) => {
-    set({ isConfigLoading: true });
+    const state = get();
+    const prevConfig = {
+      hideAuthor: state.hideAuthor,
+      disableGuestLogin: state.disableGuestLogin,
+      appName: state.appName,
+      logoUrl: state.logoUrl,
+      faviconUrl: state.faviconUrl,
+      primaryColor: state.primaryColor,
+      localStorageAuthEnabled: state.localStorageAuthEnabled,
+      localStoragePassword: state.localStoragePassword,
+    };
+
+    // Optimistic update
+    set({ ...config });
+
     try {
       const response = await fetch("/api/admin/config", {
         method: "POST",
@@ -156,10 +170,12 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (
       });
     } catch (error: unknown) {
       console.error("Config update error:", error);
+      set(prevConfig);
       get().addToast({
         message: getErrorMessage(error, "Error updating config"),
         type: "error",
       });
+      throw error;
     } finally {
       set({ isConfigLoading: false });
     }

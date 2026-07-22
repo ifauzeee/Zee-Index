@@ -19,6 +19,7 @@ import type {
 } from "@/lib/services/health-service";
 import { getErrorMessage } from "@/lib/errors";
 import { formatBytes } from "@/lib/utils";
+import { HealthCardSkeleton } from "@/components/admin/skeletons";
 import { useTranslations } from "next-intl";
 
 interface SystemHealthResponse {
@@ -96,11 +97,7 @@ export default function SystemHealth() {
     | undefined;
 
   if (loading && !data) {
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="animate-spin text-muted-foreground" size={32} />
-      </div>
-    );
+    return <HealthCardSkeleton count={5} />;
   }
 
   if (error && !data) {

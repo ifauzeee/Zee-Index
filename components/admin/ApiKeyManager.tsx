@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useAppStore } from "@/lib/store";
 import { format } from "date-fns";
 import {
   Key,
@@ -13,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { TableSkeleton } from "@/components/admin/skeletons";
 import { useTranslations } from "next-intl";
 
 interface ApiKeyItem {
@@ -45,9 +47,12 @@ export default function ApiKeyManager() {
   const [creating, setCreating] = useState(false);
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isRefetching, setIsRefetching] = useState(false);
+  const { addToast } = useAppStore();
 
-  const fetchKeys = useCallback(async () => {
-    setLoading(true);
+  const fetchKeys = useCallback(async (isBackground = false) => {
+    if (isBackground) setIsRefetching(true);
+    else setLoading(true);
     setError("");
     try {
       const res = await fetch("/api/admin/api-keys");
@@ -57,7 +62,8 @@ export default function ApiKeyManager() {
     } catch {
       setError("Gagal memuat API keys");
     } finally {
-      setLoading(false);
+      if (isBackground) setIsRefetching(false);
+      else setLoading(false);
     }
   }, []);
 
@@ -69,6 +75,20 @@ export default function ApiKeyManager() {
     if (!newName.trim() || newPerms.length === 0) return;
     setCreating(true);
     setError("");
+
+    // Optimistic addition
+    const tempKey = {
+      id: "temp-" + Date.now(),
+      name: newName.trim(),
+      keyPrefix: "...",
+      permissions: [...newPerms],
+      lastUsedAt: null,
+      expiresAt: null,
+      createdAt: new Date().toISOString(),
+      revoked: false,
+    };
+    setKeys((prev) => [tempKey, ...prev]);
+
     try {
       const res = await fetch("/api/admin/api-keys", {
         method: "POST",
@@ -83,9 +103,13 @@ export default function ApiKeyManager() {
       setCreatedKey(data.apiKey);
       setNewName("");
       setNewPerms(["files:read", "search"]);
-      await fetchKeys();
+      await fetchKeys(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal membuat API key");
+      await fetchKeys(true);
+      addToast({
+        message: err instanceof Error ? err.message : "Gagal membuat API key",
+        type: "error",
+      });
     } finally {
       setCreating(false);
     }
@@ -93,14 +117,21 @@ export default function ApiKeyManager() {
 
   const handleRevoke = async (id: string) => {
     if (!confirm("Yakin ingin mencabut API key ini?")) return;
+
+    // Optimistic revoke
+    setKeys((prev) =>
+      prev.map((k) => (k.id === id ? { ...k, revoked: true } : k)),
+    );
+
     try {
       const res = await fetch(`/api/admin/api-keys/${id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Failed to revoke");
-      await fetchKeys();
+      await fetchKeys(true);
     } catch {
-      setError("Gagal mencabut API key");
+      await fetchKeys(true);
+      addToast({ message: "Gagal mencabut API key", type: "error" });
     }
   };
 
@@ -130,8 +161,11 @@ export default function ApiKeyManager() {
     <div className="p-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">
+          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
             API Keys
+            {isRefetching && (
+              <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+            )}
           </h1>
           <p className="text-gray-400 mt-1">
             Kelola API keys untuk akses eksternal
@@ -248,9 +282,7 @@ export default function ApiKeyManager() {
 
       {/* Table */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
-        </div>
+        <TableSkeleton rows={5} columns={5} />
       ) : keys.length === 0 ? (
         <div className="text-center py-20 text-gray-500">
           <Key className="w-12 h-12 mx-auto mb-3 opacity-50" />

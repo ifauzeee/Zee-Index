@@ -3,7 +3,6 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
-import Loading from "@/components/common/Loading";
 import FileList from "@/components/file-browser/FileList";
 import type { DriveFile } from "@/lib/drive";
 import { motion } from "framer-motion";
@@ -84,7 +83,29 @@ export default function FavoritesPage() {
   }
 
   if (isLoading) {
-    return <Loading />;
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <h1 className="text-xl font-bold mb-4">{t("title")}</h1>
+        <div className="flex flex-col gap-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 border bg-card rounded-lg p-3 min-h-[68px]"
+            >
+              <div className="w-10 h-10 shrink-0 rounded shimmer" />
+              <div className="flex-1 min-w-0">
+                <div className="h-4 w-1/3 shimmer rounded-md mb-2" />
+                <div className="h-3 w-1/4 shimmer rounded-md" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    );
   }
 
   return (

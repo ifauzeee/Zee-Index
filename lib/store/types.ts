@@ -113,12 +113,12 @@ export interface AuthSlice {
   fetchUser: () => Promise<void>;
   adminEmails: string[];
   isFetchingAdmins: boolean;
-  fetchAdminEmails: () => Promise<void>;
+  fetchAdminEmails: (isBackground?: boolean) => Promise<void>;
   addAdminEmail: (email: string) => Promise<void>;
   removeAdminEmail: (email: string) => Promise<void>;
   editorEmails: string[];
   isFetchingEditors: boolean;
-  fetchEditorEmails: () => Promise<void>;
+  fetchEditorEmails: (isBackground?: boolean) => Promise<void>;
   addEditorEmail: (email: string) => Promise<void>;
   removeEditorEmail: (email: string) => Promise<void>;
   isLocalStorageUnlocked: boolean;

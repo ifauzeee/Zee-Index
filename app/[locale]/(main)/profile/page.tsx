@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useSession } from "next-auth/react";
-import Loading from "@/components/common/Loading";
+import { ProfileSkeleton } from "@/components/common/skeletons/ProfileSkeleton";
 import EmptyState from "@/components/file-browser/EmptyState";
 
 const container = {
@@ -53,7 +53,7 @@ export default function ProfilePage() {
   }, [status, fetchUser, user]);
 
   if (status === "loading" || (status === "authenticated" && !user)) {
-    return <Loading />;
+    return <ProfileSkeleton />;
   }
 
   if (!user || user.isGuest || status === "unauthenticated") {

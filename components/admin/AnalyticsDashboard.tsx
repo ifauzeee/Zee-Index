@@ -21,23 +21,24 @@ import {
   HardDrive,
 } from "lucide-react";
 import type { AnalyticsData } from "@/lib/analyticsTracker";
+import { StatCardSkeleton, ChartSkeleton } from "@/components/admin/skeletons";
 import { useTranslations } from "next-intl";
 
 const PageViewsChart = dynamic(
   () => import("@/components/charts/PageViewsChart"),
-  { ssr: false },
+  { ssr: false, loading: () => <ChartSkeleton /> },
 );
 const VisitorsTrendChart = dynamic(
   () => import("@/components/charts/VisitorsTrendChart"),
-  { ssr: false },
+  { ssr: false, loading: () => <ChartSkeleton /> },
 );
 const DeviceBreakdownChart = dynamic(
   () => import("@/components/charts/DeviceBreakdownChart"),
-  { ssr: false },
+  { ssr: false, loading: () => <ChartSkeleton /> },
 );
 const BandwidthChart = dynamic(
   () => import("@/components/charts/BandwidthChart"),
-  { ssr: false },
+  { ssr: false, loading: () => <ChartSkeleton /> },
 );
 
 function formatBytes(bytes: number): string {
@@ -149,8 +150,14 @@ export default function AnalyticsDashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="space-y-6">
+        <StatCardSkeleton count={6} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ChartSkeleton height="200px" />
+          <ChartSkeleton height="200px" />
+          <ChartSkeleton height="200px" />
+          <ChartSkeleton height="200px" />
+        </div>
       </div>
     );
   }

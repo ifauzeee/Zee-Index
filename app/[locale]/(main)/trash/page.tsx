@@ -261,8 +261,19 @@ export default function TrashPage() {
     >
       {renderHeader()}
       {isLoadingData ? (
-        <div className="flex justify-center h-64 items-center">
-          <Loader2 className="animate-spin h-8 w-8 text-muted-foreground" />
+        <div className="flex flex-col gap-2">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 border bg-card rounded-lg p-3 min-h-[68px]"
+            >
+              <div className="w-10 h-10 shrink-0 rounded shimmer" />
+              <div className="flex-1 min-w-0">
+                <div className="h-4 w-1/3 shimmer rounded-md mb-2" />
+                <div className="h-3 w-1/4 shimmer rounded-md" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : files.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">

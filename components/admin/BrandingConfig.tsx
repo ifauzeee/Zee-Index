@@ -11,6 +11,7 @@ import {
   Save,
   RotateCcw,
 } from "lucide-react";
+import { FormSkeleton } from "@/components/admin/skeletons";
 import { useTranslations } from "next-intl";
 
 export default function BrandingConfig() {
@@ -73,8 +74,9 @@ export default function BrandingConfig() {
 
   if (isConfigLoading)
     return (
-      <div className="flex justify-center p-8">
-        <Loader2 className="animate-spin" />
+      <div>
+        <h2 className="text-2xl font-semibold mb-6">{t("title")}</h2>
+        <FormSkeleton fields={4} />
       </div>
     );
 

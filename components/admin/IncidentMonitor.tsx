@@ -16,6 +16,7 @@ import {
   Bell,
   Play,
 } from "lucide-react";
+import { CardSkeleton } from "@/components/admin/skeletons";
 
 type IncidentStatus = "open" | "acknowledged" | "resolved";
 type IncidentSeverity = "warning" | "error" | "critical";
@@ -241,9 +242,7 @@ export default function IncidentMonitor() {
 
       {/* List */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
-        </div>
+        <CardSkeleton count={4} />
       ) : incidents.length === 0 ? (
         <div className="text-center py-20 text-gray-500">
           <ShieldAlert className="w-12 h-12 mx-auto mb-3 opacity-50" />

@@ -10,7 +10,6 @@ import {
   Activity,
   UploadCloud,
   HardDrive,
-  Loader2,
   BarChart3,
   Zap,
   ExternalLink,
@@ -24,19 +23,20 @@ import type { AdminStats } from "@/lib/adminStats";
 import SystemHealth from "@/components/admin/SystemHealth";
 import RealTimeOverview from "@/components/admin/RealTimeOverview";
 import StorageIntelligence from "@/components/admin/StorageIntelligence";
+import { StatCardSkeleton, ChartSkeleton } from "@/components/admin/skeletons";
 import { useTranslations } from "next-intl";
 
 const TodayDownloadsChart = dynamic(
   () => import("@/components/charts/TodayDownloadsChart"),
-  { ssr: false },
+  { ssr: false, loading: () => <ChartSkeleton /> },
 );
 const DayOfWeekChart = dynamic(
   () => import("@/components/charts/DayOfWeekChart"),
-  { ssr: false },
+  { ssr: false, loading: () => <ChartSkeleton /> },
 );
 const LivePerformanceChart = dynamic(
   () => import("@/components/charts/LivePerformanceChart"),
-  { ssr: false },
+  { ssr: false, loading: () => <ChartSkeleton /> },
 );
 
 export default function AdminSummaryTab() {
@@ -206,9 +206,13 @@ export default function AdminSummaryTab() {
           {t("statistics") || "Statistics"}
         </h2>
         {isLoadingStats ? (
-          <div className="bg-card border rounded-xl p-6 h-64 flex items-center justify-center text-muted-foreground">
-            <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
+          <>
+            <StatCardSkeleton count={4} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <ChartSkeleton height="180px" />
+              <ChartSkeleton height="180px" />
+            </div>
+          </>
         ) : stats ? (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm xl:col-span-2">

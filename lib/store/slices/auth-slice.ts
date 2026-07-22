@@ -22,8 +22,8 @@ export const createAuthSlice: StateCreator<AppState, [], [], AuthSlice> = (
   },
   adminEmails: [],
   isFetchingAdmins: false,
-  fetchAdminEmails: async () => {
-    set({ isFetchingAdmins: true });
+  fetchAdminEmails: async (isBackground = false) => {
+    if (!isBackground) set({ isFetchingAdmins: true });
     try {
       const response = await fetch("/api/admin/users");
       if (!response.ok) throw new Error("Failed to fetch admin list");
@@ -35,10 +35,16 @@ export const createAuthSlice: StateCreator<AppState, [], [], AuthSlice> = (
         type: "error",
       });
     } finally {
-      set({ isFetchingAdmins: false });
+      if (!isBackground) set({ isFetchingAdmins: false });
     }
   },
   addAdminEmail: async (email: string) => {
+    const originalAdmins = get().adminEmails;
+    if (!originalAdmins.includes(email)) {
+      set((state: AppState) => ({
+        adminEmails: [...state.adminEmails, email].sort(),
+      }));
+    }
     try {
       const response = await fetch("/api/admin/users", {
         method: "POST",
@@ -47,11 +53,10 @@ export const createAuthSlice: StateCreator<AppState, [], [], AuthSlice> = (
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to add admin.");
-      set((state: AppState) => ({
-        adminEmails: [...state.adminEmails, email].sort(),
-      }));
       get().addToast({ message: result.message, type: "success" });
+      get().fetchAdminEmails(true);
     } catch (error: unknown) {
+      set({ adminEmails: originalAdmins });
       get().addToast({
         message: getErrorMessage(error, "Error"),
         type: "error",
@@ -75,6 +80,7 @@ export const createAuthSlice: StateCreator<AppState, [], [], AuthSlice> = (
       if (!response.ok)
         throw new Error(result.error || "Failed to remove admin.");
       get().addToast({ message: result.message, type: "success" });
+      get().fetchAdminEmails(true);
     } catch (error: unknown) {
       get().addToast({
         message: getErrorMessage(error, "Error"),
@@ -85,8 +91,8 @@ export const createAuthSlice: StateCreator<AppState, [], [], AuthSlice> = (
   },
   editorEmails: [],
   isFetchingEditors: false,
-  fetchEditorEmails: async () => {
-    set({ isFetchingEditors: true });
+  fetchEditorEmails: async (isBackground = false) => {
+    if (!isBackground) set({ isFetchingEditors: true });
     try {
       const response = await fetch("/api/admin/editors");
       if (!response.ok) throw new Error("Failed to fetch editor list");
@@ -98,10 +104,16 @@ export const createAuthSlice: StateCreator<AppState, [], [], AuthSlice> = (
         type: "error",
       });
     } finally {
-      set({ isFetchingEditors: false });
+      if (!isBackground) set({ isFetchingEditors: false });
     }
   },
   addEditorEmail: async (email: string) => {
+    const originalEditors = get().editorEmails;
+    if (!originalEditors.includes(email)) {
+      set((state: AppState) => ({
+        editorEmails: [...state.editorEmails, email].sort(),
+      }));
+    }
     try {
       const response = await fetch("/api/admin/editors", {
         method: "POST",
@@ -111,11 +123,10 @@ export const createAuthSlice: StateCreator<AppState, [], [], AuthSlice> = (
       const result = await response.json();
       if (!response.ok)
         throw new Error(result.error || "Failed to add editor.");
-      set((state: AppState) => ({
-        editorEmails: [...state.editorEmails, email].sort(),
-      }));
       get().addToast({ message: result.message, type: "success" });
+      get().fetchEditorEmails(true);
     } catch (error: unknown) {
+      set({ editorEmails: originalEditors });
       get().addToast({
         message: getErrorMessage(error, "Error"),
         type: "error",
@@ -137,6 +148,7 @@ export const createAuthSlice: StateCreator<AppState, [], [], AuthSlice> = (
       if (!response.ok)
         throw new Error(result.error || "Failed to remove editor.");
       get().addToast({ message: result.message, type: "success" });
+      get().fetchEditorEmails(true);
     } catch (error: unknown) {
       get().addToast({
         message: getErrorMessage(error, "Error"),
