@@ -17,6 +17,7 @@ import {
   Play,
 } from "lucide-react";
 import { CardSkeleton } from "@/components/admin/skeletons";
+import PageTransition from "@/components/ui/PageTransition";
 
 type IncidentStatus = "open" | "acknowledged" | "resolved";
 type IncidentSeverity = "warning" | "error" | "critical";
@@ -173,212 +174,218 @@ export default function IncidentMonitor() {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">
-            Incident Monitor
-          </h1>
-          <p className="text-gray-400 mt-1">
-            Pantau dan kelola insiden keamanan &amp; sistem
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {openCount > 0 && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-900/30 border border-red-800/30 rounded-lg text-red-300 text-sm">
-              <Bell className="w-4 h-4" />
-              <span className="font-semibold">{openCount}</span> open
-            </div>
-          )}
-          <button
-            onClick={handleEvaluate}
-            disabled={evalLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg transition-colors text-sm"
-          >
-            {evalLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Play className="w-4 h-4" />
-            )}
-            Evaluate Rules
-          </button>
-          <button
-            onClick={fetchIncidents}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white rounded-lg transition-colors text-sm"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      {error && (
-        <div className="flex items-center gap-2 p-3 mb-4 bg-red-900/30 border border-red-800 rounded-lg text-red-300 text-sm">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          {error}
-        </div>
-      )}
-
-      {/* Status filter tabs */}
-      <div className="flex gap-2 mb-6">
-        {(["all", "open", "acknowledged", "resolved"] as const).map((s) => (
-          <button
-            key={s}
-            onClick={() => handleFilterChange(s)}
-            className={`px-3 py-2 rounded-lg text-sm transition-colors ${
-              statusFilter === s
-                ? "bg-indigo-600 text-white"
-                : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-            }`}
-          >
-            {s === "all" && "Semua"}
-            {s === "open" && "Open"}
-            {s === "acknowledged" && "Acknowledged"}
-            {s === "resolved" && "Resolved"}
-          </button>
-        ))}
-      </div>
-
-      {/* List */}
-      {loading ? (
-        <CardSkeleton count={4} />
-      ) : incidents.length === 0 ? (
-        <div className="text-center py-20 text-gray-500">
-          <ShieldAlert className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p>Tidak ada insiden</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {incidents.map((inc) => {
-            const SevIcon = SEVERITY_CONFIG[inc.severity].icon;
-            const statusCfg = STATUS_CONFIG[inc.status];
-            const sevCfg = SEVERITY_CONFIG[inc.severity];
-
-            return (
-              <div
-                key={inc.id}
-                className="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition-colors"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className={`p-2 rounded-lg shrink-0 ${sevCfg.class}`}>
-                      <SevIcon className="w-5 h-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-white font-semibold">
-                          {inc.title}
-                        </h3>
-                        <span
-                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${sevCfg.class}`}
-                        >
-                          {SEVERITY_CONFIG[inc.severity].label}
-                        </span>
-                        <span
-                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusCfg.class}`}
-                        >
-                          {statusCfg.label}
-                        </span>
-                      </div>
-                      <p className="text-gray-400 text-sm mt-1 line-clamp-2">
-                        {inc.description}
-                      </p>
-                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                        <span>
-                          Rule:{" "}
-                          <code className="text-gray-400 font-mono">
-                            {inc.ruleId}
-                          </code>
-                        </span>
-                        <span>
-                          Triggered:{" "}
-                          {format(
-                            new Date(inc.lastTriggeredAt),
-                            "dd MMM HH:mm",
-                          )}{" "}
-                          (x{inc.triggerCount})
-                        </span>
-                        {inc.acknowledgedBy && (
-                          <span>By: {inc.acknowledgedBy}</span>
-                        )}
-                        {inc.resolvedBy && (
-                          <span>Resolved by: {inc.resolvedBy}</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    {inc.status === "open" && (
-                      <button
-                        onClick={() =>
-                          handleUpdateStatus(inc.id, "acknowledged")
-                        }
-                        disabled={actionLoading === inc.id}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
-                      >
-                        {actionLoading === inc.id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <Eye className="w-3.5 h-3.5" />
-                        )}
-                        Acknowledge
-                      </button>
-                    )}
-                    {(inc.status === "open" ||
-                      inc.status === "acknowledged") && (
-                      <button
-                        onClick={() => handleUpdateStatus(inc.id, "resolved")}
-                        disabled={actionLoading === inc.id}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
-                      >
-                        {actionLoading === inc.id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                        )}
-                        Resolve
-                      </button>
-                    )}
-                  </div>
-                </div>
+    <PageTransition>
+      <div className="p-6 max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">
+              Incident Monitor
+            </h1>
+            <p className="text-gray-400 mt-1">
+              Pantau dan kelola insiden keamanan &amp; sistem
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {openCount > 0 && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-900/30 border border-red-800/30 rounded-lg text-red-300 text-sm">
+                <Bell className="w-4 h-4" />
+                <span className="font-semibold">{openCount}</span> open
               </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Pagination */}
-      {totalPages > 1 && !loading && (
-        <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-800">
-          <span className="text-sm text-gray-500">
-            {offset + 1}–{Math.min(offset + ITEMS_PER_PAGE, total)} of {total}
-            {statusFilter === "all" && (
-              <span className="ml-2 text-gray-600">({openCount} open)</span>
             )}
-          </span>
-          <div className="flex items-center gap-2">
             <button
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 disabled:opacity-30 transition-colors"
+              onClick={handleEvaluate}
+              disabled={evalLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg transition-colors text-sm"
             >
-              <ChevronLeft className="w-4 h-4" />
+              {evalLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Play className="w-4 h-4" />
+              )}
+              Evaluate Rules
             </button>
-            <span className="text-sm text-gray-400 px-2">
-              {currentPage} / {totalPages}
-            </span>
             <button
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 disabled:opacity-30 transition-colors"
+              onClick={fetchIncidents}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white rounded-lg transition-colors text-sm"
             >
-              <ChevronRight className="w-4 h-4" />
+              <RefreshCw
+                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+              />
+              Refresh
             </button>
           </div>
         </div>
-      )}
-    </div>
+
+        {error && (
+          <div className="flex items-center gap-2 p-3 mb-4 bg-red-900/30 border border-red-800 rounded-lg text-red-300 text-sm">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            {error}
+          </div>
+        )}
+
+        {/* Status filter tabs */}
+        <div className="flex gap-2 mb-6">
+          {(["all", "open", "acknowledged", "resolved"] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => handleFilterChange(s)}
+              className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                statusFilter === s
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+              }`}
+            >
+              {s === "all" && "Semua"}
+              {s === "open" && "Open"}
+              {s === "acknowledged" && "Acknowledged"}
+              {s === "resolved" && "Resolved"}
+            </button>
+          ))}
+        </div>
+
+        {/* List */}
+        {loading ? (
+          <CardSkeleton count={4} />
+        ) : incidents.length === 0 ? (
+          <div className="text-center py-20 text-gray-500">
+            <ShieldAlert className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>Tidak ada insiden</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {incidents.map((inc) => {
+              const SevIcon = SEVERITY_CONFIG[inc.severity].icon;
+              const statusCfg = STATUS_CONFIG[inc.status];
+              const sevCfg = SEVERITY_CONFIG[inc.severity];
+
+              return (
+                <div
+                  key={inc.id}
+                  className="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div
+                        className={`p-2 rounded-lg shrink-0 ${sevCfg.class}`}
+                      >
+                        <SevIcon className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-white font-semibold">
+                            {inc.title}
+                          </h3>
+                          <span
+                            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${sevCfg.class}`}
+                          >
+                            {SEVERITY_CONFIG[inc.severity].label}
+                          </span>
+                          <span
+                            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusCfg.class}`}
+                          >
+                            {statusCfg.label}
+                          </span>
+                        </div>
+                        <p className="text-gray-400 text-sm mt-1 line-clamp-2">
+                          {inc.description}
+                        </p>
+                        <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                          <span>
+                            Rule:{" "}
+                            <code className="text-gray-400 font-mono">
+                              {inc.ruleId}
+                            </code>
+                          </span>
+                          <span>
+                            Triggered:{" "}
+                            {format(
+                              new Date(inc.lastTriggeredAt),
+                              "dd MMM HH:mm",
+                            )}{" "}
+                            (x{inc.triggerCount})
+                          </span>
+                          {inc.acknowledgedBy && (
+                            <span>By: {inc.acknowledgedBy}</span>
+                          )}
+                          {inc.resolvedBy && (
+                            <span>Resolved by: {inc.resolvedBy}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      {inc.status === "open" && (
+                        <button
+                          onClick={() =>
+                            handleUpdateStatus(inc.id, "acknowledged")
+                          }
+                          disabled={actionLoading === inc.id}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                        >
+                          {actionLoading === inc.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Eye className="w-3.5 h-3.5" />
+                          )}
+                          Acknowledge
+                        </button>
+                      )}
+                      {(inc.status === "open" ||
+                        inc.status === "acknowledged") && (
+                        <button
+                          onClick={() => handleUpdateStatus(inc.id, "resolved")}
+                          disabled={actionLoading === inc.id}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                        >
+                          {actionLoading === inc.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          )}
+                          Resolve
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && !loading && (
+          <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-800">
+            <span className="text-sm text-gray-500">
+              {offset + 1}–{Math.min(offset + ITEMS_PER_PAGE, total)} of {total}
+              {statusFilter === "all" && (
+                <span className="ml-2 text-gray-600">({openCount} open)</span>
+              )}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 disabled:opacity-30 transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="text-sm text-gray-400 px-2">
+                {currentPage} / {totalPages}
+              </span>
+              <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 disabled:opacity-30 transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </PageTransition>
   );
 }

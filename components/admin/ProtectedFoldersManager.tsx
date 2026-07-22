@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { ListSkeleton } from "@/components/admin/skeletons";
 import { getErrorMessage } from "@/lib/errors";
+import PageTransition from "@/components/ui/PageTransition";
 
 interface ProtectedFolder {
   id: string;
@@ -96,7 +97,7 @@ export default function ProtectedFoldersManager() {
   };
 
   return (
-    <>
+    <PageTransition>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h2 className="text-2xl font-bold flex items-center gap-2">
@@ -303,6 +304,6 @@ export default function ProtectedFoldersManager() {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </PageTransition>
   );
 }
