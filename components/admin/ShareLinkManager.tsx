@@ -17,9 +17,9 @@ import {
   Share2,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { TableSkeleton } from "@/components/admin/skeletons";
 import { useConfirm } from "@/components/providers/ModalProvider";
 import PageTransition from "@/components/ui/PageTransition";
+import DataTable, { type Column } from "@/components/ui/DataTable";
 
 interface ShareLinkItem {
   id: string;
@@ -252,130 +252,186 @@ export default function ShareLinkManager() {
         </div>
 
         {/* Table */}
-        {loading ? (
-          <TableSkeleton rows={8} columns={6} />
-        ) : filteredLinks.length === 0 ? (
-          <div className="text-center py-20 text-gray-500">
-            <Share2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>
-              {links.length === 0
-                ? "Belum ada tautan berbagi"
-                : "Tidak ada tautan yang sesuai filter"}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-800 text-gray-400 uppercase text-xs tracking-wider">
-                  <th className="text-left py-3 px-2">Item</th>
-                  <th className="text-left py-3 px-2 hidden md:table-cell">
-                    Path
-                  </th>
-                  <th className="text-left py-3 px-2 hidden lg:table-cell">
-                    Pembuat
-                  </th>
-                  <th className="text-left py-3 px-2 hidden sm:table-cell">
-                    Dilihat
-                  </th>
-                  <th className="text-left py-3 px-2">Berlaku</th>
-                  <th className="text-left py-3 px-2">Status</th>
-                  <th className="text-right py-3 px-2">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredLinks.map((link) => {
-                  const status = getExpiryStatus(link.expiresAt);
-                  const isExpired = new Date(link.expiresAt) < new Date();
-                  return (
-                    <tr
-                      key={link.id}
-                      className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors"
+        <DataTable<ShareLinkItem>
+          columns={[
+            {
+              key: "itemName",
+              header: "Item",
+              render: (link) => (
+                <div className="flex items-center gap-2">
+                  <Link2 className="w-4 h-4 text-gray-500 shrink-0" />
+                  <div className="truncate max-w-[200px]">
+                    <span className="text-white font-medium">
+                      {link.itemName}
+                    </span>
+                    {link.isCollection && (
+                      <span className="ml-2 text-xs bg-blue-900/50 text-blue-300 px-1.5 py-0.5 rounded">
+                        koleksi
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ),
+            },
+            {
+              key: "path",
+              header: "Path",
+              hideOnMobile: true,
+              render: (link) => (
+                <code className="text-gray-400 text-xs font-mono truncate max-w-[180px] block">
+                  {link.path}
+                </code>
+              ),
+            },
+            {
+              key: "createdBy",
+              header: "Pembuat",
+              hideOnMobile: true,
+              render: (link) => (
+                <span className="text-gray-400">{link.createdBy || "—"}</span>
+              ),
+            },
+            {
+              key: "viewCount",
+              header: "Dilihat",
+              hideOnMobile: true,
+              render: (link) => (
+                <span className="text-gray-400">{link.viewCount}</span>
+              ),
+            },
+            {
+              key: "expiresAt",
+              header: "Berlaku",
+              render: (link) => (
+                <span className="text-gray-400 text-xs">
+                  {format(new Date(link.expiresAt), "dd MMM yyyy HH:mm", {
+                    locale: id,
+                  })}
+                </span>
+              ),
+            },
+            {
+              key: "status",
+              header: "Status",
+              render: (link) => {
+                const status = getExpiryStatus(link.expiresAt);
+                return (
+                  <span className={`text-xs font-medium ${status.class}`}>
+                    {status.label}
+                  </span>
+                );
+              },
+            },
+            {
+              key: "actions",
+              header: "Aksi",
+              headerClassName: "text-right",
+              cellClassName: "text-right",
+              render: (link) => {
+                const isExpired = new Date(link.expiresAt) < new Date();
+                return (
+                  <div className="flex items-center justify-end gap-1">
+                    <button
+                      onClick={() => handleCopyUrl(link)}
+                      className="p-1.5 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors"
+                      title="Salin URL"
                     >
-                      <td className="py-3 px-2">
-                        <div className="flex items-center gap-2">
-                          <Link2 className="w-4 h-4 text-gray-500 shrink-0" />
-                          <div className="truncate max-w-[200px]">
-                            <span className="text-white font-medium">
-                              {link.itemName}
-                            </span>
-                            {link.isCollection && (
-                              <span className="ml-2 text-xs bg-blue-900/50 text-blue-300 px-1.5 py-0.5 rounded">
-                                koleksi
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-2 hidden md:table-cell">
-                        <code className="text-gray-400 text-xs font-mono truncate max-w-[180px] block">
-                          {link.path}
-                        </code>
-                      </td>
-                      <td className="py-3 px-2 hidden lg:table-cell text-gray-400">
-                        {link.createdBy || "—"}
-                      </td>
-                      <td className="py-3 px-2 hidden sm:table-cell text-gray-400">
-                        {link.viewCount}
-                      </td>
-                      <td className="py-3 px-2 text-gray-400 text-xs">
-                        {format(new Date(link.expiresAt), "dd MMM yyyy HH:mm", {
-                          locale: id,
-                        })}
-                      </td>
-                      <td className="py-3 px-2">
-                        <span className={`text-xs font-medium ${status.class}`}>
-                          {status.label}
-                        </span>
-                      </td>
-                      <td className="py-3 px-2 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => handleCopyUrl(link)}
-                            className="p-1.5 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors"
-                            title="Salin URL"
-                          >
-                            {copiedId === link.id ? (
-                              <Check className="w-4 h-4 text-emerald-400" />
-                            ) : (
-                              <Copy className="w-4 h-4" />
-                            )}
-                          </button>
-                          {!isExpired && (
-                            <button
-                              onClick={() => handleRevoke(link)}
-                              disabled={actionLoading === link.id}
-                              className="p-1.5 hover:bg-amber-900/50 rounded text-gray-400 hover:text-amber-300 transition-colors"
-                              title="Cabut"
-                            >
-                              {actionLoading === link.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <Ban className="w-4 h-4" />
-                              )}
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDelete(link)}
-                            disabled={actionLoading === link.id}
-                            className="p-1.5 hover:bg-red-900/50 rounded text-gray-400 hover:text-red-300 transition-colors"
-                            title="Hapus"
-                          >
-                            {actionLoading === link.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+                      {copiedId === link.id ? (
+                        <Check className="w-4 h-4 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </button>
+                    {!isExpired && (
+                      <button
+                        onClick={() => handleRevoke(link)}
+                        disabled={actionLoading === link.id}
+                        className="p-1.5 hover:bg-amber-900/50 rounded text-gray-400 hover:text-amber-300 transition-colors"
+                        title="Cabut"
+                      >
+                        {actionLoading === link.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Ban className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDelete(link)}
+                      disabled={actionLoading === link.id}
+                      className="p-1.5 hover:bg-red-900/50 rounded text-gray-400 hover:text-red-300 transition-colors"
+                      title="Hapus"
+                    >
+                      {actionLoading === link.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                );
+              },
+            },
+          ]}
+          data={filteredLinks}
+          keyExtractor={(link) => link.id}
+          loading={loading}
+          skeletonRows={8}
+          emptyState={
+            <div className="text-center py-20 text-gray-500">
+              <Share2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>
+                {links.length === 0
+                  ? "Belum ada tautan berbagi"
+                  : "Tidak ada tautan yang sesuai filter"}
+              </p>
+            </div>
+          }
+          mobileActions={(link) => {
+            const isExpired = new Date(link.expiresAt) < new Date();
+            return (
+              <div className="flex items-center justify-end gap-1">
+                <button
+                  onClick={() => handleCopyUrl(link)}
+                  className="p-1.5 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors"
+                  title="Salin URL"
+                >
+                  {copiedId === link.id ? (
+                    <Check className="w-4 h-4 text-emerald-400" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </button>
+                {!isExpired && (
+                  <button
+                    onClick={() => handleRevoke(link)}
+                    disabled={actionLoading === link.id}
+                    className="p-1.5 hover:bg-amber-900/50 rounded text-gray-400 hover:text-amber-300 transition-colors"
+                    title="Cabut"
+                  >
+                    {actionLoading === link.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Ban className="w-4 h-4" />
+                    )}
+                  </button>
+                )}
+                <button
+                  onClick={() => handleDelete(link)}
+                  disabled={actionLoading === link.id}
+                  className="p-1.5 hover:bg-red-900/50 rounded text-gray-400 hover:text-red-300 transition-colors"
+                  title="Hapus"
+                >
+                  {actionLoading === link.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            );
+          }}
+        />
 
         {/* Summary */}
         {!loading && links.length > 0 && (

@@ -14,9 +14,9 @@ import {
   X,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { TableSkeleton } from "@/components/admin/skeletons";
 import { useConfirm } from "@/components/providers/ModalProvider";
 import PageTransition from "@/components/ui/PageTransition";
+import DataTable, { type Column } from "@/components/ui/DataTable";
 import { useTranslations } from "next-intl";
 
 interface ApiKeyItem {
@@ -290,81 +290,97 @@ export default function ApiKeyManager() {
         )}
 
         {/* Table */}
-        {loading ? (
-          <TableSkeleton rows={5} columns={5} />
-        ) : keys.length === 0 ? (
-          <div className="text-center py-20 text-gray-500">
-            <Key className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>Belum ada API keys</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-800 text-gray-400 uppercase text-xs tracking-wider">
-                  <th className="text-left py-3 px-2">Nama</th>
-                  <th className="text-left py-3 px-2">Prefix</th>
-                  <th className="text-left py-3 px-2">Permissions</th>
-                  <th className="text-left py-3 px-2">Terakhir Digunakan</th>
-                  <th className="text-left py-3 px-2">Dibuat</th>
-                  <th className="text-left py-3 px-2">Status</th>
-                  <th className="text-right py-3 px-2">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {keys.map((key) => (
-                  <tr
-                    key={key.id}
-                    className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors"
+        <DataTable<ApiKeyItem>
+          columns={[
+            {
+              key: "name",
+              header: "Nama",
+              render: (key) => <span className="text-white">{key.name}</span>,
+            },
+            {
+              key: "keyPrefix",
+              header: "Prefix",
+              render: (key) => (
+                <span className="font-mono text-gray-400">
+                  {key.keyPrefix}...
+                </span>
+              ),
+            },
+            {
+              key: "permissions",
+              header: "Permissions",
+              render: (key) => (
+                <div className="flex flex-wrap gap-1">
+                  {key.permissions.map((p) => (
+                    <span
+                      key={p}
+                      className="px-2 py-0.5 bg-gray-700 rounded text-xs text-gray-300"
+                    >
+                      {p}
+                    </span>
+                  ))}
+                </div>
+              ),
+            },
+            {
+              key: "lastUsedAt",
+              header: "Terakhir Digunakan",
+              hideOnMobile: true,
+              render: (key) => (
+                <span className="text-gray-400">
+                  {key.lastUsedAt
+                    ? format(new Date(key.lastUsedAt), "dd MMM HH:mm")
+                    : "—"}
+                </span>
+              ),
+            },
+            {
+              key: "createdAt",
+              header: "Dibuat",
+              render: (key) => (
+                <span className="text-gray-400">
+                  {format(new Date(key.createdAt), "dd MMM yyyy")}
+                </span>
+              ),
+            },
+            {
+              key: "revoked",
+              header: "Status",
+              render: (key) =>
+                key.revoked ? (
+                  <span className="text-red-400 text-xs">Revoked</span>
+                ) : (
+                  <span className="text-emerald-400 text-xs">Active</span>
+                ),
+            },
+            {
+              key: "actions",
+              header: "Aksi",
+              headerClassName: "text-right",
+              cellClassName: "text-right",
+              render: (key) =>
+                !key.revoked ? (
+                  <button
+                    onClick={() => handleRevoke(key.id)}
+                    className="p-1.5 hover:bg-red-900/50 rounded text-gray-400 hover:text-red-300 transition-colors"
+                    title="Revoke"
                   >
-                    <td className="py-3 px-2 text-white">{key.name}</td>
-                    <td className="py-3 px-2 font-mono text-gray-400">
-                      {key.keyPrefix}...
-                    </td>
-                    <td className="py-3 px-2">
-                      <div className="flex flex-wrap gap-1">
-                        {key.permissions.map((p) => (
-                          <span
-                            key={p}
-                            className="px-2 py-0.5 bg-gray-700 rounded text-xs text-gray-300"
-                          >
-                            {p}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="py-3 px-2 text-gray-400">
-                      {key.lastUsedAt
-                        ? format(new Date(key.lastUsedAt), "dd MMM HH:mm")
-                        : "—"}
-                    </td>
-                    <td className="py-3 px-2 text-gray-400">
-                      {format(new Date(key.createdAt), "dd MMM yyyy")}
-                    </td>
-                    <td className="py-3 px-2">
-                      {key.revoked ? (
-                        <span className="text-red-400 text-xs">Revoked</span>
-                      ) : (
-                        <span className="text-emerald-400 text-xs">Active</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-2 text-right">
-                      {!key.revoked && (
-                        <button
-                          onClick={() => handleRevoke(key.id)}
-                          className="p-1.5 hover:bg-red-900/50 rounded text-gray-400 hover:text-red-300 transition-colors"
-                          title="Revoke"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                ) : null,
+            },
+          ]}
+          data={keys}
+          keyExtractor={(key) => key.id}
+          loading={loading}
+          skeletonRows={5}
+          emptyState={
+            <div className="text-center py-20 text-gray-500">
+              <Key className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>Belum ada API keys</p>
+            </div>
+          }
+        />
       </div>
     </PageTransition>
   );
