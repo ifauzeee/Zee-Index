@@ -15,16 +15,6 @@ const {
   mockCheckRateLimit: vi.fn(),
 }));
 
-const mockBodySchema = {
-  safeParse: vi.fn((v: unknown) => {
-    const body = v as Record<string, unknown>;
-    if (typeof body.token === "string" && body.token.length > 0) {
-      return { success: true, data: body };
-    }
-    return { success: false, error: { message: "Token required" } };
-  }),
-};
-
 vi.mock("@/lib/api-middleware", () => ({
   createUserRoute: (
     handler: (ctx: any) => Promise<Response>,

@@ -15,7 +15,7 @@ const handlers = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/api-middleware", () => ({
-  createPublicRoute: (handler: RouteHandler, _opts?: unknown) => {
+  createPublicRoute: (handler: RouteHandler) => {
     handlers.POST = handler;
     return async (request: NextRequest) => {
       const raw = await request.json().catch(() => undefined);

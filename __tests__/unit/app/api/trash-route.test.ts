@@ -14,23 +14,6 @@ vi.mock("@/lib/drive", () => ({
   deleteForever: mockDeleteForever,
 }));
 
-// Import the actual schema for validation
-import { z } from "zod";
-
-const trashActionSchema = z
-  .object({
-    fileId: z.string().min(1).optional(),
-    fileIds: z.array(z.string().min(1)).min(1).optional(),
-  })
-  .superRefine((value, ctx) => {
-    if (!value.fileId && !value.fileIds) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "File ID or IDs are required",
-      });
-    }
-  });
-
 vi.mock("@/lib/api-middleware", () => ({
   createAdminRoute: (
     handler: (context: {

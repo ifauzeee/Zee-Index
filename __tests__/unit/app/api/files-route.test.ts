@@ -7,14 +7,12 @@ const {
   mockIsAccessRestricted,
   mockGetProtectedFolderIdsCached,
   mockValidateShareToken,
-  mockHasUserAccessBatch,
 } = vi.hoisted(() => ({
   mockListAllFiles: vi.fn(),
   mockIsPrivateFolder: vi.fn(),
   mockIsAccessRestricted: vi.fn(),
   mockGetProtectedFolderIdsCached: vi.fn(),
   mockValidateShareToken: vi.fn(),
-  mockHasUserAccessBatch: vi.fn(),
 }));
 
 vi.mock("@/lib/api-middleware", () => ({

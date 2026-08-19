@@ -7,10 +7,7 @@ const { mockKvGet, mockShareLinkFindUnique } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/api-middleware", () => ({
-  createPublicRoute: (
-    handler: (ctx: any) => Promise<Response>,
-    options?: { includeSession?: boolean },
-  ) => {
+  createPublicRoute: (handler: (ctx: any) => Promise<Response>) => {
     return async (request: NextRequest) =>
       handler({
         request,

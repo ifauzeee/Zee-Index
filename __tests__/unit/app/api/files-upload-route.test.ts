@@ -35,7 +35,6 @@ import { POST } from "@/app/api/files/upload/route";
 
 function makeRequest(
   body: object | null,
-  queryType = "init",
   url = "http://localhost:3000/api/files/upload?type=init",
 ) {
   const req = new NextRequest(url, {

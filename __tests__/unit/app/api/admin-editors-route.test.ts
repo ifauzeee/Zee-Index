@@ -22,12 +22,6 @@ type RouteHandler = (ctx: {
   request: NextRequest;
 }) => Promise<Response>;
 
-const handlers = vi.hoisted(() => ({
-  GET: undefined as unknown as RouteHandler,
-  POST: undefined as unknown as RouteHandler,
-  DELETE: undefined as unknown as RouteHandler,
-}));
-
 vi.mock("@/lib/api-middleware", () => ({
   createAdminRoute: (
     handler: RouteHandler,

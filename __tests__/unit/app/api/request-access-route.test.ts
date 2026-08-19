@@ -24,13 +24,6 @@ vi.mock("@/lib/activityLogger", () => ({
   logActivity: mockLogActivity,
 }));
 
-import { z } from "zod";
-
-const accessRequestCreateSchema = z.object({
-  folderId: z.string().min(1),
-  folderName: z.string().min(1),
-});
-
 vi.mock("@/lib/api-middleware", () => ({
   createUserRoute: (
     handler: (context: {

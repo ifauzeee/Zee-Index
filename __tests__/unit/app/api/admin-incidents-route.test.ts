@@ -14,11 +14,6 @@ type RouteHandler = (ctx: {
   session?: { user: { email?: string } };
 }) => Promise<Response>;
 
-const handlers = vi.hoisted(() => ({
-  GET: undefined as unknown as RouteHandler,
-  PATCH: undefined as unknown as RouteHandler,
-}));
-
 vi.mock("@/lib/api-middleware", () => ({
   createAdminRoute: (handler: RouteHandler) => {
     return async (request: NextRequest) => {

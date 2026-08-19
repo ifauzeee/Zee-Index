@@ -80,6 +80,9 @@ jobs:
       - name: Unit Tests
         run: pnpm test -- run
 
+      - name: Build
+        run: pnpm build
+
       - name: Get Playwright version
         id: playwright-version
         run: echo "version=$(pnpm list @playwright/test --depth=0 | grep @playwright/test | awk '{print $2}')" >> $GITHUB_OUTPUT
@@ -106,6 +109,3 @@ jobs:
           CI: true
           E2E_ADMIN_EMAIL: admin@example.com
           E2E_ADMIN_PASSWORD: testpass123
-
-      - name: Build
-        run: pnpm build

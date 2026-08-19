@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-const { mockSubscribe, mockEventBus } = vi.hoisted(() => ({
-  mockSubscribe: vi.fn().mockReturnValue(vi.fn()),
+const { mockEventBus } = vi.hoisted(() => ({
   mockEventBus: {
     subscribe: vi.fn().mockReturnValue(vi.fn()),
   },

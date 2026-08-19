@@ -26,15 +26,6 @@ vi.mock("jszip", () => {
   return { default: MockJSZip };
 });
 
-import { z } from "zod";
-
-const bulkDownloadSchema = z.object({
-  fileIds: z
-    .array(z.string().min(1))
-    .min(1, "Parameter fileIds tidak valid.")
-    .max(20, "Maksimal 20 file per unduhan sekaligus."),
-});
-
 vi.mock("@/lib/api-middleware", () => ({
   createPublicRoute: (
     handler: (context: {
