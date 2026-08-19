@@ -41,6 +41,7 @@ Pre-commit hook (Husky) runs `npx lint-staged` — Prettier on staged files, not
   - `storage/` — file storage abstraction: providers/ (s3, webdav) + local; Google Drive via `drive/`
   - `drive/` — Google Drive API client (auth, fetchers, mutators)
   - `services/` — biz logic (download, health-service, etc.)
+  - `openapi/` — OpenAPI spec: `schemas.ts` (registry + reusable schemas), `paths-*.ts` (per-tag path definitions, side-effect registered), `index.ts` (`getOpenApiDocument()`)
 - `components/` — React components: admin/, file-browser/, file-details/, layout/, common/, ui/
 - `prisma/schema.prisma` — DB schema. Models: User, Account, Session, VerificationToken, ActivityLog, ShareLink, FolderAccess, ProtectedFolder, ApiKey, FileIndex, AdminConfig.
 - `types/` — TS type definitions (`next-auth.d.ts` extends NextAuth types)

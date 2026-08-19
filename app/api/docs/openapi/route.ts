@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getOpenApiDocument } from "@/lib/openapi-registry";
+import { getOpenApiDocument } from "@/lib/openapi";
 
 export const dynamic = "force-dynamic";
 
