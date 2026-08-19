@@ -10,6 +10,7 @@ import { REDIS_KEYS } from "@/lib/constants";
 import {
   fileRequestUploadInitSchema,
   parseFileRequestLink,
+  type FileRequestLink,
 } from "@/lib/link-payloads";
 import { z } from "zod";
 
@@ -57,7 +58,7 @@ export function escapeHtml(str: string): string {
 }
 
 async function sendUploadNotificationEmail(
-  requestData: any,
+  requestData: FileRequestLink,
   fileName: string,
   fileSizeStr: string,
 ) {

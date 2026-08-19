@@ -449,21 +449,3 @@ export function createCronRoute<
     },
   );
 }
-
-type LegacyAdminHandler = (
-  req: NextRequest,
-  context: { params?: unknown },
-  session: Session,
-) => Promise<Response>;
-
-export function withAdminSession(handler: LegacyAdminHandler) {
-  return createAdminRoute(async ({ request, params, session }) => {
-    return await handler(request, { params }, session);
-  });
-}
-
-export function withEditorSession(handler: LegacyAdminHandler) {
-  return createEditorRoute(async ({ request, params, session }) => {
-    return await handler(request, { params }, session);
-  });
-}

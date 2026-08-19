@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useAppStore } from "@/lib/store";
-import { Loader2, EyeOff, UserX, Bell } from "lucide-react";
+import { EyeOff, UserX, Bell } from "lucide-react";
 import { FormSkeleton } from "@/components/admin/skeletons";
 import { useTranslations } from "next-intl";
 

@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
 import { kv } from "@/lib/kv";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 const shareUpdateRequestSchema = z.object({
@@ -41,7 +42,7 @@ export const PATCH = createAdminRoute(
         expiresAt,
       } = body;
 
-      const updateData: Record<string, any> = {};
+      const updateData: Prisma.ShareLinkUpdateInput = {};
       if (loginRequired !== undefined) updateData.loginRequired = loginRequired;
       if (maxUses !== undefined) updateData.maxUses = maxUses;
       if (preventDownload !== undefined)

@@ -14,8 +14,9 @@ import { constantTimeEqual } from "@/lib/security";
 import type { ActivityDetails } from "@/lib/activityLogger";
 
 import type { NextAuthConfig } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 
-async function setupTwoFactorForToken(email: string, token: any) {
+async function setupTwoFactorForToken(email: string, token: JWT) {
   try {
     const is2FAEnabled = await kv.get(`2fa:enabled:${email}`);
     token.twoFactorRequired = !!is2FAEnabled;

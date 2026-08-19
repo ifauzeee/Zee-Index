@@ -4,7 +4,6 @@ import { getAccessToken } from "@/lib/drive";
 import { GOOGLE_DRIVE_API_BASE_URL } from "@/lib/constants";
 import { fetchWithRetry } from "@/lib/drive/client";
 import { extractText, isExtractable, MAX_EXTRACT_SIZE } from "./extractor";
-import type { FileIndex } from "@prisma/client";
 
 /* ------- public API ---------------------------------------------------- */
 
@@ -112,9 +111,11 @@ export async function indexFileContent(
  * Runs sequentially (per-file) to avoid flooding the Drive API quota.
  * Call this from a cron job or admin action.
  */
-export async function indexAllPendingContent(opts?: {
-  concurrency?: number;
-}): Promise<{ indexed: number; skipped: number; failed: number }> {
+export async function indexAllPendingContent(): Promise<{
+  indexed: number;
+  skipped: number;
+  failed: number;
+}> {
   let indexed = 0;
   let skipped = 0;
   let failed = 0;

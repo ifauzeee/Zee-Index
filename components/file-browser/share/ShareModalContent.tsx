@@ -1,14 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  ShieldCheck,
-  Download,
-  Eye,
-  EyeOff,
-  Fingerprint,
-  Hash,
-} from "lucide-react";
+import { ShieldCheck, Download, EyeOff, Fingerprint, Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 

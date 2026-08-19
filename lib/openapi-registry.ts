@@ -5,7 +5,6 @@ import {
 } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
 import { appConfigSchema } from "@/lib/app-config.shared";
-import type { ZeeFile } from "@/types/storage";
 
 extendZodWithOpenApi(z);
 
@@ -17,19 +16,6 @@ const registry = new OpenAPIRegistry();
 /* ------------------------------------------------------------------ */
 /*  Utility helpers                                                   */
 /* ------------------------------------------------------------------ */
-
-/** Convert a Zod schema to an OpenAPI schema object via the generator. */
-function toSchema(schema: z.ZodTypeAny): Record<string, unknown> {
-  const gen = new OpenApiGeneratorV3([{ type: "schema", schema }]);
-  const doc = gen.generateDocument({
-    openapi: "3.0.3",
-    info: { title: "internal", version: "0.0.0" },
-  });
-  const ref = doc.components?.schemas?.["default"] as
-    | Record<string, unknown>
-    | undefined;
-  return ref ?? {};
-}
 
 /* ------------------------------------------------------------------ */
 /*  Reusable component schemas                                        */

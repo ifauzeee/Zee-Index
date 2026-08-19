@@ -13,7 +13,6 @@ import {
   Monitor,
   ArrowUpRight,
   ArrowDownRight,
-  Loader2,
   RefreshCw,
   BarChart3,
   FileText,

@@ -8,7 +8,6 @@ import {
   Clock,
   Database,
   HardDrive,
-  Loader2,
   Server,
 } from "lucide-react";
 import type {

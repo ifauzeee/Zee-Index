@@ -16,10 +16,9 @@ import {
   ExternalLink,
   Share2,
 } from "lucide-react";
-import { motion } from "framer-motion";
 import { useConfirm } from "@/components/providers/ModalProvider";
 import PageTransition from "@/components/ui/PageTransition";
-import DataTable, { type Column } from "@/components/ui/DataTable";
+import DataTable from "@/components/ui/DataTable";
 
 interface ShareLinkItem {
   id: string;

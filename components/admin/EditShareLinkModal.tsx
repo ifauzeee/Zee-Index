@@ -48,7 +48,14 @@ export default function EditShareLinkModal({
 
     setIsSavingEdit(true);
     try {
-      const payload: Record<string, any> = {
+      const payload: {
+        loginRequired: boolean;
+        maxUses: number | null;
+        preventDownload: boolean;
+        hasWatermark: boolean;
+        watermarkText: string | null;
+        expiresAt?: string;
+      } = {
         loginRequired: editLoginRequired,
         maxUses: editMaxUses === "" ? null : Number(editMaxUses),
         preventDownload: editPreventDownload,
@@ -77,9 +84,12 @@ export default function EditShareLinkModal({
         type: "success",
       });
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       addToast({
-        message: err.message || "Gagal memperbarui tautan berbagi.",
+        message:
+          err instanceof Error
+            ? err.message
+            : "Gagal memperbarui tautan berbagi.",
         type: "error",
       });
     } finally {

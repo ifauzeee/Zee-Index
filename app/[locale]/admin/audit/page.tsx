@@ -18,8 +18,6 @@ import {
   Move,
   Copy,
   Share2,
-  AlertCircle,
-  Loader2,
   ChevronLeft,
   ChevronRight,
   ScrollText,

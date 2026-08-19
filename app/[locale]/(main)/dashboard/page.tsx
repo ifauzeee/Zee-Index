@@ -10,7 +10,6 @@ import {
   Star,
   HardDrive,
   LogIn,
-  Loader2,
   FileText,
   User,
   Activity,

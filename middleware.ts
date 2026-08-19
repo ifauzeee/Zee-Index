@@ -19,6 +19,7 @@ import {
 import {
   LOCALES,
   DEFAULT_LOCALE,
+  isLocale,
   stripLocaleFromPathname,
 } from "@/lib/i18n-config";
 
@@ -296,7 +297,7 @@ export default async function middleware(request: NextRequest) {
         );
       }
       const requestedLocale = pathname.split("/")[1];
-      const locale = LOCALES.includes(requestedLocale as any)
+      const locale = isLocale(requestedLocale)
         ? requestedLocale
         : DEFAULT_LOCALE;
       const translations = {

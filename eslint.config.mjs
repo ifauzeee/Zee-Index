@@ -9,8 +9,8 @@ const config = [
   },
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-unused-vars": "error",
       "@typescript-eslint/no-var-requires": "off",
       "@typescript-eslint/no-require-imports": "off",
       "@next/next/no-html-link-for-pages": "off",
@@ -19,6 +19,14 @@ const config = [
       "react-hooks/purity": "off",
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/static-components": "off",
+    },
+  },
+  {
+    // Tests legitimately use `any` for mocks/casts — keep them out of the gate.
+    files: ["__tests__/**", "e2e/**", "test/**"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "warn",
     },
   },
 ];

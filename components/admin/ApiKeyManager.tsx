@@ -16,8 +16,7 @@ import {
 import { motion } from "framer-motion";
 import { useConfirm } from "@/components/providers/ModalProvider";
 import PageTransition from "@/components/ui/PageTransition";
-import DataTable, { type Column } from "@/components/ui/DataTable";
-import { useTranslations } from "next-intl";
+import DataTable from "@/components/ui/DataTable";
 
 interface ApiKeyItem {
   id: string;
@@ -39,7 +38,6 @@ const AVAILABLE_PERMISSIONS = [
 ];
 
 export default function ApiKeyManager() {
-  const t = useTranslations();
   const [keys, setKeys] = useState<ApiKeyItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
