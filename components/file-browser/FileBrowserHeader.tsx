@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Share2,
   Upload,
@@ -12,9 +12,12 @@ import {
   AlignJustify,
   StretchHorizontal,
   ArrowDownUp,
+  FolderDown,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
+import { getErrorMessage } from "@/lib/errors";
 import ViewToggle from "@/components/file-browser/ViewToggle";
 import {
   DropdownMenu,
@@ -71,8 +74,49 @@ export default function FileBrowserHeader({
   onPrefetchFolder,
 }: FileBrowserHeaderProps) {
   const navRef = useRef<HTMLElement>(null);
-  const { density, setDensity } = useAppStore();
+  const { density, setDensity, addToast } = useAppStore();
   const t = useTranslations("FileBrowser");
+  const tb = useTranslations("BulkActionBar");
+  const [isZipping, setIsZipping] = useState(false);
+  const currentFolderId = history[history.length - 1]?.id;
+
+  const handleDownloadFolder = async () => {
+    if (!currentFolderId || isZipping) return;
+    setIsZipping(true);
+    addToast({ message: tb("zipFolderStarted"), type: "info" });
+
+    try {
+      const response = await fetch("/api/bulk-download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folderId: currentFolderId }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || tb("zipGenError"));
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "download.zip";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      addToast({ message: tb("zipStarted"), type: "success" });
+    } catch (error: unknown) {
+      addToast({
+        message: getErrorMessage(error, tb("zipFolderError")),
+        type: "error",
+      });
+    } finally {
+      setIsZipping(false);
+    }
+  };
 
   const showAdminActions = !shareToken && isAdmin;
   const sortLabels = {
@@ -204,6 +248,20 @@ export default function FileBrowserHeader({
               aria-label={t("shareFolder")}
             >
               <Share2 size={18} />
+            </button>
+
+            <button
+              onClick={handleDownloadFolder}
+              disabled={isZipping || !currentFolderId}
+              className="p-2 rounded-lg bg-card border hover:bg-accent hover:text-green-500 transition-colors shadow-sm flex items-center justify-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              title={t("downloadFolder")}
+              aria-label={t("downloadFolder")}
+            >
+              {isZipping ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <FolderDown size={18} />
+              )}
             </button>
 
             <div className="w-px h-6 bg-border mx-1 hidden sm:block shrink-0"></div>

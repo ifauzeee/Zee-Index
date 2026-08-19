@@ -12,6 +12,8 @@ import {
   Calendar,
   HardDrive,
   File,
+  History,
+  Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
@@ -37,6 +39,37 @@ export default function Search({ onSearchClose }: SearchProps) {
   const [modifiedTime, setModifiedTime] = useState("any");
   const [minSize, setMinSize] = useState("");
 
+  const RECENT_SEARCHES_KEY = "zee-index:recent-searches";
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      return JSON.parse(
+        window.localStorage.getItem(RECENT_SEARCHES_KEY) || "[]",
+      );
+    } catch {
+      return [];
+    }
+  });
+  const [showRecent, setShowRecent] = useState(false);
+
+  const saveRecentSearch = useCallback((term: string) => {
+    const trimmed = term.trim();
+    if (!trimmed) return;
+    setRecentSearches((prev) => {
+      const next = [trimmed, ...prev.filter((s) => s !== trimmed)].slice(0, 5);
+      try {
+        window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next));
+      } catch {
+        // noop
+      }
+      return next;
+    });
+  }, []);
+
+  const isPendingSearch =
+    searchTerm.trim() !== "" &&
+    searchTerm.trim() !== (searchParams.get("q") || "");
+
   const performSearch = useCallback(
     (term: string) => {
       if (
@@ -45,6 +78,7 @@ export default function Search({ onSearchClose }: SearchProps) {
         modifiedTime !== "any" ||
         minSize
       ) {
+        saveRecentSearch(term);
         const params = new URLSearchParams();
         params.set("q", term.trim());
         params.set("searchType", searchType);
@@ -78,6 +112,7 @@ export default function Search({ onSearchClose }: SearchProps) {
       mimeType,
       modifiedTime,
       minSize,
+      saveRecentSearch,
     ],
   );
 
@@ -161,18 +196,71 @@ export default function Search({ onSearchClose }: SearchProps) {
           type="text"
           placeholder={placeholderText}
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setShowRecent(false);
+          }}
+          onFocus={() => setShowRecent(!searchTerm)}
+          onBlur={() => setShowRecent(false)}
           className="w-full pl-10 pr-32 py-2 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-shadow text-sm"
         />
+
+        {showRecent && recentSearches.length > 0 && (
+          <div className="absolute top-full left-0 right-0 z-20 mt-1 p-2 bg-card border rounded-lg shadow-lg">
+            <div className="flex items-center justify-between px-2 py-1">
+              <span className="text-xs font-medium text-muted-foreground">
+                {t("recentSearches")}
+              </span>
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  try {
+                    window.localStorage.removeItem(RECENT_SEARCHES_KEY);
+                  } catch {
+                    // noop
+                  }
+                  setRecentSearches([]);
+                  setShowRecent(false);
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                {t("clear")}
+              </button>
+            </div>
+            {recentSearches.map((term) => (
+              <button
+                key={term}
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setSearchTerm(term);
+                  setShowRecent(false);
+                  performSearch(term);
+                }}
+                className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent text-left"
+              >
+                <History size={14} className="text-muted-foreground shrink-0" />
+                <span className="truncate">{term}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {searchTerm && (
           <button
             type="button"
-            onClick={clearSearch}
+            onClick={isPendingSearch ? undefined : clearSearch}
             className="absolute inset-y-0 right-20 flex items-center justify-center w-10 text-muted-foreground hover:text-foreground"
-            title={t("clear")}
+            title={isPendingSearch ? t("searching") : t("clear")}
+            aria-label={isPendingSearch ? t("searching") : t("clear")}
+            disabled={isPendingSearch}
           >
-            <X size={18} />
+            {isPendingSearch ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : (
+              <X size={18} />
+            )}
           </button>
         )}
         <button
