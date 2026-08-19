@@ -24,6 +24,7 @@ public/swe-worker-*.js
 
 # Docs (auto-generated)
 CHANGELOG.md
+docs/api
 
 # Docker
 Dockerfile*
