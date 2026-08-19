@@ -6,6 +6,7 @@ import { createPublicRoute } from "@/lib/api-middleware";
 import { getAccessToken, listFilesFromDrive } from "@/lib/drive";
 import JSZip from "jszip";
 import { isAccessRestricted } from "@/lib/securityUtils";
+import { MAX_ZIP_TOTAL_BYTES } from "@/lib/constants";
 import { z } from "zod";
 
 const bulkDownloadSchema = z
@@ -20,6 +21,8 @@ const bulkDownloadSchema = z
   .refine((value) => value.fileIds || value.folderId, {
     message: "Parameter fileIds atau folderId wajib diisi.",
   });
+
+const ZIP_TOO_LARGE_MESSAGE = `Total ukuran file melebihi batas ${Math.floor(MAX_ZIP_TOTAL_BYTES / 1024 / 1024)}MB. Unduh file satu per satu.`;
 
 export const POST = createPublicRoute(
   async ({ body, session }) => {
@@ -38,8 +41,19 @@ export const POST = createPublicRoute(
         items = result.files
           .filter((f) => f.mimeType !== "application/vnd.google-apps.folder")
           .map((f) => ({ id: f.id, name: f.name }));
+
+        const totalSize = result.files
+          .filter((f) => f.mimeType !== "application/vnd.google-apps.folder")
+          .reduce((sum, f) => sum + (Number(f.size) || 0), 0);
+        if (totalSize > MAX_ZIP_TOTAL_BYTES) {
+          return NextResponse.json(
+            { error: ZIP_TOO_LARGE_MESSAGE },
+            { status: 413 },
+          );
+        }
       }
 
+      let totalSize = 0;
       for (const item of items) {
         if (session?.user?.role !== "ADMIN") {
           const isRestricted = await isAccessRestricted(
@@ -54,7 +68,7 @@ export const POST = createPublicRoute(
         let fileName: string = item.name ?? "";
 
         if (!fileName) {
-          const detailsUrl = `https://www.googleapis.com/drive/v3/files/${item.id}?fields=name`;
+          const detailsUrl = `https://www.googleapis.com/drive/v3/files/${item.id}?fields=name,size`;
           const detailsResponse = await fetch(detailsUrl, {
             headers: { Authorization: `Bearer ${accessToken}` },
           });
@@ -63,6 +77,14 @@ export const POST = createPublicRoute(
 
           const fileDetails = await detailsResponse.json();
           fileName = fileDetails.name || item.id;
+
+          totalSize += Number(fileDetails.size) || 0;
+          if (totalSize > MAX_ZIP_TOTAL_BYTES) {
+            return NextResponse.json(
+              { error: ZIP_TOO_LARGE_MESSAGE },
+              { status: 413 },
+            );
+          }
         }
 
         const fileResponse = await fetch(driveUrl, {

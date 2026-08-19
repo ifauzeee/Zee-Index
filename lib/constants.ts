@@ -84,6 +84,10 @@ export const ERROR_MESSAGES = {
   INTERNAL_SERVER_ERROR: "Internal Server Error.",
 } as const;
 
+// Max total bytes streamed into a ZIP. Bounded so in-memory buffering (arrayBuffer +
+// JSZip) stays well under the container's 512MB limit — videos belong in direct download.
+export const MAX_ZIP_TOTAL_BYTES = 150 * 1024 * 1024; // 150 MB
+
 export const RATE_LIMITS = {
   API: {
     LIMIT: 500,

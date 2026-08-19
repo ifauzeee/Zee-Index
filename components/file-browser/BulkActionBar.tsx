@@ -10,6 +10,7 @@ import MoveModal from "@/components/modals/MoveModal";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { getErrorMessage } from "@/lib/errors";
+import { MAX_ZIP_TOTAL_BYTES } from "@/lib/constants";
 
 export function BulkActionBar() {
   const {
@@ -45,6 +46,18 @@ export function BulkActionBar() {
     if (filesToZip.length > 20) {
       addToast({
         message: "Maksimal 20 file per unduhan bulk sekaligus.",
+        type: "error",
+      });
+      return;
+    }
+
+    const totalSize = filesToZip.reduce(
+      (sum, f) => sum + (Number(f.size) || 0),
+      0,
+    );
+    if (totalSize > MAX_ZIP_TOTAL_BYTES) {
+      addToast({
+        message: `Total ukuran file melebihi batas ${Math.floor(MAX_ZIP_TOTAL_BYTES / 1024 / 1024)}MB. Unduh file satu per satu.`,
         type: "error",
       });
       return;
