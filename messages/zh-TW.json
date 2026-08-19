@@ -97,7 +97,8 @@
     "googleAuthError": "Google Drive 驗證失敗。請檢查憑證或重新授權。",
     "close": "關閉側邊欄",
     "profile": "個人檔案",
-    "dashboard": "儀表板"
+    "dashboard": "儀表板",
+    "navPendingRequests": "有 {count} 個待處理的存取請求"
   },
   "Header": {
     "switchTheme": "切換主題",

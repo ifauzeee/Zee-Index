@@ -97,7 +97,8 @@
     "googleAuthError": "Google Drive authentication failed. Please check your credentials or re-authorize.",
     "close": "Close Sidebar",
     "profile": "Profile",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "navPendingRequests": "{count} pending access requests"
   },
   "Header": {
     "toggleSidebar": "Toggle Sidebar",

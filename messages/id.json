@@ -97,7 +97,8 @@
     "googleAuthError": "Autentikasi Google Drive gagal. Silakan periksa kredensial atau otorisasi ulang.",
     "close": "Tutup Sidebar",
     "profile": "Profil",
-    "dashboard": "Dasbor"
+    "dashboard": "Dasbor",
+    "navPendingRequests": "{count} permintaan akses tertunda"
   },
   "Header": {
     "toggleSidebar": "Buka/Tutup Sidebar",

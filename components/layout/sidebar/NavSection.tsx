@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Home,
   Star,
@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { useRouter, usePathname } from "next/navigation";
 
 interface NavSectionProps {
-  t: (key: string) => string;
+  t: (key: string, values?: Record<string, string | number | Date>) => string;
 }
 
 export default function NavSection({ t }: NavSectionProps) {
@@ -27,6 +27,21 @@ export default function NavSection({ t }: NavSectionProps) {
   const navigatingId = useAppStore((state) => state.navigatingId);
   const setNavigatingId = useAppStore((state) => state.setNavigatingId);
   const setSidebarOpen = useAppStore((state) => state.setSidebarOpen);
+  const [pendingAccessRequests, setPendingAccessRequests] = useState(0);
+
+  useEffect(() => {
+    if (user?.role !== "ADMIN") return;
+    let cancelled = false;
+    fetch("/api/admin/access-requests")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((requests: unknown[]) => {
+        if (!cancelled) setPendingAccessRequests(requests.length);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.role, pathname]);
 
   const handleNav = (id: string, path: string) => {
     setNavigatingId(id);
@@ -155,12 +170,25 @@ export default function NavSection({ t }: NavSectionProps) {
               if (window.innerWidth < 1024) setSidebarOpen(false);
             }}
             className={cn(
-              "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
+              "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors relative",
               pathname.includes("/admin") &&
                 "bg-accent font-medium text-primary",
             )}
           >
             <ShieldCheck size={16} /> {t("admin")}
+            {pendingAccessRequests > 0 && (
+              <span
+                aria-label={t("navPendingRequests", {
+                  count: pendingAccessRequests,
+                })}
+                title={t("navPendingRequests", {
+                  count: pendingAccessRequests,
+                })}
+                className="absolute right-2 top-1/2 -translate-y-1/2 min-w-5 h-5 px-1 flex items-center justify-center rounded-full bg-red-500 text-[10px] font-semibold text-white"
+              >
+                {pendingAccessRequests > 99 ? "99+" : pendingAccessRequests}
+              </span>
+            )}
           </button>
         </>
       )}
