@@ -51,6 +51,12 @@ const securityHeaders = [
 const nextConfig = {
   output: "standalone",
 
+  // Next's file tracing misses @swc/helpers/esm (loaded dynamically via
+  // require-hook at runtime) with pnpm — force-include the whole package.
+  outputFileTracingIncludes: {
+    "/**/*": ["./node_modules/@swc/helpers/**/*"],
+  },
+
   typescript: {
     ignoreBuildErrors: false,
   },
