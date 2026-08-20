@@ -30,7 +30,6 @@ import {
   NetworkErrorOverlay,
   FormatErrorOverlay,
   ResumePromptOverlay,
-  BufferingOverlay,
   WatermarkOverlay,
 } from "./video-player/Overlays";
 
@@ -79,7 +78,6 @@ export default function VideoPlayer({
   const [resumeTime, setResumeTime] = useState(0);
   const [upNextCountdown, setUpNextCountdown] = useState<number | null>(null);
   const controlsVisible = useMediaState("controlsVisible", playerRef);
-  const buffering = useMediaState("waiting", playerRef);
 
   const tPlayer = useTranslations("VideoPlayer");
 
@@ -427,12 +425,6 @@ export default function VideoPlayer({
             tPlayer={tPlayer}
           />
         )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        <BufferingOverlay
-          show={buffering && !networkError && !formatError && !showResumePrompt}
-        />
       </AnimatePresence>
     </div>
   );

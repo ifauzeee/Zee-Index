@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { WifiOff, History, FileWarning, Download, Loader2 } from "lucide-react";
+import { WifiOff, History, FileWarning, Download } from "lucide-react";
 import { formatDuration } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
@@ -262,36 +262,6 @@ export function ResumePromptOverlay({
           >
             {tPlayer("resumeButton")}
           </button>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-interface BufferingOverlayProps {
-  show: boolean;
-}
-
-export function BufferingOverlay({ show }: BufferingOverlayProps) {
-  if (!show) return null;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.8 }}
-      className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
-    >
-      <div className="relative">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-20 h-20 border-4 border-primary/30 border-t-primary rounded-full shadow-[0_0_20px_rgba(var(--primary),0.3)]"
-        />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-12 h-12 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center">
-            <Loader2 size={24} className="text-primary animate-spin" />
-          </div>
         </div>
       </div>
     </motion.div>
