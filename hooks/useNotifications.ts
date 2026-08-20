@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { logger } from "@/lib/logger";
-import { useAppStore, NotificationItem } from "@/lib/store";
+import { useAppStore } from "@/lib/store";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -81,29 +81,14 @@ export function useNotifications({
 
           if (newEvents.length > 0) {
             newEvents.forEach((eventItem) => {
-              const notifData: NotificationItem = {
-                id: eventItem.id,
-                message: eventItem.message,
-                type: eventItem.severity === "warning" ? "error" : "info",
-                timestamp: eventItem.timestamp,
-                read: false,
-              };
-
-              addNotification(notifData);
-
-              if (
-                ["file:upload", "file:delete", "file:move"].includes(
-                  eventItem.type,
-                )
-              ) {
-                queryClient.invalidateQueries({ queryKey: ["files"] });
-              }
-
-              if (
+              const shouldToast =
                 eventItem.severity === "warning" ||
                 eventItem.severity === "error" ||
-                eventItem.severity === "success"
-              ) {
+                eventItem.severity === "success";
+
+              if (shouldToast) {
+                // addToast also appends a notification entry; adding one
+                // here too would duplicate it (different id).
                 addToast({
                   message: eventItem.message,
                   type:
@@ -111,6 +96,22 @@ export function useNotifications({
                       ? "error"
                       : eventItem.severity,
                 });
+              } else {
+                addNotification({
+                  id: eventItem.id,
+                  message: eventItem.message,
+                  type: "info",
+                  timestamp: eventItem.timestamp,
+                  read: false,
+                });
+              }
+
+              if (
+                ["file:upload", "file:delete", "file:move"].includes(
+                  eventItem.type,
+                )
+              ) {
+                queryClient.invalidateQueries({ queryKey: ["files"] });
               }
             });
           }
