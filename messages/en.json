@@ -9,7 +9,6 @@
     "upload": "Upload or Create Folder",
     "requestFiles": "Create File Request Link",
     "shareFolder": "Share This Folder",
-    "downloadFolder": "Download folder as ZIP",
     "sortFiles": "Sort files",
     "viewDetails": "View Details",
     "selectMultiple": "Select Multiple Files",
@@ -640,8 +639,6 @@
   "BulkActionBar": {
     "zipError": "No files selected to zip.",
     "zipping": "Zipping {count} files...",
-    "zipFolderError": "Failed to create zip folder",
-    "zipFolderStarted": "Preparing folder download...",
     "networkError": "Network error",
     "skipError": "Skipped {name} (failed to fetch)",
     "zipStarted": "Download started!",

@@ -1,16 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 
-const { mockGetAccessToken, mockIsAccessRestricted, mockListFilesFromDrive } =
-  vi.hoisted(() => ({
-    mockGetAccessToken: vi.fn(),
-    mockIsAccessRestricted: vi.fn(),
-    mockListFilesFromDrive: vi.fn(),
-  }));
+const { mockGetAccessToken, mockIsAccessRestricted } = vi.hoisted(() => ({
+  mockGetAccessToken: vi.fn(),
+  mockIsAccessRestricted: vi.fn(),
+}));
 
 vi.mock("@/lib/drive", () => ({
   getAccessToken: mockGetAccessToken,
-  listFilesFromDrive: mockListFilesFromDrive,
 }));
 
 vi.mock("@/lib/securityUtils", () => ({
@@ -33,7 +30,7 @@ vi.mock("@/lib/api-middleware", () => ({
   createPublicRoute: (
     handler: (context: {
       request: NextRequest;
-      body?: { fileIds?: string[]; folderId?: string };
+      body?: { fileIds?: string[] };
       session?: { user?: { role?: string; email?: string } };
     }) => Promise<Response>,
     options?: {
@@ -48,7 +45,7 @@ vi.mock("@/lib/api-middleware", () => ({
     },
   ) => {
     return async (request: NextRequest) => {
-      let body: { fileIds?: string[]; folderId?: string } | undefined;
+      let body: { fileIds?: string[] } | undefined;
       if (options?.bodySchema) {
         try {
           const rawBody = await request.json();
@@ -62,7 +59,7 @@ vi.mock("@/lib/api-middleware", () => ({
               { status: 400 },
             );
           }
-          body = parsedBody.data as { fileIds?: string[]; folderId?: string };
+          body = parsedBody.data as { fileIds?: string[] };
         } catch {
           return NextResponse.json(
             { error: "Invalid request body.", details: [] },
@@ -94,10 +91,6 @@ describe("app/api/bulk-download route", () => {
     vi.clearAllMocks();
     mockGetAccessToken.mockResolvedValue("mock-access-token");
     mockIsAccessRestricted.mockResolvedValue(false);
-    mockListFilesFromDrive.mockResolvedValue({
-      files: [],
-      nextPageToken: null,
-    });
   });
 
   it("returns 400 when fileIds is missing", async () => {
@@ -114,41 +107,6 @@ describe("app/api/bulk-download route", () => {
     const manyIds = Array.from({ length: 21 }, (_, i) => "file" + i);
     const response = await POST(createRequest({ fileIds: manyIds }));
     expect(response.status).toBe(400);
-  });
-
-  it("returns 400 when neither fileIds nor folderId is provided", async () => {
-    const response = await POST(createRequest({}));
-    expect(response.status).toBe(400);
-  });
-
-  it("returns 200 with zip of one-level folder contents, skipping folders", async () => {
-    mockListFilesFromDrive.mockResolvedValue({
-      files: [
-        { id: "f1", name: "a.txt", mimeType: "text/plain" },
-        {
-          id: "f2",
-          name: "Nested",
-          mimeType: "application/vnd.google-apps.folder",
-        },
-      ],
-      nextPageToken: null,
-    });
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      arrayBuffer: () => Promise.resolve(new ArrayBuffer(10)),
-    });
-    vi.stubGlobal("fetch", mockFetch);
-
-    const response = await POST(createRequest({ folderId: "root" }));
-
-    expect(response.status).toBe(200);
-    expect(mockListFilesFromDrive).toHaveBeenCalledWith(
-      "root",
-      null,
-      200,
-      false,
-    );
-    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
   it("returns 200 with zip when valid fileIds provided", async () => {

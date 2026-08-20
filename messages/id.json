@@ -9,7 +9,6 @@
     "upload": "Unggah atau Buat Folder",
     "requestFiles": "Buat Tautan Permintaan File",
     "shareFolder": "Bagikan Folder Ini",
-    "downloadFolder": "Unduh Folder sebagai ZIP",
     "sortFiles": "Urutkan file",
     "viewDetails": "Lihat Detail",
     "selectMultiple": "Pilih Beberapa File",
@@ -640,8 +639,6 @@
   "BulkActionBar": {
     "zipError": "Tidak ada file yang dipilih untuk dikompres.",
     "zipping": "Mengompres {count} file...",
-    "zipFolderError": "Gagal membuat folder zip",
-    "zipFolderStarted": "Menyiapkan unduhan folder...",
     "networkError": "Kesalahan jaringan",
     "skipError": "Melewati {name} (gagal mengambil)",
     "zipStarted": "Unduhan dimulai!",
