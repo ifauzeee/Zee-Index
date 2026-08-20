@@ -229,6 +229,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
             isFetchingNextPage={isFetchingNextPage}
             nextPageToken={nextPageToken}
             navigatingId={navigatingId}
+            currentFolderId={currentFolderId}
           />
         </motion.div>
       </AnimatePresence>

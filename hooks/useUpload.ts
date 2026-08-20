@@ -120,7 +120,7 @@ export function useUpload({
   const uploadFileChunked = useCallback(
     async (file: File, targetParentId: string) => {
       try {
-        updateUploadProgress(file.name, 0, "uploading");
+        updateUploadProgress(file.name, targetParentId, 0, "uploading");
 
         const initRes = await retryFetch("/api/files/upload?type=init", {
           method: "POST",
@@ -160,10 +160,10 @@ export function useUpload({
           if (!chunkRes.ok) throw new Error(t("chunkFailed"));
           const chunkData = await chunkRes.json();
           const percent = Math.round((end / file.size) * 100);
-          updateUploadProgress(file.name, percent, "uploading");
+          updateUploadProgress(file.name, targetParentId, percent, "uploading");
 
           if (chunkData.status === "completed") {
-            updateUploadProgress(file.name, 100, "success");
+            updateUploadProgress(file.name, targetParentId, 100, "success");
             triggerRefresh();
             setTimeout(() => {
               removeUpload(file.name);
@@ -176,7 +176,13 @@ export function useUpload({
         console.error(error);
         const errorMessage =
           error instanceof Error ? error.message : "Upload failed";
-        updateUploadProgress(file.name, 0, "error", errorMessage);
+        updateUploadProgress(
+          file.name,
+          targetParentId,
+          0,
+          "error",
+          errorMessage,
+        );
         addToast({
           message: t("uploadError", { fileName: file.name }),
           type: "error",

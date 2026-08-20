@@ -352,6 +352,7 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
   uploads: {},
   updateUploadProgress: (
     fileName: string,
+    parentId: string,
     progress: number,
     status: "uploading" | "success" | "error",
     error?: string,
@@ -359,7 +360,7 @@ export const createFileSlice: StateCreator<AppState, [], [], FileSlice> = (
     set((state: AppState) => ({
       uploads: {
         ...state.uploads,
-        [fileName]: { name: fileName, progress, status, error },
+        [fileName]: { name: fileName, parentId, progress, status, error },
       },
     })),
   removeUpload: (fileName: string) =>

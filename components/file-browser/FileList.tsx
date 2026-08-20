@@ -27,6 +27,7 @@ interface FileListProps {
   isFetchingNextPage?: boolean;
   nextPageToken?: string | null;
   navigatingId: string | null;
+  currentFolderId?: string;
 }
 
 export default function FileList({
@@ -46,6 +47,7 @@ export default function FileList({
   isFetchingNextPage,
   nextPageToken,
   navigatingId,
+  currentFolderId,
 }: FileListProps) {
   const {
     view,
@@ -114,7 +116,9 @@ export default function FileList({
     return Object.values(uploads)
       .filter(
         (upload) =>
-          upload.status === "uploading" && !realFileNames.has(upload.name),
+          upload.status === "uploading" &&
+          upload.parentId === currentFolderId &&
+          !realFileNames.has(upload.name),
       )
       .map(
         (upload): BrowserFile => ({
@@ -134,7 +138,7 @@ export default function FileList({
           uploadError: upload.error,
         }),
       );
-  }, [uploads, files]);
+  }, [uploads, files, currentFolderId]);
 
   const allItems = useMemo(
     () => [...uploadGhostFiles, ...files],

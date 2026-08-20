@@ -68,6 +68,7 @@ export interface SortState {
 
 export interface UploadItem {
   name: string;
+  parentId: string;
   progress: number;
   status: "uploading" | "success" | "error";
   error?: string;
@@ -184,6 +185,7 @@ export interface FileSlice {
   uploads: Record<string, UploadItem>;
   updateUploadProgress: (
     fileName: string,
+    parentId: string,
     progress: number,
     status: "uploading" | "success" | "error",
     error?: string,
