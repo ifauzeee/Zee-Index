@@ -259,7 +259,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 <ExternalLink size={20} />
                 {editorLink ? t("editFile") : t("openDrive")}
               </motion.a>
-              {!sharePolicy?.preventDownload && (
+              {!sharePolicy?.preventDownload && !file.isFolder && (
                 <motion.a
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
