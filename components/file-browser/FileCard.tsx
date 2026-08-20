@@ -56,6 +56,7 @@ export default function FileCard({
 }: FileCardProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     setIsDesktop(window.matchMedia("(pointer: fine)").matches);
@@ -121,7 +122,8 @@ export default function FileCard({
     }
   };
 
-  const displayThumbnail = thumbnailSrc && !isFolder && file.hasThumbnail;
+  const displayThumbnail =
+    thumbnailSrc && !isFolder && file.hasThumbnail && !imageError;
   const isUploading = file.uploadStatus === "uploading";
   const createActionEvent = (
     event: React.MouseEvent,
@@ -229,7 +231,7 @@ export default function FileCard({
             fill
             className="object-cover transition-transform group-hover:scale-105"
             unoptimized
-            onError={() => {}}
+            onError={() => setImageError(true)}
           />
         ) : isFolder ? (
           <Folder className="w-16 h-16 text-blue-500/80" />

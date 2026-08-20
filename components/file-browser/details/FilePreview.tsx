@@ -14,6 +14,7 @@ interface FilePreviewProps {
 
 export default function FilePreview({ file, variant }: FilePreviewProps) {
   const FileIconComponent = getIcon(file.mimeType);
+  const [imageError, setImageError] = React.useState(false);
 
   const sizeClasses =
     variant === "desktop"
@@ -52,7 +53,7 @@ export default function FilePreview({ file, variant }: FilePreviewProps) {
             transition={{ type: "spring", stiffness: 300 }}
             className={`relative ${sizeClasses} shadow-xl bg-card border border-border/50 flex items-center justify-center overflow-hidden z-10`}
           >
-            {file.thumbnailLink && !file.isFolder ? (
+            {file.thumbnailLink && !file.isFolder && !imageError ? (
               <Image
                 src={`/api/proxy-image?url=${encodeURIComponent(
                   file.thumbnailLink.replace("=s220", "=s800"),
@@ -61,6 +62,7 @@ export default function FilePreview({ file, variant }: FilePreviewProps) {
                 fill
                 className="object-cover transition-transform duration-700 group-hover:scale-110"
                 unoptimized
+                onError={() => setImageError(true)}
               />
             ) : (
               <FileIconComponent size={80} className="text-foreground/20" />
