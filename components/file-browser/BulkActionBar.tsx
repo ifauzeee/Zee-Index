@@ -10,7 +10,6 @@ import MoveModal from "@/components/modals/MoveModal";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { getErrorMessage } from "@/lib/errors";
-import { MAX_ZIP_TOTAL_BYTES } from "@/lib/constants";
 
 export function BulkActionBar() {
   const {
@@ -34,74 +33,32 @@ export function BulkActionBar() {
   }, []);
 
   const handleDownload = async () => {
-    const filesToZip = selectedFiles.filter(
+    const filesToDownload = selectedFiles.filter(
       (f) => f.mimeType !== "application/vnd.google-apps.folder",
     );
 
-    if (filesToZip.length === 0) {
-      addToast({ message: t("zipError"), type: "error" });
-      return;
-    }
-
-    if (filesToZip.length > 20) {
-      addToast({
-        message: "Maksimal 20 file per unduhan bulk sekaligus.",
-        type: "error",
-      });
-      return;
-    }
-
-    const totalSize = filesToZip.reduce(
-      (sum, f) => sum + (Number(f.size) || 0),
-      0,
-    );
-    if (totalSize > MAX_ZIP_TOTAL_BYTES) {
-      addToast({
-        message: `Total ukuran file melebihi batas ${Math.floor(MAX_ZIP_TOTAL_BYTES / 1024 / 1024)}MB. Unduh file satu per satu.`,
-        type: "error",
-      });
+    if (filesToDownload.length === 0) {
+      addToast({ message: t("downloadNoFiles"), type: "error" });
       return;
     }
 
     addToast({
-      message: t("zipping", { count: filesToZip.length }),
+      message: t("downloading", { count: filesToDownload.length }),
       type: "info",
     });
-    setIsProcessing(true);
 
-    try {
-      const response = await fetch("/api/bulk-download", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileIds: filesToZip.map((f) => f.id) }),
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || t("zipGenError"));
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+    for (const file of filesToDownload) {
       const a = document.createElement("a");
-      a.href = url;
-      a.download = "download.zip";
+      a.href = `/api/download?fileId=${file.id}`;
+      a.download = file.name || "download";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      addToast({ message: t("zipStarted"), type: "success" });
-      clearSelection();
-    } catch (error: unknown) {
-      console.error("Zip error:", error);
-      addToast({
-        message: getErrorMessage(error, t("zipGenError")),
-        type: "error",
-      });
-    } finally {
-      setIsProcessing(false);
+      await new Promise((resolve) => setTimeout(resolve, 300));
     }
+
+    addToast({ message: t("downloadStarted"), type: "success" });
+    clearSelection();
   };
 
   const handleDelete = async () => {

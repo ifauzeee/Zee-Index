@@ -637,12 +637,9 @@
     "local": "Local"
   },
   "BulkActionBar": {
-    "zipError": "No files selected to zip.",
-    "zipping": "Zipping {count} files...",
-    "networkError": "Network error",
-    "skipError": "Skipped {name} (failed to fetch)",
-    "zipStarted": "Download started!",
-    "zipGenError": "Failed to generate zip file.",
+    "downloadNoFiles": "No files selected to download.",
+    "downloading": "Downloading {count} files...",
+    "downloadStarted": "Download started!",
     "deleteConfirm": "Are you sure you want to delete {count} items?",
     "deleteTitle": "Delete Items",
     "deleteBtn": "Delete",

@@ -66,7 +66,6 @@ This folder contains the maintained API reference for Zee-Index.
 | GET    | `/api/files/[fileId]/revisions` | Read revision history                                  |
 | POST   | `/api/folder/create`            | Create a folder                                        |
 | GET    | `/api/folderpath`               | Resolve breadcrumb path                                |
-| POST   | `/api/bulk-download`            | Download multiple files                                |
 | GET    | `/api/archive-preview`          | Preview archive contents                               |
 | GET    | `/api/proxy-image`              | Proxy remote image previews                            |
 | GET    | `/api/metadata`                 | Resolve metadata for embeds/previews                   |

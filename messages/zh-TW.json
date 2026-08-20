@@ -648,12 +648,9 @@
     "local": "本機"
   },
   "BulkActionBar": {
-    "zipError": "尚未選取要壓縮的檔案。",
-    "zipping": "正在壓縮 {count} 個檔案...",
-    "networkError": "網路錯誤",
-    "skipError": "略過 {name}（取得失敗）",
-    "zipStarted": "下載已開始！",
-    "zipGenError": "產生 zip 檔案失敗。",
+    "downloadNoFiles": "尚未選取要下載的檔案。",
+    "downloading": "正在下載 {count} 個檔案...",
+    "downloadStarted": "下載已開始！",
     "deleteConfirm": "確定要刪除 {count} 個項目嗎？",
     "deleteTitle": "刪除項目",
     "deleteBtn": "刪除",

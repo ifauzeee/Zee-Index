@@ -761,7 +761,6 @@ API keys are bcrypt-hashed at rest and never exposed in API responses (the admin
 | `POST` | `/api/files/bulk-delete`        | Bulk delete files                  |
 | `POST` | `/api/files/bulk-move`          | Bulk move files                    |
 | `POST` | `/api/files/[fileId]/revisions` | Get file revision history          |
-| `POST` | `/api/bulk-download`            | Bulk download as ZIP archive       |
 | `POST` | `/api/folder/create`            | Create new folder                  |
 | `POST` | `/api/favorites`                | Toggle favorite status             |
 | `POST` | `/api/tags`                     | Manage file tags                   |

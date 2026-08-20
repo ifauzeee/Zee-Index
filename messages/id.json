@@ -637,12 +637,9 @@
     "local": "Lokal"
   },
   "BulkActionBar": {
-    "zipError": "Tidak ada file yang dipilih untuk dikompres.",
-    "zipping": "Mengompres {count} file...",
-    "networkError": "Kesalahan jaringan",
-    "skipError": "Melewati {name} (gagal mengambil)",
-    "zipStarted": "Unduhan dimulai!",
-    "zipGenError": "Gagal membuat file zip.",
+    "downloadNoFiles": "Tidak ada file yang dipilih untuk diunduh.",
+    "downloading": "Mengunduh {count} file...",
+    "downloadStarted": "Unduhan dimulai!",
     "deleteConfirm": "Apakah Anda yakin ingin menghapus {count} item?",
     "deleteTitle": "Hapus Item",
     "deleteBtn": "Hapus",

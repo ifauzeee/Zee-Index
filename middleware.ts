@@ -41,7 +41,6 @@ const PUBLIC_API_PREFIXES = [
   "/api/folderpath",
   "/api/filedetails",
   "/api/download",
-  "/api/bulk-download",
   "/api/proxy-image",
   "/api/admin/analytics/track",
   "/api/health",

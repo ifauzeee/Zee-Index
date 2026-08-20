@@ -202,10 +202,6 @@ export const CreateFolderBodySchema = z.object({
   parentId: z.string().min(1),
 });
 
-export const BulkDownloadBodySchema = z.object({
-  fileIds: z.array(z.string().min(1)).min(1).max(20),
-});
-
 export const FolderPathResponseSchema = z.array(
   z.object({ id: z.string(), name: z.string() }),
 );

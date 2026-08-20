@@ -2,7 +2,6 @@ import { z } from "zod";
 import {
   registry,
   ArchivePreviewResponseSchema,
-  BulkDownloadBodySchema,
   ErrorResponseSchema,
   FolderPathResponseSchema,
   ZeeFileSchema,
@@ -60,30 +59,6 @@ registry.registerPath({
   responses: {
     200: {
       description: "Headers only, no body",
-    },
-  },
-});
-
-registry.registerPath({
-  method: "post",
-  path: "/api/bulk-download",
-  tags: ["Download"],
-  summary: "Bulk download as ZIP",
-  description:
-    "Downloads multiple files as a single ZIP archive. Max 20 files.",
-  request: {
-    body: {
-      content: { "application/json": { schema: BulkDownloadBodySchema } },
-    },
-  },
-  responses: {
-    200: {
-      description: "ZIP archive binary",
-      content: { "application/zip": { schema: z.string() } },
-    },
-    500: {
-      description: "Internal server error",
-      content: { "application/json": { schema: ErrorResponseSchema } },
     },
   },
 });
