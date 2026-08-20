@@ -87,7 +87,7 @@ export function createContentSecurityPolicy(
     "font-src 'self' data: https://fonts.gstatic.com",
     "img-src 'self' data: blob: https://*.googleusercontent.com https://drive.google.com https://images.unsplash.com https://image.tmdb.org",
     "media-src 'self' blob: https://*.googleapis.com",
-    "connect-src 'self' https://*.googleapis.com https://*.google.com https://cdn.jsdelivr.net https://www.google-analytics.com",
+    "connect-src 'self' https://*.googleapis.com https://*.google.com https://*.googleusercontent.com https://cdn.jsdelivr.net https://www.google-analytics.com",
     "frame-src 'self' https://accounts.google.com https://drive.google.com https://view.officeapps.live.com",
     "worker-src 'self' blob: https://cdn.jsdelivr.net",
     "object-src 'none'",

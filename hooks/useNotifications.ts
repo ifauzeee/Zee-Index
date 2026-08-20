@@ -142,7 +142,12 @@ export function useNotifications({
   }, [enabled, addNotification, addToast, queryClient]);
 
   useEffect(() => {
-    if (!enabled || !session?.user) return;
+    if (
+      !enabled ||
+      !session?.user ||
+      (session.user as { role?: string }).role === "GUEST"
+    )
+      return;
 
     connect();
 
