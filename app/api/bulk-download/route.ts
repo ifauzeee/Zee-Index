@@ -64,11 +64,11 @@ export const POST = createPublicRoute(
           if (isRestricted) continue;
         }
 
-        const driveUrl = `https://www.googleapis.com/drive/v3/files/${item.id}?alt=media`;
+        const driveUrl = `https://www.googleapis.com/drive/v3/files/${item.id}?alt=media&supportsAllDrives=true`;
         let fileName: string = item.name ?? "";
 
         if (!fileName) {
-          const detailsUrl = `https://www.googleapis.com/drive/v3/files/${item.id}?fields=name,size`;
+          const detailsUrl = `https://www.googleapis.com/drive/v3/files/${item.id}?fields=name,size&supportsAllDrives=true`;
           const detailsResponse = await fetch(detailsUrl, {
             headers: { Authorization: `Bearer ${accessToken}` },
           });
