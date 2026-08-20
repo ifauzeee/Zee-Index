@@ -254,7 +254,7 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
                 href={editorLink || driveViewerLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-primary/5 text-primary font-semibold text-sm hover:bg-primary/10 transition-colors border border-primary/10"
+                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-primary/5 text-primary font-semibold text-sm hover:bg-primary/10 transition-colors border border-primary/10 ${sharePolicy?.preventDownload || file.isFolder ? "col-span-2" : ""}`}
               >
                 <ExternalLink size={20} />
                 {editorLink ? t("editFile") : t("openDrive")}
