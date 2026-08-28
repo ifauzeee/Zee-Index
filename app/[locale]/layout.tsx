@@ -30,6 +30,11 @@ export const metadata: Metadata = {
   description:
     "A modern, fast, and feature-rich Google Drive indexer built with Next.js. Stream, manage, and share your files effortlessly.",
   applicationName: "Zee Index",
+  // ⛔ DO NOT REMOVE / ALTER THIS ATTRIBUTION — REQUIRED BY LICENSE.
+  // LICENSE (GNU AGPL-3.0 + additional terms under Section 7) mandates a
+  // visible attribution on all user-facing pages:
+  //   "© 2025-2026 All rights reserved - Muhammad Ibnu Fauzi"
+  // This notice cannot be removed or altered. Changing it breaches the license.
   authors: [
     { name: "Muhammad Ibnu Fauzi", url: "https://ifauzeee.vercel.app" },
   ],

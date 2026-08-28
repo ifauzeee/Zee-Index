@@ -437,6 +437,9 @@ export default function SetupPage() {
 
           <p className="text-center text-xs text-muted-foreground pt-12">
             &copy; {new Date().getFullYear()} - {t("createdBy")}{" "}
+            {/* ⛔ REQUIRED BY LICENSE (AGPL-3.0 Section 7). DO NOT remove/alter
+                "Muhammad Ibnu Fauzi" attribution here — it must stay on all
+                user-facing pages or the license is breached. */}
             <a
               href="https://ifauzeee.vercel.app/"
               target="_blank"

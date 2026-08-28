@@ -348,6 +348,9 @@ function CustomLoginPage() {
             suppressHydrationWarning
           >
             © {new Date().getFullYear()} - {t("footer")}{" "}
+            {/* ⛔ REQUIRED BY LICENSE (AGPL-3.0 Section 7). DO NOT remove/alter
+                "Muhammad Ibnu Fauzi" attribution here — it must stay on all
+                user-facing pages or the license is breached. */}
             <a
               href="https://ifauzeee.vercel.app/"
               target="_blank"
