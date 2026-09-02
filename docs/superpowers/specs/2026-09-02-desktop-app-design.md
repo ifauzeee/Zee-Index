@@ -102,7 +102,17 @@ Wizard (window khusus):
 5. Admin credentials.
 6. Selesai → buka app utama.
 
-## 9. Project Structure Tambahan
+## 9. Repo & Project Structure
+
+### Repo (monorepo terpisah)
+
+Desktop app berada di **repo terpisah** bernama `Zee-Index-Desktop`, terpisah dari repo `zee-index` (web). Alasan: isolasi build desktop dari build web, versioning sendiri, tidak membebani node_modules web.
+
+- Repo baru `Zee-Index-Desktop` berisi hanya desktop app.
+- `zee-index` (web/Next.js) dijadikan dependency — di-build sebagai standalone output lalu di-bundle ke dalam Electron.
+- Konsumsi via git submodule atau dependency npm dari source, atau build artifact.
+
+### Struktur repo `Zee-Index-Desktop`
 
 ```
 electron/            # Electron main process & preload
@@ -111,6 +121,7 @@ electron/            # Electron main process & preload
   tray.ts            # system tray
   updater.ts         # auto-update
   storage.ts         # local storage / folder picker
+src/                 # Next.js web source (dari zee-index) atau build artifact
 desktop/             # build & config
   electron-builder.yml
   icons/             # .ico, .png
