@@ -13,7 +13,7 @@ const DEFAULT_RETENTION_MS = 90 * 24 * 60 * 60 * 1000; // 90 days
 export async function cleanupOldActivityLogs(
   retentionMs: number = DEFAULT_RETENTION_MS,
 ): Promise<number> {
-  const cutoff = Date.now() - retentionMs;
+  const cutoff = new Date(Date.now() - retentionMs);
 
   try {
     const result = await db.activityLog.deleteMany({

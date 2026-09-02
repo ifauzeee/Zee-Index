@@ -22,7 +22,7 @@ export const ADMIN_STATS_ACTIVITY_LOG_TAKE_LIMIT = 10_000;
 
 const getAdminStatsCached = unstable_cache(
   async () => {
-    const ninetyDaysAgo = subDays(new Date(), 90).getTime();
+    const ninetyDaysAgo = subDays(new Date(), 90);
     const allLogsRaw = await db.activityLog.findMany({
       where: { timestamp: { gte: ninetyDaysAgo } },
       orderBy: { timestamp: "desc" },

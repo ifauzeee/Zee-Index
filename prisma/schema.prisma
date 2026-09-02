@@ -37,14 +37,20 @@ model Session {
   @@index([userId])
 }
 
+enum Role {
+  ADMIN
+  EDITOR
+  USER
+  GUEST
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  /// ADMIN | EDITOR | USER (session may also use GUEST)
-  role          String    @default("USER")
+  role          Role      @default(USER)
   accounts      Account[]
   sessions      Session[]
 }
@@ -58,30 +64,30 @@ model VerificationToken {
 }
 
 model ActivityLog {
-  id            String   @id @default(cuid())
-  type          String
-  timestamp     Float
-  severity      String
-  
-  itemName      String?
-  itemId        String?
-  itemSize      String?
-  itemType      String?
-  userEmail     String?
-  userId        String?
-  userRole      String?
-  targetUser    String?
+  id        String   @id @default(cuid())
+  type      String
+  timestamp DateTime @default(now()) @db.Timestamptz(6)
+  severity  String
+
+  itemName          String?
+  itemId            String?
+  itemSize          String?
+  itemType          String?
+  userEmail         String?
+  userId            String?
+  userRole          String?
+  targetUser        String?
   destinationFolder String?
-  sourcePath    String?
-  targetPath    String?
-  status        String?
-  error         String?
-  errorCode     String?
-  ipAddress     String?
-  userAgent     String?
-  country       String?
-  city          String?
-  metadata      String?
+  sourcePath        String?
+  targetPath        String?
+  status            String?
+  error             String?
+  errorCode         String?
+  ipAddress         String?
+  userAgent         String?
+  country           String?
+  city              String?
+  metadata          String?
 
   @@index([type])
   @@index([timestamp])
@@ -103,10 +109,10 @@ model ShareLink {
   createdBy     String?
 
   maxUses         Int?
-  preventDownload Boolean  @default(false)
-  hasWatermark    Boolean  @default(false)
+  preventDownload Boolean @default(false)
+  hasWatermark    Boolean @default(false)
   watermarkText   String?
-  directDownload  Boolean  @default(false)
+  directDownload  Boolean @default(false)
 
   @@index([expiresAt])
   @@index([createdAt])
@@ -134,30 +140,30 @@ model ProtectedFolder {
 
 /// Admin-managed API keys for external app access (scoped, revocable).
 model ApiKey {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
-  keyPrefix   String   @unique
+  keyPrefix   String    @unique
   keyHash     String
   permissions String[]
   lastUsedAt  DateTime?
   expiresAt   DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
   createdBy   String
-  revoked     Boolean  @default(false)
+  revoked     Boolean   @default(false)
 }
 
 /// Durable search index for files (populated via reindex or on access).
 model FileIndex {
-  id          String   @id
-  name        String
-  mimeType    String
-  folderId    String
-  source      String
-  size        Int?
+  id           String   @id
+  name         String
+  mimeType     String
+  folderId     String
+  source       String
+  size         Int?
   modifiedTime DateTime @default(now())
-  createdAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
   /// Extracted full-text content for PDF/DOCX/TXT files (nullable).
-  contentText String?
+  contentText  String?
 
   @@index([name])
   @@index([folderId])

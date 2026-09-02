@@ -273,7 +273,10 @@ export function mapDbActivityLog(log: DbActivityLog): ActivityLog {
   return {
     id: log.id,
     type: log.type as ActivityType,
-    timestamp: log.timestamp,
+    timestamp:
+      log.timestamp instanceof Date
+        ? log.timestamp.getTime()
+        : Number(log.timestamp as unknown as number),
     severity: log.severity as ActivityLog["severity"],
     itemName: log.itemName ?? undefined,
     itemId: log.itemId ?? undefined,
@@ -325,13 +328,12 @@ export async function logActivity<T extends ActivityType>(
   details: ActivityDetails<T> = {},
 ): Promise<ActivityLog<T> | null> {
   try {
-    const timestamp = Date.now();
     const clientInfo = await getClientInfo();
 
     const logEntry = await db.activityLog.create({
       data: {
         type,
-        timestamp,
+        timestamp: new Date(),
         severity: SEVERITY_MAP[type] || "info",
         ipAddress: clientInfo.ipAddress,
         userAgent: clientInfo.userAgent,
@@ -442,8 +444,12 @@ export async function getActivityStats(): Promise<{
       byType[log.type] = (byType[log.type] || 0) + 1;
       bySeverity[log.severity] = (bySeverity[log.severity] || 0) + 1;
 
-      if (log.timestamp > oneDayAgo) last24Hours++;
-      if (log.timestamp > sevenDaysAgo) last7Days++;
+      const ts =
+        log.timestamp instanceof Date
+          ? log.timestamp.getTime()
+          : Number(log.timestamp as unknown as number);
+      if (ts > oneDayAgo) last24Hours++;
+      if (ts > sevenDaysAgo) last7Days++;
     }
 
     return {

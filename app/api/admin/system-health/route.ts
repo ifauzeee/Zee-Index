@@ -15,20 +15,23 @@ export const GET = createAdminRoute(async () => {
       includeDriveQuota: true,
     });
 
-    const now = Date.now();
+    const now = new Date();
     const oneDay = 24 * 60 * 60 * 1000;
 
     const errorsLast24h = await db.activityLog.count({
       where: {
         severity: "error",
-        timestamp: { gte: now - oneDay },
+        timestamp: { gte: new Date(now.getTime() - oneDay) },
       },
     });
 
     const errorsPrev24h = await db.activityLog.count({
       where: {
         severity: "error",
-        timestamp: { gte: now - 2 * oneDay, lt: now - oneDay },
+        timestamp: {
+          gte: new Date(now.getTime() - 2 * oneDay),
+          lt: new Date(now.getTime() - oneDay),
+        },
       },
     });
 

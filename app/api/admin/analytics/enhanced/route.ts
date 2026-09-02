@@ -47,12 +47,12 @@ function toCount(value: number | bigint | null | undefined): number {
 export const GET = createAdminRoute(async () => {
   try {
     const now = Date.now();
-    const todayStart = startOfToday().getTime();
-    const weekStart = startOfWeek(new Date()).getTime();
-    const monthStart = startOfMonth(new Date()).getTime();
-    const thirtyDaysAgo = subDays(new Date(), 30).getTime();
-    const fiveMinutesAgo = now - 5 * 60 * 1000;
-    const oneHourAgo = now - 60 * 60 * 1000;
+    const todayStart = startOfToday();
+    const weekStart = startOfWeek(new Date());
+    const monthStart = startOfMonth(new Date());
+    const thirtyDaysAgo = subDays(new Date(), 30);
+    const fiveMinutesAgo = new Date(now - 5 * 60 * 1000);
+    const oneHourAgo = new Date(now - 60 * 60 * 1000);
 
     const [
       dailyTrendRows,
@@ -65,7 +65,7 @@ export const GET = createAdminRoute(async () => {
       db.$queryRaw<DailyTrendRow[]>`
         SELECT
           TO_CHAR(
-            DATE_TRUNC('day', TO_TIMESTAMP("timestamp" / 1000.0) AT TIME ZONE 'UTC'),
+            DATE_TRUNC('day', "timestamp" AT TIME ZONE 'UTC'),
             'YYYY-MM-DD'
           ) AS day,
           type,
@@ -77,7 +77,7 @@ export const GET = createAdminRoute(async () => {
       `,
       db.$queryRaw<HourlyActivityRow[]>`
         SELECT
-          EXTRACT(HOUR FROM TO_TIMESTAMP("timestamp" / 1000.0) AT TIME ZONE 'UTC')::int AS hour,
+          EXTRACT(HOUR FROM "timestamp" AT TIME ZONE 'UTC')::int AS hour,
           COUNT(*)::int AS count
         FROM "ActivityLog"
         WHERE "timestamp" >= ${thirtyDaysAgo}
