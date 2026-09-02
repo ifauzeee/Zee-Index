@@ -22,6 +22,7 @@ class MemoryCache {
   private cache: Map<string, CacheEntry<unknown>> = new Map();
   private stats: CacheStats = { hits: 0, misses: 0, sets: 0, evictions: 0 };
   private cleanupTimer: NodeJS.Timer | null = null;
+  private inFlight: Map<string, Promise<unknown>> = new Map();
 
   constructor() {
     if (typeof setInterval !== "undefined") {
@@ -163,9 +164,21 @@ class MemoryCache {
       return cached;
     }
 
-    const value = await fetcher();
-    this.set(key, value, ttlMs);
-    return value;
+    const existing = this.inFlight.get(key) as Promise<T> | undefined;
+    if (existing) return existing;
+
+    const promise = (async () => {
+      try {
+        const value = await fetcher();
+        this.set(key, value, ttlMs);
+        return value;
+      } finally {
+        this.inFlight.delete(key);
+      }
+    })();
+
+    this.inFlight.set(key, promise as Promise<unknown>);
+    return promise;
   }
 
   async getWithSWR<T>(
@@ -178,13 +191,15 @@ class MemoryCache {
     const now = Date.now();
 
     if (entry && entry.expires > now) {
-      if (now > entry.staleAt) {
+      if (now > entry.staleAt && !this.inFlight.has(key)) {
         logger.debug({ key }, "[MemoryCache] SWR Revalidating");
-        fetcher()
+        const bg = fetcher()
           .then((value) => this.set(key, value, ttlMs, swrMs))
           .catch((err) =>
             logger.warn({ err, key }, "[MemoryCache] SWR Revalidation failed"),
-          );
+          )
+          .finally(() => this.inFlight.delete(key));
+        this.inFlight.set(key, bg as Promise<unknown>);
       }
       this.stats.hits++;
       entry.accessCount++;
@@ -192,10 +207,25 @@ class MemoryCache {
       return entry.value;
     }
 
+    const existing = this.inFlight.get(key) as Promise<T> | undefined;
+    if (existing) {
+      try {
+        return await existing;
+      } catch {}
+    }
+
     this.stats.misses++;
-    const value = await fetcher();
-    this.set(key, value, ttlMs, swrMs);
-    return value;
+    const promise = (async () => {
+      try {
+        const value = await fetcher();
+        this.set(key, value, ttlMs, swrMs);
+        return value;
+      } finally {
+        this.inFlight.delete(key);
+      }
+    })();
+    this.inFlight.set(key, promise as Promise<unknown>);
+    return promise;
   }
 }
 
