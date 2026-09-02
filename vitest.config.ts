@@ -14,6 +14,16 @@ export default defineConfig({
       "**/test-results/**",
       "**/coverage/**",
     ],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "lcov", "html"],
+      thresholds: {
+        lines: 60,
+        branches: 50,
+        functions: 50,
+        statements: 60,
+      },
+    },
   },
   resolve: {
     alias: {

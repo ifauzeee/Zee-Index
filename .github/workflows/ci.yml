@@ -71,14 +71,14 @@ jobs:
       - name: Apply database migrations
         run: pnpm prisma migrate deploy
 
-      - name: Lint
-        run: pnpm lint
-
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Lint
+        run: pnpm lint
+
       - name: Unit Tests
-        run: pnpm test -- run
+        run: pnpm test -- run --coverage
 
       - name: Build
         run: pnpm build

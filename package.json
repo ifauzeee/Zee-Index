@@ -24,12 +24,13 @@
     "fix:all": "npm run format:fix && npm run lint --fix",
     "test": "vitest",
     "test:e2e": "playwright test",
-    "prepush": "pnpm typecheck",
+    "prepush": "pnpm check:all",
     "analyze": "cross-env ANALYZE=true next build",
     "prepare": "husky"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
       "prettier --write"
     ],
     "*.{json,md}": [

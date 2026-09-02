@@ -86,6 +86,10 @@ export function validateOnStartup(): Env {
       DATABASE_URL: process.env.DATABASE_URL || "postgresql://",
       REDIS_URL: process.env.REDIS_URL || "",
       GOOGLE_REFRESH_TOKEN: process.env.GOOGLE_REFRESH_TOKEN || "",
+      PRIVATE_FOLDER_IDS: process.env.PRIVATE_FOLDER_IDS || "",
+      STORAGE_LIMIT_GB: process.env.STORAGE_LIMIT_GB || "",
+      STORAGE_WARNING_THRESHOLD: process.env.STORAGE_WARNING_THRESHOLD || "",
+      CRON_SECRET: process.env.CRON_SECRET || "",
       SMTP_HOST: process.env.SMTP_HOST || "",
       SMTP_PORT: process.env.SMTP_PORT || "",
       SMTP_USER: process.env.SMTP_USER || "",
@@ -166,10 +170,13 @@ export function validateOnStartup(): Env {
   if (!process.env.SMTP_HOST)
     warnings.push("SMTP is not configured. Email features will be disabled.");
 
-  if (process.env.NODE_ENV === "production" && !process.env.CRON_SECRET)
-    warnings.push(
-      "CRON_SECRET is not set. Cron endpoints will reject all requests.",
+  const cronSecret = (result.data.CRON_SECRET || "").trim();
+  if (process.env.NODE_ENV === "production" && !cronSecret) {
+    console.error(
+      "\n❌ CRON_SECRET is required in production (min 16 chars). Cron endpoints will reject all requests.",
     );
+    process.exit(1);
+  }
 
   if (warnings.length > 0) {
     console.warn("\n⚠️  Configuration warnings:");
