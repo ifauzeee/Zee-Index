@@ -109,8 +109,8 @@ Wizard (window khusus):
 Desktop app berada di **repo terpisah** bernama `Zee-Index-Desktop`, terpisah dari repo `zee-index` (web). Alasan: isolasi build desktop dari build web, versioning sendiri, tidak membebani node_modules web.
 
 - Repo baru `Zee-Index-Desktop` berisi hanya desktop app.
-- `zee-index` (web/Next.js) dijadikan dependency — di-build sebagai standalone output lalu di-bundle ke dalam Electron.
-- Konsumsi via git submodule atau dependency npm dari source, atau build artifact.
+- `zee-index` (web/Next.js) dikonsumsi via **git submodule** — desktop repo punya submodule yang point ke `zee-index`. Update web = `git submodule update --remote`, lalu rebuild standalone.
+- `zee-index` di-build sebagai standalone output lalu di-bundle ke dalam Electron.
 
 ### Struktur repo `Zee-Index-Desktop`
 
@@ -121,11 +121,13 @@ electron/            # Electron main process & preload
   tray.ts            # system tray
   updater.ts         # auto-update
   storage.ts         # local storage / folder picker
-src/                 # Next.js web source (dari zee-index) atau build artifact
+submodules/zee-index  # git submodule → zee-index (web source, standalone build)
 desktop/             # build & config
   electron-builder.yml
   icons/             # .ico, .png
 ```
+
+Build flow: build `submodules/zee-index` → `next build` (standalone output) → bundle ke Electron → `electron-builder` produce `.exe`.
 
 `next.config.mjs` — pastikan `output: 'standalone'` + `serverExternalPackages` untuk Prisma/grammar.
 
