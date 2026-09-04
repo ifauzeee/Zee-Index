@@ -1,0 +1,17 @@
+#!/bin/sh
+# Conventional Commits guard (tanpa dependensi baru).
+# Melewatkan: feat, fix, docs, style, refactor, perf, test,
+# build, ci, chore, revert, security + merge/revert commit.
+MSG_FILE="$1"
+MSG=$(head -n 1 "$MSG_FILE")
+
+if echo "$MSG" | grep -qE "^(Merge|Revert)"; then
+  exit 0
+fi
+
+if ! echo "$MSG" | grep -qE "^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|security)(\(.+\))?(!)?: .+"; then
+  echo "❌ Commit message harus Conventional Commits, contoh:"
+  echo "   feat: tambah filter tanggal"
+  echo "   fix(api): perbaiki 500 saat folder kosong"
+  exit 1
+fi
