@@ -68,6 +68,9 @@ jobs:
       - name: Audit dependencies
         run: pnpm audit --audit-level=high
 
+      - name: Check env sync
+        run: pnpm check:env
+
       - name: Generate Prisma Client
         run: pnpm prisma generate
 
@@ -85,6 +88,9 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Check bundle budget
+        run: pnpm check:bundle
 
       - name: Get Playwright version
         id: playwright-version

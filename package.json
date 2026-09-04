@@ -23,6 +23,8 @@
     "check:all": "pnpm typecheck && pnpm format:check && pnpm lint",
     "fix:all": "pnpm format:fix && pnpm lint --fix",
     "audit": "pnpm audit --audit-level=moderate",
+    "check:env": "node scripts/check-env-sync.mjs",
+    "check:bundle": "node scripts/check-bundle-budget.mjs",
     "test": "vitest",
     "test:e2e": "playwright test",
     "prepush": "pnpm typecheck",
