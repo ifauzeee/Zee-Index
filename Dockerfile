@@ -1,5 +1,5 @@
 # Stage 1: Base
-FROM node:20-alpine AS base
+FROM node:26-alpine AS base
 RUN apk add --no-cache libc6-compat openssl
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -42,7 +42,7 @@ ENV NEXT_PUBLIC_LOCAL_STORAGE_NAME=$NEXT_PUBLIC_LOCAL_STORAGE_NAME
 RUN --mount=type=cache,target=/app/.next/cache pnpm run build
 
 # Stage 4: Runner
-FROM node:20-alpine AS runner
+FROM node:26-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
