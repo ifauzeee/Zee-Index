@@ -60,12 +60,9 @@ test.describe("Download endpoint – Range header", () => {
       expect(acceptRanges).toBe("bytes");
     } else {
       // Auth-level rejection (401/403/429), or upstream Drive failure (500)
-      // when running with mock Google creds: the download route is public
-      // by design, so an unknown fileId reaches the Drive layer which
-      // throws with dummy credentials → structured 500 via handleRouteError.
+      // with mock creds (public route → Drive layer throws → handleRouteError).
+      // HEAD responses carry no body by HTTP spec, so assert status only.
       expect([401, 403, 429, 500]).toContain(response.status());
-      const payload = await response.json();
-      expect(payload).toHaveProperty("error");
     }
   });
 
