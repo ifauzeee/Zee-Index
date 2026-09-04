@@ -204,7 +204,8 @@ export function createRouteHandler<
   const role = (options.role ?? "public") as TRole;
 
   return async (request: NextRequest, context: RouteContextInput = {}) => {
-    const requestId = crypto.randomUUID();
+    const requestId =
+      request.headers.get("x-request-id")?.trim() || crypto.randomUUID();
 
     try {
       const session =

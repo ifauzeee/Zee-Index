@@ -20,8 +20,9 @@
     "format:check": "prettier --check .",
     "format:fix": "prettier --write .",
     "check": "bash scripts/check-all.sh",
-    "check:all": "npm run typecheck && npm run format:check && npm run lint",
-    "fix:all": "npm run format:fix && npm run lint --fix",
+    "check:all": "pnpm typecheck && pnpm format:check && pnpm lint",
+    "fix:all": "pnpm format:fix && pnpm lint --fix",
+    "audit": "pnpm audit --audit-level=moderate",
     "test": "vitest",
     "test:e2e": "playwright test",
     "prepush": "pnpm typecheck",
@@ -30,7 +31,8 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "prettier --write"
+      "prettier --write",
+      "eslint --fix"
     ],
     "*.{json,md}": [
       "prettier --write"
