@@ -61,7 +61,7 @@ registry.registerPath({
   tags: ["Misc"],
   summary: "Get storage details",
   description:
-    "Returns detailed storage information including largest files and usage breakdown. User or above.",
+    "Returns detailed storage information including largest files and usage breakdown. Public with session-aware filtering (non-admin sees only unrestricted files).",
   responses: {
     200: {
       description: "Storage details",

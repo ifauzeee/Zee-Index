@@ -7,10 +7,10 @@ const { mockGetStorageDetails, mockIsAccessRestricted } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/api-middleware", () => ({
-  createUserRoute: (
+  createPublicRoute: (
     handler: (ctx: {
       request: NextRequest;
-      session: { user: { email: string; role: string } };
+      session: { user: { email: string; role: string } } | null;
     }) => Promise<Response>,
   ) => {
     return async (request: NextRequest) =>
