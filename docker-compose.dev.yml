@@ -47,7 +47,7 @@ services:
     command: >
       sh -c "
         apk add --no-cache libc6-compat openssl &&
-        npm install -g pnpm &&
+        corepack enable && corepack prepare pnpm@10.33.2 --activate &&
         pnpm install &&
         pnpm exec prisma generate &&
         pnpm exec prisma db push &&
