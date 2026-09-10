@@ -1022,6 +1022,7 @@ docker compose logs zee-index --tail 50
 3. Check `ADMIN_PASSWORD` is set correctly in `.env`
 4. Clear browser cookies and retry
 5. Check `docker compose logs zee-index` for `[Auth]` messages
+
 </details>
 
 <details>
@@ -1031,6 +1032,7 @@ docker compose logs zee-index --tail 50
 2. Re-run `/setup` flow to obtain a new token
 3. Check API quota at [Google Cloud Console](https://console.cloud.google.com/apis/dashboard)
 4. Ensure the Google account has access to the target folders
+
 </details>
 
 <details>
@@ -1040,6 +1042,7 @@ docker compose logs zee-index --tail 50
 2. Check Google Drive API quota (default: 12,000 requests/min)
 3. Monitor with `docker compose exec zee-index sh -c "cat /proc/1/status | grep VmRSS"`
 4. Increase memory limit if needed: `NODE_OPTIONS=--max-old-space-size=512`
+
 </details>
 
 <details>

@@ -120,24 +120,22 @@ export default function FileList({
           upload.parentId === currentFolderId &&
           !realFileNames.has(upload.name),
       )
-      .map(
-        (upload): BrowserFile => ({
-          id: `upload-${upload.name}`,
-          name: upload.name,
-          mimeType: "application/octet-stream",
-          size: "0",
-          modifiedTime: new Date().toISOString(),
-          createdTime: new Date().toISOString(),
-          webViewLink: "",
-          hasThumbnail: false,
-          isFolder: false,
-          trashed: false,
-          source: "local" as const,
-          uploadProgress: upload.progress,
-          uploadStatus: upload.status,
-          uploadError: upload.error,
-        }),
-      );
+      .map((upload): BrowserFile => ({
+        id: `upload-${upload.name}`,
+        name: upload.name,
+        mimeType: "application/octet-stream",
+        size: "0",
+        modifiedTime: new Date().toISOString(),
+        createdTime: new Date().toISOString(),
+        webViewLink: "",
+        hasThumbnail: false,
+        isFolder: false,
+        trashed: false,
+        source: "local" as const,
+        uploadProgress: upload.progress,
+        uploadStatus: upload.status,
+        uploadError: upload.error,
+      }));
   }, [uploads, files, currentFolderId]);
 
   const allItems = useMemo(

@@ -12,13 +12,7 @@ export const EVENT_PIPELINE_KEYS = {
 } as const;
 
 type EventCategory =
-  | "file"
-  | "share"
-  | "folder"
-  | "auth"
-  | "security"
-  | "system"
-  | "analytics";
+  "file" | "share" | "folder" | "auth" | "security" | "system" | "analytics";
 
 export type EventStreamRecord = AppEvent & {
   source: "activity-log" | "analytics" | "system";

@@ -56,6 +56,7 @@ lerna-debug.log*
 
 # Tooling
 .omo/
+.codegraph/
 .stylelintcache
 .parcel-cache
 
@@ -100,3 +101,4 @@ public/swe-worker-*.js
 # Local Storage Cloud
 /storage/
 repomix-output.xml
+.freebuff

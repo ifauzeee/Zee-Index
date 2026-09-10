@@ -92,8 +92,7 @@ export default function SystemHealth() {
   const database = data?.services.database;
   const cache = data?.services.cache;
   const drive = data?.services.google_drive as
-    | GoogleDriveHealthCheckResult
-    | undefined;
+    GoogleDriveHealthCheckResult | undefined;
 
   if (loading && !data) {
     return <HealthCardSkeleton count={5} />;

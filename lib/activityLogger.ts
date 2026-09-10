@@ -178,8 +178,9 @@ export interface ActivityDetails<T extends ActivityType = ActivityType> {
   metadata?: ActivityMetadata<T>;
 }
 
-export interface ActivityLog<T extends ActivityType = ActivityType>
-  extends ActivityDetails<T> {
+export interface ActivityLog<
+  T extends ActivityType = ActivityType,
+> extends ActivityDetails<T> {
   id: string;
   type: ActivityType;
   timestamp: number;
