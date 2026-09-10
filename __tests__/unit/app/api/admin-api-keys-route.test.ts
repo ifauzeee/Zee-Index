@@ -70,10 +70,15 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
-vi.mock("@/lib/api-key", () => ({
-  generateApiKey: mockGenerateApiKey,
-  clearApiKeyCache: mockClearApiKeyCache,
-}));
+vi.mock("@/lib/api-key", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/api-key")>();
+  return {
+    generateApiKey: mockGenerateApiKey,
+    clearApiKeyCache: mockClearApiKeyCache,
+    parsePermissions: actual.parsePermissions,
+    serializePermissions: actual.serializePermissions,
+  };
+});
 
 import { GET, POST } from "@/app/api/admin/api-keys/route";
 import { DELETE } from "@/app/api/admin/api-keys/[id]/route";

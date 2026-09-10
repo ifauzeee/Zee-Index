@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
-import { generateApiKey } from "@/lib/api-key";
+import {
+  generateApiKey,
+  serializePermissions,
+  parsePermissions,
+} from "@/lib/api-key";
 import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +21,7 @@ const createApiKeySchema = z.object({
 
 /** List all API keys (without hashes). */
 export const GET = createAdminRoute(async () => {
-  const keys = await db.apiKey.findMany({
+  const rows = await db.apiKey.findMany({
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -31,6 +35,11 @@ export const GET = createAdminRoute(async () => {
       revoked: true,
     },
   });
+
+  const keys = rows.map((k) => ({
+    ...k,
+    permissions: parsePermissions(k.permissions),
+  }));
 
   return NextResponse.json({ keys });
 });
@@ -47,7 +56,8 @@ export const POST = createAdminRoute(
         name: name.trim(),
         keyPrefix: prefix,
         keyHash: hash,
-        permissions,
+        // SQLite column is String, Postgres column is String[] — helper picks per DATABASE_URL.
+        permissions: serializePermissions(permissions) as string[],
         createdBy: session?.user?.email || "unknown",
         expiresAt: expiresAt ? new Date(expiresAt) : null,
       },

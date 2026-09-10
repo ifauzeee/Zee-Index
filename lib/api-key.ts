@@ -13,6 +13,36 @@ export interface ApiKeyData {
 }
 
 /**
+ * The ApiKey.permissions column is `String[]` on Postgres but a JSON-encoded
+ * `String` on SQLite (desktop sidecar). Normalize both directions here so the
+ * rest of the app always works with `string[]`.
+ */
+export function parsePermissions(raw: unknown): string[] {
+  if (Array.isArray(raw))
+    return raw.filter((p): p is string => typeof p === "string");
+  if (typeof raw === "string") {
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (Array.isArray(parsed))
+        return parsed.filter((p): p is string => typeof p === "string");
+    } catch {
+      // Not JSON — fall through to [] (never pass garbage downstream).
+    }
+    return [];
+  }
+  return [];
+}
+
+/**
+ * Serialize for storage. SQLite stores a JSON string; Postgres stores a native
+ * array. Provider is inferred from DATABASE_URL (`file:` ⇒ SQLite).
+ */
+export function serializePermissions(permissions: string[]): string[] | string {
+  const url = process.env.DATABASE_URL ?? "";
+  return url.startsWith("file:") ? JSON.stringify(permissions) : permissions;
+}
+
+/**
  * Generate a new API key pair.
  * Returns the raw key (shown once to the admin) and the hash (stored in DB).
  */
@@ -69,7 +99,7 @@ export async function validateApiKey(
     const data: ApiKeyData = {
       id: record.id,
       name: record.name,
-      permissions: record.permissions,
+      permissions: parsePermissions(record.permissions),
     };
 
     // Populate cache
