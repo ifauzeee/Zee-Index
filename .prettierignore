@@ -40,3 +40,6 @@ docker-compose*.yml
 # IDE
 .idea
 .vscode
+
+# Personal scratch notes (untracked, local only)
+issue-atribusi-notDrive.md

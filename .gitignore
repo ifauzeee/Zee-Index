@@ -100,5 +100,8 @@ public/swe-worker-*.js
 
 # Local Storage Cloud
 /storage/
+
+# Local DB backups (generated at runtime)
+/backups/
 repomix-output.xml
 .freebuff

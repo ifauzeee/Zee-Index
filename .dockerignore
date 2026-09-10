@@ -84,3 +84,6 @@ analyze
 .analyze
 bundle-analyzer
 *.local
+
+# Local DB backups (generated at runtime)
+backups

@@ -186,6 +186,51 @@
       zee-index:
         condition: service_healthy
 
+  db-backup:
+    image: postgres:16-alpine
+    container_name: zee-db-backup
+    restart: unless-stopped
+    volumes:
+      - ./backups:/backups
+    environment:
+      - PGPASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-zee_index}
+      - BACKUP_INTERVAL_SECONDS=${BACKUP_INTERVAL_SECONDS:-86400}
+      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-7}
+    entrypoint: ["/bin/sh"]
+    command:
+      - -c
+      - |
+        until pg_isready -h postgres -U "$${POSTGRES_USER}"; do
+          echo "[db-backup] Waiting for postgres..."
+          sleep 5
+        done
+        echo "[db-backup] postgres is ready."
+
+        while true; do
+          STAMP=$$(date +%Y%m%d-%H%M%S)
+          FILE="/backups/$${POSTGRES_DB}-$${STAMP}.sql.gz"
+          echo "[db-backup] Dumping to $${FILE}..."
+          if pg_dump -h postgres -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}" | gzip > "$${FILE}"; then
+            echo "[db-backup] Backup OK: $${FILE}"
+          else
+            code=$$?
+            echo "[db-backup] Backup failed with exit $${code}."
+            rm -f "$${FILE}"
+          fi
+          echo "[db-backup] Pruning backups older than $${BACKUP_RETENTION_DAYS} days..."
+          find /backups -maxdepth 1 -name "*.sql.gz" -mtime "+$${BACKUP_RETENTION_DAYS}" -delete
+          sleep "$${BACKUP_INTERVAL_SECONDS:-86400}"
+        done
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+
 volumes:
   postgres_data:
   redis_data:
