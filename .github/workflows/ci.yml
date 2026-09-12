@@ -51,7 +51,7 @@ jobs:
       NEXT_PUBLIC_ENABLE_LOCAL_STORAGE: "true"
       SKIP_ENV_VALIDATION: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
