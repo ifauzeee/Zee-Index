@@ -101,6 +101,7 @@ model ShareLink {
   views         Int      @default(0)
   createdAt     DateTime @default(now())
   createdBy     String?
+  revokedAt     DateTime?
 
   maxUses         Int?
   preventDownload Boolean  @default(false)
