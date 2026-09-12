@@ -113,7 +113,6 @@
     "menu": "Menu",
     "notifications": "Notifikasi",
     "backToHome": "Kembali ke Beranda",
-    "tour": "Mulai Tur",
     "driveLogoAlt": "Logo Google Drive",
     "logoAlt": "Logo"
   },
@@ -796,51 +795,6 @@
     "title": "Tersemat",
     "folderSubtitle": "Folder Tersemat"
   },
-  "TourGuide": {
-    "startTour": "Mulai Tur",
-    "next": "Lanjut",
-    "prev": "Kembali",
-    "done": "Selesai",
-    "skip": "Lewati",
-    "steps": {
-      "welcome": {
-        "title": "Selamat Datang di Zee-Index!",
-        "description": "Mari ikuti tur singkat untuk membantu Anda memulai dengan manajer file baru Anda."
-      },
-      "mobileMenu": {
-        "title": "Opsi Menu",
-        "description": "Akses Tema, Segarkan, dan opsi Github di sini."
-      },
-      "navigation": {
-        "title": "Navigasi",
-        "description": "Akses cepat ke Beranda, Favorit, dan analisis Penyimpanan Anda di sini."
-      },
-      "explorer": {
-        "title": "Penjelajah File",
-        "description": "Jelajahi folder dan file Anda dalam tampilan pohon hierarkis."
-      },
-      "search": {
-        "title": "Pencarian",
-        "description": "Temukan file Anda secara instan. Anda dapat mencari berdasarkan nama atau bahkan konten."
-      },
-      "notifications": {
-        "title": "Notifikasi",
-        "description": "Periksa di sini untuk pembaruan penting, permintaan akses, atau pesan sistem."
-      },
-      "theme": {
-        "title": "Pengganti Tema",
-        "description": "Beralih antara mode Terang dan Gelap sesuai preferensi Anda."
-      },
-      "refresh": {
-        "title": "Segarkan",
-        "description": "Muat ulang tampilan saat ini untuk melihat perubahan terbaru."
-      },
-      "github": {
-        "title": "Open Source",
-        "description": "Lihat proyek ini di GitHub, laporkan masalah, atau berkontribusi!"
-      }
-    }
-  },
   "FilePage": {
     "errorTitle": "Gagal Memuat",
     "retry": "Coba Muat Ulang",
@@ -1058,8 +1012,7 @@
     "configTitle": "Setup Diperlukan",
     "defaultMessage": "Koneksi ke Google Drive terputus. Silakan konfigurasi ulang untuk melanjutkan.",
     "openSetup": "Buka Halaman Setup",
-    "tryAgain": "Coba Lagi",
-    "status": "Status"
+    "tryAgain": "Coba Lagi"
   },
   "MainError": {
     "title": "Gagal Memuat Konten",
