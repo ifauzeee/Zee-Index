@@ -26,6 +26,13 @@ Self-hosted Google Drive Explorer, CMS & streaming platform. Next.js 16 App Rout
 
 Pre-commit hook (Husky) runs `npx lint-staged` — Prettier on staged files, nothing else.
 
+## Git push workflow — plan before push
+
+- Before any commit/push to GitHub: propose a plan first (branch name, commit split, PR) and get user approval. Never commit straight to `main` or push unprompted.
+- Atomic commits, one logical change each. Conventional Commits, English: `type(scope): description`.
+- Release as branch + PR, squash-merge on GitHub. Direct-to-`main` commits only on explicit request.
+- Ditch incidental line-ending noise before staging: `git checkout -- <file>` for STAT-only diffs (e.g. LICENSE).
+
 ## Architecture
 
 - `app/[locale]/` — i18n-prefixed routes. Always use `stripLocaleFromPathname()` in middleware.
