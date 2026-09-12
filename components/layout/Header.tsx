@@ -19,7 +19,6 @@ import {
   Github,
   Bell,
   PanelLeft,
-  HelpCircle,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { usePublicConfig } from "@/hooks/useConfig";
@@ -233,12 +232,6 @@ export default function Header() {
       rel: "noopener noreferrer",
       icon: Send,
       label: t("joinGroup"),
-    },
-    {
-      id: "tour",
-      onClick: () => window.dispatchEvent(new Event("start-tour")),
-      icon: HelpCircle,
-      label: t("tour"),
     },
   ];
 
