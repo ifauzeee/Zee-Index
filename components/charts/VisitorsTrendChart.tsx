@@ -39,7 +39,7 @@ const CustomTooltip = ({
           <p className="flex items-center gap-2">
             <span
               className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: "hsl(250, 80%, 60%)" }}
+              style={{ backgroundColor: "var(--chart-1)" }}
             />
             {t("views")}:{" "}
             <span className="font-medium text-foreground">
@@ -49,7 +49,7 @@ const CustomTooltip = ({
           <p className="flex items-center gap-2">
             <span
               className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: "hsl(340, 75%, 55%)" }}
+              style={{ backgroundColor: "var(--chart-2)" }}
             />
             {t("visitors")}:{" "}
             <span className="font-medium text-foreground">
@@ -72,12 +72,8 @@ const VisitorsTrendChart: React.FC<VisitorsTrendChartProps> = ({ data }) => {
       >
         <defs>
           <linearGradient id="trendViewsGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop
-              offset="5%"
-              stopColor="hsl(250, 80%, 60%)"
-              stopOpacity={0.3}
-            />
-            <stop offset="95%" stopColor="hsl(250, 80%, 60%)" stopOpacity={0} />
+            <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
           </linearGradient>
           <linearGradient
             id="trendVisitorsGradient"
@@ -86,12 +82,8 @@ const VisitorsTrendChart: React.FC<VisitorsTrendChartProps> = ({ data }) => {
             x2="0"
             y2="1"
           >
-            <stop
-              offset="5%"
-              stopColor="hsl(340, 75%, 55%)"
-              stopOpacity={0.3}
-            />
-            <stop offset="95%" stopColor="hsl(340, 75%, 55%)" stopOpacity={0} />
+            <stop offset="5%" stopColor="var(--chart-2)" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="var(--chart-2)" stopOpacity={0} />
           </linearGradient>
         </defs>
         <CartesianGrid
@@ -118,14 +110,14 @@ const VisitorsTrendChart: React.FC<VisitorsTrendChartProps> = ({ data }) => {
         <Area
           type="monotone"
           dataKey="views"
-          stroke="hsl(250, 80%, 60%)"
+          stroke="var(--chart-1)"
           fill="url(#trendViewsGradient)"
           strokeWidth={2}
         />
         <Area
           type="monotone"
           dataKey="visitors"
-          stroke="hsl(340, 75%, 55%)"
+          stroke="var(--chart-2)"
           fill="url(#trendVisitorsGradient)"
           strokeWidth={2}
         />

@@ -23,14 +23,14 @@ interface DeviceTooltipPayload {
 }
 
 const COLORS = [
-  "hsl(217, 91%, 60%)",
-  "hsl(142, 71%, 45%)",
-  "hsl(340, 75%, 55%)",
-  "hsl(250, 80%, 60%)",
-  "hsl(30, 90%, 55%)",
-  "hsl(180, 65%, 45%)",
-  "hsl(60, 75%, 50%)",
-  "hsl(300, 60%, 55%)",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
 ];
 
 const CustomTooltip = ({
