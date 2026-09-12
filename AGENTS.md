@@ -2,7 +2,7 @@
 
 ## Project identity
 
-Self-hosted Google Drive Explorer, CMS & streaming platform. Next.js 16 App Router + React 19 + TypeScript strict. pnpm v10.33.2, Node.js 20.x. Google Drive API v3 + Prisma/PostgreSQL 16 + Redis 7.
+Self-hosted Google Drive Explorer, CMS & streaming platform. Next.js 16 App Router + React 19 + TypeScript strict. pnpm v10.33.2, Node.js 22.x (LTS). Google Drive API v3 + Prisma/PostgreSQL 16 + Redis 7.
 
 ## Commands (exact)
 
