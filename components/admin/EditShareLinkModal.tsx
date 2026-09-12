@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Edit, X, Loader2 } from "lucide-react";
 import { useAppStore, ShareLink } from "@/lib/store";
+import { useUpdateShareLinkMutation } from "@/hooks/useShareLinks";
 import { useTranslations } from "next-intl";
 
 interface EditShareLinkModalProps {
@@ -15,7 +16,8 @@ export default function EditShareLinkModal({
   link,
   onClose,
 }: EditShareLinkModalProps) {
-  const { updateShareLink, addToast } = useAppStore();
+  const { addToast } = useAppStore();
+  const updateShareLink = useUpdateShareLinkMutation();
   const t = useTranslations("AdminPage");
 
   const [editLoginRequired, setEditLoginRequired] = useState(
@@ -78,7 +80,7 @@ export default function EditShareLinkModal({
         throw new Error(result.error || "Gagal memperbarui tautan berbagi.");
       }
 
-      updateShareLink(result.updatedShareLink);
+      updateShareLink.mutate(result.updatedShareLink);
       addToast({
         message: "Pengaturan tautan berhasil diperbarui.",
         type: "success",

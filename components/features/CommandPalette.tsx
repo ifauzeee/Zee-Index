@@ -2,7 +2,6 @@
 import * as React from "react";
 import { Command } from "cmdk";
 import { useRouter } from "next/navigation";
-import { useAppStore } from "@/lib/store";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useTheme } from "next-themes";
@@ -24,11 +23,12 @@ import {
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
+import { useUser } from "@/hooks/useUser";
 
 export default function CommandPalette() {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
-  const { user } = useAppStore();
+  const user = useUser();
   const { theme, setTheme } = useTheme();
   const t = useTranslations("CommandPalette");
   const commonT = useTranslations("Common");

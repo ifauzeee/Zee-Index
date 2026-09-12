@@ -16,6 +16,14 @@ export type ContextMenuState = {
 } | null;
 
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  useFavoritesQuery,
+  useToggleFavoriteMutation,
+} from "@/hooks/useFavorites";
+import {
+  usePinnedFoldersQuery,
+  usePinnedMutation,
+} from "@/hooks/usePinnedFolders";
 
 interface FileListPage {
   files: DriveFile[];
@@ -26,18 +34,12 @@ type FileListQueryData = InfiniteData<FileListPage>;
 
 export function useFileActions(currentFolderId: string) {
   const queryClient = useQueryClient();
-  const {
-    addToast,
-    triggerRefresh,
-    favorites,
-    toggleFavorite,
-    pinnedFolders,
-    addPin,
-    removePin,
-    shareToken,
-    folderTokens,
-    refreshKey,
-  } = useAppStore();
+  const { addToast, triggerRefresh, shareToken, folderTokens, refreshKey } =
+    useAppStore();
+  const { data: favoriteFiles = [] } = useFavoritesQuery();
+  const toggleFavorite = useToggleFavoriteMutation();
+  const { data: pinnedFolders = [] } = usePinnedFoldersQuery();
+  const pinnedMutation = usePinnedMutation();
   const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
   const [actionState, setActionState] = useState<ActionState>({
     type: null,
@@ -70,8 +72,8 @@ export function useFileActions(currentFolderId: string) {
   const handleToggleFavorite = () => {
     if (!contextMenu?.file) return;
     const { file } = contextMenu;
-    const isCurrentlyFavorite = favorites.includes(file.id);
-    toggleFavorite(file.id, isCurrentlyFavorite);
+    const isCurrentlyFavorite = favoriteFiles.some((f) => f.id === file.id);
+    toggleFavorite.mutate({ fileId: file.id, isCurrentlyFavorite });
     setContextMenu(null);
   };
 
@@ -269,11 +271,10 @@ export function useFileActions(currentFolderId: string) {
     const { id } = contextMenu.file;
     const isPinned = pinnedFolders.some((f) => f.id === id);
 
-    if (isPinned) {
-      await removePin(id);
-    } else {
-      await addPin(id);
-    }
+    pinnedMutation.mutate({
+      folderId: id,
+      action: isPinned ? "remove" : "add",
+    });
     setContextMenu(null);
   };
 

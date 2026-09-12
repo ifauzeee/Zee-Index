@@ -9,12 +9,14 @@ import React from "react";
 import EmptyState from "@/components/file-browser/EmptyState";
 import { Link, SearchX } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useUser } from "@/hooks/useUser";
 
 function SharedCollectionPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const { addToast, user } = useAppStore();
+  const addToast = useAppStore((state) => state.addToast);
+  const user = useUser();
   const shareId = params.shareId as string;
   const shareToken = searchParams.get("share_token");
   const t = useTranslations("SharedCollectionPage");

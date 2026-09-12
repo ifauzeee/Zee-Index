@@ -1,26 +1,21 @@
 "use client";
 
-import { useEffect } from "react";
-import { useAppStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { Pin, Folder, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import type { DriveFile } from "@/lib/drive";
-
 import { useTranslations } from "next-intl";
+import { usePinnedFoldersQuery } from "@/hooks/usePinnedFolders";
+import { useAppStore } from "@/lib/store";
 
 export default function PinnedSection() {
-  const { pinnedFolders, fetchPinnedFolders, currentFolderId, shareToken } =
-    useAppStore();
+  const { data: pinnedFolders = [] } = usePinnedFoldersQuery();
+  const { currentFolderId, shareToken } = useAppStore();
   const router = useRouter();
   const t = useTranslations("PinnedSection");
   const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID;
 
   const isRoot = !currentFolderId || currentFolderId === rootId;
-
-  useEffect(() => {
-    fetchPinnedFolders();
-  }, [fetchPinnedFolders]);
 
   if (!isRoot || pinnedFolders.length === 0) return null;
 

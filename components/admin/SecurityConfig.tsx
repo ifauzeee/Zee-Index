@@ -2,6 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import { useAppStore } from "@/lib/store";
+import { useUser } from "@/hooks/useUser";
+import {
+  useAdminConfigQuery,
+  useUpdateConfigMutation,
+} from "@/hooks/useConfig";
 import { EyeOff, UserX, Bell } from "lucide-react";
 import { FormSkeleton } from "@/components/admin/skeletons";
 import { useTranslations } from "next-intl";
@@ -13,41 +18,24 @@ interface NotificationStatus {
 
 export default function SecurityConfig() {
   const t = useTranslations("SecurityConfig");
-  const {
-    hideAuthor,
-    disableGuestLogin,
-    localStorageAuthEnabled,
-    isConfigLoading,
-    fetchConfig,
-    setConfig,
-    addToast,
-    user,
-  } = useAppStore();
+  const addToast = useAppStore((state) => state.addToast);
+  const user = useUser();
+  const { data: config, isLoading } = useAdminConfigQuery();
+  const updateConfig = useUpdateConfigMutation();
   const [notificationStatus, setNotificationStatus] =
     useState<NotificationStatus | null>(null);
 
+  const hideAuthor = config?.hideAuthor ?? null;
+  const disableGuestLogin = config?.disableGuestLogin ?? null;
+
   useEffect(() => {
-    if (user?.role !== "ADMIN") return;
-    if (
-      hideAuthor === null ||
-      disableGuestLogin === null ||
-      localStorageAuthEnabled === null
-    ) {
-      fetchConfig();
-    }
     fetch("/api/admin/config")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.notifications) setNotificationStatus(data.notifications);
       })
       .catch(() => {});
-  }, [
-    fetchConfig,
-    hideAuthor,
-    disableGuestLogin,
-    localStorageAuthEnabled,
-    user,
-  ]);
+  }, []);
 
   if (user?.role !== "ADMIN") return null;
 
@@ -56,7 +44,7 @@ export default function SecurityConfig() {
     value: boolean,
   ) => {
     try {
-      await setConfig({ [key]: value });
+      await updateConfig.mutateAsync({ [key]: value });
       addToast({
         message: t("saveSuccess", {
           setting: key,
@@ -75,7 +63,7 @@ export default function SecurityConfig() {
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6">{t("title")}</h2>
-      {isConfigLoading ? (
+      {isLoading ? (
         <FormSkeleton fields={4} />
       ) : (
         <div className="bg-card border rounded-lg p-6 space-y-4 divide-y divide-border">

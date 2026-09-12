@@ -1,5 +1,7 @@
 import { useAppStore } from "@/lib/store";
-import React, { useEffect, useRef, useMemo } from "react";
+import React, { useRef, useMemo } from "react";
+import { useToggleFavoriteMutation } from "@/hooks/useFavorites";
+import { useShareLinksQuery } from "@/hooks/useShareLinks";
 
 import ListView from "./views/ListView";
 import GridView from "./views/GridView";
@@ -54,20 +56,13 @@ export default function FileList({
     selectedFiles,
     isBulkMode,
     density,
-    shareLinks,
-    fetchShareLinks,
     setSelectedFiles,
     setBulkMode,
-    toggleFavorite,
   } = useAppStore();
+  const toggleFavorite = useToggleFavoriteMutation();
+  const { data: shareLinks = [] } = useShareLinksQuery(isAdmin);
 
   const lastSelectedId = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (isAdmin && shareLinks.length === 0) {
-      fetchShareLinks();
-    }
-  }, [isAdmin, shareLinks.length, fetchShareLinks]);
 
   const handleItemClickWrapper = (
     file: BrowserFile,
@@ -108,7 +103,10 @@ export default function FileList({
     file: BrowserFile,
   ) => {
     e.stopPropagation();
-    toggleFavorite(file.id, !!file.isFavorite);
+    toggleFavorite.mutate({
+      fileId: file.id,
+      isCurrentlyFavorite: !!file.isFavorite,
+    });
   };
 
   const uploadGhostFiles = useMemo(() => {

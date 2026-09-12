@@ -24,6 +24,9 @@ import SystemHealth from "@/components/admin/SystemHealth";
 import RealTimeOverview from "@/components/admin/RealTimeOverview";
 import { StatCardSkeleton, ChartSkeleton } from "@/components/admin/skeletons";
 import { useTranslations } from "next-intl";
+import { useShareLinksQuery } from "@/hooks/useShareLinks";
+import { useFileRequestsQuery } from "@/hooks/useFileRequests";
+import { useAdminEmailsQuery } from "@/hooks/useAdminUsers";
 
 const StorageIntelligence = dynamic(
   () => import("@/components/admin/StorageIntelligence"),
@@ -44,25 +47,16 @@ const LivePerformanceChart = dynamic(
 );
 
 export default function AdminSummaryTab() {
-  const {
-    shareLinks,
-    fileRequests,
-    addToast,
-    fetchShareLinks,
-    fetchFileRequests,
-    adminEmails,
-    fetchAdminEmails,
-  } = useAppStore();
+  const { addToast } = useAppStore();
+  const { data: shareLinks = [] } = useShareLinksQuery();
+  const { data: fileRequests = [] } = useFileRequestsQuery();
+  const { data: adminEmails = [] } = useAdminEmailsQuery();
   const t = useTranslations("AdminPage");
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    fetchShareLinks();
-    fetchFileRequests();
-    fetchAdminEmails();
-
     setIsLoadingStats(true);
     fetch("/api/admin/stats")
       .then((res) => {
@@ -85,7 +79,7 @@ export default function AdminSummaryTab() {
         }
       })
       .finally(() => setIsLoadingStats(false));
-  }, [fetchShareLinks, fetchFileRequests, fetchAdminEmails, addToast, t]);
+  }, [addToast, t]);
 
   const { expiredLinks } = useMemo(() => {
     const now = new Date();

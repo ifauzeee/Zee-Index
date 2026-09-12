@@ -10,28 +10,18 @@ import { StarOff, LogIn } from "lucide-react";
 import React from "react";
 import EmptyState from "@/components/file-browser/EmptyState";
 import { useTranslations } from "next-intl";
-import { useQuery } from "@tanstack/react-query";
-import { getFavorites } from "@/app/actions/favorites";
+import { useFavoritesQuery } from "@/hooks/useFavorites";
+import { useUser } from "@/hooks/useUser";
 
 export default function FavoritesPage() {
   const router = useRouter();
-  const { addToast, user } = useAppStore();
+  const addToast = useAppStore((state) => state.addToast);
+  const user = useUser();
   const t = useTranslations("FavoritesPage");
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
 
-  const {
-    data: favoriteFiles = [],
-    isLoading,
-    error,
-  } = useQuery<DriveFile[]>({
-    queryKey: ["favorites"],
-    queryFn: async () => {
-      return await getFavorites();
-    },
-    enabled: !!user && !user.isGuest,
-    initialData: [],
-  });
+  const { data: favoriteFiles = [], isLoading, error } = useFavoritesQuery();
 
   React.useEffect(() => {
     if (error) {
@@ -117,7 +107,7 @@ export default function FavoritesPage() {
       <h1 className="text-xl font-bold mb-4">{t("title")}</h1>
       {favoriteFiles.length > 0 ? (
         <FileList
-          files={favoriteFiles}
+          files={favoriteFiles.map((f) => ({ ...f, isFavorite: true }))}
           onItemClick={handleItemClick}
           onItemContextMenu={() => {}}
           activeFileId={null}

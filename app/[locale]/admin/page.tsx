@@ -1,8 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import React, { useEffect } from "react";
-import { useAppStore } from "@/lib/store";
+import React from "react";
+import { useUser } from "@/hooks/useUser";
 import { motion } from "framer-motion";
 import {
   AlertCircle,
@@ -70,16 +70,10 @@ const scrollbarHideStyles = {
 };
 
 export default function AdminPage() {
-  const { user, fetchUser } = useAppStore();
+  const user = useUser();
   const { status } = useSession();
   const router = useRouter();
   const t = useTranslations("AdminPage");
-
-  useEffect(() => {
-    if (status === "authenticated" && !user) {
-      fetchUser();
-    }
-  }, [status, user, fetchUser]);
 
   if (status === "loading" || (status === "authenticated" && !user)) {
     return <Loading />;

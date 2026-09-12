@@ -12,6 +12,7 @@ import React from "react";
 import EmptyState from "@/components/file-browser/EmptyState";
 import { SearchX } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useUser } from "@/hooks/useUser";
 
 export default function SearchResultsList() {
   const router = useRouter();
@@ -19,7 +20,8 @@ export default function SearchResultsList() {
   const searchTerm = searchParams.get("q");
   const folderId = searchParams.get("folderId");
   const searchType = searchParams.get("searchType") || "name";
-  const { shareToken, addToast, currentFolderId, user } = useAppStore();
+  const { shareToken, addToast, currentFolderId } = useAppStore();
+  const user = useUser();
   const t = useTranslations("SearchResultsList");
 
   const {

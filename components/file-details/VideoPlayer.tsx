@@ -19,6 +19,7 @@ import { useAppStore } from "@/lib/store";
 import type { SubtitleTrack } from "@/lib/subtitles";
 import { srtToVtt } from "@/lib/subtitleUtils";
 import { useTranslations } from "next-intl";
+import { useUser } from "@/hooks/useUser";
 
 import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
@@ -63,8 +64,8 @@ export default function VideoPlayer({
     isTheaterMode,
     toggleTheaterMode,
     sharePolicy,
-    user,
   } = useAppStore();
+  const user = useUser();
   const playerRef = useRef<MediaPlayerInstance>(null);
   const [networkError, setNetworkError] = useState(false);
   const [formatError, setFormatError] = useState(false);

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/lib/store";
+import { useUser } from "@/hooks/useUser";
 import { useSession } from "next-auth/react";
 import MarkdownViewer from "@/components/file-details/MarkdownViewer";
 
@@ -20,7 +21,8 @@ interface FolderReadmeProps {
 }
 
 export default function FolderReadme({ fileId }: FolderReadmeProps) {
-  const { shareToken, addToast, user } = useAppStore();
+  const { shareToken, addToast } = useAppStore();
+  const user = useUser();
   const { data: session } = useSession();
   const [content, setContent] = useState<string | null>(null);
   const [draftContent, setDraftContent] = useState("");

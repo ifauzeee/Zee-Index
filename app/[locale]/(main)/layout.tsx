@@ -7,7 +7,6 @@ import { BulkActionBar } from "@/components/file-browser/BulkActionBar";
 import Toast from "@/components/common/Toast";
 import { AnimatePresence } from "framer-motion";
 
-import { useSession } from "next-auth/react";
 import CommandPalette from "@/components/features/CommandPalette";
 import GlobalAudioPlayer from "@/components/features/GlobalAudioPlayer";
 import KeyboardShortcutsModal from "@/components/modals/KeyboardShortcutsModal";
@@ -21,6 +20,7 @@ import GlobalDropZone from "@/components/file-browser/GlobalDropZone";
 import { usePathname, useSearchParams } from "next/navigation";
 import Loading from "@/components/common/Loading";
 import { useTranslations } from "next-intl";
+import { useDataUsageQuery } from "@/hooks/useDataUsage";
 
 const Header = dynamic(() => import("@/components/layout/Header"), {
   ssr: false,
@@ -33,16 +33,12 @@ const DetailsPanel = dynamic(
 );
 
 const AppFooter = () => {
-  const { dataUsage } = useAppStore();
+  const refreshKey = useAppStore((state) => state.refreshKey);
+  const { data, isPending, isError } = useDataUsageQuery(refreshKey);
   const currentYear = new Date().getFullYear();
   const t = useTranslations("Footer");
 
-  let displayValue = dataUsage.value;
-  if (dataUsage.status === "loading") {
-    displayValue = "...";
-  } else if (dataUsage.status === "error") {
-    displayValue = dataUsage.value !== "Memuat..." ? dataUsage.value : "Gagal";
-  }
+  const displayValue = isPending ? "..." : isError ? (data ?? "Gagal") : data;
 
   return (
     <footer className="text-center py-6 text-sm text-muted-foreground bg-background mb-16 lg:mb-0 w-full overflow-hidden">
@@ -51,7 +47,7 @@ const AppFooter = () => {
         <span>{t("dataUsage")} </span>
         <span
           id="data-usage-value"
-          className={`font-medium text-foreground ${dataUsage.status === "loading" ? "animate-pulse" : ""}`}
+          className={`font-medium text-foreground ${isPending ? "animate-pulse" : ""}`}
         >
           {displayValue}
         </span>
@@ -75,18 +71,13 @@ const AppFooter = () => {
 };
 
 function MainLayoutContent({ children }: { children: React.ReactNode }) {
-  const refreshKey = useAppStore((state) => state.refreshKey);
   const toasts = useAppStore((state) => state.toasts);
   const removeToast = useAppStore((state) => state.removeToast);
-  const fetchUser = useAppStore((state) => state.fetchUser);
-  const fetchDataUsage = useAppStore((state) => state.fetchDataUsage);
   const detailsFile = useAppStore((state) => state.detailsFile);
   const setDetailsFile = useAppStore((state) => state.setDetailsFile);
-  const fetchPublicConfig = useAppStore((state) => state.fetchPublicConfig);
   const isSidebarOpen = useAppStore((state) => state.isSidebarOpen);
   const setSidebarOpen = useAppStore((state) => state.setSidebarOpen);
   const addToast = useAppStore((state) => state.addToast);
-  const { status } = useSession();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -101,18 +92,6 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
   }, []);
 
   const effectiveSidebarOpen = mounted ? isSidebarOpen : true;
-
-  useEffect(() => {
-    fetchPublicConfig();
-
-    if (status === "authenticated") {
-      fetchUser();
-    }
-  }, [status, fetchUser, fetchPublicConfig, refreshKey]);
-
-  useEffect(() => {
-    fetchDataUsage();
-  }, [fetchDataUsage, refreshKey]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartRef.current = e.targetTouches[0].clientX;

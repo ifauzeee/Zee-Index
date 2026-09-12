@@ -3,6 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { useAppStore } from "@/lib/store";
 import {
+  useAdminConfigQuery,
+  useUpdateConfigMutation,
+} from "@/hooks/useConfig";
+import {
   Loader2,
   Palette,
   Type,
@@ -16,16 +20,9 @@ import { useTranslations } from "next-intl";
 
 export default function BrandingConfig() {
   const t = useTranslations("BrandingConfig");
-  const {
-    appName,
-    logoUrl,
-    faviconUrl,
-    primaryColor,
-    setConfig,
-    isConfigLoading,
-    fetchConfig,
-    addToast,
-  } = useAppStore();
+  const addToast = useAppStore((state) => state.addToast);
+  const { data: config, isLoading } = useAdminConfigQuery();
+  const updateConfig = useUpdateConfigMutation();
 
   const [formState, setFormState] = useState({
     appName: "",
@@ -36,20 +33,14 @@ export default function BrandingConfig() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (useAppStore.getState().user?.role !== "ADMIN") return;
-    if (appName === null || logoUrl === null || primaryColor === null) {
-      fetchConfig();
-    }
-  }, [fetchConfig, appName, logoUrl, primaryColor]);
-
-  useEffect(() => {
+    if (!config) return;
     setFormState({
-      appName: appName || "Zee Index",
-      logoUrl: logoUrl || "",
-      faviconUrl: faviconUrl || "",
-      primaryColor: primaryColor || "",
+      appName: config.appName || "Zee Index",
+      logoUrl: config.logoUrl || "",
+      faviconUrl: config.faviconUrl || "",
+      primaryColor: config.primaryColor || "",
     });
-  }, [appName, logoUrl, faviconUrl, primaryColor]);
+  }, [config]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -67,12 +58,12 @@ export default function BrandingConfig() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    await setConfig(formState);
+    await updateConfig.mutateAsync(formState);
     addToast({ message: t("savedToast"), type: "success" });
     setIsSubmitting(false);
   };
 
-  if (isConfigLoading)
+  if (isLoading)
     return (
       <div>
         <h2 className="text-2xl font-semibold mb-6">{t("title")}</h2>

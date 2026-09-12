@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useAppStore } from "@/lib/store";
+import React, { useState } from "react";
+import { useUser } from "@/hooks/useUser";
 import { motion } from "framer-motion";
 import {
   User,
@@ -34,7 +34,7 @@ const item = {
 };
 
 export default function ProfilePage() {
-  const { user, fetchUser } = useAppStore();
+  const user = useUser();
   const { status } = useSession();
   const t = useTranslations("ProfilePage");
 
@@ -45,12 +45,6 @@ export default function ProfilePage() {
     type: "success" | "error";
     text: string;
   } | null>(null);
-
-  useEffect(() => {
-    if (status === "authenticated" && !user) {
-      fetchUser();
-    }
-  }, [status, fetchUser, user]);
 
   if (status === "loading" || (status === "authenticated" && !user)) {
     return <ProfileSkeleton />;

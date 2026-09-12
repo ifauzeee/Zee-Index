@@ -1,27 +1,26 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useAppStore } from "@/lib/store";
+import React, { useState } from "react";
 import { useConfirm } from "@/components/providers/ModalProvider";
 import { Trash2, UserPlus, Loader2, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
+import {
+  useAdminEmailsQuery,
+  useEditorEmailsQuery,
+  useAdminEmailMutation,
+  useEditorEmailMutation,
+} from "@/hooks/useAdminUsers";
 import UserPasswordManager from "@/components/admin/UserPasswordManager";
 import { UserListSkeleton } from "@/components/admin/skeletons";
 import { useTranslations } from "next-intl";
 
 export default function AdminUsersTab() {
-  const {
-    adminEmails,
-    isFetchingAdmins,
-    fetchAdminEmails,
-    addAdminEmail,
-    removeAdminEmail,
-    editorEmails,
-    isFetchingEditors,
-    fetchEditorEmails,
-    addEditorEmail,
-    removeEditorEmail,
-  } = useAppStore();
+  const { data: adminEmails = [], isLoading: isLoadingAdmins } =
+    useAdminEmailsQuery();
+  const { data: editorEmails = [], isLoading: isLoadingEditors } =
+    useEditorEmailsQuery();
+  const adminMutation = useAdminEmailMutation();
+  const editorMutation = useEditorEmailMutation();
   const { confirm } = useConfirm();
   const { data: session } = useSession();
   const t = useTranslations("AdminPage");
@@ -42,16 +41,14 @@ export default function AdminUsersTab() {
     text: string;
   } | null>(null);
 
-  useEffect(() => {
-    fetchAdminEmails();
-    fetchEditorEmails();
-  }, [fetchAdminEmails, fetchEditorEmails]);
-
   const handleAddAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAdminEmail.trim()) return;
     setIsSubmittingAdmin(true);
-    await addAdminEmail(newAdminEmail);
+    await adminMutation.mutateAsync({
+      email: newAdminEmail,
+      action: "add",
+    });
     setNewAdminEmail("");
     setIsSubmittingAdmin(false);
   };
@@ -63,7 +60,7 @@ export default function AdminUsersTab() {
         variant: "destructive",
       })
     ) {
-      await removeAdminEmail(email);
+      await adminMutation.mutateAsync({ email, action: "remove" });
     }
   };
 
@@ -71,7 +68,10 @@ export default function AdminUsersTab() {
     e.preventDefault();
     if (!newEditorEmail.trim()) return;
     setIsSubmittingEditor(true);
-    await addEditorEmail(newEditorEmail);
+    await editorMutation.mutateAsync({
+      email: newEditorEmail,
+      action: "add",
+    });
     setNewEditorEmail("");
     setIsSubmittingEditor(false);
   };
@@ -86,7 +86,7 @@ export default function AdminUsersTab() {
         },
       )
     ) {
-      await removeEditorEmail(email);
+      await editorMutation.mutateAsync({ email, action: "remove" });
     }
   };
 
@@ -157,7 +157,7 @@ export default function AdminUsersTab() {
         <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wider">
           {t("adminList")}
         </h3>
-        {isFetchingAdmins ? (
+        {isLoadingAdmins ? (
           <UserListSkeleton count={3} />
         ) : (
           <div className="space-y-3">
@@ -218,7 +218,7 @@ export default function AdminUsersTab() {
         <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wider">
           {t("editorList")}
         </h3>
-        {isFetchingEditors ? (
+        {isLoadingEditors ? (
           <UserListSkeleton count={3} />
         ) : (
           <div className="space-y-3">

@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter, usePathname } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useAppStore } from "@/lib/store";
+import { useUser } from "@/hooks/useUser";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { fetchFolderPathApi } from "@/hooks/useFileFetching";
 import type { DriveFile } from "@/lib/drive";
@@ -58,7 +59,7 @@ export function useSidebarController() {
   const isSidebarOpen = useAppStore((state) => state.isSidebarOpen);
   const setSidebarOpen = useAppStore((state) => state.setSidebarOpen);
   const currentFolderId = useAppStore((state) => state.currentFolderId);
-  const user = useAppStore((state) => state.user);
+  const user = useUser();
   const shareToken = useAppStore((state) => state.shareToken);
   const setNavigatingId = useAppStore((state) => state.setNavigatingId);
   const isAuthHealthy = useAppStore((state) => state.isGoogleAuthHealthy);

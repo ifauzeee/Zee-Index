@@ -22,6 +22,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { usePublicConfig } from "@/hooks/useConfig";
 import Search from "@/components/features/Search";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
@@ -179,8 +180,7 @@ export default function Header() {
     (state) => state.toggleNotificationCenter,
   );
   const toggleSidebar = useAppStore((state) => state.toggleSidebar);
-  const appName = useAppStore((state) => state.appName);
-  const logoUrl = useAppStore((state) => state.logoUrl);
+  const { appName, logoUrl } = usePublicConfig();
   const { theme, setTheme } = useTheme();
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

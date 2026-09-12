@@ -28,6 +28,8 @@ import {
 } from "@/lib/utils";
 import { useTranslations, useLocale } from "next-intl";
 import { useAppStore } from "@/lib/store";
+import { useUser } from "@/hooks/useUser";
+import { usePublicConfig } from "@/hooks/useConfig";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import {
   QuickStat,
@@ -85,7 +87,9 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
     ? parseInt(file.videoMediaMetadata.durationMillis, 10)
     : undefined;
 
-  const { user, hideAuthor, addToast, sharePolicy } = useAppStore();
+  const { addToast, sharePolicy } = useAppStore();
+  const user = useUser();
+  const { hideAuthor } = usePublicConfig();
 
   const [isMobile, setIsMobile] = useState(false);
   const controls = useAnimation();

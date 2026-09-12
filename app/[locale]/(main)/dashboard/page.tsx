@@ -2,7 +2,6 @@
 
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useAppStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import {
   Clock,
@@ -24,6 +23,8 @@ import { DashboardSkeleton } from "@/components/common/skeletons/DashboardSkelet
 import EmptyState from "@/components/file-browser/EmptyState";
 import { getDashboardData } from "@/app/actions/dashboard";
 import { getFavorites } from "@/app/actions/favorites";
+import { useDataUsageQuery } from "@/hooks/useDataUsage";
+import { useUser } from "@/hooks/useUser";
 import type { DriveFile } from "@/lib/drive";
 
 const ACTIVITY_ICONS: Record<string, React.ElementType> = {
@@ -106,8 +107,9 @@ const statItem = {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, dataUsage } = useAppStore();
+  const user = useUser();
   const t = useTranslations("DashboardPage");
+  const { data: usageData } = useDataUsageQuery();
   const locale =
     typeof window !== "undefined"
       ? window.location.pathname.match(/^\/(en|id|zh-TW)\/?/)?.[1] || "en"
@@ -130,7 +132,7 @@ export default function DashboardPage() {
 
   const recentActivity = dashData?.recentActivity?.slice(0, 10) || [];
   const downloadCount = dashData?.downloadCount || 0;
-  const storageUsage = dashData?.storageUsage || dataUsage.value;
+  const storageUsage = dashData?.storageUsage || usageData || "";
 
   const createSlug = (name: string) =>
     encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());

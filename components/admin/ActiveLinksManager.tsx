@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAppStore, ShareLink, FileRequestLink } from "@/lib/store";
 import { useConfirm } from "@/components/providers/ModalProvider";
 import { format } from "date-fns";
@@ -20,27 +20,26 @@ import {
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import EditShareLinkModal from "@/components/admin/EditShareLinkModal";
+import {
+  useShareLinksQuery,
+  useRemoveShareLinkMutation,
+} from "@/hooks/useShareLinks";
+import {
+  useFileRequestsQuery,
+  useRemoveFileRequestMutation,
+} from "@/hooks/useFileRequests";
 
 export default function ActiveLinksManager() {
-  const {
-    shareLinks,
-    removeShareLink,
-    fileRequests,
-    fetchFileRequests,
-    removeFileRequest,
-    addToast,
-    fetchShareLinks,
-  } = useAppStore();
+  const { addToast } = useAppStore();
   const { confirm } = useConfirm();
   const t = useTranslations("AdminPage");
+  const { data: shareLinks = [] } = useShareLinksQuery();
+  const { data: fileRequests = [] } = useFileRequestsQuery();
+  const removeShareLink = useRemoveShareLinkMutation();
+  const removeFileRequest = useRemoveFileRequestMutation();
   const [editingShareLink, setEditingShareLink] = useState<ShareLink | null>(
     null,
   );
-
-  useEffect(() => {
-    fetchShareLinks();
-    fetchFileRequests();
-  }, [fetchShareLinks, fetchFileRequests]);
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -59,9 +58,9 @@ export default function ActiveLinksManager() {
       })
     ) {
       if (type === "share") {
-        await removeShareLink(item as ShareLink);
+        removeShareLink.mutate(item as ShareLink);
       } else {
-        await removeFileRequest((item as FileRequestLink).token);
+        removeFileRequest.mutate((item as FileRequestLink).token);
       }
     }
   };

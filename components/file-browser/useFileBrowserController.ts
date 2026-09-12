@@ -9,6 +9,8 @@ import type { DriveFile } from "@/lib/drive";
 import { getFileType } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import { useFileActions } from "@/hooks/useFileActions";
+import { useUser } from "@/hooks/useUser";
+import { useFavoritesQuery } from "@/hooks/useFavorites";
 import { useFileFetching } from "@/hooks/useFileFetching";
 import { useUpload } from "@/hooks/useUpload";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
@@ -69,12 +71,14 @@ export function useFileBrowserController({
   const addToast = useAppStore((state) => state.addToast);
   const folderTokens = useAppStore((state) => state.folderTokens);
   const setFolderToken = useAppStore((state) => state.setFolderToken);
-  const user = useAppStore((state) => state.user);
-  const fetchUser = useAppStore((state) => state.fetchUser);
+  const user = useUser();
   const shareToken = useAppStore((state) => state.shareToken);
   const setShareToken = useAppStore((state) => state.setShareToken);
-  const favorites = useAppStore((state) => state.favorites);
-  const fetchFavorites = useAppStore((state) => state.fetchFavorites);
+  const { data: favoriteFiles = [] } = useFavoritesQuery();
+  const favorites = useMemo(
+    () => favoriteFiles.map((f) => f.id),
+    [favoriteFiles],
+  );
   const detailsFile = useAppStore((state) => state.detailsFile);
   const setDetailsFile = useAppStore((state) => state.setDetailsFile);
   const setCurrentFolderId = useAppStore((state) => state.setCurrentFolderId);
@@ -174,13 +178,6 @@ export function useFileBrowserController({
   useEffect(() => {
     checkLocalStorageAuth();
   }, [checkLocalStorageAuth]);
-
-  useEffect(() => {
-    if (sessionStatus === "authenticated" && !user) {
-      fetchUser();
-      fetchFavorites();
-    }
-  }, [sessionStatus, user, fetchUser, fetchFavorites]);
 
   useEffect(() => {
     const currentShareToken = searchParams.get("share_token");
