@@ -113,7 +113,6 @@ describe("app/api/archive-preview route", () => {
     expect(response.status).toBe(500);
     await expect(response.json()).resolves.toEqual({
       error: "Gagal memproses file arsip.",
-      details: "network error",
     });
   });
 });

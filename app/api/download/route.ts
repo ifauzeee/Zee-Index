@@ -195,10 +195,9 @@ async function handleDownload(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            errorJson.error?.message ||
-            (googleResponse.status === 204
+            googleResponse.status === 204
               ? "Google Drive mengembalikan respons kosong. Mungkin token akses kedaluwarsa."
-              : "Gagal mengambil file dari Google Drive"),
+              : "Gagal mengambil file dari Google Drive",
         },
         { status: googleResponse.status === 204 ? 502 : googleResponse.status },
       );
@@ -303,10 +302,7 @@ async function handleDownload(request: NextRequest) {
     logger.error({ err: error }, "Download API Error");
     return NextResponse.json(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        error: ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
       },
       { status: 500 },
     );

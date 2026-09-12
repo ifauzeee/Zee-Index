@@ -20,7 +20,7 @@ interface EPubRendition {
 interface EPubBook {
   renderTo: (
     element: HTMLDivElement,
-    options: { width: string; height: string },
+    options: { width: string; height: string; allowScriptedContent?: boolean },
   ) => EPubRendition;
   destroy: () => void;
 }
@@ -119,6 +119,7 @@ export const EbookPreview: React.FC<{ src: string }> = ({ src }) => {
     const rendition = book.renderTo(containerRef.current, {
       width: "100%",
       height: "100%",
+      allowScriptedContent: false,
     });
     rendition
       .display()

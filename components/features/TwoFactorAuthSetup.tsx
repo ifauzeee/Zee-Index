@@ -13,6 +13,7 @@ export default function TwoFactorAuthSetup() {
   const [isEnabled, setIsEnabled] = useState<boolean | null>(null);
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string | null>(null);
   const [verificationCode, setVerificationCode] = useState("");
+  const [showDisableForm, setShowDisableForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const { addToast } = useAppStore();
@@ -84,6 +85,13 @@ export default function TwoFactorAuthSetup() {
   };
 
   const handleDisable = async () => {
+    if (verificationCode.length !== 6) {
+      setShowDisableForm(true);
+      setError(
+        "Masukkan kode verifikasi dari aplikasi authenticator untuk menonaktifkan 2FA.",
+      );
+      return;
+    }
     if (
       !(await confirm(
         "Apakah Anda yakin ingin menonaktifkan Autentikasi Dua Faktor?",
@@ -94,11 +102,19 @@ export default function TwoFactorAuthSetup() {
     setIsLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/auth/2fa/disable", { method: "POST" });
-      if (!response.ok) throw new Error("Gagal menonaktifkan 2FA.");
+      const response = await fetch("/api/auth/2fa/disable", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: verificationCode }),
+      });
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Gagal menonaktifkan 2FA.");
 
       addToast({ message: "2FA berhasil dinonaktifkan.", type: "info" });
       setIsEnabled(false);
+      setShowDisableForm(false);
+      setVerificationCode("");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error");
     } finally {
@@ -134,6 +150,34 @@ export default function TwoFactorAuthSetup() {
           >
             {isLoading ? <Loader2 className="animate-spin" /> : t("disable")}
           </button>
+          {showDisableForm && (
+            <div className="mt-4 border-t pt-4">
+              <p className="text-sm text-center mb-2">{t("enterCode")}</p>
+              <div className="flex items-center justify-center gap-2">
+                <input
+                  type="text"
+                  value={verificationCode}
+                  onChange={(e) =>
+                    setVerificationCode(e.target.value.replace(/\D/g, ""))
+                  }
+                  placeholder={t("codePlaceholder")}
+                  maxLength={6}
+                  className="w-32 text-center tracking-[0.5em] font-mono text-lg px-3 py-2 rounded-md border bg-transparent focus:ring-2 focus:ring-ring focus:outline-none"
+                />
+                <button
+                  onClick={handleDisable}
+                  disabled={isLoading || verificationCode.length !== 6}
+                  className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 text-sm font-semibold disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    t("disable")
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div>

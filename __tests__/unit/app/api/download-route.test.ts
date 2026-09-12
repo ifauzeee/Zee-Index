@@ -279,7 +279,7 @@ describe("app/api/download route", () => {
 
     expect(response.status).toBe(403);
     await expect(response.json()).resolves.toEqual({
-      error: "Upstream denied",
+      error: "Gagal mengambil file dari Google Drive",
     });
     expect(mockLoggerError).toHaveBeenCalled();
   });

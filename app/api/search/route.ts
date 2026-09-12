@@ -79,6 +79,23 @@ export const GET = createPublicRoute(
       : "";
     const searchTerm = sanitizedSearchTerm.replace(/'/g, "''");
 
+    const isAdmin = session?.user?.role === "ADMIN";
+    const authHeader = request.headers.get("Authorization");
+    const token = authHeader?.split(" ")[1];
+    const allowedTokens: string[] = [];
+
+    if (token) {
+      try {
+        const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
+        const { payload } = await jwtVerify(token, secret);
+        if (payload.folderId) {
+          allowedTokens.push(payload.folderId as string);
+        }
+      } catch {
+        // JWT verify failure — no allowed tokens to pass
+      }
+    }
+
     const cacheKey = `search:${JSON.stringify({
       q: searchTerm,
       folderId,
@@ -86,7 +103,9 @@ export const GET = createPublicRoute(
       mimeType,
       modifiedTime,
       minSize,
-      isAdmin: session?.user?.role === "ADMIN",
+      isAdmin,
+      user: session?.user?.email ?? "anon",
+      tokens: allowedTokens.sort().join(","),
     })}`;
 
     let cachedData = null;
@@ -147,25 +166,6 @@ export const GET = createPublicRoute(
 
       const data = await response.json();
 
-      const isAdmin = session?.user?.role === "ADMIN";
-      const authHeader = request.headers.get("Authorization");
-      const token = authHeader?.split(" ")[1];
-      const allowedTokens: string[] = [];
-
-      if (token) {
-        try {
-          const secret = new TextEncoder().encode(
-            process.env.SHARE_SECRET_KEY!,
-          );
-          const { payload } = await jwtVerify(token, secret);
-          if (payload.folderId) {
-            allowedTokens.push(payload.folderId as string);
-          }
-        } catch {
-          // JWT verify failure — no allowed tokens to pass
-        }
-      }
-
       const [allProtectedFolders, isPrivFolder] = await Promise.all([
         db.protectedFolder
           .findMany({ select: { folderId: true } })
@@ -216,17 +216,24 @@ export const GET = createPublicRoute(
           });
           const seen = new Set(driveFiles.map((f: DriveFile) => f.id));
           for (const f of indexedFiles) {
-            if (!seen.has(f.id)) {
-              seen.add(f.id);
-              driveFiles.push({
-                ...f,
-                parents: [f.folderId],
-                modifiedTime: f.modifiedTime.toISOString(),
-                hasThumbnail: f.mimeType.startsWith("image/"),
-                isFolder: f.mimeType === "application/vnd.google-apps.folder",
-                contentText: f.contentText,
-              } as unknown as DriveFile);
+            if (seen.has(f.id)) continue;
+            if (!isAdmin) {
+              const restricted = await isAccessRestricted(
+                f.id,
+                allowedTokens,
+                session?.user?.email,
+              );
+              if (restricted) continue;
             }
+            seen.add(f.id);
+            driveFiles.push({
+              ...f,
+              parents: [f.folderId],
+              modifiedTime: f.modifiedTime.toISOString(),
+              hasThumbnail: f.mimeType.startsWith("image/"),
+              isFolder: f.mimeType === "application/vnd.google-apps.folder",
+              contentText: f.contentText,
+            } as unknown as DriveFile);
           }
         } catch (err) {
           logger.warn({ err }, "Local full-text index search failed");
@@ -245,13 +252,9 @@ export const GET = createPublicRoute(
       }
 
       return NextResponse.json(result);
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan tidak dikenal.";
+    } catch {
       return NextResponse.json(
-        { error: "Failed to perform search.", details: errorMessage },
+        { error: "Failed to perform search." },
         { status: 500 },
       );
     }

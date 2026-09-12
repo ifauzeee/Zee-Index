@@ -60,7 +60,7 @@ export const GET = createUserRoute(async ({ request }) => {
         : "Terjadi kesalahan tidak dikenal.";
     logger.error({ err: errorMessage }, "Archive Preview API Error");
     return NextResponse.json(
-      { error: "Gagal memproses file arsip.", details: errorMessage },
+      { error: "Gagal memproses file arsip." },
       { status: 500 },
     );
   }
