@@ -84,12 +84,20 @@ export default function TwoFactorAuthSetup() {
     }
   };
 
-  const handleDisable = async () => {
+  const handleDisableClick = () => {
     if (verificationCode.length !== 6) {
       setShowDisableForm(true);
-      setError(
-        "Masukkan kode verifikasi dari aplikasi authenticator untuk menonaktifkan 2FA.",
-      );
+      setError(t("disableCodePrompt"));
+      return;
+    }
+    void handleDisableSubmit();
+  };
+
+  const handleDisableSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (verificationCode.length !== 6) {
+      setShowDisableForm(true);
+      setError(t("disableCodePrompt"));
       return;
     }
     if (
@@ -144,15 +152,17 @@ export default function TwoFactorAuthSetup() {
             </div>
           </div>
           <button
-            onClick={handleDisable}
+            onClick={handleDisableClick}
             disabled={isLoading}
             className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 text-sm font-semibold disabled:opacity-50"
           >
             {isLoading ? <Loader2 className="animate-spin" /> : t("disable")}
           </button>
           {showDisableForm && (
-            <div className="mt-4 border-t pt-4">
-              <p className="text-sm text-center mb-2">{t("enterCode")}</p>
+            <form onSubmit={handleDisableSubmit} className="mt-4 border-t pt-4">
+              <p className="text-sm text-center mb-2">
+                {t("disableCodePrompt")}
+              </p>
               <div className="flex items-center justify-center gap-2">
                 <input
                   type="text"
@@ -162,10 +172,11 @@ export default function TwoFactorAuthSetup() {
                   }
                   placeholder={t("codePlaceholder")}
                   maxLength={6}
+                  autoFocus
                   className="w-32 text-center tracking-[0.5em] font-mono text-lg px-3 py-2 rounded-md border bg-transparent focus:ring-2 focus:ring-ring focus:outline-none"
                 />
                 <button
-                  onClick={handleDisable}
+                  type="submit"
                   disabled={isLoading || verificationCode.length !== 6}
                   className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 text-sm font-semibold disabled:opacity-50"
                 >
@@ -176,7 +187,7 @@ export default function TwoFactorAuthSetup() {
                   )}
                 </button>
               </div>
-            </div>
+            </form>
           )}
         </div>
       ) : (

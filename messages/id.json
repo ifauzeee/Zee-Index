@@ -881,7 +881,8 @@
     "scanQr": "1. Pindai kode QR ini dengan aplikasi authenticator Anda (mis. Google Authenticator).",
     "qrAlt": "QR Code 2FA",
     "enterCode": "2. Masukkan kode 6 digit yang muncul di aplikasi Anda untuk menyelesaikan proses.",
-    "verify": "Verifikasi"
+    "verify": "Verifikasi",
+    "disableCodePrompt": "Masukkan kode verifikasi dari aplikasi authenticator untuk menonaktifkan 2FA."
   },
   "TagManager": {
     "newLabelPlaceholder": "Label Baru...",

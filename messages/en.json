@@ -881,7 +881,8 @@
     "scanQr": "1. Scan this QR code with your authenticator app (e.g. Google Authenticator).",
     "qrAlt": "2FA QR Code",
     "enterCode": "2. Enter the 6-digit code shown in your app to complete setup.",
-    "verify": "Verify"
+    "verify": "Verify",
+    "disableCodePrompt": "Enter the verification code from your authenticator app to disable 2FA."
   },
   "TagManager": {
     "newLabelPlaceholder": "New Label...",
