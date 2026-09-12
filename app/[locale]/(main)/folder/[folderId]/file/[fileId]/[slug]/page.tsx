@@ -1,11 +1,13 @@
 import { getAnyFileDetails, listAllFiles } from "@/lib/storage";
 import FileDetailClient from "@/components/file-browser/FileDetailClient";
 import { getTranslations } from "next-intl/server";
+import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import {
   isPrivateFolder,
   isProtected,
   hasUserAccess,
+  verifyFolderToken,
   verifyShareTokenString,
 } from "@/lib/auth";
 import type { SubtitleTrack } from "@/lib/subtitles";
@@ -70,7 +72,14 @@ export default async function FilePage(props: {
       hasAccess = true;
     } else if (userEmail && (await hasUserAccess(userEmail, folderId))) {
       hasAccess = true;
-    } else if (!isPriv && !isProt) {
+    } else if (isPriv || isProt) {
+      const folderToken = (await cookies()).get(
+        `folder_token_${folderId}`,
+      )?.value;
+      if (folderToken && (await verifyFolderToken(folderToken, folderId))) {
+        hasAccess = true;
+      }
+    } else {
       hasAccess = true;
     }
 

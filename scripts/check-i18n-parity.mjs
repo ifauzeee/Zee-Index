@@ -5,7 +5,10 @@ import { readFileSync } from "node:fs";
 const messages = ["en", "id", "zh-TW"].map((locale) => ({
   locale,
   data: JSON.parse(
-    readFileSync(new URL(`../messages/${locale}.json`, import.meta.url), "utf8"),
+    readFileSync(
+      new URL(`../messages/${locale}.json`, import.meta.url),
+      "utf8",
+    ),
   ),
 }));
 
@@ -29,12 +32,16 @@ const issues = [];
 for (const other of others) {
   for (const key of other.keys) {
     if (!ref.keys.includes(key)) {
-      issues.push(`extra in "${other.locale}" (missing in "${ref.locale}"): ${key}`);
+      issues.push(
+        `extra in "${other.locale}" (missing in "${ref.locale}"): ${key}`,
+      );
     }
   }
   for (const key of ref.keys) {
     if (!other.keys.includes(key)) {
-      issues.push(`missing in "${other.locale}" (present in "${ref.locale}"): ${key}`);
+      issues.push(
+        `missing in "${other.locale}" (present in "${ref.locale}"): ${key}`,
+      );
     }
   }
 }
