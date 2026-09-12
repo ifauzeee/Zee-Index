@@ -7,7 +7,6 @@ import { motion } from "framer-motion";
 import {
   AlertCircle,
   ArrowLeft,
-  Clock,
   ShieldCheck,
   Users,
   Activity,
@@ -24,7 +23,6 @@ import {
   ChartSkeleton,
   UserListSkeleton,
   FormSkeleton,
-  LogListSkeleton,
 } from "@/components/admin/skeletons";
 import { useTranslations } from "next-intl";
 
@@ -58,10 +56,6 @@ const AdminSecurityTab = dynamic(
 const BrandingConfig = dynamic(
   () => import("@/components/admin/BrandingConfig"),
   { ssr: false, loading: () => <FormSkeleton fields={4} /> },
-);
-const ActivityLogDashboard = dynamic(
-  () => import("@/components/admin/ActivityLogDashboard"),
-  { ssr: false, loading: () => <LogListSkeleton /> },
 );
 
 const scrollbarHideStyles = {
@@ -105,7 +99,6 @@ export default function AdminPage() {
     { value: "users", label: t("admin"), icon: Users },
     { value: "security", label: t("security"), icon: ShieldCheck },
     { value: "branding", label: t("branding"), icon: Palette },
-    { value: "logs", label: t("logs"), icon: Clock },
   ];
 
   return (
@@ -168,12 +161,6 @@ export default function AdminPage() {
 
         <TabsContent value="users" className="mt-2">
           <AdminUsersTab />
-        </TabsContent>
-
-        <TabsContent value="logs" className="mt-2">
-          <div className="bg-card border rounded-xl overflow-hidden shadow-sm">
-            <ActivityLogDashboard />
-          </div>
         </TabsContent>
       </Tabs>
     </motion.div>

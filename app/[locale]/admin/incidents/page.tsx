@@ -9,5 +9,9 @@ const IncidentMonitor = dynamic(
 );
 
 export default function IncidentsPage() {
-  return <IncidentMonitor />;
+  return (
+    <div className="py-6">
+      <IncidentMonitor />
+    </div>
+  );
 }

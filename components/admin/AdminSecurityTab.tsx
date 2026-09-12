@@ -1,13 +1,11 @@
 "use client";
 
-import { ShieldCheck, FolderLock, HardDrive } from "lucide-react";
+import { ShieldCheck, HardDrive } from "lucide-react";
 import TwoFactorAuthSetup from "@/components/features/TwoFactorAuthSetup";
-import ProtectedFoldersManager from "@/components/admin/ProtectedFoldersManager";
 import SecurityConfig from "@/components/admin/SecurityConfig";
 import StorageConfig from "@/components/admin/StorageConfig";
 import UserFolderAccessManager from "@/components/admin/UserFolderAccessManager";
 import ManualDrivesManager from "@/components/admin/ManualDrivesManager";
-import SecurityCenter from "@/components/admin/SecurityCenter";
 import ActiveLinksManager from "@/components/admin/ActiveLinksManager";
 import { useTranslations } from "next-intl";
 
@@ -16,10 +14,6 @@ export default function AdminSecurityTab() {
 
   return (
     <div className="space-y-10">
-      <section className="space-y-6">
-        <SecurityCenter />
-      </section>
-
       <section className="space-y-6">
         <div className="flex items-center gap-2 border-b pb-2 mb-4">
           <ShieldCheck className="text-primary" />
@@ -34,17 +28,12 @@ export default function AdminSecurityTab() {
 
       <section className="space-y-6">
         <div className="flex items-center gap-2 border-b pb-2 mb-4">
-          <FolderLock className="text-amber-500" />
+          <ShieldCheck className="text-amber-500" />
           <h3 className="text-lg font-bold">{t("protection")}</h3>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <div>
-            <ProtectedFoldersManager />
-          </div>
-          <div>
-            <UserFolderAccessManager />
-          </div>
+        <div>
+          <UserFolderAccessManager />
         </div>
       </section>
 

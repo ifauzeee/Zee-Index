@@ -9,5 +9,9 @@ const ApiKeyManager = dynamic(
 );
 
 export default function ApiKeysPage() {
-  return <ApiKeyManager />;
+  return (
+    <div className="py-6">
+      <ApiKeyManager />
+    </div>
+  );
 }

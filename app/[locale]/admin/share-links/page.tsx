@@ -9,5 +9,9 @@ const ShareLinkManager = dynamic(
 );
 
 export default function ShareLinksPage() {
-  return <ShareLinkManager />;
+  return (
+    <div className="py-6">
+      <ShareLinkManager />
+    </div>
+  );
 }
