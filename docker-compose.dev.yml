@@ -26,7 +26,7 @@ services:
     command: redis-server --appendonly no --save 300 100
 
   zee-index-dev:
-    image: node:20-alpine
+    image: node:22-alpine
     container_name: zee-index-dev
     working_dir: /app
     restart: always
