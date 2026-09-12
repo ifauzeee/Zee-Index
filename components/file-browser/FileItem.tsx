@@ -1,32 +1,16 @@
 import type { DriveFile } from "@/lib/drive";
 import { useAppStore } from "@/lib/store";
-import { formatBytes, getIcon, cn } from "@/lib/utils";
+import { formatBytes, getIcon, cn, extractExcerpt } from "@/lib/utils";
 import React, { useState, useMemo, memo, useEffect, useRef } from "react";
 import { motion, Variants } from "framer-motion";
-import Image from "next/image";
-import {
-  Lock,
-  Star,
-  Share2,
-  Download,
-  Info,
-  MoreVertical,
-  Loader2,
-} from "lucide-react";
-import { useTranslations, useFormatter } from "next-intl";
+import { Star, Lock } from "lucide-react";
+import { useFormatter } from "next-intl";
 import type {
   BrowserFile,
   FileBrowserActionEvent,
 } from "@/components/file-browser/views/types";
-
-/** Truncate text to ~maxLen chars at a word boundary, preserving the first portion. */
-function extractExcerpt(text: string, maxLen: number): string {
-  const cleaned = text.replace(/\s+/g, " ").trim();
-  if (cleaned.length <= maxLen) return cleaned;
-  const truncated = cleaned.slice(0, maxLen);
-  const lastSpace = truncated.lastIndexOf(" ");
-  return lastSpace > 0 ? truncated.slice(0, lastSpace) + "…" : truncated + "…";
-}
+import FileItemThumbnail from "@/components/file-browser/FileItemThumbnail";
+import FileItemActions from "@/components/file-browser/FileItemActions";
 
 interface FileItemProps {
   file: BrowserFile;
@@ -102,7 +86,6 @@ function FileItem({
   const [imageError, setImageError] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [isDesktop, setIsDesktop] = useState(false);
-  const t = useTranslations("FileItem");
   const format = useFormatter();
 
   useEffect(() => {
@@ -130,13 +113,6 @@ function FileItem({
     e.preventDefault();
     e.stopPropagation();
     onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
-  };
-
-  const handleMenuClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const rect = (e.currentTarget as Element).getBoundingClientRect();
-    onContextMenu({ clientX: rect.left, clientY: rect.bottom + 5 }, file);
   };
 
   const createActionEvent = (
@@ -275,85 +251,19 @@ function FileItem({
               isGallery && "w-full min-h-[150px]",
             )}
           >
-            {isGallery && hasImage ? (
-              <div className="relative w-full bg-muted/20">
-                {isImageLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-muted/30 z-10">
-                    <Icon size={32} className="opacity-20" />
-                  </div>
-                )}
-                <Image
-                  src={thumbnailSrc}
-                  alt={file.name}
-                  width={0}
-                  height={0}
-                  sizes="100vw"
-                  style={{ width: "100%", height: "auto" }}
-                  className={cn(
-                    "object-cover block transition-opacity duration-200 select-none",
-                    isImageLoading ? "opacity-0" : "opacity-100",
-                  )}
-                  loading="lazy"
-                  decoding="async"
-                  onLoad={() => setIsImageLoading(false)}
-                  onError={() => {
-                    setIsImageLoading(false);
-                    setImageError(true);
-                  }}
-                  unoptimized
-                />
-              </div>
-            ) : view === "grid" && hasImage ? (
-              <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-md overflow-hidden flex items-center justify-center bg-muted/20">
-                <Image
-                  src={thumbnailSrc}
-                  alt={file.name}
-                  fill
-                  className="object-cover select-none"
-                  sizes="(max-width: 640px) 80px, 150px"
-                  loading="lazy"
-                  decoding="async"
-                  referrerPolicy="no-referrer"
-                  unoptimized={true}
-                  onError={() => setImageError(true)}
-                />
-              </div>
-            ) : (
-              <div
-                className={cn(
-                  "text-3xl text-primary shrink-0 flex items-center justify-center select-none",
-                  view === "grid" && "text-4xl mb-2",
-                  isGallery &&
-                    "py-8 text-6xl bg-accent/10 w-full flex flex-col gap-2",
-                )}
-              >
-                {isNavigating ? (
-                  <Loader2
-                    size={
-                      view === "grid"
-                        ? 48
-                        : isGallery
-                          ? 64
-                          : compactClass
-                            ? 20
-                            : 28
-                    }
-                    className="animate-spin text-primary"
-                  />
-                ) : (
-                  React.createElement(Icon, {
-                    size:
-                      view === "grid"
-                        ? 48
-                        : isGallery
-                          ? 64
-                          : compactClass
-                            ? 20
-                            : 28,
-                  })
-                )}
-              </div>
-            )}
+            <FileItemThumbnail
+              file={file}
+              view={view}
+              isGallery={isGallery}
+              thumbnailSrc={thumbnailSrc}
+              hasImage={hasImage}
+              isImageLoading={isImageLoading}
+              setImageLoading={setIsImageLoading}
+              setImageError={setImageError}
+              isNavigating={isNavigating}
+              compactClass={compactClass}
+              Icon={Icon}
+            />
 
             {view !== "list" && file.isProtected && !isGallery && (
               <div className="absolute -bottom-1 -right-1 flex items-center justify-center p-1.5 bg-background/60 rounded-full ring-2 ring-background/20 z-20">
@@ -456,116 +366,21 @@ function FileItem({
             )}
           </div>
 
-          {!isBulkMode && !isUploading && (
-            <div
-              className={cn(
-                "hidden md:flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 focus-within:opacity-100 shrink-0 pointer-events-auto",
-                compactClass && "scale-90 origin-right",
-              )}
-            >
-              {isAdmin && (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onShare(createActionEvent(e));
-                  }}
-                  title={t("share")}
-                  aria-label={t("share")}
-                  className="p-2 rounded-full hover:bg-muted select-none"
-                >
-                  <Share2 size={16} />
-                </button>
-              )}
-              {!file.isFolder && (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onDownload(createActionEvent(e));
-                  }}
-                  title={t("download")}
-                  aria-label={t("download")}
-                  className="p-2 rounded-full hover:bg-muted select-none"
-                >
-                  <Download size={16} />
-                </button>
-              )}
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onToggleFavorite?.(createActionEvent(e), file);
-                }}
-                title={
-                  file.isFavorite
-                    ? t("removeFromFavorites")
-                    : t("addToFavorites")
-                }
-                aria-label={
-                  file.isFavorite
-                    ? t("removeFromFavorites")
-                    : t("addToFavorites")
-                }
-                className="p-2 rounded-full hover:bg-muted select-none"
-              >
-                <Star
-                  size={16}
-                  className={
-                    file.isFavorite
-                      ? "text-yellow-400 fill-yellow-400"
-                      : "text-muted-foreground"
-                  }
-                />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onShowDetails(createActionEvent(e));
-                }}
-                title={t("viewDetails")}
-                aria-label={t("viewDetails")}
-                className="p-2 rounded-full hover:bg-muted select-none"
-              >
-                <Info size={16} />
-              </button>
-            </div>
-          )}
-
-          {!isUploading && !isBulkMode && (
-            <button
-              onClick={handleMenuClick}
-              className={cn(
-                "md:hidden p-2.5 -m-1 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0 z-30 active:bg-accent active:text-primary pointer-events-auto select-none",
-                view === "grid" || view === "gallery"
-                  ? "absolute top-1 right-1 bg-background/70 backdrop-blur-sm shadow-sm border border-black/5"
-                  : "ml-auto",
-              )}
-              aria-label={t("moreOptions")}
-            >
-              <MoreVertical size={18} />
-            </button>
-          )}
-
-          {isBulkMode && !isUploading && (
-            <input
-              type="checkbox"
-              checked={isSelected}
-              readOnly
-              className={cn(
-                "absolute h-5 w-5 pointer-events-auto z-10",
-                view === "list"
-                  ? "right-4 top-1/2 -translate-y-1/2"
-                  : "top-2 right-2",
-                "rounded border-primary text-primary focus:ring-primary accent-primary",
-              )}
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleSelection(file);
-              }}
-            />
-          )}
+          <FileItemActions
+            file={file}
+            view={view}
+            isAdmin={isAdmin}
+            isBulkMode={isBulkMode}
+            uploadStatus={uploadStatus}
+            compactClass={compactClass}
+            onShare={onShare}
+            onDownload={onDownload}
+            onToggleFavorite={onToggleFavorite}
+            onShowDetails={onShowDetails}
+            onContextMenu={onContextMenu}
+            isSelected={isSelected}
+            toggleSelection={toggleSelection}
+          />
         </div>
       </div>
     </motion.div>

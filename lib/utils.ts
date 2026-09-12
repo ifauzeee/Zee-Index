@@ -352,3 +352,11 @@ export function getBaseUrl(): string {
 
   return "http://localhost:3000";
 }
+
+export function extractExcerpt(text: string, maxLen: number): string {
+  const cleaned = text.replace(/\s+/g, " ").trim();
+  if (cleaned.length <= maxLen) return cleaned;
+  const truncated = cleaned.slice(0, maxLen);
+  const lastSpace = truncated.lastIndexOf(" ");
+  return lastSpace > 0 ? truncated.slice(0, lastSpace) + "…" : truncated + "…";
+}
