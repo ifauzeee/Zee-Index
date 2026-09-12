@@ -131,7 +131,7 @@ export function BulkActionBar() {
 
     if (!currentParentId) {
       addToast({
-        message: "Gagal mendapatkan lokasi saat ini.",
+        message: t("moveLocationError"),
         type: "error",
       });
       setIsProcessing(false);

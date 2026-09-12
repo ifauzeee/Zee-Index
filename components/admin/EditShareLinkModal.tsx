@@ -77,21 +77,19 @@ export default function EditShareLinkModal({
 
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result.error || "Gagal memperbarui tautan berbagi.");
+        throw new Error(result.error || t("shareLinkUpdateFailed"));
       }
 
       updateShareLink.mutate(result.updatedShareLink);
       addToast({
-        message: "Pengaturan tautan berhasil diperbarui.",
+        message: t("shareLinkUpdateSuccess"),
         type: "success",
       });
       onClose();
     } catch (err: unknown) {
       addToast({
         message:
-          err instanceof Error
-            ? err.message
-            : "Gagal memperbarui tautan berbagi.",
+          err instanceof Error ? err.message : t("shareLinkUpdateFailed"),
         type: "error",
       });
     } finally {

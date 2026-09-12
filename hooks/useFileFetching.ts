@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   type InfiniteData,
   useInfiniteQuery,
@@ -65,12 +66,18 @@ const fetchFilesApi = async ({
   shareToken,
   folderToken,
   refresh,
+  fallbacks,
 }: {
   folderId: string;
   pageToken?: string | null;
   shareToken?: string | null;
   folderToken?: string;
   refresh?: boolean;
+  fallbacks: {
+    protectedFolder: string;
+    localLocked: string;
+    fetchFiles: string;
+  };
 }): Promise<FilesResponse> => {
   const url = new URL(window.location.origin + "/api/files");
   url.searchParams.append("folderId", folderId);
@@ -90,12 +97,12 @@ const fetchFilesApi = async ({
       .catch(() => ({}));
     if (response.status === 401 && errorData.protected) {
       throw new ProtectedError(
-        errorData.error || "Folder membutuhkan autentikasi.",
+        errorData.error || fallbacks.protectedFolder,
         folderId,
       );
     }
     if (response.status === 401 && errorData.isLocalAuthNeeded) {
-      throw new RequestError(errorData.error || "Local Storage Terkunci", {
+      throw new RequestError(errorData.error || fallbacks.localLocked, {
         status: 401,
         isLocalAuthNeeded: true,
       });
@@ -104,7 +111,7 @@ const fetchFilesApi = async ({
     throw createRequestError(
       errorData,
       response.status,
-      "Gagal mengambil data file.",
+      fallbacks.fetchFiles,
       folderId,
     );
   }
@@ -116,6 +123,7 @@ export const fetchFolderPathApi = async (
   folderId: string,
   shareToken?: string | null,
   locale?: string,
+  fallbackMessage = "Failed to load folder data.",
 ): Promise<FolderPathItem[]> => {
   const url = new URL(window.location.origin + "/api/folderpath");
   url.searchParams.append("folderId", folderId);
@@ -130,7 +138,7 @@ export const fetchFolderPathApi = async (
     throw createRequestError(
       errorData,
       response.status,
-      "Gagal mengambil data folder.",
+      fallbackMessage,
       folderId,
     );
   }
@@ -156,6 +164,9 @@ export function useFileFetching({
   const currentFolderId = initialFolderId || rootFolderId;
 
   const queryClient = useQueryClient();
+  const tErr = useTranslations("FileErrors");
+  const tBrowse = useTranslations("FileBrowser");
+  const tSidebar = useTranslations("Sidebar");
 
   useEffect(() => {
     if (refreshKey > 0) {
@@ -168,7 +179,13 @@ export function useFileFetching({
 
   const { data: historyData } = useQuery<FolderPathItem[], RequestError>({
     queryKey: ["folderPath", currentFolderId, shareToken, locale],
-    queryFn: () => fetchFolderPathApi(currentFolderId, shareToken, locale),
+    queryFn: () =>
+      fetchFolderPathApi(
+        currentFolderId,
+        shareToken,
+        locale,
+        tErr("fetchFolder"),
+      ),
     enabled: !!currentFolderId && currentFolderId !== rootFolderId,
     initialData: initialFolderPath,
     retry: false,
@@ -182,9 +199,7 @@ export function useFileFetching({
       return [
         {
           id: rootFolderId,
-          name:
-            process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME ||
-            (locale === "id" ? "Beranda" : "Home"),
+          name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || tSidebar("home"),
         },
       ];
     }
@@ -201,9 +216,7 @@ export function useFileFetching({
         return [
           {
             id: rootFolderId,
-            name:
-              process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME ||
-              (locale === "id" ? "Beranda" : "Home"),
+            name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || tSidebar("home"),
           },
           ...slicedPath,
         ];
@@ -213,7 +226,7 @@ export function useFileFetching({
     }
 
     return rawPath;
-  }, [historyData, currentFolderId, rootFolderId, folderTokens, locale]);
+  }, [historyData, currentFolderId, rootFolderId, folderTokens, tSidebar]);
 
   const bestToken = useMemo(() => {
     if (folderTokens[currentFolderId]) return folderTokens[currentFolderId];
@@ -245,6 +258,11 @@ export function useFileFetching({
         shareToken,
         folderToken: bestToken,
         refresh: refreshKey > 0,
+        fallbacks: {
+          protectedFolder: tErr("protectedFolder"),
+          localLocked: tErr("localLocked"),
+          fetchFiles: tErr("fetchFiles"),
+        },
       }),
     initialPageParam: null,
     initialData:
@@ -287,7 +305,7 @@ export function useFileFetching({
       }
 
       addToast({
-        message: getErrorMessage(error, "Gagal memuat data."),
+        message: getErrorMessage(error, tErr("loadData")),
         type: "error",
       });
 
@@ -318,13 +336,13 @@ export function useFileFetching({
         );
       }
     }
-  }, [error, addToast, router]);
+  }, [error, addToast, router, tErr]);
 
   const authModalInfo = useMemo(() => {
     if (error?.isProtected && error.folderId) {
       const folderName =
         history.find((folder) => folder.id === error.folderId)?.name ||
-        "Folder Terkunci";
+        tBrowse("lockedFolder");
 
       return {
         isOpen: true,
@@ -333,7 +351,7 @@ export function useFileFetching({
       };
     }
     return null;
-  }, [error, history]);
+  }, [error, history, tBrowse]);
 
   return {
     files,

@@ -54,6 +54,7 @@ export function useSidebarController() {
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const t = useTranslations("Sidebar");
+  const tErr = useTranslations("FileErrors");
   const locale = useLocale();
 
   const isSidebarOpen = useAppStore((state) => state.isSidebarOpen);
@@ -275,7 +276,12 @@ export function useSidebarController() {
           const pathData = await queryClient.fetchQuery({
             queryKey: ["folderPath", currentFolderId, shareToken, locale],
             queryFn: () =>
-              fetchFolderPathApi(currentFolderId, shareToken, locale),
+              fetchFolderPathApi(
+                currentFolderId,
+                shareToken,
+                locale,
+                tErr("fetchFolder"),
+              ),
             staleTime: 5 * 60 * 1000,
           });
           if (Array.isArray(pathData)) {
@@ -334,6 +340,7 @@ export function useSidebarController() {
     shareToken,
     locale,
     isAuthHealthy,
+    tErr,
   ]);
 
   const handleTouchStart = (event: React.TouchEvent) => {
@@ -408,17 +415,17 @@ export function useSidebarController() {
           });
           const result = await response.json();
           if (!response.ok) {
-            throw new Error(result.error || "Gagal memindahkan item.");
+            throw new Error(result.error || tErr("moveFailed"));
           }
 
           useAppStore.getState().addToast({
-            message: result.message || "Item berhasil dipindahkan",
+            message: result.message || tErr("moveSuccess"),
             type: "success",
           });
           useAppStore.getState().triggerRefresh();
         } catch (error: unknown) {
           useAppStore.getState().addToast({
-            message: getErrorMessage(error, "Gagal memindahkan item."),
+            message: getErrorMessage(error, tErr("moveFailed")),
             type: "error",
           });
         }
@@ -433,7 +440,7 @@ export function useSidebarController() {
 
       handleDropMove(data.files, targetFolderId);
     },
-    [],
+    [tErr],
   );
 
   const treeContextValue = useMemo<TreeContextType>(

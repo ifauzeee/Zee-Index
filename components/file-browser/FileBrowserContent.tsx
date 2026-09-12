@@ -183,9 +183,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
               : tList("errorTitle") || "Error"}
           </h3>
           <p className="text-sm max-w-md mt-1">
-            {error.message ||
-              tList("errorMessage") ||
-              "Gagal mengambil data file."}
+            {error.message || tList("errorMessage") || t("errorFallback")}
           </p>
         </div>
       </div>

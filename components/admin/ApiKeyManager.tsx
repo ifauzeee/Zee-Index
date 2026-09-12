@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { useAppStore } from "@/lib/store";
 import { format } from "date-fns";
 import {
@@ -50,23 +51,27 @@ export default function ApiKeyManager() {
   const [isRefetching, setIsRefetching] = useState(false);
   const { addToast } = useAppStore();
   const { confirm } = useConfirm();
+  const t = useTranslations("AdminPage");
 
-  const fetchKeys = useCallback(async (isBackground = false) => {
-    if (isBackground) setIsRefetching(true);
-    else setLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/admin/api-keys");
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
-      setKeys(data.keys || []);
-    } catch {
-      setError("Gagal memuat API keys");
-    } finally {
-      if (isBackground) setIsRefetching(false);
-      else setLoading(false);
-    }
-  }, []);
+  const fetchKeys = useCallback(
+    async (isBackground = false) => {
+      if (isBackground) setIsRefetching(true);
+      else setLoading(true);
+      setError("");
+      try {
+        const res = await fetch("/api/admin/api-keys");
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        setKeys(data.keys || []);
+      } catch {
+        setError(t("apiKeyLoadFailed"));
+      } finally {
+        if (isBackground) setIsRefetching(false);
+        else setLoading(false);
+      }
+    },
+    [t],
+  );
 
   useEffect(() => {
     fetchKeys();
@@ -108,7 +113,7 @@ export default function ApiKeyManager() {
     } catch (err) {
       await fetchKeys(true);
       addToast({
-        message: err instanceof Error ? err.message : "Gagal membuat API key",
+        message: err instanceof Error ? err.message : t("apiKeyCreateFailed"),
         type: "error",
       });
     } finally {
@@ -117,9 +122,9 @@ export default function ApiKeyManager() {
   };
 
   const handleRevoke = async (id: string) => {
-    const confirmed = await confirm("Yakin ingin mencabut API key ini?", {
-      title: "Cabut API Key",
-      confirmText: "Ya, Cabut",
+    const confirmed = await confirm(t("revokeApiKeyConfirm"), {
+      title: t("revokeApiKeyTitle"),
+      confirmText: t("confirmRevoke"),
       variant: "destructive",
     });
     if (!confirmed) return;
@@ -137,7 +142,7 @@ export default function ApiKeyManager() {
       await fetchKeys(true);
     } catch {
       await fetchKeys(true);
-      addToast({ message: "Gagal mencabut API key", type: "error" });
+      addToast({ message: t("apiKeyRevokeFailed"), type: "error" });
     }
   };
 
@@ -174,9 +179,7 @@ export default function ApiKeyManager() {
                 <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
               )}
             </h1>
-            <p className="text-gray-400 mt-1">
-              Kelola API keys untuk akses eksternal
-            </p>
+            <p className="text-gray-400 mt-1">{t("apiKeySubtitle")}</p>
           </div>
           <button
             onClick={() => {
@@ -186,7 +189,7 @@ export default function ApiKeyManager() {
             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors"
           >
             <Plus className="w-4 h-4" />
-            Buat Key
+            {t("createKey")}
           </button>
         </div>
 
@@ -205,8 +208,7 @@ export default function ApiKeyManager() {
             className="p-4 mb-6 bg-emerald-900/30 border border-emerald-800 rounded-lg"
           >
             <p className="text-emerald-300 font-semibold mb-2">
-              API Key berhasil dibuat! Salin sekarang — tidak akan ditampilkan
-              lagi.
+              {t("apiKeyCreatedNotice")}
             </p>
             <div className="flex items-center gap-2">
               <code className="flex-1 p-2 bg-black/40 rounded text-sm font-mono text-amber-200 break-all">
@@ -235,7 +237,7 @@ export default function ApiKeyManager() {
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">
-                Buat API Key Baru
+                {t("createApiKeyTitle")}
               </h3>
               <button
                 onClick={() => setShowCreate(false)}
@@ -246,11 +248,13 @@ export default function ApiKeyManager() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm text-gray-300 mb-1">Nama</label>
+              <label className="block text-sm text-gray-300 mb-1">
+                {t("name")}
+              </label>
               <input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                placeholder="Contoh: CI Script, Backup Service"
+                placeholder={t("apiKeyNamePlaceholder")}
                 className="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white text-sm"
               />
             </div>
@@ -282,7 +286,7 @@ export default function ApiKeyManager() {
               className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg transition-colors"
             >
               {creating && <Loader2 className="w-4 h-4 animate-spin" />}
-              Buat
+              {t("create")}
             </button>
           </motion.div>
         )}
@@ -292,7 +296,7 @@ export default function ApiKeyManager() {
           columns={[
             {
               key: "name",
-              header: "Nama",
+              header: t("name"),
               render: (key) => <span className="text-white">{key.name}</span>,
             },
             {
@@ -322,7 +326,7 @@ export default function ApiKeyManager() {
             },
             {
               key: "lastUsedAt",
-              header: "Terakhir Digunakan",
+              header: t("lastUsed"),
               hideOnMobile: true,
               render: (key) => (
                 <span className="text-gray-400">
@@ -334,7 +338,7 @@ export default function ApiKeyManager() {
             },
             {
               key: "createdAt",
-              header: "Dibuat",
+              header: t("created"),
               render: (key) => (
                 <span className="text-gray-400">
                   {format(new Date(key.createdAt), "dd MMM yyyy")}
@@ -343,7 +347,7 @@ export default function ApiKeyManager() {
             },
             {
               key: "revoked",
-              header: "Status",
+              header: t("status"),
               render: (key) =>
                 key.revoked ? (
                   <span className="text-red-400 text-xs">Revoked</span>
@@ -353,7 +357,7 @@ export default function ApiKeyManager() {
             },
             {
               key: "actions",
-              header: "Aksi",
+              header: t("actions"),
               headerClassName: "text-right",
               cellClassName: "text-right",
               render: (key) =>
@@ -361,7 +365,7 @@ export default function ApiKeyManager() {
                   <button
                     onClick={() => handleRevoke(key.id)}
                     className="p-1.5 hover:bg-red-900/50 rounded text-gray-400 hover:text-red-300 transition-colors"
-                    title="Revoke"
+                    title={t("revoke")}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -375,7 +379,7 @@ export default function ApiKeyManager() {
           emptyState={
             <div className="text-center py-20 text-gray-500">
               <Key className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Belum ada API keys</p>
+              <p>{t("noApiKeys")}</p>
             </div>
           }
         />

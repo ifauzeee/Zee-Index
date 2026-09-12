@@ -25,7 +25,7 @@ export default function TwoFactorAuthSetup() {
     setIsLoading(true);
     try {
       const response = await fetch("/api/auth/2fa/status");
-      if (!response.ok) throw new Error("Gagal memeriksa status 2FA.");
+      if (!response.ok) throw new Error(t("statusFailed"));
       const data = await response.json();
       setIsEnabled(data.isEnabled);
     } catch (err: unknown) {
@@ -36,7 +36,7 @@ export default function TwoFactorAuthSetup() {
     } finally {
       setIsLoading(false);
     }
-  }, [addToast]);
+  }, [addToast, t]);
 
   useEffect(() => {
     if (session?.user) {
@@ -51,7 +51,7 @@ export default function TwoFactorAuthSetup() {
       const response = await fetch("/api/auth/2fa/generate", {
         method: "POST",
       });
-      if (!response.ok) throw new Error("Gagal membuat kode QR.");
+      if (!response.ok) throw new Error(t("qrGenerateFailed"));
       const data = await response.json();
       setQrCodeDataURL(data.qrCodeDataURL);
     } catch (err: unknown) {
@@ -72,8 +72,8 @@ export default function TwoFactorAuthSetup() {
         body: JSON.stringify({ token: verificationCode }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Verifikasi gagal.");
-      addToast({ message: "2FA berhasil diaktifkan!", type: "success" });
+      if (!response.ok) throw new Error(data.error || t("verifyFailed"));
+      addToast({ message: t("enabledSuccess"), type: "success" });
       setIsEnabled(true);
       setQrCodeDataURL(null);
       setVerificationCode("");
@@ -101,10 +101,10 @@ export default function TwoFactorAuthSetup() {
       return;
     }
     if (
-      !(await confirm(
-        "Apakah Anda yakin ingin menonaktifkan Autentikasi Dua Faktor?",
-        { variant: "destructive", title: "Nonaktifkan 2FA" },
-      ))
+      !(await confirm(t("disableConfirm"), {
+        variant: "destructive",
+        title: t("disableTitle"),
+      }))
     )
       return;
     setIsLoading(true);
@@ -116,10 +116,9 @@ export default function TwoFactorAuthSetup() {
         body: JSON.stringify({ token: verificationCode }),
       });
       const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.error || "Gagal menonaktifkan 2FA.");
+      if (!response.ok) throw new Error(data.error || t("disableFailed"));
 
-      addToast({ message: "2FA berhasil dinonaktifkan.", type: "info" });
+      addToast({ message: t("disabledSuccess"), type: "info" });
       setIsEnabled(false);
       setShowDisableForm(false);
       setVerificationCode("");

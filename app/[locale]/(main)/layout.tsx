@@ -38,7 +38,11 @@ const AppFooter = () => {
   const currentYear = new Date().getFullYear();
   const t = useTranslations("Footer");
 
-  const displayValue = isPending ? "..." : isError ? (data ?? "Gagal") : data;
+  const displayValue = isPending
+    ? "..."
+    : isError
+      ? (data ?? t("failed"))
+      : data;
 
   return (
     <footer className="text-center py-6 text-sm text-muted-foreground bg-background mb-16 lg:mb-0 w-full overflow-hidden">

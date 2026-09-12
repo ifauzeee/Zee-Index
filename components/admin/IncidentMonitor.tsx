@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import {
   AlertTriangle,
@@ -100,6 +101,7 @@ export default function IncidentMonitor() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [offset, setOffset] = useState(0);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const t = useTranslations("AdminPage");
 
   const fetchIncidents = useCallback(async () => {
     setLoading(true);
@@ -117,11 +119,11 @@ export default function IncidentMonitor() {
       setTotal(data.total || 0);
       setOpenCount(data.openCount || 0);
     } catch {
-      setError("Gagal memuat insiden");
+      setError(t("incidentLoadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [offset, statusFilter]);
+  }, [offset, statusFilter, t]);
 
   useEffect(() => {
     fetchIncidents();
@@ -137,7 +139,7 @@ export default function IncidentMonitor() {
       if (!res.ok) throw new Error("Failed to evaluate");
       await fetchIncidents();
     } catch {
-      setError("Gagal menjalankan evaluasi aturan");
+      setError(t("incidentEvalFailed"));
     } finally {
       setEvalLoading(false);
     }
@@ -155,7 +157,7 @@ export default function IncidentMonitor() {
       if (!res.ok) throw new Error("Failed to update");
       await fetchIncidents();
     } catch {
-      setError("Gagal memperbarui status insiden");
+      setError(t("incidentUpdateFailed"));
     } finally {
       setActionLoading(null);
     }
@@ -181,9 +183,7 @@ export default function IncidentMonitor() {
             <h1 className="text-3xl font-bold text-white tracking-tight">
               Incident Monitor
             </h1>
-            <p className="text-gray-400 mt-1">
-              Pantau dan kelola insiden keamanan &amp; sistem
-            </p>
+            <p className="text-gray-400 mt-1">{t("incidentSubtitle")}</p>
           </div>
           <div className="flex items-center gap-3">
             {openCount > 0 && (
@@ -236,7 +236,7 @@ export default function IncidentMonitor() {
                   : "bg-gray-800 text-gray-400 hover:bg-gray-700"
               }`}
             >
-              {s === "all" && "Semua"}
+              {s === "all" && t("all")}
               {s === "open" && "Open"}
               {s === "acknowledged" && "Acknowledged"}
               {s === "resolved" && "Resolved"}
@@ -250,7 +250,7 @@ export default function IncidentMonitor() {
         ) : incidents.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
             <ShieldAlert className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>Tidak ada insiden</p>
+            <p>{t("noIncidents")}</p>
           </div>
         ) : (
           <div className="space-y-3">
