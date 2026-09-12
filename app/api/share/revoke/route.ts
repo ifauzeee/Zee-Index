@@ -29,18 +29,26 @@ export const POST = createAdminRoute(
         ex: expiresInSeconds,
       });
 
+      let persistedRevocation = true;
       try {
         await db.shareLink.update({
           where: { jti },
           data: { revokedAt: new Date() },
         });
       } catch (err) {
+        persistedRevocation = false;
         logger.warn({ err, jti }, "ShareLink DB row missing on revoke");
       }
 
       return NextResponse.json({
         success: true,
         message: "Tautan berhasil dibatalkan.",
+        ...(persistedRevocation
+          ? {}
+          : {
+              warning:
+                "Perubahan hanya tersimpan sementara. Token akan kembali valid setelah server restart.",
+            }),
       });
     } catch (error) {
       logger.error({ err: error }, "Error revoking share link");
