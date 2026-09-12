@@ -301,26 +301,23 @@ export default async function middleware(request: NextRequest) {
         : DEFAULT_LOCALE;
       const translations = {
         en: {
-          title: "Access Denied - Zee Index",
+          title: "Access Denied",
           heading: "Access Denied",
-          message:
-            "Sorry, only administrators can access the Setup page.<br>Please login with an admin account.",
+          message: "Only administrators can access the Setup page.",
           button: "Login as Admin",
           footer: "Zee Index",
         },
         id: {
-          title: "Akses Ditolak - Zee Index",
+          title: "Akses Ditolak",
           heading: "Akses Ditolak",
-          message:
-            "Maaf, hanya admin yang dapat mengakses halaman Setup.<br>Silakan login dengan akun admin.",
+          message: "Hanya admin yang dapat mengakses halaman Setup.",
           button: "Login sebagai Admin",
           footer: "Zee Index",
         },
         "zh-TW": {
-          title: "拒絕訪問 - Zee Index",
+          title: "拒絕訪問",
           heading: "拒絕訪問",
-          message:
-            "抱歉，只有管理員才能訪問設置頁面。<br>請使用管理員帳戶登錄。",
+          message: "只有管理員才能訪問設置頁面。",
           button: "以管理員身分登錄",
           footer: "Zee Index",
         },
@@ -343,72 +340,48 @@ export default async function middleware(request: NextRequest) {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       display: flex; align-items: center; justify-content: center;
       min-height: 100vh;
-      background: #0b0d14;
-      color: #e2e8f0;
+      background: hsl(222.2, 84%, 4.9%);
+      color: hsl(210, 40%, 98%);
       -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      background-image: radial-gradient(circle at top right, rgba(30, 41, 59, 0.4), transparent 50%), radial-gradient(circle at bottom left, rgba(15, 23, 42, 0.6), transparent 50%);
     }
-    .container { 
-      display: flex; flex-direction: column; align-items: center; justify-content: center; 
-      padding: 2rem; width: 100%; max-width: 500px; text-align: center;
-      animation: fadeIn 0.5s ease-out;
+    .container {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 2rem; width: 100%; max-width: 400px; text-align: center;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .icon-wrapper {
+    .icon {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 5rem; height: 5rem;
-      background: rgba(239, 68, 68, 0.1);
+      width: 3rem; height: 3rem;
+      background: hsl(215, 20.2%, 15%);
       border-radius: 50%;
-      margin-bottom: 2rem;
-      position: relative;
+      margin-bottom: 1.5rem;
     }
-    .icon-wrapper::after {
-      content: '';
-      position: absolute;
-      inset: -0.5rem;
-      border-radius: 50%;
-      border: 1px solid rgba(239, 68, 68, 0.2);
-      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: .5; transform: scale(1.05); }
-    }
-    .icon-wrapper svg { width: 2.5rem; height: 2.5rem; color: #ef4444; }
+    .icon svg { width: 1.5rem; height: 1.5rem; color: hsl(215, 20.2%, 65.1%); }
     h1 {
-      font-size: 2.5rem; font-weight: 700; letter-spacing: -0.025em;
-      margin-bottom: 1rem;
-      background: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-size: 1.5rem; font-weight: 600;
+      margin-bottom: 0.5rem;
     }
-    p { color: #94a3b8; line-height: 1.6; margin-bottom: 2.5rem; font-size: 1.125rem; }
+    p {
+      color: hsl(215, 20.2%, 65.1%);
+      line-height: 1.5; margin-bottom: 1.5rem;
+      font-size: 0.9375rem;
+    }
     .btn {
-      display: inline-flex; align-items: center; gap: 0.75rem;
-      padding: 0.875rem 1.75rem;
-      background: #f8fafc; color: #0f172a;
-      text-decoration: none; border-radius: 0.75rem;
-      font-weight: 600; font-size: 1rem;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.625rem 1.5rem;
+      background: hsl(210, 40%, 98%);
+      color: hsl(222.2, 47.4%, 11.2%);
+      text-decoration: none; border-radius: 0.5rem;
+      font-weight: 500; font-size: 0.875rem;
+      transition: opacity 0.15s;
     }
-    .btn:hover { 
-      background: #ffffff; 
-      transform: translateY(-2px); 
-      box-shadow: 0 10px 25px -5px rgba(248, 250, 252, 0.2), 0 8px 10px -6px rgba(248, 250, 252, 0.1); 
-    }
-    .btn:active { transform: translateY(0); }
-    .btn svg { width: 1.25rem; height: 1.25rem; transition: transform 0.2s; }
-    .btn:hover svg { transform: translateX(2px); }
-    .footer { margin-top: 4rem; font-size: 0.875rem; color: #475569; }
+    .btn:hover { opacity: 0.9; }
+    .btn svg { width: 1rem; height: 1rem; }
+    .footer { margin-top: 3rem; font-size: 0.75rem; color: hsl(215, 20.2%, 40%); }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="icon-wrapper">
+    <div class="icon">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
         <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
