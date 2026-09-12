@@ -243,10 +243,16 @@ export async function verifyShareTokenString(token: string): Promise<boolean> {
       return false;
     }
 
-    const shareRecord = await db.shareLink.findUnique({
-      where: { jti: payload.jti },
-    });
-    if (!shareRecord || shareRecord.revokedAt) {
+    const validCacheKey = `share:token:valid:${payload.jti}`;
+    const cachedValid = memoryCache.get<boolean>(validCacheKey);
+    if (cachedValid === null) {
+      const shareRecord = await db.shareLink.findUnique({
+        where: { jti: payload.jti },
+      });
+      const isValid = !!shareRecord && !shareRecord.revokedAt;
+      memoryCache.set(validCacheKey, isValid, 30_000);
+      if (!isValid) return false;
+    } else if (!cachedValid) {
       return false;
     }
 

@@ -167,7 +167,11 @@ export const GET = createPublicRoute(
       const filteredFiles = await Promise.all(
         processedFiles.map(async (file) => {
           if (isAdmin) return file;
-          const restricted = await isAccessRestricted(file.id, allowedTokens);
+          const restricted = await isAccessRestricted(
+            file.id,
+            allowedTokens,
+            session?.user?.email,
+          );
           return restricted ? null : file;
         }),
       );
@@ -204,6 +208,7 @@ export const GET = createPublicRoute(
                 const restricted = await isAccessRestricted(
                   f.id,
                   allowedTokens,
+                  session?.user?.email,
                 );
                 return restricted ? null : f;
               }),

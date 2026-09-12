@@ -892,7 +892,8 @@
     "scanQr": "1. 請使用驗證器應用程式（例如 Google Authenticator）掃描此 QR Code。",
     "qrAlt": "雙重驗證 QR Code",
     "enterCode": "2. 請輸入應用程式中顯示的 6 位數驗證碼以完成設定。",
-    "verify": "驗證"
+    "verify": "驗證",
+    "disableCodePrompt": "請輸入驗證器應用程式中的驗證碼以停用雙重驗證。"
   },
   "TagManager": {
     "newLabelPlaceholder": "新標籤...",

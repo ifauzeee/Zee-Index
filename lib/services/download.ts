@@ -100,27 +100,23 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
           throw new Error(ERROR_MESSAGES.SHARE_LINK_REVOKED);
         }
 
-        if (shareRecord) {
-          if (
-            shareRecord.maxUses !== null &&
-            shareRecord.views >= shareRecord.maxUses
-          ) {
-            throw new Error(
-              "Batas maksimum unduhan/akses untuk tautan ini telah tercapai.",
-            );
-          }
-          if (
-            shareRecord.preventDownload &&
-            !range &&
-            request.headers.get("sec-fetch-dest") === "document"
-          ) {
-            throw new Error("Unduhan dinonaktifkan untuk file ini.");
-          }
+        if (
+          shareRecord.maxUses !== null &&
+          shareRecord.views >= shareRecord.maxUses
+        ) {
+          throw new Error(
+            "Batas maksimum unduhan/akses untuk tautan ini telah tercapai.",
+          );
+        }
+        if (
+          shareRecord.preventDownload &&
+          !range &&
+          request.headers.get("sec-fetch-dest") === "document"
+        ) {
+          throw new Error("Unduhan dinonaktifkan untuk file ini.");
         }
 
-        const isLoginRequired = shareRecord
-          ? shareRecord.loginRequired
-          : !!payload.loginRequired;
+        const isLoginRequired = shareRecord.loginRequired;
         if (isLoginRequired && !session) {
           throw new Error("Login required.");
         }
