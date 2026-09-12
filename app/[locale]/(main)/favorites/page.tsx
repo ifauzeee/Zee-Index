@@ -125,6 +125,10 @@ export default function FavoritesPage() {
             icon={StarOff}
             title={t("emptyTitle")}
             message={t("emptyMessage")}
+            action={{
+              label: t("browseAllFiles"),
+              onClick: () => router.push("/"),
+            }}
           />
         </div>
       )}

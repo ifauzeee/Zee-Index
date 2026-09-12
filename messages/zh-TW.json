@@ -21,7 +21,8 @@
     "wrongCredentials": "憑證不正確。",
     "accessGranted": "已授權存取！",
     "failedPrefetch": "預先載入失敗",
-    "folderDefaultName": "資料夾"
+    "folderDefaultName": "資料夾",
+    "errorFallback": "載入檔案資料失敗。"
   },
   "Common": {
     "loading": "載入中...",
@@ -382,7 +383,8 @@
     "requireAccountMessage": "你必須使用 Google 帳號登入才能收藏檔案或資料夾。",
     "loadError": "取得收藏失敗。",
     "locationError": "找不到檔案位置。",
-    "genericError": "發生錯誤。"
+    "genericError": "發生錯誤。",
+    "browseAllFiles": "瀏覽所有檔案"
   },
   "AdminPage": {
     "title": "管理員儀表板",
@@ -475,11 +477,58 @@
     "inviteFailed": "邀請使用者失敗",
     "roleUser": "使用者",
     "roleEditor": "編輯者",
-    "roleAdmin": "管理員"
+    "roleAdmin": "管理員",
+    "shareLinkSubtitle": "管理已建立的所有分享連結",
+    "shareLinkLoadFailed": "載入分享連結清單失敗",
+    "revokeShareLinkConfirm": "要撤銷「{itemName}」的分享連結嗎？",
+    "revokeShareLinkTitle": "撤銷連結",
+    "confirmRevoke": "是，撤銷",
+    "deleteShareLinkConfirm": "要永久刪除「{itemName}」的分享連結嗎？",
+    "deleteShareLinkTitle": "刪除連結",
+    "confirmDeleteLink": "是，刪除",
+    "shareLinkRevokeFailed": "撤銷連結失敗",
+    "shareLinkDeleteFailed": "刪除連結失敗",
+    "shareLinkSearchPlaceholder": "依名稱、路徑或建立者搜尋...",
+    "all": "全部",
+    "creator": "建立者",
+    "views": "瀏覽次數",
+    "validUntil": "有效期限",
+    "status": "狀態",
+    "actions": "操作",
+    "collection": "收藏集",
+    "copyUrl": "複製網址",
+    "revoke": "撤銷",
+    "noShareLinks": "尚無分享連結",
+    "noMatchFilter": "沒有符合篩選條件的連結",
+    "linksOfTotal": "{total} 個連結中的 {filtered}",
+    "linksTotal": "共 {total} 個連結",
+    "apiKeySubtitle": "管理供外部存取使用的 API 金鑰",
+    "apiKeyLoadFailed": "載入 API 金鑰失敗",
+    "apiKeyCreateFailed": "建立 API 金鑰失敗",
+    "revokeApiKeyConfirm": "確定要撤銷此 API 金鑰嗎？",
+    "revokeApiKeyTitle": "撤銷 API 金鑰",
+    "apiKeyRevokeFailed": "撤銷 API 金鑰失敗",
+    "createKey": "建立金鑰",
+    "apiKeyCreatedNotice": "API 金鑰建立成功！請立即複製——之後將不再顯示。",
+    "createApiKeyTitle": "建立新的 API 金鑰",
+    "name": "名稱",
+    "apiKeyNamePlaceholder": "範例：CI Script、Backup Service",
+    "create": "建立",
+    "lastUsed": "上次使用時間",
+    "created": "建立時間",
+    "noApiKeys": "尚無 API 金鑰",
+    "incidentSubtitle": "監控並管理安全性與系統事件",
+    "incidentLoadFailed": "載入事件失敗",
+    "incidentEvalFailed": "執行規則評估失敗",
+    "incidentUpdateFailed": "更新事件狀態失敗",
+    "noIncidents": "沒有任何事件",
+    "shareLinkUpdateSuccess": "分享連結設定已成功更新。",
+    "shareLinkUpdateFailed": "更新分享連結失敗。"
   },
   "Footer": {
     "dataUsage": "總資料使用量：",
-    "rightsReserved": "版權所有 -"
+    "rightsReserved": "版權所有 -",
+    "failed": "失敗"
   },
   "RequestPage": {
     "invalidLink": "此連結無效或已到期。",
@@ -663,6 +712,7 @@
     "moving": "移動中...",
     "moveSuccess": "移動成功",
     "moveFailed": "移動失敗",
+    "moveLocationError": "無法取得目前位置。",
     "selected": "已選取 {count} 個",
     "move": "移動",
     "copy": "複製",
@@ -691,7 +741,8 @@
     "accessGranted": "已授權存取",
     "requestRejected": "已拒絕請求",
     "loadError": "載入資料失敗：",
-    "deleteError": "刪除失敗"
+    "deleteError": "刪除失敗",
+    "processFailed": "處理失敗"
   },
   "ManualDrivesManager": {
     "title": "共用雲端硬碟管理",
@@ -875,7 +926,8 @@
     "emptyHint": "請使用上方的表單新增第一個資料夾。",
     "localStorage": "本機儲存空間",
     "encrypted": "已加密",
-    "folder": "資料夾"
+    "folder": "資料夾",
+    "fetchFailed": "取得資料夾資料失敗。"
   },
   "AuthModal": {
     "userIdPlaceholder": "使用者 ID",
@@ -893,7 +945,15 @@
     "qrAlt": "雙重驗證 QR Code",
     "enterCode": "2. 請輸入應用程式中顯示的 6 位數驗證碼以完成設定。",
     "verify": "驗證",
-    "disableCodePrompt": "請輸入驗證器應用程式中的驗證碼以停用雙重驗證。"
+    "disableCodePrompt": "請輸入驗證器應用程式中的驗證碼以停用雙重驗證。",
+    "statusFailed": "檢查雙重驗證狀態失敗。",
+    "qrGenerateFailed": "產生 QR Code 失敗。",
+    "verifyFailed": "驗證失敗。",
+    "enabledSuccess": "雙重驗證已成功啟用！",
+    "disableConfirm": "確定要停用雙重驗證嗎？",
+    "disableTitle": "停用雙重驗證",
+    "disableFailed": "停用雙重驗證失敗。",
+    "disabledSuccess": "雙重驗證已成功停用。"
   },
   "TagManager": {
     "newLabelPlaceholder": "新標籤...",
@@ -1207,7 +1267,8 @@
     "resetZoom": "重設縮放"
   },
   "GlobalAudioPlayer": {
-    "queue": "播放佇列（{count}）"
+    "queue": "播放佇列（{count}）",
+    "loadFailed": "載入音訊失敗"
   },
   "ProfilePage": {
     "title": "我的個人檔案",
@@ -1260,5 +1321,30 @@
     "folderIdRequired": "需要資料夾 ID",
     "missingFileId": "缺少 fileId",
     "missingData": "缺少數據"
+  },
+  "FileErrors": {
+    "protectedFolder": "此資料夾需要驗證。",
+    "localLocked": "本機儲存空間已鎖定",
+    "fetchFiles": "載入檔案資料失敗。",
+    "fetchFolder": "載入資料夾資料失敗。",
+    "loadData": "載入資料失敗。",
+    "moveFailed": "移動項目失敗。",
+    "moveSuccess": "項目已成功移動。"
+  },
+  "FolderReadme": {
+    "loadFailed": "載入 README 失敗",
+    "saveSuccess": "README 已成功儲存",
+    "saveFailed": "儲存 README 失敗",
+    "cancel": "取消",
+    "saving": "儲存中...",
+    "save": "儲存"
+  },
+  "Auth": {
+    "verify2faTitle": "雙步驟驗證",
+    "verify2faDesc": "請輸入驗證器應用程式中的 6 位數驗證碼。",
+    "errorInvalid": "驗證碼必須為 6 位數。",
+    "verifyButton": "驗證",
+    "backToLogin": "返回登入",
+    "verifyFailed": "驗證 2FA 失敗"
   }
 }
