@@ -96,6 +96,10 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
             where: { jti: payload.jti as string },
           })) || undefined;
 
+        if (!shareRecord || shareRecord.revokedAt) {
+          throw new Error(ERROR_MESSAGES.SHARE_LINK_REVOKED);
+        }
+
         if (shareRecord) {
           if (
             shareRecord.maxUses !== null &&
