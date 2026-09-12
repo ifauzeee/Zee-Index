@@ -305,11 +305,9 @@ export const GET = createPublicRoute(
           "Cache-Control": "private, max-age=60, stale-while-revalidate=600",
         },
       });
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Internal error.";
+    } catch {
       return NextResponse.json(
-        { error: "Failed to fetch path", details: errorMessage },
+        { error: "Failed to fetch path" },
         { status: 500 },
       );
     }

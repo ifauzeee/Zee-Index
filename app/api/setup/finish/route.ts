@@ -153,14 +153,15 @@ export const POST = createPublicRoute(
         );
       }
 
-      const manualConfigData = writeSuccess
-        ? null
-        : {
-            GOOGLE_CLIENT_ID: clientId,
-            GOOGLE_CLIENT_SECRET: clientSecret,
-            GOOGLE_REFRESH_TOKEN: tokenData.refresh_token,
-            NEXT_PUBLIC_ROOT_FOLDER_ID: rootFolderId,
-          };
+      const manualConfigData =
+        writeSuccess || session?.user?.role !== "ADMIN"
+          ? null
+          : {
+              GOOGLE_CLIENT_ID: clientId,
+              GOOGLE_CLIENT_SECRET: clientSecret,
+              GOOGLE_REFRESH_TOKEN: tokenData.refresh_token,
+              NEXT_PUBLIC_ROOT_FOLDER_ID: rootFolderId,
+            };
 
       try {
         await invalidateAccessToken();
@@ -180,10 +181,11 @@ export const POST = createPublicRoute(
           ? "Konfigurasi berhasil diperbarui di file .env. PENTING: Anda HARUS me-restart container/aplikasi agar perubahan ini terbaca."
           : "Gagal menulis ke .env secara otomatis. Silakan salin nilai ini secara manual.",
       });
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Internal Server Error";
-      return NextResponse.json({ error: errorMessage }, { status: 500 });
+    } catch {
+      return NextResponse.json(
+        { error: "Terjadi kesalahan internal." },
+        { status: 500 },
+      );
     }
   },
   { rateLimit: false, bodySchema: setupFinishSchema, includeSession: true },

@@ -221,6 +221,19 @@ export const POST = createPublicRoute(
         }
 
         if (uploadUrl.startsWith("local-storage-upload://")) {
+          const parsed = uploadUrl.replace("local-storage-upload://", "");
+          const parentIdEncoded = parsed.substring(0, parsed.indexOf("/"));
+          const parentId = decodeURIComponent(parentIdEncoded);
+          if (
+            parentId !== requestData.folderId &&
+            !parentId.startsWith(`${requestData.folderId}/`)
+          ) {
+            return NextResponse.json(
+              { error: "Folder tujuan upload tidak valid." },
+              { status: 403 },
+            );
+          }
+
           const { saveLocalChunk } = await import("@/lib/storage/local");
           const chunkBuffer = await request.arrayBuffer();
 
@@ -307,9 +320,10 @@ export const POST = createPublicRoute(
       }
     } catch (error: unknown) {
       logger.error({ err: error }, "Public Upload Error");
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      return NextResponse.json({ error: errorMessage }, { status: 500 });
+      return NextResponse.json(
+        { error: "Terjadi kesalahan internal." },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });

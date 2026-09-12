@@ -64,7 +64,7 @@ export const GET = createPublicRoute(
           : "Terjadi kesalahan tidak dikenal.";
       logger.error({ err: errorMessage }, "File Details API Error");
       return NextResponse.json(
-        { error: "Gagal mengambil detail file.", details: errorMessage },
+        { error: "Gagal mengambil detail file." },
         { status: 500 },
       );
     }

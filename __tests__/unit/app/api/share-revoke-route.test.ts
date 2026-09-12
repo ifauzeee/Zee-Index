@@ -29,6 +29,14 @@ vi.mock("@/lib/api-middleware", () => ({
   },
 }));
 
+vi.mock("@/lib/db", () => ({
+  db: {
+    shareLink: {
+      update: vi.fn().mockResolvedValue({}),
+    },
+  },
+}));
+
 vi.mock("@/lib/kv", () => ({
   kv: { set: mockKvSet },
 }));

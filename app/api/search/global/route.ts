@@ -182,7 +182,7 @@ export const GET = createPublicRoute(
           fullText: searchType === "fullText",
           limit: 100,
         });
-        const fromIndex: DriveFile[] = indexedFiles.map(
+        let fromIndex: DriveFile[] = indexedFiles.map(
           (f) =>
             ({
               id: f.id,
@@ -196,6 +196,20 @@ export const GET = createPublicRoute(
               contentText: f.contentText,
             }) as DriveFile,
         );
+
+        if (!isAdmin) {
+          fromIndex = (
+            await Promise.all(
+              fromIndex.map(async (f) => {
+                const restricted = await isAccessRestricted(
+                  f.id,
+                  allowedTokens,
+                );
+                return restricted ? null : f;
+              }),
+            )
+          ).filter((f): f is DriveFile => f !== null);
+        }
         const seen = new Set(merged.map((f) => f.id));
         for (const file of fromIndex) {
           if (!seen.has(file.id)) {
@@ -215,7 +229,7 @@ export const GET = createPublicRoute(
           : "Terjadi kesalahan tidak dikenal.";
       logger.error({ err: errorMessage }, "Global Search API Error");
       return NextResponse.json(
-        { error: "Failed to perform global search.", details: errorMessage },
+        { error: "Failed to perform global search." },
         { status: 500 },
       );
     }

@@ -243,6 +243,13 @@ export async function verifyShareTokenString(token: string): Promise<boolean> {
       return false;
     }
 
+    const shareRecord = await db.shareLink.findUnique({
+      where: { jti: payload.jti },
+    });
+    if (!shareRecord || shareRecord.revokedAt) {
+      return false;
+    }
+
     if (payload.loginRequired) {
       const session = await auth();
       return !!session;

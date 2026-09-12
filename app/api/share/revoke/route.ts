@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
+import { db } from "@/lib/db";
 import { kv } from "@/lib/kv";
 import { REDIS_KEYS } from "@/lib/constants";
 import { shareRevokeRequestSchema } from "@/lib/link-payloads";
@@ -27,6 +28,15 @@ export const POST = createAdminRoute(
       await kv.set(`${REDIS_KEYS.SHARE_BLOCKED}${jti}`, "blocked", {
         ex: expiresInSeconds,
       });
+
+      try {
+        await db.shareLink.update({
+          where: { jti },
+          data: { revokedAt: new Date() },
+        });
+      } catch (err) {
+        logger.warn({ err, jti }, "ShareLink DB row missing on revoke");
+      }
 
       return NextResponse.json({
         success: true,
