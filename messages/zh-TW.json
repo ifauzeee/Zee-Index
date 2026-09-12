@@ -1299,5 +1299,11 @@
     "verifyButton": "驗證",
     "backToLogin": "返回登入",
     "verifyFailed": "驗證 2FA 失敗"
+  },
+  "EmptyContextMenu": {
+    "newFolder": "新增資料夾",
+    "uploadFiles": "上傳檔案",
+    "uploadFolder": "上傳資料夾",
+    "cancel": "取消"
   }
 }

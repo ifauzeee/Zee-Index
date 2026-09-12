@@ -1299,5 +1299,11 @@
     "verifyButton": "Verify",
     "backToLogin": "Back to Login",
     "verifyFailed": "Failed to verify 2FA"
+  },
+  "EmptyContextMenu": {
+    "newFolder": "New folder",
+    "uploadFiles": "Upload files",
+    "uploadFolder": "Upload folder",
+    "cancel": "Cancel"
   }
 }

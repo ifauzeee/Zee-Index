@@ -1299,5 +1299,11 @@
     "verifyButton": "Verifikasi",
     "backToLogin": "Kembali ke Login",
     "verifyFailed": "Gagal memverifikasi 2FA"
+  },
+  "EmptyContextMenu": {
+    "newFolder": "Folder baru",
+    "uploadFiles": "Unggah file",
+    "uploadFolder": "Unggah folder",
+    "cancel": "Batal"
   }
 }

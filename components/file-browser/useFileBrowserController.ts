@@ -59,6 +59,10 @@ export function useFileBrowserController({
     null,
   );
   const [showHistory, setShowHistory] = useState(false);
+  const [emptyContextMenu, setEmptyContextMenu] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   const sort = useAppStore((state) => state.sort);
   const setSort = useAppStore((state) => state.setSort);
@@ -402,6 +406,24 @@ export function useFileBrowserController({
     [isBulkMode, shareToken, fileActions],
   );
 
+  const handleEmptyAreaContextMenu = useCallback(
+    (e: React.MouseEvent) => {
+      if (isBulkMode || shareToken) return;
+      if (!canEdit) {
+        e.preventDefault();
+        return;
+      }
+      e.preventDefault();
+      setEmptyContextMenu({ x: e.clientX, y: e.clientY });
+    },
+    [isBulkMode, shareToken, canEdit],
+  );
+
+  const openUploadModal = useCallback(() => {
+    setEmptyContextMenu(null);
+    upload.setIsUploadModalOpen(true);
+  }, [upload]);
+
   const handleQuickShare = (
     event: FileBrowserActionEvent,
     file: BrowserFile,
@@ -533,6 +555,7 @@ export function useFileBrowserController({
       uploads: upload.uploads,
       onItemClick: handleItemClick,
       onContextMenu: handleContextMenuWrapper,
+      onEmptyAreaContextMenu: handleEmptyAreaContextMenu,
       onShareClick: handleQuickShare,
       onDetailsClick: (event: FileBrowserActionEvent, file: BrowserFile) => {
         event.stopPropagation();
@@ -580,6 +603,9 @@ export function useFileBrowserController({
       setDetailsFile,
       isUploadModalOpen: upload.isUploadModalOpen,
       setIsUploadModalOpen: upload.setIsUploadModalOpen,
+      emptyContextMenu,
+      onEmptyContextMenuAction: openUploadModal,
+      onCloseEmptyContextMenu: () => setEmptyContextMenu(null),
       droppedFiles: upload.droppedFiles,
       handleFileSelect: upload.handleFileSelect,
       handleDragOver: upload.handleDragOver,
