@@ -2,6 +2,7 @@
 
 import { SessionProvider } from "next-auth/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ModalProvider } from "@/components/providers/ModalProvider";
@@ -12,7 +13,11 @@ type Props = {
   nonce?: string;
 };
 
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+const ReactQueryDevtools = dynamic(
+  () =>
+    import("@tanstack/react-query-devtools").then((m) => m.ReactQueryDevtools),
+  { ssr: false },
+);
 
 export function Providers({ children, nonce }: Props) {
   const [queryClient] = useState(

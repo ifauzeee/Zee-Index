@@ -22,9 +22,13 @@ import { useRouter } from "next/navigation";
 import type { AdminStats } from "@/lib/adminStats";
 import SystemHealth from "@/components/admin/SystemHealth";
 import RealTimeOverview from "@/components/admin/RealTimeOverview";
-import StorageIntelligence from "@/components/admin/StorageIntelligence";
 import { StatCardSkeleton, ChartSkeleton } from "@/components/admin/skeletons";
 import { useTranslations } from "next-intl";
+
+const StorageIntelligence = dynamic(
+  () => import("@/components/admin/StorageIntelligence"),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
 
 const TodayDownloadsChart = dynamic(
   () => import("@/components/charts/TodayDownloadsChart"),
