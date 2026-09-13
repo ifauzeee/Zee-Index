@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useAppStore } from "@/lib/store";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
@@ -51,23 +52,27 @@ export default function ShareLinkManager() {
   const [isRefetching, setIsRefetching] = useState(false);
   const { addToast } = useAppStore();
   const { confirm } = useConfirm();
+  const t = useTranslations("AdminPage");
 
-  const fetchLinks = useCallback(async (isBackground = false) => {
-    if (isBackground) setIsRefetching(true);
-    else setLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/share/list");
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
-      setLinks(Array.isArray(data) ? data : []);
-    } catch {
-      setError("Gagal memuat daftar tautan berbagi");
-    } finally {
-      if (isBackground) setIsRefetching(false);
-      else setLoading(false);
-    }
-  }, []);
+  const fetchLinks = useCallback(
+    async (isBackground = false) => {
+      if (isBackground) setIsRefetching(true);
+      else setLoading(true);
+      setError("");
+      try {
+        const res = await fetch("/api/share/list");
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        setLinks(Array.isArray(data) ? data : []);
+      } catch {
+        setError(t("shareLinkLoadFailed"));
+      } finally {
+        if (isBackground) setIsRefetching(false);
+        else setLoading(false);
+      }
+    },
+    [t],
+  );
 
   useEffect(() => {
     fetchLinks();
@@ -102,10 +107,10 @@ export default function ShareLinkManager() {
 
   const handleRevoke = async (link: ShareLinkItem) => {
     const confirmed = await confirm(
-      `Cabut tautan berbagi untuk "${link.itemName}"?`,
+      t("revokeShareLinkConfirm", { itemName: link.itemName }),
       {
-        title: "Cabut Tautan",
-        confirmText: "Ya, Cabut",
+        title: t("revokeShareLinkTitle"),
+        confirmText: t("confirmRevoke"),
         variant: "destructive",
       },
     );
@@ -125,7 +130,7 @@ export default function ShareLinkManager() {
       await fetchLinks(true);
     } catch {
       await fetchLinks(true);
-      addToast({ message: "Gagal mencabut tautan", type: "error" });
+      addToast({ message: t("shareLinkRevokeFailed"), type: "error" });
     } finally {
       setActionLoading(null);
     }
@@ -133,10 +138,10 @@ export default function ShareLinkManager() {
 
   const handleDelete = async (link: ShareLinkItem) => {
     const confirmed = await confirm(
-      `Hapus permanen tautan berbagi untuk "${link.itemName}"?`,
+      t("deleteShareLinkConfirm", { itemName: link.itemName }),
       {
-        title: "Hapus Tautan",
-        confirmText: "Ya, Hapus",
+        title: t("deleteShareLinkTitle"),
+        confirmText: t("confirmDeleteLink"),
         variant: "destructive",
       },
     );
@@ -160,7 +165,7 @@ export default function ShareLinkManager() {
       await fetchLinks(true);
     } catch {
       await fetchLinks(true);
-      addToast({ message: "Gagal menghapus tautan", type: "error" });
+      addToast({ message: t("shareLinkDeleteFailed"), type: "error" });
     } finally {
       setActionLoading(null);
     }
@@ -199,9 +204,7 @@ export default function ShareLinkManager() {
                 <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
               )}
             </h1>
-            <p className="text-gray-400 mt-1">
-              Kelola semua tautan berbagi yang telah dibuat
-            </p>
+            <p className="text-gray-400 mt-1">{t("shareLinkSubtitle")}</p>
           </div>
           <a
             href="/admin"
@@ -226,7 +229,7 @@ export default function ShareLinkManager() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cari berdasarkan nama, path, atau pembuat..."
+              placeholder={t("shareLinkSearchPlaceholder")}
               className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-indigo-500"
             />
           </div>
@@ -241,9 +244,9 @@ export default function ShareLinkManager() {
                     : "bg-gray-800 text-gray-400 hover:bg-gray-700"
                 }`}
               >
-                {s === "all" && "Semua"}
-                {s === "active" && "Aktif"}
-                {s === "expired" && "Kedaluwarsa"}
+                {s === "all" && t("all")}
+                {s === "active" && t("active")}
+                {s === "expired" && t("expired")}
                 <span className="ml-1.5 opacity-60">{statusCounts[s]}</span>
               </button>
             ))}
@@ -265,7 +268,7 @@ export default function ShareLinkManager() {
                     </span>
                     {link.isCollection && (
                       <span className="ml-2 text-xs bg-blue-900/50 text-blue-300 px-1.5 py-0.5 rounded">
-                        koleksi
+                        {t("collection")}
                       </span>
                     )}
                   </div>
@@ -284,7 +287,7 @@ export default function ShareLinkManager() {
             },
             {
               key: "createdBy",
-              header: "Pembuat",
+              header: t("creator"),
               hideOnMobile: true,
               render: (link) => (
                 <span className="text-gray-400">{link.createdBy || "—"}</span>
@@ -292,7 +295,7 @@ export default function ShareLinkManager() {
             },
             {
               key: "viewCount",
-              header: "Dilihat",
+              header: t("views"),
               hideOnMobile: true,
               render: (link) => (
                 <span className="text-gray-400">{link.viewCount}</span>
@@ -300,7 +303,7 @@ export default function ShareLinkManager() {
             },
             {
               key: "expiresAt",
-              header: "Berlaku",
+              header: t("validUntil"),
               render: (link) => (
                 <span className="text-gray-400 text-xs">
                   {format(new Date(link.expiresAt), "dd MMM yyyy HH:mm", {
@@ -311,7 +314,7 @@ export default function ShareLinkManager() {
             },
             {
               key: "status",
-              header: "Status",
+              header: t("status"),
               render: (link) => {
                 const status = getExpiryStatus(link.expiresAt);
                 return (
@@ -323,7 +326,7 @@ export default function ShareLinkManager() {
             },
             {
               key: "actions",
-              header: "Aksi",
+              header: t("actions"),
               headerClassName: "text-right",
               cellClassName: "text-right",
               render: (link) => {
@@ -333,7 +336,7 @@ export default function ShareLinkManager() {
                     <button
                       onClick={() => handleCopyUrl(link)}
                       className="p-1.5 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors"
-                      title="Salin URL"
+                      title={t("copyUrl")}
                     >
                       {copiedId === link.id ? (
                         <Check className="w-4 h-4 text-emerald-400" />
@@ -346,7 +349,7 @@ export default function ShareLinkManager() {
                         onClick={() => handleRevoke(link)}
                         disabled={actionLoading === link.id}
                         className="p-1.5 hover:bg-amber-900/50 rounded text-gray-400 hover:text-amber-300 transition-colors"
-                        title="Cabut"
+                        title={t("revoke")}
                       >
                         {actionLoading === link.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -359,7 +362,7 @@ export default function ShareLinkManager() {
                       onClick={() => handleDelete(link)}
                       disabled={actionLoading === link.id}
                       className="p-1.5 hover:bg-red-900/50 rounded text-gray-400 hover:text-red-300 transition-colors"
-                      title="Hapus"
+                      title={t("deleteShareLinkTitle")}
                     >
                       {actionLoading === link.id ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -380,9 +383,7 @@ export default function ShareLinkManager() {
             <div className="text-center py-20 text-gray-500">
               <Share2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p>
-                {links.length === 0
-                  ? "Belum ada tautan berbagi"
-                  : "Tidak ada tautan yang sesuai filter"}
+                {links.length === 0 ? t("noShareLinks") : t("noMatchFilter")}
               </p>
             </div>
           }
@@ -393,7 +394,7 @@ export default function ShareLinkManager() {
                 <button
                   onClick={() => handleCopyUrl(link)}
                   className="p-1.5 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors"
-                  title="Salin URL"
+                  title={t("copyUrl")}
                 >
                   {copiedId === link.id ? (
                     <Check className="w-4 h-4 text-emerald-400" />
@@ -406,7 +407,7 @@ export default function ShareLinkManager() {
                     onClick={() => handleRevoke(link)}
                     disabled={actionLoading === link.id}
                     className="p-1.5 hover:bg-amber-900/50 rounded text-gray-400 hover:text-amber-300 transition-colors"
-                    title="Cabut"
+                    title={t("revoke")}
                   >
                     {actionLoading === link.id ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -419,7 +420,7 @@ export default function ShareLinkManager() {
                   onClick={() => handleDelete(link)}
                   disabled={actionLoading === link.id}
                   className="p-1.5 hover:bg-red-900/50 rounded text-gray-400 hover:text-red-300 transition-colors"
-                  title="Hapus"
+                  title={t("deleteShareLinkTitle")}
                 >
                   {actionLoading === link.id ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -436,8 +437,11 @@ export default function ShareLinkManager() {
         {!loading && links.length > 0 && (
           <div className="mt-4 text-xs text-gray-500 text-right">
             {filteredLinks.length !== links.length
-              ? `${filteredLinks.length} dari ${links.length} tautan`
-              : `${links.length} total tautan`}
+              ? t("linksOfTotal", {
+                  filtered: filteredLinks.length,
+                  total: links.length,
+                })
+              : t("linksTotal", { total: links.length })}
           </div>
         )}
       </div>

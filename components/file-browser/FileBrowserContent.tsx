@@ -41,6 +41,7 @@ interface FileBrowserContentProps {
     e: { clientX: number; clientY: number },
     file: BrowserFile,
   ) => void;
+  onEmptyAreaContextMenu: (e: React.MouseEvent) => void;
   onShareClick: (e: FileBrowserActionEvent, file: BrowserFile) => void;
   onDetailsClick: (e: FileBrowserActionEvent, file: BrowserFile) => void;
   onDownloadClick: (e: FileBrowserActionEvent, file: BrowserFile) => void;
@@ -76,6 +77,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
     uploads,
     onItemClick,
     onContextMenu,
+    onEmptyAreaContextMenu,
     onShareClick,
     onDetailsClick,
     onDownloadClick,
@@ -183,9 +185,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
               : tList("errorTitle") || "Error"}
           </h3>
           <p className="text-sm max-w-md mt-1">
-            {error.message ||
-              tList("errorMessage") ||
-              "Gagal mengambil data file."}
+            {error.message || tList("errorMessage") || t("errorFallback")}
           </p>
         </div>
       </div>
@@ -207,6 +207,9 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
       <AnimatePresence mode="wait">
         <motion.div
           key={currentFolderId || "root"}
+          className="select-none"
+          onDoubleClick={(e) => e.preventDefault()}
+          onContextMenu={onEmptyAreaContextMenu}
           initial={{ opacity: 0, scale: 0.98, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 1.02, y: -15 }}

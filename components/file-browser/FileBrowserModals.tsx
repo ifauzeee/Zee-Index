@@ -56,6 +56,7 @@ const FileDetail = dynamic(
 );
 
 import ContextMenu from "@/components/file-browser/ContextMenu";
+import EmptyAreaContextMenu from "@/components/file-browser/EmptyAreaContextMenu";
 import RenameModal from "@/components/modals/RenameModal";
 import DeleteConfirm from "@/components/modals/DeleteConfirm";
 import ShareButton from "@/components/file-browser/ShareButton";
@@ -91,6 +92,9 @@ interface FileBrowserModalsProps {
   setDetailsFile: (file: DriveFile | null) => void;
   isUploadModalOpen: boolean;
   setIsUploadModalOpen: (open: boolean) => void;
+  emptyContextMenu: { x: number; y: number } | null;
+  onEmptyContextMenuAction: () => void;
+  onCloseEmptyContextMenu: () => void;
   droppedFiles: FileList | null;
   handleFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleDragOver: (e: React.DragEvent) => void;
@@ -135,6 +139,9 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
     setDetailsFile,
     isUploadModalOpen,
     setIsUploadModalOpen,
+    emptyContextMenu,
+    onEmptyContextMenuAction,
+    onCloseEmptyContextMenu,
     droppedFiles,
     handleFileSelect,
     handleDragOver,
@@ -201,6 +208,17 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
             onClose={() => setImageEditorFile(null)}
           />
         </Suspense>
+      )}
+
+      {emptyContextMenu && (
+        <EmptyAreaContextMenu
+          x={emptyContextMenu.x}
+          y={emptyContextMenu.y}
+          onClose={onCloseEmptyContextMenu}
+          onNewFolder={onEmptyContextMenuAction}
+          onUploadFiles={onEmptyContextMenuAction}
+          onUploadFolder={onEmptyContextMenuAction}
+        />
       )}
 
       {contextMenu && (

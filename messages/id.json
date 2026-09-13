@@ -21,7 +21,8 @@
     "wrongCredentials": "Kredensial salah.",
     "accessGranted": "Akses diberikan!",
     "failedPrefetch": "Gagal memuat ulang",
-    "folderDefaultName": "Folder"
+    "folderDefaultName": "Folder",
+    "errorFallback": "Gagal mengambil data file."
   },
   "Common": {
     "loading": "Memuat...",
@@ -112,7 +113,6 @@
     "menu": "Menu",
     "notifications": "Notifikasi",
     "backToHome": "Kembali ke Beranda",
-    "tour": "Mulai Tur",
     "driveLogoAlt": "Logo Google Drive",
     "logoAlt": "Logo"
   },
@@ -323,6 +323,8 @@
       "accessDeniedText": "Anda tidak dapat mengakses halaman utama melalui tautan berbagi. Silakan gunakan tautan asli yang Anda terima.",
       "revokedTitle": "Akses Dicabut",
       "revokedText": "Akses ke tautan ini telah dicabut oleh administrator.",
+      "loginRequiredTitle": "Login Diperlukan",
+      "loginRequiredText": "Anda harus masuk untuk membuka tautan ini. Masuk dengan Google atau email dan kata sandi yang dikeluarkan administrator.",
       "guestDeniedTitle": "Akses Terbatas",
       "guestDeniedText": "Akses tamu tidak diizinkan untuk halaman ini. Silakan masuk menggunakan akun Google.",
       "guestLogoutTitle": "Sampai Jumpa! 👋",
@@ -380,7 +382,8 @@
     "requireAccountMessage": "Anda harus login dengan akun Google untuk dapat menyimpan file atau folder ke favorit.",
     "loadError": "Gagal mengambil data favorit.",
     "locationError": "Tidak dapat menemukan lokasi file.",
-    "genericError": "Terjadi galat."
+    "genericError": "Terjadi galat.",
+    "browseAllFiles": "Jelajahi Semua File"
   },
   "AdminPage": {
     "title": "Dasbor Admin",
@@ -473,11 +476,58 @@
     "inviteFailed": "Gagal mengundang pengguna",
     "roleUser": "Pengguna",
     "roleEditor": "Editor",
-    "roleAdmin": "Admin"
+    "roleAdmin": "Admin",
+    "shareLinkSubtitle": "Kelola semua tautan berbagi yang telah dibuat",
+    "shareLinkLoadFailed": "Gagal memuat daftar tautan berbagi",
+    "revokeShareLinkConfirm": "Cabut tautan berbagi untuk \"{itemName}\"?",
+    "revokeShareLinkTitle": "Cabut Tautan",
+    "confirmRevoke": "Ya, Cabut",
+    "deleteShareLinkConfirm": "Hapus permanen tautan berbagi untuk \"{itemName}\"?",
+    "deleteShareLinkTitle": "Hapus Tautan",
+    "confirmDeleteLink": "Ya, Hapus",
+    "shareLinkRevokeFailed": "Gagal mencabut tautan",
+    "shareLinkDeleteFailed": "Gagal menghapus tautan",
+    "shareLinkSearchPlaceholder": "Cari berdasarkan nama, path, atau pembuat...",
+    "all": "Semua",
+    "creator": "Pembuat",
+    "views": "Dilihat",
+    "validUntil": "Berlaku",
+    "status": "Status",
+    "actions": "Aksi",
+    "collection": "koleksi",
+    "copyUrl": "Salin URL",
+    "revoke": "Cabut",
+    "noShareLinks": "Belum ada tautan berbagi",
+    "noMatchFilter": "Tidak ada tautan yang sesuai filter",
+    "linksOfTotal": "{filtered} dari {total} tautan",
+    "linksTotal": "{total} total tautan",
+    "apiKeySubtitle": "Kelola API keys untuk akses eksternal",
+    "apiKeyLoadFailed": "Gagal memuat API keys",
+    "apiKeyCreateFailed": "Gagal membuat API key",
+    "revokeApiKeyConfirm": "Yakin ingin mencabut API key ini?",
+    "revokeApiKeyTitle": "Cabut API Key",
+    "apiKeyRevokeFailed": "Gagal mencabut API key",
+    "createKey": "Buat Key",
+    "apiKeyCreatedNotice": "API Key berhasil dibuat! Salin sekarang — tidak akan ditampilkan lagi.",
+    "createApiKeyTitle": "Buat API Key Baru",
+    "name": "Nama",
+    "apiKeyNamePlaceholder": "Contoh: CI Script, Backup Service",
+    "create": "Buat",
+    "lastUsed": "Terakhir Digunakan",
+    "created": "Dibuat",
+    "noApiKeys": "Belum ada API keys",
+    "incidentSubtitle": "Pantau dan kelola insiden keamanan & sistem",
+    "incidentLoadFailed": "Gagal memuat insiden",
+    "incidentEvalFailed": "Gagal menjalankan evaluasi aturan",
+    "incidentUpdateFailed": "Gagal memperbarui status insiden",
+    "noIncidents": "Tidak ada insiden",
+    "shareLinkUpdateSuccess": "Pengaturan tautan berhasil diperbarui.",
+    "shareLinkUpdateFailed": "Gagal memperbarui tautan berbagi."
   },
   "Footer": {
     "dataUsage": "Total Penggunaan Data:",
-    "rightsReserved": "Hak cipta dilindungi -"
+    "rightsReserved": "Hak cipta dilindungi -",
+    "failed": "Gagal"
   },
   "RequestPage": {
     "invalidLink": "Link ini tidak valid atau sudah kadaluarsa.",
@@ -547,6 +597,15 @@
     "understand": "Paham, Kembali ke Beranda",
     "refreshToken": "Refresh Token",
     "envNote": "Salin semua variabel di bawah ini dan tambahkan ke file .env Anda, lalu restart container/VPS jika perlu.",
+    "subtitleSa": "Akses Drive API menggunakan akun layanan Google Cloud. Bagikan folder root ke email akun layanan (Editor). Opsional: tambahkan OAuth untuk masuk dengan akun Google.",
+    "modeServiceAccount": "Akun Layanan",
+    "modeOAuth": "Token Refresh OAuth",
+    "serviceAccountEmail": "Email Akun Layanan",
+    "privateKey": "Kunci Privat",
+    "privateKeyHint": "Tempel private_key dari file JSON kunci, termasuk baris BEGIN dan END.",
+    "nextAuthOptional": "Masuk dengan Google (opsional)",
+    "nextAuthOptionalDesc": "Jika Anda menggunakan masuk dengan Google, isi OAuth Client ID dan Secret dari Google Cloud Console.",
+    "fillServiceAccountFields": "Masukkan email akun layanan, kunci privat, dan ID folder root.",
     "createdBy": "Dibuat oleh"
   },
   "DetailsPanel": {
@@ -652,6 +711,7 @@
     "moving": "Memindahkan item...",
     "moveSuccess": "Berhasil dipindahkan",
     "moveFailed": "Gagal memindahkan",
+    "moveLocationError": "Gagal mendapatkan lokasi saat ini.",
     "selected": "{count} terpilih",
     "move": "Pindah",
     "copy": "Salin",
@@ -680,7 +740,8 @@
     "accessGranted": "Akses diberikan",
     "requestRejected": "Permintaan ditolak",
     "loadError": "Gagal memuat data: ",
-    "deleteError": "Gagal menghapus"
+    "deleteError": "Gagal menghapus",
+    "processFailed": "Gagal memproses"
   },
   "ManualDrivesManager": {
     "title": "Manajemen Drive Bersama",
@@ -733,51 +794,6 @@
   "PinnedSection": {
     "title": "Tersemat",
     "folderSubtitle": "Folder Tersemat"
-  },
-  "TourGuide": {
-    "startTour": "Mulai Tur",
-    "next": "Lanjut",
-    "prev": "Kembali",
-    "done": "Selesai",
-    "skip": "Lewati",
-    "steps": {
-      "welcome": {
-        "title": "Selamat Datang di Zee-Index!",
-        "description": "Mari ikuti tur singkat untuk membantu Anda memulai dengan manajer file baru Anda."
-      },
-      "mobileMenu": {
-        "title": "Opsi Menu",
-        "description": "Akses Tema, Segarkan, dan opsi Github di sini."
-      },
-      "navigation": {
-        "title": "Navigasi",
-        "description": "Akses cepat ke Beranda, Favorit, dan analisis Penyimpanan Anda di sini."
-      },
-      "explorer": {
-        "title": "Penjelajah File",
-        "description": "Jelajahi folder dan file Anda dalam tampilan pohon hierarkis."
-      },
-      "search": {
-        "title": "Pencarian",
-        "description": "Temukan file Anda secara instan. Anda dapat mencari berdasarkan nama atau bahkan konten."
-      },
-      "notifications": {
-        "title": "Notifikasi",
-        "description": "Periksa di sini untuk pembaruan penting, permintaan akses, atau pesan sistem."
-      },
-      "theme": {
-        "title": "Pengganti Tema",
-        "description": "Beralih antara mode Terang dan Gelap sesuai preferensi Anda."
-      },
-      "refresh": {
-        "title": "Segarkan",
-        "description": "Muat ulang tampilan saat ini untuk melihat perubahan terbaru."
-      },
-      "github": {
-        "title": "Open Source",
-        "description": "Lihat proyek ini di GitHub, laporkan masalah, atau berkontribusi!"
-      }
-    }
   },
   "FilePage": {
     "errorTitle": "Gagal Memuat",
@@ -864,7 +880,8 @@
     "emptyHint": "Gunakan form di atas untuk menambah folder pertama.",
     "localStorage": "Penyimpanan Lokal",
     "encrypted": "Terenkripsi",
-    "folder": "Folder"
+    "folder": "Folder",
+    "fetchFailed": "Gagal mengambil data folder."
   },
   "AuthModal": {
     "userIdPlaceholder": "ID Pengguna",
@@ -882,7 +899,15 @@
     "qrAlt": "QR Code 2FA",
     "enterCode": "2. Masukkan kode 6 digit yang muncul di aplikasi Anda untuk menyelesaikan proses.",
     "verify": "Verifikasi",
-    "disableCodePrompt": "Masukkan kode verifikasi dari aplikasi authenticator untuk menonaktifkan 2FA."
+    "disableCodePrompt": "Masukkan kode verifikasi dari aplikasi authenticator untuk menonaktifkan 2FA.",
+    "statusFailed": "Gagal memeriksa status 2FA.",
+    "qrGenerateFailed": "Gagal membuat kode QR.",
+    "verifyFailed": "Verifikasi gagal.",
+    "enabledSuccess": "2FA berhasil diaktifkan!",
+    "disableConfirm": "Apakah Anda yakin ingin menonaktifkan Autentikasi Dua Faktor?",
+    "disableTitle": "Nonaktifkan 2FA",
+    "disableFailed": "Gagal menonaktifkan 2FA.",
+    "disabledSuccess": "2FA berhasil dinonaktifkan."
   },
   "TagManager": {
     "newLabelPlaceholder": "Label Baru...",
@@ -987,8 +1012,7 @@
     "configTitle": "Setup Diperlukan",
     "defaultMessage": "Koneksi ke Google Drive terputus. Silakan konfigurasi ulang untuk melanjutkan.",
     "openSetup": "Buka Halaman Setup",
-    "tryAgain": "Coba Lagi",
-    "status": "Status"
+    "tryAgain": "Coba Lagi"
   },
   "MainError": {
     "title": "Gagal Memuat Konten",
@@ -1196,7 +1220,8 @@
     "resetZoom": "Reset Zoom"
   },
   "GlobalAudioPlayer": {
-    "queue": "Antrean Putar ({count})"
+    "queue": "Antrean Putar ({count})",
+    "loadFailed": "Gagal memuat audio"
   },
   "ProfilePage": {
     "title": "Profil Saya",
@@ -1249,5 +1274,36 @@
     "folderIdRequired": "Folder ID diperlukan.",
     "missingFileId": "FileId tidak ada",
     "missingData": "Data tidak lengkap"
+  },
+  "FileErrors": {
+    "protectedFolder": "Folder membutuhkan autentikasi.",
+    "localLocked": "Local Storage Terkunci",
+    "fetchFiles": "Gagal mengambil data file.",
+    "fetchFolder": "Gagal mengambil data folder.",
+    "loadData": "Gagal memuat data.",
+    "moveFailed": "Gagal memindahkan item.",
+    "moveSuccess": "Item berhasil dipindahkan"
+  },
+  "FolderReadme": {
+    "loadFailed": "Gagal memuat README",
+    "saveSuccess": "README berhasil disimpan",
+    "saveFailed": "Gagal menyimpan README",
+    "cancel": "Batal",
+    "saving": "Menyimpan...",
+    "save": "Simpan"
+  },
+  "Auth": {
+    "verify2faTitle": "Verifikasi Dua Langkah",
+    "verify2faDesc": "Masukkan kode 6 digit dari aplikasi authenticator Anda.",
+    "errorInvalid": "Kode harus 6 digit.",
+    "verifyButton": "Verifikasi",
+    "backToLogin": "Kembali ke Login",
+    "verifyFailed": "Gagal memverifikasi 2FA"
+  },
+  "EmptyContextMenu": {
+    "newFolder": "Folder baru",
+    "uploadFiles": "Unggah file",
+    "uploadFolder": "Unggah folder",
+    "cancel": "Batal"
   }
 }

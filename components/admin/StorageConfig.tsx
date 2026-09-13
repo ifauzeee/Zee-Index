@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { Loader2, Cloud, HardDrive, Plug, Check, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useUser } from "@/hooks/useUser";
 
 interface StorageStatus {
   provider: string;
@@ -34,7 +35,8 @@ interface TestResult {
 
 export default function StorageConfig() {
   const t = useTranslations("StorageConfig");
-  const { user, addToast } = useAppStore();
+  const user = useUser();
+  const addToast = useAppStore((state) => state.addToast);
   const [status, setStatus] = useState<StorageStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [testing, setTesting] = useState(false);

@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter, usePathname } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useAppStore } from "@/lib/store";
+import { useUser } from "@/hooks/useUser";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { fetchFolderPathApi } from "@/hooks/useFileFetching";
 import type { DriveFile } from "@/lib/drive";
@@ -53,12 +54,13 @@ export function useSidebarController() {
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const t = useTranslations("Sidebar");
+  const tErr = useTranslations("FileErrors");
   const locale = useLocale();
 
   const isSidebarOpen = useAppStore((state) => state.isSidebarOpen);
   const setSidebarOpen = useAppStore((state) => state.setSidebarOpen);
   const currentFolderId = useAppStore((state) => state.currentFolderId);
-  const user = useAppStore((state) => state.user);
+  const user = useUser();
   const shareToken = useAppStore((state) => state.shareToken);
   const setNavigatingId = useAppStore((state) => state.setNavigatingId);
   const isAuthHealthy = useAppStore((state) => state.isGoogleAuthHealthy);
@@ -274,7 +276,12 @@ export function useSidebarController() {
           const pathData = await queryClient.fetchQuery({
             queryKey: ["folderPath", currentFolderId, shareToken, locale],
             queryFn: () =>
-              fetchFolderPathApi(currentFolderId, shareToken, locale),
+              fetchFolderPathApi(
+                currentFolderId,
+                shareToken,
+                locale,
+                tErr("fetchFolder"),
+              ),
             staleTime: 5 * 60 * 1000,
           });
           if (Array.isArray(pathData)) {
@@ -333,6 +340,7 @@ export function useSidebarController() {
     shareToken,
     locale,
     isAuthHealthy,
+    tErr,
   ]);
 
   const handleTouchStart = (event: React.TouchEvent) => {
@@ -407,17 +415,17 @@ export function useSidebarController() {
           });
           const result = await response.json();
           if (!response.ok) {
-            throw new Error(result.error || "Gagal memindahkan item.");
+            throw new Error(result.error || tErr("moveFailed"));
           }
 
           useAppStore.getState().addToast({
-            message: result.message || "Item berhasil dipindahkan",
+            message: result.message || tErr("moveSuccess"),
             type: "success",
           });
           useAppStore.getState().triggerRefresh();
         } catch (error: unknown) {
           useAppStore.getState().addToast({
-            message: getErrorMessage(error, "Gagal memindahkan item."),
+            message: getErrorMessage(error, tErr("moveFailed")),
             type: "error",
           });
         }
@@ -432,7 +440,7 @@ export function useSidebarController() {
 
       handleDropMove(data.files, targetFolderId);
     },
-    [],
+    [tErr],
   );
 
   const treeContextValue = useMemo<TreeContextType>(

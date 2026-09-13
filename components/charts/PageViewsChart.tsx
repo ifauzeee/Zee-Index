@@ -39,7 +39,7 @@ const CustomTooltip = ({
           <p className="flex items-center gap-2">
             <span
               className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: "hsl(217, 91%, 60%)" }}
+              style={{ backgroundColor: "var(--chart-1)" }}
             />
             {t("views")}:{" "}
             <span className="font-medium text-foreground">
@@ -49,7 +49,7 @@ const CustomTooltip = ({
           <p className="flex items-center gap-2">
             <span
               className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: "hsl(142, 71%, 45%)" }}
+              style={{ backgroundColor: "var(--chart-2)" }}
             />
             {t("visitors")}:{" "}
             <span className="font-medium text-foreground">
@@ -72,20 +72,12 @@ const PageViewsChart: React.FC<PageViewsChartProps> = ({ data }) => {
       >
         <defs>
           <linearGradient id="viewsGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop
-              offset="5%"
-              stopColor="hsl(217, 91%, 60%)"
-              stopOpacity={0.3}
-            />
-            <stop offset="95%" stopColor="hsl(217, 91%, 60%)" stopOpacity={0} />
+            <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
           </linearGradient>
           <linearGradient id="visitorsGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop
-              offset="5%"
-              stopColor="hsl(142, 71%, 45%)"
-              stopOpacity={0.3}
-            />
-            <stop offset="95%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0} />
+            <stop offset="5%" stopColor="var(--chart-2)" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="var(--chart-2)" stopOpacity={0} />
           </linearGradient>
         </defs>
         <CartesianGrid
@@ -112,14 +104,14 @@ const PageViewsChart: React.FC<PageViewsChartProps> = ({ data }) => {
         <Area
           type="monotone"
           dataKey="views"
-          stroke="hsl(217, 91%, 60%)"
+          stroke="var(--chart-1)"
           fill="url(#viewsGradient)"
           strokeWidth={2}
         />
         <Area
           type="monotone"
           dataKey="visitors"
-          stroke="hsl(142, 71%, 45%)"
+          stroke="var(--chart-2)"
           fill="url(#visitorsGradient)"
           strokeWidth={2}
         />

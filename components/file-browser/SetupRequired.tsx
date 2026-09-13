@@ -2,7 +2,6 @@
 
 import React from "react";
 import {
-  AlertCircle,
   RefreshCw,
   Settings,
   ShieldAlert,
@@ -110,16 +109,6 @@ export default function SetupRequired({
             <RefreshCw size={14} />
             <span>{t("tryAgain")}</span>
           </button>
-        </motion.div>
-
-        <motion.div
-          variants={itemVariants}
-          className="mt-10 flex items-center gap-1.5 py-1 px-3 rounded-full bg-destructive/5 text-[10px] uppercase font-bold tracking-[0.05em] text-destructive/70 border border-destructive/10"
-        >
-          <AlertCircle size={10} />
-          <span>
-            {t("status")}: {isExpired ? "INVALID_GRANT" : "MISSING_CONFIG"}
-          </span>
         </motion.div>
       </motion.div>
     </div>

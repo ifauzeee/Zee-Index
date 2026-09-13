@@ -5,8 +5,18 @@ import { createUISlice } from "./slices/ui-slice";
 import { createAuthSlice } from "./slices/auth-slice";
 import { createFileSlice } from "./slices/file-slice";
 import { createAudioSlice } from "./slices/audio-slice";
+import type { DriveFile } from "@/lib/drive";
 
 export * from "./types";
+
+const slimAudioFile = (file: DriveFile) => ({
+  id: file.id,
+  name: file.name,
+  mimeType: file.mimeType,
+  size: file.size,
+  parents: file.parents,
+  webViewLink: file.webViewLink,
+});
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -24,12 +34,10 @@ export const useAppStore = create<AppState>()(
         sort: state.sort,
         notifications: state.notifications,
         isSidebarOpen: state.isSidebarOpen,
-        audioQueue: state.audioQueue,
-        activeAudioFile: state.activeAudioFile,
-        appName: state.appName,
-        logoUrl: state.logoUrl,
-        faviconUrl: state.faviconUrl,
-        primaryColor: state.primaryColor,
+        audioQueue: state.audioQueue.map(slimAudioFile),
+        activeAudioFile: state.activeAudioFile
+          ? slimAudioFile(state.activeAudioFile)
+          : null,
         videoProgress: state.videoProgress,
         folderTokens: state.folderTokens,
         sharePolicy: state.sharePolicy,

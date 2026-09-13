@@ -14,6 +14,7 @@ import { useAppStore } from "@/lib/store";
 import { signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { getErrorMessage } from "@/lib/errors";
+import { useUser } from "@/hooks/useUser";
 
 interface AuthFormProps {
   folderId?: string;
@@ -29,7 +30,8 @@ export default function AuthForm({
   onSubmit,
 }: AuthFormProps) {
   const [password, setPassword] = useState("");
-  const { user, addToast } = useAppStore();
+  const user = useUser();
+  const addToast = useAppStore((state) => state.addToast);
   const [isRequesting, setIsRequesting] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
   const [refreshCountdown, setRefreshCountdown] = useState(5);

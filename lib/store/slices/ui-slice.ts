@@ -1,7 +1,4 @@
 import { StateCreator } from "zustand";
-import type { AppConfig } from "@/lib/app-config.shared";
-import { getErrorMessage } from "@/lib/errors";
-import { DEFAULT_APP_CONFIG } from "@/lib/app-config.shared";
 import {
   AppState,
   ViewMode,
@@ -80,106 +77,6 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (
       })),
     })),
   clearNotifications: () => set({ notifications: [] }),
-  appName: DEFAULT_APP_CONFIG.appName,
-  logoUrl: DEFAULT_APP_CONFIG.logoUrl,
-  faviconUrl: DEFAULT_APP_CONFIG.faviconUrl,
-  primaryColor: DEFAULT_APP_CONFIG.primaryColor,
-  isConfigLoading: false,
-  hideAuthor: null,
-  disableGuestLogin: null,
-  localStorageAuthEnabled: null,
-  localStoragePassword: null,
-  fetchConfig: async () => {
-    set({ isConfigLoading: true });
-    try {
-      const response = await fetch("/api/admin/config");
-      if (!response.ok)
-        throw new Error(`Failed to fetch admin config: ${response.status}`);
-      const config: AppConfig = await response.json();
-      set({
-        hideAuthor: config.hideAuthor,
-        disableGuestLogin: config.disableGuestLogin,
-        appName: config.appName,
-        logoUrl: config.logoUrl,
-        faviconUrl: config.faviconUrl,
-        primaryColor: config.primaryColor,
-        localStorageAuthEnabled: config.localStorageAuthEnabled,
-        localStoragePassword: config.localStoragePassword,
-      });
-    } catch (error) {
-      console.error("Admin config fetch error:", error);
-    } finally {
-      set({ isConfigLoading: false });
-    }
-  },
-  fetchPublicConfig: async () => {
-    try {
-      const response = await fetch("/api/config");
-      if (!response.ok)
-        throw new Error(`Failed to fetch public config: ${response.status}`);
-      const config = await response.json();
-      set({
-        appName: config.appName || DEFAULT_APP_CONFIG.appName,
-        logoUrl: config.logoUrl || DEFAULT_APP_CONFIG.logoUrl,
-        faviconUrl: config.faviconUrl || DEFAULT_APP_CONFIG.faviconUrl,
-        primaryColor: config.primaryColor || DEFAULT_APP_CONFIG.primaryColor,
-        hideAuthor: config.hideAuthor ?? DEFAULT_APP_CONFIG.hideAuthor,
-      });
-    } catch (error) {
-      console.error("Public config fetch error:", error);
-    }
-  },
-  setConfig: async (config: Partial<AppConfig>) => {
-    const state = get();
-    const prevConfig = {
-      hideAuthor: state.hideAuthor,
-      disableGuestLogin: state.disableGuestLogin,
-      appName: state.appName,
-      logoUrl: state.logoUrl,
-      faviconUrl: state.faviconUrl,
-      primaryColor: state.primaryColor,
-      localStorageAuthEnabled: state.localStorageAuthEnabled,
-      localStoragePassword: state.localStoragePassword,
-    };
-
-    // Optimistic update
-    set({ ...config });
-
-    try {
-      const response = await fetch("/api/admin/config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(config),
-      });
-      if (!response.ok) {
-        const result = await response.json().catch(() => ({}));
-        throw new Error(result.error || `Update failed: ${response.status}`);
-      }
-      const result = await response.json();
-      const updatedConfig = result.config as AppConfig;
-
-      set({
-        hideAuthor: updatedConfig.hideAuthor,
-        disableGuestLogin: updatedConfig.disableGuestLogin,
-        appName: updatedConfig.appName,
-        logoUrl: updatedConfig.logoUrl,
-        faviconUrl: updatedConfig.faviconUrl,
-        primaryColor: updatedConfig.primaryColor,
-        localStorageAuthEnabled: updatedConfig.localStorageAuthEnabled,
-        localStoragePassword: updatedConfig.localStoragePassword,
-      });
-    } catch (error: unknown) {
-      console.error("Config update error:", error);
-      set(prevConfig);
-      get().addToast({
-        message: getErrorMessage(error, "Error updating config"),
-        type: "error",
-      });
-      throw error;
-    } finally {
-      set({ isConfigLoading: false });
-    }
-  },
   isTheaterMode: false,
   toggleTheaterMode: () =>
     set((state: AppState) => ({ isTheaterMode: !state.isTheaterMode })),

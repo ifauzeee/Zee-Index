@@ -21,7 +21,8 @@
     "wrongCredentials": "Incorrect credentials.",
     "accessGranted": "Access granted!",
     "failedPrefetch": "Failed to prefetch",
-    "folderDefaultName": "Folder"
+    "folderDefaultName": "Folder",
+    "errorFallback": "Failed to load file data."
   },
   "Common": {
     "loading": "Loading...",
@@ -112,7 +113,6 @@
     "menu": "Menu",
     "notifications": "Notifications",
     "backToHome": "Back to Home",
-    "tour": "Start Tour",
     "driveLogoAlt": "Google Drive Logo",
     "logoAlt": "Logo"
   },
@@ -323,6 +323,8 @@
       "accessDeniedText": "You cannot access the main page through a share link. Please use the original link you received.",
       "revokedTitle": "Access Revoked",
       "revokedText": "Access to this link has been revoked by the administrator.",
+      "loginRequiredTitle": "Login Required",
+      "loginRequiredText": "You must sign in to open this link. Sign in with Google or the email and password issued by the administrator.",
       "guestDeniedTitle": "Limited Access",
       "guestDeniedText": "Guest access is not allowed for this page. Please log in using a Google account.",
       "guestLogoutTitle": "See You! 👋",
@@ -380,7 +382,8 @@
     "requireAccountMessage": "You must log in with a Google account to save files or folders to favorites.",
     "loadError": "Failed to fetch favorites.",
     "locationError": "Unable to find file location.",
-    "genericError": "An error occurred."
+    "genericError": "An error occurred.",
+    "browseAllFiles": "Browse All Files"
   },
   "AdminPage": {
     "title": "Admin Dashboard",
@@ -473,11 +476,58 @@
     "inviteFailed": "Failed to invite user",
     "roleUser": "User",
     "roleEditor": "Editor",
-    "roleAdmin": "Admin"
+    "roleAdmin": "Admin",
+    "shareLinkSubtitle": "Manage all shared links that have been created",
+    "shareLinkLoadFailed": "Failed to load the list of shared links",
+    "revokeShareLinkConfirm": "Revoke the shared link for \"{itemName}\"?",
+    "revokeShareLinkTitle": "Revoke Link",
+    "confirmRevoke": "Yes, Revoke",
+    "deleteShareLinkConfirm": "Permanently delete the shared link for \"{itemName}\"?",
+    "deleteShareLinkTitle": "Delete Link",
+    "confirmDeleteLink": "Yes, Delete",
+    "shareLinkRevokeFailed": "Failed to revoke the link",
+    "shareLinkDeleteFailed": "Failed to delete the link",
+    "shareLinkSearchPlaceholder": "Search by name, path, or creator...",
+    "all": "All",
+    "creator": "Creator",
+    "views": "Views",
+    "validUntil": "Valid Until",
+    "status": "Status",
+    "actions": "Actions",
+    "collection": "collection",
+    "copyUrl": "Copy URL",
+    "revoke": "Revoke",
+    "noShareLinks": "No shared links yet",
+    "noMatchFilter": "No links match the filter",
+    "linksOfTotal": "{filtered} of {total} links",
+    "linksTotal": "{total} total links",
+    "apiKeySubtitle": "Manage API keys for external access",
+    "apiKeyLoadFailed": "Failed to load API keys",
+    "apiKeyCreateFailed": "Failed to create API key",
+    "revokeApiKeyConfirm": "Are you sure you want to revoke this API key?",
+    "revokeApiKeyTitle": "Revoke API Key",
+    "apiKeyRevokeFailed": "Failed to revoke API key",
+    "createKey": "Create Key",
+    "apiKeyCreatedNotice": "API key created successfully! Copy it now — it will not be shown again.",
+    "createApiKeyTitle": "Create New API Key",
+    "name": "Name",
+    "apiKeyNamePlaceholder": "Example: CI Script, Backup Service",
+    "create": "Create",
+    "lastUsed": "Last Used",
+    "created": "Created",
+    "noApiKeys": "No API keys yet",
+    "incidentSubtitle": "Monitor and manage security & system incidents",
+    "incidentLoadFailed": "Failed to load incidents",
+    "incidentEvalFailed": "Failed to run rule evaluation",
+    "incidentUpdateFailed": "Failed to update incident status",
+    "noIncidents": "No incidents",
+    "shareLinkUpdateSuccess": "Share link settings updated successfully.",
+    "shareLinkUpdateFailed": "Failed to update the shared link."
   },
   "Footer": {
     "dataUsage": "Total Data Usage:",
-    "rightsReserved": "All rights reserved -"
+    "rightsReserved": "All rights reserved -",
+    "failed": "Failed"
   },
   "RequestPage": {
     "invalidLink": "This link is invalid or expired.",
@@ -547,6 +597,15 @@
     "understand": "Understood, Back to Home",
     "refreshToken": "Refresh Token",
     "envNote": "Copy all variables below and add them to your .env file, then restart the container/VPS if needed.",
+    "subtitleSa": "Access the Drive API using a Google Cloud service account. Share the root folder with the service account email (Editor). Optional: add OAuth for Google user sign-in.",
+    "modeServiceAccount": "Service Account",
+    "modeOAuth": "OAuth Refresh Token",
+    "serviceAccountEmail": "Service Account Email",
+    "privateKey": "Private Key",
+    "privateKeyHint": "Paste the private_key from the key JSON file, including the BEGIN and END lines.",
+    "nextAuthOptional": "Google sign-in (optional)",
+    "nextAuthOptionalDesc": "If you use Google sign-in, fill in the OAuth Client ID and Secret from Google Cloud Console.",
+    "fillServiceAccountFields": "Enter the service account email, private key and root folder ID.",
     "createdBy": "Created by"
   },
   "DetailsPanel": {
@@ -652,6 +711,7 @@
     "moving": "Moving items...",
     "moveSuccess": "Moved successfully",
     "moveFailed": "Move failed",
+    "moveLocationError": "Failed to get current location.",
     "selected": "{count} selected",
     "move": "Move",
     "copy": "Copy",
@@ -680,7 +740,8 @@
     "accessGranted": "Access granted",
     "requestRejected": "Request rejected",
     "loadError": "Failed to load data: ",
-    "deleteError": "Failed to delete"
+    "deleteError": "Failed to delete",
+    "processFailed": "Failed to process"
   },
   "ManualDrivesManager": {
     "title": "Shared Drives Management",
@@ -733,51 +794,6 @@
   "PinnedSection": {
     "title": "Pinned",
     "folderSubtitle": "Pinned Folder"
-  },
-  "TourGuide": {
-    "startTour": "Start Tour",
-    "next": "Next",
-    "prev": "Previous",
-    "done": "Done",
-    "skip": "Skip",
-    "steps": {
-      "welcome": {
-        "title": "Welcome to Zee-Index!",
-        "description": "Let's take a quick tour to help you get started with your new file manager."
-      },
-      "mobileMenu": {
-        "title": "Menu Options",
-        "description": "Access Theme, Refresh, and Github options here."
-      },
-      "navigation": {
-        "title": "Navigation",
-        "description": "Quickly access your Home, Favorites, and Storage analysis here."
-      },
-      "explorer": {
-        "title": "File Explorer",
-        "description": "Browse your folders and files in a hierarchical tree view."
-      },
-      "search": {
-        "title": "Search",
-        "description": "Find your files instantly. You can search by name or even content."
-      },
-      "notifications": {
-        "title": "Notifications",
-        "description": "Check here for important updates, access requests, or system messages."
-      },
-      "theme": {
-        "title": "Theme Switcher",
-        "description": "Toggle between Light and Dark mode to suit your preference."
-      },
-      "refresh": {
-        "title": "Refresh",
-        "description": "Reload the current view to see the latest changes."
-      },
-      "github": {
-        "title": "Open Source",
-        "description": "Check out the project on GitHub, report issues, or contribute!"
-      }
-    }
   },
   "FilePage": {
     "errorTitle": "Failed to Load",
@@ -864,7 +880,8 @@
     "emptyHint": "Use the form above to add the first folder.",
     "localStorage": "Local Storage",
     "encrypted": "Encrypted",
-    "folder": "Folder"
+    "folder": "Folder",
+    "fetchFailed": "Failed to fetch folder data."
   },
   "AuthModal": {
     "userIdPlaceholder": "User ID",
@@ -882,7 +899,15 @@
     "qrAlt": "2FA QR Code",
     "enterCode": "2. Enter the 6-digit code shown in your app to complete setup.",
     "verify": "Verify",
-    "disableCodePrompt": "Enter the verification code from your authenticator app to disable 2FA."
+    "disableCodePrompt": "Enter the verification code from your authenticator app to disable 2FA.",
+    "statusFailed": "Failed to check 2FA status.",
+    "qrGenerateFailed": "Failed to generate QR code.",
+    "verifyFailed": "Verification failed.",
+    "enabledSuccess": "2FA enabled successfully!",
+    "disableConfirm": "Are you sure you want to disable Two-Factor Authentication?",
+    "disableTitle": "Disable 2FA",
+    "disableFailed": "Failed to disable 2FA.",
+    "disabledSuccess": "2FA disabled successfully."
   },
   "TagManager": {
     "newLabelPlaceholder": "New Label...",
@@ -987,8 +1012,7 @@
     "configTitle": "Setup Required",
     "defaultMessage": "The Google Drive connection was lost. Please configure it again to continue.",
     "openSetup": "Open Setup Page",
-    "tryAgain": "Try Again",
-    "status": "Status"
+    "tryAgain": "Try Again"
   },
   "MainError": {
     "title": "Failed to Load Content",
@@ -1196,7 +1220,8 @@
     "resetZoom": "Reset Zoom"
   },
   "GlobalAudioPlayer": {
-    "queue": "Play Queue ({count})"
+    "queue": "Play Queue ({count})",
+    "loadFailed": "Failed to load audio"
   },
   "ProfilePage": {
     "title": "My Profile",
@@ -1249,5 +1274,36 @@
     "folderIdRequired": "Folder ID is required.",
     "missingFileId": "Missing fileId",
     "missingData": "Missing data"
+  },
+  "FileErrors": {
+    "protectedFolder": "This folder requires authentication.",
+    "localLocked": "Local Storage Locked",
+    "fetchFiles": "Failed to load file data.",
+    "fetchFolder": "Failed to load folder data.",
+    "loadData": "Failed to load data.",
+    "moveFailed": "Failed to move item.",
+    "moveSuccess": "Item moved successfully."
+  },
+  "FolderReadme": {
+    "loadFailed": "Failed to load README",
+    "saveSuccess": "README saved successfully",
+    "saveFailed": "Failed to save README",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "save": "Save"
+  },
+  "Auth": {
+    "verify2faTitle": "Two-Step Verification",
+    "verify2faDesc": "Enter the 6-digit code from your authenticator app.",
+    "errorInvalid": "Code must be 6 digits.",
+    "verifyButton": "Verify",
+    "backToLogin": "Back to Login",
+    "verifyFailed": "Failed to verify 2FA"
+  },
+  "EmptyContextMenu": {
+    "newFolder": "New folder",
+    "uploadFiles": "Upload files",
+    "uploadFolder": "Upload folder",
+    "cancel": "Cancel"
   }
 }

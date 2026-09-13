@@ -12,7 +12,9 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/lib/store";
+import { useUser } from "@/hooks/useUser";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import MarkdownViewer from "@/components/file-details/MarkdownViewer";
 
 interface FolderReadmeProps {
@@ -20,8 +22,10 @@ interface FolderReadmeProps {
 }
 
 export default function FolderReadme({ fileId }: FolderReadmeProps) {
-  const { shareToken, addToast, user } = useAppStore();
+  const { shareToken, addToast } = useAppStore();
+  const user = useUser();
   const { data: session } = useSession();
+  const t = useTranslations("FolderReadme");
   const [content, setContent] = useState<string | null>(null);
   const [draftContent, setDraftContent] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -51,7 +55,7 @@ export default function FolderReadme({ fileId }: FolderReadmeProps) {
         setContent(text);
         setDraftContent(text);
       } catch {
-        addToast({ message: "Gagal memuat README", type: "error" });
+        addToast({ message: t("loadFailed"), type: "error" });
       } finally {
         setIsLoading(false);
       }
@@ -60,7 +64,7 @@ export default function FolderReadme({ fileId }: FolderReadmeProps) {
     if (fileId) {
       fetchReadme();
     }
-  }, [fileId, shareToken, addToast]);
+  }, [fileId, shareToken, addToast, t]);
 
   const handleEdit = () => {
     setDraftContent(content || "");
@@ -92,9 +96,9 @@ export default function FolderReadme({ fileId }: FolderReadmeProps) {
       setContent(draftContent);
       setIsEditing(false);
       setIsPreviewingDraft(false);
-      addToast({ message: "README berhasil disimpan", type: "success" });
+      addToast({ message: t("saveSuccess"), type: "success" });
     } catch {
-      addToast({ message: "Gagal menyimpan README", type: "error" });
+      addToast({ message: t("saveFailed"), type: "error" });
     } finally {
       setIsSaving(false);
     }
@@ -128,7 +132,7 @@ export default function FolderReadme({ fileId }: FolderReadmeProps) {
               className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
             >
               {isEditing ? <X size={14} /> : <Edit3 size={14} />}
-              {isEditing ? "Batal" : "Edit"}
+              {isEditing ? t("cancel") : "Edit"}
             </button>
           )}
           <button className="text-muted-foreground hover:text-foreground">
@@ -181,7 +185,7 @@ export default function FolderReadme({ fileId }: FolderReadmeProps) {
                     className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <Save size={14} />
-                    {isSaving ? "Menyimpan..." : "Simpan"}
+                    {isSaving ? t("saving") : t("save")}
                   </button>
                 </div>
 

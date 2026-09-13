@@ -166,7 +166,7 @@ export default function GlobalAudioPlayer() {
             onError={() => {
               useAppStore
                 .getState()
-                .addToast({ message: "Gagal memuat audio", type: "error" });
+                .addToast({ message: t("loadFailed"), type: "error" });
             }}
           />
 

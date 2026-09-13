@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
+import { useUser } from "@/hooks/useUser";
 import { useConfirm } from "@/components/providers/ModalProvider";
 import { motion } from "framer-motion";
 import { Trash2, Loader2, FileX, ArrowDownUp } from "lucide-react";
@@ -23,7 +24,8 @@ type SortKey = "modifiedTime" | "name" | "size";
 type SortOrder = "asc" | "desc";
 
 export default function TrashPage() {
-  const { user, addToast, fetchUser } = useAppStore();
+  const { addToast } = useAppStore();
+  const user = useUser();
   const { confirm } = useConfirm();
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -38,10 +40,6 @@ export default function TrashPage() {
 
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-
-  useEffect(() => {
-    if (status === "authenticated" && !user) fetchUser();
-  }, [status, user, fetchUser]);
 
   useEffect(() => {
     if (status === "loading") return;

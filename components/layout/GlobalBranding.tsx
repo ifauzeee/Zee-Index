@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { useAppStore } from "@/lib/store";
 import { hexToHsl } from "@/lib/utils";
+import { usePublicConfig } from "@/hooks/useConfig";
 
 export default function GlobalBranding() {
-  const { primaryColor, appName, faviconUrl } = useAppStore();
+  const { primaryColor, appName, faviconUrl } = usePublicConfig();
 
   useEffect(() => {
     if (primaryColor) {

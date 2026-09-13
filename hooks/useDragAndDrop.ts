@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import type { DriveFile } from "@/lib/drive";
 import React from "react";
 import { getErrorMessage } from "@/lib/errors";
@@ -29,6 +30,7 @@ export function useDragAndDrop({
   const [dragOverBreadcrumb, setDragOverBreadcrumb] = useState<string | null>(
     null,
   );
+  const tErr = useTranslations("FileErrors");
 
   const handleDropMove = useCallback(
     async (
@@ -51,7 +53,7 @@ export function useDragAndDrop({
         });
         const result = await response.json();
         if (!response.ok && response.status !== 207)
-          throw new Error(result.error || "Gagal memindahkan item.");
+          throw new Error(result.error || tErr("moveFailed"));
         addToast({
           message: result.message,
           type: response.ok ? "success" : "info",
@@ -60,14 +62,14 @@ export function useDragAndDrop({
         clearSelection();
       } catch (error: unknown) {
         addToast({
-          message: getErrorMessage(error, "Gagal memindahkan item."),
+          message: getErrorMessage(error, tErr("moveFailed")),
           type: "error",
         });
       } finally {
         setIsDropMoving(false);
       }
     },
-    [addToast, triggerRefresh, clearSelection, currentFolderId],
+    [addToast, triggerRefresh, clearSelection, currentFolderId, tErr],
   );
 
   const handleDragStart = useCallback(

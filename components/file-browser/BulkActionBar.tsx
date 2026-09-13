@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Download, Trash2, Copy, FolderInput } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { useUser } from "@/hooks/useUser";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/providers/ModalProvider";
 import MoveModal from "@/components/modals/MoveModal";
@@ -19,9 +20,9 @@ export function BulkActionBar() {
     triggerRefresh,
     isSidebarOpen,
     currentFolderId,
-    user,
     sharePolicy,
   } = useAppStore();
+  const user = useUser();
   const t = useTranslations("BulkActionBar");
   const { confirm } = useConfirm();
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -130,7 +131,7 @@ export function BulkActionBar() {
 
     if (!currentParentId) {
       addToast({
-        message: "Gagal mendapatkan lokasi saat ini.",
+        message: t("moveLocationError"),
         type: "error",
       });
       setIsProcessing(false);

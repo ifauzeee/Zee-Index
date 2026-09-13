@@ -9,5 +9,9 @@ const ProtectedFoldersManager = dynamic(
 );
 
 export default function ProtectedFoldersPage() {
-  return <ProtectedFoldersManager />;
+  return (
+    <div className="py-6">
+      <ProtectedFoldersManager />
+    </div>
+  );
 }

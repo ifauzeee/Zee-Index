@@ -10,6 +10,9 @@ import type { DriveFile } from "@/lib/drive";
 import type { SubtitleTrack } from "@/lib/subtitles";
 import { getFileType, getPreviewUrl } from "@/lib/utils";
 import { fetchFolderPathApi } from "@/hooks/useFileFetching";
+import { useTagsQuery, useTagMutation } from "@/hooks/useTags";
+import { useUser } from "@/hooks/useUser";
+import { usePublicConfig } from "@/hooks/useConfig";
 import type { ShareTokenPayload } from "@/lib/store/types";
 
 interface TmdbGenre {
@@ -45,13 +48,11 @@ export function useFileDetailController({
   const searchParams = useSearchParams();
   const { data: session } = useSession();
   const addToast = useAppStore((state) => state.addToast);
-  const user = useAppStore((state) => state.user);
+  const user = useUser();
   const triggerRefresh = useAppStore((state) => state.triggerRefresh);
-  const hideAuthor = useAppStore((state) => state.hideAuthor);
-  const fileTags = useAppStore((state) => state.fileTags);
-  const fetchTags = useAppStore((state) => state.fetchTags);
-  const addTag = useAppStore((state) => state.addTag);
-  const removeTag = useAppStore((state) => state.removeTag);
+  const { hideAuthor } = usePublicConfig();
+  const { data: fileTags = [] } = useTagsQuery(file.id);
+  const tagMutation = useTagMutation(file.id);
   const folderTokens = useAppStore((state) => state.folderTokens);
   const setCurrentFileId = useAppStore((state) => state.setCurrentFileId);
   const setCurrentFolderId = useAppStore((state) => state.setCurrentFolderId);
@@ -78,10 +79,6 @@ export function useFileDetailController({
 
   const t = useTranslations("FileDetail");
   const locale = useLocale();
-
-  useEffect(() => {
-    fetchTags(file.id);
-  }, [file.id, fetchTags]);
 
   useEffect(() => {
     if (!isModal) {
@@ -337,8 +334,8 @@ export function useFileDetailController({
     canShowAuthor,
     fileType,
     fileTags,
-    addTag,
-    removeTag,
+    addTag: (tag: string) => tagMutation.mutate({ tag, action: "add" }),
+    removeTag: (tag: string) => tagMutation.mutate({ tag, action: "remove" }),
     directLink,
     previewLink,
     authenticatedSubtitleTracks,

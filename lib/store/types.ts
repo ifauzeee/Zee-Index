@@ -1,5 +1,4 @@
 import type { DriveFile } from "@/lib/drive";
-import type { AppConfig } from "@/lib/app-config.shared";
 import type {
   FileRequestLink as PersistedFileRequestLink,
   ShareTokenPayload as ParsedShareTokenPayload,
@@ -93,35 +92,11 @@ export interface UISlice {
   toggleNotificationCenter: () => void;
   markAllNotificationsRead: () => void;
   clearNotifications: () => void;
-  appName: string;
-  logoUrl: string;
-  faviconUrl: string;
-  primaryColor: string;
-  isConfigLoading: boolean;
-  fetchConfig: () => Promise<void>;
-  fetchPublicConfig: () => Promise<void>;
-  setConfig: (config: Partial<AppConfig>) => Promise<void>;
-  hideAuthor: boolean | null;
-  disableGuestLogin: boolean | null;
-  localStorageAuthEnabled: boolean | null;
-  localStoragePassword: string | null;
   isTheaterMode: boolean;
   toggleTheaterMode: () => void;
 }
 
 export interface AuthSlice {
-  user: UserProfile | null;
-  fetchUser: () => Promise<void>;
-  adminEmails: string[];
-  isFetchingAdmins: boolean;
-  fetchAdminEmails: (isBackground?: boolean) => Promise<void>;
-  addAdminEmail: (email: string) => Promise<void>;
-  removeAdminEmail: (email: string) => Promise<void>;
-  editorEmails: string[];
-  isFetchingEditors: boolean;
-  fetchEditorEmails: (isBackground?: boolean) => Promise<void>;
-  addEditorEmail: (email: string) => Promise<void>;
-  removeEditorEmail: (email: string) => Promise<void>;
   isLocalStorageUnlocked: boolean;
   unlockLocalStorage: (password: string) => Promise<boolean>;
   lockLocalStorage: () => Promise<boolean>;
@@ -151,35 +126,8 @@ export interface FileSlice {
   setNavigatingId: (id: string | null) => void;
   currentFileId: string | null;
   setCurrentFileId: (id: string | null) => void;
-  shareLinks: ShareLink[];
-  fetchShareLinks: () => Promise<void>;
-  addShareLink: (link: ShareLink) => void;
-  removeShareLink: (link: ShareLink) => Promise<void>;
-  updateShareLink: (link: ShareLink) => void;
-  fileRequests: FileRequestLink[];
-  fetchFileRequests: () => Promise<void>;
-  removeFileRequest: (token: string) => Promise<void>;
-  dataUsage: {
-    status: "idle" | "loading" | "success" | "error";
-    value: string;
-  };
-  fetchDataUsage: () => Promise<void>;
-  favorites: string[];
-  fetchFavorites: () => Promise<void>;
-  toggleFavorite: (
-    fileId: string,
-    isCurrentlyFavorite: boolean,
-  ) => Promise<void>;
   detailsFile: DriveFile | null;
   setDetailsFile: (file: DriveFile | null) => void;
-  fileTags: Record<string, string[]>;
-  fetchTags: (fileId: string) => Promise<void>;
-  addTag: (fileId: string, tag: string) => Promise<void>;
-  removeTag: (fileId: string, tag: string) => Promise<void>;
-  pinnedFolders: DriveFile[];
-  fetchPinnedFolders: () => Promise<void>;
-  addPin: (folderId: string) => Promise<void>;
-  removePin: (folderId: string) => Promise<void>;
   videoProgress: Record<string, number>;
   setVideoProgress: (fileId: string, time: number) => void;
   uploads: Record<string, UploadItem>;

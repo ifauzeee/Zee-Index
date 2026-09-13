@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Share2, X, Copy, Clock, Zap } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { useUser } from "@/hooks/useUser";
+import { useAddShareLinkMutation } from "@/hooks/useShareLinks";
 import { motion, AnimatePresence } from "framer-motion";
 import type { DriveFile } from "@/lib/drive";
 import { useTranslations } from "next-intl";
@@ -28,7 +30,9 @@ export default function ShareButton({
 }: ShareButtonProps) {
   const t = useTranslations("ShareButton");
   const [internalIsOpen, setInternalIsOpen] = useState(false);
-  const { addToast, user, addShareLink } = useAppStore();
+  const { addToast } = useAppStore();
+  const user = useUser();
+  const addShareLink = useAddShareLinkMutation();
 
   const [customDuration, setCustomDuration] = useState<string | number>(10);
   const [customUnit, setCustomUnit] = useState<TimeUnit>("m");
@@ -113,7 +117,7 @@ export default function ShareButton({
       }
 
       const { shareableUrl, newShareLink } = await response.json();
-      addShareLink(newShareLink);
+      addShareLink.mutate(newShareLink);
 
       await navigator.clipboard.writeText(shareableUrl);
       addToast({ message: t("linkCopied"), type: "success" });

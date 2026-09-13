@@ -86,7 +86,6 @@
 | **Turbopack**             | Next.js 16 Turbopack for ultra-fast development builds                    |
 | **PWA Support**           | Installable as a Progressive Web App with offline caching                 |
 | **Command Palette**       | Quick actions with <kbd>Ctrl+K</kbd> powered by `cmdk`                    |
-| **Tour Guide**            | Interactive onboarding with `driver.js`                                   |
 | **Dark/Light Mode**       | Automatic theme detection with manual toggle                              |
 
 ### 🎬 Media & File Previews
@@ -922,7 +921,7 @@ zee-index/
 │   ├── admin/                    # Admin dashboard UI
 │   ├── charts/                   # Recharts analytics components
 │   ├── common/                   # Loading, error, empty states
-│   ├── features/                 # CommandPalette, AudioPlayer, TourGuide
+│   ├── features/                 # CommandPalette, AudioPlayer
 │   ├── file-browser/             # File listing, bulk actions, modals
 │   │   ├── details/              # Detail panel & info panel
 │   │   ├── share/                # Share modal components

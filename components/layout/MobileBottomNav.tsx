@@ -4,13 +4,14 @@ import { Home, Star, ShieldCheck, HardDrive, Server } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
+import { useUser } from "@/hooks/useUser";
 import { useTranslations } from "next-intl";
 
 export default function MobileBottomNav() {
   const t = useTranslations("MobileBottomNav");
   const router = useRouter();
   const pathname = usePathname();
-  const user = useAppStore((state) => state.user);
+  const user = useUser();
   const shareToken = useAppStore((state) => state.shareToken);
 
   if (shareToken) return null;

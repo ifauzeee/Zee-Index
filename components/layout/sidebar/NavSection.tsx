@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -23,7 +24,7 @@ interface NavSectionProps {
 export default function NavSection({ t }: NavSectionProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const user = useAppStore((state) => state.user);
+  const user = useUser();
   const navigatingId = useAppStore((state) => state.navigatingId);
   const setNavigatingId = useAppStore((state) => state.setNavigatingId);
   const setSidebarOpen = useAppStore((state) => state.setSidebarOpen);

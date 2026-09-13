@@ -136,7 +136,7 @@ export default function UserFolderAccessManager() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, requestData: request }),
       });
-      if (!res.ok) throw new Error("Gagal memproses");
+      if (!res.ok) throw new Error(t("processFailed"));
 
       addToast({
         message:

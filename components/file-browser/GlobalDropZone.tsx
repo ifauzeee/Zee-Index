@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { UploadCloud } from "lucide-react";
-import { useAppStore } from "@/lib/store";
+import { useUser } from "@/hooks/useUser";
 import { useTranslations } from "next-intl";
 
 interface GlobalDropZoneProps {
@@ -13,7 +13,7 @@ interface GlobalDropZoneProps {
 export default function GlobalDropZone({ onDrop }: GlobalDropZoneProps) {
   const t = useTranslations("GlobalDropZone");
   const [isDragging, setIsDragging] = useState(false);
-  const { user } = useAppStore();
+  const user = useUser();
 
   const handleDragEnter = useCallback((e: DragEvent) => {
     e.preventDefault();

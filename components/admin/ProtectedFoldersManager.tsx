@@ -38,14 +38,14 @@ export default function ProtectedFoldersManager() {
     setIsLoading(true);
     try {
       const response = await fetch("/api/admin/protected-folders");
-      if (!response.ok) throw new Error("Gagal mengambil data folder.");
+      if (!response.ok) throw new Error(t("fetchFailed"));
       setFolders(await response.json());
     } catch (error: unknown) {
       addToast({ message: getErrorMessage(error), type: "error" });
     } finally {
       setIsLoading(false);
     }
-  }, [addToast]);
+  }, [addToast, t]);
 
   useEffect(() => {
     fetchFolders();

@@ -85,7 +85,7 @@ const BandwidthChart: React.FC<BandwidthChartProps> = ({ data }) => {
         <Tooltip content={<CustomTooltip />} />
         <Bar
           dataKey="bytes"
-          fill="hsl(217, 91%, 60%)"
+          fill="var(--chart-1)"
           radius={[4, 4, 0, 0]}
           maxBarSize={20}
         />

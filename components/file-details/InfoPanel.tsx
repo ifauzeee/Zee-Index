@@ -30,7 +30,7 @@ interface InfoPanelProps {
   canShowAuthor: boolean;
   tags: string[];
   directLink: string;
-  onAddTag: (tag: string) => Promise<void>;
+  onAddTag: (tag: string) => void;
   onRemoveTag: (tag: string) => void;
   onCopyLink: () => void;
   onEditImage?: () => void;

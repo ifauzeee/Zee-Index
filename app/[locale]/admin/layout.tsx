@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, Suspense } from "react";
+import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useAppStore } from "@/lib/store";
 import { BulkActionBar } from "@/components/file-browser/BulkActionBar";
@@ -8,8 +8,8 @@ import Toast from "@/components/common/Toast";
 import { AnimatePresence } from "framer-motion";
 import { HardDrive } from "lucide-react";
 
-import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
+import { useDataUsageQuery } from "@/hooks/useDataUsage";
 
 const Header = dynamic(() => import("@/components/layout/Header"), {
   ssr: false,
@@ -24,14 +24,15 @@ const DetailsPanel = dynamic(
   },
 );
 const AppFooter = () => {
-  const { dataUsage } = useAppStore();
+  const refreshKey = useAppStore((state) => state.refreshKey);
+  const { data } = useDataUsageQuery(refreshKey);
   const currentYear = new Date().getFullYear();
   const t = useTranslations("Footer");
   return (
     <footer className="text-center py-6 text-sm text-muted-foreground border-t bg-background">
       <p className="mb-2">
         <HardDrive size={14} className="inline mr-2" />
-        {t("dataUsage")} <span id="data-usage-value">{dataUsage.value}</span>
+        {t("dataUsage")} <span id="data-usage-value">{data ?? ""}</span>
       </p>
       <p>
         &copy; {currentYear} {t("rightsReserved")}{" "}
@@ -56,27 +57,8 @@ export default function MainLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const {
-    refreshKey,
-    toasts,
-    removeToast,
-    fetchUser,
-    fetchDataUsage,
-    detailsFile,
-    setDetailsFile,
-    fetchConfig,
-  } = useAppStore();
-  const { status } = useSession();
+  const { toasts, removeToast, detailsFile, setDetailsFile } = useAppStore();
   const tCommon = useTranslations("Common");
-
-  useEffect(() => {
-    fetchConfig();
-
-    if (status === "authenticated") {
-      fetchUser();
-      fetchDataUsage();
-    }
-  }, [status, fetchUser, fetchDataUsage, fetchConfig, refreshKey]);
 
   return (
     <>

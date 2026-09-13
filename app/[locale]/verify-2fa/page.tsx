@@ -10,7 +10,7 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "Auth" });
 
   return {
-    title: t("verify2faTitle", { fallback: "Verifikasi 2FA" }),
+    title: t("verify2faTitle"),
   };
 }
 
