@@ -1,6 +1,7 @@
 import { getAccessToken } from "./auth";
 import { fetchWithRetry } from "./client";
 import { logger } from "@/lib/logger";
+import { ERROR_MESSAGES } from "@/lib/constants";
 
 export async function restoreTrash(fileId: string | string[]) {
   const accessToken = await getAccessToken();
@@ -70,7 +71,9 @@ export async function copyFile(
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.error?.message || "Gagal menyalin file");
+    throw new Error(
+      errorData.error?.message || ERROR_MESSAGES.COPY_FILE_FAILED,
+    );
   }
 
   const result = await response.json();
@@ -98,7 +101,7 @@ export async function updateFileContent(fileId: string, newContent: string) {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
-      errorData.error?.message || "Gagal memperbarui konten file.",
+      errorData.error?.message || ERROR_MESSAGES.UPDATE_FILE_CONTENT_FAILED,
     );
   }
 

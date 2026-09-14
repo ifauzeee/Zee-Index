@@ -162,7 +162,7 @@ export async function checkGoogleDriveHealth(options?: {
   } catch (error: unknown) {
     const errorMessage = getErrorMessage(error);
     const status =
-      errorMessage.includes("Aplikasi belum dikonfigurasi") ||
+      errorMessage.includes("Application is not configured") ||
       errorMessage.includes("Root Folder ID")
         ? "not_configured"
         : "unhealthy";

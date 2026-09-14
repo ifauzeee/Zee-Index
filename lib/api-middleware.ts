@@ -58,6 +58,9 @@ interface CreateRouteOptions<
   querySchema?: TQuerySchema;
   paramsSchema?: TParamsSchema;
   internalErrorMessage?: string;
+  /** Required API key permission (e.g. "admin:write", "files:read").
+   *  Only enforced when the request uses API key auth. */
+  permission?: string;
 }
 
 type SessionForRole<TRole extends ApiRole> = TRole extends "public"
@@ -229,6 +232,25 @@ export function createRouteHandler<
         );
       }
 
+      // API key permission enforcement — only applies to API key requests.
+      // Session-based requests use role-based auth above.
+      if (options.permission) {
+        const authMethod = request.headers.get("x-auth-method");
+        if (authMethod === "api-key") {
+          const perms =
+            request.headers.get("x-api-key-permissions")?.split(",") || [];
+          if (!perms.includes("*") && !perms.includes(options.permission)) {
+            return withRequestId(
+              NextResponse.json(
+                { error: "API key does not have the required permission." },
+                { status: 403 },
+              ),
+              requestId,
+            );
+          }
+        }
+      }
+
       if (options.requireEmail && !session?.user?.email) {
         return withRequestId(
           NextResponse.json(
@@ -372,13 +394,14 @@ export function createEditorRoute<
   >[1],
   options: Omit<
     CreateRouteOptions<TBodySchema, TQuerySchema, TParamsSchema>,
-    "role"
-  > = {},
+    "role" | "permission"
+  > & { permission?: string } = {},
 ) {
   return createRouteHandler<"editor", TBodySchema, TQuerySchema, TParamsSchema>(
     {
       ...options,
       role: "editor",
+      permission: options.permission ?? "files:write",
     },
     handler,
   );
@@ -394,13 +417,14 @@ export function createAdminRoute<
   >[1],
   options: Omit<
     CreateRouteOptions<TBodySchema, TQuerySchema, TParamsSchema>,
-    "role"
+    "role" | "permission"
   > = {},
 ) {
   return createRouteHandler<"admin", TBodySchema, TQuerySchema, TParamsSchema>(
     {
       ...options,
       role: "admin",
+      permission: "admin:write",
     },
     handler,
   );
