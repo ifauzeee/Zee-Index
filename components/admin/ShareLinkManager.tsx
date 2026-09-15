@@ -14,7 +14,6 @@ import {
   AlertCircle,
   Trash2,
   Ban,
-  ExternalLink,
   Share2,
   Eye,
   BarChart3,
@@ -22,6 +21,7 @@ import {
 import { useConfirm } from "@/components/providers/ModalProvider";
 import PageTransition from "@/components/ui/PageTransition";
 import DataTable from "@/components/ui/DataTable";
+import AdminBackButton from "@/components/admin/AdminBackButton";
 
 interface ShareLinkItem {
   id: string;
@@ -177,15 +177,19 @@ export default function ShareLinkManager() {
     const now = new Date();
     const expiry = new Date(expiresAt);
     const diffMs = expiry.getTime() - now.getTime();
-    if (diffMs < 0) return { label: "Expired", class: "text-red-400" };
+    if (diffMs < 0)
+      return { label: "Expired", class: "text-red-500 dark:text-red-400" };
     const diffHours = diffMs / (1000 * 60 * 60);
     if (diffHours < 24)
       return {
         label: `${Math.ceil(diffHours)}h left`,
-        class: "text-amber-400",
+        class: "text-amber-500 dark:text-amber-400",
       };
     const diffDays = Math.floor(diffHours / 24);
-    return { label: `${diffDays}d left`, class: "text-emerald-400" };
+    return {
+      label: `${diffDays}d left`,
+      class: "text-emerald-600 dark:text-emerald-400",
+    };
   };
 
   const statusCounts = useMemo(() => {
@@ -209,25 +213,21 @@ export default function ShareLinkManager() {
       <div className="p-6 max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-foreground tracking-tight flex items-center gap-3">
               Share Links
               {isRefetching && (
-                <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+                <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
               )}
             </h1>
-            <p className="text-gray-400 mt-1">{t("shareLinkSubtitle")}</p>
+            <p className="text-muted-foreground mt-1">
+              {t("shareLinkSubtitle")}
+            </p>
           </div>
-          <a
-            href="/admin"
-            className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Admin Dashboard
-          </a>
+          <AdminBackButton />
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 p-3 mb-4 bg-red-900/30 border border-red-800 rounded-lg text-red-300 text-sm">
+          <div className="flex items-center gap-2 p-3 mb-4 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive text-sm">
             <AlertCircle className="w-4 h-4 shrink-0" />
             {error}
           </div>
@@ -236,41 +236,41 @@ export default function ShareLinkManager() {
         {/* Analytics Summary */}
         {links.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
-              <div className="flex items-center gap-2 text-gray-400 mb-1">
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Link2 size={14} />
                 <span className="text-xs font-medium uppercase tracking-wider">
                   {t("totalLinks")}
                 </span>
               </div>
-              <p className="text-2xl font-bold text-white tabular-nums">
+              <p className="text-2xl font-bold text-foreground tabular-nums">
                 {statusCounts.all}
               </p>
             </div>
-            <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
-              <div className="flex items-center gap-2 text-gray-400 mb-1">
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Eye size={14} />
                 <span className="text-xs font-medium uppercase tracking-wider">
                   {t("totalViews")}
                 </span>
               </div>
-              <p className="text-2xl font-bold text-white tabular-nums">
+              <p className="text-2xl font-bold text-foreground tabular-nums">
                 {analytics.totalViews.toLocaleString()}
               </p>
             </div>
-            <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
-              <div className="flex items-center gap-2 text-gray-400 mb-1">
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <BarChart3 size={14} />
                 <span className="text-xs font-medium uppercase tracking-wider">
                   {t("avgViewsPerLink")}
                 </span>
               </div>
-              <p className="text-2xl font-bold text-white tabular-nums">
+              <p className="text-2xl font-bold text-foreground tabular-nums">
                 {analytics.avgViews.toFixed(1)}
               </p>
             </div>
-            <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
-              <div className="flex items-center gap-2 text-gray-400 mb-1">
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Share2 size={14} />
                 <span className="text-xs font-medium uppercase tracking-wider">
                   {t("topShared")}
@@ -278,16 +278,18 @@ export default function ShareLinkManager() {
               </div>
               {analytics.topLinks.length > 0 ? (
                 <p
-                  className="text-sm text-white truncate"
+                  className="text-sm text-foreground truncate"
                   title={analytics.topLinks[0].itemName}
                 >
                   {analytics.topLinks[0].itemName}
-                  <span className="text-gray-400 ml-1 text-xs">
+                  <span className="text-muted-foreground ml-1 text-xs">
                     ({analytics.topLinks[0].viewCount})
                   </span>
                 </p>
               ) : (
-                <p className="text-sm text-gray-500">{t("noViewsYet")}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t("noViewsYet")}
+                </p>
               )}
             </div>
           </div>
@@ -296,12 +298,12 @@ export default function ShareLinkManager() {
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("shareLinkSearchPlaceholder")}
-              className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-indigo-500"
+              className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:border-primary"
             />
           </div>
           <div className="flex gap-2">
@@ -311,8 +313,8 @@ export default function ShareLinkManager() {
                 onClick={() => setStatusFilter(s)}
                 className={`px-3 py-2 rounded-lg text-sm transition-colors ${
                   statusFilter === s
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-accent"
                 }`}
               >
                 {s === "all" && t("all")}
@@ -332,13 +334,13 @@ export default function ShareLinkManager() {
               header: "Item",
               render: (link) => (
                 <div className="flex items-center gap-2">
-                  <Link2 className="w-4 h-4 text-gray-500 shrink-0" />
+                  <Link2 className="w-4 h-4 text-muted-foreground shrink-0" />
                   <div className="truncate max-w-[200px]">
-                    <span className="text-white font-medium">
+                    <span className="text-foreground font-medium">
                       {link.itemName}
                     </span>
                     {link.isCollection && (
-                      <span className="ml-2 text-xs bg-blue-900/50 text-blue-300 px-1.5 py-0.5 rounded">
+                      <span className="ml-2 text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded">
                         {t("collection")}
                       </span>
                     )}
@@ -351,7 +353,7 @@ export default function ShareLinkManager() {
               header: "Path",
               hideOnMobile: true,
               render: (link) => (
-                <code className="text-gray-400 text-xs font-mono truncate max-w-[180px] block">
+                <code className="text-muted-foreground text-xs font-mono truncate max-w-[180px] block">
                   {link.path}
                 </code>
               ),
@@ -361,7 +363,9 @@ export default function ShareLinkManager() {
               header: t("creator"),
               hideOnMobile: true,
               render: (link) => (
-                <span className="text-gray-400">{link.createdBy || "—"}</span>
+                <span className="text-muted-foreground">
+                  {link.createdBy || "—"}
+                </span>
               ),
             },
             {
@@ -369,14 +373,14 @@ export default function ShareLinkManager() {
               header: t("views"),
               hideOnMobile: true,
               render: (link) => (
-                <span className="text-gray-400">{link.viewCount}</span>
+                <span className="text-muted-foreground">{link.viewCount}</span>
               ),
             },
             {
               key: "expiresAt",
               header: t("validUntil"),
               render: (link) => (
-                <span className="text-gray-400 text-xs">
+                <span className="text-muted-foreground text-xs">
                   {format(new Date(link.expiresAt), "dd MMM yyyy HH:mm", {
                     locale: id,
                   })}
@@ -406,11 +410,11 @@ export default function ShareLinkManager() {
                   <div className="flex items-center justify-end gap-1">
                     <button
                       onClick={() => handleCopyUrl(link)}
-                      className="p-1.5 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors"
+                      className="p-1.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
                       title={t("copyUrl")}
                     >
                       {copiedId === link.id ? (
-                        <Check className="w-4 h-4 text-emerald-400" />
+                        <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
                       ) : (
                         <Copy className="w-4 h-4" />
                       )}
@@ -419,7 +423,7 @@ export default function ShareLinkManager() {
                       <button
                         onClick={() => handleRevoke(link)}
                         disabled={actionLoading === link.id}
-                        className="p-1.5 hover:bg-amber-900/50 rounded text-gray-400 hover:text-amber-300 transition-colors"
+                        className="p-1.5 hover:bg-amber-500/10 rounded text-muted-foreground hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
                         title={t("revoke")}
                       >
                         {actionLoading === link.id ? (
@@ -432,7 +436,7 @@ export default function ShareLinkManager() {
                     <button
                       onClick={() => handleDelete(link)}
                       disabled={actionLoading === link.id}
-                      className="p-1.5 hover:bg-red-900/50 rounded text-gray-400 hover:text-red-300 transition-colors"
+                      className="p-1.5 hover:bg-red-500/10 rounded text-muted-foreground hover:text-red-500 dark:hover:text-red-400 transition-colors"
                       title={t("deleteShareLinkTitle")}
                     >
                       {actionLoading === link.id ? (
@@ -451,7 +455,7 @@ export default function ShareLinkManager() {
           loading={loading}
           skeletonRows={8}
           emptyState={
-            <div className="text-center py-20 text-gray-500">
+            <div className="text-center py-20 text-muted-foreground">
               <Share2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p>
                 {links.length === 0 ? t("noShareLinks") : t("noMatchFilter")}
@@ -464,11 +468,11 @@ export default function ShareLinkManager() {
               <div className="flex items-center justify-end gap-1">
                 <button
                   onClick={() => handleCopyUrl(link)}
-                  className="p-1.5 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors"
+                  className="p-1.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
                   title={t("copyUrl")}
                 >
                   {copiedId === link.id ? (
-                    <Check className="w-4 h-4 text-emerald-400" />
+                    <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
                   ) : (
                     <Copy className="w-4 h-4" />
                   )}
@@ -477,7 +481,7 @@ export default function ShareLinkManager() {
                   <button
                     onClick={() => handleRevoke(link)}
                     disabled={actionLoading === link.id}
-                    className="p-1.5 hover:bg-amber-900/50 rounded text-gray-400 hover:text-amber-300 transition-colors"
+                    className="p-1.5 hover:bg-amber-500/10 rounded text-muted-foreground hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
                     title={t("revoke")}
                   >
                     {actionLoading === link.id ? (
@@ -490,7 +494,7 @@ export default function ShareLinkManager() {
                 <button
                   onClick={() => handleDelete(link)}
                   disabled={actionLoading === link.id}
-                  className="p-1.5 hover:bg-red-900/50 rounded text-gray-400 hover:text-red-300 transition-colors"
+                  className="p-1.5 hover:bg-red-500/10 rounded text-muted-foreground hover:text-red-500 dark:hover:text-red-400 transition-colors"
                   title={t("deleteShareLinkTitle")}
                 >
                   {actionLoading === link.id ? (
@@ -506,7 +510,7 @@ export default function ShareLinkManager() {
 
         {/* Summary */}
         {!loading && links.length > 0 && (
-          <div className="mt-4 text-xs text-gray-500 text-right">
+          <div className="mt-4 text-xs text-muted-foreground text-right">
             {filteredLinks.length !== links.length
               ? t("linksOfTotal", {
                   filtered: filteredLinks.length,

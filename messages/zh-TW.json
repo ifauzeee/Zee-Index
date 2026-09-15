@@ -407,7 +407,9 @@
     "topUser": "最佳使用者（90 天）",
     "weeklyTrend": "每週趨勢",
     "bandwidthMonthly": "頻寬使用量（30 天）",
-    "fileTypeDistribution": "熱門檔案類型",
+    "fileTypeDistribution": "最常見下載的檔案類型",
+    "fileTypeDistributionSubtitle": "根據下載紀錄（最近 90 天）",
+    "backToAdmin": "返回管理後台",
     "monthlyUsage": "每月使用量",
     "noData": "尚無資料。",
     "basicConfig": "基本設定",
@@ -854,6 +856,7 @@
     "largestFiles": "10 個最大檔案",
     "modified": "修改時間：",
     "noFilesFound": "找不到檔案。",
+    "noData": "尚無檔案類型資料。",
     "loadError": "載入儲存空間資料失敗，請稍後再試。",
     "unknownError": "發生未知錯誤。",
     "errorTitle": "發生錯誤",
@@ -1130,14 +1133,6 @@
     "envHint": "密鑰從環境變數讀取（請參閱 .env.example）。修改後請重新啟動伺服器。",
     "yes": "是",
     "no": "否"
-  },
-  "StorageIntelligence": {
-    "duplicateTitle": "重複分析（模擬）",
-    "identicalFiles": "偵測到相同檔案",
-    "wastingSpace": "浪費約 {size} 的儲存空間",
-    "contentDistribution": "內容分布",
-    "fileCount": "{count} 個檔案",
-    "count": "數量"
   },
   "Charts": {
     "count": "數量",

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { CardSkeleton } from "@/components/admin/skeletons";
 import PageTransition from "@/components/ui/PageTransition";
+import AdminBackButton from "@/components/admin/AdminBackButton";
 
 type IncidentStatus = "open" | "acknowledged" | "resolved";
 type IncidentSeverity = "warning" | "error" | "critical";
@@ -186,6 +187,7 @@ export default function IncidentMonitor() {
             <p className="text-gray-400 mt-1">{t("incidentSubtitle")}</p>
           </div>
           <div className="flex items-center gap-3">
+            <AdminBackButton />
             {openCount > 0 && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-900/30 border border-red-800/30 rounded-lg text-red-300 text-sm">
                 <Bell className="w-4 h-4" />

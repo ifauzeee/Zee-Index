@@ -407,7 +407,9 @@
     "topUser": "Pengguna Teratas (90 Hari)",
     "weeklyTrend": "Tren Mingguan",
     "bandwidthMonthly": "Penggunaan Bandwidth (30 Hari)",
-    "fileTypeDistribution": "Tipe File Terpopuler",
+    "fileTypeDistribution": "Tipe File Paling Diunduh",
+    "fileTypeDistributionSubtitle": "Berdasarkan riwayat unduhan (90 hari terakhir)",
+    "backToAdmin": "Kembali ke Admin",
     "monthlyUsage": "Penggunaan Bulanan",
     "noData": "Belum ada data.",
     "basicConfig": "Konfigurasi Dasar",
@@ -854,6 +856,7 @@
     "largestFiles": "10 File Terbesar",
     "modified": "Diubah:",
     "noFilesFound": "Tidak ada file yang ditemukan.",
+    "noData": "Belum ada data tipe file.",
     "loadError": "Gagal memuat data penyimpanan. Silakan coba lagi nanti.",
     "unknownError": "Terjadi kesalahan tidak dikenal.",
     "errorTitle": "Terjadi Kesalahan",
@@ -1130,14 +1133,6 @@
     "envHint": "Rahasia dibaca dari variabel environment (lihat .env.example). Restart server setelah mengubahnya.",
     "yes": "Ya",
     "no": "Tidak"
-  },
-  "StorageIntelligence": {
-    "duplicateTitle": "Analisis Duplikat (Mock)",
-    "identicalFiles": "File Identik Terdeteksi",
-    "wastingSpace": "Membuang sekitar {size} ruang penyimpanan",
-    "contentDistribution": "Distribusi Konten",
-    "fileCount": "{count} file",
-    "count": "Jumlah"
   },
   "Charts": {
     "count": "Jumlah",
