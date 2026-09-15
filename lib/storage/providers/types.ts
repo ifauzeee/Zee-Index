@@ -41,6 +41,10 @@ export interface StorageProvider {
   ): Promise<ZeeFile | null>;
   deleteFile(fileId: string): Promise<boolean>;
 
+  // Optional: create a folder. When unimplemented, folder creation is
+  // unsupported for that provider.
+  createFolder?(parentId: string, folderName: string): Promise<ZeeFile | null>;
+
   // Optional: streaming upload session (for providers with chunked session APIs
   // like Dropbox). When implemented, the route streams chunks directly to the
   // provider without buffering the entire file in server memory. The provider

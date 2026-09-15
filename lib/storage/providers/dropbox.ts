@@ -238,6 +238,29 @@ export class DropboxStorageProvider implements StorageProvider {
     }
   }
 
+  async createFolder(
+    parentId: string,
+    folderName: string,
+  ): Promise<ZeeFile | null> {
+    const parentPath =
+      parentId === this.rootId
+        ? this.basePath || ""
+        : this.toRemotePath(parentId);
+    const remotePath = `${parentPath.replace(/\/$/, "")}/${folderName}`.replace(
+      /\/\//g,
+      "/",
+    );
+
+    try {
+      const res = await this.client.filesCreateFolderV2({ path: remotePath });
+      const entry = res.result.metadata as Parameters<typeof this.toZeeFile>[0];
+      return this.toZeeFile(entry);
+    } catch (err) {
+      logger.error({ err, remotePath }, "[Dropbox] createFolder failed");
+      return null;
+    }
+  }
+
   // ponytail: single-process session map; sessions leak on upload abort and are
   // lost on restart (Dropbox sessions expire after 7 days anyway, their own
   // cleanup). Not worth a DB table until multi-instance deployment.
