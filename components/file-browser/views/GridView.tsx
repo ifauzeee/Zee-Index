@@ -23,8 +23,10 @@ export default function GridView({
   isFetchingNextPage,
   nextPageToken,
   navigatingId,
+  onUploadClick,
 }: FileBrowserViewProps) {
   const t = useTranslations("FileList");
+  const tBrowser = useTranslations("FileBrowser");
   const listRef = useRef<HTMLDivElement | null>(null);
   const [numColumns, setNumColumns] = useState(2);
   const [offset, setOffset] = React.useState(0);
@@ -102,6 +104,11 @@ export default function GridView({
           icon={FolderSearch}
           title={t("emptyTitle")}
           message={t("emptyMessage")}
+          action={
+            onUploadClick
+              ? { label: tBrowser("upload"), onClick: onUploadClick }
+              : null
+          }
         />
       </div>
     );

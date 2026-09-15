@@ -30,8 +30,10 @@ export default function GalleryView({
   isFetchingNextPage,
   nextPageToken,
   navigatingId,
+  onUploadClick,
 }: FileBrowserViewProps) {
   const t = useTranslations("FileList");
+  const tBrowser = useTranslations("FileBrowser");
 
   if (files.length === 0 && !isFetchingNextPage) {
     return (
@@ -40,6 +42,11 @@ export default function GalleryView({
           icon={FolderSearch}
           title={t("emptyTitle")}
           message={t("emptyMessage")}
+          action={
+            onUploadClick
+              ? { label: tBrowser("upload"), onClick: onUploadClick }
+              : null
+          }
         />
       </div>
     );

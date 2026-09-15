@@ -802,7 +802,8 @@
   },
   "PinnedSection": {
     "title": "Pinned",
-    "folderSubtitle": "Pinned Folder"
+    "folderSubtitle": "Pinned Folder",
+    "emptyHint": "Pin folders from the context menu for quick access."
   },
   "FilePage": {
     "errorTitle": "Failed to Load",

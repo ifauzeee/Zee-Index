@@ -60,6 +60,7 @@ interface FileBrowserContentProps {
   navigatingId: string | null;
   currentFolderId: string | undefined;
   error: RequestError | null;
+  onUploadClick?: () => void;
 }
 
 import { useTranslations } from "next-intl";
@@ -99,6 +100,7 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
     navigatingId,
     currentFolderId,
     error,
+    onUploadClick,
   } = props;
 
   const isGoogleAuthHealthy = useAppStore((state) => state.isGoogleAuthHealthy);
@@ -252,7 +254,13 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
             nextPageToken={nextPageToken}
             navigatingId={navigatingId}
             currentFolderId={currentFolderId}
+            onUploadClick={onUploadClick}
           />
+
+          {/* Infinite scroll sentinel — IntersectionObserver watches this */}
+          {nextPageToken && (
+            <div ref={loaderRef} className="h-10" aria-hidden="true" />
+          )}
         </motion.div>
       </AnimatePresence>
     </>

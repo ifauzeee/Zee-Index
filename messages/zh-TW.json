@@ -802,7 +802,8 @@
   },
   "PinnedSection": {
     "title": "釘選",
-    "folderSubtitle": "已釘選的資料夾"
+    "folderSubtitle": "已釘選的資料夾",
+    "emptyHint": "從右鍵選單釘選資料夾以快速存取。"
   },
   "FilePage": {
     "errorTitle": "載入失敗",

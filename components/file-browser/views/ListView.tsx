@@ -28,8 +28,10 @@ export default function ListView({
   isFetchingNextPage,
   nextPageToken,
   navigatingId,
+  onUploadClick,
 }: FileBrowserViewProps) {
   const t = useTranslations("FileList");
+  const tBrowser = useTranslations("FileBrowser");
   const listRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = React.useState(0);
 
@@ -69,6 +71,11 @@ export default function ListView({
           icon={FolderSearch}
           title={t("emptyTitle")}
           message={t("emptyMessage")}
+          action={
+            onUploadClick
+              ? { label: tBrowser("upload"), onClick: onUploadClick }
+              : null
+          }
         />
       </div>
     );

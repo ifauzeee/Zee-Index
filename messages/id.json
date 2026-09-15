@@ -802,7 +802,8 @@
   },
   "PinnedSection": {
     "title": "Tersemat",
-    "folderSubtitle": "Folder Tersemat"
+    "folderSubtitle": "Folder Tersemat",
+    "emptyHint": "Semat folder dari menu konteks untuk akses cepat."
   },
   "FilePage": {
     "errorTitle": "Gagal Memuat",

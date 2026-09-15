@@ -583,6 +583,7 @@ export function useFileBrowserController({
       fetchNextPage,
       navigatingId,
       currentFolderId,
+      onUploadClick: () => upload.setIsUploadModalOpen(true),
     },
     modalsProps: {
       authModal: { isOpen: false, folderId: "", folderName: "" },

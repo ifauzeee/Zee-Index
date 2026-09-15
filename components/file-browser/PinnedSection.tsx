@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Pin, Folder, ChevronRight } from "lucide-react";
+import { Pin, Folder, PinOff, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import type { DriveFile } from "@/lib/drive";
 import { useTranslations } from "next-intl";
@@ -17,13 +17,26 @@ export default function PinnedSection() {
 
   const isRoot = !currentFolderId || currentFolderId === rootId;
 
-  if (!isRoot || pinnedFolders.length === 0) return null;
+  if (!isRoot) return null;
 
   const handleClick = (folder: DriveFile) => {
     let url = `/folder/${folder.id}`;
     if (shareToken) url += `?share_token=${shareToken}`;
     router.push(url);
   };
+
+  if (pinnedFolders.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center gap-3 p-4 bg-card border border-dashed rounded-xl text-sm text-muted-foreground"
+      >
+        <PinOff size={18} className="text-muted-foreground/50 shrink-0" />
+        <span>{t("emptyHint")}</span>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
