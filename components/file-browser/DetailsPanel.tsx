@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, memo, useCallback } from "react";
 import { motion, PanInfo, useAnimation, Variants } from "framer-motion";
 import {
   X,
@@ -79,7 +79,7 @@ const panelVariants: Variants = {
   }),
 };
 
-export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
+function DetailsPanelInner({ file, onClose }: DetailsPanelProps) {
   const t = useTranslations("DetailsPanel");
   const locale = useLocale();
   const metadata = file.imageMediaMetadata || file.videoMediaMetadata;
@@ -151,11 +151,11 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
     fetchPath();
   }, [file.id, file.parents, t, locale]);
 
-  const handleCopyLink = () => {
+  const handleCopyLink = useCallback(() => {
     const url = `/api/download?fileId=${file.id}`;
     navigator.clipboard.writeText(`${window.location.origin}${url}`);
     addToast({ message: t("linkDownloadCopied"), type: "success" });
-  };
+  }, [file.id, addToast, t]);
 
   const onDragEnd = async (
     event: MouseEvent | TouchEvent | PointerEvent,
@@ -410,3 +410,12 @@ export default function DetailsPanel({ file, onClose }: DetailsPanelProps) {
     </>
   );
 }
+
+const areDetailsPropsEqual = (
+  prevProps: DetailsPanelProps,
+  nextProps: DetailsPanelProps,
+) => {
+  return prevProps.file.id === nextProps.file.id;
+};
+
+export default memo(DetailsPanelInner, areDetailsPropsEqual);

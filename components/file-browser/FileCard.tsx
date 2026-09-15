@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, memo, useCallback } from "react";
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -38,7 +38,7 @@ interface FileCardProps {
   onFileDrop?: (e: React.DragEvent, targetFolder: DriveFile) => void;
 }
 
-export default function FileCard({
+function FileCardInner({
   file,
   onNavigate,
   onClick,
@@ -94,33 +94,47 @@ export default function FileCard({
   } = useAppStore();
   const isSelected = selectedFiles.some((f) => f.id === file.id);
 
-  const handleClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest("button") || target.closest("input")) return;
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest("button") || target.closest("input")) return;
 
-    if (isBulkMode || e.shiftKey) {
+      if (isBulkMode || e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleSelection(file);
+        if (!isBulkMode) setBulkMode(true);
+        return;
+      }
+
+      if (isFolder && onNavigate) {
+        e.preventDefault();
+        onNavigate(file.id);
+      } else if (onClick) {
+        onClick(file);
+      }
+    },
+    [
+      file,
+      isBulkMode,
+      isFolder,
+      onNavigate,
+      onClick,
+      toggleSelection,
+      setBulkMode,
+    ],
+  );
+
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      toggleSelection(file);
-      if (!isBulkMode) setBulkMode(true);
-      return;
-    }
-
-    if (isFolder && onNavigate) {
-      e.preventDefault();
-      onNavigate(file.id);
-    } else if (onClick) {
-      onClick(file);
-    }
-  };
-
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (onContextMenu) {
-      onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
-    }
-  };
+      if (onContextMenu) {
+        onContextMenu({ clientX: e.clientX, clientY: e.clientY }, file);
+      }
+    },
+    [file, onContextMenu],
+  );
 
   const displayThumbnail =
     thumbnailSrc && !isFolder && file.hasThumbnail && !imageError;
@@ -302,3 +316,19 @@ export default function FileCard({
     </motion.div>
   );
 }
+
+const areCardPropsEqual = (
+  prevProps: FileCardProps,
+  nextProps: FileCardProps,
+) => {
+  return (
+    prevProps.file.id === nextProps.file.id &&
+    prevProps.file.name === nextProps.file.name &&
+    prevProps.file.uploadStatus === nextProps.file.uploadStatus &&
+    prevProps.thumbnailSrc === nextProps.thumbnailSrc &&
+    prevProps.isNavigating === nextProps.isNavigating &&
+    prevProps.isAdmin === nextProps.isAdmin
+  );
+};
+
+export default memo(FileCardInner, areCardPropsEqual);
