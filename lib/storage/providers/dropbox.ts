@@ -254,7 +254,8 @@ export class DropboxStorageProvider implements StorageProvider {
     try {
       const res = await this.client.filesCreateFolderV2({ path: remotePath });
       const entry = res.result.metadata as Parameters<typeof this.toZeeFile>[0];
-      return this.toZeeFile(entry);
+      // create_folder_v2 returns FolderMetadataReference which may omit ".tag"
+      return this.toZeeFile({ ...entry, ".tag": "folder" });
     } catch (err) {
       logger.error({ err, remotePath }, "[Dropbox] createFolder failed");
       return null;
