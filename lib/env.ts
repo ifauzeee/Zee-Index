@@ -54,6 +54,12 @@ const envSchema = z.object({
   STORAGE_WEBDAV_PASSWORD: z.string().optional().or(z.literal("")),
   STORAGE_WEBDAV_BASEPATH: z.string().optional().or(z.literal("")),
   STORAGE_WEBDAV_ROOT_NAME: z.string().optional().or(z.literal("")),
+  STORAGE_DROPBOX_ACCESS_TOKEN: z.string().optional().or(z.literal("")),
+  STORAGE_DROPBOX_REFRESH_TOKEN: z.string().optional().or(z.literal("")),
+  STORAGE_DROPBOX_APP_KEY: z.string().optional().or(z.literal("")),
+  STORAGE_DROPBOX_APP_SECRET: z.string().optional().or(z.literal("")),
+  STORAGE_DROPBOX_BASEPATH: z.string().optional().or(z.literal("")),
+  STORAGE_DROPBOX_ROOT_NAME: z.string().optional().or(z.literal("")),
   TMDB_API_KEY: z.string().optional(),
   ANALYZE: z.string().optional(),
 });
@@ -109,6 +115,14 @@ export function validateOnStartup(): Env {
       STORAGE_WEBDAV_PASSWORD: process.env.STORAGE_WEBDAV_PASSWORD || "",
       STORAGE_WEBDAV_BASEPATH: process.env.STORAGE_WEBDAV_BASEPATH || "",
       STORAGE_WEBDAV_ROOT_NAME: process.env.STORAGE_WEBDAV_ROOT_NAME || "",
+      STORAGE_DROPBOX_ACCESS_TOKEN:
+        process.env.STORAGE_DROPBOX_ACCESS_TOKEN || "",
+      STORAGE_DROPBOX_REFRESH_TOKEN:
+        process.env.STORAGE_DROPBOX_REFRESH_TOKEN || "",
+      STORAGE_DROPBOX_APP_KEY: process.env.STORAGE_DROPBOX_APP_KEY || "",
+      STORAGE_DROPBOX_APP_SECRET: process.env.STORAGE_DROPBOX_APP_SECRET || "",
+      STORAGE_DROPBOX_BASEPATH: process.env.STORAGE_DROPBOX_BASEPATH || "",
+      STORAGE_DROPBOX_ROOT_NAME: process.env.STORAGE_DROPBOX_ROOT_NAME || "",
       TMDB_API_KEY: process.env.TMDB_API_KEY || "",
       ANALYZE: process.env.ANALYZE || "",
     } as Env;

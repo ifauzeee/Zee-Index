@@ -4,6 +4,7 @@ import {
   GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
+  DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getMimeType } from "../mime";
 import type {
@@ -198,6 +199,19 @@ export class S3StorageProvider implements StorageProvider {
     } catch (err) {
       logger.error({ err, key }, "S3 upload failed");
       return null;
+    }
+  }
+
+  async deleteFile(fileId: string): Promise<boolean> {
+    const key = this.toKey(fileId);
+    try {
+      await this.client.send(
+        new DeleteObjectCommand({ Bucket: this.bucket, Key: key }),
+      );
+      return true;
+    } catch (err) {
+      logger.error({ err, key }, "S3 delete failed");
+      return false;
     }
   }
 }

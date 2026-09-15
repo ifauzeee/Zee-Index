@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAccessToken, getFileDetailsFromDrive } from "@/lib/drive";
 import { deleteLocalFile } from "@/lib/storage/local";
+import { getActiveProvider, isProviderId } from "@/lib/storage/providers";
 import { z } from "zod";
 import { logActivity } from "@/lib/activityLogger";
 import { invalidateFolderCache } from "@/lib/cache";
@@ -18,6 +19,36 @@ export const POST = createAdminRoute(
     let fileDetails: { name?: string; parents?: string[] } | null = null;
     try {
       const { fileId } = body;
+
+      if (isProviderId(fileId)) {
+        const provider = getActiveProvider();
+        const parts = fileId.split("/").filter(Boolean);
+        const fileName = parts.pop() || fileId;
+        const parentId = parts.length > 0 ? parts.join("/") : "";
+
+        if (!provider) {
+          throw new Error("Tidak ada storage provider aktif.");
+        }
+
+        const deleted = await provider.deleteFile(fileId);
+        if (!deleted) {
+          throw new Error(`Gagal menghapus file dari ${provider.source}.`);
+        }
+
+        await logActivity("DELETE", {
+          itemName: fileName,
+          userEmail: session?.user?.email,
+          status: "success",
+        });
+
+        if (parentId) {
+          await invalidateFolderCache(parentId);
+        } else {
+          await invalidateFolderCache(provider.rootId);
+        }
+
+        return NextResponse.json({ success: true });
+      }
 
       if (fileId.startsWith("local-storage:")) {
         const localPath = fileId.replace("local-storage:", "");

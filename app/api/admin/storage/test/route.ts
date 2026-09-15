@@ -12,7 +12,7 @@ export const POST = createAdminRoute(async () => {
       {
         ok: false,
         error:
-          "No external storage provider is configured. Set STORAGE_PROVIDER to 's3' or 'webdav'.",
+          "No external storage provider is configured. Set STORAGE_PROVIDER to 's3', 'webdav', or 'dropbox'.",
       },
       { status: 400 },
     );
