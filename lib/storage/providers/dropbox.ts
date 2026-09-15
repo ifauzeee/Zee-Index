@@ -1,5 +1,5 @@
 import { Dropbox, DropboxAuth } from "dropbox";
-import type { StorageProvider } from "./types";
+import type { ProviderDownload, StorageProvider } from "./types";
 import { getMimeType } from "../mime";
 import type { ZeeFile } from "@/types/storage";
 import { logger } from "@/lib/logger";
@@ -19,6 +19,7 @@ export class DropboxStorageProvider implements StorageProvider {
   readonly source = "dropbox" as const;
 
   private client: Dropbox;
+  private auth: DropboxAuth;
   private basePath: string;
 
   constructor() {
@@ -38,6 +39,7 @@ export class DropboxStorageProvider implements StorageProvider {
     });
 
     this.client = new Dropbox({ auth });
+    this.auth = auth;
   }
 
   private toRemotePath(fileId: string): string {
@@ -140,45 +142,86 @@ export class DropboxStorageProvider implements StorageProvider {
     }
   }
 
-  async getDownload(fileId: string): Promise<{
-    stream: ReadableStream<Uint8Array>;
-    size: number;
-    mimeType: string;
-    filename: string;
-  } | null> {
+  async getDownload(
+    fileId: string,
+    range?: string | null,
+  ): Promise<ProviderDownload | null> {
     const remotePath = this.toRemotePath(fileId);
     try {
-      const res = await this.client.filesDownload({ path: remotePath });
-      const result = res.result as unknown as Record<string, unknown>;
+      let token = this.auth.getAccessToken();
+      if (!token) {
+        await this.auth.refreshAccessToken();
+        token = this.auth.getAccessToken();
+      }
+      if (!token) {
+        logger.error({ fileId }, "[Dropbox] no access token available");
+        return null;
+      }
 
-      const name = (result.name as string) || basename(remotePath);
-      const mimeType = getMimeType(name) || "application/octet-stream";
-      const blob = (result.fileBlob ?? result.fileBinary) as
-        Blob | ArrayBuffer | undefined;
-      if (!blob) {
+      const linkRes = await fetch(
+        "https://api.dropboxapi.com/2/files/get_temporary_link",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ path: remotePath }),
+        },
+      );
+      if (!linkRes.ok) {
         logger.error(
-          { keys: Object.keys(result), fileId },
-          "[Dropbox] getDownload: no fileBlob/fileBinary",
+          { status: linkRes.status, fileId },
+          "[Dropbox] get_temporary_link failed",
         );
         return null;
       }
 
-      const buffer =
-        blob instanceof Blob
-          ? Buffer.from(await blob.arrayBuffer())
-          : Buffer.from(blob as ArrayBuffer);
-      const stream = new ReadableStream<Uint8Array>({
-        start(controller) {
-          controller.enqueue(new Uint8Array(buffer));
-          controller.close();
-        },
-      });
+      const linkData = (await linkRes.json()) as {
+        link?: string;
+        metadata?: { name?: string; size?: number };
+      };
+      const link = linkData.link;
+      if (!link) {
+        logger.error({ fileId }, "[Dropbox] get_temporary_link: no link");
+        return null;
+      }
+
+      const name = linkData.metadata?.name || basename(remotePath);
+      const size = linkData.metadata?.size ?? 0;
+
+      const headers: Record<string, string> = {
+        "User-Agent": "Zee-Index-Streamer/1.0",
+      };
+      if (range) headers.Range = range;
+
+      let upstream = await fetch(link, { headers, cache: "no-store" });
+      if (upstream.status === 401 || upstream.status === 403) {
+        // temp link expired or invalidated; retry once with a fresh link
+        upstream = await fetch(link, {
+          headers: range ? { ...headers, Range: range } : headers,
+          cache: "no-store",
+        });
+      }
+      if (!upstream.ok) {
+        logger.error(
+          { status: upstream.status, fileId },
+          "[Dropbox] download failed",
+        );
+        return null;
+      }
+
+      const contentRange = upstream.headers.get("Content-Range");
+      const rawLength = upstream.headers.get("Content-Length");
 
       return {
-        stream,
-        size: (result.size as number) || buffer.byteLength,
-        mimeType,
+        stream: upstream.body as unknown as ReadableStream<Uint8Array>,
+        size,
+        mimeType: getMimeType(name) || "application/octet-stream",
         filename: name,
+        status: upstream.status,
+        contentRange,
+        contentLength: rawLength ? parseInt(rawLength, 10) : null,
       };
     } catch (err) {
       logger.error({ err, fileId }, "[Dropbox] download failed");
