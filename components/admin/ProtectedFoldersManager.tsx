@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
+import AdminBackButton from "@/components/admin/AdminBackButton";
 import { ListSkeleton } from "@/components/admin/skeletons";
 import { getErrorMessage } from "@/lib/errors";
 import PageTransition from "@/components/ui/PageTransition";
@@ -103,15 +104,18 @@ export default function ProtectedFoldersManager() {
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <ShieldPlus className="text-primary" /> {t("title")}
           </h2>
-          <button
-            type="button"
-            onClick={() =>
-              setNewFolder({ folderId: "local-storage:", password: "" })
-            }
-            className="text-xs font-semibold bg-blue-500/10 text-blue-600 px-3 py-1.5 rounded-full border border-blue-500/20 hover:bg-blue-500/20 transition-all flex items-center gap-1.5"
-          >
-            <Lock size={12} /> {t("protectLocalRoot")}
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <AdminBackButton />
+            <button
+              type="button"
+              onClick={() =>
+                setNewFolder({ folderId: "local-storage:", password: "" })
+              }
+              className="text-xs font-semibold bg-blue-500/10 text-blue-600 px-3 py-1.5 rounded-full border border-blue-500/20 hover:bg-blue-500/20 transition-all flex items-center gap-1.5"
+            >
+              <Lock size={12} /> {t("protectLocalRoot")}
+            </button>
+          </div>
         </div>
 
         <div className="bg-card border rounded-2xl p-6 shadow-sm space-y-8">

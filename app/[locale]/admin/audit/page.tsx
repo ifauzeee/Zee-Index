@@ -31,6 +31,7 @@ import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import EmptyState from "@/components/file-browser/EmptyState";
 import { TableSkeleton } from "@/components/admin/skeletons";
+import AdminBackButton from "@/components/admin/AdminBackButton";
 
 interface AuditLog {
   id: string;
@@ -187,14 +188,19 @@ export default function AuditDashboard() {
     >
       {/* ── Header ── */}
       <motion.div variants={item}>
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-primary/10 text-primary rounded-2xl shadow-sm">
-            <ScrollText size={26} />
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-primary/10 text-primary rounded-2xl shadow-sm">
+              <ScrollText size={26} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                {t("title")}
+              </h1>
+              <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-            <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
-          </div>
+          <AdminBackButton />
         </div>
       </motion.div>
 

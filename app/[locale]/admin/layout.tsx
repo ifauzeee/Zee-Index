@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useAppStore } from "@/lib/store";
 import { BulkActionBar } from "@/components/file-browser/BulkActionBar";
@@ -10,7 +10,11 @@ import { HardDrive } from "lucide-react";
 
 import { useTranslations } from "next-intl";
 import { useDataUsageQuery } from "@/hooks/useDataUsage";
+import { cn } from "@/lib/utils";
 
+const Sidebar = dynamic(() => import("@/components/layout/Sidebar"), {
+  ssr: false,
+});
 const Header = dynamic(() => import("@/components/layout/Header"), {
   ssr: false,
 });
@@ -57,14 +61,37 @@ export default function MainLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { toasts, removeToast, detailsFile, setDetailsFile } = useAppStore();
+  const {
+    toasts,
+    removeToast,
+    detailsFile,
+    setDetailsFile,
+    isSidebarOpen,
+    setSidebarOpen,
+  } = useAppStore();
   const tCommon = useTranslations("Common");
+  const touchStartRef = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    if (touchStartRef.current < 50 && touchEnd - touchStartRef.current > 100) {
+      setSidebarOpen(true);
+    }
+    touchStartRef.current = null;
+  };
 
   return (
     <>
       <div
         id="app-container"
-        className={`bg-background text-foreground min-h-screen flex flex-col`}
+        className="bg-background text-foreground min-h-screen flex flex-col"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         <a
           href="#main-content"
@@ -75,17 +102,29 @@ export default function MainLayout({
         <Suspense fallback={<div className="h-16 bg-background" />}>
           <Header />
         </Suspense>
-        <Suspense fallback={null}>
-          <AdminSubNav />
-        </Suspense>
-        <div className="container mx-auto px-4 max-w-7xl flex-grow">
-          <main
-            id="main-content"
-            tabIndex={-1}
-            className="min-h-[50vh] mb-12 outline-none"
+        <div className="flex flex-1 min-h-0">
+          <Suspense fallback={null}>
+            <Sidebar />
+          </Suspense>
+          <div
+            className={cn(
+              "flex-1 flex flex-col transition-all duration-300 ease-in-out min-w-0 w-full",
+              isSidebarOpen ? "lg:ml-64" : "ml-0",
+            )}
           >
-            {children}
-          </main>
+            <Suspense fallback={null}>
+              <AdminSubNav />
+            </Suspense>
+            <div className="container mx-auto px-4 max-w-7xl flex-grow">
+              <main
+                id="main-content"
+                tabIndex={-1}
+                className="min-h-[50vh] mb-12 outline-none"
+              >
+                {children}
+              </main>
+            </div>
+          </div>
         </div>
 
         <div

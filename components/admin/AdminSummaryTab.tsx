@@ -28,11 +28,6 @@ import { useShareLinksQuery } from "@/hooks/useShareLinks";
 import { useFileRequestsQuery } from "@/hooks/useFileRequests";
 import { useAdminEmailsQuery } from "@/hooks/useAdminUsers";
 
-const StorageIntelligence = dynamic(
-  () => import("@/components/admin/StorageIntelligence"),
-  { ssr: false, loading: () => <ChartSkeleton /> },
-);
-
 const TodayDownloadsChart = dynamic(
   () => import("@/components/charts/TodayDownloadsChart"),
   { ssr: false, loading: () => <ChartSkeleton /> },
@@ -315,15 +310,14 @@ export default function AdminSummaryTab() {
               </div>
             </div>
 
-            <div className="xl:col-span-2 mt-4">
-              <StorageIntelligence stats={stats} />
-            </div>
-
             <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm">
-              <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
+              <h3 className="text-base font-semibold mb-1 flex items-center gap-2">
                 <BarChart3 size={18} className="text-emerald-500" />
                 {t("fileTypeDistribution")}
               </h3>
+              <p className="text-xs text-muted-foreground mb-4">
+                {t("fileTypeDistributionSubtitle")}
+              </p>
               <div className="space-y-4">
                 {stats.fileTypeDistribution?.length > 0 ? (
                   stats.fileTypeDistribution.map((item) => (

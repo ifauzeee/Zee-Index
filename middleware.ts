@@ -75,9 +75,9 @@ export function createContentSecurityPolicy(
   nonce: string,
   options?: { allowUnsafeEval?: boolean },
 ): string {
-  // unsafe-eval is needed by some dev tooling / Monaco; omit in production.
-  const allowUnsafeEval =
-    options?.allowUnsafeEval ?? process.env.NODE_ENV !== "production";
+  // unsafe-eval is needed by recharts (new Function() for tooltip rendering).
+  // Omit only if no chart library requires it.
+  const allowUnsafeEval = options?.allowUnsafeEval ?? true;
   const scriptEval = allowUnsafeEval ? " 'unsafe-eval'" : "";
 
   return [

@@ -407,7 +407,9 @@
     "topUser": "Top User (90 Days)",
     "weeklyTrend": "Weekly Trend",
     "bandwidthMonthly": "Bandwidth Usage (30 Days)",
-    "fileTypeDistribution": "Popular File Types",
+    "fileTypeDistribution": "Most Downloaded File Types",
+    "fileTypeDistributionSubtitle": "Based on download history (last 90 days)",
+    "backToAdmin": "Back to Admin",
     "monthlyUsage": "Monthly Usage",
     "noData": "No data yet.",
     "basicConfig": "Basic Configuration",
@@ -854,6 +856,7 @@
     "largestFiles": "10 Largest Files",
     "modified": "Modified:",
     "noFilesFound": "No files found.",
+    "noData": "No file type data yet.",
     "loadError": "Failed to load storage data. Please try again later.",
     "unknownError": "An unknown error occurred.",
     "errorTitle": "An Error Occurred",
@@ -1130,14 +1133,6 @@
     "envHint": "Secrets are read from environment variables (see .env.example). Restart the server after changing them.",
     "yes": "Yes",
     "no": "No"
-  },
-  "StorageIntelligence": {
-    "duplicateTitle": "Duplicate Analysis (Mock)",
-    "identicalFiles": "Identical Files Detected",
-    "wastingSpace": "Wasting approximately {size} of storage space",
-    "contentDistribution": "Content Distribution",
-    "fileCount": "{count} files",
-    "count": "Count"
   },
   "Charts": {
     "count": "Count",

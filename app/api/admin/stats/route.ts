@@ -81,7 +81,7 @@ const getAdminStatsCached = unstable_cache(
            COUNT(*)::bigint AS count
          FROM "ActivityLog"
          WHERE type = 'DOWNLOAD' AND "itemName" IS NOT NULL AND timestamp >= $1
-         GROUP BY type ORDER BY count DESC LIMIT 5`,
+         GROUP BY 1 ORDER BY count DESC LIMIT 5`,
         ninetyDaysAgo,
       ),
     ]);

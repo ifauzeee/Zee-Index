@@ -93,6 +93,8 @@ function StoragePageContent() {
     fill: chartColors[index % chartColors.length],
   }));
 
+  const hasData = data.usage > 0 && data.breakdown.length > 0;
+
   return (
     <motion.div
       className="container mx-auto py-8 px-4 max-w-7xl"
@@ -162,38 +164,48 @@ function StoragePageContent() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        <div className="lg:col-span-5 flex flex-col gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-stretch">
+        <div className="flex flex-col gap-6">
           <div className="h-full flex flex-col">
             <h2 className="text-lg font-semibold mb-6">
               {t("fileDistribution")}
             </h2>
 
-            <StorageUsageChart data={chartData} />
-
-            <div className="mt-2 grid grid-cols-2 gap-3">
-              {chartData.map((item) => (
-                <div
-                  key={item.type}
-                  className="flex items-center justify-between text-sm p-2 rounded-lg bg-muted/30"
-                >
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    <span
-                      className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: item.fill }}
-                    />
-                    <span className="truncate font-medium">{item.type}</span>
-                  </div>
-                  <span className="text-muted-foreground shrink-0 text-xs ml-2">
-                    {formatBytes(item.size)}
-                  </span>
+            {hasData ? (
+              <>
+                <StorageUsageChart data={chartData} />
+                <div className="mt-2 grid grid-cols-2 gap-3">
+                  {chartData.map((item) => (
+                    <div
+                      key={item.type}
+                      className="flex items-center justify-between text-sm p-2 rounded-lg bg-muted/30"
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: item.fill }}
+                        />
+                        <span className="truncate font-medium">
+                          {item.type}
+                        </span>
+                      </div>
+                      <span className="text-muted-foreground shrink-0 text-xs ml-2">
+                        {formatBytes(item.size)}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center rounded-xl border border-dashed border-border bg-muted/20">
+                <PieChartIcon className="w-10 h-10 text-muted-foreground/40 mb-3" />
+                <p className="text-sm text-muted-foreground">{t("noData")}</p>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="lg:col-span-7 flex flex-col gap-6">
+        <div className="flex flex-col gap-6">
           <div className="h-full">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -261,8 +273,11 @@ function StoragePageContent() {
                   );
                 })
               ) : (
-                <div className="text-center py-10 text-muted-foreground">
-                  {t("noFilesFound")}
+                <div className="flex flex-col items-center justify-center py-10 text-center rounded-xl border border-dashed border-border bg-muted/20">
+                  <FileText className="w-10 h-10 text-muted-foreground/40 mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    {t("noFilesFound")}
+                  </p>
                 </div>
               )}
             </div>
