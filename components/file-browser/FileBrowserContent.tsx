@@ -49,12 +49,18 @@ interface FileBrowserContentProps {
   onFileDrop: (e: React.DragEvent, target: BrowserFile) => void;
   onPrefetchItem: (file: BrowserFile) => void;
 
+  onFilePreview?: (file: BrowserFile) => void;
+  onFileDelete?: (file: BrowserFile) => void;
+  onFileRename?: (file: BrowserFile) => void;
+  onOpenSearch?: () => void;
+
   isFetchingNextPage: boolean;
   nextPageToken: string | null;
   fetchNextPage: () => void;
   navigatingId: string | null;
   currentFolderId: string | undefined;
   error: RequestError | null;
+  onUploadClick?: () => void;
 }
 
 import { useTranslations } from "next-intl";
@@ -84,12 +90,17 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
     onDragStart,
     onFileDrop,
     onPrefetchItem,
+    onFilePreview,
+    onFileDelete,
+    onFileRename,
+    onOpenSearch,
     isFetchingNextPage,
     nextPageToken,
     fetchNextPage,
     navigatingId,
     currentFolderId,
     error,
+    onUploadClick,
   } = props;
 
   const isGoogleAuthHealthy = useAppStore((state) => state.isGoogleAuthHealthy);
@@ -101,6 +112,16 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
   const { focusedIndex } = useKeyboardNavigation({
     files: sortedFiles as Array<{ id: string; name: string; mimeType: string }>,
     onFileOpen: (file) => onItemClick(file as BrowserFile),
+    onFilePreview: onFilePreview
+      ? (file) => onFilePreview(file as BrowserFile)
+      : undefined,
+    onFileDelete: onFileDelete
+      ? (file) => onFileDelete(file as BrowserFile)
+      : undefined,
+    onFileRename: onFileRename
+      ? (file) => onFileRename(file as BrowserFile)
+      : undefined,
+    onOpenSearch,
   });
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
@@ -233,7 +254,13 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
             nextPageToken={nextPageToken}
             navigatingId={navigatingId}
             currentFolderId={currentFolderId}
+            onUploadClick={onUploadClick}
           />
+
+          {/* Infinite scroll sentinel — IntersectionObserver watches this */}
+          {nextPageToken && (
+            <div ref={loaderRef} className="h-10" aria-hidden="true" />
+          )}
         </motion.div>
       </AnimatePresence>
     </>

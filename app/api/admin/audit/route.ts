@@ -1,7 +1,7 @@
 import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
-import { getActivityLogs } from "@/lib/activityLogger";
+import { getActivityLogs, getActivityStats } from "@/lib/activityLogger";
 import { kv } from "@/lib/kv";
 import { db } from "@/lib/db";
 import { EVENT_PIPELINE_KEYS } from "@/lib/events/pipeline";
@@ -10,8 +10,11 @@ export const dynamic = "force-dynamic";
 
 export const GET = createAdminRoute(async () => {
   try {
-    const logs = await getActivityLogs(100);
-    return NextResponse.json(logs);
+    const [logs, stats] = await Promise.all([
+      getActivityLogs(100),
+      getActivityStats(),
+    ]);
+    return NextResponse.json({ logs, stats });
   } catch (error) {
     logger.error({ err: error }, "[Audit API] Error");
     return NextResponse.json(

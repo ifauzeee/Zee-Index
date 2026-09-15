@@ -16,6 +16,8 @@ import {
   Ban,
   ExternalLink,
   Share2,
+  Eye,
+  BarChart3,
 } from "lucide-react";
 import { useConfirm } from "@/components/providers/ModalProvider";
 import PageTransition from "@/components/ui/PageTransition";
@@ -193,6 +195,15 @@ export default function ShareLinkManager() {
     return { all: links.length, active, expired };
   }, [links]);
 
+  const analytics = useMemo(() => {
+    const totalViews = links.reduce((sum, l) => sum + l.viewCount, 0);
+    const avgViews = links.length > 0 ? totalViews / links.length : 0;
+    const topLinks = [...links]
+      .sort((a, b) => b.viewCount - a.viewCount)
+      .slice(0, 5);
+    return { totalViews, avgViews, topLinks };
+  }, [links]);
+
   return (
     <PageTransition>
       <div className="p-6 max-w-6xl mx-auto">
@@ -219,6 +230,66 @@ export default function ShareLinkManager() {
           <div className="flex items-center gap-2 p-3 mb-4 bg-red-900/30 border border-red-800 rounded-lg text-red-300 text-sm">
             <AlertCircle className="w-4 h-4 shrink-0" />
             {error}
+          </div>
+        )}
+
+        {/* Analytics Summary */}
+        {links.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+              <div className="flex items-center gap-2 text-gray-400 mb-1">
+                <Link2 size={14} />
+                <span className="text-xs font-medium uppercase tracking-wider">
+                  {t("totalLinks")}
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-white tabular-nums">
+                {statusCounts.all}
+              </p>
+            </div>
+            <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+              <div className="flex items-center gap-2 text-gray-400 mb-1">
+                <Eye size={14} />
+                <span className="text-xs font-medium uppercase tracking-wider">
+                  {t("totalViews")}
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-white tabular-nums">
+                {analytics.totalViews.toLocaleString()}
+              </p>
+            </div>
+            <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+              <div className="flex items-center gap-2 text-gray-400 mb-1">
+                <BarChart3 size={14} />
+                <span className="text-xs font-medium uppercase tracking-wider">
+                  {t("avgViewsPerLink")}
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-white tabular-nums">
+                {analytics.avgViews.toFixed(1)}
+              </p>
+            </div>
+            <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+              <div className="flex items-center gap-2 text-gray-400 mb-1">
+                <Share2 size={14} />
+                <span className="text-xs font-medium uppercase tracking-wider">
+                  {t("topShared")}
+                </span>
+              </div>
+              {analytics.topLinks.length > 0 ? (
+                <p
+                  className="text-sm text-white truncate"
+                  title={analytics.topLinks[0].itemName}
+                >
+                  {analytics.topLinks[0].itemName}
+                  <span className="text-gray-400 ml-1 text-xs">
+                    ({analytics.topLinks[0].viewCount})
+                  </span>
+                </p>
+              ) : (
+                <p className="text-sm text-gray-500">{t("noViewsYet")}</p>
+              )}
+            </div>
           </div>
         )}
 

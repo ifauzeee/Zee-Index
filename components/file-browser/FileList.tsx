@@ -30,6 +30,7 @@ interface FileListProps {
   nextPageToken?: string | null;
   navigatingId: string | null;
   currentFolderId?: string;
+  onUploadClick?: () => void;
 }
 
 export default function FileList({
@@ -50,6 +51,7 @@ export default function FileList({
   nextPageToken,
   navigatingId,
   currentFolderId,
+  onUploadClick,
 }: FileListProps) {
   const {
     view,
@@ -162,6 +164,7 @@ export default function FileList({
     isFetchingNextPage,
     nextPageToken,
     navigatingId,
+    onUploadClick,
   };
 
   if (view === "grid") {

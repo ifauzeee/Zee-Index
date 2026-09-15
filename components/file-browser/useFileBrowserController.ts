@@ -568,11 +568,24 @@ export function useFileBrowserController({
       onDragStart: dragAndDrop.handleDragStart,
       onFileDrop: dragAndDrop.onDropOnFolder,
       onPrefetchItem: handlePrefetchItem,
+      onFilePreview: (file: BrowserFile) => fileActions.setPreviewFile(file),
+      onFileDelete: (file: BrowserFile) => {
+        fileActions.setContextMenu(null);
+        fileActions.setActionState({ type: "delete", file });
+      },
+      onFileRename: (file: BrowserFile) => {
+        fileActions.setContextMenu(null);
+        fileActions.setActionState({ type: "rename", file });
+      },
+      onOpenSearch: () => {
+        window.dispatchEvent(new CustomEvent("open-command-palette"));
+      },
       isFetchingNextPage,
       nextPageToken,
       fetchNextPage,
       navigatingId,
       currentFolderId,
+      onUploadClick: () => upload.setIsUploadModalOpen(true),
     },
     modalsProps: {
       authModal: { isOpen: false, folderId: "", folderName: "" },

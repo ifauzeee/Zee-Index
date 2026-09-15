@@ -522,7 +522,16 @@
     "incidentUpdateFailed": "Failed to update incident status",
     "noIncidents": "No incidents",
     "shareLinkUpdateSuccess": "Share link settings updated successfully.",
-    "shareLinkUpdateFailed": "Failed to update the shared link."
+    "shareLinkUpdateFailed": "Failed to update the shared link.",
+    "totalViews": "Total Views",
+    "avgViewsPerLink": "Avg Views/Link",
+    "topShared": "Top Shared",
+    "noViewsYet": "No views yet",
+    "rateLimits": "Rate Limits",
+    "rateLimitTier": "Tier",
+    "rateLimitWindow": "Window",
+    "rateLimitMax": "Max Requests",
+    "recentlyLimited": "Recently Limited"
   },
   "Footer": {
     "dataUsage": "Total Data Usage:",
@@ -793,7 +802,8 @@
   },
   "PinnedSection": {
     "title": "Pinned",
-    "folderSubtitle": "Pinned Folder"
+    "folderSubtitle": "Pinned Folder",
+    "emptyHint": "Pin folders from the context menu for quick access."
   },
   "FilePage": {
     "errorTitle": "Failed to Load",

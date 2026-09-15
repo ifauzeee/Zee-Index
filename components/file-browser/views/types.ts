@@ -40,4 +40,5 @@ export interface FileBrowserViewProps {
   isFetchingNextPage?: boolean;
   nextPageToken?: string | null;
   navigatingId: string | null;
+  onUploadClick?: () => void;
 }

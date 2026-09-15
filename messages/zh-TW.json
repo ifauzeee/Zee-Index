@@ -522,7 +522,16 @@
     "incidentUpdateFailed": "更新事件狀態失敗",
     "noIncidents": "沒有任何事件",
     "shareLinkUpdateSuccess": "分享連結設定已成功更新。",
-    "shareLinkUpdateFailed": "更新分享連結失敗。"
+    "shareLinkUpdateFailed": "更新分享連結失敗。",
+    "totalViews": "總瀏覽次數",
+    "avgViewsPerLink": "平均瀏覽/連結",
+    "topShared": "熱門分享",
+    "noViewsYet": "尚無瀏覽",
+    "rateLimits": "速率限制",
+    "rateLimitTier": "層級",
+    "rateLimitWindow": "視窗",
+    "rateLimitMax": "最大請求數",
+    "recentlyLimited": "近期被限制"
   },
   "Footer": {
     "dataUsage": "總資料使用量：",
@@ -793,7 +802,8 @@
   },
   "PinnedSection": {
     "title": "釘選",
-    "folderSubtitle": "已釘選的資料夾"
+    "folderSubtitle": "已釘選的資料夾",
+    "emptyHint": "從右鍵選單釘選資料夾以快速存取。"
   },
   "FilePage": {
     "errorTitle": "載入失敗",
