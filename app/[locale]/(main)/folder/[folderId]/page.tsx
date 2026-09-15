@@ -1,6 +1,7 @@
 import FileBrowser from "@/components/file-browser/FileBrowser";
 import { getFolderPath } from "@/lib/drive";
 import { listAllFiles } from "@/lib/storage";
+import { getActiveProvider, isProviderId } from "@/lib/storage/providers";
 import { ZeeFile } from "@/types/storage";
 import { isProtected } from "@/lib/auth";
 import { Metadata } from "next";
@@ -29,6 +30,32 @@ async function getUnifiedPath(folderId: string, locale: string) {
 
     return pathNodes;
   }
+
+  if (isProviderId(folderId)) {
+    const provider = getActiveProvider();
+    if (provider) {
+      const relPath = folderId.slice(provider.idPrefix.length);
+      const segments = relPath.split("/").filter(Boolean);
+      const pathNodes = [
+        {
+          id: provider.rootId,
+          name: provider.rootName,
+        },
+      ];
+
+      let currentPath = "";
+      segments.forEach((segment) => {
+        currentPath += segment + "/";
+        pathNodes.push({
+          id: `${provider.idPrefix}${currentPath}`,
+          name: segment,
+        });
+      });
+
+      return pathNodes;
+    }
+  }
+
   return getFolderPath(folderId, locale);
 }
 
