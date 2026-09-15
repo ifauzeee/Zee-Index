@@ -4,7 +4,7 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional().or(z.literal("")),
   GOOGLE_CLIENT_SECRET: z.string().optional().or(z.literal("")),
   NEXT_PUBLIC_ROOT_FOLDER_ID: z.string().optional().or(z.literal("")),
-  NEXT_PUBLIC_ROOT_FOLDER_NAME: z.string().default("Home"),
+  NEXT_PUBLIC_ROOT_FOLDER_NAME: z.string().default("Google Drive"),
 
   NEXTAUTH_SECRET: z
     .string()
@@ -79,7 +79,7 @@ export function validateOnStartup(): Env {
       GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || "",
       NEXT_PUBLIC_ROOT_FOLDER_ID: process.env.NEXT_PUBLIC_ROOT_FOLDER_ID || "",
       NEXT_PUBLIC_ROOT_FOLDER_NAME:
-        process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Home",
+        process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Google Drive",
       NEXTAUTH_SECRET:
         process.env.NEXTAUTH_SECRET || "12345678901234567890123456789012",
       NEXTAUTH_URL: process.env.NEXTAUTH_URL || "http://localhost:3000",
