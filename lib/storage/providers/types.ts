@@ -15,6 +15,12 @@ export interface ProviderDownload {
   size: number;
   mimeType: string;
   filename: string;
+  /** Upstream status when serving a partial (Range) response, e.g. 206. */
+  status?: number;
+  /** Upstream Content-Range header (bytes a-b/total). */
+  contentRange?: string | null;
+  /** Actual byte count in the stream (range slice). */
+  contentLength?: number | null;
 }
 
 export interface StorageProvider {
@@ -32,7 +38,10 @@ export interface StorageProvider {
     opts?: ListFilesOptions,
   ): Promise<ProviderListResult>;
   getFileDetails(fileId: string): Promise<ZeeFile | null>;
-  getDownload(fileId: string): Promise<ProviderDownload | null>;
+  getDownload(
+    fileId: string,
+    range?: string | null,
+  ): Promise<ProviderDownload | null>;
   uploadFile(
     parentId: string,
     fileName: string,

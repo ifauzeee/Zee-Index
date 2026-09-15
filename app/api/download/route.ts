@@ -123,7 +123,7 @@ async function handleDownload(request: NextRequest) {
         );
       }
 
-      const downloadData = await provider.getDownload(fileId);
+      const downloadData = await provider.getDownload(fileId, range);
       if (!downloadData) {
         return NextResponse.json(
           { error: ERROR_MESSAGES.FILE_NOT_FOUND },
@@ -131,7 +131,15 @@ async function handleDownload(request: NextRequest) {
         );
       }
 
-      const { stream: webStream, size, mimeType, filename } = downloadData;
+      const {
+        stream: webStream,
+        size,
+        mimeType,
+        filename,
+        status,
+        contentRange,
+        contentLength,
+      } = downloadData;
       const responseHeaders = prepareResponseHeaders(
         mimeType,
         filename,
@@ -144,8 +152,11 @@ async function handleDownload(request: NextRequest) {
       if (isPreview) {
         applyPreviewResponseHeaders(responseHeaders);
       }
-      responseHeaders.set("Content-Length", size.toString());
+      responseHeaders.set("Content-Length", (contentLength ?? size).toString());
       responseHeaders.set("Accept-Ranges", "bytes");
+      if (contentRange) {
+        responseHeaders.set("Content-Range", contentRange);
+      }
 
       logActivity("DOWNLOAD", {
         itemName: filename,
@@ -156,7 +167,7 @@ async function handleDownload(request: NextRequest) {
       }).catch(() => {});
 
       return new Response(webStream, {
-        status: 200,
+        status: status === 206 ? 206 : 200,
         headers: responseHeaders,
       });
     }
