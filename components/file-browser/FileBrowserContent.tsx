@@ -161,14 +161,14 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
 
   if (error && !isLocked && !error.isProtected) {
     const isCriticalAuthError =
-      error.message.includes("Sesi Google Drive kadaluarsa") ||
-      error.message.includes("Aplikasi belum dikonfigurasi");
+      error.message.includes("Google Drive session expired") ||
+      error.message.includes("Application is not configured");
 
     if (isCriticalAuthError) {
       return (
         <SetupRequired
           message={error.message}
-          type={error.message.includes("kadaluarsa") ? "expired" : "config"}
+          type={error.message.includes("expired") ? "expired" : "config"}
         />
       );
     }

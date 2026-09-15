@@ -104,16 +104,14 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
           shareRecord.maxUses !== null &&
           shareRecord.views >= shareRecord.maxUses
         ) {
-          throw new Error(
-            "Batas maksimum unduhan/akses untuk tautan ini telah tercapai.",
-          );
+          throw new Error(ERROR_MESSAGES.SHARE_MAX_USES_REACHED);
         }
         if (
           shareRecord.preventDownload &&
           !range &&
           request.headers.get("sec-fetch-dest") === "document"
         ) {
-          throw new Error("Unduhan dinonaktifkan untuk file ini.");
+          throw new Error(ERROR_MESSAGES.SHARE_DOWNLOAD_DISABLED);
         }
 
         const isLoginRequired = shareRecord.loginRequired;
@@ -160,7 +158,10 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
       return {
         context: createEmptyDownloadContext(),
         session,
-        error: { error: "Autentikasi Local Storage diperlukan", status: 401 },
+        error: {
+          error: ERROR_MESSAGES.LOCAL_STORAGE_AUTH_REQUIRED,
+          status: 401,
+        },
       };
     }
   } else if (userRole !== "ADMIN") {
@@ -311,12 +312,26 @@ export function prepareResponseHeaders(
   responseHeaders.set("X-Content-Type-Options", "nosniff");
   responseHeaders.set("Connection", "keep-alive");
 
-  const allowedOrigin = requestOrigin || process.env.NEXTAUTH_URL || "";
-  responseHeaders.set("Access-Control-Allow-Origin", allowedOrigin);
-  responseHeaders.set(
-    "Access-Control-Expose-Headers",
-    "Content-Range, Content-Length, Accept-Ranges",
-  );
+  // Validate origin against allowed list instead of reflecting arbitrary values.
+  // This prevents an attacker from making cross-origin requests from any domain.
+  const appOrigin = process.env.NEXTAUTH_URL || "";
+  const allowedOrigins = appOrigin
+    ? [
+        appOrigin,
+        ...(process.env.ALLOWED_ORIGINS || "").split(",").filter(Boolean),
+      ]
+    : [];
+  const allowedOrigin =
+    requestOrigin && allowedOrigins.includes(requestOrigin)
+      ? requestOrigin
+      : appOrigin;
+  if (allowedOrigin) {
+    responseHeaders.set("Access-Control-Allow-Origin", allowedOrigin);
+    responseHeaders.set(
+      "Access-Control-Expose-Headers",
+      "Content-Range, Content-Length, Accept-Ranges",
+    );
+  }
 
   if (isHEAD) return responseHeaders;
 

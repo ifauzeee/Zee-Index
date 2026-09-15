@@ -313,12 +313,12 @@ export const GET = createPublicRoute(
   async ({ request }) => {
     return await handleDownload(request);
   },
-  { rateLimit: false },
+  { rateLimit: false, permission: "files:read" },
 );
 
 export const HEAD = createPublicRoute(
   async ({ request }) => {
     return await handleDownload(request);
   },
-  { rateLimit: false },
+  { rateLimit: false, permission: "files:read" },
 );

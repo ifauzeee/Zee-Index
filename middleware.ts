@@ -81,15 +81,15 @@ export function createContentSecurityPolicy(
 
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}'${scriptEval} https://cdn.jsdelivr.net https://www.google-analytics.com`,
-    `script-src-elem 'self' 'nonce-${nonce}'${scriptEval} https://cdn.jsdelivr.net https://www.google-analytics.com`,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
+    `script-src 'self' 'nonce-${nonce}'${scriptEval} https://cdn.jsdelivr.net/npm/swagger-ui-dist@5 https://cdn.jsdelivr.net/npm/pdfjs-dist@4 https://www.google-analytics.com`,
+    `script-src-elem 'self' 'nonce-${nonce}'${scriptEval} https://cdn.jsdelivr.net/npm/swagger-ui-dist@5 https://cdn.jsdelivr.net/npm/pdfjs-dist@4 https://www.google-analytics.com`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/swagger-ui-dist@5",
     "font-src 'self' data: https://fonts.gstatic.com",
     "img-src 'self' data: blob: https://*.googleusercontent.com https://drive.google.com https://images.unsplash.com https://image.tmdb.org",
     "media-src 'self' blob: https://*.googleapis.com",
-    "connect-src 'self' https://*.googleapis.com https://*.google.com https://*.googleusercontent.com https://cdn.jsdelivr.net https://www.google-analytics.com",
+    "connect-src 'self' https://*.googleapis.com https://*.google.com https://*.googleusercontent.com https://www.google-analytics.com",
     "frame-src 'self' https://accounts.google.com https://drive.google.com https://view.officeapps.live.com",
-    "worker-src 'self' blob: https://cdn.jsdelivr.net",
+    `worker-src 'self' blob: https://cdn.jsdelivr.net/npm/pdfjs-dist@4`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -181,7 +181,10 @@ export default async function middleware(request: NextRequest) {
     const authHeader = request.headers.get("Authorization");
     if (authHeader?.startsWith("Bearer ")) {
       const rawKey = authHeader.slice(7);
-      if (rawKey.length >= 16) {
+      // API keys are 64-char hex strings (two concatenated UUIDs with hyphens removed).
+      // Strict format check prevents malformed tokens from obtaining the higher
+      // API_KEY rate-limit tier (1000/min vs 500/min for regular API requests).
+      if (/^[0-9a-f]{64}$/i.test(rawKey)) {
         const apiKeyData = await validateApiKey(rawKey);
         if (apiKeyData) {
           isApiKeyRequest = true;
@@ -501,10 +504,6 @@ export default async function middleware(request: NextRequest) {
       intlMiddleware,
     );
     if (folderRes) return applyCsp(request, folderRes);
-  }
-
-  if (!isAuthenticated && !isPublicRoute(pathnameWithoutLocale)) {
-    return applyCsp(request, handleAuthRedirect(request, pathname));
   }
 
   if (pathname.startsWith("/findpath")) {

@@ -81,6 +81,12 @@ export const ERROR_MESSAGES = {
   RATE_LIMIT_EXCEEDED: "Too many requests. Please try again later.",
   INVALID_SHARE_TOKEN: "Invalid share token or authentication required.",
   SHARE_LINK_REVOKED: "This link has been revoked.",
+  SHARE_MAX_USES_REACHED:
+    "Maximum download/access limit for this link has been reached.",
+  SHARE_DOWNLOAD_DISABLED: "Downloads are disabled for this file.",
+  LOCAL_STORAGE_AUTH_REQUIRED: "Local Storage authentication required.",
+  COPY_FILE_FAILED: "Failed to copy file.",
+  UPDATE_FILE_CONTENT_FAILED: "Failed to update file content.",
   INTERNAL_SERVER_ERROR: "Internal Server Error.",
 } as const;
 
