@@ -133,6 +133,8 @@ export async function searchIndexedFiles(opts: {
   }
 }
 
+const BATCH_SIZE = 100;
+
 export async function reindexDrive(): Promise<{
   indexed: number;
   failed: number;
@@ -152,6 +154,44 @@ export async function reindexDrive(): Promise<{
     const folderIds = await getAllDescendantFolders(accessToken, rootFolderId);
     folderIds.unshift(rootFolderId);
 
+    const pending: UpsertInput[] = [];
+
+    const flushBatch = async (batch: UpsertInput[]) => {
+      const txOps = batch.map((file) =>
+        db.fileIndex.upsert({
+          where: { id: file.id },
+          create: {
+            id: file.id,
+            name: file.name,
+            mimeType: file.mimeType,
+            folderId: file.folderId,
+            source: file.source,
+            modifiedTime: file.modifiedTime
+              ? new Date(file.modifiedTime)
+              : new Date(),
+            size: file.size ?? null,
+            ...(file.contentText !== undefined
+              ? { contentText: file.contentText }
+              : {}),
+          },
+          update: {
+            name: file.name,
+            mimeType: file.mimeType,
+            folderId: file.folderId,
+            source: file.source,
+            modifiedTime: file.modifiedTime
+              ? new Date(file.modifiedTime)
+              : new Date(),
+            size: file.size ?? null,
+            ...(file.contentText !== undefined
+              ? { contentText: file.contentText }
+              : {}),
+          },
+        }),
+      );
+      await db.$transaction(txOps);
+    };
+
     for (const folderId of folderIds) {
       let pageToken: string | null = null;
       do {
@@ -163,7 +203,7 @@ export async function reindexDrive(): Promise<{
         );
         for (const file of result.files) {
           try {
-            await upsertIndexedFile({
+            pending.push({
               id: file.id,
               name: file.name,
               mimeType: file.mimeType,
@@ -172,13 +212,25 @@ export async function reindexDrive(): Promise<{
               modifiedTime: file.modifiedTime,
               size: typeof file.size === "number" ? file.size : null,
             });
-            indexed += 1;
+            if (pending.length >= BATCH_SIZE) {
+              await flushBatch(pending.splice(0, BATCH_SIZE));
+              indexed += BATCH_SIZE;
+            }
           } catch {
             failed += 1;
           }
         }
         pageToken = result.nextPageToken || null;
       } while (pageToken);
+    }
+
+    if (pending.length > 0) {
+      try {
+        await flushBatch(pending);
+        indexed += pending.length;
+      } catch {
+        failed += pending.length;
+      }
     }
   } catch (err) {
     logger.error({ err }, "Drive reindex failed");

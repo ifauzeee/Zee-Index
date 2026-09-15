@@ -373,7 +373,9 @@ export function useFileBrowserController({
           },
           initialPageParam: null,
         })
-        .catch(() => {});
+        .catch((err) =>
+          console.error("[useFileBrowserController] Prefetch failed:", err),
+        );
     },
     [router, shareToken, queryClient, folderTokens],
   );

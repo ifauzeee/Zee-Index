@@ -148,6 +148,8 @@ export const GET = createPublicRoute(
         }
       }
 
+      const accessCache = new Map<string, boolean>();
+
       const processedFilesPromise = Array.from(uniqueFiles.values()).map(
         async (file: DriveFile) => {
           const isFolder =
@@ -171,6 +173,11 @@ export const GET = createPublicRoute(
             file.id,
             allowedTokens,
             session?.user?.email,
+            0,
+            5,
+            null,
+            new Set(),
+            accessCache,
           );
           return restricted ? null : file;
         }),
@@ -192,9 +199,9 @@ export const GET = createPublicRoute(
               id: f.id,
               name: f.name,
               mimeType: f.mimeType,
+              source: "google-drive",
               parents: [f.folderId],
               modifiedTime: f.modifiedTime.toISOString(),
-              source: f.source,
               hasThumbnail: f.mimeType.startsWith("image/"),
               isFolder: f.mimeType === "application/vnd.google-apps.folder",
               contentText: f.contentText,
@@ -209,6 +216,11 @@ export const GET = createPublicRoute(
                   f.id,
                   allowedTokens,
                   session?.user?.email,
+                  0,
+                  20,
+                  null,
+                  new Set(),
+                  accessCache,
                 );
                 return restricted ? null : f;
               }),

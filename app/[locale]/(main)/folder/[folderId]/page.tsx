@@ -4,6 +4,7 @@ import { listAllFiles } from "@/lib/storage";
 import { ZeeFile } from "@/types/storage";
 import { isProtected } from "@/lib/auth";
 import { Metadata } from "next";
+import { logger } from "@/lib/logger";
 
 export const revalidate = 3600;
 
@@ -125,7 +126,7 @@ export default async function FolderPage(props: {
       });
       initialNextPageToken = data.nextPageToken;
     } catch (e) {
-      console.error("ISR Fetch error:", e);
+      logger.error({ err: e }, "ISR Fetch error");
       initialFiles = [];
     }
   }

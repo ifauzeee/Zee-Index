@@ -114,6 +114,21 @@ export class RedisKV implements KVClient {
     }
   }
 
+  private getMemoryCacheTTL(key: string): number {
+    if (key.startsWith("zee-index:folder-content"))
+      return CACHE_TTL.FOLDER_CONTENT;
+    if (key.startsWith("gdrive:file-details")) return CACHE_TTL.FILE_DETAILS;
+    if (key.startsWith("zee-index:folder-path")) return CACHE_TTL.FOLDER_PATH;
+    if (key.startsWith("zee-index:protected-folders"))
+      return CACHE_TTL.PROTECTED_FOLDERS;
+    if (
+      key.startsWith("zee-index:admins") ||
+      key.startsWith("zee-index:editors")
+    )
+      return CACHE_TTL.CONFIG;
+    return CACHE_TTL.USER_ACCESS;
+  }
+
   async get<T>(key: string): Promise<T | null> {
     const cached = memoryCache.get<T>(`kv:${key}`);
     if (cached !== null) return cached;
@@ -121,7 +136,7 @@ export class RedisKV implements KVClient {
     const value = await this.client.get(key);
     const parsed = this.deserialize<T>(value);
     if (parsed !== null) {
-      memoryCache.set(`kv:${key}`, parsed, CACHE_TTL.FOLDER_CONTENT);
+      memoryCache.set(`kv:${key}`, parsed, this.getMemoryCacheTTL(key));
     }
     return parsed;
   }

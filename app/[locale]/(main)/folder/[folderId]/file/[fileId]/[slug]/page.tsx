@@ -11,6 +11,7 @@ import {
   verifyShareTokenString,
 } from "@/lib/auth";
 import type { SubtitleTrack } from "@/lib/subtitles";
+import { logger } from "@/lib/logger";
 
 const FileError = ({
   message,
@@ -163,7 +164,7 @@ export default async function FilePage(props: {
       }
     }
   } catch (err) {
-    console.error("Fetch file details error:", err);
+    logger.error({ err }, "Fetch file details error");
     error = t("fetchError");
   }
 

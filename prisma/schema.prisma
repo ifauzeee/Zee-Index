@@ -58,30 +58,30 @@ model VerificationToken {
 }
 
 model ActivityLog {
-  id            String   @id @default(cuid())
-  type          String
-  timestamp     Float
-  severity      String
-  
-  itemName      String?
-  itemId        String?
-  itemSize      String?
-  itemType      String?
-  userEmail     String?
-  userId        String?
-  userRole      String?
-  targetUser    String?
+  id        String @id @default(cuid())
+  type      String
+  timestamp Float
+  severity  String
+
+  itemName          String?
+  itemId            String?
+  itemSize          String?
+  itemType          String?
+  userEmail         String?
+  userId            String?
+  userRole          String?
+  targetUser        String?
   destinationFolder String?
-  sourcePath    String?
-  targetPath    String?
-  status        String?
-  error         String?
-  errorCode     String?
-  ipAddress     String?
-  userAgent     String?
-  country       String?
-  city          String?
-  metadata      String?
+  sourcePath        String?
+  targetPath        String?
+  status            String?
+  error             String?
+  errorCode         String?
+  ipAddress         String?
+  userAgent         String?
+  country           String?
+  city              String?
+  metadata          String?
 
   @@index([type])
   @@index([timestamp])
@@ -90,24 +90,24 @@ model ActivityLog {
 }
 
 model ShareLink {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   path          String
-  token         String   @unique
-  jti           String   @unique
+  token         String    @unique
+  jti           String    @unique
   expiresAt     DateTime
-  loginRequired Boolean  @default(false)
+  loginRequired Boolean   @default(false)
   itemName      String
-  isCollection  Boolean  @default(false)
-  views         Int      @default(0)
-  createdAt     DateTime @default(now())
+  isCollection  Boolean   @default(false)
+  views         Int       @default(0)
+  createdAt     DateTime  @default(now())
   createdBy     String?
   revokedAt     DateTime?
 
   maxUses         Int?
-  preventDownload Boolean  @default(false)
-  hasWatermark    Boolean  @default(false)
+  preventDownload Boolean @default(false)
+  hasWatermark    Boolean @default(false)
   watermarkText   String?
-  directDownload  Boolean  @default(false)
+  directDownload  Boolean @default(false)
 
   @@index([expiresAt])
   @@index([createdAt])
@@ -135,35 +135,34 @@ model ProtectedFolder {
 
 /// Admin-managed API keys for external app access (scoped, revocable).
 model ApiKey {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
-  keyPrefix   String   @unique
+  keyPrefix   String    @unique
   keyHash     String
   permissions String[]
   lastUsedAt  DateTime?
   expiresAt   DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
   createdBy   String
-  revoked     Boolean  @default(false)
+  revoked     Boolean   @default(false)
 }
 
 /// Durable search index for files (populated via reindex or on access).
 model FileIndex {
-  id          String   @id
-  name        String
-  mimeType    String
-  folderId    String
-  source      String
-  size        Int?
+  id           String   @id
+  name         String
+  mimeType     String
+  folderId     String
+  source       String
+  size         Int?
   modifiedTime DateTime @default(now())
-  createdAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
   /// Extracted full-text content for PDF/DOCX/TXT files (nullable).
-  contentText String?
+  contentText  String?
 
   @@index([name])
   @@index([folderId])
   @@index([mimeType])
-  @@index([contentText])
 }
 
 model AdminConfig {
