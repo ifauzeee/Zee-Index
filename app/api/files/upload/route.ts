@@ -7,6 +7,7 @@ import { createEditorRoute } from "@/lib/api-middleware";
 import { logActivity } from "@/lib/activityLogger";
 import { invalidateFolderCache } from "@/lib/cache";
 import { z } from "zod";
+import { getActiveProvider } from "@/lib/storage/providers";
 
 export const maxDuration = 60;
 
@@ -33,6 +34,12 @@ const uploadQuerySchema = z
     }
   });
 
+// ponytail: in-memory buffer per upload URL; leaks on crash, fine for single-process dev
+const providerBuffers = new Map<
+  string,
+  { chunks: Buffer[]; totalSize: number }
+>();
+
 export const POST = createEditorRoute(
   async ({ request, session, query }) => {
     const uploadType = query.type;
@@ -58,6 +65,20 @@ export const POST = createEditorRoute(
             uploadUrl: `local-storage-upload://${encodeURIComponent(
               parentId,
             )}/${encodeURIComponent(name)}`,
+          });
+        }
+
+        const provider = getActiveProvider();
+        if (
+          provider &&
+          (parentId === provider.rootId ||
+            parentId.startsWith(provider.idPrefix))
+        ) {
+          return NextResponse.json({
+            uploadUrl: `provider-upload://${encodeURIComponent(name)}`,
+            useProvider: true,
+            mimeType,
+            size,
           });
         }
 
@@ -93,6 +114,74 @@ export const POST = createEditorRoute(
       } else if (uploadType === "chunk") {
         const uploadUrl = query.uploadUrl!;
         const parentId = query.parentId;
+
+        if (uploadUrl.startsWith("provider-upload://")) {
+          const fileName = decodeURIComponent(
+            uploadUrl.slice("provider-upload://".length),
+          );
+          const provider = getActiveProvider();
+          const parent = parentId || provider?.rootId || "";
+
+          if (!provider) {
+            return NextResponse.json(
+              { error: "Tidak ada storage provider aktif." },
+              { status: 400 },
+            );
+          }
+
+          const contentRange = request.headers.get("Content-Range") || "";
+          const rangeMatch = contentRange.match(/bytes (\d+)-(\d+)\/(\d+)/);
+          const chunkBuffer = Buffer.from(await request.arrayBuffer());
+
+          const entry = providerBuffers.get(uploadUrl) || {
+            chunks: [],
+            totalSize: 0,
+          };
+          entry.chunks.push(chunkBuffer);
+          entry.totalSize += chunkBuffer.length;
+          providerBuffers.set(uploadUrl, entry);
+
+          const isLast =
+            rangeMatch && Number(rangeMatch[2]) + 1 === Number(rangeMatch[3]);
+
+          if (!isLast) {
+            return NextResponse.json({ status: "partial" });
+          }
+
+          const fullBuffer = Buffer.concat(entry.chunks);
+          providerBuffers.delete(uploadUrl);
+
+          const file = await provider.uploadFile(
+            parent,
+            fileName,
+            fullBuffer,
+            request.headers.get("Content-Type") || undefined,
+          );
+
+          if (!file) {
+            throw new Error("Gagal mengunggah file ke storage provider.");
+          }
+
+          if (parent) {
+            await invalidateFolderCache(parent);
+          }
+
+          await logActivity("UPLOAD", {
+            itemName: file.name,
+            itemId: file.id,
+            itemSize: file.size,
+            userEmail: session.user?.email,
+            status: "success",
+            metadata: {
+              operation: "file_upload",
+              fileId: file.id,
+              parentId: parent,
+              uploadType: "chunk",
+            },
+          });
+
+          return NextResponse.json({ status: "completed", file });
+        }
 
         if (uploadUrl.startsWith("local-storage-upload://")) {
           const { saveLocalChunk } = await import("@/lib/storage/local");

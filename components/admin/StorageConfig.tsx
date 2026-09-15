@@ -11,6 +11,7 @@ interface StorageStatus {
   isExternalEnabled: boolean;
   isS3Enabled: boolean;
   isWebDavEnabled: boolean;
+  isDropboxEnabled: boolean;
   s3?: {
     endpoint: string;
     region: string;
@@ -21,6 +22,11 @@ interface StorageStatus {
   webdav?: {
     url: string;
     username: string;
+    basePath: string;
+    rootName: string;
+  };
+  dropbox?: {
+    accountHint: string;
     basePath: string;
     rootName: string;
   };
@@ -130,6 +136,17 @@ export default function StorageConfig() {
             [t("username"), status.webdav.username || "—"],
             [t("basePath"), status.webdav.basePath],
             [t("rootName"), status.webdav.rootName],
+          ]}
+        />
+      )}
+
+      {status.dropbox && (
+        <ConfigTable
+          icon={<Cloud className="h-5 w-5 text-muted-foreground" />}
+          title="Dropbox"
+          rows={[
+            [t("basePath"), status.dropbox.basePath],
+            [t("rootName"), status.dropbox.rootName],
           ]}
         />
       )}

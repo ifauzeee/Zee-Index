@@ -50,6 +50,7 @@ const securityHeaders = [
 
 const nextConfig = {
   output: "standalone",
+  middlewareClientMaxBodySize: "500mb",
 
   // Next's file tracing misses @swc/helpers/esm (loaded dynamically via
   // require-hook at runtime) with pnpm — force-include the whole package.
@@ -98,6 +99,7 @@ const nextConfig = {
   serverExternalPackages: ["ioredis"],
 
   experimental: {
+    proxyClientMaxBodySize: "500mb",
     serverActions: {
       bodySizeLimit: "5mb",
     },

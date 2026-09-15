@@ -25,7 +25,7 @@ export interface StorageProvider {
   /** Human-readable root name. */
   readonly rootName: string;
   /** Source tag used on ZeeFile.source. */
-  readonly source: "s3" | "webdav";
+  readonly source: "s3" | "webdav" | "dropbox";
 
   listFiles(
     folderId: string,
@@ -39,4 +39,5 @@ export interface StorageProvider {
     buffer: Buffer,
     mimeType?: string,
   ): Promise<ZeeFile | null>;
+  deleteFile(fileId: string): Promise<boolean>;
 }

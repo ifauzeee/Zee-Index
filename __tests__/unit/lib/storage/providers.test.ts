@@ -46,4 +46,23 @@ describe("storage provider factory", () => {
     const mod = await import("@/lib/storage/providers");
     expect(mod.getActiveProvider()).toBeNull();
   });
+
+  it("returns a Dropbox provider when STORAGE_PROVIDER=dropbox and token is set", async () => {
+    process.env.STORAGE_PROVIDER = "dropbox";
+    process.env.STORAGE_DROPBOX_ACCESS_TOKEN = "sl.test-token";
+    const mod = await import("@/lib/storage/providers");
+    const provider = mod.getActiveProvider();
+    expect(provider).not.toBeNull();
+    expect(provider?.idPrefix).toBe("dropbox:");
+    expect(provider?.rootId).toBe("dropbox:");
+    expect(provider?.source).toBe("dropbox");
+    expect(mod.isProviderId("dropbox:/photos")).toBe(true);
+  });
+
+  it("returns null when dropbox provider selected but token missing", async () => {
+    process.env.STORAGE_PROVIDER = "dropbox";
+    delete process.env.STORAGE_DROPBOX_ACCESS_TOKEN;
+    const mod = await import("@/lib/storage/providers");
+    expect(mod.getActiveProvider()).toBeNull();
+  });
 });

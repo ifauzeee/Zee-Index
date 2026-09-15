@@ -1,6 +1,7 @@
 import type { StorageProvider } from "./types";
 import { S3StorageProvider } from "./s3";
 import { WebDavStorageProvider } from "./webdav";
+import { DropboxStorageProvider } from "./dropbox";
 
 let cached: StorageProvider | null | undefined;
 
@@ -20,6 +21,10 @@ export function getActiveProvider(): StorageProvider | null {
     if (provider === "webdav") {
       if (!process.env.STORAGE_WEBDAV_URL) return (cached = null);
       return (cached = new WebDavStorageProvider());
+    }
+    if (provider === "dropbox") {
+      if (!process.env.STORAGE_DROPBOX_ACCESS_TOKEN) return (cached = null);
+      return (cached = new DropboxStorageProvider());
     }
   } catch {
     return (cached = null);

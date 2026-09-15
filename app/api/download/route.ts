@@ -13,6 +13,7 @@ import {
   prepareResponseHeaders,
 } from "@/lib/services/download";
 import { applyWatermark } from "@/lib/watermark";
+import { getActiveProvider, isProviderId } from "@/lib/storage/providers";
 
 export const dynamic = "force-dynamic";
 
@@ -111,6 +112,53 @@ async function handleDownload(request: NextRequest) {
         }
         throw err;
       }
+    }
+
+    if (isProviderId(fileId)) {
+      const provider = getActiveProvider();
+      if (!provider) {
+        return NextResponse.json(
+          { error: ERROR_MESSAGES.FILE_NOT_FOUND },
+          { status: 404 },
+        );
+      }
+
+      const downloadData = await provider.getDownload(fileId);
+      if (!downloadData) {
+        return NextResponse.json(
+          { error: ERROR_MESSAGES.FILE_NOT_FOUND },
+          { status: 404 },
+        );
+      }
+
+      const { stream: webStream, size, mimeType, filename } = downloadData;
+      const responseHeaders = prepareResponseHeaders(
+        mimeType,
+        filename,
+        range,
+        request.headers.get("Sec-Fetch-Dest"),
+        null,
+        false,
+        request.headers.get("origin"),
+      );
+      if (isPreview) {
+        applyPreviewResponseHeaders(responseHeaders);
+      }
+      responseHeaders.set("Content-Length", size.toString());
+      responseHeaders.set("Accept-Ranges", "bytes");
+
+      logActivity("DOWNLOAD", {
+        itemName: filename,
+        itemId: fileId,
+        itemSize: String(size),
+        userEmail: session?.user?.email,
+        status: "success",
+      }).catch(() => {});
+
+      return new Response(webStream, {
+        status: 200,
+        headers: responseHeaders,
+      });
     }
 
     const [accessToken, fileDetails] = await Promise.all([
