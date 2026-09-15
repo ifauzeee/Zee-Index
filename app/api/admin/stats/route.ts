@@ -2,7 +2,6 @@ import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
-import type { ActivityLog } from "@/lib/activityLogger";
 import type {
   AdminStats,
   HourlyDownload,
@@ -10,29 +9,82 @@ import type {
   DayOfWeekDownload,
   TopUser,
 } from "@/lib/adminStats";
-import { startOfToday, subDays, getDay } from "date-fns";
+import { startOfToday, subDays } from "date-fns";
 import { unstable_cache } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
 import { getAnalyticsData } from "@/lib/analyticsTracker";
-import { mapDbActivityLog } from "@/lib/activityLogger";
-
-export const ADMIN_STATS_ACTIVITY_LOG_TAKE_LIMIT = 10_000;
 
 const getAdminStatsCached = unstable_cache(
   async () => {
-    const ninetyDaysAgo = subDays(new Date(), 90).getTime();
-    const allLogsRaw = await db.activityLog.findMany({
-      where: { timestamp: { gte: ninetyDaysAgo } },
-      orderBy: { timestamp: "desc" },
-      take: ADMIN_STATS_ACTIVITY_LOG_TAKE_LIMIT,
-    });
-
-    const allLogs: ActivityLog[] = allLogsRaw.map(mapDbActivityLog);
-
     const todayStart = startOfToday().getTime();
+    const ninetyDaysAgo = subDays(new Date(), 90).getTime();
     const sevenWeeksAgo = subDays(new Date(), 49).getTime();
+
+    const [
+      downloadsTodayRows,
+      downloadsByDayRows,
+      topFilesRows,
+      topUsersRows,
+      topUploadedRows,
+      fileTypeRows,
+    ] = await Promise.all([
+      // Downloads today — grouped by hour
+      db.$queryRawUnsafe<{ hour: number; count: bigint }[]>(
+        `SELECT EXTRACT(HOUR FROM TO_TIMESTAMP(timestamp / 1000))::int AS hour, COUNT(*)::bigint AS count
+         FROM "ActivityLog"
+         WHERE type = 'DOWNLOAD' AND timestamp >= $1
+         GROUP BY hour ORDER BY hour`,
+        todayStart,
+      ),
+      // Downloads by day of week (last 7 weeks)
+      db.$queryRawUnsafe<{ dow: number; count: bigint }[]>(
+        `SELECT EXTRACT(DOW FROM TO_TIMESTAMP(timestamp / 1000))::int AS dow, COUNT(*)::bigint AS count
+         FROM "ActivityLog"
+         WHERE type = 'DOWNLOAD' AND timestamp >= $1
+         GROUP BY dow ORDER BY dow`,
+        sevenWeeksAgo,
+      ),
+      // Top downloaded files
+      db.$queryRawUnsafe<{ name: string; count: bigint }[]>(
+        `SELECT "itemName" AS name, COUNT(*)::bigint AS count
+         FROM "ActivityLog"
+         WHERE type = 'DOWNLOAD' AND "itemName" IS NOT NULL AND timestamp >= $1
+         GROUP BY "itemName" ORDER BY count DESC LIMIT 5`,
+        ninetyDaysAgo,
+      ),
+      // Top users
+      db.$queryRawUnsafe<{ email: string; count: bigint }[]>(
+        `SELECT "userEmail" AS email, COUNT(*)::bigint AS count
+         FROM "ActivityLog"
+         WHERE "userEmail" IS NOT NULL AND timestamp >= $1
+         GROUP BY "userEmail" ORDER BY count DESC LIMIT 5`,
+        ninetyDaysAgo,
+      ),
+      // Top uploaded files
+      db.$queryRawUnsafe<{ name: string; count: bigint }[]>(
+        `SELECT "itemName" AS name, COUNT(*)::bigint AS count
+         FROM "ActivityLog"
+         WHERE type = 'UPLOAD' AND "itemName" IS NOT NULL AND timestamp >= $1
+         GROUP BY "itemName" ORDER BY count DESC LIMIT 5`,
+        ninetyDaysAgo,
+      ),
+      // File type distribution
+      db.$queryRawUnsafe<{ type: string; count: bigint }[]>(
+        `SELECT
+           CASE
+             WHEN LENGTH(SPLIT_PART("itemName", '.', -1)) <= 5
+               THEN UPPER(SPLIT_PART("itemName", '.', -1))
+             ELSE 'OTHER'
+           END AS type,
+           COUNT(*)::bigint AS count
+         FROM "ActivityLog"
+         WHERE type = 'DOWNLOAD' AND "itemName" IS NOT NULL AND timestamp >= $1
+         GROUP BY type ORDER BY count DESC LIMIT 5`,
+        ninetyDaysAgo,
+      ),
+    ]);
 
     const downloadsToday: HourlyDownload[] = Array(24)
       .fill(0)
@@ -40,11 +92,9 @@ const getAdminStatsCached = unstable_cache(
         name: `${i}:00`,
         downloads: 0,
       }));
-
-    const fileCounts = new Map<string, number>();
-    const userCounts = new Map<string, number>();
-    const uploadCounts = new Map<string, number>();
-    const typeCounts = new Map<string, number>();
+    for (const row of downloadsTodayRows) {
+      downloadsToday[row.hour].downloads = Number(row.count);
+    }
 
     const downloadsByDayOfWeek: DayOfWeekDownload[] = [
       { name: "Min", downloads: 0 },
@@ -55,66 +105,33 @@ const getAdminStatsCached = unstable_cache(
       { name: "Jum", downloads: 0 },
       { name: "Sab", downloads: 0 },
     ];
-
-    for (const log of allLogs) {
-      if (log.userEmail) {
-        userCounts.set(log.userEmail, (userCounts.get(log.userEmail) || 0) + 1);
-      }
-
-      if (log.type === "UPLOAD" && log.itemName) {
-        uploadCounts.set(
-          log.itemName,
-          (uploadCounts.get(log.itemName) || 0) + 1,
-        );
-      }
-
-      if (log.type === "DOWNLOAD") {
-        if (log.timestamp >= todayStart) {
-          const hour = new Date(log.timestamp).getHours();
-          downloadsToday[hour].downloads++;
-        }
-
-        if (log.timestamp >= sevenWeeksAgo) {
-          const dayIndex = getDay(new Date(log.timestamp));
-          downloadsByDayOfWeek[dayIndex].downloads++;
-        }
-
-        if (log.itemName) {
-          fileCounts.set(log.itemName, (fileCounts.get(log.itemName) || 0) + 1);
-
-          const ext = log.itemName.split(".").pop()?.toUpperCase() || "UNKNOWN";
-          if (ext.length <= 5) {
-            typeCounts.set(ext, (typeCounts.get(ext) || 0) + 1);
-          } else {
-            typeCounts.set("OTHER", (typeCounts.get("OTHER") || 0) + 1);
-          }
-        }
-      }
+    for (const row of downloadsByDayRows) {
+      downloadsByDayOfWeek[row.dow].downloads = Number(row.count);
     }
 
-    const topFiles: TopFile[] = Array.from(fileCounts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([name, count]) => ({ name, count }));
+    const topFiles: TopFile[] = topFilesRows.map((r) => ({
+      name: r.name,
+      count: Number(r.count),
+    }));
 
-    const topUsers: TopUser[] = Array.from(userCounts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([email, count]) => ({ email, count }));
+    const topUsers: TopUser[] = topUsersRows.map((r) => ({
+      email: r.email,
+      count: Number(r.count),
+    }));
 
-    const topUploadedFiles: TopFile[] = Array.from(uploadCounts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([name, count]) => ({ name, count }));
+    const topUploadedFiles: TopFile[] = topUploadedRows.map((r) => ({
+      name: r.name,
+      count: Number(r.count),
+    }));
 
-    const fileTypeDistribution = Array.from(typeCounts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([type, count]) => ({ type, count }));
+    const fileTypeDistribution = fileTypeRows.map((r) => ({
+      type: r.type,
+      count: Number(r.count),
+    }));
 
     const analyticsData = await getAnalyticsData();
 
-    const stats: AdminStats = {
+    return {
       downloadsToday,
       topFiles,
       downloadsByDayOfWeek,
@@ -126,9 +143,7 @@ const getAdminStatsCached = unstable_cache(
         thisWeek: analyticsData.bandwidth.totalThisWeek,
         thisMonth: analyticsData.bandwidth.totalThisMonth,
       },
-    };
-
-    return stats;
+    } satisfies AdminStats;
   },
   ["admin-stats"],
   { revalidate: 300, tags: ["admin-stats"] },
@@ -139,9 +154,9 @@ export const GET = createAdminRoute(async () => {
     const stats = await getAdminStatsCached();
     return NextResponse.json(stats);
   } catch (error) {
-    logger.error({ err: error }, "Gagal mengambil statistik admin");
+    logger.error({ err: error }, "Failed to fetch admin stats");
     return NextResponse.json(
-      { error: "Gagal mengambil statistik." },
+      { error: "Failed to fetch admin stats." },
       { status: 500 },
     );
   }

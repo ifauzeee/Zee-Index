@@ -2,6 +2,7 @@ import FileBrowser from "@/components/file-browser/FileBrowser";
 import { listAllFiles } from "@/lib/storage";
 import { ZeeFile } from "@/types/storage";
 import { getRootFolderId } from "@/lib/config";
+import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +54,7 @@ export default async function Home() {
       });
       initialNextPageToken = data.nextPageToken;
     } catch (e) {
-      console.error("ISR Root fetch error:", e);
+      logger.error({ err: e }, "ISR Root fetch error");
       initialFiles = [];
     }
   }

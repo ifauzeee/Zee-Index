@@ -20,6 +20,7 @@ const CLEANUP_INTERVAL = 60_000;
 
 class MemoryCache {
   private cache: Map<string, CacheEntry<unknown>> = new Map();
+  private inflight: Map<string, Promise<unknown>> = new Map();
   private stats: CacheStats = { hits: 0, misses: 0, sets: 0, evictions: 0 };
   private cleanupTimer: NodeJS.Timer | null = null;
 
@@ -163,9 +164,23 @@ class MemoryCache {
       return cached;
     }
 
-    const value = await fetcher();
-    this.set(key, value, ttlMs);
-    return value;
+    // Singleflight: if a fetch for this key is already in-flight, reuse it.
+    const existing = this.inflight.get(key);
+    if (existing) {
+      return existing as Promise<T>;
+    }
+
+    const promise = fetcher()
+      .then((value) => {
+        this.set(key, value, ttlMs);
+        return value;
+      })
+      .finally(() => {
+        this.inflight.delete(key);
+      });
+
+    this.inflight.set(key, promise);
+    return promise;
   }
 
   async getWithSWR<T>(
@@ -179,12 +194,22 @@ class MemoryCache {
 
     if (entry && entry.expires > now) {
       if (now > entry.staleAt) {
-        logger.debug({ key }, "[MemoryCache] SWR Revalidating");
-        fetcher()
-          .then((value) => this.set(key, value, ttlMs, swrMs))
-          .catch((err) =>
-            logger.warn({ err, key }, "[MemoryCache] SWR Revalidation failed"),
-          );
+        // Singleflight: skip revalidation if one is already in-flight.
+        if (!this.inflight.has(key)) {
+          logger.debug({ key }, "[MemoryCache] SWR Revalidating");
+          const promise = fetcher()
+            .then((value) => this.set(key, value, ttlMs, swrMs))
+            .catch((err) =>
+              logger.warn(
+                { err, key },
+                "[MemoryCache] SWR Revalidation failed",
+              ),
+            )
+            .finally(() => {
+              this.inflight.delete(key);
+            });
+          this.inflight.set(key, promise);
+        }
       }
       this.stats.hits++;
       entry.accessCount++;
@@ -193,9 +218,23 @@ class MemoryCache {
     }
 
     this.stats.misses++;
-    const value = await fetcher();
-    this.set(key, value, ttlMs, swrMs);
-    return value;
+
+    const existing = this.inflight.get(key);
+    if (existing) {
+      return existing as Promise<T>;
+    }
+
+    const promise = fetcher()
+      .then((value) => {
+        this.set(key, value, ttlMs, swrMs);
+        return value;
+      })
+      .finally(() => {
+        this.inflight.delete(key);
+      });
+
+    this.inflight.set(key, promise);
+    return promise;
   }
 }
 

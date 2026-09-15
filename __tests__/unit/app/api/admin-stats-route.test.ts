@@ -1,13 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-const { mockFindMany, mockGetAnalyticsData, mockMapDbActivityLog } = vi.hoisted(
-  () => ({
-    mockFindMany: vi.fn(),
-    mockGetAnalyticsData: vi.fn(),
-    mockMapDbActivityLog: vi.fn(),
-  }),
-);
+const { mockQueryRawUnsafe, mockGetAnalyticsData } = vi.hoisted(() => ({
+  mockQueryRawUnsafe: vi.fn(),
+  mockGetAnalyticsData: vi.fn(),
+}));
 
 vi.mock("next/cache", () => ({
   unstable_cache: <T extends (...args: any[]) => any>(fn: T) => fn,
@@ -23,9 +20,7 @@ vi.mock("@/lib/api-middleware", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    activityLog: {
-      findMany: mockFindMany,
-    },
+    $queryRawUnsafe: mockQueryRawUnsafe,
   },
 }));
 
@@ -33,19 +28,11 @@ vi.mock("@/lib/analyticsTracker", () => ({
   getAnalyticsData: mockGetAnalyticsData,
 }));
 
-vi.mock("@/lib/activityLogger", () => ({
-  mapDbActivityLog: mockMapDbActivityLog,
-}));
-
-import {
-  ADMIN_STATS_ACTIVITY_LOG_TAKE_LIMIT,
-  GET,
-} from "@/app/api/admin/stats/route";
+import { GET } from "@/app/api/admin/stats/route";
 
 describe("app/api/admin/stats route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockMapDbActivityLog.mockImplementation((log: unknown) => log);
     mockGetAnalyticsData.mockResolvedValue({
       bandwidth: {
         totalToday: 100,
@@ -53,31 +40,33 @@ describe("app/api/admin/stats route", () => {
         totalThisMonth: 3000,
       },
     });
+
+    mockQueryRawUnsafe.mockImplementation((query: string) => {
+      if (query.includes("SPLIT_PART")) {
+        return Promise.resolve([{ type: "MP4", count: BigInt(2) }]);
+      }
+      if (query.includes("EXTRACT(HOUR")) {
+        return Promise.resolve([{ hour: 12, count: BigInt(2) }]);
+      }
+      if (query.includes("EXTRACT(DOW")) {
+        return Promise.resolve([{ dow: 1, count: BigInt(2) }]);
+      }
+      if (query.includes("userEmail")) {
+        return Promise.resolve([
+          { email: "admin@example.com", count: BigInt(3) },
+        ]);
+      }
+      if (query.includes("UPLOAD")) {
+        return Promise.resolve([{ name: "draft.docx", count: BigInt(1) }]);
+      }
+      if (query.includes("itemName")) {
+        return Promise.resolve([{ name: "movie.mp4", count: BigInt(2) }]);
+      }
+      return Promise.resolve([]);
+    });
   });
 
-  it("returns aggregated admin stats from activity logs", async () => {
-    const now = Date.now();
-    mockFindMany.mockResolvedValue([
-      {
-        type: "DOWNLOAD",
-        timestamp: now - 1000, // 1 second ago
-        itemName: "movie.mp4",
-        userEmail: "admin@example.com",
-      },
-      {
-        type: "DOWNLOAD",
-        timestamp: now - 2000, // 2 seconds ago
-        itemName: "movie.mp4",
-        userEmail: "admin@example.com",
-      },
-      {
-        type: "UPLOAD",
-        timestamp: now - 3000, // 3 seconds ago
-        itemName: "draft.docx",
-        userEmail: "admin@example.com",
-      },
-    ]);
-
+  it("returns aggregated admin stats from SQL aggregation", async () => {
     const response = await GET(
       new NextRequest("http://localhost:3000/api/admin/stats"),
     );
@@ -85,12 +74,7 @@ describe("app/api/admin/stats route", () => {
     expect(response.status).toBe(200);
     const payload = await response.json();
 
-    expect(mockFindMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        orderBy: { timestamp: "desc" },
-        take: ADMIN_STATS_ACTIVITY_LOG_TAKE_LIMIT,
-      }),
-    );
+    expect(mockQueryRawUnsafe).toHaveBeenCalledTimes(6);
     expect(payload.bandwidthSummary).toEqual({
       today: 100,
       thisWeek: 700,
@@ -118,8 +102,7 @@ describe("app/api/admin/stats route", () => {
   });
 
   it("returns 500 when stats query fails", async () => {
-    mockFindMany.mockRejectedValue(new Error("database unavailable"));
-    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockQueryRawUnsafe.mockRejectedValue(new Error("database unavailable"));
 
     const response = await GET(
       new NextRequest("http://localhost:3000/api/admin/stats"),
@@ -127,10 +110,7 @@ describe("app/api/admin/stats route", () => {
 
     expect(response.status).toBe(500);
     await expect(response.json()).resolves.toEqual({
-      error: "Gagal mengambil statistik.",
+      error: "Failed to fetch admin stats.",
     });
-    expect(errorSpy).toHaveBeenCalled();
-
-    errorSpy.mockRestore();
   });
 });

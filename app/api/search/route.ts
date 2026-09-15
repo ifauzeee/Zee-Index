@@ -177,6 +177,7 @@ export const GET = createPublicRoute(
         import("@/lib/auth").then((m) => m.isPrivateFolder),
       ]);
 
+      const accessCache = new Map<string, boolean>();
       const processedFiles = (data.files || []).map((file: DriveFile) => {
         const isFolder = file.mimeType === "application/vnd.google-apps.folder";
         const fileId = file.id;
@@ -197,6 +198,11 @@ export const GET = createPublicRoute(
             file.id,
             allowedTokens,
             session?.user?.email,
+            0,
+            5,
+            null,
+            new Set(),
+            accessCache,
           );
           return restricted ? null : file;
         }),
@@ -222,18 +228,25 @@ export const GET = createPublicRoute(
                 f.id,
                 allowedTokens,
                 session?.user?.email,
+                0,
+                20,
+                null,
+                new Set(),
+                accessCache,
               );
               if (restricted) continue;
             }
             seen.add(f.id);
             driveFiles.push({
               ...f,
+              source: "google-drive",
+              size: f.size != null ? String(f.size) : undefined,
               parents: [f.folderId],
               modifiedTime: f.modifiedTime.toISOString(),
               hasThumbnail: f.mimeType.startsWith("image/"),
               isFolder: f.mimeType === "application/vnd.google-apps.folder",
               contentText: f.contentText,
-            } as unknown as DriveFile);
+            } satisfies DriveFile);
           }
         } catch (err) {
           logger.warn({ err }, "Local full-text index search failed");

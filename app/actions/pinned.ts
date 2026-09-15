@@ -8,6 +8,21 @@ import { revalidateTag } from "next/cache";
 import { getTranslations } from "next-intl/server";
 
 const PINNED_KEY = "zee-index:pinned-folders";
+const PINNED_BATCH_SIZE = 10;
+
+async function batchDriveFetch<T>(
+  items: string[],
+  batchSize: number,
+  fn: (id: string) => Promise<T>,
+): Promise<T[]> {
+  const results: T[] = [];
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    const batchResults = await Promise.all(batch.map(fn));
+    results.push(...batchResults);
+  }
+  return results;
+}
 
 const pinSchema = z.object({
   folderId: z.string().min(1),
@@ -20,14 +35,17 @@ export async function getPinnedFolders() {
     return [];
   }
 
-  const promises = pinnedIds.map(async (id) => {
-    const detail = await getFileDetailsFromDrive(id);
-    if (!detail) {
-      await kv.srem(PINNED_KEY, id);
-    }
-    return detail;
-  });
-  const results = await Promise.all(promises);
+  const results = await batchDriveFetch(
+    pinnedIds,
+    PINNED_BATCH_SIZE,
+    async (id) => {
+      const detail = await getFileDetailsFromDrive(id);
+      if (!detail) {
+        await kv.srem(PINNED_KEY, id);
+      }
+      return detail;
+    },
+  );
 
   const pinnedFolders = results.filter(
     (file): file is DriveFile =>
