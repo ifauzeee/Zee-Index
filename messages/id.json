@@ -522,7 +522,16 @@
     "incidentUpdateFailed": "Gagal memperbarui status insiden",
     "noIncidents": "Tidak ada insiden",
     "shareLinkUpdateSuccess": "Pengaturan tautan berhasil diperbarui.",
-    "shareLinkUpdateFailed": "Gagal memperbarui tautan berbagi."
+    "shareLinkUpdateFailed": "Gagal memperbarui tautan berbagi.",
+    "totalViews": "Total Tayangan",
+    "avgViewsPerLink": "Rata-rata Tayangan/Link",
+    "topShared": "Paling Dibagikan",
+    "noViewsYet": "Belum ada tayangan",
+    "rateLimits": "Batasan Laju",
+    "rateLimitTier": "Tier",
+    "rateLimitWindow": "Jendela Waktu",
+    "rateLimitMax": "Maks Request",
+    "recentlyLimited": "Terbaru Dibatasi"
   },
   "Footer": {
     "dataUsage": "Total Penggunaan Data:",
