@@ -317,9 +317,7 @@ export async function getFolderPath(
   const path: { id: string; name: string }[] = [];
   let currentId = folderId;
   const rootId = await getRootFolderId();
-  const rootName =
-    process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME ||
-    (locale === "id" ? "Beranda" : "Home");
+  const rootName = process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Google Drive";
 
   const dbDrives = parseManualDriveRecords(await kv.get(MANUAL_DRIVES_KEY));
   const envDrives = parseManualDrivesFromEnv(
