@@ -49,7 +49,9 @@ export default function StorageConfig() {
       .then((data) => {
         if (data?.storage) setStatus(data.storage);
       })
-      .catch(() => {})
+      .catch((err) =>
+        console.error("[StorageConfig] Failed to load config:", err),
+      )
       .finally(() => setLoading(false));
   }, [user]);
 

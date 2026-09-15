@@ -65,7 +65,7 @@ export async function isAccessRestricted(
   allowedTokens: string[] = [],
   userEmail: string | null | undefined = null,
   depth: number = 0,
-  maxDepth: number = 20,
+  maxDepth: number = 5,
   preFetchedRestrictedIds: string[] | null = null,
   visited: Set<string> = new Set(),
   accessCache: Map<string, boolean> = new Map(),

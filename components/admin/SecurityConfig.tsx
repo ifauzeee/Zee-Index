@@ -34,7 +34,9 @@ export default function SecurityConfig() {
       .then((data) => {
         if (data?.notifications) setNotificationStatus(data.notifications);
       })
-      .catch(() => {});
+      .catch((err) =>
+        console.error("[SecurityConfig] Failed to load config:", err),
+      );
   }, []);
 
   if (user?.role !== "ADMIN") return null;

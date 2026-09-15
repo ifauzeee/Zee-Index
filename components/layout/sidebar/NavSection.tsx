@@ -38,7 +38,9 @@ export default function NavSection({ t }: NavSectionProps) {
       .then((requests: unknown[]) => {
         if (!cancelled) setPendingAccessRequests(requests.length);
       })
-      .catch(() => {});
+      .catch((err) =>
+        console.error("[NavSection] Failed to fetch access requests:", err),
+      );
     return () => {
       cancelled = true;
     };

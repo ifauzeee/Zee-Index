@@ -4,6 +4,7 @@ import {
   invalidateAccessToken,
   type DriveFile,
 } from "@/lib/drive";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -113,7 +114,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.redirect(destinationUrl);
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "FindPath error");
     return NextResponse.redirect(new URL("/", request.url));
   }
 }

@@ -158,7 +158,9 @@ export const CodePreview: React.FC<{ src: string; fileName: string }> = ({
     fetch(src)
       .then((res) => res.text())
       .then(setContent)
-      .catch(() => {})
+      .catch((err) =>
+        console.error("[CodePreview] Failed to fetch content:", err),
+      )
       .finally(() => setIsLoading(false));
   }, [src]);
 
