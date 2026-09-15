@@ -1,12 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-const { mockGetActivityLogs, mockDbActivityLogDeleteMany, mockKvDel } =
-  vi.hoisted(() => ({
-    mockGetActivityLogs: vi.fn(),
-    mockDbActivityLogDeleteMany: vi.fn(),
-    mockKvDel: vi.fn(),
-  }));
+const {
+  mockGetActivityLogs,
+  mockGetActivityStats,
+  mockDbActivityLogDeleteMany,
+  mockKvDel,
+} = vi.hoisted(() => ({
+  mockGetActivityLogs: vi.fn(),
+  mockGetActivityStats: vi.fn(),
+  mockDbActivityLogDeleteMany: vi.fn(),
+  mockKvDel: vi.fn(),
+}));
 
 vi.mock("@/lib/api-middleware", () => ({
   createAdminRoute: (
@@ -18,6 +23,7 @@ vi.mock("@/lib/api-middleware", () => ({
 
 vi.mock("@/lib/activityLogger", () => ({
   getActivityLogs: mockGetActivityLogs,
+  getActivityStats: mockGetActivityStats,
 }));
 
 vi.mock("@/lib/kv", () => ({
@@ -34,6 +40,13 @@ describe("app/api/admin/audit GET", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetActivityLogs.mockResolvedValue([{ id: "1", action: "LOGIN" }]);
+    mockGetActivityStats.mockResolvedValue({
+      totalLogs: 1,
+      byType: { LOGIN: 1 },
+      bySeverity: { info: 1 },
+      last24Hours: 1,
+      last7Days: 1,
+    });
   });
 
   it("returns activity logs", async () => {
@@ -42,7 +55,16 @@ describe("app/api/admin/audit GET", () => {
     );
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body).toEqual([{ id: "1", action: "LOGIN" }]);
+    expect(body).toEqual({
+      logs: [{ id: "1", action: "LOGIN" }],
+      stats: {
+        totalLogs: 1,
+        byType: { LOGIN: 1 },
+        bySeverity: { info: 1 },
+        last24Hours: 1,
+        last7Days: 1,
+      },
+    });
   });
 
   it("returns 500 on error", async () => {

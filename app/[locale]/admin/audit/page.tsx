@@ -21,6 +21,9 @@ import {
   ChevronLeft,
   ChevronRight,
   ScrollText,
+  Activity,
+  AlertTriangle,
+  CalendarDays,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { useTranslations } from "next-intl";
@@ -41,6 +44,14 @@ interface AuditLog {
   userAgent?: string;
   status?: string;
   error?: string;
+}
+
+interface ActivityStats {
+  totalLogs: number;
+  byType: Record<string, number>;
+  bySeverity: Record<string, number>;
+  last24Hours: number;
+  last7Days: number;
 }
 
 const ACTION_ICONS: Record<string, React.ElementType> = {
@@ -89,6 +100,7 @@ export default function AuditDashboard() {
   const { addToast } = useAppStore();
   const t = useTranslations("AuditDashboard");
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [stats, setStats] = useState<ActivityStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [isRefetching, setIsRefetching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -100,8 +112,9 @@ export default function AuditDashboard() {
     try {
       const res = await fetch("/api/admin/audit");
       if (res.ok) {
-        const data: AuditLog[] = await res.json();
-        setLogs(data);
+        const data = await res.json();
+        setLogs(data.logs ?? data);
+        setStats(data.stats ?? null);
       }
     } catch (error) {
       console.error(error);
@@ -184,6 +197,106 @@ export default function AuditDashboard() {
           </div>
         </div>
       </motion.div>
+
+      {/* ── Stats Summary ── */}
+      {stats && (
+        <motion.div variants={item}>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-card border rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <Activity size={14} />
+                <span className="text-xs font-medium uppercase tracking-wider">
+                  Total Logs
+                </span>
+              </div>
+              <p className="text-2xl font-bold tabular-nums">
+                {stats.totalLogs.toLocaleString()}
+              </p>
+            </div>
+            <div className="bg-card border rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <CalendarDays size={14} />
+                <span className="text-xs font-medium uppercase tracking-wider">
+                  Last 24h
+                </span>
+              </div>
+              <p className="text-2xl font-bold tabular-nums">
+                {stats.last24Hours.toLocaleString()}
+              </p>
+            </div>
+            <div className="bg-card border rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <Clock size={14} />
+                <span className="text-xs font-medium uppercase tracking-wider">
+                  Last 7 Days
+                </span>
+              </div>
+              <p className="text-2xl font-bold tabular-nums">
+                {stats.last7Days.toLocaleString()}
+              </p>
+            </div>
+            <div className="bg-card border rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <AlertTriangle size={14} />
+                <span className="text-xs font-medium uppercase tracking-wider">
+                  Errors
+                </span>
+              </div>
+              <p className="text-2xl font-bold tabular-nums text-red-600 dark:text-red-400">
+                {(stats.bySeverity.error ?? 0) +
+                  (stats.bySeverity.critical ?? 0)}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ── Activity Type Breakdown ── */}
+      {stats && Object.keys(stats.byType).length > 0 && (
+        <motion.div variants={item}>
+          <div className="bg-card border rounded-2xl p-5 shadow-sm">
+            <h3 className="text-sm font-semibold mb-4">Activity Breakdown</h3>
+            <div className="space-y-2.5">
+              {Object.entries(stats.byType)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 8)
+                .map(([type, count]) => {
+                  const maxCount = Math.max(...Object.values(stats.byType));
+                  const pct = maxCount > 0 ? (count / maxCount) * 100 : 0;
+                  const Icon = ACTION_ICONS[type] || FileText;
+                  const colorClass = getActionColor(type);
+                  return (
+                    <div key={type} className="flex items-center gap-3">
+                      <div
+                        className={`shrink-0 p-1.5 rounded-lg ${colorClass}`}
+                      >
+                        <Icon size={13} />
+                      </div>
+                      <span className="text-xs font-medium w-36 truncate shrink-0">
+                        {type.replace(/_/g, " ")}
+                      </span>
+                      <div className="flex-1 h-2 bg-muted/50 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{
+                            duration: 0.6,
+                            delay: 0.1,
+                            ease: "easeOut",
+                          }}
+                          className={`h-full rounded-full ${colorClass.split(" ")[0]}`}
+                        />
+                      </div>
+                      <span className="text-xs text-muted-foreground tabular-nums w-10 text-right shrink-0">
+                        {count}
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* ── Toolbar ── */}
       <motion.div variants={item}>

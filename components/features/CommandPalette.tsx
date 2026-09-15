@@ -65,6 +65,13 @@ export default function CommandPalette() {
   }, []);
 
   React.useEffect(() => {
+    const openPalette = () => setOpen(true);
+    window.addEventListener("open-command-palette", openPalette);
+    return () =>
+      window.removeEventListener("open-command-palette", openPalette);
+  }, []);
+
+  React.useEffect(() => {
     if (!open) {
       setSearchQuery("");
     }

@@ -6,11 +6,23 @@ import { useRouter, usePathname } from "next/navigation";
 interface UseKeyboardNavigationProps {
   files: Array<{ id: string; name: string; mimeType: string }>;
   onFileOpen?: (file: { id: string; name: string; mimeType: string }) => void;
+  onFilePreview?: (file: {
+    id: string;
+    name: string;
+    mimeType: string;
+  }) => void;
+  onFileDelete?: (file: { id: string; name: string; mimeType: string }) => void;
+  onFileRename?: (file: { id: string; name: string; mimeType: string }) => void;
+  onOpenSearch?: () => void;
 }
 
 export function useKeyboardNavigation({
   files,
   onFileOpen,
+  onFilePreview,
+  onFileDelete,
+  onFileRename,
+  onOpenSearch,
 }: UseKeyboardNavigationProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -79,6 +91,48 @@ export function useKeyboardNavigation({
           setSearchBuffer("");
           break;
 
+        case " ":
+          e.preventDefault();
+          if (
+            focusedIndex >= 0 &&
+            focusedIndex < files.length &&
+            files[focusedIndex].mimeType !==
+              "application/vnd.google-apps.folder" &&
+            onFilePreview
+          ) {
+            onFilePreview(files[focusedIndex]);
+          }
+          break;
+
+        case "Delete":
+          if (
+            focusedIndex >= 0 &&
+            focusedIndex < files.length &&
+            onFileDelete
+          ) {
+            e.preventDefault();
+            onFileDelete(files[focusedIndex]);
+          }
+          break;
+
+        case "F2":
+          if (
+            focusedIndex >= 0 &&
+            focusedIndex < files.length &&
+            onFileRename
+          ) {
+            e.preventDefault();
+            onFileRename(files[focusedIndex]);
+          }
+          break;
+
+        case "/":
+          if (searchBuffer.length === 0 && onOpenSearch) {
+            e.preventDefault();
+            onOpenSearch();
+          }
+          break;
+
         default:
           if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
             const newBuffer = searchBuffer + e.key.toLowerCase();
@@ -103,6 +157,10 @@ export function useKeyboardNavigation({
       router,
       pathname,
       onFileOpen,
+      onFilePreview,
+      onFileDelete,
+      onFileRename,
+      onOpenSearch,
       searchBuffer,
       searchTimeoutRef,
     ],
