@@ -402,19 +402,22 @@ pnpm docker:prod      # Docker Compose production stack
 
 ### Optional Variables
 
-| Variable                           | Description                            | Default     |
-| ---------------------------------- | -------------------------------------- | ----------- |
-| `NEXT_PUBLIC_ROOT_FOLDER_NAME`     | Display name for root folder           | `Home`      |
-| `NEXT_PUBLIC_APP_NAME`             | Custom application name                | `Zee Index` |
-| `NEXT_PUBLIC_MANUAL_DRIVES`        | JSON array of additional drives        | `[]`        |
-| `NEXT_PUBLIC_ENABLE_LOCAL_STORAGE` | Enable local filesystem provider       | —           |
-| `PRIVATE_FOLDER_IDS`               | JSON array of private folder IDs       | `[]`        |
-| `STORAGE_LIMIT_GB`                 | Storage warning limit                  | `15`        |
-| `STORAGE_WARNING_THRESHOLD`        | Warning threshold (0–1)                | `0.90`      |
-| `CRON_SECRET`                      | Cron job authentication token (min 16) | —           |
-| `TMDB_API_KEY`                     | TMDB API key for movie metadata        | —           |
-| `DUCKDNS_DOMAIN`                   | DuckDNS subdomain                      | —           |
-| `DUCKDNS_TOKEN`                    | DuckDNS authentication token           | —           |
+| Variable                           | Description                                    | Default        |
+| ---------------------------------- | ---------------------------------------------- | -------------- |
+| `NEXT_PUBLIC_ROOT_FOLDER_NAME`     | Display name for the Google Drive root         | `Google Drive` |
+| `NEXT_PUBLIC_APP_NAME`             | Custom application name                        | `Zee Index`    |
+| `LOG_LEVEL`                        | Pino log level (`debug`/`info`/`warn`/`error`) | `info`         |
+| `ALLOWED_ORIGINS`                  | Comma-separated download origin allowlist      | —              |
+| `DOWNLOAD_TIMEOUT_MS`              | Download proxy timeout (ms)                    | `60000`        |
+| `NEXT_PUBLIC_MANUAL_DRIVES`        | JSON array of additional drives                | `[]`           |
+| `NEXT_PUBLIC_ENABLE_LOCAL_STORAGE` | Enable local filesystem provider               | —              |
+| `PRIVATE_FOLDER_IDS`               | JSON array of private folder IDs               | `[]`           |
+| `STORAGE_LIMIT_GB`                 | Storage warning limit                          | `15`           |
+| `STORAGE_WARNING_THRESHOLD`        | Warning threshold (0–1)                        | `0.90`         |
+| `CRON_SECRET`                      | Cron job authentication token (min 16)         | —              |
+| `TMDB_API_KEY`                     | TMDB API key for movie metadata                | —              |
+| `DUCKDNS_DOMAIN`                   | DuckDNS subdomain                              | —              |
+| `DUCKDNS_TOKEN`                    | DuckDNS authentication token                   | —              |
 
 ### Notifications (Optional)
 
@@ -483,7 +486,7 @@ GOOGLE_CLIENT_ID=""
 GOOGLE_CLIENT_SECRET=""
 GOOGLE_REFRESH_TOKEN=""
 NEXT_PUBLIC_ROOT_FOLDER_ID=""
-NEXT_PUBLIC_ROOT_FOLDER_NAME="Home"
+# NEXT_PUBLIC_ROOT_FOLDER_NAME="Google Drive"  # optional; defaults to "Google Drive"
 
 # 3. DATABASE (Docker auto-configures DATABASE_URL)
 POSTGRES_USER=postgres
