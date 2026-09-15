@@ -40,4 +40,15 @@ export interface StorageProvider {
     mimeType?: string,
   ): Promise<ZeeFile | null>;
   deleteFile(fileId: string): Promise<boolean>;
+
+  // Optional: streaming upload session (for providers with chunked session APIs
+  // like Dropbox). When implemented, the route streams chunks directly to the
+  // provider without buffering the entire file in server memory. The provider
+  // tracks the session and resolves the final path internally.
+  startUploadSession?(parentId: string, fileName: string): Promise<string>;
+  appendUploadSession?(sessionToken: string, chunk: ArrayBuffer): Promise<void>;
+  finishUploadSession?(
+    sessionToken: string,
+    chunk: ArrayBuffer,
+  ): Promise<ZeeFile | null>;
 }

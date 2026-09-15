@@ -34,7 +34,8 @@ const uploadQuerySchema = z
     }
   });
 
-// ponytail: in-memory buffer per upload URL; leaks on crash, fine for single-process dev
+// ponytail: providers without session streaming (S3/WebDAV) buffer in memory;
+// swap to their multipart/stream APIs when uploads >~100MB matter there too.
 const providerBuffers = new Map<
   string,
   { chunks: Buffer[]; totalSize: number }
@@ -74,6 +75,22 @@ export const POST = createEditorRoute(
           (parentId === provider.rootId ||
             parentId.startsWith(provider.idPrefix))
         ) {
+          // Use session-based streaming upload if the provider supports it
+          // (e.g. Dropbox upload sessions). This avoids buffering the entire
+          // file in server memory — each chunk is forwarded directly.
+          if (provider.startUploadSession) {
+            const sessionToken = await provider.startUploadSession(
+              parentId,
+              name,
+            );
+            return NextResponse.json({
+              uploadUrl: `provider-session://${sessionToken}`,
+            });
+          }
+
+          // Fallback: buffer entire file server-side (for providers without
+          // session support — S3, WebDAV). Works for small files; large files
+          // need provider-specific streaming (add session methods above).
           return NextResponse.json({
             uploadUrl: `provider-upload://${encodeURIComponent(name)}`,
             useProvider: true,
@@ -114,6 +131,60 @@ export const POST = createEditorRoute(
       } else if (uploadType === "chunk") {
         const uploadUrl = query.uploadUrl!;
         const parentId = query.parentId;
+
+        if (uploadUrl.startsWith("provider-session://")) {
+          const sessionToken = uploadUrl.slice("provider-session://".length);
+          const provider = getActiveProvider();
+          const parent = parentId || provider?.rootId || "";
+
+          if (!provider?.appendUploadSession || !provider.finishUploadSession) {
+            return NextResponse.json(
+              { error: "Storage provider tidak mendukung session upload." },
+              { status: 400 },
+            );
+          }
+
+          const chunkBuffer = await request.arrayBuffer();
+          const rangeMatch = (request.headers.get("Content-Range") || "").match(
+            /bytes (\d+)-(\d+)\/(\d+)/,
+          );
+          const isLast =
+            !!rangeMatch && Number(rangeMatch[2]) + 1 === Number(rangeMatch[3]);
+
+          if (!isLast) {
+            await provider.appendUploadSession(sessionToken, chunkBuffer);
+            return NextResponse.json({ status: "partial" });
+          }
+
+          const file = await provider.finishUploadSession(
+            sessionToken,
+            chunkBuffer,
+          );
+
+          if (!file) {
+            throw new Error("Gagal mengunggah file ke storage provider.");
+          }
+
+          if (parent) {
+            await invalidateFolderCache(parent);
+          }
+
+          await logActivity("UPLOAD", {
+            itemName: file.name,
+            itemId: file.id,
+            itemSize: file.size,
+            userEmail: session.user?.email,
+            status: "success",
+            metadata: {
+              operation: "file_upload",
+              fileId: file.id,
+              parentId: parent,
+              uploadType: "chunk",
+            },
+          });
+
+          return NextResponse.json({ status: "completed", file });
+        }
 
         if (uploadUrl.startsWith("provider-upload://")) {
           const fileName = decodeURIComponent(

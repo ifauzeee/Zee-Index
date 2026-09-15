@@ -237,4 +237,107 @@ export class DropboxStorageProvider implements StorageProvider {
       return false;
     }
   }
+
+  // ponytail: single-process session map; sessions leak on upload abort and are
+  // lost on restart (Dropbox sessions expire after 7 days anyway, their own
+  // cleanup). Not worth a DB table until multi-instance deployment.
+  private sessions = new Map<
+    string,
+    { sessionId: string; offset: number; remotePath: string }
+  >();
+
+  async startUploadSession(
+    parentId: string,
+    fileName: string,
+  ): Promise<string> {
+    const parentPath =
+      parentId === this.rootId
+        ? this.basePath || ""
+        : this.toRemotePath(parentId);
+    const remotePath = `${parentPath.replace(/\/$/, "")}/${fileName}`.replace(
+      /\/\//g,
+      "/",
+    );
+
+    try {
+      const res = await this.client.filesUploadSessionStart({
+        contents: new ArrayBuffer(0),
+        close: false,
+      });
+      const token = crypto.randomUUID();
+      this.sessions.set(token, {
+        sessionId: res.result.session_id,
+        offset: 0,
+        remotePath,
+      });
+      return token;
+    } catch (err) {
+      logger.error({ err, remotePath }, "[Dropbox] startUploadSession failed");
+      throw err;
+    }
+  }
+
+  async appendUploadSession(
+    sessionToken: string,
+    chunk: ArrayBuffer,
+  ): Promise<void> {
+    const session = this.sessions.get(sessionToken);
+    if (!session) {
+      throw new Error("Dropbox upload session tidak ditemukan.");
+    }
+
+    try {
+      await this.client.filesUploadSessionAppendV2({
+        cursor: {
+          session_id: session.sessionId,
+          offset: session.offset,
+        },
+        contents: chunk,
+        close: false,
+      });
+      session.offset += chunk.byteLength;
+    } catch (err) {
+      logger.error(
+        { err, sessionToken, offset: session.offset },
+        "[Dropbox] appendUploadSession failed",
+      );
+      throw err;
+    }
+  }
+
+  async finishUploadSession(
+    sessionToken: string,
+    chunk: ArrayBuffer,
+  ): Promise<ZeeFile | null> {
+    const session = this.sessions.get(sessionToken);
+    if (!session) {
+      throw new Error("Dropbox upload session tidak ditemukan.");
+    }
+
+    try {
+      const res = await this.client.filesUploadSessionFinish({
+        cursor: {
+          session_id: session.sessionId,
+          offset: session.offset,
+        },
+        contents: chunk,
+        commit: {
+          path: session.remotePath,
+          mode: { ".tag": "overwrite" },
+          autorename: false,
+        },
+      });
+      this.sessions.delete(sessionToken);
+
+      const meta = res.result as Parameters<typeof this.toZeeFile>[0];
+      return this.toZeeFile(meta);
+    } catch (err) {
+      logger.error(
+        { err, sessionToken, remotePath: session.remotePath },
+        "[Dropbox] finishUploadSession failed",
+      );
+      this.sessions.delete(sessionToken);
+      return null;
+    }
+  }
 }
