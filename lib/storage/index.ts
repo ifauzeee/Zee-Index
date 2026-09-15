@@ -22,6 +22,18 @@ export async function listAllFiles(
 
     const files: ZeeFile[] = [];
 
+    if (driveRoot) {
+      files.push({
+        id: driveRoot,
+        name: "Google Drive",
+        mimeType: "application/vnd.google-apps.folder",
+        isFolder: true,
+        source: "google-drive",
+        hasThumbnail: false,
+        modifiedTime: new Date().toISOString(),
+      });
+    }
+
     if (provider) {
       files.push({
         id: provider.rootId,
@@ -29,16 +41,6 @@ export async function listAllFiles(
         mimeType: "application/vnd.google-apps.folder",
         isFolder: true,
         source: provider.source,
-        hasThumbnail: false,
-        modifiedTime: new Date().toISOString(),
-      });
-    } else if (driveRoot) {
-      files.push({
-        id: driveRoot,
-        name: "Google Drive",
-        mimeType: "application/vnd.google-apps.folder",
-        isFolder: true,
-        source: "google-drive",
         hasThumbnail: false,
         modifiedTime: new Date().toISOString(),
       });

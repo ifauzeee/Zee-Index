@@ -166,7 +166,6 @@ export function useFileFetching({
   const queryClient = useQueryClient();
   const tErr = useTranslations("FileErrors");
   const tBrowse = useTranslations("FileBrowser");
-  const tSidebar = useTranslations("Sidebar");
 
   useEffect(() => {
     if (refreshKey > 0) {
@@ -199,7 +198,7 @@ export function useFileFetching({
       return [
         {
           id: rootFolderId,
-          name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || tSidebar("home"),
+          name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Google Drive",
         },
       ];
     }
@@ -216,7 +215,7 @@ export function useFileFetching({
         return [
           {
             id: rootFolderId,
-            name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || tSidebar("home"),
+            name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Google Drive",
           },
           ...slicedPath,
         ];
@@ -226,7 +225,7 @@ export function useFileFetching({
     }
 
     return rawPath;
-  }, [historyData, currentFolderId, rootFolderId, folderTokens, tSidebar]);
+  }, [historyData, currentFolderId, rootFolderId, folderTokens]);
 
   const bestToken = useMemo(() => {
     if (folderTokens[currentFolderId]) return folderTokens[currentFolderId];

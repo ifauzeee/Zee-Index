@@ -134,7 +134,8 @@ export function useUpload({
         });
 
         if (!initRes.ok) throw new Error(t("initFailed"));
-        const { uploadUrl } = await initRes.json();
+        const initData = await initRes.json();
+        const { uploadUrl } = initData;
 
         let start = 0;
         while (start < file.size) {

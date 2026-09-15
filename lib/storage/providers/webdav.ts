@@ -153,4 +153,15 @@ export class WebDavStorageProvider implements StorageProvider {
       hasThumbnail: false,
     };
   }
+
+  async deleteFile(fileId: string): Promise<boolean> {
+    const remotePath = this.toRemotePath(fileId);
+    try {
+      await this.client.deleteFile(remotePath);
+      return true;
+    } catch (error) {
+      logger.error({ err: error, remotePath }, "[WebDAV] delete failed");
+      return false;
+    }
+  }
 }

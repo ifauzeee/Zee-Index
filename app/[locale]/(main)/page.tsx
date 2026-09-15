@@ -3,6 +3,7 @@ import { listAllFiles } from "@/lib/storage";
 import { ZeeFile } from "@/types/storage";
 import { getRootFolderId } from "@/lib/config";
 import { logger } from "@/lib/logger";
+import { getActiveProvider } from "@/lib/storage/providers";
 
 export const dynamic = "force-dynamic";
 
@@ -17,18 +18,26 @@ export default async function Home() {
     import("@/lib/db").then((m) => m.db),
   ]);
 
+  const provider = getActiveProvider();
+  const hasLocalStorage =
+    process.env.NEXT_PUBLIC_ENABLE_LOCAL_STORAGE === "true" &&
+    !!process.env.LOCAL_STORAGE_PATH;
+  const showVirtualRoot =
+    rootId === "virtual-root" || !!provider || hasLocalStorage;
+  const initialFolderId = showVirtualRoot ? "virtual-root" : rootId;
+
   let initialFiles: ZeeFile[] | undefined;
   let initialNextPageToken: string | null = null;
 
   const isLocked =
-    rootId !== "virtual-root" &&
-    ((await isProtected(rootId)) || isPrivateFolder(rootId));
+    initialFolderId !== "virtual-root" &&
+    ((await isProtected(initialFolderId)) || isPrivateFolder(initialFolderId));
 
   if (!isLocked) {
     try {
       const [data, allProtectedFolders] = await Promise.all([
         listAllFiles({
-          folderId: rootId,
+          folderId: initialFolderId,
           pageToken: null,
           pageSize: 50,
           useCache: true,
@@ -61,7 +70,7 @@ export default async function Home() {
 
   return (
     <FileBrowser
-      initialFolderId={rootId}
+      initialFolderId={initialFolderId}
       initialFiles={initialFiles}
       initialNextPageToken={initialNextPageToken}
     />

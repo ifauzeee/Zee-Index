@@ -51,4 +51,19 @@ describe("storage status", () => {
     expect(status.webdav?.username).toBe("••••");
     expect(JSON.stringify(status)).not.toContain("super-secret");
   });
+
+  it("reports Dropbox config when dropbox is enabled", async () => {
+    process.env.STORAGE_PROVIDER = "dropbox";
+    process.env.STORAGE_DROPBOX_ACCESS_TOKEN = "sl.test-token";
+    process.env.STORAGE_DROPBOX_ROOT_NAME = "My Dropbox";
+    const { getStorageStatus } = await import("@/lib/storage/status");
+    const status = getStorageStatus();
+    expect(status.isDropboxEnabled).toBe(true);
+    expect(status.dropbox).toEqual({
+      accountHint: "",
+      basePath: "/",
+      rootName: "My Dropbox",
+    });
+    expect(JSON.stringify(status)).not.toContain("sl.test-token");
+  });
 });

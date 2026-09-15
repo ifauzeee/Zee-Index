@@ -24,6 +24,7 @@ lerna-debug.log*
 *.log
 /playwright-report/
 /test-results/
+/.playwright-mcp/
 
 # Environment Variables
 .env
