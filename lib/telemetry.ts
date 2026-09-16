@@ -239,7 +239,6 @@ export const appEventSchema = z.discriminatedUnion("type", [
   }),
 ]);
 
-export type PageViewEvent = z.infer<typeof pageViewEventSchema>;
 export type PopularPagePayload = z.infer<typeof popularPagePayloadSchema>;
 export type DeviceStatsPayload = z.infer<typeof deviceStatsPayloadSchema>;
 export type ReferrerPayload = z.infer<typeof referrerPayloadSchema>;

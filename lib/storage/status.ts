@@ -5,6 +5,7 @@ export interface StorageStatus {
   isExternalEnabled: boolean;
   isS3Enabled: boolean;
   isWebDavEnabled: boolean;
+  isDropboxEnabled: boolean;
   s3?: {
     endpoint: string;
     region: string;
@@ -18,6 +19,11 @@ export interface StorageStatus {
     basePath: string;
     rootName: string;
   };
+  dropbox?: {
+    accountHint: string;
+    basePath: string;
+    rootName: string;
+  };
 }
 
 export function getStorageStatus(): StorageStatus {
@@ -25,12 +31,15 @@ export function getStorageStatus(): StorageStatus {
   const active = getActiveProvider();
   const isS3 = provider === "s3" && !!process.env.STORAGE_S3_BUCKET;
   const isWebDav = provider === "webdav" && !!process.env.STORAGE_WEBDAV_URL;
+  const isDropbox =
+    provider === "dropbox" && !!process.env.STORAGE_DROPBOX_ACCESS_TOKEN;
 
   const status: StorageStatus = {
     provider,
     isExternalEnabled: !!active,
     isS3Enabled: isS3,
     isWebDavEnabled: isWebDav,
+    isDropboxEnabled: isDropbox,
   };
 
   if (isS3) {
@@ -51,6 +60,14 @@ export function getStorageStatus(): StorageStatus {
       username: process.env.STORAGE_WEBDAV_USERNAME ? "••••" : "",
       basePath: process.env.STORAGE_WEBDAV_BASEPATH || "/",
       rootName: process.env.STORAGE_WEBDAV_ROOT_NAME || "WebDAV",
+    };
+  }
+
+  if (isDropbox) {
+    status.dropbox = {
+      accountHint: process.env.STORAGE_DROPBOX_APP_KEY ? "App configured" : "",
+      basePath: process.env.STORAGE_DROPBOX_BASEPATH || "/",
+      rootName: process.env.STORAGE_DROPBOX_ROOT_NAME || "Dropbox",
     };
   }
 

@@ -4,6 +4,7 @@ import { createPublicRoute } from "@/lib/api-middleware";
 import { getAccessToken } from "@/lib/drive";
 import { validateShareToken } from "@/lib/auth";
 import { kv } from "@/lib/kv";
+import { getActiveProvider, isProviderId } from "@/lib/storage/providers";
 
 export const dynamic = "force-dynamic";
 
@@ -177,6 +178,36 @@ export const GET = createPublicRoute(
         });
       }
 
+      if (isProviderId(folderId)) {
+        const provider = getActiveProvider();
+        if (provider) {
+          const relPath = folderId.slice(provider.idPrefix.length);
+          const segments = relPath.split("/").filter(Boolean);
+          const pathNodes = [
+            {
+              id: provider.rootId,
+              name: provider.rootName,
+            },
+          ];
+
+          let currentPath = "";
+          segments.forEach((segment) => {
+            currentPath += segment + "/";
+            pathNodes.push({
+              id: `${provider.idPrefix}${currentPath}`,
+              name: segment,
+            });
+          });
+
+          return NextResponse.json(pathNodes, {
+            headers: {
+              "Cache-Control":
+                "private, max-age=60, stale-while-revalidate=600",
+            },
+          });
+        }
+      }
+
       const cachedPath: { id: string; name: string }[] | null =
         await kv.get(cacheKey);
       if (cachedPath) {
@@ -204,8 +235,7 @@ export const GET = createPublicRoute(
       if (process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
         shortcutMap.set(
           process.env.NEXT_PUBLIC_ROOT_FOLDER_ID.trim(),
-          process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME ||
-            (locale === "id" ? "Beranda" : "Home"),
+          "Google Drive",
         );
       }
 

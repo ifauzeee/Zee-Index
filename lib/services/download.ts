@@ -139,7 +139,8 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
     };
   }
 
-  const fileIdPattern = /^[a-zA-Z0-9_:/.\s\(\)\[\]~@#$%-]+$/;
+  const fileIdPattern =
+    /^[a-zA-Z0-9_:/.\s\(\)\[\]~@#$%\-\u{1F300}-\u{1FFFF}]+$/u;
   if (!fileIdPattern.test(fileId) || fileId.length > 255) {
     return {
       context: createEmptyDownloadContext(),

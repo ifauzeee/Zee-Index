@@ -12,7 +12,7 @@ const manualDriveNameSchema = z.string().trim().min(1).max(120);
 
 export const MANUAL_DRIVES_KEY = REDIS_KEYS.MANUAL_DRIVES;
 
-export const manualDriveRecordSchema = z.object({
+const manualDriveRecordSchema = z.object({
   id: manualDriveIdSchema,
   name: manualDriveNameSchema,
   isProtected: z.boolean().optional(),
@@ -29,7 +29,6 @@ export const manualDriveDeleteSchema = z.object({
 });
 
 export type ManualDriveRecord = z.infer<typeof manualDriveRecordSchema>;
-export type ManualDriveCreateInput = z.infer<typeof manualDriveCreateSchema>;
 
 export function parseManualDriveRecords(value: unknown): ManualDriveRecord[] {
   if (!Array.isArray(value)) {

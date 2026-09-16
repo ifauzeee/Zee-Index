@@ -5,7 +5,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { useAppStore } from "@/lib/store";
 import type { AppConfig } from "@/lib/app-config.shared";
 
-export interface PublicConfig {
+interface PublicConfig {
   appName: string;
   logoUrl: string;
   faviconUrl: string;
@@ -21,7 +21,7 @@ const PUBLIC_DEFAULTS: PublicConfig = {
   hideAuthor: null,
 };
 
-export function usePublicConfigQuery() {
+function usePublicConfigQuery() {
   return useQuery<PublicConfig>({
     queryKey: ["publicConfig"],
     queryFn: async () => {

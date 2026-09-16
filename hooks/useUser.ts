@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useAppStore, UserProfile } from "@/lib/store";
 
-export function useUserQuery(refreshKey = 0) {
+function useUserQuery(refreshKey = 0) {
   const { status } = useSession();
 
   return useQuery<UserProfile | null>({

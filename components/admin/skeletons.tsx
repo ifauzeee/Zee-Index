@@ -234,35 +234,3 @@ export function HealthCardSkeleton({ count = 3 }: { count?: number }) {
     </div>
   );
 }
-
-export function LogListSkeleton({
-  rows = 5,
-  count,
-}: {
-  rows?: number;
-  count?: number;
-}) {
-  const total = count ?? rows;
-  return (
-    <div className="space-y-1 animate-pulse">
-      <div className="flex gap-4 pb-3 border-b border-border">
-        {Array.from({ length: 4 }).map((_, c) => (
-          <SkeletonBlock
-            key={`h-${c}`}
-            className={cn("h-3", c === 0 ? "w-1/4" : "flex-1")}
-          />
-        ))}
-      </div>
-      {Array.from({ length: total }).map((_, i) => (
-        <div key={i} className="flex gap-4 py-2">
-          {Array.from({ length: 4 }).map((_, c) => (
-            <SkeletonBlock
-              key={`c-${i}-${c}`}
-              className={cn("h-3", c === 0 ? "w-1/4" : "flex-1")}
-            />
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}

@@ -68,7 +68,6 @@ export const useModal = () => {
 
 export const useConfirm = useModal;
 export const useAlert = useModal;
-export const usePrompt = useModal;
 
 export const ModalProvider = ({ children }: { children: ReactNode }) => {
   const [confirmState, setConfirmState] = useState<{

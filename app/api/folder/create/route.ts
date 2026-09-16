@@ -8,6 +8,7 @@ import { z } from "zod";
 import { logActivity } from "@/lib/activityLogger";
 import { kv } from "@/lib/kv";
 import { invalidateFolderCache } from "@/lib/cache";
+import { getActiveProvider, isProviderId } from "@/lib/storage/providers";
 
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
 
@@ -23,6 +24,22 @@ export const POST = createAdminRoute(
   async ({ body, session }) => {
     try {
       const { folderName, parentId } = body;
+
+      const provider = getActiveProvider();
+      if (provider && isProviderId(parentId)) {
+        if (!provider.createFolder) {
+          throw new Error(
+            "Pembuatan folder tidak didukung oleh penyimpanan aktif.",
+          );
+        }
+        const file = await provider.createFolder(parentId, folderName);
+        if (!file) {
+          throw new Error("Gagal membuat folder di penyimpanan aktif.");
+        }
+        await invalidateFolderCache(parentId);
+        return NextResponse.json(file, { status: 200 });
+      }
+
       const accessToken = await getAccessToken();
 
       const fileMetadata = {

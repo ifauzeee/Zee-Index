@@ -1,7 +1,5 @@
 import { getAccessToken } from "./auth";
-import { fetchWithRetry } from "./client";
 import { logger } from "@/lib/logger";
-import { ERROR_MESSAGES } from "@/lib/constants";
 
 const MAX_CONCURRENT = 10;
 
@@ -53,69 +51,6 @@ export async function deleteForever(fileId: string | string[]) {
       logger.error(`Failed to delete a file forever: ${res.statusText}`);
     }
   });
-}
-
-export async function copyFile(
-  fileId: string,
-  destinationFolderId: string,
-  newName?: string,
-) {
-  const accessToken = await getAccessToken();
-  const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/copy`;
-
-  const requestBody: { parents?: string[]; name?: string } = {
-    parents: [destinationFolderId],
-  };
-  if (newName) {
-    requestBody.name = newName;
-  }
-
-  const response = await fetch(driveUrl, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(
-      errorData.error?.message || ERROR_MESSAGES.COPY_FILE_FAILED,
-    );
-  }
-
-  const result = await response.json();
-  return {
-    id: result.id,
-    name: result.name || newName,
-    mimeType: result.mimeType,
-    parents: result.parents,
-  };
-}
-
-export async function updateFileContent(fileId: string, newContent: string) {
-  const accessToken = await getAccessToken();
-  const url = `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`;
-
-  const response = await fetchWithRetry(url, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "text/plain",
-    },
-    body: newContent,
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.error?.message || ERROR_MESSAGES.UPDATE_FILE_CONTENT_FAILED,
-    );
-  }
-
-  return response.json();
 }
 
 export async function uploadToDrive(

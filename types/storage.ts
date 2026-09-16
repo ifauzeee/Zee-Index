@@ -1,4 +1,4 @@
-export type StorageSource = "google-drive" | "local" | "s3" | "webdav";
+type StorageSource = "google-drive" | "local" | "s3" | "webdav" | "dropbox";
 
 export interface ZeeFile {
   id: string;

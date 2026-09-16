@@ -5,16 +5,3 @@ export function srtToVtt(srtText: string): string {
 
   return vttText;
 }
-
-export async function fetchAndConvertSrt(url: string): Promise<string> {
-  const response = await fetch(url);
-  const text = await response.text();
-
-  if (text.trim().startsWith("WEBVTT")) {
-    return url;
-  }
-
-  const vtt = srtToVtt(text);
-  const blob = new Blob([vtt], { type: "text/vtt" });
-  return URL.createObjectURL(blob);
-}
