@@ -59,4 +59,5 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             NEXT_PUBLIC_ROOT_FOLDER_ID=${{ secrets.NEXT_PUBLIC_ROOT_FOLDER_ID }}
-            NEXT_PUBLIC_ROOT_FOLDER_NAME=${{ secrets.NEXT_PUBLIC_ROOT_FOLDER_NAME }}
+            NEXT_PUBLIC_ENABLE_LOCAL_STORAGE=${{ secrets.NEXT_PUBLIC_ENABLE_LOCAL_STORAGE }}
+            NEXT_PUBLIC_LOCAL_STORAGE_NAME=${{ secrets.NEXT_PUBLIC_LOCAL_STORAGE_NAME }}

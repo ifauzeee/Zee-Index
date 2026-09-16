@@ -18,7 +18,7 @@ export interface TopUser {
   count: number;
 }
 
-export interface FileTypeStat {
+interface FileTypeStat {
   type: string;
   count: number;
 }

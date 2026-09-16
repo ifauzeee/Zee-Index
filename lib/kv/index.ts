@@ -45,25 +45,6 @@ function createKVClient(): KVClient {
 
 export const kv: KVClient = createKVClient();
 
-export function invalidateKvCache(key: string): void {
-  memoryCache.delete(`kv:${key}`);
-  memoryCache.delete(`kv:hash:${key}`);
-}
-
-export function invalidateKvCacheByPrefix(prefix: string): void {
-  memoryCache.deleteByPrefix(`kv:${prefix}`);
-}
-
-export function getKvStats() {
-  return {
-    kv:
-      redisUrl && !isEdgeRuntime
-        ? { type: "redis" }
-        : (kv as unknown as InMemoryKV).getStats(),
-    memoryCache: memoryCache.getStats(),
-  };
-}
-
 export function getKvCacheStats() {
   return memoryCache.getStats();
 }

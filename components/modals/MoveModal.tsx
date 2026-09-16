@@ -30,7 +30,7 @@ export default function MoveModal({
   initialFolderId,
 }: MoveModalProps) {
   const rootId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
-  const rootName = process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Google Drive";
+  const rootName = "Google Drive";
 
   const [currentFolderId, setCurrentFolderId] = useState(
     initialFolderId || rootId,

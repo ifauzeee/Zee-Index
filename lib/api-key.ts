@@ -119,6 +119,3 @@ export async function clearApiKeyCache(prefix: string): Promise<void> {
   const cacheKey = `${REDIS_KEYS.API_KEY_CACHE}${prefix}`;
   await kv.del(cacheKey).catch(() => {});
 }
-
-/** Length of the key prefix used for DB lookups. */
-export { KEY_PREFIX_LEN };

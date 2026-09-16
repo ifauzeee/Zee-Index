@@ -35,7 +35,7 @@ interface UseFileFetchingProps {
   locale: string;
 }
 
-export class ProtectedError extends RequestError {
+class ProtectedError extends RequestError {
   constructor(message: string, folderId: string) {
     super(message, {
       status: 401,
@@ -198,7 +198,7 @@ export function useFileFetching({
       return [
         {
           id: rootFolderId,
-          name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Google Drive",
+          name: "Google Drive",
         },
       ];
     }
@@ -215,7 +215,7 @@ export function useFileFetching({
         return [
           {
             id: rootFolderId,
-            name: process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Google Drive",
+            name: "Google Drive",
           },
           ...slicedPath,
         ];

@@ -5,7 +5,7 @@ import { GOOGLE_DRIVE_API_BASE_URL } from "@/lib/constants";
 import { getRootFolderId } from "@/lib/config";
 import { getErrorMessage } from "@/lib/errors";
 
-export type HealthStatus = "healthy" | "unhealthy" | "not_configured";
+type HealthStatus = "healthy" | "unhealthy" | "not_configured";
 
 export interface HealthCheckResult {
   status: HealthStatus;
@@ -18,7 +18,7 @@ export interface CacheHealthCheckResult extends HealthCheckResult {
   backend: "redis" | "memory";
 }
 
-export interface GoogleDriveQuota {
+interface GoogleDriveQuota {
   usage: number;
   limit: number;
 }

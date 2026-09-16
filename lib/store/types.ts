@@ -36,7 +36,7 @@ export interface ShareLink {
   watermarkText?: string | null;
 }
 
-export interface SharePolicy {
+interface SharePolicy {
   preventDownload?: boolean;
   directDownload?: boolean;
   hasWatermark?: boolean;
@@ -60,7 +60,7 @@ export type SortKey = "name" | "size" | "modifiedTime";
 export type SortOrder = "asc" | "desc";
 export type DensityMode = "comfortable" | "compact";
 
-export interface SortState {
+interface SortState {
   key: SortKey;
   order: SortOrder;
 }

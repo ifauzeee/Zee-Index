@@ -48,7 +48,7 @@ function sanitizeLocalFileName(fileName: string): string {
   return trimmedName;
 }
 
-export async function ensureLocalRoot() {
+async function ensureLocalRoot() {
   try {
     await fs.access(LOCAL_ROOT);
   } catch {

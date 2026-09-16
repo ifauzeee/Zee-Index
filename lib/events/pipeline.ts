@@ -79,21 +79,6 @@ function bool(value: unknown): boolean | undefined {
   return typeof value === "boolean" ? value : undefined;
 }
 
-function num(value: unknown): number | undefined {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value === "string" && value !== "") {
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) {
-      return parsed;
-    }
-  }
-
-  return undefined;
-}
-
 function toEventSeverity(
   severity: ActivityLog["severity"],
 ): AppEvent["severity"] {
@@ -411,7 +396,7 @@ async function trimHistory(
   await kv.zremrangebyscore(key, 0, cutoff);
 }
 
-export async function appendActivityLogToPipeline(log: ActivityLog) {
+async function appendActivityLogToPipeline(log: ActivityLog) {
   try {
     await kv.zadd(EVENT_PIPELINE_KEYS.activityLog, {
       score: log.timestamp,
@@ -497,24 +482,6 @@ export async function publishActivityEvent(log: ActivityLog): Promise<void> {
   });
 }
 
-export async function getPipelineEvents(
-  limit: number = 100,
-  offset: number = 0,
-): Promise<EventStreamRecord[]> {
-  try {
-    const end = offset + Math.max(0, limit - 1);
-    return await kv.zrange<EventStreamRecord>(
-      EVENT_PIPELINE_KEYS.eventStream,
-      offset,
-      end,
-      { rev: true },
-    );
-  } catch (err) {
-    logger.error({ err }, "[EventPipeline] failed to read stream events");
-    return [];
-  }
-}
-
 export async function clearEventPipeline() {
   await kv.del(
     EVENT_PIPELINE_KEYS.activityLog,
@@ -530,8 +497,4 @@ export function mapBandwidthToSeverity(bytes: number): AppEvent["severity"] {
     return "info";
   }
   return "success";
-}
-
-export function mapDownloadSize(log: ActivityLog): number | undefined {
-  return num(log.itemSize);
 }

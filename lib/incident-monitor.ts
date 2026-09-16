@@ -14,12 +14,12 @@ export const incidentStatusSchema = z.enum([
   "acknowledged",
   "resolved",
 ]);
-export const incidentSeveritySchema = z.enum(["warning", "error", "critical"]);
+const incidentSeveritySchema = z.enum(["warning", "error", "critical"]);
 
 export type IncidentStatus = z.infer<typeof incidentStatusSchema>;
 export type IncidentSeverity = z.infer<typeof incidentSeveritySchema>;
 
-export const incidentRecordSchema = z.object({
+const incidentRecordSchema = z.object({
   id: z.string().min(1),
   ruleId: z.string().min(1),
   fingerprint: z.string().min(1),

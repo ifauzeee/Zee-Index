@@ -14,7 +14,7 @@ export const shareTokenPayloadSchema = z
   })
   .passthrough();
 
-export const driveFileSchema = z.object({
+const driveFileSchema = z.object({
   id: z.string(),
   name: z.string(),
   mimeType: z.string(),
@@ -65,7 +65,7 @@ export const driveFileSchema = z.object({
     .optional(),
 });
 
-export const shareCollectionItemsSchema = z.array(driveFileSchema);
+const shareCollectionItemsSchema = z.array(driveFileSchema);
 
 export const shareCreateRequestSchema = z
   .object({
@@ -114,7 +114,7 @@ export const fileRequestCreateSchema = z.object({
   expiresIn: z.number().int().min(1),
 });
 
-export const fileRequestLinkSchema = z.object({
+const fileRequestLinkSchema = z.object({
   token: z.string().min(1),
   folderId: z.string().min(1),
   folderName: z.string().min(1),
@@ -136,7 +136,7 @@ export const fileRequestUploadInitSchema = z.object({
   subfolder: z.string().optional(),
 });
 
-export const accessRequestRecordSchema = z
+const accessRequestRecordSchema = z
   .object({
     folderId: z.string().min(1),
     folderName: z.string().optional(),
@@ -160,7 +160,6 @@ export type ShareTokenPayload = z.infer<typeof shareTokenPayloadSchema>;
 export type ShareCreateRequest = z.infer<typeof shareCreateRequestSchema>;
 export type FileRequestLink = z.infer<typeof fileRequestLinkSchema>;
 export type AccessRequestRecord = z.infer<typeof accessRequestRecordSchema>;
-export type AppShareTokenRequest = z.infer<typeof shareTokenRequestSchema>;
 
 function parseSchemaValue<T>(raw: unknown, schema: z.ZodType<T>): T | null {
   if (typeof raw === "string") {

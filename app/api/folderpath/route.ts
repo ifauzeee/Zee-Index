@@ -235,7 +235,7 @@ export const GET = createPublicRoute(
       if (process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
         shortcutMap.set(
           process.env.NEXT_PUBLIC_ROOT_FOLDER_ID.trim(),
-          process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Google Drive",
+          "Google Drive",
         );
       }
 

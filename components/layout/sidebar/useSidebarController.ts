@@ -75,13 +75,11 @@ export function useSidebarController() {
   const canEdit =
     (user?.role === "ADMIN" || user?.role === "EDITOR") && !user?.isGuest;
   const rootFolderId = process.env.NEXT_PUBLIC_ROOT_FOLDER_ID!;
-  const rootFolderName =
-    process.env.NEXT_PUBLIC_ROOT_FOLDER_NAME || "Google Drive";
 
   const [tree, setTree] = useState<FlatTree>({
     [rootFolderId]: {
       id: rootFolderId,
-      name: rootFolderName,
+      name: "Google Drive",
       parentId: null,
       childIds: [],
       isExpanded: true,
@@ -103,10 +101,10 @@ export function useSidebarController() {
       ...prev,
       [rootFolderId]: {
         ...prev[rootFolderId],
-        name: rootFolderName,
+        name: "Google Drive",
       },
     }));
-  }, [rootFolderId, rootFolderName]);
+  }, [rootFolderId]);
 
   useEffect(() => {
     setMounted(true);
