@@ -191,14 +191,14 @@ export default function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrolled = window.scrollY > 10;
-      if (scrolled !== isScrolled) {
-        setIsScrolled(scrolled);
-      }
+      setIsScrolled((prev) => {
+        const next = window.scrollY > 10;
+        return next === prev ? prev : next;
+      });
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [isScrolled]);
+  }, []);
 
   const handleRefresh = () => {
     triggerRefresh();

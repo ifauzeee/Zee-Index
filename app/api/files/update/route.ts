@@ -54,13 +54,9 @@ export const POST = createEditorRoute(
       const updatedFile = await response.json();
       return NextResponse.json({ success: true, file: updatedFile });
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan tidak dikenal.";
-      logger.error({ err: errorMessage }, "Update API Error");
+      logger.error({ err: error }, "Update API Error");
       return NextResponse.json(
-        { error: "Internal Server Error.", details: errorMessage },
+        { error: "Internal Server Error." },
         { status: 500 },
       );
     }

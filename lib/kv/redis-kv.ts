@@ -30,6 +30,7 @@ interface RedisClientLike {
   mget(...keys: string[]): Promise<Array<string | null>>;
   mset(...values: string[]): Promise<unknown>;
   incr(key: string): Promise<number>;
+  incrby(key: string, increment: number): Promise<number>;
   expire(key: string, seconds: number): Promise<number>;
   hgetall(key: string): Promise<Record<string, string>>;
   hset(key: string, obj: Record<string, string>): Promise<number>;
@@ -215,6 +216,10 @@ export class RedisKV implements KVClient {
 
   async incr(key: string): Promise<number> {
     return await this.client.incr(key);
+  }
+
+  async incrby(key: string, increment: number): Promise<number> {
+    return await this.client.incrby(key, increment);
   }
 
   async expire(key: string, seconds: number): Promise<number> {

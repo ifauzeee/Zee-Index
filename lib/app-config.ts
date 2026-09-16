@@ -12,6 +12,8 @@ import {
 } from "@/lib/app-config.shared";
 const BCRYPT_HASH_PATTERN = /^\$2[aby]\$\d{2}\$/;
 
+let configWriteLock: Promise<unknown> = Promise.resolve();
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -88,6 +90,12 @@ export async function getPublicAppConfig(): Promise<PublicAppConfig> {
 export async function updateAppConfig(
   update: AppConfigUpdate,
 ): Promise<AppConfig> {
+  const result = configWriteLock.then(() => doUpdate(update));
+  configWriteLock = result.catch(() => {});
+  return result;
+}
+
+async function doUpdate(update: AppConfigUpdate): Promise<AppConfig> {
   const currentConfig = await getAppConfig();
   const normalizedUpdate = { ...update };
 

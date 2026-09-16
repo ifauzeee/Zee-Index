@@ -126,6 +126,13 @@ export class InMemoryKV implements KVClient {
     return newVal;
   }
 
+  async incrby(key: string, increment: number): Promise<number> {
+    const val = Number(this.store.get(key) || 0);
+    const newVal = val + increment;
+    this.store.set(key, newVal);
+    return newVal;
+  }
+
   async expire(key: string, seconds: number): Promise<number> {
     if (
       !this.store.has(key) &&

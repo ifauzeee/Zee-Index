@@ -197,11 +197,29 @@ export class DropboxStorageProvider implements StorageProvider {
 
       let upstream = await fetch(link, { headers, cache: "no-store" });
       if (upstream.status === 401 || upstream.status === 403) {
-        // temp link expired or invalidated; retry once with a fresh link
-        upstream = await fetch(link, {
-          headers: range ? { ...headers, Range: range } : headers,
-          cache: "no-store",
-        });
+        // temp link expired or invalidated; fetch a fresh link and retry once
+        const retryLinkRes = await fetch(
+          "https://api.dropboxapi.com/2/files/get_temporary_link",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ path: remotePath }),
+          },
+        );
+        if (retryLinkRes.ok) {
+          const retryLinkData = (await retryLinkRes.json()) as {
+            link?: string;
+          };
+          if (retryLinkData.link) {
+            upstream = await fetch(retryLinkData.link, {
+              headers: range ? { ...headers, Range: range } : headers,
+              cache: "no-store",
+            });
+          }
+        }
       }
       if (!upstream.ok) {
         logger.error(

@@ -220,10 +220,8 @@ export async function trackBandwidth(bytes: number): Promise<void> {
   try {
     const dayKey = getDayKey(Date.now());
     const currentKey = `${BANDWIDTH_KEY}:${dayKey}`;
-    const current = await kv.get<number>(currentKey);
-    await kv.set(currentKey, (current || 0) + bytes, {
-      ex: LOG_EXPIRATION_SECONDS,
-    });
+    await kv.incrby(currentKey, bytes);
+    await kv.expire(currentKey, LOG_EXPIRATION_SECONDS);
 
     await publishPipelineEvent({
       type: "analytics:bandwidth",

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { formatBytes, formatDuration } from "@/lib/utils";
 import type { DriveFile } from "@/lib/drive";
 import {
@@ -71,8 +71,16 @@ export default function InfoPanel({
   const [isShowingSubtitleSelector, setIsShowingSubtitleSelector] =
     useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const blobUrlsRef = useRef<string[]>([]);
   const t = useTranslations("InfoPanel");
   const format = useFormatter();
+
+  useEffect(() => {
+    const urls = blobUrlsRef.current;
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
 
   const metadata = file.imageMediaMetadata || file.videoMediaMetadata;
   const durationMillis = file.videoMediaMetadata?.durationMillis
@@ -104,6 +112,7 @@ export default function InfoPanel({
         }
         const blob = new Blob([finalContent], { type: "text/vtt" });
         const url = URL.createObjectURL(blob);
+        blobUrlsRef.current.push(url);
 
         onAddSubtitle?.({
           src: url,

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createPublicRoute } from "@/lib/api-middleware";
 import { getStorageDetails } from "@/lib/drive";
+import { logger } from "@/lib/logger";
 
 export const revalidate = 7200;
 export const maxDuration = 60;
@@ -15,12 +16,9 @@ export const GET = createPublicRoute(
         totalUsage: storageDetails.usage,
       });
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan tidak dikenal.";
+      logger.error({ err: error }, "Failed to calculate data usage");
       return NextResponse.json(
-        { error: "Failed to calculate data usage.", details: errorMessage },
+        { error: "Failed to calculate data usage." },
         { status: 500 },
       );
     }

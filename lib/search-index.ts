@@ -213,8 +213,13 @@ export async function reindexDrive(): Promise<{
               size: typeof file.size === "number" ? file.size : null,
             });
             if (pending.length >= BATCH_SIZE) {
-              await flushBatch(pending.splice(0, BATCH_SIZE));
-              indexed += BATCH_SIZE;
+              const batch = pending.splice(0, BATCH_SIZE);
+              try {
+                await flushBatch(batch);
+                indexed += batch.length;
+              } catch {
+                failed += batch.length;
+              }
             }
           } catch {
             failed += 1;

@@ -7,6 +7,7 @@ import { sendMail } from "@/lib/mailer";
 import { kv } from "@/lib/kv";
 import { logActivity } from "@/lib/activityLogger";
 import { REDIS_KEYS } from "@/lib/constants";
+import { escapeHtml } from "@/lib/html-utils";
 import {
   accessRequestCreateSchema,
   serializeAccessRequestRecord,
@@ -42,12 +43,14 @@ export const POST = createUserRoute(
 
       const adminEmails = await kv.smembers("zee-index:admins");
       if (adminEmails && adminEmails.length > 0) {
+        const safeEmail = escapeHtml(session.user.email);
+        const safeFolderName = escapeHtml(folderName);
         const emailHtml = `
         <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
           <h2>Permintaan Akses Baru</h2>
           <ul style="list-style: none; padding: 0;">
-            <li><strong>User:</strong> ${session.user.email}</li>
-            <li><strong>Folder:</strong> ${folderName}</li>
+            <li><strong>User:</strong> ${safeEmail}</li>
+            <li><strong>Folder:</strong> ${safeFolderName}</li>
           </ul>
           <p>Buka Dashboard Admin untuk menyetujui.</p>
         </div>
@@ -55,7 +58,7 @@ export const POST = createUserRoute(
 
         await sendMail({
           to: adminEmails,
-          subject: `[Request Access] ${folderName}`,
+          subject: `[Request Access] ${safeFolderName}`,
           html: emailHtml,
         });
       }

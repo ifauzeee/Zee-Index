@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
 interface UseKeyboardNavigationProps {
@@ -29,10 +29,7 @@ export function useKeyboardNavigation({
   const [focusedIndex, setFocusedIndex] = useState(-1);
 
   const [searchBuffer, setSearchBuffer] = useState("");
-  const searchTimeoutRef = useCallback(() => {
-    const timer = setTimeout(() => setSearchBuffer(""), 500);
-    return () => clearTimeout(timer);
-  }, []);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -146,7 +143,8 @@ export function useKeyboardNavigation({
               setFocusedIndex(matchIndex);
             }
 
-            searchTimeoutRef();
+            if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+            searchTimerRef.current = setTimeout(() => setSearchBuffer(""), 500);
           }
           break;
       }
@@ -162,13 +160,15 @@ export function useKeyboardNavigation({
       onFileRename,
       onOpenSearch,
       searchBuffer,
-      searchTimeoutRef,
     ],
   );
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    };
   }, [handleKeyDown]);
 
   useEffect(() => {
