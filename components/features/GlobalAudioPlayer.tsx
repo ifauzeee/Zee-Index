@@ -47,17 +47,11 @@ export default function GlobalAudioPlayer() {
   useEffect(() => {
     if (!audioRef.current) return;
 
+    audioRef.current.load();
     if (isAudioPlaying) {
       audioRef.current.play().catch(() => {});
     } else {
       audioRef.current.pause();
-    }
-  }, [isAudioPlaying, activeAudioFile]);
-
-  useEffect(() => {
-    if (activeAudioFile && audioRef.current) {
-      audioRef.current.load();
-      if (isAudioPlaying) audioRef.current.play().catch(console.error);
     }
   }, [activeAudioFile, isAudioPlaying]);
 

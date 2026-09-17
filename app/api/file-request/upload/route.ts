@@ -48,14 +48,9 @@ export function isAllowedResumableUploadUrl(uploadUrl: string): boolean {
   }
 }
 
-export function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+import { escapeHtml } from "@/lib/html-utils";
+
+export { escapeHtml };
 
 async function sendUploadNotificationEmail(
   requestData: FileRequestLink,

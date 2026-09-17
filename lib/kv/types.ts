@@ -13,6 +13,7 @@ export interface KVClient {
   mget<T>(...keys: string[]): Promise<(T | null)[]>;
   mset(keyValues: Record<string, unknown>): Promise<string>;
   incr(key: string): Promise<number>;
+  incrby(key: string, increment: number): Promise<number>;
   expire(key: string, seconds: number): Promise<number>;
   hgetall<T>(key: string): Promise<T | null>;
   hset(key: string, obj: Record<string, unknown>): Promise<number>;
