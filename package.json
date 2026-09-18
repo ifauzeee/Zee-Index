@@ -72,7 +72,7 @@
     "jose": "^5.4.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.424.0",
-    "mammoth": "^1.12.0",
+    "mammoth": "^1.12.3",
     "next": "^16.3.4",
     "next-auth": "5.0.0-beta.32",
     "next-intl": "^4.13.7",
