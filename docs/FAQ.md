@@ -36,6 +36,27 @@ To fix this warning:
 2. Add or update the `CRON_SECRET` variable with a random string (e.g., `CRON_SECRET="my-super-secret-cron-key"`).
 3. Restart your containers.
 
+### Why does admin login fail when deploying with Docker Compose? (`ADMIN_PASSWORD_HASH`)
+
+Docker Compose interpolates `$` inside `.env` values (including those passed via `env_file`).
+Bcrypt hashes always contain `$` (e.g. `$2b$10$zh.…`), so Compose can silently corrupt them —
+`$zh` is read as the empty variable `${zh}`, leaving a hash that never matches.
+
+**Symptoms:**
+
+- Admin login always fails, even with the correct password
+- No clear error — just a generic "invalid credentials"
+
+**Fix (choose one):**
+
+1. **Use plaintext `ADMIN_PASSWORD`** (min 8 chars, avoid `$` inside the password) — simplest for Compose.
+2. **Escape every `$` as `$$`** in `ADMIN_PASSWORD_HASH` — works only when _every_ consumer is
+   Docker Compose; `pnpm dev` and `docker run --env-file` would receive the literal `$$` value
+   and login would stay broken.
+3. Keep the unescaped hash on **non-Compose** setups (local dev, PaaS, direct `docker run`).
+
+After changing `.env`, restart: `docker compose up -d`.
+
 ### How do I get the Google Drive Root Folder ID?
 
 1. Open Google Drive in your browser.

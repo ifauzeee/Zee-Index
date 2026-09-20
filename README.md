@@ -323,6 +323,11 @@ browser, side by side with other providers.
 
 Prefer `ADMIN_PASSWORD_HASH` over `ADMIN_PASSWORD` in production. Generate one with `scripts/hash-password.sh`.
 
+> ⚠️ **Docker Compose deployments:** use plaintext `ADMIN_PASSWORD` instead. Compose
+> interpolates `$` inside `.env` values, which silently corrupts bcrypt hashes
+> (e.g. `$zh` in `$2b$10$zh.…` is read as the empty variable `${zh}`) and breaks
+> admin login. See the FAQ: ["Why does admin login fail when deploying with Docker Compose?"](docs/FAQ.md).
+
 ### Database, Cache & Limits
 
 | Variable                    | Description                    | Default                  |
