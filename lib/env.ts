@@ -169,6 +169,20 @@ export function validateOnStartup(): Env {
     );
   }
 
+  // Detect bcrypt hashes corrupted by Docker Compose interpolation: Compose
+  // expands "$" inside .env values (env_file), so e.g. "$zh" in "$2b$10$zh.…"
+  // is read as the empty variable "${zh}", producing a hash that never matches.
+  const bcryptHashPattern = /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/;
+  if (adminPasswordHash && !bcryptHashPattern.test(adminPasswordHash)) {
+    console.warn(
+      "\n⚠️  ADMIN_PASSWORD_HASH does not look like a valid bcrypt hash — it may have been " +
+        'corrupted by Docker Compose interpolation (values containing "$" are expanded, ' +
+        'e.g. "$zh" → ""). When deploying with `docker compose`, use a plaintext ' +
+        'ADMIN_PASSWORD (min 8 chars) instead, or escape every "$" as "$$" if all ' +
+        "consumers are Compose. See docs/FAQ.md.",
+    );
+  }
+
   const warnings: string[] = [];
   if (!process.env.REDIS_URL)
     warnings.push(
