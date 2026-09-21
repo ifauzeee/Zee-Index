@@ -138,7 +138,7 @@ const FileItemActions: React.FC<FileItemActionsProps> = ({
           onClick={handleMenuClick}
           className={cn(
             "md:hidden p-2.5 -m-1 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0 z-30 active:bg-accent active:text-primary pointer-events-auto select-none",
-            view === "grid" || view === "gallery"
+            view === "gallery"
               ? "absolute top-1 right-1 bg-background/70 backdrop-blur-sm shadow-sm border border-black/5"
               : "ml-auto",
           )}

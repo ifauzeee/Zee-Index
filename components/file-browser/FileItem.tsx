@@ -101,7 +101,6 @@ function FileItem({
     if (file.thumbnailLink) {
       let size = "s800";
       if (view === "list") size = "s64";
-      else if (view === "grid") size = "s320";
       else if (view === "gallery") size = "s1280";
 
       return file.thumbnailLink.replace(/=s\d+/, `=${size}`);
@@ -205,8 +204,6 @@ function FileItem({
               ? "p-1.5 min-h-[40px]"
               : "p-3 min-h-[68px]"
             : "w-full",
-          view === "grid" &&
-            "flex flex-col items-center justify-center text-center p-2 sm:p-4",
           isGallery && "p-0 border-none",
           isDragOver &&
             "ring-4 ring-primary/30 bg-primary/20 scale-[1.05] z-50 shadow-2xl border-primary",
@@ -238,11 +235,7 @@ function FileItem({
         <div
           className={cn(
             "flex w-full min-w-0 pointer-events-none",
-            view === "list"
-              ? "items-center gap-3"
-              : view === "grid"
-                ? "flex-col items-center justify-center gap-2"
-                : "flex-col",
+            view === "list" ? "items-center gap-3" : "flex-col",
           )}
         >
           <div
@@ -253,7 +246,6 @@ function FileItem({
           >
             <FileItemThumbnail
               file={file}
-              view={view}
               isGallery={isGallery}
               thumbnailSrc={thumbnailSrc}
               hasImage={hasImage}
@@ -272,21 +264,11 @@ function FileItem({
             )}
           </div>
 
-          <div
-            className={cn(
-              "flex-1 min-w-0 max-w-full",
-              view === "grid" && "mt-2 w-full text-center",
-              isGallery && "p-3",
-            )}
-          >
+          <div className={cn("flex-1 min-w-0 max-w-full", isGallery && "p-3")}>
             <div
               className={cn(
                 "font-medium flex items-center gap-1.5 min-w-0",
-                view === "list"
-                  ? "text-sm justify-start"
-                  : view === "grid"
-                    ? "text-xs sm:text-sm justify-center"
-                    : "text-sm",
+                view === "list" ? "text-sm justify-start" : "text-sm",
               )}
             >
               {file.isFavorite && (
