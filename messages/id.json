@@ -277,7 +277,8 @@
   },
   "FileBrowserModals": {
     "dropToUpload": "Lepas untuk Mengunggah",
-    "toThisFolder": "Ke folder ini"
+    "toThisFolder": "Ke folder ini",
+    "zipErrorFallback": "Folder ZIP gagal dibuat. Periksa jumlah file dan total ukuran."
   },
   "ArchivePreviewModal": {
     "title": "Isi Arsip",

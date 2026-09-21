@@ -2,8 +2,9 @@ import { ZipArchive, type Archiver } from "archiver";
 import { Readable } from "stream";
 import { listAllFiles, getDownloadStream } from "@/lib/storage";
 
-const MAX_ZIP_FILES = 200;
-const MAX_ZIP_BYTES = 1024 * 1024 * 1024; // 1 GB
+const MAX_ZIP_FILES = Number(process.env.MAX_ZIP_FILES) || 400;
+const MAX_ZIP_BYTES =
+  Number(process.env.MAX_ZIP_BYTES) || 4 * 1024 * 1024 * 1024; // default 4 GB
 
 export interface ZipStats {
   files: number;
@@ -12,9 +13,9 @@ export interface ZipStats {
 
 export class FolderZipError extends Error {}
 
-export async function createFolderZipStream(
+export async function checkFolderZipGuard(
   folderId: string,
-): Promise<{ stream: Archiver; stats: ZipStats }> {
+): Promise<{ stats: ZipStats; files: import("@/types/storage").ZeeFile[] }> {
   const data = await listAllFiles({
     folderId,
     pageToken: null,
@@ -38,9 +39,17 @@ export async function createFolderZipStream(
   );
   if (totalBytes > MAX_ZIP_BYTES) {
     throw new FolderZipError(
-      `Total size too large (${Math.round(totalBytes / 1024 / 1024)} MB > 1024 MB)`,
+      `Total size too large (${Math.round(totalBytes / 1024 / 1024)} MB > ${Math.round(MAX_ZIP_BYTES / 1024 / 1024)} MB)`,
     );
   }
+
+  return { stats: { files: files.length, totalBytes }, files };
+}
+
+export async function createFolderZipStream(
+  folderId: string,
+): Promise<{ stream: Archiver; stats: ZipStats }> {
+  const { stats, files } = await checkFolderZipGuard(folderId);
 
   const zip = new ZipArchive({ zlib: { level: 6 } });
 
@@ -60,5 +69,5 @@ export async function createFolderZipStream(
 
   await zip.finalize();
 
-  return { stream: zip, stats: { files: files.length, totalBytes } };
+  return { stream: zip, stats };
 }

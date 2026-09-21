@@ -61,7 +61,7 @@ describe("lib/zip", () => {
 
   it("throws when the folder exceeds the file count limit", async () => {
     mockStorage.listAllFiles.mockResolvedValue({
-      files: makeFiles(201),
+      files: makeFiles(401),
       nextPageToken: null,
     });
     await expect(createFolderZipStream("folder-1")).rejects.toThrow(
@@ -71,8 +71,8 @@ describe("lib/zip", () => {
 
   it("throws when the total size exceeds the byte limit", async () => {
     mockStorage.listAllFiles.mockResolvedValue({
-      // 600 MB each * 2 > 1 GB limit
-      files: makeFiles(2, 600 * 1024 * 1024),
+      // 3 GB each * 2 > 4 GB default limit
+      files: makeFiles(2, 3 * 1024 * 1024 * 1024),
       nextPageToken: null,
     });
     await expect(createFolderZipStream("folder-1")).rejects.toThrow(

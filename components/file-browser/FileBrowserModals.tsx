@@ -7,6 +7,7 @@ import type { DriveFile } from "@/lib/drive";
 import type { ActionState, ContextMenuState } from "@/hooks/useFileActions";
 import { useTranslations } from "next-intl";
 import { triggerDownload } from "@/lib/utils";
+import { useAlert } from "@/components/providers/ModalProvider";
 
 const ModalLoading = () => {
   const t = useTranslations("Common");
@@ -155,6 +156,7 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
 
   const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024;
   const t = useTranslations("FileBrowserModals");
+  const { alert } = useAlert();
 
   useEffect(() => {
     if (
@@ -275,11 +277,20 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
           isFolder={contextMenu.file.isFolder}
           isPinned={isFilePinned(contextMenu.file.id)}
           onTogglePin={handleTogglePin}
-          onDownloadZip={() => {
-            triggerDownload(
-              `/api/folder/download?folderId=${encodeURIComponent(contextMenu.file.id)}`,
-            );
+          onDownloadZip={async () => {
+            const url = `/api/folder/download?folderId=${encodeURIComponent(contextMenu.file.id)}`;
             setContextMenu(null);
+            try {
+              const res = await fetch(url, { method: "HEAD" });
+              if (res.ok) {
+                triggerDownload(url);
+              } else {
+                const data = await res.json().catch(() => null);
+                await alert(data?.error || t("zipErrorFallback"));
+              }
+            } catch {
+              await alert(t("zipErrorFallback"));
+            }
           }}
           isAdmin={isAdmin}
           onOpenNewTab={() => {

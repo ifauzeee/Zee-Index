@@ -277,7 +277,8 @@
   },
   "FileBrowserModals": {
     "dropToUpload": "放開即可上傳",
-    "toThisFolder": "到此資料夾"
+    "toThisFolder": "到此資料夾",
+    "zipErrorFallback": "建立資料夾 ZIP 失敗，請檢查檔案數量與總大小。"
   },
   "ArchivePreviewModal": {
     "title": "壓縮檔內容",

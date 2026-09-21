@@ -277,7 +277,8 @@
   },
   "FileBrowserModals": {
     "dropToUpload": "Drop to Upload",
-    "toThisFolder": "To this folder"
+    "toThisFolder": "To this folder",
+    "zipErrorFallback": "Folder ZIP could not be created. Check file count and total size."
   },
   "ArchivePreviewModal": {
     "title": "Archive Content",
