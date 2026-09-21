@@ -13,6 +13,7 @@ import { useAppStore } from "@/lib/store";
 import type { DriveFile } from "@/lib/drive";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { useTranslations } from "next-intl";
+import { fetchFolderPathApi } from "@/hooks/useFileFetching";
 
 interface MoveModalProps {
   fileToMove?: DriveFile;
@@ -52,16 +53,11 @@ export default function MoveModal({
       setIsInitializing(true);
       if (initialFolderId && initialFolderId !== rootId) {
         try {
-          const res = await fetch(
-            `/api/folderpath?folderId=${initialFolderId}`,
-          );
-          if (res.ok) {
-            const path = await res.json();
-            if (Array.isArray(path) && path.length > 0) {
-              setFolderStack(path);
-              setIsInitializing(false);
-              return;
-            }
+          const path = await fetchFolderPathApi(initialFolderId);
+          if (path.length > 0) {
+            setFolderStack(path);
+            setIsInitializing(false);
+            return;
           }
         } catch (err) {
           console.error("Failed to fetch folder path", err);

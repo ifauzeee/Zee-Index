@@ -14,13 +14,12 @@ import type {
 } from "./types";
 import type { ZeeFile } from "@/types/storage";
 import { logger } from "@/lib/logger";
+import { posix } from "path";
 
 const ID_PREFIX = "s3:";
 
 function basename(key: string): string {
-  const cleaned = key.endsWith("/") ? key.slice(0, -1) : key;
-  const parts = cleaned.split("/");
-  return parts[parts.length - 1] || cleaned;
+  return posix.basename(key);
 }
 
 export class S3StorageProvider implements StorageProvider {

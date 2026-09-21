@@ -3,7 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { WifiOff, History, FileWarning, Download } from "lucide-react";
-import { formatDuration } from "@/lib/utils";
+import { formatDuration, triggerDownload } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -138,15 +138,7 @@ export function FormatErrorOverlay({
       </p>
       <div className="flex flex-wrap justify-center gap-3">
         <Button
-          onClick={() => {
-            const iframe = document.createElement("iframe");
-            iframe.style.display = "none";
-            iframe.src = currentSrc;
-            document.body.appendChild(iframe);
-            setTimeout(() => {
-              document.body.removeChild(iframe);
-            }, 5000);
-          }}
+          onClick={() => triggerDownload(currentSrc)}
           className="px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
         >
           <Download size={16} /> {tPlayer("downloadFile")}

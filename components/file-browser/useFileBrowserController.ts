@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
 import type { DriveFile } from "@/lib/drive";
-import { getFileType } from "@/lib/utils";
+import { getFileType, triggerDownload } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import { useFileActions } from "@/hooks/useFileActions";
 import { useUser } from "@/hooks/useUser";
@@ -457,13 +457,7 @@ export function useFileBrowserController({
       url += `&access_token=${token}`;
     }
 
-    const iframe = document.createElement("iframe");
-    iframe.style.display = "none";
-    iframe.src = url;
-    document.body.appendChild(iframe);
-    setTimeout(() => {
-      document.body.removeChild(iframe);
-    }, 5000);
+    triggerDownload(url);
   };
 
   const handleBreadcrumbClick = (folderId: string) => {

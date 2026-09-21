@@ -3,7 +3,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { Loader2, Download, Eye } from "lucide-react";
-import { getIcon, getLanguageFromFilename } from "@/lib/utils";
+import { getIcon, getLanguageFromFilename, triggerDownload } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { OfficeViewer } from "./OfficeViewer";
@@ -230,15 +230,7 @@ export const DefaultPreview: React.FC<{
       </h3>
       <p className="text-sm text-zinc-500 mb-8">{t("notAvailable")}</p>
       <button
-        onClick={() => {
-          const iframe = document.createElement("iframe");
-          iframe.style.display = "none";
-          iframe.src = downloadUrl;
-          document.body.appendChild(iframe);
-          setTimeout(() => {
-            document.body.removeChild(iframe);
-          }, 5000);
-        }}
+        onClick={() => triggerDownload(downloadUrl)}
         className="flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-medium hover:bg-zinc-200 transition-colors shadow-lg"
       >
         <Download size={18} /> {t("download")}

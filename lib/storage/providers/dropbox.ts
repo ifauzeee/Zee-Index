@@ -3,13 +3,12 @@ import type { ProviderDownload, StorageProvider } from "./types";
 import { getMimeType } from "../mime";
 import type { ZeeFile } from "@/types/storage";
 import { logger } from "@/lib/logger";
+import { posix } from "path";
 
 const ID_PREFIX = "dropbox:";
 
 function basename(path: string): string {
-  const cleaned = path.endsWith("/") ? path.slice(0, -1) : path;
-  const parts = cleaned.split("/");
-  return parts[parts.length - 1] || cleaned;
+  return posix.basename(path);
 }
 
 export class DropboxStorageProvider implements StorageProvider {
