@@ -81,62 +81,6 @@ registry.registerPath({
 
 registry.registerPath({
   method: "get",
-  path: "/api/admin/analytics/enhanced",
-  tags: ["Admin"],
-  summary: "Get enhanced analytics",
-  description:
-    "Returns detailed analytics with daily trends, peak hours, engagement stats, and security events. Admin only.",
-  responses: {
-    200: {
-      description: "Enhanced analytics data",
-      content: { "application/json": { schema: z.any() } },
-    },
-    500: {
-      description: "Internal server error",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-  },
-});
-
-registry.registerPath({
-  method: "get",
-  path: "/api/admin/activity-log",
-  tags: ["Admin"],
-  summary: "Get activity logs",
-  description: "Returns paginated activity log entries. Admin only.",
-  request: {
-    query: z.object({
-      page: z.coerce.number().min(1).default(1),
-      limit: z.coerce.number().min(1).max(100).default(50),
-    }),
-  },
-  responses: {
-    200: {
-      description: "Paginated activity logs",
-      content: {
-        "application/json": {
-          schema: z.object({
-            logs: z.array(z.any()),
-            totalPages: z.number(),
-            currentPage: z.number(),
-            totalLogs: z.number(),
-          }),
-        },
-      },
-    },
-    400: {
-      description: "Invalid query parameters",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-    500: {
-      description: "Internal server error",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-  },
-});
-
-registry.registerPath({
-  method: "get",
   path: "/api/admin/audit",
   tags: ["Admin"],
   summary: "Get audit trail",
@@ -171,29 +115,6 @@ registry.registerPath({
     500: {
       description: "Internal server error",
       content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-  },
-});
-
-registry.registerPath({
-  method: "get",
-  path: "/api/admin/cache-stats",
-  tags: ["Admin"],
-  summary: "Get cache statistics",
-  description:
-    "Returns KV cache hit/miss statistics and size information. Admin only.",
-  responses: {
-    200: {
-      description: "Cache statistics",
-      content: {
-        "application/json": {
-          schema: z.object({
-            cacheStats: z.any(),
-            timestamp: z.string(),
-            info: z.any(),
-          }),
-        },
-      },
     },
   },
 });
@@ -709,24 +630,6 @@ registry.registerPath({
           schema: z.object({ logs: z.array(z.any()), hasMore: z.boolean() }),
         },
       },
-    },
-    500: {
-      description: "Internal server error",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-  },
-});
-
-registry.registerPath({
-  method: "get",
-  path: "/api/admin/logs/security",
-  tags: ["Admin"],
-  summary: "Get security event logs",
-  description: "Returns recent security-related log entries. Admin only.",
-  responses: {
-    200: {
-      description: "Security logs",
-      content: { "application/json": { schema: z.array(z.any()) } },
     },
     500: {
       description: "Internal server error",

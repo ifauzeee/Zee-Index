@@ -13,6 +13,7 @@ import { isAccessRestricted } from "@/lib/securityUtils";
 import { searchIndexedFiles } from "@/lib/search-index";
 import { jwtVerify } from "jose";
 
+import { getErrorMessage } from "@/lib/errors";
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
 const getMimeQuery = (mimeType?: string | null) => {
   switch (mimeType) {
@@ -240,10 +241,10 @@ export const GET = createPublicRoute(
 
       return NextResponse.json({ files: merged });
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan tidak dikenal.";
+      const errorMessage = getErrorMessage(
+        error,
+        "Terjadi kesalahan tidak dikenal.",
+      );
       logger.error({ err: errorMessage }, "Global Search API Error");
       return NextResponse.json(
         { error: "Failed to perform global search." },

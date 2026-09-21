@@ -83,5 +83,4 @@ Please refer to the [Google Cloud Setup](#) section in the main `README.md`. It 
 If files are not showing up or changes aren't reflecting, you can clear the cache:
 
 - **From UI**: Log in as Admin, go to the Admin Dashboard, and use the "Clear Cache" button.
-- **Via API**: Send a DELETE request to `/api/admin/clearcache` (requires admin privileges).
 - **Via Docker (Redis)**: `docker compose exec redis redis-cli FLUSHALL`

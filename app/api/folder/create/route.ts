@@ -1,4 +1,6 @@
 import { logger } from "@/lib/logger";
+
+import { getErrorMessage } from "@/lib/errors";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -9,7 +11,6 @@ import { logActivity } from "@/lib/activityLogger";
 import { kv } from "@/lib/kv";
 import { invalidateFolderCache } from "@/lib/cache";
 import { getActiveProvider, isProviderId } from "@/lib/storage/providers";
-
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
 
 const createFolderSchema = z.object({
@@ -88,10 +89,10 @@ export const POST = createAdminRoute(
 
       return NextResponse.json(data, { status: 200 });
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan tidak dikenal.";
+      const errorMessage = getErrorMessage(
+        error,
+        "Terjadi kesalahan tidak dikenal.",
+      );
       logger.error({ err: error }, "Create Folder API Error");
       return NextResponse.json(
         { error: errorMessage || "Internal Server Error." },

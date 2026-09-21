@@ -482,13 +482,6 @@ export async function publishActivityEvent(log: ActivityLog): Promise<void> {
   });
 }
 
-export async function clearEventPipeline() {
-  await kv.del(
-    EVENT_PIPELINE_KEYS.activityLog,
-    EVENT_PIPELINE_KEYS.eventStream,
-  );
-}
-
 export function mapBandwidthToSeverity(bytes: number): AppEvent["severity"] {
   if (bytes >= 250 * 1024 * 1024) {
     return "warning";

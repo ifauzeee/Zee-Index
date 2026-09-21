@@ -206,30 +206,8 @@ registry.registerPath({
 });
 
 /* ------------------------------------------------------------------ */
-/*  Paths — Admin — Reindex / Drives / User Password                   */
+/*  Paths — Admin — Drives / User Password                             */
 /* ------------------------------------------------------------------ */
-
-registry.registerPath({
-  method: "post",
-  path: "/api/admin/reindex",
-  tags: ["Admin"],
-  summary: "Reindex files",
-  description: "Triggers a full reindex of the search index. Admin only.",
-  responses: {
-    200: {
-      description: "Reindex started",
-      content: {
-        "application/json": {
-          schema: z.object({ message: z.string() }),
-        },
-      },
-    },
-    500: {
-      description: "Internal server error",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-  },
-});
 
 registry.registerPath({
   method: "get",

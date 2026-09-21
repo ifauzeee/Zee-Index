@@ -20,7 +20,6 @@ Self-hosted Google Drive Explorer, CMS & streaming platform. Next.js 16 App Rout
 | `pnpm test`                                       | Vitest unit tests (`__tests__/`)                            |
 | `pnpm test:e2e`                                   | Playwright E2E tests (`e2e/`)                               |
 | `pnpm analyze`                                    | Bundle analyzer (`cross-env ANALYZE=true next build`)       |
-| `pnpm check`                                      | Runs `scripts/check-all.sh` (custom sequence)               |
 | `pnpm docker:dev` / `docker:prod` / `docker:stop` | Docker Compose                                              |
 | `pnpm prepush`                                    | typecheck only                                              |
 

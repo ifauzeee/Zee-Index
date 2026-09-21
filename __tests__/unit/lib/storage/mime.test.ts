@@ -17,11 +17,4 @@ describe("storage mime helper", () => {
     expect(getMimeType("file.unknownext")).toBeUndefined();
     expect(getMimeType("noextension")).toBeUndefined();
   });
-
-  it("detects folder mime", async () => {
-    const { isFolderMime } = await import("@/lib/storage/mime");
-    expect(isFolderMime("application/vnd.google-apps.folder")).toBe(true);
-    expect(isFolderMime("image/png")).toBe(false);
-    expect(isFolderMime(null)).toBe(false);
-  });
 });

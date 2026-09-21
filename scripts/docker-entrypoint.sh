@@ -9,7 +9,7 @@ if [ -n "$DATABASE_URL" ]; then
   DB_PASS=$(echo "$DATABASE_URL" | sed -n 's/.*:\([^@]*\)@.*/\1/p')
 
   echo "Waiting for postgres to be ready..."
-  until PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -U "$DB_USER" -d postgres -c '\q' 2>/dev/null; do
+  until pg_isready -h "$DB_HOST" -U "$DB_USER" 2>/dev/null; do
     sleep 1
   done
 

@@ -104,10 +104,6 @@ function recordRateLimitFailure(type: RateLimitType, now: number): boolean {
   return openedNow;
 }
 
-export function resetRateLimitCircuitBreakers() {
-  circuitBreakers.clear();
-}
-
 async function restIncrWithExpire(
   key: string,
   windowSeconds: number,

@@ -1,13 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import {
-  memoryCache,
-  getCached,
-  setCached,
-  invalidateCache,
-  invalidateCacheByPrefix,
-  CACHE_TTL,
-} from "@/lib/memory-cache";
+import { memoryCache, CACHE_TTL } from "@/lib/memory-cache";
 
 describe("lib/memory-cache", () => {
   beforeEach(() => {
@@ -165,25 +158,6 @@ describe("lib/memory-cache", () => {
       expect(result).toBe("fresh-data");
       expect(fetcher).toHaveBeenCalledOnce();
       expect(memoryCache.get("new-key")).toBe("fresh-data");
-    });
-  });
-
-  describe("helper functions", () => {
-    it("getCached works", () => {
-      setCached("helper-key", "helper-value");
-      expect(getCached("helper-key")).toBe("helper-value");
-    });
-
-    it("invalidateCache works", () => {
-      setCached("to-invalidate", "val");
-      expect(invalidateCache("to-invalidate")).toBe(true);
-      expect(getCached("to-invalidate")).toBeNull();
-    });
-
-    it("invalidateCacheByPrefix works", () => {
-      setCached("prefix:a", 1);
-      setCached("prefix:b", 2);
-      expect(invalidateCacheByPrefix("prefix:")).toBe(2);
     });
   });
 

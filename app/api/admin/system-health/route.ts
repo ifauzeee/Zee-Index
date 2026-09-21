@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
+import { getErrorMessage } from "@/lib/errors";
 import {
   getHealthServicesSnapshot,
   summarizeLatencies,
@@ -52,8 +53,7 @@ export const GET = createAdminRoute(async () => {
       timestamp: new Date().toISOString(),
     });
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Internal Server Error";
+    const errorMessage = getErrorMessage(error, "Internal Server Error");
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 });

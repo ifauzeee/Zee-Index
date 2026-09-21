@@ -1,6 +1,5 @@
 import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
-import tailwindcssAspectRatio from "@tailwindcss/aspect-ratio";
 import tailwindcssTypography from "@tailwindcss/typography";
 
 const config: Config = {
@@ -90,6 +89,6 @@ const config: Config = {
       },
     },
   },
-  plugins: [tailwindcssAnimate, tailwindcssAspectRatio, tailwindcssTypography],
+  plugins: [tailwindcssAnimate, tailwindcssTypography],
 };
 export default config;

@@ -5,6 +5,7 @@ import { getAnyFileDetails } from "@/lib/storage";
 import { validateShareToken } from "@/lib/auth";
 import { isAccessRestricted } from "@/lib/securityUtils";
 
+import { getErrorMessage } from "@/lib/errors";
 export const dynamic = "force-dynamic";
 
 export const GET = createPublicRoute(
@@ -58,10 +59,10 @@ export const GET = createPublicRoute(
         },
       });
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan tidak dikenal.";
+      const errorMessage = getErrorMessage(
+        error,
+        "Terjadi kesalahan tidak dikenal.",
+      );
       logger.error({ err: errorMessage }, "File Details API Error");
       return NextResponse.json(
         { error: "Gagal mengambil detail file." },
