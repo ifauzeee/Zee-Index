@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import {
   X,
   Folder as FolderIcon,
@@ -14,6 +14,7 @@ import type { DriveFile } from "@/lib/drive";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { useTranslations } from "next-intl";
 import { fetchFolderPathApi } from "@/hooks/useFileFetching";
+import ModalShell from "@/components/ui/ModalShell";
 
 interface MoveModalProps {
   fileToMove?: DriveFile;
@@ -135,96 +136,83 @@ export default function MoveModal({
 
   return (
     <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
+      <ModalShell
+        onClose={onClose}
+        variant="slideUp"
+        className="flex flex-col"
+        showCloseButton={false}
       >
-        <motion.div
-          className="relative w-full max-w-md bg-background p-6 rounded-lg shadow-xl flex flex-col"
-          initial={{ scale: 0.9, y: 20 }}
-          animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.9, y: 20 }}
-          onClick={(e) => e.stopPropagation()}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-muted-foreground hover:text-foreground"
         >
+          <X size={20} />
+        </button>
+        <h3 className="text-lg font-semibold mb-2">
+          {t.rich("title", {
+            itemName: () => <span className="font-bold">{itemName}</span>,
+          })}
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">{t("selectDest")}</p>
+
+        <div className="border rounded-md p-2 flex items-center mb-4">
+          {folderStack.length > 1 && (
+            <button
+              onClick={handleBackClick}
+              className="p-2 rounded-md hover:bg-accent"
+            >
+              <ArrowLeft size={16} />
+            </button>
+          )}
+          <span className="font-medium px-2 truncate">{currentFolderName}</span>
+        </div>
+
+        <div className="h-64 overflow-y-auto border rounded-md">
+          {isLoading || isInitializing ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="animate-spin" />
+            </div>
+          ) : subfolders.length > 0 ? (
+            <ul>
+              {subfolders.map((folder) => (
+                <li key={folder.id}>
+                  <button
+                    onClick={() => handleFolderClick(folder)}
+                    className="w-full text-left flex items-center justify-between px-4 py-2 text-sm text-foreground hover:bg-accent"
+                  >
+                    <span className="flex items-center gap-2">
+                      <FolderIcon size={16} /> {folder.name}
+                    </span>
+                    <ChevronRight size={16} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+              <p>{t("noSubfolders")}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-2 mt-6">
           <button
+            type="button"
             onClick={onClose}
-            className="absolute top-3 right-3 text-muted-foreground hover:text-foreground"
+            className="px-4 py-2 rounded-md hover:bg-accent"
           >
-            <X size={20} />
+            {t("cancel")}
           </button>
-          <h3 className="text-lg font-semibold mb-2">
-            {t.rich("title", {
-              itemName: () => <span className="font-bold">{itemName}</span>,
-            })}
-          </h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            {t("selectDest")}
-          </p>
-
-          <div className="border rounded-md p-2 flex items-center mb-4">
-            {folderStack.length > 1 && (
-              <button
-                onClick={handleBackClick}
-                className="p-2 rounded-md hover:bg-accent"
-              >
-                <ArrowLeft size={16} />
-              </button>
-            )}
-            <span className="font-medium px-2 truncate">
-              {currentFolderName}
-            </span>
-          </div>
-
-          <div className="h-64 overflow-y-auto border rounded-md">
-            {isLoading || isInitializing ? (
-              <div className="flex items-center justify-center h-full">
-                <Loader2 className="animate-spin" />
-              </div>
-            ) : subfolders.length > 0 ? (
-              <ul>
-                {subfolders.map((folder) => (
-                  <li key={folder.id}>
-                    <button
-                      onClick={() => handleFolderClick(folder)}
-                      className="w-full text-left flex items-center justify-between px-4 py-2 text-sm text-foreground hover:bg-accent"
-                    >
-                      <span className="flex items-center gap-2">
-                        <FolderIcon size={16} /> {folder.name}
-                      </span>
-                      <ChevronRight size={16} />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-                <p>{t("noSubfolders")}</p>
-              </div>
-            )}
-          </div>
-
-          <div className="flex justify-end gap-2 mt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-md hover:bg-accent"
-            >
-              {t("cancel")}
-            </button>
-            <button
-              type="button"
-              disabled={isMoveDisabled}
-              onClick={handleMoveConfirm}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:bg-primary/50"
-            >
-              {isMoving ? t("moving") : t("moveHere")}
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
+          <button
+            type="button"
+            disabled={isMoveDisabled}
+            onClick={handleMoveConfirm}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:bg-primary/50"
+          >
+            {isMoving ? t("moving") : t("moveHere")}
+          </button>
+        </div>
+      </ModalShell>
     </AnimatePresence>
   );
 }
