@@ -10,6 +10,7 @@ import { useScrollLock } from "@/hooks/useScrollLock";
 import { fetchFolderPathApi } from "@/hooks/useFileFetching";
 import type { DriveFile } from "@/lib/drive";
 import { getErrorMessage } from "@/lib/errors";
+import { parseManualDrivesFromEnv } from "@/lib/manual-drives";
 import type {
   FlatTree,
   FolderNode,
@@ -30,23 +31,6 @@ interface DropPayload {
   type?: string;
   files?: Array<Pick<DriveFile, "id">>;
   sourceFolderId?: string;
-}
-
-function parseEnvManualDrives(envValue: string): ManualDrive[] {
-  return envValue.split(",").reduce<ManualDrive[]>((accumulator, entry) => {
-    const [id, name] = entry.split(":");
-    if (!id || !id.trim()) {
-      return accumulator;
-    }
-
-    accumulator.push({
-      id: id.trim(),
-      name: name?.trim() || id.trim(),
-      isProtected: false,
-    });
-
-    return accumulator;
-  }, []);
 }
 
 export function useSidebarController() {
@@ -159,8 +143,8 @@ export function useSidebarController() {
   const allManualDrives = useMemo<ManualDrive[]>(() => {
     if (!isAuthHealthy) return [];
 
-    const envDrives = parseEnvManualDrives(
-      process.env.NEXT_PUBLIC_MANUAL_DRIVES || "",
+    const envDrives = parseManualDrivesFromEnv(
+      process.env.NEXT_PUBLIC_MANUAL_DRIVES,
     );
     const dbIds = new Set(dbDrives.map((drive) => drive.id));
     const filteredEnvDrives = envDrives.filter((drive) => !dbIds.has(drive.id));

@@ -20,6 +20,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { getErrorMessage } from "@/lib/errors";
+import { parseManualDrivesFromEnv } from "@/lib/manual-drives";
 
 interface ManualDrive {
   id: string;
@@ -62,21 +63,13 @@ export default function ManualDrivesManager() {
     password: "",
   });
 
-  const envDrives = useMemo<ManualDrive[]>(() => {
-    const envString = process.env.NEXT_PUBLIC_MANUAL_DRIVES || "";
-    return envString.split(",").reduce<ManualDrive[]>((acc, entry) => {
-      const [id, name] = entry.split(":");
-      if (id && id.trim()) {
-        acc.push({
-          id: id.trim(),
-          name: name?.trim() || id.trim(),
-          isProtected: false,
-          source: "env",
-        });
-      }
-      return acc;
-    }, []);
-  }, []);
+  const envDrives = useMemo<ManualDrive[]>(
+    () =>
+      parseManualDrivesFromEnv(process.env.NEXT_PUBLIC_MANUAL_DRIVES).map(
+        (drive) => ({ ...drive, source: "env" }),
+      ),
+    [],
+  );
 
   const fetchDrives = useCallback(async () => {
     try {

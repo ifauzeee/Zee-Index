@@ -307,9 +307,6 @@ function FileCardInner({
                 {t("share")}
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem className="text-red-600">
-              {t("delete")}
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
