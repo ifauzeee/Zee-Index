@@ -1,4 +1,9 @@
 {
+  "Discovery": {
+    "recentlyAdded": "Baru Ditambahkan",
+    "topDownloads": "Unduhan Teratas (7 hari)",
+    "continueWatching": "Lanjut Menonton"
+  },
   "LocaleSwitcher": {
     "label": "Bahasa"
   },
@@ -124,6 +129,7 @@
     "archiveTooBig": "Terlalu besar (> {size})",
     "pinFolder": "Sematkan Folder",
     "unpin": "Lepas Sematan",
+    "downloadZip": "Unduh sebagai ZIP",
     "addFavorite": "Tambah ke Favorit",
     "removeFavorite": "Hapus dari Favorit",
     "share": "Bagikan",
@@ -271,7 +277,8 @@
   },
   "FileBrowserModals": {
     "dropToUpload": "Lepas untuk Mengunggah",
-    "toThisFolder": "Ke folder ini"
+    "toThisFolder": "Ke folder ini",
+    "zipErrorFallback": "Folder ZIP gagal dibuat. Periksa jumlah file dan total ukuran."
   },
   "ArchivePreviewModal": {
     "title": "Isi Arsip",

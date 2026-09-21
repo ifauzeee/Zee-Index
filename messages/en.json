@@ -1,4 +1,9 @@
 {
+  "Discovery": {
+    "recentlyAdded": "Recently Added",
+    "topDownloads": "Top Downloads (7 days)",
+    "continueWatching": "Continue Watching"
+  },
   "LocaleSwitcher": {
     "label": "Language"
   },
@@ -124,6 +129,7 @@
     "archiveTooBig": "Too large (> {size})",
     "pinFolder": "Pin Folder",
     "unpin": "Unpin",
+    "downloadZip": "Download as ZIP",
     "addFavorite": "Add Favorite",
     "removeFavorite": "Remove Favorite",
     "share": "Share",
@@ -271,7 +277,8 @@
   },
   "FileBrowserModals": {
     "dropToUpload": "Drop to Upload",
-    "toThisFolder": "To this folder"
+    "toThisFolder": "To this folder",
+    "zipErrorFallback": "Folder ZIP could not be created. Check file count and total size."
   },
   "ArchivePreviewModal": {
     "title": "Archive Content",

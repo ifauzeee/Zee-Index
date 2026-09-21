@@ -187,5 +187,54 @@ export async function getDownloadStream(fileId: string) {
     }
   }
 
-  return null;
+  // Google Drive (default source)
+  const { getAccessToken, getFileDetailsFromDrive } =
+    await import("@/lib/drive");
+  const { prepareGoogleDriveUrl } = await import("@/lib/services/download");
+
+  const [accessToken, fileDetails] = await Promise.all([
+    getAccessToken(),
+    getFileDetailsFromDrive(cleanId),
+  ]);
+
+  if (
+    !fileDetails ||
+    fileDetails.mimeType === "application/vnd.google-apps.folder"
+  ) {
+    return null;
+  }
+
+  const { url, mimeType, filename } = prepareGoogleDriveUrl(
+    cleanId,
+    fileDetails,
+    null,
+  );
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+  const googleResponse = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "User-Agent": "Zee-Index-Streamer/1.0",
+      "Accept-Encoding": "identity",
+    },
+    cache: "no-store",
+    signal: controller.signal,
+  }).finally(() => clearTimeout(timeoutId));
+
+  if (!googleResponse.ok || !googleResponse.body) {
+    logger.error(
+      { status: googleResponse.status, fileId: cleanId },
+      "[Storage] Google Drive download failed",
+    );
+    return null;
+  }
+
+  return {
+    stream: googleResponse.body as ReadableStream<Uint8Array>,
+    size: Number(fileDetails.size ?? 0),
+    mimeType,
+    filename,
+  };
 }

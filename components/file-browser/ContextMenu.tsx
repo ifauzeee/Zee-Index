@@ -45,6 +45,7 @@ interface ContextMenuProps {
   isFolder: boolean;
   isPinned: boolean;
   onTogglePin: () => void;
+  onDownloadZip?: () => void;
   isAdmin: boolean;
   onOpenNewTab: () => void;
   onShowHistory?: () => void;
@@ -72,6 +73,7 @@ export default function ContextMenu({
   isFolder,
   isPinned,
   onTogglePin,
+  onDownloadZip,
   isAdmin,
   onOpenNewTab,
   onShowHistory,
@@ -213,6 +215,13 @@ export default function ContextMenu({
             icon={isPinned ? PinOff : Pin}
             label={isPinned ? t("unpin") : t("pinFolder")}
           />
+          {onDownloadZip && (
+            <MenuItem
+              onClick={onDownloadZip}
+              icon={Archive}
+              label={t("downloadZip")}
+            />
+          )}
         </>
       )}
 

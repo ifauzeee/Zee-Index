@@ -1,7 +1,10 @@
 import FileBrowser from "@/components/file-browser/FileBrowser";
+import DiscoverySections from "@/components/discovery/DiscoverySections";
+import ContinueWatching from "@/components/discovery/ContinueWatching";
 import { listAllFiles } from "@/lib/storage";
 import { ZeeFile } from "@/types/storage";
 import { getRootFolderId } from "@/lib/config";
+import { getRecentlyAdded, getTopDownloads } from "@/lib/discovery";
 import { logger } from "@/lib/logger";
 import { getActiveProvider } from "@/lib/storage/providers";
 
@@ -11,6 +14,10 @@ type ProtectedFolderMap = Record<string, boolean>;
 
 export default async function Home() {
   const rootId = (await getRootFolderId()) || "virtual-root";
+  const [recent, top] = await Promise.all([
+    getRecentlyAdded().catch(() => []),
+    getTopDownloads().catch(() => []),
+  ]);
 
   const [isProtected, isPrivateFolder, db] = await Promise.all([
     import("@/lib/auth").then((m) => m.isProtected),
@@ -69,10 +76,14 @@ export default async function Home() {
   }
 
   return (
-    <FileBrowser
-      initialFolderId={initialFolderId}
-      initialFiles={initialFiles}
-      initialNextPageToken={initialNextPageToken}
-    />
+    <>
+      <ContinueWatching />
+      <DiscoverySections recent={recent} top={top} />
+      <FileBrowser
+        initialFolderId={initialFolderId}
+        initialFiles={initialFiles}
+        initialNextPageToken={initialNextPageToken}
+      />
+    </>
   );
 }

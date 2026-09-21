@@ -59,6 +59,7 @@
     "@tanstack/react-virtual": "^3.13.18",
     "@types/qrcode": "^1.5.5",
     "@vidstack/react": "^1.15.6",
+    "archiver": "^8.0.0",
     "bcryptjs": "^3.0.2",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
