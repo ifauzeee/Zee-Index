@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { parseSchemaValue } from "@/lib/telemetry";
 
 export const shareTokenPayloadSchema = z
   .object({
@@ -160,23 +161,6 @@ export type ShareTokenPayload = z.infer<typeof shareTokenPayloadSchema>;
 export type ShareCreateRequest = z.infer<typeof shareCreateRequestSchema>;
 export type FileRequestLink = z.infer<typeof fileRequestLinkSchema>;
 export type AccessRequestRecord = z.infer<typeof accessRequestRecordSchema>;
-
-function parseSchemaValue<T>(raw: unknown, schema: z.ZodType<T>): T | null {
-  if (typeof raw === "string") {
-    if (raw === "[object Object]") {
-      return null;
-    }
-
-    try {
-      return parseSchemaValue(JSON.parse(raw) as unknown, schema);
-    } catch {
-      return null;
-    }
-  }
-
-  const parsed = schema.safeParse(raw);
-  return parsed.success ? parsed.data : null;
-}
 
 export function parseFileRequestLink(value: unknown): FileRequestLink | null {
   return parseSchemaValue(value, fileRequestLinkSchema);

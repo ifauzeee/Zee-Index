@@ -152,6 +152,7 @@ export async function getDownloadStream(fileId: string) {
     const { getLocalFilePath } = await import("./local");
     const { getMimeType } = await import("./mime");
     const { createReadStream } = await import("fs");
+    const { Readable } = await import("stream");
     const { stat } = await import("fs/promises");
     const path = await import("path");
 
@@ -167,17 +168,9 @@ export async function getDownloadStream(fileId: string) {
       const mimeType = getMimeType(absolutePath) || "application/octet-stream";
       const filename = path.basename(absolutePath);
 
-      const stream = createReadStream(absolutePath);
-      const webStream = new ReadableStream({
-        start(controller) {
-          stream.on("data", (chunk) => controller.enqueue(chunk));
-          stream.on("end", () => controller.close());
-          stream.on("error", (err) => controller.error(err));
-        },
-        cancel() {
-          stream.destroy();
-        },
-      });
+      const webStream = Readable.toWeb(
+        createReadStream(absolutePath),
+      ) as ReadableStream<Uint8Array>;
 
       return {
         stream: webStream,

@@ -248,14 +248,21 @@ export type AppEventPayloadByType = {
 };
 
 export function parseSchemaValue<T>(
-  raw: string,
+  raw: unknown,
   schema: z.ZodSchema<T>,
 ): T | null {
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    const result = schema.safeParse(parsed);
-    return result.success ? result.data : null;
-  } catch {
-    return null;
+  if (typeof raw === "string") {
+    if (raw === "[object Object]") {
+      return null;
+    }
+
+    try {
+      return parseSchemaValue(JSON.parse(raw) as unknown, schema);
+    } catch {
+      return null;
+    }
   }
+
+  const parsed = schema.safeParse(raw);
+  return parsed.success ? parsed.data : null;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { formatBytes, formatDuration } from "@/lib/utils";
+import { formatBytes, formatDuration, triggerDownload } from "@/lib/utils";
 import type { DriveFile } from "@/lib/drive";
 import {
   Plus,
@@ -18,6 +18,7 @@ import { useTranslations, useFormatter } from "next-intl";
 import SubtitleSelectorModal from "../modals/SubtitleSelectorModal";
 import { srtToVtt } from "@/lib/subtitleUtils";
 import type { SubtitleTrack } from "@/lib/subtitles";
+import { fetchFolderPathApi } from "@/hooks/useFileFetching";
 
 interface FolderPathItem {
   id: string;
@@ -140,14 +141,9 @@ export default function InfoPanel({
       setPathLoading(true);
       try {
         const parentId = file.parents[0];
-        const res = await fetch(`/api/folderpath?folderId=${parentId}`);
-        if (res.ok) {
-          const data: FolderPathItem[] = await res.json();
-          const path = data.map((pathItem) => pathItem.name).join(" / ");
-          setPathString(path || "Root");
-        } else {
-          setPathString("Unknown");
-        }
+        const data: FolderPathItem[] = await fetchFolderPathApi(parentId);
+        const path = data.map((pathItem) => pathItem.name).join(" / ");
+        setPathString(path || "Root");
       } catch (error) {
         console.error("Failed to fetch path", error);
         setPathString(t("error"));
@@ -365,15 +361,7 @@ export default function InfoPanel({
         </button>
 
         <button
-          onClick={() => {
-            const iframe = document.createElement("iframe");
-            iframe.style.display = "none";
-            iframe.src = directLink;
-            document.body.appendChild(iframe);
-            setTimeout(() => {
-              document.body.removeChild(iframe);
-            }, 5000);
-          }}
+          onClick={() => triggerDownload(directLink)}
           className="flex items-center justify-center px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-semibold"
         >
           <Download size={18} className="mr-3" />

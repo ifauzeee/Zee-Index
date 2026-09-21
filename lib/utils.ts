@@ -361,3 +361,13 @@ export function extractExcerpt(text: string, maxLen: number): string {
   const lastSpace = truncated.lastIndexOf(" ");
   return lastSpace > 0 ? truncated.slice(0, lastSpace) + "…" : truncated + "…";
 }
+
+export function triggerDownload(url: string): void {
+  const iframe = document.createElement("iframe");
+  iframe.style.display = "none";
+  iframe.src = url;
+  document.body.appendChild(iframe);
+  setTimeout(() => {
+    document.body.removeChild(iframe);
+  }, 5000);
+}

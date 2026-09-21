@@ -28,6 +28,7 @@ import {
 } from "@/lib/utils";
 import { useTranslations, useLocale } from "next-intl";
 import { useAppStore } from "@/lib/store";
+import { fetchFolderPathApi } from "@/hooks/useFileFetching";
 import { useUser } from "@/hooks/useUser";
 import { usePublicConfig } from "@/hooks/useConfig";
 import { useScrollLock } from "@/hooks/useScrollLock";
@@ -131,16 +132,13 @@ function DetailsPanelInner({ file, onClose }: DetailsPanelProps) {
       setPathLoading(true);
       try {
         const parentId = file.parents[0];
-        const res = await fetch(
-          `/api/folderpath?folderId=${parentId}&locale=${locale}`,
+        const data: FolderPathItem[] = await fetchFolderPathApi(
+          parentId,
+          undefined,
+          locale,
         );
-        if (res.ok) {
-          const data: FolderPathItem[] = await res.json();
-          const path = data.map((pathItem) => pathItem.name).join(" / ");
-          setPathString(path || t("root"));
-        } else {
-          setPathString(t("unknown"));
-        }
+        const path = data.map((pathItem) => pathItem.name).join(" / ");
+        setPathString(path || t("root"));
       } catch (error) {
         console.error("Failed to fetch path", error);
         setPathString(t("error"));
