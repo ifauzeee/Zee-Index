@@ -386,6 +386,17 @@ docker compose up -d --build
 docker compose ps          # all services should report "healthy"
 ```
 
+> **Enabling the local storage provider on Docker Compose** — the app container
+> runs as the `nextjs` user (uid 1001), and `./storage` is bind-mounted from the
+> host. The host directory must be writable by uid 1001, or folder listings fail
+> with `EACCES: permission denied, mkdir '/app/storage/.tmp'`. Fix the ownership
+> once per host (run again after each fresh deploy):
+>
+> ```bash
+> sudo chown -R 1001:1001 storage
+> docker compose up -d zee-index
+> ```
+
 Typical footprint:
 
 | Container   | Limit  | Typical |
