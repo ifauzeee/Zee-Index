@@ -62,10 +62,6 @@ import DeleteConfirm from "@/components/modals/DeleteConfirm";
 import ShareButton from "@/components/file-browser/ShareButton";
 
 interface FileBrowserModalsProps {
-  authModal: { isOpen: boolean; folderId: string; folderName: string };
-  isAuthLoading: boolean;
-  onCloseAuth: () => void;
-  onAuthSubmit: (id: string, pass: string) => void;
   isFileRequestModalOpen: boolean;
   setIsFileRequestModalOpen: (open: boolean) => void;
   currentFolderId: string;
@@ -113,7 +109,6 @@ interface FileBrowserModalsProps {
 
 export default function FileBrowserModals(props: FileBrowserModalsProps) {
   const {
-    authModal = { isOpen: false, folderId: "", folderName: "" },
     isFileRequestModalOpen,
     setIsFileRequestModalOpen,
     currentFolderId,
@@ -162,7 +157,6 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
 
   useEffect(() => {
     if (
-      authModal.isOpen ||
       isFileRequestModalOpen ||
       imageEditorFile ||
       previewFile ||
@@ -179,7 +173,6 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
       document.body.style.overflow = "";
     };
   }, [
-    authModal.isOpen,
     isFileRequestModalOpen,
     imageEditorFile,
     previewFile,
