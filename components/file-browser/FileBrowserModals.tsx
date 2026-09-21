@@ -6,6 +6,7 @@ import { UploadCloud, Loader2 } from "lucide-react";
 import type { DriveFile } from "@/lib/drive";
 import type { ActionState, ContextMenuState } from "@/hooks/useFileActions";
 import { useTranslations } from "next-intl";
+import { triggerDownload } from "@/lib/utils";
 
 const ModalLoading = () => {
   const t = useTranslations("Common");
@@ -274,6 +275,12 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
           isFolder={contextMenu.file.isFolder}
           isPinned={isFilePinned(contextMenu.file.id)}
           onTogglePin={handleTogglePin}
+          onDownloadZip={() => {
+            triggerDownload(
+              `/api/folder/download?folderId=${encodeURIComponent(contextMenu.file.id)}`,
+            );
+            setContextMenu(null);
+          }}
           isAdmin={isAdmin}
           onOpenNewTab={() => {
             const sharePath = getSharePath(contextMenu.file);
