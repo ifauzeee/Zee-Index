@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { getActiveProvider } from "@/lib/storage/providers";
 import { logger } from "@/lib/logger";
+import { getErrorMessage } from "@/lib/errors";
 
 export const dynamic = "force-dynamic";
 
@@ -26,8 +27,7 @@ export const POST = createAdminRoute(async () => {
       message: "Connection successful.",
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unknown connection error";
+    const message = getErrorMessage(error, "Unknown connection error");
     logger.warn(
       { err: error, provider: provider.source },
       "[Storage] Test connection failed",

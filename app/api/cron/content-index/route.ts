@@ -1,6 +1,7 @@
 import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createCronRoute } from "@/lib/api-middleware";
+import { getErrorMessage } from "@/lib/errors";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export const GET = createCronRoute(async () => {
       message: `Indexed ${result.indexed} file(s) (${result.skipped} skipped, ${result.failed} failed).`,
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Unknown error";
+    const message = getErrorMessage(error, "Unknown error");
     logger.error({ err: message }, "Scheduled content indexing failed");
     return NextResponse.json(
       { error: "Content indexing failed.", details: message },

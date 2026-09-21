@@ -1,4 +1,6 @@
 import { logger } from "@/lib/logger";
+
+import { getErrorMessage } from "@/lib/errors";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -8,7 +10,6 @@ import { logActivity } from "@/lib/activityLogger";
 import { invalidateFolderCache } from "@/lib/cache";
 import { z } from "zod";
 import { getActiveProvider } from "@/lib/storage/providers";
-
 export const maxDuration = 60;
 
 const uploadInitBodySchema = z.object({
@@ -348,10 +349,10 @@ export const POST = createEditorRoute(
         );
       }
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan tidak dikenal.";
+      const errorMessage = getErrorMessage(
+        error,
+        "Terjadi kesalahan tidak dikenal.",
+      );
       logger.error({ err: error }, "Upload API Error");
       return NextResponse.json(
         { error: errorMessage || "Internal Server Error." },

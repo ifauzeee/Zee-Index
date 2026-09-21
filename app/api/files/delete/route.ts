@@ -1,4 +1,6 @@
 import { logger } from "@/lib/logger";
+
+import { getErrorMessage } from "@/lib/errors";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -9,7 +11,6 @@ import { z } from "zod";
 import { logActivity } from "@/lib/activityLogger";
 import { invalidateFolderCache } from "@/lib/cache";
 import { createAdminRoute } from "@/lib/api-middleware";
-
 const deleteSchema = z.object({
   fileId: z.string().min(1),
 });
@@ -116,10 +117,10 @@ export const POST = createAdminRoute(
 
       return NextResponse.json({ success: true });
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan tidak dikenal.";
+      const errorMessage = getErrorMessage(
+        error,
+        "Terjadi kesalahan tidak dikenal.",
+      );
       await logActivity("DELETE", {
         itemName: fileDetails?.name || "Unknown",
         userEmail: session?.user?.email,

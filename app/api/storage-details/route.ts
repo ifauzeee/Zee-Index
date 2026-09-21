@@ -1,11 +1,12 @@
 import { logger } from "@/lib/logger";
+
+import { getErrorMessage } from "@/lib/errors";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { createPublicRoute } from "@/lib/api-middleware";
 import { getStorageDetails } from "@/lib/drive";
 import { isAccessRestricted } from "@/lib/securityUtils";
-
 export const GET = createPublicRoute(
   async ({ session }) => {
     try {
@@ -25,10 +26,10 @@ export const GET = createPublicRoute(
 
       return NextResponse.json(details);
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan tidak dikenal.";
+      const errorMessage = getErrorMessage(
+        error,
+        "Terjadi kesalahan tidak dikenal.",
+      );
       logger.error({ err: errorMessage }, "Storage Details API Error");
       return NextResponse.json(
         { error: "Gagal mengambil detail penyimpanan.", details: errorMessage },

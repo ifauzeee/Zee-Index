@@ -5,6 +5,7 @@ import { kv } from "@/lib/kv";
 import { sendMail } from "@/lib/mailer";
 import { formatBytes } from "@/lib/utils";
 import { EVENT_PIPELINE_KEYS } from "@/lib/events/pipeline";
+import { getErrorMessage } from "@/lib/errors";
 
 export const dynamic = "force-dynamic";
 
@@ -69,7 +70,7 @@ export const GET = createCronRoute(async () => {
     });
   } catch (error: unknown) {
     logger.error(
-      { err: error instanceof Error ? error.message : error },
+      { err: getErrorMessage(error) },
       "Gagal membuat laporan mingguan",
     );
     return NextResponse.json(

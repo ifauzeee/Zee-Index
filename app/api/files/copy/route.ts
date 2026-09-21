@@ -1,4 +1,6 @@
 import { logger } from "@/lib/logger";
+
+import { getErrorMessage } from "@/lib/errors";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -7,7 +9,6 @@ import { getAccessToken, getFileDetailsFromDrive } from "@/lib/drive";
 import { z } from "zod";
 import { invalidateFolderCache } from "@/lib/cache";
 import { logActivity } from "@/lib/activityLogger";
-
 const copySchema = z.object({
   fileId: z.string().min(1),
   destinationId: z.string().optional(),
@@ -64,10 +65,10 @@ export const POST = createAdminRoute(
 
       return NextResponse.json({ success: true, file: copiedFile });
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan tidak dikenal.";
+      const errorMessage = getErrorMessage(
+        error,
+        "Terjadi kesalahan tidak dikenal.",
+      );
       logger.error({ err: errorMessage }, "Copy API Error");
       return NextResponse.json(
         { error: "Internal Server Error.", details: errorMessage },

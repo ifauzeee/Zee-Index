@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createCronRoute } from "@/lib/api-middleware";
 import { cleanupOldActivityLogs } from "@/lib/activity-cleanup";
+import { getErrorMessage } from "@/lib/errors";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export const GET = createCronRoute(async () => {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: getErrorMessage(error, "Unknown error"),
       },
       { status: 500 },
     );

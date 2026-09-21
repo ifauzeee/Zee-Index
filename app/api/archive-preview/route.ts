@@ -5,6 +5,7 @@ import { getAccessToken } from "@/lib/drive";
 import JSZip, { JSZipObject } from "jszip";
 import { isAccessRestricted } from "@/lib/securityUtils";
 
+import { getErrorMessage } from "@/lib/errors";
 interface JSZipFileWithData extends JSZipObject {
   _data: {
     uncompressedSize: number;
@@ -54,10 +55,10 @@ export const GET = createUserRoute(async ({ request }) => {
 
     return NextResponse.json(content);
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error
-        ? error.message
-        : "Terjadi kesalahan tidak dikenal.";
+    const errorMessage = getErrorMessage(
+      error,
+      "Terjadi kesalahan tidak dikenal.",
+    );
     logger.error({ err: errorMessage }, "Archive Preview API Error");
     return NextResponse.json(
       { error: "Gagal memproses file arsip." },

@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { getAccessToken } from "@/lib/drive";
 import { invalidateFolderCache } from "@/lib/cache";
+import { getErrorMessage } from "@/lib/errors";
 
 export const PATCH = createAdminRoute(async ({ request }) => {
   try {
@@ -43,7 +44,7 @@ export const PATCH = createAdminRoute(async ({ request }) => {
     const data = await response.json();
     return NextResponse.json({ success: true, data });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Unknown error";
+    const message = getErrorMessage(error, "Unknown error");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 });

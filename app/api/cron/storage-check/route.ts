@@ -5,6 +5,7 @@ import { getStorageDetails } from "@/lib/drive";
 import { sendMail } from "@/lib/mailer";
 import { formatBytes } from "@/lib/utils";
 import { kv } from "@/lib/kv";
+import { getErrorMessage } from "@/lib/errors";
 
 const WARNING_SENT_KEY = "zee-index:storage-warning-sent";
 
@@ -65,7 +66,7 @@ export const GET = createCronRoute(async () => {
     });
   } catch (error: unknown) {
     logger.error(
-      { err: error instanceof Error ? error.message : error },
+      { err: getErrorMessage(error) },
       "Gagal memeriksa penyimpanan",
     );
     return NextResponse.json(
