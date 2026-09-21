@@ -579,7 +579,9 @@ export function useFileBrowserController({
       fetchNextPage,
       navigatingId,
       currentFolderId,
-      onUploadClick: () => upload.setIsUploadModalOpen(true),
+      onUploadClick: canEdit
+        ? () => upload.setIsUploadModalOpen(true)
+        : undefined,
     },
     modalsProps: {
       isFileRequestModalOpen,
