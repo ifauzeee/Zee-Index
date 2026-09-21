@@ -176,11 +176,12 @@ export function getGoogleEditorLink(
 }
 
 function appendQueryParam(url: string, key: string, value: string): string {
-  const hashIndex = url.indexOf("#");
-  const baseUrl = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
-  const hash = hashIndex >= 0 ? url.slice(hashIndex) : "";
-  const separator = baseUrl.includes("?") ? "&" : "?";
-  return `${baseUrl}${separator}${encodeURIComponent(key)}=${encodeURIComponent(value)}${hash}`;
+  const [headAndQuery, hash] = url.split("#", 2);
+  const [head, query] = headAndQuery.split("?", 2);
+  const params = new URLSearchParams(query ?? "");
+  params.set(key, value);
+  const queryString = params.toString();
+  return `${head}${queryString ? `?${queryString}` : ""}${hash ? `#${hash}` : ""}`;
 }
 
 export function getPreviewUrl(downloadUrl: string, mimeType: string): string {

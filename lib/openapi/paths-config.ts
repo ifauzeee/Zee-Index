@@ -41,31 +41,4 @@ registry.registerPath({
   },
 });
 
-registry.registerPath({
-  method: "get",
-  path: "/api/clearcache",
-  tags: ["Config"],
-  summary: "Clear server cache",
-  description: "Clears the server-side cache for a given target. Admin only.",
-  request: {
-    query: z.object({
-      target: z.string(),
-    }),
-  },
-  responses: {
-    200: {
-      description: "Cache cleared",
-      content: {
-        "application/json": {
-          schema: z.object({ success: z.boolean(), message: z.string() }),
-        },
-      },
-    },
-    400: {
-      description: "Invalid cache target",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-  },
-});
-
 /* ------------------------------------------------------------------ */

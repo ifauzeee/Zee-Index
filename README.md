@@ -514,17 +514,14 @@ at rest, use their own rate-limit tier, and can be revoked individually.
 | `POST` | `/api/share/revoke`             | Revoke share link              |
 | `POST` | `/api/request-access`           | Request folder access          |
 | `POST` | `/api/file-request/upload`      | Upload to a file request       |
-| `POST` | `/api/clearcache`               | Clear server cache             |
 
 ### Admin
 
 | Method   | Endpoint                        | Description              |
 | -------- | ------------------------------- | ------------------------ |
 | `GET`    | `/api/admin/analytics`          | Analytics data           |
-| `GET`    | `/api/admin/activity-log`       | Activity logs            |
 | `GET`    | `/api/admin/audit`              | Security audit trail     |
 | `GET`    | `/api/admin/logs`               | System logs              |
-| `GET`    | `/api/admin/cache-stats`        | Cache statistics         |
 | `GET`    | `/api/admin/config`             | App configuration        |
 | `GET`    | `/api/admin/incidents`          | Incidents                |
 | `GET`    | `/api/admin/stats`              | System statistics        |

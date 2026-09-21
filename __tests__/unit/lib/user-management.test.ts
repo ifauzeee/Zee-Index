@@ -24,8 +24,6 @@ vi.mock("@/lib/logger", () => ({
 import {
   changeOwnPassword,
   hasUserPassword,
-  listUsers,
-  removeUserPassword,
   setUserPassword,
   upsertUser,
   verifyUserPassword,
@@ -69,24 +67,6 @@ describe("lib/user-management", () => {
       }),
     );
     expect(mockKv.set).toHaveBeenCalled();
-  });
-
-  it("lists users with password presence", async () => {
-    mockDb.user.findMany.mockResolvedValue([
-      { email: "a@example.com", role: "ADMIN", name: "a" },
-      { email: "b@example.com", role: "USER", name: "b" },
-    ]);
-    mockKv.exists.mockResolvedValueOnce(1).mockResolvedValueOnce(0);
-    const users = await listUsers();
-    expect(users).toEqual([
-      { email: "a@example.com", role: "ADMIN", hasPassword: true, name: "a" },
-      { email: "b@example.com", role: "USER", hasPassword: false, name: "b" },
-    ]);
-  });
-
-  it("removes a user password", async () => {
-    await removeUserPassword("user@example.com");
-    expect(mockKv.del).toHaveBeenCalledWith("password:user@example.com");
   });
 
   it("changeOwnPassword rejects wrong current password", async () => {

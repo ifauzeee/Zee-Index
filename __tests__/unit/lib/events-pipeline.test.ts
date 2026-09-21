@@ -23,7 +23,6 @@ vi.mock("@/lib/events/eventBus", () => ({
 
 import {
   EVENT_PIPELINE_KEYS,
-  clearEventPipeline,
   publishActivityEvent,
   publishPipelineEvent,
 } from "@/lib/events/pipeline";
@@ -91,15 +90,6 @@ describe("lib/events/pipeline", () => {
         type: "file:download",
         itemName: "movie.mp4",
       }),
-    );
-  });
-
-  it("clears activity and event stream keys", async () => {
-    await clearEventPipeline();
-
-    expect(mockKv.del).toHaveBeenCalledWith(
-      EVENT_PIPELINE_KEYS.activityLog,
-      EVENT_PIPELINE_KEYS.eventStream,
     );
   });
 });

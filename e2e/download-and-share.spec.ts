@@ -149,16 +149,6 @@ test.describe("Share-link expiry & max-uses", () => {
     expect(payload).toHaveProperty("error");
   });
 
-  test("share status endpoint rejects invalid tokens", async ({ request }) => {
-    const response = await request.get(
-      "/api/share/status?share_token=not-a-real-jwt",
-    );
-
-    expect([400, 401, 403]).toContain(response.status());
-    const payload = await response.json();
-    expect(payload).toHaveProperty("error");
-  });
-
   test("share track endpoint rejects requests without valid token", async ({
     request,
   }) => {

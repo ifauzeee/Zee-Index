@@ -112,41 +112,6 @@ registry.registerPath({
 
 registry.registerPath({
   method: "post",
-  path: "/api/share/status",
-  tags: ["Share"],
-  summary: "Check share token status",
-  description:
-    "Validates whether a share token is still active and not revoked.",
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: z.object({ shareToken: z.string().min(1) }),
-        },
-      },
-    },
-  },
-  responses: {
-    200: {
-      description: "Token validity status",
-      content: {
-        "application/json": {
-          schema: z.object({
-            valid: z.boolean(),
-            error: z.string().optional(),
-          }),
-        },
-      },
-    },
-    400: {
-      description: "Invalid token",
-      content: { "application/json": { schema: ErrorResponseSchema } },
-    },
-  },
-});
-
-registry.registerPath({
-  method: "post",
   path: "/api/share/delete",
   tags: ["Share"],
   summary: "Delete share link",

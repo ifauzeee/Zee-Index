@@ -43,16 +43,10 @@ const MIME_TYPES: Record<string, string> = {
   m3u8: "application/vnd.apple.mpegurl",
 };
 
-const FOLDER_MIME = "application/vnd.google-apps.folder";
-
 export function getMimeType(filename: string): string | undefined {
   const lower = filename.toLowerCase();
   const lastDot = lower.lastIndexOf(".");
   if (lastDot === -1) return undefined;
   const ext = lower.slice(lastDot + 1);
   return MIME_TYPES[ext];
-}
-
-export function isFolderMime(mimeType?: string | null): boolean {
-  return mimeType === FOLDER_MIME;
 }

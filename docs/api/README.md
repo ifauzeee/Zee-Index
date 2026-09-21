@@ -70,7 +70,6 @@ This folder contains the maintained API reference for Zee-Index.
 | GET    | `/api/proxy-image`              | Proxy remote image previews                            |
 | GET    | `/api/metadata`                 | Resolve metadata for embeds/previews                   |
 | GET    | `/api/trash`                    | Read trash data                                        |
-| POST   | `/api/clearcache`               | Invalidate entire/partial system cache (Admin only)    |
 | GET    | `/api/datausage`                | Read aggregate storage/bandwidth data usage            |
 | GET    | `/api/events`                   | SSE stream for realtime file/cache events              |
 | GET    | `/api/storage-details`          | Fetch detailed Google Drive quota and storage info     |
@@ -84,7 +83,6 @@ This folder contains the maintained API reference for Zee-Index.
 | GET    | `/api/share/list`            | List share links                                   |
 | POST   | `/api/share/delete`          | Delete a share link and remove it from persistence |
 | POST   | `/api/share/revoke`          | Block a share token without deleting the record    |
-| POST   | `/api/share/status`          | Validate whether a share token is still active     |
 | POST   | `/api/share/track`           | Increment share view counters                      |
 | GET    | `/api/share/items/[shareId]` | Resolve the items of a shared collection           |
 | PATCH  | `/api/share/[id]`            | Edit/update share link settings (Admin only)       |
@@ -106,12 +104,8 @@ This folder contains the maintained API reference for Zee-Index.
 | POST   | `/api/admin/config`             | Update app configuration                 |
 | GET    | `/api/admin/system-health`      | Operational dependency and error metrics |
 | GET    | `/api/admin/stats`              | Aggregated dashboard statistics          |
-| GET    | `/api/admin/cache-stats`        | Cache and in-memory stats                |
-| GET    | `/api/admin/activity-log`       | Activity log data                        |
 | GET    | `/api/admin/logs`               | Application logs                         |
-| GET    | `/api/admin/logs/security`      | Security log feed                        |
 | GET    | `/api/admin/analytics`          | Analytics dashboard data                 |
-| GET    | `/api/admin/analytics/enhanced` | Enhanced analytics                       |
 | POST   | `/api/admin/analytics/track`    | Client analytics ingestion               |
 | GET    | `/api/admin/users`              | List admins                              |
 | POST   | `/api/admin/users`              | Add an admin                             |

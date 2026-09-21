@@ -1,10 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { kv } from "@/lib/kv";
-import {
-  createRateLimitResponse,
-  KVRateLimiter,
-  resetRateLimitCircuitBreakers,
-} from "@/lib/ratelimit";
+import { createRateLimitResponse, KVRateLimiter } from "@/lib/ratelimit";
 import type { RateLimitResult } from "@/lib/ratelimit";
 
 vi.mock("@/lib/kv", () => ({
@@ -23,7 +19,6 @@ vi.mock("@/lib/logger", () => ({
 describe("lib/ratelimit", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    resetRateLimitCircuitBreakers();
   });
 
   afterEach(() => {

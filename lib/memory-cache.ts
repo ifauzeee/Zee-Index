@@ -240,22 +240,6 @@ class MemoryCache {
 
 export const memoryCache = new MemoryCache();
 
-export function getCached<T>(key: string): T | null {
-  return memoryCache.get<T>(key);
-}
-
-export function setCached<T>(key: string, value: T, ttlMs?: number): void {
-  memoryCache.set(key, value, ttlMs);
-}
-
-export function invalidateCache(key: string): boolean {
-  return memoryCache.delete(key);
-}
-
-export function invalidateCacheByPrefix(prefix: string): number {
-  return memoryCache.deleteByPrefix(prefix);
-}
-
 export const CACHE_TTL = {
   FOLDER_CONTENT: 60_000,
   FOLDER_PATH: 300_000,

@@ -80,11 +80,6 @@ export async function hasUserPassword(email: string): Promise<boolean> {
   return result === 1;
 }
 
-export async function removeUserPassword(email: string): Promise<void> {
-  const normalized = email.toLowerCase().trim();
-  await kv.del(`${USER_PASSWORD_PREFIX}${normalized}`);
-}
-
 export async function upsertUser(
   email: string,
   role: UserRole,
@@ -104,20 +99,6 @@ export async function upsertUser(
     hasPassword: password ? true : await hasUserPassword(normalized),
     name: normalized.split("@")[0],
   };
-}
-
-export async function listUsers(): Promise<ManagedUser[]> {
-  const users = await db.user.findMany({ orderBy: { email: "asc" } });
-  return Promise.all(
-    users
-      .filter((u) => u.email)
-      .map(async (u) => ({
-        email: u.email as string,
-        role: u.role as UserRole,
-        hasPassword: await hasUserPassword(u.email as string),
-        name: u.name,
-      })),
-  );
 }
 
 export async function changeOwnPassword(

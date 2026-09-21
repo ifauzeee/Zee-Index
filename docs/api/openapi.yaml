@@ -687,37 +687,6 @@ paths:
         "200":
           description: Share link revoked
 
-  /api/share/status:
-    post:
-      tags:
-        - Share
-      summary: Check share token status
-      description: Validates whether a share token is still usable
-      operationId: getShareStatus
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - shareToken
-              properties:
-                shareToken:
-                  type: string
-      responses:
-        "200":
-          description: Validation result
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  valid:
-                    type: boolean
-                  error:
-                    type: string
-
   /api/share/track:
     post:
       tags:
@@ -935,36 +904,6 @@ paths:
           description: Admin removed
         "401":
           description: Unauthorized
-
-  /api/admin/activity-log:
-    get:
-      tags:
-        - Admin
-      summary: Get activity logs
-      description: Get system activity logs
-      operationId: getActivityLogs
-      security:
-        - sessionAuth: []
-      parameters:
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 100
-        - name: offset
-          in: query
-          schema:
-            type: integer
-            default: 0
-      responses:
-        "200":
-          description: Activity logs
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ActivityLog"
 
   /api/admin/api-keys:
     get:
