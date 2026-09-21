@@ -1,4 +1,9 @@
 {
+  "Discovery": {
+    "recentlyAdded": "最近新增",
+    "topDownloads": "熱門下載（7 天）",
+    "continueWatching": "繼續觀看"
+  },
   "LocaleSwitcher": {
     "label": "語言"
   },
@@ -124,6 +129,7 @@
     "archiveTooBig": "太大（> {size}）",
     "pinFolder": "釘選資料夾",
     "unpin": "取消釘選",
+    "downloadZip": "下載為 ZIP",
     "addFavorite": "加入收藏",
     "removeFavorite": "移除收藏",
     "share": "分享",

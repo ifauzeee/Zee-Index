@@ -79,6 +79,8 @@ export default function VideoPlayer({
   const [resumeTime, setResumeTime] = useState(0);
   const [upNextCountdown, setUpNextCountdown] = useState<number | null>(null);
   const controlsVisible = useMediaState("controlsVisible", playerRef);
+  const userEmail = user?.email;
+  const lastSavedRef = useRef(0);
 
   const tPlayer = useTranslations("VideoPlayer");
 
@@ -168,7 +170,21 @@ export default function VideoPlayer({
     setHasResumed(false);
     setShowResumePrompt(false);
     setUpNextCountdown(null);
-  }, [src]);
+
+    if (fileId && userEmail) {
+      fetch(`/api/watch/progress`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then(
+          (data: { items?: { fileId: string; position: number }[] } | null) => {
+            const match = data?.items?.find((item) => item.fileId === fileId);
+            if (match && match.position > 10) {
+              setVideoProgress(fileId, match.position);
+            }
+          },
+        )
+        .catch(() => {});
+    }
+  }, [src, fileId, userEmail, setVideoProgress]);
 
   const handleRetry = () => {
     if (playerRef.current && playerRef.current.currentTime > 0) {
@@ -267,6 +283,20 @@ export default function VideoPlayer({
     if (fileId && detail.currentTime > 5 && !showResumePrompt) {
       if (Math.floor(detail.currentTime) % 10 === 0) {
         setVideoProgress(fileId, detail.currentTime);
+        if (userEmail && detail.currentTime !== lastSavedRef.current) {
+          lastSavedRef.current = detail.currentTime;
+          const duration = playerRef.current?.duration || 0;
+          fetch("/api/watch/progress", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              fileId,
+              fileName: title,
+              position: detail.currentTime,
+              duration,
+            }),
+          }).catch(() => {});
+        }
       }
     }
   };
@@ -301,7 +331,21 @@ export default function VideoPlayer({
         poster={poster?.replace("=s220", "=s1280")}
         aspectRatio={type === "video" ? "16/9" : undefined}
         onEnded={() => {
-          if (fileId) setVideoProgress(fileId, 0);
+          if (fileId) {
+            setVideoProgress(fileId, 0);
+            if (userEmail) {
+              fetch("/api/watch/progress", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  fileId,
+                  fileName: title,
+                  position: 0,
+                  duration: playerRef.current?.duration || 0,
+                }),
+              }).catch(() => {});
+            }
+          }
 
           if (playerRef.current) {
             const { currentTime, duration } = playerRef.current;

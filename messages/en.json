@@ -1,4 +1,9 @@
 {
+  "Discovery": {
+    "recentlyAdded": "Recently Added",
+    "topDownloads": "Top Downloads (7 days)",
+    "continueWatching": "Continue Watching"
+  },
   "LocaleSwitcher": {
     "label": "Language"
   },
@@ -124,6 +129,7 @@
     "archiveTooBig": "Too large (> {size})",
     "pinFolder": "Pin Folder",
     "unpin": "Unpin",
+    "downloadZip": "Download as ZIP",
     "addFavorite": "Add Favorite",
     "removeFavorite": "Remove Favorite",
     "share": "Share",
