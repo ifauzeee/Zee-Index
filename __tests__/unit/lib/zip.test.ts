@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockArchiver, mockStorage } = vi.hoisted(() => {
-  const append = vi.fn().mockReturnThis();
-  const finalize = vi.fn().mockResolvedValue(undefined);
-  const destroy = vi.fn().mockReturnThis();
-  const instance = { append, finalize, destroy };
+const { mockSpies, mockStorage } = vi.hoisted(() => {
+  const mockSpies = {
+    append: vi.fn().mockReturnThis(),
+    finalize: vi.fn().mockResolvedValue(undefined),
+    destroy: vi.fn().mockReturnThis(),
+  };
   return {
-    mockArchiver: { instance, factory: vi.fn(() => instance) },
+    mockSpies,
     mockStorage: {
       listAllFiles: vi.fn(),
       getDownloadStream: vi.fn(),
@@ -14,7 +15,11 @@ const { mockArchiver, mockStorage } = vi.hoisted(() => {
   };
 });
 
-vi.mock("archiver", () => ({ default: mockArchiver.factory }));
+vi.mock("archiver", () => {
+  class ZipArchive {}
+  Object.assign(ZipArchive.prototype, mockSpies);
+  return { ZipArchive };
+});
 vi.mock("@/lib/storage", () => mockStorage);
 
 import { createFolderZipStream, FolderZipError } from "@/lib/zip";
@@ -83,13 +88,12 @@ describe("lib/zip", () => {
 
     const { stream, stats } = await createFolderZipStream("folder-1");
 
-    expect(stream).toBe(mockArchiver.instance);
-    expect(mockArchiver.instance.append).toHaveBeenCalledTimes(2);
-    expect(mockArchiver.instance.append).toHaveBeenCalledWith(
-      expect.anything(),
-      { name: "file-0.txt" },
-    );
-    expect(mockArchiver.instance.finalize).toHaveBeenCalled();
+    expect(stream).toBeDefined();
+    expect(mockSpies.append).toHaveBeenCalledTimes(2);
+    expect(mockSpies.append).toHaveBeenCalledWith(expect.anything(), {
+      name: "file-0.txt",
+    });
+    expect(mockSpies.finalize).toHaveBeenCalled();
     expect(stats).toEqual({ files: 2, totalBytes: 20 });
   });
 });

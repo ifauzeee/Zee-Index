@@ -1,4 +1,4 @@
-import archiver, { type Archiver } from "archiver";
+import { ZipArchive, type Archiver } from "archiver";
 import { Readable } from "stream";
 import { listAllFiles, getDownloadStream } from "@/lib/storage";
 
@@ -42,7 +42,7 @@ export async function createFolderZipStream(
     );
   }
 
-  const zip = archiver("zip", { zlib: { level: 6 } });
+  const zip = new ZipArchive({ zlib: { level: 6 } });
 
   for (const file of files) {
     try {

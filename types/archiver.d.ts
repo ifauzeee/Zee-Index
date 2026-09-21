@@ -11,8 +11,15 @@ declare module "archiver" {
     destroy(err?: Error): Archiver;
   }
 
-  export default function archiver(
-    format: "zip",
-    options?: ArchiverOptions,
-  ): Archiver;
+  export class ZipArchive extends Archiver {
+    constructor(options?: ArchiverOptions);
+  }
+
+  export class TarArchive extends Archiver {
+    constructor(options?: ArchiverOptions);
+  }
+
+  export class JsonArchive extends Archiver {
+    constructor(options?: ArchiverOptions);
+  }
 }
