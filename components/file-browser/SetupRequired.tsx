@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
+import { useRouter, usePathname } from "next/navigation";
 
 interface SetupRequiredProps {
   message?: string;
@@ -22,9 +23,11 @@ export default function SetupRequired({
 }: SetupRequiredProps) {
   const t = useTranslations("SetupRequired");
   const isExpired = type === "expired";
+  const router = useRouter();
+  const pathname = usePathname();
   const openSetupPage = () => {
-    const locale = window.location.pathname.match(/^\/(en|id)(\/|$)/)?.[1];
-    window.location.href = `${locale ? `/${locale}` : ""}/setup`;
+    const locale = pathname.match(/^\/(en|id)(\/|$)/)?.[1];
+    router.push(`${locale ? `/${locale}` : ""}/setup`);
   };
 
   const containerVariants = {
