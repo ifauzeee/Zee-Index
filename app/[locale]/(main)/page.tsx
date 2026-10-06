@@ -28,7 +28,8 @@ export default async function Home() {
     getTopDownloads().catch(() => []),
     auth(),
   ]);
-  const isGuest = session?.user?.isGuest === true;
+  const isGuest =
+    session?.user?.isGuest === true || session?.user?.role === "GUEST";
 
   const [isProtected, isPrivateFolder] = await Promise.all([
     import("@/lib/auth").then((m) => m.isProtected),
