@@ -162,8 +162,8 @@ importers:
         specifier: ^19.2.3
         version: 19.2.3(react@19.2.3)
       react-easy-crop:
-        specifier: ^5.5.5
-        version: 5.5.5(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: ^6.2.3
+        version: 6.2.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.2.14)(react@19.2.3)
@@ -5429,8 +5429,8 @@ packages:
     peerDependencies:
       react: ^19.2.3
 
-  react-easy-crop@5.5.5:
-    resolution: {integrity: sha512-aRiY8CnsHir4cmoPaXbZW0Hpmy0Wd+7mxZbALx/+rxvAIIy0hesK48hCBjorAt9Kl9dA8IskWnhOq3ky44coLA==}
+  react-easy-crop@6.2.3:
+    resolution: {integrity: sha512-ebimG3OGlzizjxEZ77Cj9CVLcg5vDZ6QVz8ud1rx4WmsCDWHIROEhgMi0GpJ/jKAuwHrH0M+QZUK4hyvxbYhOA==}
     peerDependencies:
       react: '>=16.4.0'
       react-dom: '>=16.4.0'
@@ -12554,12 +12554,11 @@ snapshots:
       react: 19.2.3
       scheduler: 0.27.0
 
-  react-easy-crop@5.5.5(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+  react-easy-crop@6.2.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       normalize-wheel: 1.0.1
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
-      tslib: 2.8.1
 
   react-is@16.13.1: {}
 
