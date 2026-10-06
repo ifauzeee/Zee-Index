@@ -8,6 +8,7 @@ import {
   filterAccessibleDiscovery,
   getRecentlyAdded,
   getTopDownloads,
+  resolveBlockedIds,
 } from "@/lib/discovery";
 import { logger } from "@/lib/logger";
 import { getActiveProvider } from "@/lib/storage/providers";
@@ -43,31 +44,24 @@ export default async function Home() {
   });
 
   const isAdmin = session?.user?.role === "ADMIN";
-  const blockedItemIds = new Set<string>();
-  if (!isGuest && !isAdmin) {
-    const accessCache = new Map<string, boolean>();
-    const candidateIds = Array.from(
-      new Set<string>([
-        ...recent.map((file) => file.id),
-        ...top.map((item) => item.itemId),
-      ]),
-    );
-    await Promise.all(
-      candidateIds.map(async (id) => {
-        const restricted = await isAccessRestricted(
-          id,
-          [],
-          session?.user?.email,
-          0,
-          20,
-          null,
-          new Set(),
-          accessCache,
+  const accessCache = new Map<string, boolean>();
+  const blockedItemIds =
+    isGuest || isAdmin
+      ? new Set<string>()
+      : await resolveBlockedIds(
+          [...recent.map((file) => file.id), ...top.map((item) => item.itemId)],
+          (id) =>
+            isAccessRestricted(
+              id,
+              [],
+              session?.user?.email,
+              0,
+              20,
+              null,
+              new Set(),
+              accessCache,
+            ),
         );
-        if (restricted) blockedItemIds.add(id);
-      }),
-    );
-  }
 
   const discovery = filterAccessibleDiscovery(
     recent,

@@ -3,6 +3,8 @@ import { auth } from "@/auth";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getIcon } from "@/lib/utils";
 import { getWatchProgressList } from "@/lib/watch-progress";
+import { resolveBlockedIds } from "@/lib/discovery";
+import { isAccessRestricted } from "@/lib/securityUtils";
 
 function createSlug(name: string) {
   return encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
@@ -11,10 +13,35 @@ function createSlug(name: string) {
 export default async function ContinueWatching() {
   const session = await auth();
   const email = session?.user?.email;
-  if (!email || session?.user?.isGuest) return null;
+  if (!email || session?.user?.isGuest || session?.user?.role === "GUEST") {
+    return null;
+  }
 
   const list = await getWatchProgressList(email).catch(() => []);
   if (list.length === 0) return null;
+
+  // Hide history entries the viewer can no longer access (for example a folder
+  // that became protected after the file was watched).
+  const accessCache = new Map<string, boolean>();
+  const blocked =
+    session?.user?.role === "ADMIN"
+      ? new Set<string>()
+      : await resolveBlockedIds(
+          list.map((item) => item.fileId),
+          (id) =>
+            isAccessRestricted(
+              id,
+              [],
+              email,
+              0,
+              20,
+              null,
+              new Set(),
+              accessCache,
+            ),
+        );
+  const visible = list.filter((item) => !blocked.has(item.fileId));
+  if (visible.length === 0) return null;
 
   const locale = await getLocale();
   const t = await getTranslations("Discovery");
@@ -25,7 +52,7 @@ export default async function ContinueWatching() {
         {t("continueWatching")}
       </h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-        {list.map((item) => {
+        {visible.map((item) => {
           const Icon = getIcon(item.mimeType || "video/mp4");
           const href = item.folderId
             ? `/${locale}/folder/${encodeURIComponent(item.folderId)}/file/${encodeURIComponent(item.fileId)}/${createSlug(item.fileName)}`

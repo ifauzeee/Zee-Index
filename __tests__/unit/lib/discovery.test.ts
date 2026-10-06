@@ -13,6 +13,7 @@ import {
   filterAccessibleDiscovery,
   getRecentlyAdded,
   getTopDownloads,
+  resolveBlockedIds,
 } from "@/lib/discovery";
 
 describe("lib/discovery", () => {
@@ -139,5 +140,16 @@ describe("filterAccessibleDiscovery", () => {
     const result = filterAccessibleDiscovery(recent, top, new Set(), true);
     expect(result.recent).toEqual([]);
     expect(result.top).toEqual([]);
+  });
+});
+
+describe("resolveBlockedIds", () => {
+  it("dedupes ids and returns only restricted ones", async () => {
+    const isRestricted = vi.fn(async (id: string) => id === "b");
+
+    const blocked = await resolveBlockedIds(["a", "a", "b", "c"], isRestricted);
+
+    expect(Array.from(blocked)).toEqual(["b"]);
+    expect(isRestricted).toHaveBeenCalledTimes(3);
   });
 });

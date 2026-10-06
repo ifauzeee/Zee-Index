@@ -70,6 +70,26 @@ export async function getTopDownloads(
 }
 
 /**
+ * Resolves which ids are access-restricted by delegating to `isRestricted`
+ * (typically `isAccessRestricted`). Ids are deduped first so callers can pass
+ * every candidate id without triggering extra Drive lookups.
+ */
+export async function resolveBlockedIds(
+  ids: readonly string[],
+  isRestricted: (id: string) => Promise<boolean>,
+): Promise<Set<string>> {
+  const blocked = new Set<string>();
+  await Promise.all(
+    Array.from(new Set(ids)).map(async (id) => {
+      if (await isRestricted(id)) {
+        blocked.add(id);
+      }
+    }),
+  );
+  return blocked;
+}
+
+/**
  * Keeps only discovery entries the viewer is allowed to see. `blockedItemIds`
  * must be resolved by the caller via `isAccessRestricted`, so files nested in a
  * protected/private folder are excluded too (matching on folder ids alone is
