@@ -68,3 +68,27 @@ export async function getTopDownloads(
     count: g._count._all,
   }));
 }
+
+/**
+ * Keeps only discovery entries the viewer is allowed to see. `blockedItemIds`
+ * must be resolved by the caller via `isAccessRestricted`, so files nested in a
+ * protected/private folder are excluded too (matching on folder ids alone is
+ * shallow and leaks nested content). Guests always get empty sections.
+ */
+export function filterAccessibleDiscovery(
+  recent: DiscoveryFile[],
+  top: DiscoveryTopDownload[],
+  blockedItemIds: ReadonlySet<string>,
+  isGuest: boolean,
+): { recent: DiscoveryFile[]; top: DiscoveryTopDownload[] } {
+  if (isGuest) {
+    return { recent: [], top: [] };
+  }
+
+  return {
+    recent: recent.filter((file) => !blockedItemIds.has(file.id)),
+    top: top.filter(
+      (item) => !!item.folderId && !blockedItemIds.has(item.itemId),
+    ),
+  };
+}

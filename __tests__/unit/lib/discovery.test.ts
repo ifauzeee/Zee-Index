@@ -9,7 +9,11 @@ const { mockDb } = vi.hoisted(() => ({
 
 vi.mock("@/lib/db", () => ({ db: mockDb }));
 
-import { getRecentlyAdded, getTopDownloads } from "@/lib/discovery";
+import {
+  filterAccessibleDiscovery,
+  getRecentlyAdded,
+  getTopDownloads,
+} from "@/lib/discovery";
 
 describe("lib/discovery", () => {
   beforeEach(() => {
@@ -69,5 +73,71 @@ describe("lib/discovery", () => {
         where: expect.objectContaining({ type: "file:download" }),
       }),
     );
+  });
+});
+
+describe("filterAccessibleDiscovery", () => {
+  const recent = [
+    {
+      id: "a",
+      name: "a.mp4",
+      mimeType: "video/mp4",
+      folderId: "open",
+      modifiedTime: new Date(),
+    },
+    {
+      id: "b",
+      name: "b.mp4",
+      mimeType: "video/mp4",
+      folderId: "sub-of-locked",
+      modifiedTime: new Date(),
+    },
+    {
+      id: "c",
+      name: "c.mp4",
+      mimeType: "video/mp4",
+      folderId: "secret",
+      modifiedTime: new Date(),
+    },
+  ];
+  const top = [
+    {
+      itemId: "x",
+      itemName: "x.mp4",
+      itemType: "video/mp4",
+      folderId: "open",
+      count: 5,
+    },
+    {
+      itemId: "y",
+      itemName: "y.mp4",
+      itemType: "video/mp4",
+      folderId: "sub-of-locked",
+      count: 9,
+    },
+    {
+      itemId: "z",
+      itemName: "z.mp4",
+      itemType: "video/mp4",
+      folderId: null,
+      count: 2,
+    },
+  ];
+
+  it("drops flagged items and unresolved download links", () => {
+    const result = filterAccessibleDiscovery(
+      recent,
+      top,
+      new Set(["b", "c", "y"]),
+      false,
+    );
+    expect(result.recent.map((f) => f.id)).toEqual(["a"]);
+    expect(result.top.map((f) => f.itemId)).toEqual(["x"]);
+  });
+
+  it("returns nothing for a guest session", () => {
+    const result = filterAccessibleDiscovery(recent, top, new Set(), true);
+    expect(result.recent).toEqual([]);
+    expect(result.top).toEqual([]);
   });
 });

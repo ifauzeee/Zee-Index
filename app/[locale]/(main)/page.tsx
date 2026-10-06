@@ -4,9 +4,18 @@ import ContinueWatching from "@/components/discovery/ContinueWatching";
 import { listAllFiles } from "@/lib/storage";
 import { ZeeFile } from "@/types/storage";
 import { getRootFolderId } from "@/lib/config";
-import { getRecentlyAdded, getTopDownloads } from "@/lib/discovery";
+import {
+  filterAccessibleDiscovery,
+  getRecentlyAdded,
+  getTopDownloads,
+} from "@/lib/discovery";
 import { logger } from "@/lib/logger";
 import { getActiveProvider } from "@/lib/storage/providers";
+import { auth } from "@/auth";
+import {
+  getProtectedFolderIdsCached,
+  isAccessRestricted,
+} from "@/lib/securityUtils";
 
 export const dynamic = "force-dynamic";
 
@@ -14,16 +23,57 @@ type ProtectedFolderMap = Record<string, boolean>;
 
 export default async function Home() {
   const rootId = (await getRootFolderId()) || "virtual-root";
-  const [recent, top] = await Promise.all([
+  const [recent, top, session] = await Promise.all([
     getRecentlyAdded().catch(() => []),
     getTopDownloads().catch(() => []),
+    auth(),
   ]);
+  const isGuest = session?.user?.isGuest === true;
 
-  const [isProtected, isPrivateFolder, db] = await Promise.all([
+  const [isProtected, isPrivateFolder] = await Promise.all([
     import("@/lib/auth").then((m) => m.isProtected),
     import("@/lib/auth").then((m) => m.isPrivateFolder),
-    import("@/lib/db").then((m) => m.db),
   ]);
+
+  const protectedFolderIds = await getProtectedFolderIdsCached();
+  const protectedFolderMap: ProtectedFolderMap = {};
+  protectedFolderIds.forEach((id) => {
+    protectedFolderMap[id] = true;
+  });
+
+  const isAdmin = session?.user?.role === "ADMIN";
+  const blockedItemIds = new Set<string>();
+  if (!isGuest && !isAdmin) {
+    const accessCache = new Map<string, boolean>();
+    const candidateIds = Array.from(
+      new Set<string>([
+        ...recent.map((file) => file.id),
+        ...top.map((item) => item.itemId),
+      ]),
+    );
+    await Promise.all(
+      candidateIds.map(async (id) => {
+        const restricted = await isAccessRestricted(
+          id,
+          [],
+          session?.user?.email,
+          0,
+          20,
+          null,
+          new Set(),
+          accessCache,
+        );
+        if (restricted) blockedItemIds.add(id);
+      }),
+    );
+  }
+
+  const discovery = filterAccessibleDiscovery(
+    recent,
+    top,
+    blockedItemIds,
+    isGuest,
+  );
 
   const provider = getActiveProvider();
   const hasLocalStorage =
@@ -42,26 +92,15 @@ export default async function Home() {
 
   if (!isLocked) {
     try {
-      const [data, allProtectedFolders] = await Promise.all([
-        listAllFiles({
-          folderId: initialFolderId,
-          pageToken: null,
-          pageSize: 50,
-          useCache: true,
-        }),
-        db.protectedFolder
-          .findMany({ select: { folderId: true } })
-          .then((res: { folderId: string }[]) => {
-            const map: ProtectedFolderMap = {};
-            res.forEach((entry) => {
-              map[entry.folderId] = true;
-            });
-            return map;
-          }),
-      ]);
+      const data = await listAllFiles({
+        folderId: initialFolderId,
+        pageToken: null,
+        pageSize: 50,
+        useCache: true,
+      });
 
       initialFiles = data.files.map((f) => {
-        const isProt = !!allProtectedFolders[f.id];
+        const isProt = !!protectedFolderMap[f.id];
         const isPriv = isPrivateFolder(f.id);
         return {
           ...f,
@@ -78,7 +117,7 @@ export default async function Home() {
   return (
     <>
       <ContinueWatching />
-      <DiscoverySections recent={recent} top={top} />
+      <DiscoverySections recent={discovery.recent} top={discovery.top} />
       <FileBrowser
         initialFolderId={initialFolderId}
         initialFiles={initialFiles}
