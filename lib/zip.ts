@@ -67,7 +67,13 @@ export async function createFolderZipStream(
     }
   }
 
-  await zip.finalize();
+  // `finalize()` only resolves once the archive stream is consumed. Awaiting it
+  // here deadlocks: the HTTP response body has no reader yet, so the internal
+  // module stalls on backpressure and never emits `end`. Start finalizing and
+  // let the consumer drive; surface async errors on the stream instead.
+  zip.finalize().catch((err: unknown) => {
+    zip.destroy(err instanceof Error ? err : new Error(String(err)));
+  });
 
   return { stream: zip, stats };
 }
