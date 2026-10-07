@@ -5,6 +5,8 @@ import { listAllFiles } from "@/lib/storage";
 import { ZeeFile } from "@/types/storage";
 import { getRootFolderId } from "@/lib/config";
 import {
+  DISCOVERY_LIMIT,
+  DISCOVERY_SCAN_LIMIT,
   filterAccessibleDiscovery,
   getRecentlyAdded,
   getTopDownloads,
@@ -25,8 +27,8 @@ type ProtectedFolderMap = Record<string, boolean>;
 export default async function Home() {
   const rootId = (await getRootFolderId()) || "virtual-root";
   const [recent, top, session] = await Promise.all([
-    getRecentlyAdded().catch(() => []),
-    getTopDownloads().catch(() => []),
+    getRecentlyAdded(DISCOVERY_SCAN_LIMIT).catch(() => []),
+    getTopDownloads(DISCOVERY_SCAN_LIMIT).catch(() => []),
     auth(),
   ]);
   const isGuest =
@@ -68,6 +70,7 @@ export default async function Home() {
     top,
     blockedItemIds,
     isGuest,
+    DISCOVERY_LIMIT,
   );
 
   const provider = getActiveProvider();

@@ -131,13 +131,40 @@ describe("filterAccessibleDiscovery", () => {
       top,
       new Set(["b", "c", "y"]),
       false,
+      10,
     );
     expect(result.recent.map((f) => f.id)).toEqual(["a"]);
     expect(result.top.map((f) => f.itemId)).toEqual(["x"]);
   });
 
+  it("caps results after filtering so blocked items leave no gaps", () => {
+    const files = Array.from({ length: 12 }, (_, index) => ({
+      id: `f${index}`,
+      name: `f${index}.mp4`,
+      mimeType: "video/mp4",
+      folderId: "open",
+      modifiedTime: new Date(),
+    }));
+
+    const result = filterAccessibleDiscovery(
+      files,
+      [],
+      new Set(["f0", "f1"]),
+      false,
+      5,
+    );
+
+    expect(result.recent.map((f) => f.id)).toEqual([
+      "f2",
+      "f3",
+      "f4",
+      "f5",
+      "f6",
+    ]);
+  });
+
   it("returns nothing for a guest session", () => {
-    const result = filterAccessibleDiscovery(recent, top, new Set(), true);
+    const result = filterAccessibleDiscovery(recent, top, new Set(), true, 10);
     expect(result.recent).toEqual([]);
     expect(result.top).toEqual([]);
   });

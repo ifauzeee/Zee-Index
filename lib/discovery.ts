@@ -16,6 +16,11 @@ export interface DiscoveryTopDownload {
   count: number;
 }
 
+/** Number of items each discovery section renders. */
+export const DISCOVERY_LIMIT = 10;
+/** Over-fetch so restricted entries can be dropped without leaving gaps. */
+export const DISCOVERY_SCAN_LIMIT = DISCOVERY_LIMIT * 3;
+
 export async function getRecentlyAdded(limit = 10): Promise<DiscoveryFile[]> {
   return db.fileIndex.findMany({
     orderBy: { modifiedTime: "desc" },
@@ -93,22 +98,26 @@ export async function resolveBlockedIds(
  * Keeps only discovery entries the viewer is allowed to see. `blockedItemIds`
  * must be resolved by the caller via `isAccessRestricted`, so files nested in a
  * protected/private folder are excluded too (matching on folder ids alone is
- * shallow and leaks nested content). Guests always get empty sections.
+ * shallow and leaks nested content). Guests always get empty sections. Results
+ * are capped to `limit` after filtering so dropped entries leave no gaps.
  */
 export function filterAccessibleDiscovery(
   recent: DiscoveryFile[],
   top: DiscoveryTopDownload[],
   blockedItemIds: ReadonlySet<string>,
   isGuest: boolean,
+  limit: number = DISCOVERY_LIMIT,
 ): { recent: DiscoveryFile[]; top: DiscoveryTopDownload[] } {
   if (isGuest) {
     return { recent: [], top: [] };
   }
 
   return {
-    recent: recent.filter((file) => !blockedItemIds.has(file.id)),
-    top: top.filter(
-      (item) => !!item.folderId && !blockedItemIds.has(item.itemId),
-    ),
+    recent: recent
+      .filter((file) => !blockedItemIds.has(file.id))
+      .slice(0, limit),
+    top: top
+      .filter((item) => !!item.folderId && !blockedItemIds.has(item.itemId))
+      .slice(0, limit),
   };
 }
