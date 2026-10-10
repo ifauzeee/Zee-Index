@@ -347,16 +347,15 @@ export default async function middleware(request: NextRequest) {
 
   const shareToken = request.nextUrl.searchParams.get("share_token");
   if (shareToken) {
-    return applyCsp(
+    const shareResponse = await validateShareToken(
       request,
-      await validateShareToken(
-        request,
-        shareToken,
-        pathname,
-        isApi,
-        intlMiddleware,
-      ),
+      shareToken,
+      pathname,
+      isApi,
     );
+    if (shareResponse) {
+      return applyCsp(request, shareResponse);
+    }
   }
 
   if (!isAuthenticated && !isPublicRoute(pathnameWithoutLocale)) {

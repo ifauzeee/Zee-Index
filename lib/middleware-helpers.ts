@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { checkAuth, handleAuthRedirect } from "@/lib/auth-check";
+import { REDIS_KEYS } from "@/lib/constants";
 import { getRootFolderId } from "@/lib/config";
 import { logger } from "@/lib/logger";
 import { kv } from "@/lib/kv";
@@ -62,8 +63,7 @@ export async function validateShareToken(
   shareToken: string,
   pathname: string,
   isApi: boolean,
-  intlMiddleware: IntlMiddleware,
-) {
+): Promise<Response | null> {
   try {
     const shareSecretKey = process.env.SHARE_SECRET_KEY;
     if (!shareSecretKey || shareSecretKey.length < 32) {
@@ -72,6 +72,11 @@ export async function validateShareToken(
 
     const secret = new TextEncoder().encode(shareSecretKey);
     const { payload } = await jwtVerify(shareToken, secret);
+
+    const isBlocked = await kv.get(`${REDIS_KEYS.SHARE_BLOCKED}${payload.jti}`);
+    if (isBlocked) {
+      throw new Error("share link blocked");
+    }
 
     const liveConfig = await kv.get<{ loginRequired: boolean }>(
       `share:link:${payload.jti}`,
@@ -90,7 +95,9 @@ export async function validateShareToken(
       }
     }
 
-    return isApi ? NextResponse.next() : intlMiddleware(request);
+    // A valid share token grants nothing on its own: return null so the
+    // request continues through the normal auth, 2FA, and folder checks.
+    return null;
   } catch {
     if (isApi) {
       return NextResponse.json({ error: "ShareLinkExpired" }, { status: 401 });
