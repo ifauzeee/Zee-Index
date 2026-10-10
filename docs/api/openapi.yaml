@@ -8,7 +8,7 @@ info:
     ## Authentication
     Most endpoints support one of:
     - **sessionAuth** — NextAuth.js JWT session cookie (`next-auth.session-token`)
-    - **apiKeyAuth** — `Authorization: Bearer <zk_xxx>` header (see API Keys section)
+    - **apiKeyAuth** — `Authorization: Bearer <64-hex>` header (see API Keys section)
     - **shareToken** — `share_token` query parameter for shared links
     - **accessToken** — `access_token` query parameter for protected folders
 
@@ -996,8 +996,8 @@ components:
     apiKeyAuth:
       type: http
       scheme: bearer
-      bearerFormat: zk_
-      description: API key with bearer format (zk_ prefix). Create one from the admin panel.
+      bearerFormat: 64-hex
+      description: API key in bearer format (64 hex characters, no prefix). Create one from the admin panel.
 
   schemas:
     DriveFile:
@@ -1268,7 +1268,7 @@ components:
           description: Human-friendly label for the key
         keyPrefix:
           type: string
-          description: First 8 characters of the raw key (zk_abc123...)
+          description: First 8 characters of the raw key (e.g. 4f2a1b0c...)
         permissions:
           type: array
           items:

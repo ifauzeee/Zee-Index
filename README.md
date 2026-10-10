@@ -94,17 +94,17 @@
 
 ### Access Control
 
-| Feature               | Description                                                                 |
-| --------------------- | --------------------------------------------------------------------------- |
-| **Role-based access** | Admin / Editor / User / Guest                                               |
-| **Folder passwords**  | Recursive folder protection, bcrypt-hashed                                  |
-| **Two-factor auth**   | Optional TOTP 2FA with QR setup                                             |
-| **Share links**       | JWT-signed, with expiry, max uses, download toggle, watermark               |
-| **Direct download**   | Share links that start the download without the preview page                |
-| **Access requests**   | Users request access to protected folders; admin approves                   |
-| **Rate limiting**     | Per-endpoint tiers for API, admin, auth, and download                       |
-| **API keys**          | Bearer `zk_...` keys with granular `files:read` / `admin:write` permissions |
-| **Security headers**  | CSP (nonce-based), HSTS, X-Frame-Options, Referrer/Feature Policy           |
+| Feature               | Description                                                               |
+| --------------------- | ------------------------------------------------------------------------- |
+| **Role-based access** | Admin / Editor / User / Guest                                             |
+| **Folder passwords**  | Recursive folder protection, bcrypt-hashed                                |
+| **Two-factor auth**   | Optional TOTP 2FA with QR setup                                           |
+| **Share links**       | JWT-signed, with expiry, max uses, download toggle, watermark             |
+| **Direct download**   | Share links that start the download without the preview page              |
+| **Access requests**   | Users request access to protected folders; admin approves                 |
+| **Rate limiting**     | Per-endpoint tiers for API, admin, auth, and download                     |
+| **API keys**          | Bearer 64-hex keys with granular `files:read` / `admin:write` permissions |
+| **Security headers**  | CSP (nonce-based), HSTS, X-Frame-Options, Referrer/Feature Policy         |
 
 ### Admin Dashboard
 
