@@ -11,7 +11,6 @@ import { isProtected } from "@/lib/auth";
 import { validateShareToken } from "@/lib/auth";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { searchIndexedFiles } from "@/lib/search-index";
-import { escapeDriveQueryValue } from "@/lib/drive/query";
 import { jwtVerify } from "jose";
 
 import { getErrorMessage } from "@/lib/errors";
@@ -87,7 +86,6 @@ export const GET = createPublicRoute(
     }
 
     const sanitizedSearchTerm = sanitizeString(rawSearchTerm);
-    const searchTerm = escapeDriveQueryValue(sanitizedSearchTerm);
 
     try {
       const accessToken = await getAccessToken();
@@ -103,7 +101,7 @@ export const GET = createPublicRoute(
         searchFilesInFolder(
           accessToken,
           folderId,
-          searchTerm,
+          sanitizedSearchTerm,
           queryField,
           mimeQuery,
           dateQuery,

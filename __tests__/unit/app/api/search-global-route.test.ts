@@ -269,4 +269,19 @@ describe("app/api/search/global route", () => {
       error: "Failed to perform global search.",
     });
   });
+
+  it("passes the raw term to searchFilesInFolder so quoting is escaped once", async () => {
+    mockSearchFilesInFolder.mockResolvedValue([]);
+
+    await GET(createRequest({ q: "it's" }));
+
+    expect(mockSearchFilesInFolder).toHaveBeenCalledWith(
+      "mock-access-token",
+      expect.any(String),
+      "it's",
+      "name",
+      "",
+      "",
+    );
+  });
 });
