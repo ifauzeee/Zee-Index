@@ -3,6 +3,15 @@ import { getFileDetailsFromDrive } from "@/lib/drive";
 import { hasUserAccess } from "@/lib/auth";
 import { getPrivateFolderIds } from "@/lib/utils";
 import { logger } from "@/lib/logger";
+import { memoryCache } from "@/lib/memory-cache";
+import { getRootFolderId } from "@/lib/config";
+import { kv } from "@/lib/kv";
+import {
+  MANUAL_DRIVES_KEY,
+  parseManualDriveRecords,
+  parseManualDrivesFromEnv,
+} from "@/lib/manual-drives";
+import { isProviderId } from "@/lib/storage/providers";
 
 let cachedProtectedIds: string[] | null = null;
 let cachedRestrictedIds: string[] | null = null;
@@ -15,6 +24,74 @@ export function __resetCache() {
   cachedRestrictedIds = null;
   lastProtectedUpdate = 0;
   lastRestrictedUpdate = 0;
+}
+
+const ALLOWED_ROOTS_CACHE_KEY_PREFIX = "scope:inroot:";
+const ALLOWED_ROOTS_CACHE_TTL_MS = 10 * 60 * 1000;
+const MAX_PARENT_DEPTH = 20;
+
+/**
+ * Every folder a non-admin visitor may reach: the configured root, plus every
+ * manual/shared drive the deployment has registered. Anything outside this set
+ * is hidden from users who are not granted access explicitly.
+ */
+async function getAllowedRootIds(): Promise<Set<string>> {
+  const roots = new Set<string>();
+
+  const rootFolderId = await getRootFolderId();
+  if (rootFolderId) roots.add(rootFolderId);
+
+  for (const drive of parseManualDrivesFromEnv(
+    process.env.NEXT_PUBLIC_MANUAL_DRIVES,
+  )) {
+    roots.add(drive.id);
+  }
+
+  for (const drive of parseManualDriveRecords(
+    await kv.get(MANUAL_DRIVES_KEY),
+  )) {
+    roots.add(drive.id);
+  }
+
+  return roots;
+}
+
+/**
+ * True when `fileId` sits inside (or is) one of the allowed roots. The ancestor
+ * chain is walked through Drive metadata because a folder's id alone says
+ * nothing about where it lives.
+ */
+async function isWithinAllowedRoots(fileId: string): Promise<boolean> {
+  const cached = memoryCache.get<boolean>(
+    `${ALLOWED_ROOTS_CACHE_KEY_PREFIX}${fileId}`,
+  );
+  if (cached !== null) return cached;
+
+  const computeScoped = async (): Promise<boolean> => {
+    const roots = await getAllowedRootIds();
+    let currentId: string | undefined = fileId;
+
+    for (let level = 0; level < MAX_PARENT_DEPTH; level++) {
+      if (!currentId) return false;
+      if (roots.has(currentId)) return true;
+
+      const file = await getFileDetailsFromDrive(currentId);
+      const parents = file?.parents;
+      if (!file || !parents || parents.length === 0) return false;
+
+      currentId = parents[0];
+    }
+
+    return false;
+  };
+
+  const allowed = await computeScoped();
+  memoryCache.set(
+    `${ALLOWED_ROOTS_CACHE_KEY_PREFIX}${fileId}`,
+    allowed,
+    ALLOWED_ROOTS_CACHE_TTL_MS,
+  );
+  return allowed;
 }
 
 export async function getProtectedFolderIdsCached(): Promise<string[]> {
@@ -90,6 +167,13 @@ export async function isAccessRestricted(
     config.localStorageAuthEnabled ||
     allRestrictedIds.includes("local-storage:");
 
+  const isScopedDriveId =
+    !isLocalStorage && fileId !== "virtual-root" && !isProviderId(fileId);
+
+  if (isScopedDriveId && !(await isWithinAllowedRoots(fileId))) {
+    return true;
+  }
+
   if (allRestrictedIds.length === 0 && !isLocalRestricted) return false;
 
   async function checkAccess(id: string) {
@@ -128,6 +212,7 @@ export async function isAccessRestricted(
   }
 
   try {
+    const allowedRootIds = await getAllowedRootIds();
     const file = await getFileDetailsFromDrive(fileId);
     if (!file || !file.parents || file.parents.length === 0) return false;
 
@@ -137,7 +222,7 @@ export async function isAccessRestricted(
         if (!access) return true;
       }
 
-      if (parentId === process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
+      if (allowedRootIds.has(parentId)) {
         continue;
       }
 
