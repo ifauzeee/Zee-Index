@@ -12,6 +12,7 @@ import {
   parseManualDrivesFromEnv,
 } from "@/lib/manual-drives";
 import { isProviderId } from "@/lib/storage/providers";
+import { normalizeLocalStorageId } from "@/lib/storage/local";
 
 let cachedProtectedIds: string[] | null = null;
 let cachedRestrictedIds: string[] | null = null;
@@ -196,6 +197,12 @@ export async function isAccessRestricted(
   }
 
   if (isLocalStorage) {
+    const normalizedId = normalizeLocalStorageId(fileId);
+    if (normalizedId === null) {
+      return true;
+    }
+    fileId = normalizedId;
+
     if (isLocalRestricted) {
       const access = await checkAccess("local-storage:");
       if (!access) return true;

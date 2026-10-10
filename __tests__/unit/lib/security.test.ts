@@ -127,6 +127,29 @@ describe("lib/securityUtils/isAccessRestricted", () => {
     expect(result).toBe(true);
   });
 
+  it("blocks a local-storage id that escapes a protected folder via ..", async () => {
+    (db.protectedFolder.findMany as any).mockResolvedValue([
+      { folderId: "local-storage:secret" },
+    ]);
+
+    // The raw id does not name the protected folder, but its canonical form does.
+    const result = await isAccessRestricted(
+      "local-storage:public/../secret/a.txt",
+    );
+
+    expect(result).toBe(true);
+  });
+
+  it("rejects a local-storage id that escapes the root entirely", async () => {
+    (db.protectedFolder.findMany as any).mockResolvedValue([
+      { folderId: PROTECTED_ID },
+    ]);
+
+    const result = await isAccessRestricted("local-storage:../../etc/passwd");
+
+    expect(result).toBe(true);
+  });
+
   it("recursively checks parents for protection", async () => {
     (db.protectedFolder.findMany as any).mockResolvedValue([
       { folderId: PROTECTED_ID },

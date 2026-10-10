@@ -20,6 +20,26 @@ export function isPathInsideLocalRoot(targetPath: string): boolean {
   );
 }
 
+const LOCAL_STORAGE_PREFIX = "local-storage:";
+
+/**
+ * Rewrite a local-storage id into a canonical form so `..` segments cannot be
+ * used to reference a path outside the intended folder. Returns null when the
+ * id escapes the local storage root or contains a NUL byte.
+ */
+export function normalizeLocalStorageId(id: string): string | null {
+  if (!id.startsWith(LOCAL_STORAGE_PREFIX)) return null;
+
+  const raw = id.slice(LOCAL_STORAGE_PREFIX.length).replace(/\\/g, "/");
+  let normalized = path.posix.normalize(raw);
+  normalized = normalized.replace(/^\/+|\/+$/g, "");
+  if (normalized === ".") normalized = "";
+
+  if (normalized.startsWith("..") || id.includes("\0")) return null;
+
+  return `${LOCAL_STORAGE_PREFIX}${normalized}`;
+}
+
 function resolveLocalTargetPath(filePath: string): string {
   const normalizedFilePath = filePath.startsWith("/")
     ? filePath.substring(1)
