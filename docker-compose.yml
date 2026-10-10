@@ -54,7 +54,7 @@
         BUILDKIT_INLINE_CACHE: 1
     restart: always
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     env_file:
       - .env
     environment:

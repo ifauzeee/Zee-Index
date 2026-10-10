@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 import { db } from "@/lib/db";
 import { publishActivityEvent } from "@/lib/events/pipeline";
 import { cleanupOldActivityLogs } from "@/lib/activity-cleanup";
+import { getClientIp } from "@/lib/client-ip";
 
 export type ActivityType =
   | "UPLOAD"
@@ -304,16 +305,8 @@ async function getClientInfo(): Promise<{
 }> {
   try {
     const headersList = await headers();
-    const forwardedFor = headersList.get("x-forwarded-for");
-    const realIp = headersList.get("x-real-ip");
     const userAgent = headersList.get("user-agent") || "unknown";
-
-    let ipAddress = "unknown";
-    if (forwardedFor) {
-      ipAddress = forwardedFor.split(",")[0].trim();
-    } else if (realIp) {
-      ipAddress = realIp;
-    }
+    const ipAddress = getClientIp(headersList);
 
     return { ipAddress, userAgent };
   } catch {
