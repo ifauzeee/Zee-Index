@@ -7,7 +7,7 @@ info:
 
     ## Authentication
     Most endpoints support one of:
-    - **sessionAuth** — NextAuth.js JWT session cookie (`next-auth.session-token`)
+    - **sessionAuth** — NextAuth.js JWT session cookie (`authjs.session-token`)
     - **apiKeyAuth** — `Authorization: Bearer <64-hex>` header (see API Keys section)
     - **shareToken** — `share_token` query parameter for shared links
     - **accessToken** — `access_token` query parameter for protected folders
@@ -991,7 +991,7 @@ components:
     sessionAuth:
       type: apiKey
       in: cookie
-      name: next-auth.session-token
+      name: authjs.session-token
       description: NextAuth.js session cookie
     apiKeyAuth:
       type: http
