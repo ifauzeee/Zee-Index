@@ -73,6 +73,18 @@ describe("middleware public API paths", () => {
     expect(isPublicApiPath("/api/tags")).toBe(false);
     expect(isPublicApiPath("/api/admin/users")).toBe(false);
   });
+
+  it("matches public API paths exactly instead of by loose prefix", () => {
+    expect(isPublicApiPath("/api/files")).toBe(true);
+    expect(isPublicApiPath("/api/files/delete")).toBe(false);
+    expect(isPublicApiPath("/api/files/bulk-delete")).toBe(false);
+    expect(isPublicApiPath("/api/search")).toBe(true);
+    expect(isPublicApiPath("/api/search/global")).toBe(true);
+    expect(isPublicApiPath("/api/search/index")).toBe(false);
+    expect(isPublicApiPath("/api/filesX")).toBe(false);
+    expect(isPublicApiPath("/api/share/items/abc")).toBe(true);
+    expect(isPublicApiPath("/api/cron/storage-check")).toBe(true);
+  });
 });
 
 describe("middleware content security policy", () => {
