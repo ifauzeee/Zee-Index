@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/auth";
+import { getVerifiedSession } from "@/lib/verified-session";
 import { db } from "@/lib/db";
 import { mapDbActivityLog } from "@/lib/activityLogger";
 import type { ActivityLog } from "@/lib/activityLogger";
@@ -13,7 +13,7 @@ export interface DashboardData {
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
-  const session = await auth();
+  const session = await getVerifiedSession();
   const userEmail = session?.user?.email;
 
   const [activityLogs, storageDetails] = await Promise.all([

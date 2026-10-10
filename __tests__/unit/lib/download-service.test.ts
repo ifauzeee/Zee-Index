@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 
 const {
   mockAuth,
+  mockGetVerifiedSession,
   mockCheckRateLimit,
   mockJwtVerify,
   mockKvGet,
@@ -10,11 +11,16 @@ const {
   mockIsAccessRestricted,
 } = vi.hoisted(() => ({
   mockAuth: vi.fn(),
+  mockGetVerifiedSession: vi.fn(),
   mockCheckRateLimit: vi.fn(),
   mockJwtVerify: vi.fn(),
   mockKvGet: vi.fn(),
   mockFindUnique: vi.fn(),
   mockIsAccessRestricted: vi.fn(),
+}));
+
+vi.mock("@/lib/verified-session", () => ({
+  getVerifiedSession: mockGetVerifiedSession,
 }));
 
 vi.mock("@/auth", () => ({
@@ -60,7 +66,7 @@ describe("lib/services/download", () => {
     process.env.SHARE_SECRET_KEY =
       "test-share-secret-key-with-at-least-32-chars";
     process.env.NEXTAUTH_URL = "http://localhost:3000";
-    mockAuth.mockResolvedValue(null);
+    mockGetVerifiedSession.mockResolvedValue(null);
     mockCheckRateLimit.mockResolvedValue({ success: true });
     mockKvGet.mockResolvedValue(null);
     mockFindUnique.mockResolvedValue(null);
@@ -152,6 +158,26 @@ describe("lib/services/download", () => {
         error: ERROR_MESSAGES.ACCESS_DENIED,
         status: 403,
       });
+    });
+
+    it("does not grant admin bypass to a session pending 2FA", async () => {
+      // A pending-2FA admin session is downgraded to null by getVerifiedSession.
+      mockAuth.mockResolvedValue({
+        user: {
+          email: "admin@example.com",
+          role: "ADMIN",
+          twoFactorRequired: true,
+        },
+      });
+      mockGetVerifiedSession.mockResolvedValue(null);
+      mockIsAccessRestricted.mockResolvedValue(true);
+      const request = new NextRequest(
+        "http://localhost:3000/api/download?fileId=abc123",
+      );
+
+      const { error } = await validateDownloadRequest(request);
+
+      expect(error?.status).toBe(403);
     });
 
     it("allows restricted downloads when a valid folder token is supplied", async () => {

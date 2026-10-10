@@ -3,7 +3,7 @@ import type { ShareLink as DbShareLink } from "@prisma/client";
 import type { Session } from "next-auth";
 import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
-import { auth } from "@/auth";
+import { getVerifiedSession } from "@/lib/verified-session";
 import { db } from "@/lib/db";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { isAccessRestricted } from "@/lib/securityUtils";
@@ -77,7 +77,7 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
     };
   }
 
-  const session = await auth();
+  const session = await getVerifiedSession();
   let shareRecord: DbShareLink | undefined;
 
   if (shareToken) {
