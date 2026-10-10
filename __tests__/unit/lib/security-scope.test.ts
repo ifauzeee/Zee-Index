@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { isAccessRestricted } from "@/lib/securityUtils";
+import { isAccessRestricted, __resetCache } from "@/lib/securityUtils";
+import { memoryCache } from "@/lib/memory-cache";
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -77,6 +78,7 @@ function nestedBelowRoot(depth: number, leafId = "leaf") {
 describe("isAccessRestricted root scoping", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    __resetCache();
     process.env.NEXT_PUBLIC_ROOT_FOLDER_ID = ROOT_ID;
     process.env.NEXT_PUBLIC_MANUAL_DRIVES = "";
     delete process.env.NEXT_PUBLIC_MANUAL_DRIVES;
@@ -160,5 +162,66 @@ describe("isAccessRestricted root scoping", () => {
     driveTree({});
 
     expect(await isAccessRestricted("missing-file")).toBe(true);
+  });
+
+  it("blocks a protected folder referenced through a .. alias", async () => {
+    // The raw id does not name the protected folder, but its canonical form
+    // is exactly the protected folder (no filename segment below it).
+    (
+      db.protectedFolder.findMany as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([{ folderId: "local-storage:secret" }]);
+
+    expect(await isAccessRestricted("local-storage:public/../secret")).toBe(
+      true,
+    );
+  });
+
+  it("resolves allowed roots once per top-level check, not per parent", async () => {
+    // The parent walk recurses through several levels; re-reading the root
+    // config at every level multiplies KV reads during searches.
+    driveTree({
+      mid: { parents: [ROOT_ID] },
+      leaf: { parents: ["mid"] },
+    });
+
+    await isAccessRestricted("leaf");
+
+    expect(getRootFolderId).toHaveBeenCalledTimes(1);
+  });
+
+  it("resolves the root alias to the real root id", async () => {
+    // .env.example documents NEXT_PUBLIC_ROOT_FOLDER_ID=root; Drive parent
+    // ids are real ids, so the alias itself never matches a parent chain.
+    (getRootFolderId as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      "root",
+    );
+    (kv.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (key: string) =>
+        key === "drive:alias:root"
+          ? Promise.resolve("real-root-id")
+          : Promise.resolve(null),
+    );
+    driveTree({ below: { parents: ["real-root-id"] } });
+
+    expect(await isAccessRestricted("below")).toBe(false);
+  });
+
+  it("does not cache a failed Drive lookup as outside-the-root", async () => {
+    // A transient Drive error (e.g. 429) must not pin the file as outside
+    // the root for the full 10 minute cache TTL. The request itself still
+    // fails closed (hidden for that one request); only the caching changes.
+    (getFileDetailsFromDrive as unknown as ReturnType<typeof vi.fn>)
+      .mockRejectedValueOnce(new Error("drive 429"))
+      .mockImplementation((id: string) =>
+        Promise.resolve({ id, parents: [ROOT_ID] }),
+      );
+
+    await isAccessRestricted("flaky-file");
+    expect(memoryCache.get<boolean>("scope:inroot:flaky-file")).toBeNull();
+
+    // Once Drive recovers, the same file resolves as inside the root and
+    // only then is the positive result cached.
+    expect(await isAccessRestricted("flaky-file")).toBe(false);
+    expect(memoryCache.get<boolean>("scope:inroot:flaky-file")).toBe(true);
   });
 });

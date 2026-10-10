@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { getFileDetailsFromDrive } from "@/lib/drive";
+import { GOOGLE_DRIVE_API_BASE_URL } from "@/lib/constants";
 import { hasUserAccess } from "@/lib/auth";
 import { getPrivateFolderIds } from "@/lib/utils";
 import { logger } from "@/lib/logger";
@@ -30,17 +31,54 @@ export function __resetCache() {
 const ALLOWED_ROOTS_CACHE_KEY_PREFIX = "scope:inroot:";
 const ALLOWED_ROOTS_CACHE_TTL_MS = 10 * 60 * 1000;
 const MAX_PARENT_DEPTH = 20;
+const ROOT_ALIAS_CACHE_KEY = "drive:alias:";
+const ROOT_ALIAS_TTL_S = 3600;
 
 /**
- * Every folder a non-admin visitor may reach: the configured root, plus every
- * manual/shared drive the deployment has registered. Anything outside this set
- * is hidden from users who are not granted access explicitly.
+ * Resolve the `root` alias documented in .env.example to the Drive's real
+ * root folder id. Drive parent ids are real ids, so an alias left unresolved
+ * would never match a parent chain and hide everything from non-admins. The
+ * mapping is cached in KV with the same lifetime as folder-content caches.
+ */
+async function resolveRootAlias(rootId: string): Promise<string> {
+  if (rootId !== "root") return rootId;
+  const cacheKey = `${ROOT_ALIAS_CACHE_KEY}root`;
+  try {
+    const cached = await kv.get<string>(cacheKey);
+    if (cached) return cached;
+  } catch (e) {
+    logger.warn({ err: e }, "Failed to read root alias cache");
+  }
+
+  const { getAccessToken } = await import("@/lib/drive");
+  const accessToken = await getAccessToken();
+  const response = await fetch(
+    `${GOOGLE_DRIVE_API_BASE_URL}/files/root?fields=id&supportsAllDrives=true`,
+    { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" },
+  );
+  if (!response.ok) return rootId;
+  const data = (await response.json()) as { id?: string };
+  if (!data.id) return rootId;
+
+  try {
+    await kv.set(cacheKey, data.id, { ex: ROOT_ALIAS_TTL_S });
+  } catch (e) {
+    logger.warn({ err: e }, "Failed to cache root alias");
+  }
+  return data.id;
+}
+
+/**
+ * Every folder a non-admin visitor may reach: the configured root (with the
+ * `root` alias resolved to the real id), plus every manual/shared drive the
+ * deployment has registered. Anything outside this set is hidden from users
+ * who are not granted access explicitly.
  */
 async function getAllowedRootIds(): Promise<Set<string>> {
   const roots = new Set<string>();
 
   const rootFolderId = await getRootFolderId();
-  if (rootFolderId) roots.add(rootFolderId);
+  if (rootFolderId) roots.add(await resolveRootAlias(rootFolderId));
 
   for (const drive of parseManualDrivesFromEnv(
     process.env.NEXT_PUBLIC_MANUAL_DRIVES,
@@ -76,7 +114,15 @@ async function isWithinAllowedRoots(fileId: string): Promise<boolean> {
       if (!currentId) return false;
       if (roots.has(currentId)) return true;
 
-      const file = await getFileDetailsFromDrive(currentId);
+      let file: Awaited<ReturnType<typeof getFileDetailsFromDrive>>;
+      try {
+        file = await getFileDetailsFromDrive(currentId);
+      } catch (e) {
+        // A transient Drive error must not be remembered as "outside the
+        // root": that would hide public folders until the cache expires.
+        logger.warn({ err: e, fileId }, "Drive lookup failed during scoping");
+        throw e;
+      }
       const parents = file?.parents;
       if (!file || !parents || parents.length === 0) return false;
 
@@ -86,12 +132,23 @@ async function isWithinAllowedRoots(fileId: string): Promise<boolean> {
     return false;
   };
 
-  const allowed = await computeScoped();
-  memoryCache.set(
-    `${ALLOWED_ROOTS_CACHE_KEY_PREFIX}${fileId}`,
-    allowed,
-    ALLOWED_ROOTS_CACHE_TTL_MS,
-  );
+  let allowed: boolean;
+  try {
+    allowed = await computeScoped();
+  } catch {
+    // Fail closed for this request, but leave the result uncached so the
+    // next request retries the Drive lookup.
+    return true;
+  }
+  // Cache positive outcomes only; a "no" can be caused by a transient Drive
+  // failure and must not pin the file as restricted for the full TTL.
+  if (allowed) {
+    memoryCache.set(
+      `${ALLOWED_ROOTS_CACHE_KEY_PREFIX}${fileId}`,
+      allowed,
+      ALLOWED_ROOTS_CACHE_TTL_MS,
+    );
+  }
   return allowed;
 }
 
@@ -147,6 +204,7 @@ export async function isAccessRestricted(
   preFetchedRestrictedIds: string[] | null = null,
   visited: Set<string> = new Set(),
   accessCache: Map<string, boolean> = new Map(),
+  resolvedRoots?: Set<string>,
 ): Promise<boolean> {
   const isLocalStorage = fileId.startsWith("local-storage:");
   if (depth >= maxDepth) {
@@ -167,6 +225,18 @@ export async function isAccessRestricted(
   const isLocalRestricted =
     config.localStorageAuthEnabled ||
     allRestrictedIds.includes("local-storage:");
+
+  // Normalize before any comparison: a `..` alias can name a protected
+  // folder or a sibling subtree without its raw form containing the id.
+  if (isLocalStorage) {
+    const normalized = normalizeLocalStorageId(fileId);
+    if (normalized === null) return true;
+    fileId = normalized;
+  }
+
+  // Resolve the allowed roots once per top-level check and pass them down
+  // the recursion instead of re-reading config and KV at every level.
+  const allowedRootIds = resolvedRoots ?? (await getAllowedRootIds());
 
   const isScopedDriveId =
     !isLocalStorage && fileId !== "virtual-root" && !isProviderId(fileId);
@@ -197,12 +267,6 @@ export async function isAccessRestricted(
   }
 
   if (isLocalStorage) {
-    const normalizedId = normalizeLocalStorageId(fileId);
-    if (normalizedId === null) {
-      return true;
-    }
-    fileId = normalizedId;
-
     if (isLocalRestricted) {
       const access = await checkAccess("local-storage:");
       if (!access) return true;
@@ -219,7 +283,6 @@ export async function isAccessRestricted(
   }
 
   try {
-    const allowedRootIds = await getAllowedRootIds();
     const file = await getFileDetailsFromDrive(fileId);
     if (!file || !file.parents || file.parents.length === 0) return false;
 
@@ -242,6 +305,7 @@ export async function isAccessRestricted(
         allRestrictedIds,
         visited,
         accessCache,
+        allowedRootIds,
       );
       if (isParentRestricted) return true;
     }
