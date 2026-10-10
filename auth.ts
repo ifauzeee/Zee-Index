@@ -433,6 +433,7 @@ const authConfig: NextAuthConfig = {
         if (token.isGuest) {
           session.user.name = "Guest User";
         }
+        session.user.twoFactorRequired = !!token.twoFactorRequired;
       }
       return session;
     },
