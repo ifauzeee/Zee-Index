@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { isAccessRestricted, __resetCache } from "@/lib/securityUtils";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { isAccessRestricted, __resetCache } from "@/lib/securityUtils";
 import { memoryCache } from "@/lib/memory-cache";
 
 vi.mock("@/lib/db", () => ({
@@ -121,7 +123,31 @@ describe("isAccessRestricted root scoping", () => {
     const { leafId, nodes } = nestedBelowRoot(8);
     driveTree(nodes);
 
-    expect(await isAccessRestricted(leafId, [], null, 0, 20)).toBe(false);
+    expect(await isAccessRestricted(leafId)).toBe(false);
+  });
+
+  it("allows deep files by default, without an explicit maxDepth", async () => {
+    // An unrelated protected folder keeps the restricted-parent walk alive;
+    // with the old 5-level cap the leaf itself was hidden (fail-closed).
+    const { leafId, nodes } = nestedBelowRoot(8);
+    driveTree(nodes);
+    (
+      db.protectedFolder.findMany as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([{ folderId: "unrelated-folder" }]);
+
+    expect(await isAccessRestricted(leafId)).toBe(false);
+  });
+
+  it("restricts a file with a protected ancestor beyond 5 levels", async () => {
+    // leaf-1 is protected and sits 7 parent-steps above the leaf: the walk
+    // must reach it instead of tripping the depth cap first.
+    const { leafId, nodes } = nestedBelowRoot(8);
+    driveTree(nodes);
+    (
+      db.protectedFolder.findMany as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([{ folderId: "leaf-1" }]);
+
+    expect(await isAccessRestricted(leafId)).toBe(true);
   });
 
   it("allows a file inside a manual (shared) drive", async () => {
