@@ -54,7 +54,28 @@ export function isAllowedSetupRequestOrigin(request: Request): boolean {
 }
 
 export function escapeEnvValue(value: string): string {
-  return value.replace(/\\/g, "\\\\").replace(/\r/g, "").replace(/\n/g, "");
+  return value
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .replace(/\r/g, "")
+    .replace(/\n/g, "");
+}
+
+/** Rewrite or append one `KEY="value"` line in an .env document. */
+export function writeEnvValue(
+  envContent: string,
+  key: string,
+  value: string,
+): string {
+  const safeValue = escapeEnvValue(value);
+  // A replacer function is required: a string replacement would let `$&` and
+  // friends in the value expand to parts of the match.
+  const line = () => `${key}="${safeValue}"`;
+  const regex = new RegExp(`^${key}=.*$`, "m");
+
+  return regex.test(envContent)
+    ? envContent.replace(regex, line)
+    : `${envContent}\n${line()}`;
 }
 
 export function hasPersistedSetupConfig(envContent: string): boolean {
@@ -128,13 +149,7 @@ export const POST = createPublicRoute(
       }
 
       const updateEnv = (key: string, value: string) => {
-        const regex = new RegExp(`^${key}=.*$`, "m");
-        const safeValue = escapeEnvValue(value);
-        if (regex.test(envContent)) {
-          envContent = envContent.replace(regex, `${key}="${safeValue}"`);
-        } else {
-          envContent += `\n${key}="${safeValue}"`;
-        }
+        envContent = writeEnvValue(envContent, key, value);
       };
 
       updateEnv("GOOGLE_CLIENT_ID", clientId);

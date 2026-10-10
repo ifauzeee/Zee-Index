@@ -51,6 +51,7 @@ vi.mock("@/lib/config", () => ({
 import {
   POST,
   escapeEnvValue,
+  writeEnvValue,
   hasPersistedSetupConfig,
   isAllowedSetupRequestOrigin,
 } from "@/app/api/setup/finish/route";
@@ -101,8 +102,24 @@ describe("app/api/setup/finish route", () => {
 
   it("strips dangerous line breaks from env values", () => {
     expect(escapeEnvValue('abc"\nNEXTAUTH_SECRET=hijack')).toBe(
-      'abc"NEXTAUTH_SECRET=hijack',
+      'abc\\"NEXTAUTH_SECRET=hijack',
     );
+  });
+
+  it("escapes double quotes so they cannot close the .env value", () => {
+    expect(escapeEnvValue('a"b')).toBe('a\\"b');
+  });
+
+  it("writes a value containing $& to .env verbatim", () => {
+    // $& is the "whole match" token in String.replace; a replacer function
+    // must be used so it is not substituted.
+    const written = writeEnvValue("KEY=first", "KEY", "a$&b");
+    expect(written).toBe('KEY="a$&b"');
+  });
+
+  it("appends the key when it is not already present", () => {
+    const written = writeEnvValue("OTHER=1", "KEY", "a$&b");
+    expect(written).toContain('KEY="a$&b"');
   });
 
   it("rejects cross-origin setup submissions", async () => {
