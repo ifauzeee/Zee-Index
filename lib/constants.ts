@@ -88,6 +88,9 @@ export const ERROR_MESSAGES = {
   INTERNAL_SERVER_ERROR: "Internal Server Error.",
 } as const;
 
+/** Upper bound for a single file-request upload (2 GiB). */
+export const FILE_REQUEST_MAX_BYTES = 2 * 1024 ** 3;
+
 export const RATE_LIMITS = {
   API: {
     LIMIT: 500,

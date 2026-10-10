@@ -4,7 +4,10 @@ import {
   LOCAL_ROOT,
   isPathInsideLocalRoot,
   normalizeLocalStorageId,
+  getLocalChunkTempKey,
+  assertValidLocalChunkRange,
 } from "@/lib/storage/local";
+import { FILE_REQUEST_MAX_BYTES } from "@/lib/constants";
 
 describe("lib/storage/local", () => {
   it("accepts files that stay inside the local storage root", () => {
@@ -68,6 +71,63 @@ describe("lib/storage/local", () => {
 
     it("returns null for an id without the local storage prefix", () => {
       expect(normalizeLocalStorageId("s3:bucket/a.txt")).toBeNull();
+    });
+  });
+
+  describe("local upload chunking", () => {
+    it("derives distinct temp keys for different uploads", () => {
+      expect(getLocalChunkTempKey("folder-a", "file.txt")).not.toBe(
+        getLocalChunkTempKey("folder-b", "file.txt"),
+      );
+    });
+
+    it("derives the same temp key for a retried chunk", () => {
+      expect(getLocalChunkTempKey("folder-a", "file.txt")).toBe(
+        getLocalChunkTempKey("folder-a", "file.txt"),
+      );
+    });
+
+    it("accepts the first chunk", () => {
+      expect(() =>
+        assertValidLocalChunkRange(0, 99, 100, 0, 100),
+      ).not.toThrow();
+    });
+
+    it("rejects a chunk that leaves a gap", () => {
+      // 60 bytes are expected but only 20 are on disk yet
+      expect(() => assertValidLocalChunkRange(60, 79, 100, 20, 20)).toThrow(
+        "Content-Range tidak valid",
+      );
+    });
+
+    it("accepts a retried chunk with the same start", () => {
+      expect(() =>
+        assertValidLocalChunkRange(20, 39, 100, 20, 20),
+      ).not.toThrow();
+    });
+
+    it("rejects total larger than the file-request cap", () => {
+      expect(() =>
+        assertValidLocalChunkRange(0, 99, FILE_REQUEST_MAX_BYTES + 1, 0, 100),
+      ).toThrow("Content-Range tidak valid");
+    });
+
+    it("rejects body length that does not match the range", () => {
+      expect(() => assertValidLocalChunkRange(0, 19, 100, 0, 10)).toThrow(
+        "Content-Range tidak valid",
+      );
+    });
+
+    it("rejects an inverted range", () => {
+      expect(() => assertValidLocalChunkRange(50, 40, 100, 50, 0)).toThrow(
+        "Content-Range tidak valid",
+      );
+    });
+
+    it("rejects an end offset past the total", () => {
+      expect(() => assertValidLocalChunkRange(0, 100, 100, 0, 101)).toThrow(
+        "Content-Range tidak valid",
+      );
     });
   });
 });

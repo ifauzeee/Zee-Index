@@ -1,8 +1,10 @@
 import fs from "fs/promises";
 import path from "path";
+import { createHash } from "crypto";
 import { getMimeType } from "./mime";
 import { ZeeFile, ListFilesResponse } from "@/types/storage";
 import { logger } from "@/lib/logger";
+import { FILE_REQUEST_MAX_BYTES } from "@/lib/constants";
 
 const LOCAL_STORAGE_PATH = process.env.LOCAL_STORAGE_PATH || "storage";
 export const LOCAL_ROOT = path.isAbsolute(LOCAL_STORAGE_PATH)
@@ -178,6 +180,41 @@ export async function getLocalFilePath(filePath: string): Promise<string> {
   return resolveLocalTargetPath(filePath);
 }
 
+/**
+ * Temp file name for an in-flight upload. Hashed rather than derived from the
+ * raw path so two concurrent uploads to different folders can never share a
+ * buffer, and a `..` in the path cannot address anything outside `.tmp`.
+ */
+export function getLocalChunkTempKey(
+  parentId: string,
+  fileName: string,
+): string {
+  return createHash("sha256").update(`${parentId}/${fileName}`).digest("hex");
+}
+
+/**
+ * Validate one resumable chunk against the bytes already stored. A retried
+ * chunk with the same start is accepted (start <= bytes on disk), but a start
+ * past the end would leave a gap that the final file cannot be assembled from.
+ */
+export function assertValidLocalChunkRange(
+  start: number,
+  end: number,
+  total: number,
+  currentTempSize: number,
+  bodyLength: number,
+): void {
+  if (
+    end < start ||
+    end - start + 1 !== bodyLength ||
+    end >= total ||
+    total > FILE_REQUEST_MAX_BYTES ||
+    start > currentTempSize
+  ) {
+    throw new Error("Content-Range tidak valid");
+  }
+}
+
 export async function saveLocalChunk(
   uploadUrl: string,
   chunk: ArrayBuffer,
@@ -194,9 +231,7 @@ export async function saveLocalChunk(
 
   await ensureLocalRoot();
 
-  const tempKey = Buffer.from(`${parentId}/${fileName}`)
-    .toString("hex")
-    .substring(0, 16);
+  const tempKey = getLocalChunkTempKey(parentId, fileName);
   const tempFilePath = path.join(
     LOCAL_ROOT,
     ".tmp",
@@ -214,8 +249,15 @@ export async function saveLocalChunk(
   const start = parseInt(rangeMatch[1]);
   const end = parseInt(rangeMatch[2]);
   const total = parseInt(rangeMatch[3]);
-
   const buffer = Buffer.from(chunk);
+
+  const currentTempSize = await fs
+    .stat(tempFilePath)
+    .then((stats) => stats.size)
+    .catch(() => 0);
+
+  assertValidLocalChunkRange(start, end, total, currentTempSize, buffer.length);
+
   const handle = await fs.open(tempFilePath, start === 0 ? "w" : "r+");
 
   try {
