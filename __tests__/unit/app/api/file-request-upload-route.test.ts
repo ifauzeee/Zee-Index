@@ -22,6 +22,8 @@ vi.mock("@/lib/activityLogger", () => ({
 import {
   escapeHtml,
   isAllowedResumableUploadUrl,
+  isAllowedUploadSubfolder,
+  isUploadTargetWithinRequest,
 } from "@/app/api/file-request/upload/route";
 
 describe("app/api/file-request/upload route", () => {
@@ -53,5 +55,51 @@ describe("app/api/file-request/upload route", () => {
     expect(escapeHtml(`<img src=x onerror=alert("xss")>&'`)).toBe(
       "&lt;img src=x onerror=alert(&quot;xss&quot;)&gt;&amp;&#39;",
     );
+  });
+
+  it("rejects a subfolder that is only a traversal segment", () => {
+    expect(isAllowedUploadSubfolder("..")).toBe(false);
+    expect(isAllowedUploadSubfolder(".")).toBe(false);
+    expect(isAllowedUploadSubfolder("")).toBe(false);
+  });
+
+  it("accepts a plain subfolder name", () => {
+    expect(isAllowedUploadSubfolder("receipts")).toBe(true);
+  });
+
+  it("rejects an uploadUrl whose parent escapes the request folder via ..", () => {
+    expect(
+      isUploadTargetWithinRequest(
+        "local-storage:public/../secret",
+        "local-storage:public",
+      ),
+    ).toBe(false);
+  });
+
+  it("accepts an uploadUrl whose parent is the request folder", () => {
+    expect(
+      isUploadTargetWithinRequest(
+        "local-storage:public",
+        "local-storage:public",
+      ),
+    ).toBe(true);
+  });
+
+  it("accepts an uploadUrl whose parent is a descendant of the request folder", () => {
+    expect(
+      isUploadTargetWithinRequest(
+        "local-storage:public/receipts",
+        "local-storage:public",
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects an uploadUrl that escapes the root entirely", () => {
+    expect(
+      isUploadTargetWithinRequest(
+        "local-storage:../../etc",
+        "local-storage:public",
+      ),
+    ).toBe(false);
   });
 });

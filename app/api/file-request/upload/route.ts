@@ -7,6 +7,7 @@ import { getAccessToken } from "@/lib/drive";
 import { kv } from "@/lib/kv";
 import { logActivity } from "@/lib/activityLogger";
 import { REDIS_KEYS } from "@/lib/constants";
+import { normalizeLocalStorageId } from "@/lib/storage/local";
 import {
   fileRequestUploadInitSchema,
   parseFileRequestLink,
@@ -46,6 +47,29 @@ export function isAllowedResumableUploadUrl(uploadUrl: string): boolean {
   } catch {
     return false;
   }
+}
+
+/** A subfolder must be a single plain segment, never `.` or `..`. */
+export function isAllowedUploadSubfolder(subfolder: string): boolean {
+  const trimmed = subfolder.trim();
+  if (!trimmed) return false;
+  return trimmed !== "." && trimmed !== "..";
+}
+
+/**
+ * True when the folder an upload URL points at is the requested folder or a
+ * descendant of it. Both sides are normalized first so a `..` segment cannot
+ * claim to be inside the request folder while resolving outside it.
+ */
+export function isUploadTargetWithinRequest(
+  uploadFolderId: string,
+  requestFolderId: string,
+): boolean {
+  const upload = normalizeLocalStorageId(uploadFolderId);
+  const request = normalizeLocalStorageId(requestFolderId);
+
+  if (upload === null || request === null) return false;
+  return upload === request || upload.startsWith(`${request}/`);
 }
 
 import { escapeHtml } from "@/lib/html-utils";
@@ -128,6 +152,12 @@ export const POST = createPublicRoute(
         if (subfolder && subfolder.trim()) {
           const sanitizedSubfolder = subfolder.trim().replace(/[\/\\]/g, "_");
           if (sanitizedSubfolder) {
+            if (!isAllowedUploadSubfolder(sanitizedSubfolder)) {
+              return NextResponse.json(
+                { error: "Missing params" },
+                { status: 400 },
+              );
+            }
             if (targetFolderId.startsWith("local-storage:")) {
               targetFolderId = `${targetFolderId}/${sanitizedSubfolder}`;
             } else {
@@ -218,11 +248,9 @@ export const POST = createPublicRoute(
         if (uploadUrl.startsWith("local-storage-upload://")) {
           const parsed = uploadUrl.replace("local-storage-upload://", "");
           const parentIdEncoded = parsed.substring(0, parsed.indexOf("/"));
-          const parentId = decodeURIComponent(parentIdEncoded);
-          if (
-            parentId !== requestData.folderId &&
-            !parentId.startsWith(`${requestData.folderId}/`)
-          ) {
+          const rawParentId = decodeURIComponent(parentIdEncoded);
+
+          if (!isUploadTargetWithinRequest(rawParentId, requestData.folderId)) {
             return NextResponse.json(
               { error: "Folder tujuan upload tidak valid." },
               { status: 403 },
@@ -232,35 +260,46 @@ export const POST = createPublicRoute(
           const { saveLocalChunk } = await import("@/lib/storage/local");
           const chunkBuffer = await request.arrayBuffer();
 
-          const result = await saveLocalChunk(
-            uploadUrl,
-            chunkBuffer,
-            contentRange,
-          );
+          try {
+            const result = await saveLocalChunk(
+              uploadUrl,
+              chunkBuffer,
+              contentRange,
+            );
 
-          if (result.status === "completed" && result.file) {
-            const rolesToInvalidate = ["ADMIN", "USER", "GUEST"];
-            for (const role of rolesToInvalidate) {
-              await kv.del(
-                `folder:content:${requestData.folderId}:${role}:page1`,
+            if (result.status === "completed" && result.file) {
+              const rolesToInvalidate = ["ADMIN", "USER", "GUEST"];
+              for (const role of rolesToInvalidate) {
+                await kv.del(
+                  `folder:content:${requestData.folderId}:${role}:page1`,
+                );
+              }
+
+              await logActivity("UPLOAD", {
+                itemName: result.file.name,
+                itemSize: result.file.size,
+                userEmail: "Public Uploader",
+                destinationFolder: requestData.folderName,
+              });
+
+              await sendUploadNotificationEmail(
+                requestData,
+                result.file.name,
+                result.file.size || "0",
               );
             }
 
-            await logActivity("UPLOAD", {
-              itemName: result.file.name,
-              itemSize: result.file.size,
-              userEmail: "Public Uploader",
-              destinationFolder: requestData.folderName,
-            });
-
-            await sendUploadNotificationEmail(
-              requestData,
-              result.file.name,
-              result.file.size || "0",
+            return NextResponse.json(result);
+          } catch (error) {
+            logger.error(
+              { err: error },
+              "[File Request Upload] Local chunk rejected",
+            );
+            return NextResponse.json(
+              { error: "Content-Range tidak valid" },
+              { status: 400 },
             );
           }
-
-          return NextResponse.json(result);
         }
 
         if (!isAllowedResumableUploadUrl(uploadUrl)) {
