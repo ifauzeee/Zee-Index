@@ -256,8 +256,8 @@ export async function verifyShareTokenString(token: string): Promise<boolean> {
     }
 
     if (payload.loginRequired) {
-      // Dynamic import avoids a module cycle: lib/verified-session imports
-      // this module for auth().
+      // Lazy import keeps the NextAuth root config (@/auth) out of this
+      // module's import graph, which middleware also loads.
       const { getVerifiedSession } = await import("@/lib/verified-session");
       const session = await getVerifiedSession();
       return !!session;
