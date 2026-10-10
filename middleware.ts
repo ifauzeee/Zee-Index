@@ -91,7 +91,7 @@ export function createContentSecurityPolicy(
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}'${scriptEval} ${SWAGGER_UI_CDN}/ https://www.google-analytics.com`,
     `script-src-elem 'self' 'nonce-${nonce}'${scriptEval} ${SWAGGER_UI_CDN}/ https://www.google-analytics.com`,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${SWAGGER_UI_CDN}/",
+    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${SWAGGER_UI_CDN}/`,
     "font-src 'self' data: https://fonts.gstatic.com",
     "img-src 'self' data: blob: https://*.googleusercontent.com https://drive.google.com https://images.unsplash.com https://image.tmdb.org",
     "media-src 'self' blob: https://*.googleapis.com",
@@ -179,13 +179,23 @@ export default async function middleware(request: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
     pathname === "/sw.js" ||
-    pathname === "/manifest.webmanifest" ||
-    pathname.startsWith("/api/health")
+    pathname === "/manifest.webmanifest"
   ) {
     return NextResponse.next();
   }
 
+  if (pathname.startsWith("/api/health")) {
+    // Health skips auth and rate limiting, but route wrappers read
+    // x-auth-method, so keep the invariant that only this middleware sets
+    // it. Forward the sanitized headers; a plain next() keeps them.
+    const sanitized = withApiKeyHeadersStripped(request);
+    return NextResponse.next({ request: { headers: sanitized.headers } });
+  }
+
   if (pathname.startsWith("/api/download")) {
+    // The early exit forwards request headers through applyCsp, so forged
+    // API key headers must be stripped before the signature check too.
+    request = withApiKeyHeadersStripped(request);
     const signatureError = await validateDownloadTokenSignature(request);
     if (signatureError) {
       return applyCsp(request, signatureError);

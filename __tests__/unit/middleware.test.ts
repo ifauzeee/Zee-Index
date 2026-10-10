@@ -137,6 +137,16 @@ describe("middleware content security policy sources", () => {
     expect(csp).toContain("worker-src 'self' blob:");
     expect(csp).not.toContain("worker-src 'self' blob: https://");
   });
+
+  it("allows the pinned Swagger UI CDN stylesheet in style-src", () => {
+    const csp = createContentSecurityPolicy("nonce-src");
+
+    // A quoted "${SWAGGER_UI_CDN}" would end up in the policy as a literal,
+    // blocking swagger-ui.css on the docs page.
+    expect(csp).toContain(
+      `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${SWAGGER_UI_CDN}/`,
+    );
+  });
 });
 
 describe("middleware share_token flow", () => {
@@ -271,6 +281,49 @@ describe("middleware share_token flow", () => {
     const response = await middleware(request);
 
     expect(response.status).toBe(200);
+  });
+
+  it("strips forged API key headers on the /api/download early-exit path", async () => {
+    anonymous();
+    const request = new NextRequest(
+      "http://localhost:3000/api/download?id=file1",
+      {
+        headers: {
+          "x-auth-method": "api-key",
+          "x-api-key-id": "forged",
+          "x-api-key-name": "forged",
+          "x-api-key-permissions": "admin:write",
+        },
+      },
+    );
+
+    const response = await middleware(request);
+
+    // applyCsp forwards the middleware's request headers; the forged copy
+    // must not survive into what the route handler sees.
+    expect(
+      response.headers.get("x-middleware-request-x-auth-method"),
+    ).toBeNull();
+  });
+
+  it("strips forged API key headers on the /api/health skip path", async () => {
+    anonymous();
+    const request = new NextRequest("http://localhost:3000/api/health", {
+      headers: {
+        "x-auth-method": "api-key",
+        "x-api-key-permissions": "admin:write",
+      },
+    });
+
+    const response = await middleware(request);
+
+    const override = response.headers.get("x-middleware-override-headers");
+    expect(override).not.toBeNull();
+    const forwarded = override
+      ? override.split(",").map((header) => header.trim())
+      : [];
+    expect(forwarded).not.toContain("x-auth-method");
+    expect(forwarded).not.toContain("x-api-key-permissions");
   });
 
   it("returns 401 for an API request carrying an invalid share_token", async () => {
