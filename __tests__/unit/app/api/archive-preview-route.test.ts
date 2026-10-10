@@ -1,12 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-const { mockGetAccessToken, mockIsAccessRestricted, mockLoadAsync } =
-  vi.hoisted(() => ({
-    mockGetAccessToken: vi.fn(),
-    mockIsAccessRestricted: vi.fn(),
-    mockLoadAsync: vi.fn(),
-  }));
+const {
+  mockGetAccessToken,
+  mockIsAccessRestricted,
+  mockLoadAsync,
+  mockGetFileDetailsFromDrive,
+} = vi.hoisted(() => ({
+  mockGetAccessToken: vi.fn(),
+  mockIsAccessRestricted: vi.fn(),
+  mockLoadAsync: vi.fn(),
+  mockGetFileDetailsFromDrive: vi.fn(),
+}));
 
 vi.mock("@/lib/api-middleware", () => ({
   createUserRoute: (
@@ -25,6 +30,7 @@ vi.mock("@/lib/api-middleware", () => ({
 
 vi.mock("@/lib/drive", () => ({
   getAccessToken: mockGetAccessToken,
+  getFileDetailsFromDrive: mockGetFileDetailsFromDrive,
 }));
 
 vi.mock("@/lib/securityUtils", () => ({
@@ -42,6 +48,7 @@ vi.mock("jszip", () => ({
 }));
 
 import { GET } from "@/app/api/archive-preview/route";
+import { ARCHIVE_PREVIEW_MAX_BYTES } from "@/lib/constants";
 
 function makeRequest(fileId: string | null) {
   const url = fileId
@@ -55,14 +62,19 @@ describe("app/api/archive-preview route", () => {
     vi.clearAllMocks();
     mockGetAccessToken.mockResolvedValue("test-token");
     mockIsAccessRestricted.mockResolvedValue(false);
-  });
-
-  it("returns archive contents", async () => {
+    mockGetFileDetailsFromDrive.mockResolvedValue({
+      id: "zip-file-id",
+      name: "bundle.zip",
+      mimeType: "application/zip",
+      size: "1024",
+    });
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
     });
+  });
 
+  it("returns archive contents", async () => {
     mockLoadAsync.mockResolvedValue({
       files: {
         "readme.txt": {
@@ -86,6 +98,53 @@ describe("app/api/archive-preview route", () => {
       { name: "readme.txt", size: 100, isFolder: false },
       { name: "photos/", size: 0, isFolder: true },
     ]);
+  });
+
+  it("returns 400 for a fileId with unsafe characters", async () => {
+    const response = await GET(makeRequest("../about"));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid fileId format.",
+    });
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("passes the session email to the access check", async () => {
+    const response = await GET(makeRequest("zip-file-id"));
+
+    expect(response.status).toBe(200);
+    expect(mockIsAccessRestricted).toHaveBeenCalledWith(
+      "zip-file-id",
+      [],
+      "user@example.com",
+    );
+  });
+
+  it("returns 404 when the file no longer exists in Drive", async () => {
+    mockGetFileDetailsFromDrive.mockResolvedValue(null);
+
+    const response = await GET(makeRequest("zip-file-id"));
+
+    expect(response.status).toBe(404);
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("returns 413 when the archive exceeds the preview size cap", async () => {
+    mockGetFileDetailsFromDrive.mockResolvedValue({
+      id: "zip-file-id",
+      name: "huge.zip",
+      mimeType: "application/zip",
+      size: String(ARCHIVE_PREVIEW_MAX_BYTES + 1),
+    });
+
+    const response = await GET(makeRequest("zip-file-id"));
+
+    expect(response.status).toBe(413);
+    await expect(response.json()).resolves.toEqual({
+      error: "Archive too large to preview.",
+    });
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 
   it("returns 400 when fileId is missing", async () => {
