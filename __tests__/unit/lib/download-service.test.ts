@@ -264,5 +264,78 @@ describe("lib/services/download", () => {
       expect(headers.get("Content-Range")).toBe("bytes 0-1023/4096");
       expect(headers.get("Accept-Ranges")).toBe("bytes");
     });
+
+    it.each([
+      "text/html",
+      "image/svg+xml",
+      "text/javascript",
+      "application/xhtml+xml",
+    ])(
+      "serves %s as an octet-stream attachment even for document navigation",
+      (mime) => {
+        const headers = prepareResponseHeaders(
+          mime,
+          "dangerous",
+          null,
+          "document",
+          null,
+        );
+
+        expect(headers.get("Content-Type")).toBe("application/octet-stream");
+        expect(headers.get("Content-Disposition")).toMatch(/^attachment/);
+      },
+    );
+
+    it("keeps PNG inline for <img> loads", () => {
+      const headers = prepareResponseHeaders(
+        "image/png",
+        "a.png",
+        null,
+        "image",
+        null,
+      );
+
+      expect(headers.get("Content-Type")).toBe("image/png");
+      expect(headers.get("Content-Disposition")).toMatch(/^inline/);
+    });
+
+    it("keeps text/vtt subtitles inline", () => {
+      const headers = prepareResponseHeaders(
+        "text/vtt",
+        "a.vtt",
+        null,
+        "track",
+        null,
+      );
+
+      expect(headers.get("Content-Type")).toBe("text/vtt");
+      expect(headers.get("Content-Disposition")).toMatch(/^inline/);
+    });
+
+    it("keeps ranged video inline and marks it private", () => {
+      const headers = prepareResponseHeaders(
+        "video/mp4",
+        "movie.mp4",
+        "bytes=0-",
+        "video",
+        null,
+      );
+
+      expect(headers.get("Content-Disposition")).toMatch(/^inline/);
+      expect(headers.get("Cache-Control")).toMatch(/^private/);
+    });
+
+    it("never marks downloads as publicly cacheable", () => {
+      expect(
+        prepareResponseHeaders("image/png", "a", null, "image", null).get(
+          "Cache-Control",
+        ),
+      ).toMatch(/^private/);
+      expect(
+        prepareResponseHeaders("video/mp4", "a", "bytes=0-", "video", null).get(
+          "Cache-Control",
+        ),
+      ).toMatch(/^private/);
+    });
   });
 });
