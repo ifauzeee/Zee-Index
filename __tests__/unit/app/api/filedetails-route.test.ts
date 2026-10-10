@@ -46,6 +46,7 @@ vi.mock("@/lib/logger", () => ({
 }));
 
 import { GET } from "@/app/api/filedetails/route";
+import { ERROR_MESSAGES } from "@/lib/constants";
 
 function makeRequest(fileId: string | null) {
   const url = fileId
@@ -95,6 +96,27 @@ describe("app/api/filedetails route", () => {
     await expect(response.json()).resolves.toEqual({
       error: "Access Denied",
     });
+  });
+
+  it("forwards the session email so per-user grants can be honored", async () => {
+    const response = await GET(makeRequest("file-123"));
+
+    expect(response.status).toBe(200);
+    expect(mockIsAccessRestricted).toHaveBeenCalledWith(
+      "file-123",
+      [],
+      "user@example.com",
+    );
+  });
+
+  it("returns 400 for a local id that escapes the storage root", async () => {
+    const response = await GET(makeRequest("local-storage:../../etc/passwd"));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: ERROR_MESSAGES.INVALID_FILE_ID,
+    });
+    expect(mockGetAnyFileDetails).not.toHaveBeenCalled();
   });
 
   it("returns 500 on error", async () => {

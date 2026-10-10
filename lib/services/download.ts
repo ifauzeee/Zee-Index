@@ -5,6 +5,7 @@ import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
 import { getVerifiedSession } from "@/lib/verified-session";
 import { getClientIp } from "@/lib/client-ip";
+import { normalizeLocalStorageId } from "@/lib/storage/local";
 import { db } from "@/lib/db";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { isAccessRestricted } from "@/lib/securityUtils";
@@ -149,6 +150,30 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
 
   const userRole = session?.user?.role;
 
+  const context: DownloadContext = {
+    fileId,
+    shareToken,
+    accessTokenParam,
+    range,
+    isStream: !!range,
+    shareRecord,
+  };
+
+  if (fileId.startsWith("local-storage:")) {
+    const normalizedFileId = normalizeLocalStorageId(fileId);
+    if (normalizedFileId === null) {
+      return {
+        context,
+        session,
+        error: {
+          error: ERROR_MESSAGES.INVALID_FILE_ID,
+          status: 400,
+        },
+      };
+    }
+    context.fileId = normalizedFileId;
+  }
+
   if (fileId.startsWith("local-storage:") && userRole !== "ADMIN") {
     const hasAccess = await import("@/lib/auth").then((m) =>
       m.checkLocalStorageAccess(request),
@@ -163,63 +188,46 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
         },
       };
     }
-  } else if (userRole !== "ADMIN") {
+  }
+
+  if (userRole !== "ADMIN") {
+    const authHeader = request.headers.get("Authorization");
+    const token = authHeader?.split(" ")[1] || accessTokenParam;
+    const folderTokenIds: string[] = [];
+
+    if (token) {
+      try {
+        const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
+        const { payload } = await jwtVerify(token, secret);
+        const authorizedFolderId = payload.folderId as string;
+        if (authorizedFolderId) {
+          folderTokenIds.push(authorizedFolderId);
+        }
+      } catch (e) {
+        logger.error(
+          { err: e },
+          "[Download Service] Token verification failed",
+        );
+      }
+    }
+
     const isRestricted = await isAccessRestricted(
       fileId,
-      [],
+      folderTokenIds,
       session?.user?.email,
     );
 
     if (isRestricted) {
-      const authHeader = request.headers.get("Authorization");
-      const token = authHeader?.split(" ")[1] || accessTokenParam;
-
-      let accessGranted = false;
-      if (token) {
-        try {
-          const secret = new TextEncoder().encode(
-            process.env.SHARE_SECRET_KEY!,
-          );
-          const { payload } = await jwtVerify(token, secret);
-          const authorizedFolderId = payload.folderId as string;
-
-          if (authorizedFolderId) {
-            const stillRestricted = await isAccessRestricted(
-              fileId,
-              [authorizedFolderId],
-              session?.user?.email,
-            );
-            if (!stillRestricted) {
-              accessGranted = true;
-            }
-          }
-        } catch (e) {
-          logger.error(
-            { err: e },
-            "[Download Service] Token verification failed",
-          );
-        }
-      }
-
-      if (!accessGranted) {
-        return {
-          context: createEmptyDownloadContext(),
-          session,
-          error: { error: ERROR_MESSAGES.ACCESS_DENIED, status: 403 },
-        };
-      }
+      return {
+        context: createEmptyDownloadContext(),
+        session,
+        error: { error: ERROR_MESSAGES.ACCESS_DENIED, status: 403 },
+      };
     }
   }
 
   return {
-    context: {
-      fileId,
-      shareToken,
-      accessTokenParam,
-      range,
-      isStream: !!range,
-      shareRecord,
-    },
+    context,
     session,
   };
 }

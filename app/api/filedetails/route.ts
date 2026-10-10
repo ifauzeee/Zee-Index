@@ -4,6 +4,8 @@ import { createPublicRoute } from "@/lib/api-middleware";
 import { getAnyFileDetails } from "@/lib/storage";
 import { validateShareToken } from "@/lib/auth";
 import { isAccessRestricted } from "@/lib/securityUtils";
+import { normalizeLocalStorageId } from "@/lib/storage/local";
+import { ERROR_MESSAGES } from "@/lib/constants";
 
 import { getErrorMessage } from "@/lib/errors";
 export const dynamic = "force-dynamic";
@@ -28,10 +30,20 @@ export const GET = createPublicRoute(
       );
     }
     const fileId = decodeURIComponent(fileIdRaw);
+    const normalizedFileId = fileId.startsWith("local-storage:")
+      ? normalizeLocalStorageId(fileId)
+      : fileId;
+
+    if (normalizedFileId === null) {
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.INVALID_FILE_ID },
+        { status: 400 },
+      );
+    }
 
     const isAdmin = session?.user?.role === "ADMIN";
 
-    if (fileId.startsWith("local-storage:") && !isAdmin) {
+    if (normalizedFileId.startsWith("local-storage:") && !isAdmin) {
       const hasAccess = await import("@/lib/auth").then((m) =>
         m.checkLocalStorageAccess(request),
       );
@@ -44,15 +56,21 @@ export const GET = createPublicRoute(
           { status: 401 },
         );
       }
-    } else if (!isAdmin) {
-      const isRestricted = await isAccessRestricted(fileId);
+    }
+
+    if (!isAdmin) {
+      const isRestricted = await isAccessRestricted(
+        normalizedFileId,
+        [],
+        session?.user?.email,
+      );
       if (isRestricted) {
         return NextResponse.json({ error: "Access Denied" }, { status: 403 });
       }
     }
 
     try {
-      const details = await getAnyFileDetails(fileId);
+      const details = await getAnyFileDetails(normalizedFileId);
       return NextResponse.json(details, {
         headers: {
           "Cache-Control": "private, max-age=60, stale-while-revalidate=600",

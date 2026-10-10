@@ -7,6 +7,8 @@ import { isPrivateFolder } from "@/lib/auth";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { getProtectedFolderIdsCached } from "@/lib/securityUtils";
 import { validateShareToken } from "@/lib/auth";
+import { normalizeLocalStorageId } from "@/lib/storage/local";
+import { ERROR_MESSAGES } from "@/lib/constants";
 import { RequestError, getErrorMessage } from "@/lib/errors";
 import { jwtVerify } from "jose";
 
@@ -51,6 +53,18 @@ export const GET = createPublicRoute(
           { status: 400 },
         );
       }
+
+      const normalizedFolderId = folderId.startsWith("local-storage:")
+        ? normalizeLocalStorageId(folderId)
+        : folderId;
+
+      if (normalizedFolderId === null) {
+        return NextResponse.json(
+          { error: ERROR_MESSAGES.INVALID_FILE_ID },
+          { status: 400 },
+        );
+      }
+      folderId = normalizedFolderId;
 
       const canSeeAll = userRole === "ADMIN";
       const isRestricted = await isAccessRestricted(folderId, [], userEmail);
