@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { checkAuth, handleAuthRedirect } from "@/lib/auth-check";
 import {
@@ -137,6 +136,22 @@ function mergeMiddlewareRequestHeaders(
   });
 }
 
+const API_KEY_AUTH_HEADERS = [
+  "x-auth-method",
+  "x-api-key-id",
+  "x-api-key-name",
+  "x-api-key-permissions",
+];
+
+/** Copy `request` without the API key auth headers a client may have sent. */
+function withApiKeyHeadersStripped(request: NextRequest): NextRequest {
+  const sanitized = request.clone();
+  for (const header of API_KEY_AUTH_HEADERS) {
+    sanitized.headers.delete(header);
+  }
+  return new NextRequest(sanitized);
+}
+
 function applyCsp(request: NextRequest, response: Response): Response {
   const nonce = createNonce();
   const contentSecurityPolicy = createContentSecurityPolicy(nonce);
@@ -180,6 +195,13 @@ export default async function middleware(request: NextRequest) {
 
   const pathnameWithoutLocale = stripLocaleFromPathname(pathname) || "/";
   const isApi = pathnameWithoutLocale.startsWith("/api");
+
+  if (isApi) {
+    // These headers describe the API key that authenticated the request, so
+    // only this middleware may set them. Strip any client-supplied copy so a
+    // caller cannot impersonate an API key without presenting one.
+    request = withApiKeyHeadersStripped(request);
+  }
 
   // API key authentication (runs for all API routes).
   // If valid, sets x-auth-method=api-key headers and skips session auth downstream.

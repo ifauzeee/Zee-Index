@@ -230,6 +230,49 @@ describe("middleware share_token flow", () => {
     expect(response.status).toBe(200);
   });
 
+  it("strips client-supplied API key headers from API requests", async () => {
+    anonymous();
+    const seenAuthMethod: Array<string | null> = [];
+    const seenKeyId: Array<string | null> = [];
+    const seenPermissions: Array<string | null> = [];
+    mockCheckRateLimit.mockImplementation((request: NextRequest) => {
+      seenAuthMethod.push(request.headers.get("x-auth-method"));
+      seenKeyId.push(request.headers.get("x-api-key-id"));
+      seenPermissions.push(request.headers.get("x-api-key-permissions"));
+      return Promise.resolve({
+        success: true,
+        limit: 1,
+        remaining: 1,
+        reset: 0,
+      });
+    });
+    const request = new NextRequest("http://localhost:3000/api/files", {
+      headers: {
+        "x-auth-method": "api-key",
+        "x-api-key-id": "forged",
+        "x-api-key-name": "forged",
+        "x-api-key-permissions": "admin:write",
+      },
+    });
+
+    await middleware(request);
+
+    expect(seenAuthMethod).toEqual([null]);
+    expect(seenKeyId).toEqual([null]);
+    expect(seenPermissions).toEqual([null]);
+  });
+
+  it("keeps client-supplied API key headers on non-API requests", async () => {
+    anonymous();
+    const request = new NextRequest("http://localhost:3000/login", {
+      headers: { "x-auth-method": "api-key" },
+    });
+
+    const response = await middleware(request);
+
+    expect(response.status).toBe(200);
+  });
+
   it("returns 401 for an API request carrying an invalid share_token", async () => {
     anonymous();
     mockJwtVerify.mockRejectedValueOnce(new Error("invalid token"));
