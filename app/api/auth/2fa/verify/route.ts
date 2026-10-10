@@ -60,5 +60,5 @@ export const POST = createUserRoute(
       );
     }
   },
-  { requireEmail: true, rateLimit: false, bodySchema: verifyTwoFactorSchema },
+  { requireEmail: true, rateLimit: "AUTH", bodySchema: verifyTwoFactorSchema },
 );

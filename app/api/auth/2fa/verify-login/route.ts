@@ -6,6 +6,7 @@ import { createUserRoute } from "@/lib/api-middleware";
 import { authenticator } from "otplib";
 import { kv } from "@/lib/kv";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { ERROR_MESSAGES } from "@/lib/constants";
 import { z } from "zod";
 import { getToken } from "next-auth/jwt";
 
@@ -18,7 +19,7 @@ export const POST = createUserRoute(
     const { success } = await checkRateLimit(request, "AUTH");
     if (!success) {
       return NextResponse.json(
-        { error: "Terlalu banyak percobaan. Silakan coba lagi nanti." },
+        { error: ERROR_MESSAGES.RATE_LIMIT_EXCEEDED },
         { status: 429 },
       );
     }
@@ -26,6 +27,20 @@ export const POST = createUserRoute(
     try {
       const { token } = body;
       const userEmail = session.user.email;
+
+      // Per-account limit so a distributed attacker cannot spend the whole IP
+      // budget on one victim's account.
+      const perAccount = await checkRateLimit(
+        request,
+        "AUTH",
+        `2fa:${userEmail}`,
+      );
+      if (!perAccount.success) {
+        return NextResponse.json(
+          { error: ERROR_MESSAGES.RATE_LIMIT_EXCEEDED },
+          { status: 429 },
+        );
+      }
 
       const nextAuthToken = await getToken({
         req: request,

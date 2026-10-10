@@ -101,6 +101,32 @@ describe("app/api/auth/2fa/verify-login route", () => {
     expect(response.status).toBe(429);
   });
 
+  it("returns 429 when the per-account 2FA limit is exceeded", async () => {
+    mockCheckRateLimit.mockImplementation((_request, _type, identifier) =>
+      Promise.resolve({
+        success: !String(identifier).startsWith("2fa:"),
+        limit: 10,
+        remaining: 0,
+        reset: 0,
+      }),
+    );
+
+    const response = await POST(
+      new NextRequest("http://localhost:3000", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token: "123456" }),
+      }),
+    );
+
+    expect(response.status).toBe(429);
+    await expect(response.json()).resolves.toEqual({
+      error: "Too many requests. Please try again later.",
+    });
+    // The account budget must be spent before the code is checked.
+    expect(mockAuthenticator.check).not.toHaveBeenCalled();
+  });
+
   it("returns 400 when 2FA not required", async () => {
     mockGetToken.mockResolvedValue({
       twoFactorRequired: false,
