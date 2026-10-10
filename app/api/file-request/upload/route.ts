@@ -11,6 +11,7 @@ import {
   normalizeLocalStorageId,
   LocalChunkRequestError,
 } from "@/lib/storage/local";
+import { escapeDriveQueryValue } from "@/lib/drive/query";
 import {
   fileRequestUploadInitSchema,
   parseFileRequestLink,
@@ -165,7 +166,9 @@ export const POST = createPublicRoute(
               targetFolderId = `${targetFolderId}/${sanitizedSubfolder}`;
             } else {
               // Google Drive folder search/create
-              const queryStr = `name = '${sanitizedSubfolder.replace(/'/g, "\\'")}' and mimeType = 'application/vnd.google-apps.folder' and '${targetFolderId}' in parents and trashed = false`;
+              const escapedSubfolder =
+                escapeDriveQueryValue(sanitizedSubfolder);
+              const queryStr = `name = '${escapedSubfolder}' and mimeType = 'application/vnd.google-apps.folder' and '${targetFolderId}' in parents and trashed = false`;
               const searchUrl = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(queryStr)}&fields=files(id)`;
               const searchRes = await fetch(searchUrl, {
                 headers: { Authorization: `Bearer ${accessToken}` },
