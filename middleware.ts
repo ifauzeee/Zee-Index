@@ -8,7 +8,7 @@ import {
   type RateLimitType,
 } from "@/lib/ratelimit";
 import { validateApiKey } from "@/lib/api-key";
-import { ERROR_MESSAGES } from "@/lib/constants";
+import { ERROR_MESSAGES, SWAGGER_UI_CDN } from "@/lib/constants";
 import { isAppConfigured } from "@/lib/config";
 import {
   validateShareToken,
@@ -90,15 +90,15 @@ export function createContentSecurityPolicy(
 
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}'${scriptEval} https://cdn.jsdelivr.net/npm/swagger-ui-dist@5 https://cdn.jsdelivr.net/npm/pdfjs-dist@4 https://www.google-analytics.com`,
-    `script-src-elem 'self' 'nonce-${nonce}'${scriptEval} https://cdn.jsdelivr.net/npm/swagger-ui-dist@5 https://cdn.jsdelivr.net/npm/pdfjs-dist@4 https://www.google-analytics.com`,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/swagger-ui-dist@5",
+    `script-src 'self' 'nonce-${nonce}'${scriptEval} ${SWAGGER_UI_CDN}/ https://www.google-analytics.com`,
+    `script-src-elem 'self' 'nonce-${nonce}'${scriptEval} ${SWAGGER_UI_CDN}/ https://www.google-analytics.com`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${SWAGGER_UI_CDN}/",
     "font-src 'self' data: https://fonts.gstatic.com",
     "img-src 'self' data: blob: https://*.googleusercontent.com https://drive.google.com https://images.unsplash.com https://image.tmdb.org",
     "media-src 'self' blob: https://*.googleapis.com",
     "connect-src 'self' https://*.googleapis.com https://*.google.com https://*.googleusercontent.com https://www.google-analytics.com",
     "frame-src 'self' https://accounts.google.com https://drive.google.com https://view.officeapps.live.com",
-    `worker-src 'self' blob: https://cdn.jsdelivr.net/npm/pdfjs-dist@4`,
+    "worker-src 'self' blob:",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

@@ -55,6 +55,7 @@ import middlewareDefault, {
   createContentSecurityPolicy,
   isPublicApiPath,
 } from "@/middleware";
+import { SWAGGER_UI_CDN } from "@/lib/constants";
 
 const middleware = middlewareDefault as unknown as (
   request: NextRequest,
@@ -109,6 +110,32 @@ describe("middleware content security policy", () => {
       allowUnsafeEval: true,
     });
     expect(csp).toContain("unsafe-eval");
+  });
+});
+
+describe("middleware content security policy sources", () => {
+  it("lists the pinned Swagger UI CDN with a trailing slash", () => {
+    const csp = createContentSecurityPolicy("nonce-src");
+
+    // Without the trailing slash CSP matches only that exact URL, not the
+    // bundle and preset scripts that live beneath it.
+    expect(csp).toContain(`${SWAGGER_UI_CDN}/`);
+    expect(csp).toContain(
+      "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/",
+    );
+  });
+
+  it("no longer allows the pdf.js worker from a CDN", () => {
+    const csp = createContentSecurityPolicy("nonce-src");
+
+    expect(csp).not.toContain("pdfjs-dist@4");
+  });
+
+  it("does not list a pdf.js CDN in worker-src", () => {
+    const csp = createContentSecurityPolicy("nonce-src");
+
+    expect(csp).toContain("worker-src 'self' blob:");
+    expect(csp).not.toContain("worker-src 'self' blob: https://");
   });
 });
 

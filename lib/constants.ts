@@ -94,6 +94,10 @@ export const FILE_REQUEST_MAX_BYTES = 2 * 1024 ** 3;
 /** Upper bound for an archive served to the preview endpoint (50 MiB). */
 export const ARCHIVE_PREVIEW_MAX_BYTES = 50 * 1024 * 1024;
 
+/** Pinned Swagger UI bundle served from the docs endpoint. */
+export const SWAGGER_UI_CDN =
+  "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14";
+
 export const RATE_LIMITS = {
   API: {
     LIMIT: 500,
