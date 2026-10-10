@@ -11,6 +11,7 @@ import {
   validateDownloadRequest,
   prepareGoogleDriveUrl,
   prepareResponseHeaders,
+  isInlineSafeMimeType,
 } from "@/lib/services/download";
 import { getClientIp } from "@/lib/client-ip";
 import { applyWatermark } from "@/lib/watermark";
@@ -18,12 +19,14 @@ import { getActiveProvider, isProviderId } from "@/lib/storage/providers";
 
 export const dynamic = "force-dynamic";
 
-function applyPreviewResponseHeaders(headers: Headers) {
+function applyPreviewResponseHeaders(headers: Headers, mimeType: string) {
   const disposition = headers.get("Content-Disposition");
-  headers.set(
-    "Content-Disposition",
-    disposition ? disposition.replace(/^attachment\b/i, "inline") : "inline",
-  );
+  if (isInlineSafeMimeType(mimeType)) {
+    headers.set(
+      "Content-Disposition",
+      disposition ? disposition.replace(/^attachment\b/i, "inline") : "inline",
+    );
+  }
   headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
   headers.set("Pragma", "no-cache");
   headers.set("Expires", "0");
@@ -92,7 +95,7 @@ async function handleDownload(request: NextRequest) {
           request.headers.get("origin"),
         );
         if (isPreview) {
-          applyPreviewResponseHeaders(responseHeaders);
+          applyPreviewResponseHeaders(responseHeaders, mimeType);
         }
         responseHeaders.set("Content-Length", finalSize.toString());
         responseHeaders.set("Accept-Ranges", "bytes");
@@ -151,7 +154,7 @@ async function handleDownload(request: NextRequest) {
         request.headers.get("origin"),
       );
       if (isPreview) {
-        applyPreviewResponseHeaders(responseHeaders);
+        applyPreviewResponseHeaders(responseHeaders, mimeType);
       }
       responseHeaders.set("Content-Length", (contentLength ?? size).toString());
       responseHeaders.set("Accept-Ranges", "bytes");
@@ -224,7 +227,7 @@ async function handleDownload(request: NextRequest) {
       if (fileDetails.size) headHeaders.set("Content-Length", fileDetails.size);
       headHeaders.set("Accept-Ranges", "bytes");
       if (isPreview) {
-        applyPreviewResponseHeaders(headHeaders);
+        applyPreviewResponseHeaders(headHeaders, mimeType);
       }
       return new Response(new Blob([]), { status: 200, headers: headHeaders });
     }
@@ -273,7 +276,7 @@ async function handleDownload(request: NextRequest) {
       request.headers.get("origin"),
     );
     if (isPreview) {
-      applyPreviewResponseHeaders(responseHeaders);
+      applyPreviewResponseHeaders(responseHeaders, mimeType);
     }
 
     if (!range) {

@@ -314,13 +314,10 @@ export function prepareResponseHeaders(
   if (isVideoOrAudio) {
     responseHeaders.set(
       "Cache-Control",
-      "public, max-age=604800, no-transform",
+      "private, max-age=604800, no-transform",
     );
   } else {
-    responseHeaders.set(
-      "Cache-Control",
-      "public, max-age=31536000, no-transform, immutable",
-    );
+    responseHeaders.set("Cache-Control", "private, max-age=3600, no-transform");
   }
 
   responseHeaders.set("X-Accel-Buffering", "no");

@@ -41,11 +41,16 @@ vi.mock("@/lib/api-middleware", () => ({
   },
 }));
 
-vi.mock("@/lib/services/download", () => ({
-  validateDownloadRequest: mockValidateDownloadRequest,
-  prepareGoogleDriveUrl: mockPrepareGoogleDriveUrl,
-  prepareResponseHeaders: mockPrepareResponseHeaders,
-}));
+vi.mock("@/lib/services/download", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/services/download")>();
+  return {
+    validateDownloadRequest: mockValidateDownloadRequest,
+    prepareGoogleDriveUrl: mockPrepareGoogleDriveUrl,
+    prepareResponseHeaders: mockPrepareResponseHeaders,
+    isInlineSafeMimeType: actual.isInlineSafeMimeType,
+  };
+});
 
 vi.mock("@/lib/drive", () => ({
   getAccessToken: mockGetAccessToken,
@@ -228,6 +233,35 @@ describe("app/api/download route", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Disposition")).toBe(
       'inline; filename="sample.pdf"',
+    );
+    expect(response.headers.get("Cache-Control")).toBe(
+      "no-store, no-cache, must-revalidate",
+    );
+  });
+
+  it("keeps non-inline-safe preview responses as attachments", async () => {
+    mockPrepareGoogleDriveUrl.mockReturnValue({
+      url: "https://www.googleapis.com/drive/v3/files/file-123?alt=media",
+      mimeType: "text/html",
+      filename: "page.txt",
+    });
+    mockPrepareResponseHeaders.mockImplementation(() => {
+      return new Headers({
+        "Content-Type": "application/octet-stream",
+        "Content-Disposition": 'attachment; filename="page.txt"',
+        "Cache-Control": "public, max-age=31536000, immutable",
+      });
+    });
+
+    const response = await GET(
+      new NextRequest(
+        "http://localhost:3000/api/download?fileId=file-123&preview=1",
+      ),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Disposition")).toBe(
+      'attachment; filename="page.txt"',
     );
     expect(response.headers.get("Cache-Control")).toBe(
       "no-store, no-cache, must-revalidate",
