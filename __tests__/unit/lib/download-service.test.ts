@@ -198,7 +198,27 @@ describe("lib/services/download", () => {
       expect(error?.status).toBe(403);
       expect(mockIsAccessRestricted).toHaveBeenCalledWith(
         "local-storage:private/report.pdf",
-        [],
+        ["local-storage:"],
+        undefined,
+      );
+    });
+
+    it("lets an unlocked user download a local file under the global lock", async () => {
+      mockCheckLocalStorageAccess.mockResolvedValue(true);
+      mockIsAccessRestricted.mockImplementation(
+        (_id: string, allowedTokens: string[]) =>
+          Promise.resolve(!allowedTokens.includes("local-storage:")),
+      );
+      const request = new NextRequest(
+        "http://localhost:3000/api/download?fileId=local-storage:docs/report.pdf",
+      );
+
+      const { error } = await validateDownloadRequest(request);
+
+      expect(error).toBeUndefined();
+      expect(mockIsAccessRestricted).toHaveBeenCalledWith(
+        "local-storage:docs/report.pdf",
+        ["local-storage:"],
         undefined,
       );
     });

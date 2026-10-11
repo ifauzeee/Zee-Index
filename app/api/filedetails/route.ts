@@ -43,6 +43,10 @@ export const GET = createPublicRoute(
 
     const isAdmin = session?.user?.role === "ADMIN";
 
+    // A valid unlock cookie grants the local-storage root token so the
+    // global local lock alone does not hide already-authorized files; the
+    // 401 below only fires when the cookie is missing or invalid.
+    let localTokens: string[] = [];
     if (normalizedFileId.startsWith("local-storage:") && !isAdmin) {
       const hasAccess = await import("@/lib/auth").then((m) =>
         m.checkLocalStorageAccess(request),
@@ -56,12 +60,13 @@ export const GET = createPublicRoute(
           { status: 401 },
         );
       }
+      localTokens = ["local-storage:"];
     }
 
     if (!isAdmin) {
       const isRestricted = await isAccessRestricted(
         normalizedFileId,
-        [],
+        localTokens,
         session?.user?.email,
       );
       if (isRestricted) {

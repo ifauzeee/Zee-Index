@@ -174,6 +174,7 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
     context.fileId = normalizedFileId;
   }
 
+  let localTokens: string[] = [];
   if (fileId.startsWith("local-storage:") && userRole !== "ADMIN") {
     const hasAccess = await import("@/lib/auth").then((m) =>
       m.checkLocalStorageAccess(request),
@@ -188,6 +189,9 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
         },
       };
     }
+    // A valid unlock cookie grants the local-storage root token so the
+    // global local lock alone does not hide already-authorized files.
+    localTokens = ["local-storage:"];
   }
 
   if (userRole !== "ADMIN") {
@@ -213,7 +217,7 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
 
     const isRestricted = await isAccessRestricted(
       fileId,
-      folderTokenIds,
+      [...localTokens, ...folderTokenIds],
       session?.user?.email,
     );
 

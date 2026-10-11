@@ -109,6 +109,24 @@ describe("app/api/filedetails route", () => {
     );
   });
 
+  it("passes the local unlock to the access check for local files", async () => {
+    // Global local lock on: a user who already unlocked must not get 403 on
+    // files that are not per-folder protected.
+    mockIsAccessRestricted.mockImplementation(
+      (_id: string, allowedTokens: string[]) =>
+        Promise.resolve(!allowedTokens.includes("local-storage:")),
+    );
+
+    const response = await GET(makeRequest("local-storage:docs/report.pdf"));
+
+    expect(response.status).toBe(200);
+    expect(mockIsAccessRestricted).toHaveBeenCalledWith(
+      "local-storage:docs/report.pdf",
+      ["local-storage:"],
+      "user@example.com",
+    );
+  });
+
   it("returns 400 for a local id that escapes the storage root", async () => {
     const response = await GET(makeRequest("local-storage:../../etc/passwd"));
 
