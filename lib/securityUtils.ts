@@ -98,16 +98,19 @@ async function getAllowedRootIds(): Promise<Set<string>> {
 /**
  * True when `fileId` sits inside (or is) one of the allowed roots. The ancestor
  * chain is walked through Drive metadata because a folder's id alone says
- * nothing about where it lives.
+ * nothing about where it lives. Receives the caller's already-resolved root
+ * set so recursive checks do not re-read config and KV at every level.
  */
-async function isWithinAllowedRoots(fileId: string): Promise<boolean> {
+async function isWithinAllowedRoots(
+  fileId: string,
+  roots: Set<string>,
+): Promise<boolean> {
   const cached = memoryCache.get<boolean>(
     `${ALLOWED_ROOTS_CACHE_KEY_PREFIX}${fileId}`,
   );
   if (cached !== null) return cached;
 
   const computeScoped = async (): Promise<boolean> => {
-    const roots = await getAllowedRootIds();
     let currentId: string | undefined = fileId;
 
     for (let level = 0; level < MAX_PARENT_DEPTH; level++) {
@@ -234,15 +237,27 @@ export async function isAccessRestricted(
     fileId = normalized;
   }
 
-  // Resolve the allowed roots once per top-level check and pass them down
-  // the recursion instead of re-reading config and KV at every level.
-  const allowedRootIds = resolvedRoots ?? (await getAllowedRootIds());
-
   const isScopedDriveId =
     !isLocalStorage && fileId !== "virtual-root" && !isProviderId(fileId);
 
-  if (isScopedDriveId && !(await isWithinAllowedRoots(fileId))) {
-    return true;
+  // Resolve the allowed roots once per top-level check and pass them down
+  // the recursion instead of re-reading config and KV at every level. Only
+  // Drive-scoped ids need them; a Drive failure here fails closed for that
+  // request instead of turning a local-file request into a route error.
+  let allowedRootIds: Set<string> | undefined;
+  if (isScopedDriveId) {
+    try {
+      allowedRootIds = resolvedRoots ?? (await getAllowedRootIds());
+    } catch (e) {
+      logger.warn(
+        { err: e, fileId },
+        "Failed to resolve allowed roots during scoping",
+      );
+      return true;
+    }
+    if (!(await isWithinAllowedRoots(fileId, allowedRootIds))) {
+      return true;
+    }
   }
 
   if (allRestrictedIds.length === 0 && !isLocalRestricted) return false;
@@ -292,7 +307,7 @@ export async function isAccessRestricted(
         if (!access) return true;
       }
 
-      if (allowedRootIds.has(parentId)) {
+      if (allowedRootIds?.has(parentId)) {
         continue;
       }
 

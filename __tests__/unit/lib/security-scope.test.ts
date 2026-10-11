@@ -12,6 +12,7 @@ vi.mock("@/lib/db", () => ({
 
 vi.mock("@/lib/drive", () => ({
   getFileDetailsFromDrive: vi.fn(),
+  getAccessToken: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -37,7 +38,7 @@ vi.mock("@/lib/storage/providers", () => ({
 }));
 
 import { db } from "@/lib/db";
-import { getFileDetailsFromDrive } from "@/lib/drive";
+import { getFileDetailsFromDrive, getAccessToken } from "@/lib/drive";
 import { hasUserAccess } from "@/lib/auth";
 import { kv } from "@/lib/kv";
 import { getRootFolderId } from "@/lib/config";
@@ -79,6 +80,7 @@ describe("isAccessRestricted root scoping", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     __resetCache();
+    memoryCache.clear();
     process.env.NEXT_PUBLIC_ROOT_FOLDER_ID = ROOT_ID;
     process.env.NEXT_PUBLIC_MANUAL_DRIVES = "";
     delete process.env.NEXT_PUBLIC_MANUAL_DRIVES;
@@ -178,7 +180,9 @@ describe("isAccessRestricted root scoping", () => {
 
   it("resolves allowed roots once per top-level check, not per parent", async () => {
     // The parent walk recurses through several levels; re-reading the root
-    // config at every level multiplies KV reads during searches.
+    // config at every level multiplies KV reads during searches. The walk
+    // (isWithinAllowedRoots) must receive the already-resolved set instead
+    // of calling getAllowedRootIds again.
     driveTree({
       mid: { parents: [ROOT_ID] },
       leaf: { parents: ["mid"] },
@@ -187,6 +191,17 @@ describe("isAccessRestricted root scoping", () => {
     await isAccessRestricted("leaf");
 
     expect(getRootFolderId).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not resolve Drive roots for a local-storage id", async () => {
+    // A local file needs no Drive metadata; resolving the root alias would
+    // turn a Drive/network failure into a 500 for requests that never touch
+    // Drive.
+    driveTree({});
+
+    expect(await isAccessRestricted("local-storage:docs/a.txt")).toBe(false);
+    expect(getAccessToken).not.toHaveBeenCalled();
+    expect(getRootFolderId).not.toHaveBeenCalled();
   });
 
   it("resolves the root alias to the real root id", async () => {
