@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { parseSchemaValue } from "@/lib/telemetry";
+import { FILE_REQUEST_MAX_BYTES } from "@/lib/constants";
 
 export const shareTokenPayloadSchema = z
   .object({
@@ -133,7 +134,7 @@ export const fileRequestDeleteSchema = z.object({
 export const fileRequestUploadInitSchema = z.object({
   name: z.string().min(1),
   mimeType: z.string().min(1),
-  size: z.number().nonnegative(),
+  size: z.number().nonnegative().max(FILE_REQUEST_MAX_BYTES),
   subfolder: z.string().optional(),
 });
 

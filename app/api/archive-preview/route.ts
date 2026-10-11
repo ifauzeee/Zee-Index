@@ -1,9 +1,10 @@
 import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createUserRoute } from "@/lib/api-middleware";
-import { getAccessToken } from "@/lib/drive";
+import { getAccessToken, getFileDetailsFromDrive } from "@/lib/drive";
 import JSZip, { JSZipObject } from "jszip";
 import { isAccessRestricted } from "@/lib/securityUtils";
+import { ARCHIVE_PREVIEW_MAX_BYTES, ERROR_MESSAGES } from "@/lib/constants";
 
 import { getErrorMessage } from "@/lib/errors";
 interface JSZipFileWithData extends JSZipObject {
@@ -14,7 +15,7 @@ interface JSZipFileWithData extends JSZipObject {
 
 export const dynamic = "force-dynamic";
 
-export const GET = createUserRoute(async ({ request }) => {
+export const GET = createUserRoute(async ({ request, session }) => {
   const { searchParams } = new URL(request.url);
   const fileId = searchParams.get("fileId");
 
@@ -25,9 +26,31 @@ export const GET = createUserRoute(async ({ request }) => {
     );
   }
 
-  const isRestricted = await isAccessRestricted(fileId);
+  if (!/^[a-zA-Z0-9_-]+$/.test(fileId)) {
+    return NextResponse.json(
+      { error: ERROR_MESSAGES.INVALID_FILE_ID },
+      { status: 400 },
+    );
+  }
+
+  const isRestricted = await isAccessRestricted(fileId, [], session.user.email);
   if (isRestricted) {
     return NextResponse.json({ error: "Access Denied" }, { status: 403 });
+  }
+
+  const fileDetails = await getFileDetailsFromDrive(fileId);
+  if (!fileDetails) {
+    return NextResponse.json(
+      { error: "File tidak ditemukan." },
+      { status: 404 },
+    );
+  }
+
+  if (Number(fileDetails.size) > ARCHIVE_PREVIEW_MAX_BYTES) {
+    return NextResponse.json(
+      { error: "Archive too large to preview." },
+      { status: 413 },
+    );
   }
 
   try {

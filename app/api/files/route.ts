@@ -7,6 +7,8 @@ import { isPrivateFolder } from "@/lib/auth";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { getProtectedFolderIdsCached } from "@/lib/securityUtils";
 import { validateShareToken } from "@/lib/auth";
+import { normalizeLocalStorageId } from "@/lib/storage/local";
+import { ERROR_MESSAGES } from "@/lib/constants";
 import { RequestError, getErrorMessage } from "@/lib/errors";
 import { jwtVerify } from "jose";
 
@@ -52,16 +54,67 @@ export const GET = createPublicRoute(
         );
       }
 
+      const normalizedFolderId = folderId.startsWith("local-storage:")
+        ? normalizeLocalStorageId(folderId)
+        : folderId;
+
+      if (normalizedFolderId === null) {
+        return NextResponse.json(
+          { error: ERROR_MESSAGES.INVALID_FILE_ID },
+          { status: 400 },
+        );
+      }
+      folderId = normalizedFolderId;
+
       const canSeeAll = userRole === "ADMIN";
-      const isRestricted = await isAccessRestricted(folderId, [], userEmail);
-
       const isLocalStorage = folderId.startsWith("local-storage:");
-      if (!canSeeAll && isRestricted) {
-        if (isLocalStorage) {
-          const { checkLocalStorageAccess } = await import("@/lib/auth");
-          const hasLocalAccess = await checkLocalStorageAccess(request);
 
-          if (!hasLocalAccess) {
+      // A valid local unlock cookie grants the local-storage root, but not
+      // individual protected local folders underneath it.
+      let localTokens: string[] = [];
+      if (isLocalStorage && !canSeeAll) {
+        const { checkLocalStorageAccess } = await import("@/lib/auth");
+        if (await checkLocalStorageAccess(request)) {
+          localTokens = ["local-storage:"];
+        }
+      }
+
+      const isRestricted = await isAccessRestricted(
+        folderId,
+        localTokens,
+        userEmail,
+      );
+
+      if (!canSeeAll && isRestricted) {
+        const authHeader = request.headers.get("Authorization");
+        const token = authHeader?.split(" ")[1];
+
+        let accessGranted = false;
+        if (token) {
+          try {
+            const secret = new TextEncoder().encode(
+              process.env.SHARE_SECRET_KEY!,
+            );
+            const { payload } = await jwtVerify(token, secret);
+            const authorizedFolderId = payload.folderId as string;
+
+            if (authorizedFolderId) {
+              const stillRestricted = await isAccessRestricted(
+                folderId,
+                [...localTokens, authorizedFolderId],
+                userEmail,
+              );
+              if (!stillRestricted) {
+                accessGranted = true;
+              }
+            }
+          } catch (e) {
+            logger.error({ err: e }, "[Files API] Token verification failed");
+          }
+        }
+
+        if (!accessGranted) {
+          if (isLocalStorage && localTokens.length === 0) {
             return NextResponse.json(
               {
                 error: "Autentikasi Local Storage diperlukan",
@@ -70,44 +123,14 @@ export const GET = createPublicRoute(
               { status: 401 },
             );
           }
-        } else {
-          const authHeader = request.headers.get("Authorization");
-          const token = authHeader?.split(" ")[1];
-
-          let accessGranted = false;
-          if (token) {
-            try {
-              const secret = new TextEncoder().encode(
-                process.env.SHARE_SECRET_KEY!,
-              );
-              const { payload } = await jwtVerify(token, secret);
-              const authorizedFolderId = payload.folderId as string;
-
-              if (authorizedFolderId) {
-                const stillRestricted = await isAccessRestricted(
-                  folderId,
-                  [authorizedFolderId],
-                  userEmail,
-                );
-                if (!stillRestricted) {
-                  accessGranted = true;
-                }
-              }
-            } catch (e) {
-              logger.error({ err: e }, "[Files API] Token verification failed");
-            }
-          }
-
-          if (!accessGranted && !folderId.startsWith("local-storage:")) {
-            return NextResponse.json(
-              {
-                error: "Authentication required for this folder.",
-                protected: true,
-                folderId: folderId,
-              },
-              { status: 401 },
-            );
-          }
+          return NextResponse.json(
+            {
+              error: "Authentication required for this folder.",
+              protected: true,
+              folderId: folderId,
+            },
+            { status: 401 },
+          );
         }
       }
 

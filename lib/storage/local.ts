@@ -1,8 +1,10 @@
 import fs from "fs/promises";
 import path from "path";
+import { createHash } from "crypto";
 import { getMimeType } from "./mime";
 import { ZeeFile, ListFilesResponse } from "@/types/storage";
 import { logger } from "@/lib/logger";
+import { FILE_REQUEST_MAX_BYTES } from "@/lib/constants";
 
 const LOCAL_STORAGE_PATH = process.env.LOCAL_STORAGE_PATH || "storage";
 export const LOCAL_ROOT = path.isAbsolute(LOCAL_STORAGE_PATH)
@@ -20,6 +22,34 @@ export function isPathInsideLocalRoot(targetPath: string): boolean {
   );
 }
 
+const LOCAL_STORAGE_PREFIX = "local-storage:";
+
+/**
+ * Thrown when a chunk upload is rejected because of what the client sent
+ * (a bad Content-Range, an invalid file name, or a path outside the local
+ * root). The upload route answers 400 to these; anything else thrown by the
+ * storage layer is a server-side failure and must surface as 500.
+ */
+export class LocalChunkRequestError extends Error {}
+
+/**
+ * Rewrite a local-storage id into a canonical form so `..` segments cannot be
+ * used to reference a path outside the intended folder. Returns null when the
+ * id escapes the local storage root or contains a NUL byte.
+ */
+export function normalizeLocalStorageId(id: string): string | null {
+  if (!id.startsWith(LOCAL_STORAGE_PREFIX)) return null;
+
+  const raw = id.slice(LOCAL_STORAGE_PREFIX.length).replace(/\\/g, "/");
+  let normalized = path.posix.normalize(raw);
+  normalized = normalized.replace(/^\/+|\/+$/g, "");
+  if (normalized === ".") normalized = "";
+
+  if (normalized.startsWith("..") || id.includes("\0")) return null;
+
+  return `${LOCAL_STORAGE_PREFIX}${normalized}`;
+}
+
 function resolveLocalTargetPath(filePath: string): string {
   const normalizedFilePath = filePath.startsWith("/")
     ? filePath.substring(1)
@@ -27,7 +57,7 @@ function resolveLocalTargetPath(filePath: string): string {
   const absolutePath = path.resolve(LOCAL_ROOT, normalizedFilePath);
 
   if (!isPathInsideLocalRoot(absolutePath)) {
-    throw new Error("Akses dilarang (Path traversal)");
+    throw new LocalChunkRequestError("Akses dilarang (Path traversal)");
   }
 
   return absolutePath;
@@ -42,7 +72,7 @@ function sanitizeLocalFileName(fileName: string): string {
     trimmedName.includes("/") ||
     trimmedName.includes("\\")
   ) {
-    throw new Error("Nama file tidak valid");
+    throw new LocalChunkRequestError("Nama file tidak valid");
   }
 
   return trimmedName;
@@ -158,6 +188,41 @@ export async function getLocalFilePath(filePath: string): Promise<string> {
   return resolveLocalTargetPath(filePath);
 }
 
+/**
+ * Temp file name for an in-flight upload. Hashed rather than derived from the
+ * raw path so two concurrent uploads to different folders can never share a
+ * buffer, and a `..` in the path cannot address anything outside `.tmp`.
+ */
+export function getLocalChunkTempKey(
+  parentId: string,
+  fileName: string,
+): string {
+  return createHash("sha256").update(`${parentId}/${fileName}`).digest("hex");
+}
+
+/**
+ * Validate one resumable chunk against the bytes already stored. A retried
+ * chunk with the same start is accepted (start <= bytes on disk), but a start
+ * past the end would leave a gap that the final file cannot be assembled from.
+ */
+export function assertValidLocalChunkRange(
+  start: number,
+  end: number,
+  total: number,
+  currentTempSize: number,
+  bodyLength: number,
+): void {
+  if (
+    end < start ||
+    end - start + 1 !== bodyLength ||
+    end >= total ||
+    total > FILE_REQUEST_MAX_BYTES ||
+    start > currentTempSize
+  ) {
+    throw new LocalChunkRequestError("Content-Range tidak valid");
+  }
+}
+
 export async function saveLocalChunk(
   uploadUrl: string,
   chunk: ArrayBuffer,
@@ -174,9 +239,7 @@ export async function saveLocalChunk(
 
   await ensureLocalRoot();
 
-  const tempKey = Buffer.from(`${parentId}/${fileName}`)
-    .toString("hex")
-    .substring(0, 16);
+  const tempKey = getLocalChunkTempKey(parentId, fileName);
   const tempFilePath = path.join(
     LOCAL_ROOT,
     ".tmp",
@@ -189,13 +252,21 @@ export async function saveLocalChunk(
   const finalFilePath = path.join(finalFolderPath, fileName);
 
   const rangeMatch = contentRange.match(/bytes (\d+)-(\d+)\/(\d+)/);
-  if (!rangeMatch) throw new Error("Content-Range tidak valid");
+  if (!rangeMatch)
+    throw new LocalChunkRequestError("Content-Range tidak valid");
 
   const start = parseInt(rangeMatch[1]);
   const end = parseInt(rangeMatch[2]);
   const total = parseInt(rangeMatch[3]);
-
   const buffer = Buffer.from(chunk);
+
+  const currentTempSize = await fs
+    .stat(tempFilePath)
+    .then((stats) => stats.size)
+    .catch(() => 0);
+
+  assertValidLocalChunkRange(start, end, total, currentTempSize, buffer.length);
+
   const handle = await fs.open(tempFilePath, start === 0 ? "w" : "r+");
 
   try {

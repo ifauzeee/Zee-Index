@@ -9,6 +9,7 @@ const {
   mockKvGet,
   mockFindUnique,
   mockIsAccessRestricted,
+  mockCheckLocalStorageAccess,
 } = vi.hoisted(() => ({
   mockAuth: vi.fn(),
   mockGetVerifiedSession: vi.fn(),
@@ -17,6 +18,7 @@ const {
   mockKvGet: vi.fn(),
   mockFindUnique: vi.fn(),
   mockIsAccessRestricted: vi.fn(),
+  mockCheckLocalStorageAccess: vi.fn(),
 }));
 
 vi.mock("@/lib/verified-session", () => ({
@@ -25,6 +27,10 @@ vi.mock("@/lib/verified-session", () => ({
 
 vi.mock("@/auth", () => ({
   auth: mockAuth,
+}));
+
+vi.mock("@/lib/auth", () => ({
+  checkLocalStorageAccess: mockCheckLocalStorageAccess,
 }));
 
 vi.mock("@/lib/ratelimit", () => ({
@@ -180,10 +186,45 @@ describe("lib/services/download", () => {
       expect(error?.status).toBe(403);
     });
 
+    it("enforces folder protection for a local file under a protected subfolder", async () => {
+      mockCheckLocalStorageAccess.mockResolvedValue(true);
+      mockIsAccessRestricted.mockResolvedValue(true);
+      const request = new NextRequest(
+        "http://localhost:3000/api/download?fileId=local-storage:private/report.pdf",
+      );
+
+      const { error } = await validateDownloadRequest(request);
+
+      expect(error?.status).toBe(403);
+      expect(mockIsAccessRestricted).toHaveBeenCalledWith(
+        "local-storage:private/report.pdf",
+        ["local-storage:"],
+        undefined,
+      );
+    });
+
+    it("lets an unlocked user download a local file under the global lock", async () => {
+      mockCheckLocalStorageAccess.mockResolvedValue(true);
+      mockIsAccessRestricted.mockImplementation(
+        (_id: string, allowedTokens: string[]) =>
+          Promise.resolve(!allowedTokens.includes("local-storage:")),
+      );
+      const request = new NextRequest(
+        "http://localhost:3000/api/download?fileId=local-storage:docs/report.pdf",
+      );
+
+      const { error } = await validateDownloadRequest(request);
+
+      expect(error).toBeUndefined();
+      expect(mockIsAccessRestricted).toHaveBeenCalledWith(
+        "local-storage:docs/report.pdf",
+        ["local-storage:"],
+        undefined,
+      );
+    });
+
     it("allows restricted downloads when a valid folder token is supplied", async () => {
-      mockIsAccessRestricted
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(false);
+      mockIsAccessRestricted.mockResolvedValue(false);
       mockJwtVerify.mockResolvedValueOnce({
         payload: { folderId: "folder-1" },
       });
@@ -197,6 +238,11 @@ describe("lib/services/download", () => {
       expect(result.error).toBeUndefined();
       expect(result.context.fileId).toBe("file-1");
       expect(result.context.accessTokenParam).toBe("token");
+      expect(mockIsAccessRestricted).toHaveBeenCalledWith(
+        "file-1",
+        ["folder-1"],
+        undefined,
+      );
     });
   });
 
