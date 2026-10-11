@@ -1,7 +1,7 @@
 "use server";
 
 import { kv } from "@/lib/kv";
-import { auth } from "@/auth";
+import { getVerifiedSession } from "@/lib/verified-session";
 import { db } from "@/lib/db";
 import { DriveFile, getFileDetailsFromDrive } from "@/lib/drive";
 import { revalidateTag } from "next/cache";
@@ -27,7 +27,7 @@ async function batchDriveFetch<T>(
 
 export async function getFavorites() {
   const t = await getTranslations("ServerActions");
-  const session = await auth();
+  const session = await getVerifiedSession();
   if (!session?.user?.email) {
     throw new Error(t("accessDenied"));
   }
@@ -85,7 +85,7 @@ export async function getFavorites() {
 
 export async function addFavorite(fileId: string) {
   const t = await getTranslations("ServerActions");
-  const session = await auth();
+  const session = await getVerifiedSession();
   if (!session?.user?.email) {
     throw new Error(t("accessDenied"));
   }
@@ -103,7 +103,7 @@ export async function addFavorite(fileId: string) {
 
 export async function removeFavorite(fileId: string) {
   const t = await getTranslations("ServerActions");
-  const session = await auth();
+  const session = await getVerifiedSession();
   if (!session?.user?.email) {
     throw new Error(t("accessDenied"));
   }

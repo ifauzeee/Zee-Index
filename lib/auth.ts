@@ -3,7 +3,6 @@ import { kv } from "@/lib/kv";
 import { db } from "@/lib/db";
 import { memoryCache, CACHE_TTL } from "@/lib/memory-cache";
 import { NextRequest } from "next/server";
-import { auth } from "@/auth";
 import { getPrivateFolderIds } from "@/lib/utils";
 import { REDIS_KEYS } from "@/lib/constants";
 import { getLocalStorageAuthSecret } from "@/lib/local-auth-secret";
@@ -257,7 +256,10 @@ export async function verifyShareTokenString(token: string): Promise<boolean> {
     }
 
     if (payload.loginRequired) {
-      const session = await auth();
+      // Lazy import keeps the NextAuth root config (@/auth) out of this
+      // module's import graph, which middleware also loads.
+      const { getVerifiedSession } = await import("@/lib/verified-session");
+      const session = await getVerifiedSession();
       return !!session;
     }
     return true;

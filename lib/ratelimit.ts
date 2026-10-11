@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { kv } from "./kv";
 import { RATE_LIMITS } from "./constants";
 import { logger } from "./logger";
+import { getClientIp } from "./client-ip";
 
 export type RateLimitType = keyof typeof RATE_LIMITS;
 
@@ -248,8 +249,7 @@ export async function checkRateLimit(
   let finalId = identifier;
 
   if (!finalId) {
-    const forwardedFor = request.headers.get("x-forwarded-for");
-    finalId = forwardedFor ? forwardedFor.split(",")[0].trim() : "127.0.0.1";
+    finalId = getClientIp(request.headers);
   }
 
   let limiter: KVRateLimiter;

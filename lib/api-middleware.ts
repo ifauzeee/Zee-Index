@@ -4,6 +4,7 @@ import type { z } from "zod";
 import { ERROR_MESSAGES } from "@/lib/constants";
 import type { RateLimitType } from "@/lib/ratelimit";
 import { constantTimeEqual } from "@/lib/security";
+import { isPending2FA } from "@/lib/verified-session";
 
 type MaybePromise<T> = T | Promise<T>;
 
@@ -61,6 +62,9 @@ interface CreateRouteOptions<
   /** Required API key permission (e.g. "admin:write", "files:read").
    *  Only enforced when the request uses API key auth. */
   permission?: string;
+  /** Allow a session that has not completed 2FA yet (used by the 2FA
+   *  verification routes themselves). Any other route rejects such a session. */
+  allowPending2FA?: boolean;
 }
 
 type SessionForRole<TRole extends ApiRole> = TRole extends "public"
@@ -211,12 +215,28 @@ export function createRouteHandler<
       request.headers.get("x-request-id")?.trim() || crypto.randomUUID();
 
     try {
-      const session =
+      let session: Session | null =
         role !== "public" || options.includeSession
           ? await (
               await loadAuth()
             )()
           : null;
+
+      // A session that has not passed 2FA yet must not reach app data. Public
+      // routes simply treat it as anonymous; the rest get a hard 403.
+      if (isPending2FA(session) && !options.allowPending2FA) {
+        if (role === "public") {
+          session = null;
+        } else {
+          return withRequestId(
+            NextResponse.json(
+              { error: "2FA verification required" },
+              { status: 403 },
+            ),
+            requestId,
+          );
+        }
+      }
 
       if (role !== "public" && !session?.user) {
         return withRequestId(

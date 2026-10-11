@@ -12,6 +12,7 @@ import {
   prepareGoogleDriveUrl,
   prepareResponseHeaders,
 } from "@/lib/services/download";
+import { getClientIp } from "@/lib/client-ip";
 import { applyWatermark } from "@/lib/watermark";
 import { getActiveProvider, isProviderId } from "@/lib/storage/providers";
 
@@ -276,11 +277,7 @@ async function handleDownload(request: NextRequest) {
     }
 
     if (!range) {
-      const forwardedFor = request.headers.get("x-forwarded-for");
-      const realIp = request.headers.get("x-real-ip");
-      const ip = forwardedFor
-        ? forwardedFor.split(",")[0].trim()
-        : realIp || "anonymous";
+      const ip = getClientIp(request.headers);
       const userIdentifier = session?.user?.email || ip;
 
       const dedupeKey = `loop_prevent:download:${fileId}:${userIdentifier}`;

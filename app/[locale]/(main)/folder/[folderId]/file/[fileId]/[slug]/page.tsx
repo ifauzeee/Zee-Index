@@ -2,7 +2,7 @@ import { getAnyFileDetails, listAllFiles } from "@/lib/storage";
 import FileDetailClient from "@/components/file-browser/FileDetailClient";
 import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
-import { auth } from "@/auth";
+import { getVerifiedSession } from "@/lib/verified-session";
 import {
   isPrivateFolder,
   isProtected,
@@ -47,7 +47,7 @@ export default async function FilePage(props: {
   let file = null;
   let error = null;
 
-  const session = await auth();
+  const session = await getVerifiedSession();
   const shareToken = searchParams?.share_token as string | undefined;
 
   if (shareToken) {

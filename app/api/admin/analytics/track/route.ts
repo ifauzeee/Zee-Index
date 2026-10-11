@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createPublicRoute } from "@/lib/api-middleware";
 import { trackPageView } from "@/lib/analyticsTracker";
 import { analyticsTrackRequestSchema } from "@/lib/telemetry";
+import { getClientIp } from "@/lib/client-ip";
 
 export const dynamic = "force-dynamic";
 
@@ -12,16 +13,8 @@ export const POST = createPublicRoute(
       const path = body.path;
       const referrer = body.referrer;
 
-      const forwardedFor = request.headers.get("x-forwarded-for");
-      const realIp = request.headers.get("x-real-ip");
       const userAgent = request.headers.get("user-agent") || "unknown";
-
-      let ip = "unknown";
-      if (forwardedFor) {
-        ip = forwardedFor.split(",")[0].trim();
-      } else if (realIp) {
-        ip = realIp;
-      }
+      const ip = getClientIp(request.headers);
 
       await trackPageView({
         path,

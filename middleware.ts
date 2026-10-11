@@ -32,12 +32,11 @@ const intlMiddleware = createMiddleware({
 
 const PUBLIC_PATHS = new Set(["/login", "/verify-2fa", "/setup", "/request"]);
 // Public only when the route itself enforces auth/share checks.
-// Prefer exact prefixes for read-only public surfaces; mutations use create*Route.
-const PUBLIC_API_PREFIXES = [
-  "/api/auth",
-  "/api/config/public",
+// Exact paths let the route wrapper decide; prefixes cover sub-routes the
+// handler owns (auth callbacks, setup steps, share item reads, cron jobs).
+const PUBLIC_API_EXACT = new Set([
   "/api/config",
-  "/api/setup",
+  "/api/config/public",
   "/api/files",
   "/api/folderpath",
   "/api/filedetails",
@@ -47,15 +46,24 @@ const PUBLIC_API_PREFIXES = [
   "/api/health",
   "/api/metadata",
   "/api/search",
+  "/api/search/global",
   "/api/manual-drives",
   "/api/share/track",
-  "/api/share/items",
   "/api/file-request/upload",
+]);
+
+const PUBLIC_API_PREFIXES = [
+  "/api/auth",
+  "/api/setup",
+  "/api/share/items",
   "/api/cron",
 ];
 
 export function isPublicApiPath(pathname: string): boolean {
-  return PUBLIC_API_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  if (PUBLIC_API_EXACT.has(pathname)) return true;
+  return PUBLIC_API_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
 }
 
 const isPublicRoute = (pathname: string) => {
@@ -337,7 +345,7 @@ export default async function middleware(request: NextRequest) {
   if (
     (PUBLIC_PATHS.has(pathnameWithoutLocale) &&
       !pathnameWithoutLocale.startsWith("/setup")) ||
-    isPublicApiPath(pathname)
+    isPublicApiPath(pathnameWithoutLocale)
   ) {
     return applyCsp(
       request,
@@ -347,16 +355,15 @@ export default async function middleware(request: NextRequest) {
 
   const shareToken = request.nextUrl.searchParams.get("share_token");
   if (shareToken) {
-    return applyCsp(
+    const shareResponse = await validateShareToken(
       request,
-      await validateShareToken(
-        request,
-        shareToken,
-        pathname,
-        isApi,
-        intlMiddleware,
-      ),
+      shareToken,
+      pathname,
+      isApi,
     );
+    if (shareResponse) {
+      return applyCsp(request, shareResponse);
+    }
   }
 
   if (!isAuthenticated && !isPublicRoute(pathnameWithoutLocale)) {

@@ -1,7 +1,7 @@
 "use server";
 
 import { kv } from "@/lib/kv";
-import { auth } from "@/auth";
+import { getVerifiedSession } from "@/lib/verified-session";
 import { getFileDetailsFromDrive, DriveFile } from "@/lib/drive";
 import { z } from "zod";
 import { revalidateTag } from "next/cache";
@@ -57,7 +57,7 @@ export async function getPinnedFolders() {
 
 export async function addPin(folderId: string) {
   const t = await getTranslations("ServerActions");
-  const session = await auth();
+  const session = await getVerifiedSession();
   if (session?.user?.role !== "ADMIN") {
     throw new Error(t("unauthorized"));
   }
@@ -75,7 +75,7 @@ export async function addPin(folderId: string) {
 
 export async function removePin(folderId: string) {
   const t = await getTranslations("ServerActions");
-  const session = await auth();
+  const session = await getVerifiedSession();
   if (session?.user?.role !== "ADMIN") {
     throw new Error(t("unauthorized"));
   }

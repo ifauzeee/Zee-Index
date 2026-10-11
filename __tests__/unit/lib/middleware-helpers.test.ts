@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
+import { REDIS_KEYS } from "@/lib/constants";
 
 const {
   mockCheckAuth,
   mockHandleAuthRedirect,
   mockJwtVerify,
+  mockKvGet,
   mockGetRootFolderId,
   mockGetAccessToken,
   mockFetchMetadata,
@@ -12,6 +14,7 @@ const {
   mockCheckAuth: vi.fn(),
   mockHandleAuthRedirect: vi.fn(),
   mockJwtVerify: vi.fn(),
+  mockKvGet: vi.fn(),
   mockGetRootFolderId: vi.fn(),
   mockGetAccessToken: vi.fn(),
   mockFetchMetadata: vi.fn(),
@@ -24,6 +27,10 @@ vi.mock("@/lib/auth-check", () => ({
 
 vi.mock("jose", () => ({
   jwtVerify: mockJwtVerify,
+}));
+
+vi.mock("@/lib/kv", () => ({
+  kv: { get: mockKvGet },
 }));
 
 vi.mock("@/lib/config", () => ({
@@ -50,6 +57,7 @@ describe("lib/middleware-helpers", () => {
     vi.clearAllMocks();
     process.env.SHARE_SECRET_KEY =
       "test-share-secret-key-with-at-least-32-chars";
+    mockKvGet.mockResolvedValue(null);
 
     mockHandleAuthRedirect.mockImplementation(
       (request: NextRequest, pathname: string, error?: string) => {
@@ -73,18 +81,75 @@ describe("lib/middleware-helpers", () => {
         "bad-token",
         "/api/files",
         true,
-        (incomingRequest) => NextResponse.next({ request: incomingRequest }),
       );
 
-      expect(response.status).toBe(401);
-      await expect(response.json()).resolves.toEqual({
+      expect(response?.status).toBe(401);
+      await expect(response?.json()).resolves.toEqual({
         error: "ShareLinkExpired",
       });
     });
 
+    it("returns null for a valid share token so the normal flow continues", async () => {
+      mockJwtVerify.mockResolvedValueOnce({
+        payload: { jti: "share-1", loginRequired: false },
+      });
+
+      const request = new NextRequest("http://localhost:3000/api/files");
+      const response = await validateShareToken(
+        request,
+        "share-token",
+        "/api/files",
+        true,
+      );
+
+      expect(response).toBeNull();
+    });
+
+    it("returns api 401 when the share link jti is revoked in kv", async () => {
+      mockJwtVerify.mockResolvedValueOnce({
+        payload: { jti: "share-revoked", loginRequired: false },
+      });
+      mockKvGet.mockResolvedValueOnce(true);
+
+      const request = new NextRequest("http://localhost:3000/api/files");
+      const response = await validateShareToken(
+        request,
+        "share-token",
+        "/api/files",
+        true,
+      );
+
+      expect(mockKvGet).toHaveBeenCalledWith(
+        `${REDIS_KEYS.SHARE_BLOCKED}share-revoked`,
+      );
+      expect(response?.status).toBe(401);
+      await expect(response?.json()).resolves.toEqual({
+        error: "ShareLinkExpired",
+      });
+    });
+
+    it("redirects to login when the share link jti is revoked in kv", async () => {
+      mockJwtVerify.mockResolvedValueOnce({
+        payload: { jti: "share-revoked", loginRequired: false },
+      });
+      mockKvGet.mockResolvedValueOnce(true);
+
+      const request = new NextRequest("http://localhost:3000/share/demo");
+      const response = await validateShareToken(
+        request,
+        "share-token",
+        "/share/demo",
+        false,
+      );
+
+      expect(response?.status).toBe(307);
+      expect(response?.headers.get("location")).toContain("/login");
+      expect(response?.headers.get("location")).toContain("ShareLinkExpired");
+    });
+
     it("redirects guests to login when the share token requires authentication", async () => {
       mockJwtVerify.mockResolvedValueOnce({
-        payload: { loginRequired: true },
+        payload: { jti: "share-2", loginRequired: true },
       });
       mockCheckAuth.mockResolvedValueOnce({ isAuthenticated: false });
 
@@ -94,7 +159,6 @@ describe("lib/middleware-helpers", () => {
         "share-token",
         "/share/demo",
         false,
-        () => NextResponse.next(),
       );
 
       expect(mockCheckAuth).toHaveBeenCalled();
@@ -103,8 +167,25 @@ describe("lib/middleware-helpers", () => {
         "/share/demo",
         "GuestAccessDenied",
       );
-      expect(response.status).toBe(307);
-      expect(response.headers.get("location")).toContain("/login");
+      expect(response?.status).toBe(307);
+      expect(response?.headers.get("location")).toContain("/login");
+    });
+
+    it("returns null for a login-required share token when the user is signed in", async () => {
+      mockJwtVerify.mockResolvedValueOnce({
+        payload: { jti: "share-3", loginRequired: true },
+      });
+      mockCheckAuth.mockResolvedValueOnce({ isAuthenticated: true });
+
+      const request = new NextRequest("http://localhost:3000/share/demo");
+      const response = await validateShareToken(
+        request,
+        "share-token",
+        "/share/demo",
+        false,
+      );
+
+      expect(response).toBeNull();
     });
   });
 
