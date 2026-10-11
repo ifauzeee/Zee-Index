@@ -269,6 +269,19 @@ export function prepareGoogleDriveUrl(
   };
 }
 
+const INLINE_SAFE_MIME_TYPE =
+  /^(image\/(png|jpe?g|gif|webp|avif|bmp)|video\/.+|audio\/.+|application\/pdf|text\/plain|text\/vtt)$/i;
+
+/**
+ * Only these types may be rendered by the browser in the document context.
+ * Everything else — notably `text/html`, `image/svg+xml`, and any scripting
+ * or markup type — is served as an opaque octet-stream download, so a file
+ * served from the app can never execute as script or markup.
+ */
+export function isInlineSafeMimeType(mimeType: string): boolean {
+  return INLINE_SAFE_MIME_TYPE.test(mimeType);
+}
+
 export function prepareResponseHeaders(
   mimeType: string,
   filename: string,
@@ -284,10 +297,13 @@ export function prepareResponseHeaders(
     (char) => "%" + char.charCodeAt(0).toString(16).toUpperCase(),
   );
 
-  const isDirectDownload = !range && !secFetchDest;
-  const disposition = isDirectDownload ? "attachment" : "inline";
+  const inlineSafe = isInlineSafeMimeType(mimeType);
+  const servedMimeType = inlineSafe ? mimeType : "application/octet-stream";
 
-  responseHeaders.set("Content-Type", mimeType);
+  const isDirectDownload = !range && !secFetchDest;
+  const disposition = isDirectDownload || !inlineSafe ? "attachment" : "inline";
+
+  responseHeaders.set("Content-Type", servedMimeType);
   responseHeaders.set(
     "Content-Disposition",
     `${disposition}; filename="${encodedFileName}"; filename*=UTF-8''${encodedFileName}`,
@@ -298,13 +314,10 @@ export function prepareResponseHeaders(
   if (isVideoOrAudio) {
     responseHeaders.set(
       "Cache-Control",
-      "public, max-age=604800, no-transform",
+      "private, max-age=604800, no-transform",
     );
   } else {
-    responseHeaders.set(
-      "Cache-Control",
-      "public, max-age=31536000, no-transform, immutable",
-    );
+    responseHeaders.set("Cache-Control", "private, max-age=3600, no-transform");
   }
 
   responseHeaders.set("X-Accel-Buffering", "no");
