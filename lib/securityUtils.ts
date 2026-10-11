@@ -1,4 +1,4 @@
-﻿import { db } from "@/lib/db";
+import { db } from "@/lib/db";
 import { getFileDetailsFromDrive } from "@/lib/drive";
 import { GOOGLE_DRIVE_API_BASE_URL } from "@/lib/constants";
 import { hasUserAccess } from "@/lib/auth";

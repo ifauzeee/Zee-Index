@@ -21,4 +21,13 @@ describe("lib/drive/query escapeDriveQueryValue", () => {
   it("keeps an empty string empty", () => {
     expect(escapeDriveQueryValue("")).toBe("");
   });
+
+  it("matches the escaping searchFilesInFolder used to inline", () => {
+    // searchFilesInFolder used its own single-pass replace; pin both agree
+    // so the shared helper stays a drop-in for every call site.
+    const inlineEscape = (term: string) => term.replace(/['\\]/g, "\\$&");
+    for (const term of ["it's", "a\\b", "a\\'b", "report", "", "O'Brien\\"]) {
+      expect(escapeDriveQueryValue(term)).toBe(inlineEscape(term));
+    }
+  });
 });
