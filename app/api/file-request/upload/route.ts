@@ -7,7 +7,10 @@ import { getAccessToken } from "@/lib/drive";
 import { kv } from "@/lib/kv";
 import { logActivity } from "@/lib/activityLogger";
 import { REDIS_KEYS } from "@/lib/constants";
-import { normalizeLocalStorageId } from "@/lib/storage/local";
+import {
+  normalizeLocalStorageId,
+  LocalChunkRequestError,
+} from "@/lib/storage/local";
 import {
   fileRequestUploadInitSchema,
   parseFileRequestLink,
@@ -260,14 +263,26 @@ export const POST = createPublicRoute(
           const { saveLocalChunk } = await import("@/lib/storage/local");
           const chunkBuffer = await request.arrayBuffer();
 
+          let result: Awaited<ReturnType<typeof saveLocalChunk>>;
           try {
-            const result = await saveLocalChunk(
-              uploadUrl,
-              chunkBuffer,
-              contentRange,
-            );
+            result = await saveLocalChunk(uploadUrl, chunkBuffer, contentRange);
+          } catch (error) {
+            if (error instanceof LocalChunkRequestError) {
+              logger.error(
+                { err: error },
+                "[File Request Upload] Local chunk rejected",
+              );
+              return NextResponse.json(
+                { error: "Content-Range tidak valid" },
+                { status: 400 },
+              );
+            }
+            // Disk/save failures are server errors, not invalid client input.
+            throw error;
+          }
 
-            if (result.status === "completed" && result.file) {
+          if (result.status === "completed" && result.file) {
+            try {
               const rolesToInvalidate = ["ADMIN", "USER", "GUEST"];
               for (const role of rolesToInvalidate) {
                 await kv.del(
@@ -287,19 +302,17 @@ export const POST = createPublicRoute(
                 result.file.name,
                 result.file.size || "0",
               );
+            } catch (error) {
+              // The chunk is saved; cache invalidation and notifications are
+              // best-effort and must not turn a finished upload into an error.
+              logger.error(
+                { err: error },
+                "[File Request Upload] Post-upload cleanup failed",
+              );
             }
-
-            return NextResponse.json(result);
-          } catch (error) {
-            logger.error(
-              { err: error },
-              "[File Request Upload] Local chunk rejected",
-            );
-            return NextResponse.json(
-              { error: "Content-Range tidak valid" },
-              { status: 400 },
-            );
           }
+
+          return NextResponse.json(result);
         }
 
         if (!isAllowedResumableUploadUrl(uploadUrl)) {

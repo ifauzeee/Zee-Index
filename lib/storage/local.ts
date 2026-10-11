@@ -25,6 +25,14 @@ export function isPathInsideLocalRoot(targetPath: string): boolean {
 const LOCAL_STORAGE_PREFIX = "local-storage:";
 
 /**
+ * Thrown when a chunk upload is rejected because of what the client sent
+ * (a bad Content-Range, an invalid file name, or a path outside the local
+ * root). The upload route answers 400 to these; anything else thrown by the
+ * storage layer is a server-side failure and must surface as 500.
+ */
+export class LocalChunkRequestError extends Error {}
+
+/**
  * Rewrite a local-storage id into a canonical form so `..` segments cannot be
  * used to reference a path outside the intended folder. Returns null when the
  * id escapes the local storage root or contains a NUL byte.
@@ -49,7 +57,7 @@ function resolveLocalTargetPath(filePath: string): string {
   const absolutePath = path.resolve(LOCAL_ROOT, normalizedFilePath);
 
   if (!isPathInsideLocalRoot(absolutePath)) {
-    throw new Error("Akses dilarang (Path traversal)");
+    throw new LocalChunkRequestError("Akses dilarang (Path traversal)");
   }
 
   return absolutePath;
@@ -64,7 +72,7 @@ function sanitizeLocalFileName(fileName: string): string {
     trimmedName.includes("/") ||
     trimmedName.includes("\\")
   ) {
-    throw new Error("Nama file tidak valid");
+    throw new LocalChunkRequestError("Nama file tidak valid");
   }
 
   return trimmedName;
@@ -211,7 +219,7 @@ export function assertValidLocalChunkRange(
     total > FILE_REQUEST_MAX_BYTES ||
     start > currentTempSize
   ) {
-    throw new Error("Content-Range tidak valid");
+    throw new LocalChunkRequestError("Content-Range tidak valid");
   }
 }
 
@@ -244,7 +252,8 @@ export async function saveLocalChunk(
   const finalFilePath = path.join(finalFolderPath, fileName);
 
   const rangeMatch = contentRange.match(/bytes (\d+)-(\d+)\/(\d+)/);
-  if (!rangeMatch) throw new Error("Content-Range tidak valid");
+  if (!rangeMatch)
+    throw new LocalChunkRequestError("Content-Range tidak valid");
 
   const start = parseInt(rangeMatch[1]);
   const end = parseInt(rangeMatch[2]);
