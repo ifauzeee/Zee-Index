@@ -1,7 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { isAccessRestricted, __resetCache } from "@/lib/securityUtils";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { isAccessRestricted, __resetCache } from "@/lib/securityUtils";
 import { memoryCache } from "@/lib/memory-cache";
 
 vi.mock("@/lib/db", () => ({
