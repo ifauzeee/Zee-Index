@@ -88,6 +88,9 @@ describe("isAccessRestricted root scoping", () => {
       db.protectedFolder.findMany as unknown as ReturnType<typeof vi.fn>
     ).mockResolvedValue([]);
     (kv.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    (getAccessToken as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      "token",
+    );
     (getRootFolderId as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
       ROOT_ID,
     );
@@ -262,5 +265,27 @@ describe("isAccessRestricted root scoping", () => {
     // only then is the positive result cached.
     expect(await isAccessRestricted("flaky-file")).toBe(false);
     expect(memoryCache.get<boolean>("scope:inroot:flaky-file")).toBe(true);
+  });
+
+  it("stays fail-closed when the root alias cannot be resolved", async () => {
+    // With NEXT_PUBLIC_ROOT_FOLDER_ID=root and a Drive alias lookup failing,
+    // nothing may count as inside the root for non-admins.
+    (getRootFolderId as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      "root",
+    );
+    (kv.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: false, json: async () => ({}) }),
+    );
+    // A fresh id: positive scoping results are cached per id for 10 minutes
+    // and the alias test above already cached its own id.
+    driveTree({ "below-unresolvable-alias": { parents: ["real-root-id"] } });
+
+    try {
+      expect(await isAccessRestricted("below-unresolvable-alias")).toBe(true);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
