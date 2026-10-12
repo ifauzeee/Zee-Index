@@ -1,105 +1,36 @@
 import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createPublicRoute } from "@/lib/api-middleware";
-import { getAccessToken } from "@/lib/drive";
-import { validateShareToken } from "@/lib/auth";
-import { kv } from "@/lib/kv";
+import { getFolderPath } from "@/lib/drive";
+import { collectAccessTokens, validateShareToken } from "@/lib/auth";
+import { getAllowedRootIds, redactRestrictedPath } from "@/lib/securityUtils";
 import { getActiveProvider, isProviderId } from "@/lib/storage/providers";
 
 export const dynamic = "force-dynamic";
 
-interface ManualDrive {
-  id: string;
-  name?: string;
-}
-
-interface DrivePathNode {
+interface PathNode {
   id: string;
   name: string;
 }
 
-interface DrivePathResponse extends DrivePathNode {
-  parents?: string[];
-}
+const PATH_CACHE_HEADERS = {
+  "Cache-Control": "private, max-age=60, stale-while-revalidate=600",
+};
 
-function isManualDrive(value: unknown): value is ManualDrive {
-  return typeof value === "object" && value !== null && "id" in value;
-}
-
-function parseManualDrives(value: string): ManualDrive[] {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return [];
+/** Build breadcrumbs for a path-style id (`<prefix>a/b/`) from the id alone. */
+function buildPrefixedPath(
+  folderId: string,
+  prefix: string,
+  root: PathNode,
+): PathNode[] {
+  const segments = folderId.slice(prefix.length).split("/").filter(Boolean);
+  const nodes = [root];
+  let currentPath = "";
+  for (const segment of segments) {
+    currentPath += `${segment}/`;
+    nodes.push({ id: `${prefix}${currentPath}`, name: segment });
   }
-
-  if (trimmed.startsWith("[")) {
-    try {
-      const parsed: unknown = JSON.parse(trimmed);
-      if (Array.isArray(parsed)) {
-        return parsed.flatMap((entry) => {
-          if (typeof entry === "string") {
-            const id = entry.trim();
-            return id ? [{ id }] : [];
-          }
-
-          if (isManualDrive(entry)) {
-            const id = String(entry.id).trim();
-            if (!id) {
-              return [];
-            }
-
-            return [
-              {
-                id,
-                name:
-                  typeof entry.name === "string"
-                    ? entry.name.trim()
-                    : undefined,
-              },
-            ];
-          }
-
-          return [];
-        });
-      }
-    } catch {
-      return [];
-    }
-  }
-
-  return trimmed.split(",").flatMap((entry) => {
-    const [id, name] = entry.split(":");
-    const cleanId = id?.trim();
-    if (!cleanId) {
-      return [];
-    }
-
-    return [{ id: cleanId, name: name?.trim() || undefined }];
-  });
-}
-
-async function fetchWithRetry(
-  url: string,
-  options: RequestInit,
-  retries = 3,
-  delay = 1000,
-): Promise<Response> {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const response = await fetch(url, options);
-      if (response.ok) return response;
-      if (response.status === 404 || response.status === 401) return response;
-      if (response.status >= 500) {
-        await new Promise((res) => setTimeout(res, delay * Math.pow(2, i)));
-        continue;
-      }
-      return response;
-    } catch (error) {
-      if (i === retries - 1) throw error;
-      await new Promise((res) => setTimeout(res, delay * Math.pow(2, i)));
-    }
-  }
-  throw new Error("Fetch failed after retries");
+  return nodes;
 }
 
 export const GET = createPublicRoute(
@@ -140,202 +71,73 @@ export const GET = createPublicRoute(
       .split("?")[0]
       .trim();
 
-    const cacheKey = `zee-index:folder-path-v7:${folderId}:${locale}`;
+    // Local and provider breadcrumbs are derived from the id the caller
+    // already sent, so they reveal nothing new.
+    if (folderId === "virtual-root") {
+      return NextResponse.json(
+        [{ id: "virtual-root", name: locale === "id" ? "Beranda" : "Home" }],
+        { headers: PATH_CACHE_HEADERS },
+      );
+    }
 
-    try {
-      if (folderId === "virtual-root") {
-        return NextResponse.json(
-          [{ id: "virtual-root", name: locale === "id" ? "Beranda" : "Home" }],
-          {
-            headers: {
-              "Cache-Control":
-                "private, max-age=60, stale-while-revalidate=600",
-            },
-          },
-        );
-      }
+    if (folderId.startsWith("local-storage:")) {
+      return NextResponse.json(
+        buildPrefixedPath(folderId, "local-storage:", {
+          id: "local-storage:",
+          name: locale === "id" ? "Penyimpanan Lokal" : "Local Storage",
+        }),
+        { headers: PATH_CACHE_HEADERS },
+      );
+    }
 
-      if (folderId.startsWith("local-storage:")) {
-        const localPath = folderId.replace("local-storage:", "");
-        const segments = localPath.split("/").filter(Boolean);
-        const pathNodes = [
-          {
-            id: "local-storage:",
-            name: locale === "id" ? "Penyimpanan Lokal" : "Local Storage",
-          },
-        ];
-
-        let currentPath = "";
-        segments.forEach((segment) => {
-          currentPath += segment + "/";
-          pathNodes.push({ id: `local-storage:${currentPath}`, name: segment });
-        });
-
-        return NextResponse.json(pathNodes, {
-          headers: {
-            "Cache-Control": "private, max-age=60, stale-while-revalidate=600",
-          },
-        });
-      }
-
-      if (isProviderId(folderId)) {
-        const provider = getActiveProvider();
-        if (provider) {
-          const relPath = folderId.slice(provider.idPrefix.length);
-          const segments = relPath.split("/").filter(Boolean);
-          const pathNodes = [
-            {
-              id: provider.rootId,
-              name: provider.rootName,
-            },
-          ];
-
-          let currentPath = "";
-          segments.forEach((segment) => {
-            currentPath += segment + "/";
-            pathNodes.push({
-              id: `${provider.idPrefix}${currentPath}`,
-              name: segment,
-            });
-          });
-
-          return NextResponse.json(pathNodes, {
-            headers: {
-              "Cache-Control":
-                "private, max-age=60, stale-while-revalidate=600",
-            },
-          });
-        }
-      }
-
-      const cachedPath: { id: string; name: string }[] | null =
-        await kv.get(cacheKey);
-      if (cachedPath) {
-        return NextResponse.json(cachedPath, {
-          headers: {
-            "Cache-Control": "private, max-age=60, stale-while-revalidate=600",
-          },
-        });
-      }
-    } catch (e) {
-      logger.error({ err: e }, "Cache fetch error");
+    const provider = getActiveProvider();
+    if (provider && isProviderId(folderId)) {
+      return NextResponse.json(
+        buildPrefixedPath(folderId, provider.idPrefix, {
+          id: provider.rootId,
+          name: provider.rootName,
+        }),
+        { headers: PATH_CACHE_HEADERS },
+      );
     }
 
     try {
-      const dbDrivesRaw = await kv.get("zee-index:manual-drives");
-      const dbDrives = Array.isArray(dbDrivesRaw)
-        ? dbDrivesRaw.filter(isManualDrive)
-        : [];
-      const envDrives = parseManualDrives(
-        process.env.NEXT_PUBLIC_MANUAL_DRIVES || "",
-      );
+      const path = await getFolderPath(folderId, locale);
 
-      const shortcutMap = new Map<string, string>();
+      if (session?.user?.role === "ADMIN") {
+        return NextResponse.json(path, { headers: PATH_CACHE_HEADERS });
+      }
 
-      if (process.env.NEXT_PUBLIC_ROOT_FOLDER_ID) {
-        shortcutMap.set(
-          process.env.NEXT_PUBLIC_ROOT_FOLDER_ID.trim(),
-          "Google Drive",
+      // A path that does not start at an allowed root belongs to a folder
+      // outside the index (e.g. the account's own My Drive): reveal nothing.
+      const allowedRoots = await getAllowedRootIds();
+      if (path.length === 0 || !allowedRoots.has(path[0].id)) {
+        return NextResponse.json(
+          {
+            error:
+              locale === "id" ? "Folder tidak ditemukan." : "Folder not found.",
+          },
+          { status: 404 },
         );
       }
 
-      envDrives.forEach((drive) => {
-        if (drive.id.trim()) {
-          shortcutMap.set(drive.id.trim(), drive.name || "");
-        }
-      });
+      // Names of protected folders the caller has not unlocked are hidden;
+      // ids stay so the client can still match the folder tokens it holds.
+      const bearer = request.headers.get("Authorization")?.split(" ")[1];
+      const tokens = await collectAccessTokens(
+        request.cookies.getAll(),
+        bearer,
+      );
+      const visiblePath = await redactRestrictedPath(
+        path,
+        tokens,
+        session?.user?.email,
+        locale === "id" ? "Folder terkunci" : "Locked folder",
+      );
 
-      dbDrives.forEach((d) => {
-        if (d && d.id) shortcutMap.set(d.id.trim(), d.name || "");
-      });
-
-      const accessToken = await getAccessToken();
-      const driveFallback = locale === "id" ? "Drive Bersama" : "Shared Drive";
-
-      if (shortcutMap.has(folderId)) {
-        try {
-          const driveUrl = `https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,name&supportsAllDrives=true`;
-          const response = await fetchWithRetry(driveUrl, {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          });
-
-          if (response.ok) {
-            const data = (await response.json()) as DrivePathNode;
-            const customName = shortcutMap.get(folderId) || data.name;
-            const result = [{ id: data.id, name: customName }];
-            await kv.set(cacheKey, result, { ex: 3600 });
-            return NextResponse.json(result, {
-              headers: {
-                "Cache-Control":
-                  "private, max-age=60, stale-while-revalidate=600",
-              },
-            });
-          }
-        } catch (err) {
-          logger.error({ err: err }, "Error fetching shortcut metadata");
-        }
-
-        const result = [
-          { id: folderId, name: shortcutMap.get(folderId) || driveFallback },
-        ];
-        return NextResponse.json(result, {
-          headers: {
-            "Cache-Control": "private, max-age=60, stale-while-revalidate=600",
-          },
-        });
-      }
-
-      const path: DrivePathNode[] = [];
-      let currentId = folderId;
-      let iterations = 0;
-
-      while (currentId && iterations < 20) {
-        iterations++;
-
-        if (shortcutMap.has(currentId)) {
-          const driveUrl = `https://www.googleapis.com/drive/v3/files/${currentId}?fields=id,name&supportsAllDrives=true`;
-          const response = await fetchWithRetry(driveUrl, {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          });
-
-          if (response.ok) {
-            const data = (await response.json()) as DrivePathNode;
-            const displayName = shortcutMap.get(currentId) || data.name;
-            path.unshift({ id: data.id, name: displayName });
-          } else {
-            path.unshift({
-              id: currentId,
-              name: shortcutMap.get(currentId) || driveFallback,
-            });
-          }
-          break;
-        }
-
-        const driveUrl = `https://www.googleapis.com/drive/v3/files/${currentId}?fields=id,name,parents&supportsAllDrives=true`;
-        const response = await fetchWithRetry(driveUrl, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-          cache: "no-store",
-        });
-
-        if (!response.ok) break;
-
-        const data = (await response.json()) as DrivePathResponse;
-        path.unshift({ id: data.id, name: data.name });
-
-        if (data.parents && data.parents.length > 0) {
-          currentId = data.parents[0];
-        } else {
-          break;
-        }
-      }
-
-      await kv.set(cacheKey, path, { ex: 3600 });
-      return NextResponse.json(path, {
-        headers: {
-          "Cache-Control": "private, max-age=60, stale-while-revalidate=600",
-        },
-      });
-    } catch {
+      return NextResponse.json(visiblePath, { headers: PATH_CACHE_HEADERS });
+    } catch (e) {
+      logger.error({ err: e }, "[FolderPath] Failed to resolve folder path");
       return NextResponse.json(
         { error: "Failed to fetch path" },
         { status: 500 },
