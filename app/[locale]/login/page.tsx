@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
+import { safeCallbackUrl } from "@/lib/safe-callback";
 import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { User, LockKeyhole } from "lucide-react";
@@ -112,7 +113,7 @@ function CustomLoginPage() {
   }, []);
 
   const handleGoogleSignIn = () => {
-    const callbackUrl = searchParams.get("callbackUrl") || "/";
+    const callbackUrl = safeCallbackUrl(searchParams.get("callbackUrl"));
     signIn("google", { callbackUrl });
   };
 
@@ -122,7 +123,7 @@ function CustomLoginPage() {
     setMessage(null);
 
     try {
-      const callbackUrl = searchParams.get("callbackUrl") || "/";
+      const callbackUrl = safeCallbackUrl(searchParams.get("callbackUrl"));
       const result = await signIn("credentials", {
         email,
         password,
@@ -316,7 +317,7 @@ function CustomLoginPage() {
             <button
               onClick={() =>
                 signIn("guest", {
-                  callbackUrl: searchParams.get("callbackUrl") || "/",
+                  callbackUrl: safeCallbackUrl(searchParams.get("callbackUrl")),
                 })
               }
               disabled={isLoadingConfig || isGuestLoginDisabled}
