@@ -40,6 +40,62 @@ export async function checkLocalStorageAccess(
   }
 }
 
+interface CookieEntry {
+  name: string;
+  value: string;
+}
+
+const FOLDER_TOKEN_COOKIE_PREFIX = "folder_token_";
+const LOCAL_UNLOCK_COOKIE = "local_storage_token";
+
+/**
+ * Ids the requester has proven access to, for `isAccessRestricted`: folders
+ * unlocked with a folder password (the `folder_token_*` cookies the browser
+ * sets, or an explicit Bearer token) and the local-storage root when the
+ * local unlock cookie is valid.
+ */
+export async function collectAccessTokens(
+  cookies: CookieEntry[],
+  bearerToken?: string | null,
+): Promise<string[]> {
+  const granted = new Set<string>();
+  const shareSecret = process.env.SHARE_SECRET_KEY;
+
+  const folderTokens = cookies
+    .filter((c) => c.name.startsWith(FOLDER_TOKEN_COOKIE_PREFIX))
+    .map((c) => c.value);
+  if (bearerToken) folderTokens.push(bearerToken);
+
+  if (shareSecret) {
+    const secret = new TextEncoder().encode(shareSecret);
+    await Promise.all(
+      folderTokens.map(async (token) => {
+        try {
+          const { payload } = await jwtVerify(token, secret);
+          if (typeof payload.folderId === "string") {
+            granted.add(payload.folderId);
+          }
+        } catch {
+          // Expired or forged tokens grant nothing.
+        }
+      }),
+    );
+  }
+
+  const unlock = cookies.find((c) => c.name === LOCAL_UNLOCK_COOKIE);
+  const localSecret = getLocalStorageAuthSecret();
+  if (unlock && localSecret) {
+    try {
+      await jwtVerify(unlock.value, localSecret);
+      granted.add("local-storage:");
+    } catch {
+      // Invalid unlock cookie grants nothing.
+    }
+  }
+
+  return [...granted];
+}
+
 export async function isProtected(folderId: string): Promise<boolean> {
   if (!folderId) return false;
 

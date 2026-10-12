@@ -74,7 +74,7 @@ async function resolveRootAlias(rootId: string): Promise<string> {
  * deployment has registered. Anything outside this set is hidden from users
  * who are not granted access explicitly.
  */
-async function getAllowedRootIds(): Promise<Set<string>> {
+export async function getAllowedRootIds(): Promise<Set<string>> {
   const roots = new Set<string>();
 
   const rootFolderId = await getRootFolderId();
@@ -335,4 +335,37 @@ export async function isAccessRestricted(
     logger.error({ err: error, fileId }, "Error checking access restriction");
     return true;
   }
+}
+
+/**
+ * Replace the names of folders the requester cannot open with `placeholder`.
+ * `path` runs root → leaf, and protection is inherited, so once one folder is
+ * locked every folder below it stays locked. Ids are kept: the client needs
+ * them to match the folder tokens it already holds.
+ */
+export async function redactRestrictedPath<
+  T extends { id: string; name: string },
+>(
+  path: T[],
+  allowedTokens: string[],
+  userEmail: string | null | undefined,
+  placeholder: string,
+): Promise<T[]> {
+  const restrictedIds = new Set(await getRestrictedIds());
+  let locked = false;
+  const result: T[] = [];
+
+  for (const node of path) {
+    if (
+      !locked &&
+      restrictedIds.has(node.id) &&
+      !allowedTokens.includes(node.id) &&
+      !(userEmail && (await hasUserAccess(userEmail, node.id)))
+    ) {
+      locked = true;
+    }
+    result.push(locked ? { ...node, name: placeholder } : node);
+  }
+
+  return result;
 }

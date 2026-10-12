@@ -53,7 +53,7 @@ export async function listSharedWithMeFolders(): Promise<DriveFile[]> {
   const url = `${GOOGLE_DRIVE_API_BASE_URL}/files`;
   const params = new URLSearchParams({
     q: `sharedWithMe = true and mimeType = '${MIME_TYPES.FOLDER}' and trashed = false`,
-    fields: "files(id, name, mimeType, owners)",
+    fields: "files(id, name, mimeType, owners(displayName))",
     pageSize: "100",
   });
 
@@ -262,7 +262,7 @@ export async function getFileDetailsFromDrive(
     const driveUrl = `${GOOGLE_DRIVE_API_BASE_URL}/files/${fileId}`;
     const params = new URLSearchParams({
       fields:
-        "id, name, mimeType, size, modifiedTime, createdTime, webViewLink, webContentLink, thumbnailLink, hasThumbnail, parents, owners(displayName, emailAddress), lastModifyingUser(displayName), md5Checksum, imageMediaMetadata(width, height), videoMediaMetadata(width, height, durationMillis), trashed",
+        "id, name, mimeType, size, modifiedTime, createdTime, webViewLink, webContentLink, thumbnailLink, hasThumbnail, parents, owners(displayName), lastModifyingUser(displayName), md5Checksum, imageMediaMetadata(width, height), videoMediaMetadata(width, height, durationMillis), trashed",
       supportsAllDrives: "true",
     });
 
@@ -336,6 +336,9 @@ export async function getFolderPath(
 
   const driveFallback = locale === "id" ? "Drive Bersama" : "Shared Drive";
 
+  // An incomplete walk (Drive error mid-way) must not be cached: callers use
+  // the topmost node to decide whether the folder is inside an allowed root.
+  let complete = true;
   let iterations = 0;
   while (currentId && iterations < 20) {
     iterations++;
@@ -383,6 +386,7 @@ export async function getFolderPath(
       );
 
       if (!response.ok) {
+        complete = false;
         break;
       }
 
@@ -398,14 +402,17 @@ export async function getFolderPath(
       }
     } catch (e) {
       logger.error({ err: e }, "Error fetching folder path segment");
+      complete = false;
       break;
     }
   }
 
-  try {
-    await kv.set(cacheKey, path, { ex: REDIS_TTL.FOLDER_PATH });
-  } catch (e) {
-    logger.warn({ err: e }, "Failed to cache folder path");
+  if (complete) {
+    try {
+      await kv.set(cacheKey, path, { ex: REDIS_TTL.FOLDER_PATH });
+    } catch (e) {
+      logger.warn({ err: e }, "Failed to cache folder path");
+    }
   }
 
   return path;

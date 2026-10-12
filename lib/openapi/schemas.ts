@@ -41,7 +41,6 @@ export const ZeeFileSchema = z.object({
     .array(
       z.object({
         displayName: z.string(),
-        emailAddress: z.string(),
       }),
     )
     .optional(),

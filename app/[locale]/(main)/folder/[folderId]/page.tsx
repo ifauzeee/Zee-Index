@@ -3,13 +3,13 @@ import { getFolderPath } from "@/lib/drive";
 import { listAllFiles } from "@/lib/storage";
 import { getActiveProvider, isProviderId } from "@/lib/storage/providers";
 import { ZeeFile } from "@/types/storage";
-import { isProtected } from "@/lib/auth";
+import { isPrivateFolder } from "@/lib/auth";
+import { getAllowedRootIds, isAccessRestricted } from "@/lib/securityUtils";
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { logger } from "@/lib/logger";
 
 export const revalidate = 3600;
-
-type ProtectedFolderMap = Record<string, boolean>;
 
 async function getUnifiedPath(folderId: string, locale: string) {
   if (folderId.startsWith("local-storage:")) {
@@ -64,7 +64,10 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
   const params = await props.params;
   const folderId = decodeURIComponent(params.folderId);
-  const path = await getUnifiedPath(folderId, params.locale);
+  // Metadata is public and cached, so only name folders an anonymous
+  // visitor could open (Z2-11).
+  const restricted = await isAccessRestricted(folderId);
+  const path = restricted ? [] : await getUnifiedPath(folderId, params.locale);
   const folderName = path[path.length - 1]?.name || "Folder";
   const appName = process.env.NEXT_PUBLIC_APP_NAME || "Zee Index";
 
@@ -108,49 +111,58 @@ export default async function FolderPage(props: {
     .split("?")[0]
     .trim();
 
-  const [folderPath, protectedStatus, allProtectedFolders, isPrivateFolder] =
-    await Promise.all([
-      getUnifiedPath(cleanFolderId, locale),
-      cleanFolderId.startsWith("local-storage:")
-        ? false
-        : isProtected(cleanFolderId),
-      import("@/lib/db").then((m) =>
-        m.db.protectedFolder
-          .findMany({ select: { folderId: true } })
-          .then((res: { folderId: string }[]) => {
-            const map: ProtectedFolderMap = {};
-            res.forEach((entry) => {
-              map[entry.folderId] = true;
-            });
-            return map;
-          }),
-      ),
-      import("@/lib/auth").then((m) => m.isPrivateFolder),
-    ]);
+  // This page is ISR-cached and shared by every visitor, so it renders what
+  // an anonymous visitor may see; unlocked content is fetched client-side
+  // through /api/files with the visitor's own tokens.
+  const isPathStyleId =
+    cleanFolderId.startsWith("local-storage:") || isProviderId(cleanFolderId);
+  const [rawPath, restricted] = await Promise.all([
+    getUnifiedPath(cleanFolderId, locale),
+    isAccessRestricted(cleanFolderId),
+  ]);
+
+  if (!isPathStyleId) {
+    const allowedRoots = await getAllowedRootIds();
+    if (rawPath.length === 0 || !allowedRoots.has(rawPath[0].id)) {
+      notFound();
+    }
+  }
+
+  // Protection is inherited, so an unrestricted folder has no locked
+  // ancestors. For a restricted one, let the client load the breadcrumbs
+  // from /api/folderpath, which names only the folders this visitor unlocked.
+  const folderPath = restricted ? undefined : rawPath;
 
   let initialFiles: ZeeFile[] | undefined;
   let initialNextPageToken: string | null = null;
 
-  const isLocked =
-    !cleanFolderId.startsWith("local-storage:") &&
-    (protectedStatus || isPrivateFolder(cleanFolderId));
-
-  if (!isLocked) {
+  if (!restricted) {
     try {
-      const data = await listAllFiles({
-        folderId: cleanFolderId,
-        pageToken: null,
-        pageSize: 50,
-        useCache: true,
-      });
-      initialFiles = data.files.map((f) => {
-        const isProt = !!allProtectedFolders[f.id];
-        const isPriv = isPrivateFolder(f.id);
-        return {
+      const [data, allProtectedFolders] = await Promise.all([
+        listAllFiles({
+          folderId: cleanFolderId,
+          pageToken: null,
+          pageSize: 50,
+          useCache: true,
+        }),
+        import("@/lib/db").then((m) =>
+          m.db.protectedFolder.findMany({ select: { folderId: true } }),
+        ),
+      ]);
+      const protectedIds = new Set(
+        allProtectedFolders.map(
+          (entry: { folderId: string }) => entry.folderId,
+        ),
+      );
+      initialFiles = data.files
+        // Same rule as /api/files for anonymous visitors: private folders are
+        // hidden unless they are also password protected, and both are
+        // listed with a lock.
+        .filter((f) => !isPrivateFolder(f.id) || protectedIds.has(f.id))
+        .map((f) => ({
           ...f,
-          isProtected: isProt || isPriv,
-        };
-      });
+          isProtected: protectedIds.has(f.id) || isPrivateFolder(f.id),
+        }));
       initialNextPageToken = data.nextPageToken;
     } catch (e) {
       logger.error({ err: e }, "ISR Fetch error");

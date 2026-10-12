@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { isAccessRestricted, __resetCache } from "@/lib/securityUtils";
+import {
+  isAccessRestricted,
+  redactRestrictedPath,
+  __resetCache,
+} from "@/lib/securityUtils";
 import { memoryCache } from "@/lib/memory-cache";
 
 vi.mock("@/lib/db", () => ({
@@ -287,5 +291,63 @@ describe("isAccessRestricted root scoping", () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe("redactRestrictedPath", () => {
+  const path = [
+    { id: ROOT_ID, name: "Google Drive" },
+    { id: "public", name: "Public" },
+    { id: "payroll", name: "Payroll 2026" },
+    { id: "q3", name: "Q3" },
+  ];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    __resetCache();
+    (
+      db.protectedFolder.findMany as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([{ folderId: "payroll" }]);
+    (hasUserAccess as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      false,
+    );
+  });
+
+  it("hides a locked folder and everything below it", async () => {
+    const result = await redactRestrictedPath(path, [], null, "Locked");
+
+    expect(result.map((n) => n.name)).toEqual([
+      "Google Drive",
+      "Public",
+      "Locked",
+      "Locked",
+    ]);
+    expect(result.map((n) => n.id)).toEqual(path.map((n) => n.id));
+  });
+
+  it("shows names once the folder token was presented", async () => {
+    const result = await redactRestrictedPath(
+      path,
+      ["payroll"],
+      null,
+      "Locked",
+    );
+
+    expect(result).toEqual(path);
+  });
+
+  it("shows names to a user granted access by email", async () => {
+    (hasUserAccess as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      async (_email: string, id: string) => id === "payroll",
+    );
+
+    const result = await redactRestrictedPath(
+      path,
+      [],
+      "user@example.com",
+      "Locked",
+    );
+
+    expect(result).toEqual(path);
   });
 });
