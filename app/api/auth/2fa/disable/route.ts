@@ -2,8 +2,7 @@ import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createUserRoute } from "@/lib/api-middleware";
 import { authenticator } from "otplib";
-import { kv } from "@/lib/kv";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { disableTwoFactor, getTwoFactorState } from "@/lib/credentials";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -13,18 +12,12 @@ const disable2faSchema = z.object({
 });
 
 export const POST = createUserRoute(
-  async ({ request, session, body }) => {
-    const { success } = await checkRateLimit(request, "AUTH");
-    if (!success) {
-      return NextResponse.json(
-        { error: "Terlalu banyak permintaan. Silakan coba lagi nanti." },
-        { status: 429 },
-      );
-    }
-
+  async ({ session, body }) => {
+    // The AUTH limit is applied by the route wrapper (rateLimit option).
     try {
-      const userEmail = session.user.email;
-      const secret: string | null = await kv.get(`2fa:secret:${userEmail}`);
+      // requireEmail guarantees an email on the session.
+      const userEmail = session.user.email!;
+      const { secret } = await getTwoFactorState(userEmail);
       if (!secret) {
         return NextResponse.json(
           { error: "Konfigurasi 2FA tidak ditemukan." },
@@ -40,8 +33,7 @@ export const POST = createUserRoute(
         );
       }
 
-      await kv.del(`2fa:secret:${userEmail}`);
-      await kv.del(`2fa:enabled:${userEmail}`);
+      await disableTwoFactor(userEmail);
 
       return NextResponse.json({
         success: true,

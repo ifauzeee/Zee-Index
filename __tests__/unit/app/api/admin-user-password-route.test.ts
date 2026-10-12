@@ -1,11 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 
-const { mockKvSet, mockKvDel, mockKvExists, mockBcryptHash } = vi.hoisted(
+const { mockSetPasswordHash, mockGetPasswordHash, mockBcryptHash } = vi.hoisted(
   () => ({
-    mockKvSet: vi.fn(),
-    mockKvDel: vi.fn(),
-    mockKvExists: vi.fn(),
+    mockSetPasswordHash: vi.fn(),
+    mockGetPasswordHash: vi.fn(),
     mockBcryptHash: vi.fn(),
   }),
 );
@@ -51,13 +50,11 @@ vi.mock("@/lib/api-middleware", () => ({
   },
 }));
 
-vi.mock("@/lib/kv", () => ({
-  kv: {
-    set: mockKvSet,
-    del: mockKvDel,
-    exists: mockKvExists,
-  },
+vi.mock("@/lib/credentials", () => ({
+  setPasswordHash: mockSetPasswordHash,
+  getPasswordHash: mockGetPasswordHash,
 }));
+vi.mock("@/lib/db", () => ({ db: { user: { upsert: vi.fn() } } }));
 
 vi.mock("bcryptjs", () => ({
   default: { hash: mockBcryptHash },
@@ -70,10 +67,10 @@ describe("app/api/admin/user-password POST", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockBcryptHash.mockResolvedValue("$2a$10$hashedpassword");
-    mockKvSet.mockResolvedValue(undefined);
+    mockSetPasswordHash.mockResolvedValue(undefined);
   });
 
-  it("hashes password and stores in kv", async () => {
+  it("hashes the password and stores it in the credential store", async () => {
     const response = await POST(
       new NextRequest("http://localhost:3000/api/admin/user-password", {
         method: "POST",
@@ -88,8 +85,8 @@ describe("app/api/admin/user-password POST", () => {
     const body = await response.json();
     expect(body).toMatchObject({ success: true });
     expect(mockBcryptHash).toHaveBeenCalledWith("password123", 10);
-    expect(mockKvSet).toHaveBeenCalledWith(
-      "password:user@example.com",
+    expect(mockSetPasswordHash).toHaveBeenCalledWith(
+      "user@example.com",
       "$2a$10$hashedpassword",
     );
   });
@@ -138,10 +135,10 @@ describe("app/api/admin/user-password POST", () => {
 describe("app/api/admin/user-password DELETE", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockKvDel.mockResolvedValue(undefined);
+    mockSetPasswordHash.mockResolvedValue(undefined);
   });
 
-  it("deletes password from kv", async () => {
+  it("clears the stored password", async () => {
     const response = await DELETE(
       new NextRequest(
         "http://localhost:3000/api/admin/user-password?email=user@example.com",
@@ -151,7 +148,7 @@ describe("app/api/admin/user-password DELETE", () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body).toMatchObject({ success: true });
-    expect(mockKvDel).toHaveBeenCalledWith("password:user@example.com");
+    expect(mockSetPasswordHash).toHaveBeenCalledWith("user@example.com", null);
   });
 
   it("rejects missing email", async () => {
@@ -167,10 +164,10 @@ describe("app/api/admin/user-password DELETE", () => {
 describe("app/api/admin/user-password GET", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockKvExists.mockResolvedValue(1);
+    mockGetPasswordHash.mockResolvedValue("$2a$10$hash");
   });
 
-  it("returns hasPassword true when key exists", async () => {
+  it("returns hasPassword true when a hash is stored", async () => {
     const response = await GET(
       new NextRequest(
         "http://localhost:3000/api/admin/user-password?email=user@example.com",
@@ -181,8 +178,8 @@ describe("app/api/admin/user-password GET", () => {
     expect(body).toEqual({ email: "user@example.com", hasPassword: true });
   });
 
-  it("returns hasPassword false when key does not exist", async () => {
-    mockKvExists.mockResolvedValue(0);
+  it("returns hasPassword false when no hash is stored", async () => {
+    mockGetPasswordHash.mockResolvedValue(null);
     const response = await GET(
       new NextRequest(
         "http://localhost:3000/api/admin/user-password?email=other@example.com",
@@ -201,7 +198,7 @@ describe("app/api/admin/user-password GET", () => {
   });
 
   it("returns 500 on error", async () => {
-    mockKvExists.mockRejectedValue(new Error("kv error"));
+    mockGetPasswordHash.mockRejectedValue(new Error("db error"));
     const response = await GET(
       new NextRequest(
         "http://localhost:3000/api/admin/user-password?email=user@example.com",

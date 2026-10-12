@@ -99,6 +99,9 @@ Existing role wrappers: `createPublicRoute`, `createUserRoute` (no guest), `crea
 
 Factory in `lib/kv/index.ts`: Redis → InMemoryKV fallback. Singleton `kv`. Without Redis, data resets on restart. Redis TTLs in `constants.ts` (3600s for folder content, 600s for file details, etc.). Rate limiting uses the same KV.
 
+- Redis runs with `maxmemory-policy volatile-lru`: only keys with a TTL can be evicted. **Every cache write must set a TTL**; keys without one are treated as durable state.
+- Credentials never live only in Redis. Password hashes and TOTP state are columns on `User` (`passwordHash`, `twoFactorSecret`, `twoFactorEnabled`), read and written through `lib/credentials.ts`. Legacy `password:*` / `2fa:*` Redis keys are migrated to Postgres on first access.
+
 ## Storage abstraction
 
 `STORAGE_PROVIDER` env var: `google-drive` (default), `s3`, `webdav`. Entrypoint in `lib/storage/index.ts`. S3 + WebDAV providers in `lib/storage/providers/`; Google Drive is the default source served via `lib/drive/` (not a provider file). Local files via `lib/storage/local.ts` (enabled by `NEXT_PUBLIC_ENABLE_LOCAL_STORAGE`). Results merge Google Drive + local + provider files under one listing.

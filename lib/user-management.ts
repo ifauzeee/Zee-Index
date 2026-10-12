@@ -1,12 +1,10 @@
 import bcrypt from "bcryptjs";
-import { kv } from "@/lib/kv";
 import { db } from "@/lib/db";
+import { getPasswordHash, setPasswordHash } from "@/lib/credentials";
 import { logger } from "@/lib/logger";
 import { constantTimeEqual } from "@/lib/security";
 
 export type UserRole = "ADMIN" | "EDITOR" | "USER";
-
-const USER_PASSWORD_PREFIX = "password:";
 
 export interface ManagedUser {
   email: string;
@@ -19,9 +17,8 @@ export async function setUserPassword(
   email: string,
   password: string,
 ): Promise<void> {
-  const normalized = email.toLowerCase().trim();
   const hash = await bcrypt.hash(password, 10);
-  await kv.set(`${USER_PASSWORD_PREFIX}${normalized}`, hash);
+  await setPasswordHash(email, hash);
 }
 
 function normalizeAdminEmails(): string[] {
@@ -42,8 +39,8 @@ export async function verifyUserPassword(
 ): Promise<boolean> {
   const normalized = email.toLowerCase().trim();
 
-  // 1. Check Redis-stored password (for users who set one via profile)
-  const hash = await kv.get<string>(`${USER_PASSWORD_PREFIX}${normalized}`);
+  // 1. Check the user's own password (set by an admin or via profile)
+  const hash = await getPasswordHash(normalized);
   if (hash) {
     try {
       if (await bcrypt.compare(password, hash)) return true;
@@ -75,9 +72,7 @@ export async function verifyUserPassword(
 }
 
 export async function hasUserPassword(email: string): Promise<boolean> {
-  const normalized = email.toLowerCase().trim();
-  const result = await kv.exists(`${USER_PASSWORD_PREFIX}${normalized}`);
-  return result === 1;
+  return !!(await getPasswordHash(email));
 }
 
 export async function upsertUser(
