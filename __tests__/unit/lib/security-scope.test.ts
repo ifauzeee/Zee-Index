@@ -38,7 +38,7 @@ vi.mock("@/lib/app-config", () => ({
 }));
 
 vi.mock("@/lib/storage/providers", () => ({
-  isProviderId: (id: string) => id.startsWith("s3:"),
+  getActiveProvider: () => ({ idPrefix: "s3:" }),
 }));
 
 import { db } from "@/lib/db";
@@ -349,5 +349,47 @@ describe("redactRestrictedPath", () => {
     );
 
     expect(result).toEqual(path);
+  });
+});
+
+describe("isAccessRestricted for provider paths (Z2-07)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    __resetCache();
+    memoryCache.clear();
+    (getAppConfig as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      localStorageAuthEnabled: false,
+    });
+    (hasUserAccess as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      false,
+    );
+    // S3 folder ids are listed with a trailing slash.
+    (
+      db.protectedFolder.findMany as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([{ folderId: "s3:secret/" }]);
+  });
+
+  it("protects files inside a protected provider folder", async () => {
+    expect(await isAccessRestricted("s3:secret/report.pdf")).toBe(true);
+    expect(await isAccessRestricted("s3:secret/deep/a/b.txt")).toBe(true);
+    expect(await isAccessRestricted("s3:secret")).toBe(true);
+  });
+
+  it("does not let .. reach a protected folder from a public one", async () => {
+    expect(await isAccessRestricted("s3:public/../secret/report.pdf")).toBe(
+      true,
+    );
+  });
+
+  it("treats a path that escapes the provider root as restricted", async () => {
+    expect(await isAccessRestricted("s3:../outside.txt")).toBe(true);
+  });
+
+  it("leaves sibling folders and the folder token holder alone", async () => {
+    expect(await isAccessRestricted("s3:public/a.pdf")).toBe(false);
+    expect(await isAccessRestricted("s3:secretive/a.pdf")).toBe(false);
+    expect(
+      await isAccessRestricted("s3:secret/report.pdf", ["s3:secret/"]),
+    ).toBe(false);
   });
 });

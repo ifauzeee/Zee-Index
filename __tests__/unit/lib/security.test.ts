@@ -36,7 +36,7 @@ vi.mock("@/lib/app-config", () => ({
 }));
 
 vi.mock("@/lib/storage/providers", () => ({
-  isProviderId: vi.fn(),
+  getActiveProvider: vi.fn(),
 }));
 
 import { db } from "@/lib/db";
@@ -45,7 +45,7 @@ import { hasUserAccess } from "@/lib/auth";
 import { kv } from "@/lib/kv";
 import { getRootFolderId } from "@/lib/config";
 import { getAppConfig } from "@/lib/app-config";
-import { isProviderId } from "@/lib/storage/providers";
+import { getActiveProvider } from "@/lib/storage/providers";
 
 describe("lib/securityUtils/isAccessRestricted", () => {
   const PROTECTED_ID = "protected-folder-id";
@@ -72,8 +72,8 @@ describe("lib/securityUtils/isAccessRestricted", () => {
     (getAppConfig as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       localStorageAuthEnabled: false,
     });
-    (isProviderId as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
-      false,
+    (getActiveProvider as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+      null,
     );
   });
 

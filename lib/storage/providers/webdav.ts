@@ -7,6 +7,7 @@ import {
 import { Readable } from "stream";
 import type { StorageProvider } from "./types";
 import { getMimeType } from "../mime";
+import { normalizePathId } from "../path-id";
 import { logger } from "@/lib/logger";
 
 function unwrapDetailed<T>(result: T | ResponseDataDetailed<T>): T {
@@ -38,9 +39,14 @@ export class WebDavStorageProvider implements StorageProvider {
   }
 
   private toRemotePath(fileId: string): string {
-    const rel = fileId.startsWith(this.idPrefix)
-      ? fileId.slice(this.idPrefix.length)
-      : fileId;
+    // Resolve `..` before joining, so an id cannot climb out of basePath on
+    // the WebDAV server (Z2-07).
+    const canonical = normalizePathId(
+      fileId.startsWith(this.idPrefix) ? fileId : `${this.idPrefix}${fileId}`,
+      this.idPrefix,
+    );
+    if (canonical === null) throw new Error("Invalid WebDAV path");
+    const rel = canonical.slice(this.idPrefix.length);
     return `${this.basePath.replace(/\/$/, "")}/${rel}`.replace(/\/\//g, "/");
   }
 
