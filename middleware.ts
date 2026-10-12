@@ -143,13 +143,18 @@ const API_KEY_AUTH_HEADERS = [
   "x-api-key-permissions",
 ];
 
-/** Copy `request` without the API key auth headers a client may have sent. */
+/**
+ * Copy `request` without the API key auth headers a client may have sent.
+ * Rebuild from the original request with replaced headers: constructing a
+ * new request from a clone drops headers in the middleware runtime, which
+ * breaks anything downstream that reads them (e.g. the auth cookie).
+ */
 function withApiKeyHeadersStripped(request: NextRequest): NextRequest {
-  const sanitized = request.clone();
+  const headers = new Headers(request.headers);
   for (const header of API_KEY_AUTH_HEADERS) {
-    sanitized.headers.delete(header);
+    headers.delete(header);
   }
-  return new NextRequest(sanitized);
+  return new NextRequest(request, { headers });
 }
 
 function applyCsp(request: NextRequest, response: Response): Response {

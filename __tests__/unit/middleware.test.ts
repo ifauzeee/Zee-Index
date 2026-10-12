@@ -245,10 +245,12 @@ describe("middleware share_token flow", () => {
     const seenAuthMethod: Array<string | null> = [];
     const seenKeyId: Array<string | null> = [];
     const seenPermissions: Array<string | null> = [];
+    const seenCookies: Array<string | null> = [];
     mockCheckRateLimit.mockImplementation((request: NextRequest) => {
       seenAuthMethod.push(request.headers.get("x-auth-method"));
       seenKeyId.push(request.headers.get("x-api-key-id"));
       seenPermissions.push(request.headers.get("x-api-key-permissions"));
+      seenCookies.push(request.headers.get("cookie"));
       return Promise.resolve({
         success: true,
         limit: 1,
@@ -262,6 +264,7 @@ describe("middleware share_token flow", () => {
         "x-api-key-id": "forged",
         "x-api-key-name": "forged",
         "x-api-key-permissions": "admin:write",
+        cookie: "authjs.csrf-token=legit",
       },
     });
 
@@ -270,6 +273,9 @@ describe("middleware share_token flow", () => {
     expect(seenAuthMethod).toEqual([null]);
     expect(seenKeyId).toEqual([null]);
     expect(seenPermissions).toEqual([null]);
+    // Stripping must only remove the forged headers: anything else (cookies
+    // especially) has to reach downstream readers untouched.
+    expect(seenCookies).toEqual(["authjs.csrf-token=legit"]);
   });
 
   it("keeps client-supplied API key headers on non-API requests", async () => {
