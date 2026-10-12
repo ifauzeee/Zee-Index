@@ -4,6 +4,7 @@ import { logger } from "@/lib/logger";
 import { sendMail } from "@/lib/mailer";
 import { notifyIncidentChannels } from "@/lib/notification";
 import { REDIS_KEYS } from "@/lib/constants";
+import { escapeHtml } from "@/lib/html-utils";
 import {
   EVENT_PIPELINE_KEYS,
   type EventStreamRecord,
@@ -225,12 +226,12 @@ async function notifyIncident(incident: IncidentRecord): Promise<void> {
 
   const subject = `[Zee-Index Alert] ${incident.severity.toUpperCase()} - ${incident.title}`;
   const html = `
-    <h2>${incident.title}</h2>
-    <p>${incident.description}</p>
+    <h2>${escapeHtml(incident.title)}</h2>
+    <p>${escapeHtml(incident.description)}</p>
     <ul>
-      <li><strong>Severity:</strong> ${incident.severity}</li>
-      <li><strong>Status:</strong> ${incident.status}</li>
-      <li><strong>Rule:</strong> ${incident.ruleId}</li>
+      <li><strong>Severity:</strong> ${escapeHtml(incident.severity)}</li>
+      <li><strong>Status:</strong> ${escapeHtml(incident.status)}</li>
+      <li><strong>Rule:</strong> ${escapeHtml(incident.ruleId)}</li>
       <li><strong>Triggered:</strong> ${new Date(incident.lastTriggeredAt).toLocaleString("id-ID")}</li>
       <li><strong>Count:</strong> ${incident.triggerCount}</li>
     </ul>

@@ -235,6 +235,25 @@ describe("app/api/share POST", () => {
     expect(mockSendMail).toHaveBeenCalled();
   });
 
+  it("escapes the file name and path in the admin notification email", async () => {
+    // File names come from Drive and can be chosen by an anonymous
+    // file-request uploader, so they must not inject markup (Z2-17).
+    await POST(
+      createPostRequest({
+        path: '/folder/demo"><img src=x>',
+        itemName: "<script>alert(1)</script>.pdf",
+        type: "timed",
+        expiresIn: "1h",
+        loginRequired: true,
+      }),
+    );
+
+    const { html } = mockSendMail.mock.calls[0][0] as { html: string };
+    expect(html).not.toContain("<script>");
+    expect(html).not.toContain("<img");
+    expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;.pdf");
+  });
+
   it("stores collection items in kv for collection shares", async () => {
     const items = [
       {

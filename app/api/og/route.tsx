@@ -1,17 +1,27 @@
+import { logger } from "@/lib/logger";
 import { ImageResponse } from "next/og";
 import { createPublicRoute } from "@/lib/api-middleware";
 import idMessages from "@/messages/id.json";
 import enMessages from "@/messages/en.json";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export const dynamic = "force-dynamic";
+
+// next/og up to 16.3.5 has an RCE in ImageResponse (GHSA-vcvr-r3jv-pc5j).
+const MAX_OG_TITLE_LENGTH = 120;
+
+export function clampOgTitle(rawTitle: string | null): string {
+  if (!rawTitle) return "Zee Index";
+  // Clamp by code point so an emoji at the boundary is not split in half.
+  return Array.from(rawTitle).slice(0, MAX_OG_TITLE_LENGTH).join("");
+}
 
 export const GET = createPublicRoute(
   async ({ request }) => {
     try {
       const { searchParams } = new URL(request.url);
-      const title = searchParams.get("title") || "Zee Index";
+      const title = clampOgTitle(searchParams.get("title"));
       const appName = process.env.NEXT_PUBLIC_APP_NAME || "Zee Index";
       const locale = searchParams.get("locale") === "id" ? "id" : "en";
       const messages =
@@ -114,11 +124,14 @@ export const GET = createPublicRoute(
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Unknown OG image error";
-      console.log(message);
+      logger.error({ err: message }, "OG image generation failed");
       return new Response(`Failed to generate the image`, {
         status: 500,
       });
     }
   },
-  { rateLimit: false },
+  // The Edge middleware rate limiter runs on a per-process in-memory KV
+  // (Z2-10), so this Redis-backed limit is currently the effective one for
+  // this route. Revisit once the middleware migrates to proxy.ts.
+  { rateLimit: "API" },
 );
