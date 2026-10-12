@@ -3,13 +3,13 @@ import { NextRequest } from "next/server";
 
 const {
   mockAuthenticator,
-  mockKvGet,
+  mockGetTwoFactorState,
   mockKvSet,
   mockGetToken,
   mockCheckRateLimit,
 } = vi.hoisted(() => ({
   mockAuthenticator: { check: vi.fn() },
-  mockKvGet: vi.fn(),
+  mockGetTwoFactorState: vi.fn(),
   mockKvSet: vi.fn(),
   mockGetToken: vi.fn(),
   mockCheckRateLimit: vi.fn(),
@@ -44,7 +44,11 @@ vi.mock("otplib", () => ({
 }));
 
 vi.mock("@/lib/kv", () => ({
-  kv: { get: mockKvGet, set: mockKvSet },
+  kv: { set: mockKvSet },
+}));
+
+vi.mock("@/lib/credentials", () => ({
+  getTwoFactorState: mockGetTwoFactorState,
 }));
 
 vi.mock("@/lib/ratelimit", () => ({
@@ -65,7 +69,10 @@ describe("app/api/auth/2fa/verify-login route", () => {
       twoFactorRequired: true,
       sessionId: "test-session-id",
     });
-    mockKvGet.mockResolvedValue("stored-2fa-secret");
+    mockGetTwoFactorState.mockResolvedValue({
+      enabled: true,
+      secret: "stored-2fa-secret",
+    });
     mockAuthenticator.check.mockReturnValue(true);
     mockKvSet.mockResolvedValue("OK");
   });
@@ -161,7 +168,7 @@ describe("app/api/auth/2fa/verify-login route", () => {
   });
 
   it("returns 400 when 2FA secret not found", async () => {
-    mockKvGet.mockResolvedValue(null);
+    mockGetTwoFactorState.mockResolvedValue({ enabled: false, secret: null });
 
     const response = await POST(
       new NextRequest("http://localhost:3000", {

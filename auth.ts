@@ -10,6 +10,7 @@ import { kv } from "@/lib/kv";
 import { REDIS_KEYS } from "@/lib/constants";
 import { getPublicAppConfig } from "@/lib/app-config";
 import { constantTimeEqual } from "@/lib/security";
+import { getPasswordHash, getTwoFactorState } from "@/lib/credentials";
 
 import type { ActivityDetails } from "@/lib/activityLogger";
 
@@ -18,8 +19,8 @@ import type { JWT } from "next-auth/jwt";
 
 async function setupTwoFactorForToken(email: string, token: JWT) {
   try {
-    const is2FAEnabled = await kv.get(`2fa:enabled:${email}`);
-    token.twoFactorRequired = !!is2FAEnabled;
+    const { enabled } = await getTwoFactorState(email);
+    token.twoFactorRequired = enabled;
     if (token.twoFactorRequired) {
       token.sessionId = crypto.randomUUID();
     }
@@ -179,9 +180,8 @@ const authConfig: NextAuthConfig = {
           }
 
           if (!isPassValid) {
-            const storedUserPassword = await kv.get(
-              `password:${normalizedInputEmail}`,
-            );
+            const storedUserPassword =
+              await getPasswordHash(normalizedInputEmail);
             if (
               typeof storedUserPassword === "string" &&
               storedUserPassword.length > 0

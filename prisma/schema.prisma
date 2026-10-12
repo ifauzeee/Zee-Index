@@ -38,15 +38,22 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
+  id                    String    @id @default(cuid())
+  name                  String?
+  email                 String?   @unique
+  emailVerified         DateTime?
+  image                 String?
   /// ADMIN | EDITOR | USER (session may also use GUEST)
-  role          String    @default("USER")
-  accounts      Account[]
-  sessions      Session[]
+  role                  String    @default("USER")
+  /// bcrypt hash for email+password login (non-env users)
+  passwordHash          String?
+  /// TOTP shared secret; only meaningful when twoFactorEnabled
+  twoFactorSecret       String?
+  twoFactorEnabled      Boolean   @default(false)
+  /// Set once legacy Redis credentials were copied to this row
+  credentialsMigratedAt DateTime?
+  accounts              Account[]
+  sessions              Session[]
 }
 
 model VerificationToken {

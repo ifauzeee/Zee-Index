@@ -1,17 +1,18 @@
 import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createUserRoute } from "@/lib/api-middleware";
-import { kv } from "@/lib/kv";
+import { getTwoFactorState } from "@/lib/credentials";
 
 export const dynamic = "force-dynamic";
 
 export const GET = createUserRoute(
   async ({ session }) => {
     try {
-      const userEmail = session.user.email;
-      const isEnabled = await kv.get(`2fa:enabled:${userEmail}`);
+      // requireEmail guarantees an email on the session.
+      const userEmail = session.user.email!;
+      const { enabled } = await getTwoFactorState(userEmail);
 
-      return NextResponse.json({ isEnabled: !!isEnabled });
+      return NextResponse.json({ isEnabled: enabled });
     } catch (error) {
       logger.error({ err: error }, "2FA Status Check Error");
       return NextResponse.json(

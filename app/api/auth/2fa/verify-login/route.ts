@@ -7,6 +7,7 @@ import { authenticator } from "otplib";
 import { kv } from "@/lib/kv";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { ERROR_MESSAGES } from "@/lib/constants";
+import { getTwoFactorState } from "@/lib/credentials";
 import { z } from "zod";
 import { getToken } from "next-auth/jwt";
 
@@ -26,7 +27,8 @@ export const POST = createUserRoute(
 
     try {
       const { token } = body;
-      const userEmail = session.user.email;
+      // requireEmail guarantees an email on the session.
+      const userEmail = session.user.email!;
 
       // Per-account limit so a distributed attacker cannot spend the whole IP
       // budget on one victim's account.
@@ -60,7 +62,7 @@ export const POST = createUserRoute(
         );
       }
 
-      const secret: string | null = await kv.get(`2fa:secret:${userEmail}`);
+      const { secret } = await getTwoFactorState(userEmail);
       if (!secret) {
         return NextResponse.json(
           { error: "Konfigurasi 2FA tidak ditemukan." },

@@ -1,8 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
-const { mockKvGet } = vi.hoisted(() => ({
-  mockKvGet: vi.fn(),
+const { mockGetTwoFactorState } = vi.hoisted(() => ({
+  mockGetTwoFactorState: vi.fn(),
 }));
 
 vi.mock("@/lib/api-middleware", () => ({
@@ -14,8 +14,8 @@ vi.mock("@/lib/api-middleware", () => ({
   },
 }));
 
-vi.mock("@/lib/kv", () => ({
-  kv: { get: mockKvGet },
+vi.mock("@/lib/credentials", () => ({
+  getTwoFactorState: mockGetTwoFactorState,
 }));
 
 import { GET } from "@/app/api/auth/2fa/status/route";
@@ -25,8 +25,8 @@ describe("app/api/auth/2fa/status route", () => {
     vi.clearAllMocks();
   });
 
-  it("returns enabled when 2fa:enabled key exists", async () => {
-    mockKvGet.mockResolvedValue("true");
+  it("returns enabled when the user has 2FA on", async () => {
+    mockGetTwoFactorState.mockResolvedValue({ enabled: true, secret: "S" });
 
     const response = await GET(new NextRequest("http://localhost:3000"));
 
@@ -35,8 +35,8 @@ describe("app/api/auth/2fa/status route", () => {
     expect(data.isEnabled).toBe(true);
   });
 
-  it("returns disabled when 2fa:enabled key is null", async () => {
-    mockKvGet.mockResolvedValue(null);
+  it("returns disabled when the user has no 2FA", async () => {
+    mockGetTwoFactorState.mockResolvedValue({ enabled: false, secret: null });
 
     const response = await GET(new NextRequest("http://localhost:3000"));
 
@@ -45,8 +45,8 @@ describe("app/api/auth/2fa/status route", () => {
     expect(data.isEnabled).toBe(false);
   });
 
-  it("returns 500 on kv error", async () => {
-    mockKvGet.mockRejectedValue(new Error("KV error"));
+  it("returns 500 when the credential store fails", async () => {
+    mockGetTwoFactorState.mockRejectedValue(new Error("DB error"));
 
     const response = await GET(new NextRequest("http://localhost:3000"));
 
