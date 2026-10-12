@@ -26,4 +26,10 @@ describe("clampOgTitle", () => {
     expect(result).toHaveLength(120);
     expect(result).toBe("a".repeat(120));
   });
+
+  it("does not split a surrogate pair at the boundary", () => {
+    const result = clampOgTitle(`${"a".repeat(119)}😀tail`);
+    expect(Array.from(result)).toHaveLength(120);
+    expect(result.endsWith("😀")).toBe(true);
+  });
 });

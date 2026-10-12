@@ -12,7 +12,9 @@ export const dynamic = "force-dynamic";
 const MAX_OG_TITLE_LENGTH = 120;
 
 export function clampOgTitle(rawTitle: string | null): string {
-  return rawTitle?.slice(0, MAX_OG_TITLE_LENGTH) || "Zee Index";
+  if (!rawTitle) return "Zee Index";
+  // Clamp by code point so an emoji at the boundary is not split in half.
+  return Array.from(rawTitle).slice(0, MAX_OG_TITLE_LENGTH).join("");
 }
 
 export const GET = createPublicRoute(

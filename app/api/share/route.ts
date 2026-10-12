@@ -293,7 +293,7 @@ export const POST = createAdminRoute(
           html: `
     
         <p>${t("emailHello")},</p>
-                <p>${t("emailBody", { type: (isCollection ? t("collection") : t("share")).toLowerCase(), email: session?.user?.email || "Unknown" })}</p>
+                <p>${t("emailBody", { type: (isCollection ? t("collection") : t("share")).toLowerCase(), email: escapeHtml(session?.user?.email || "Unknown") })}</p>
                 <ul>
                     <li><b>${t("item")}</b> ${escapeHtml(shareName)}</li>
                     <li><b>${t("path")}</b> ${escapeHtml(sharePath)}</li>
