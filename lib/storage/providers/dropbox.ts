@@ -1,6 +1,7 @@
 import { Dropbox, DropboxAuth } from "dropbox";
 import type { ProviderDownload, StorageProvider } from "./types";
 import { getMimeType } from "../mime";
+import { normalizePathId } from "../path-id";
 import type { ZeeFile } from "@/types/storage";
 import { logger } from "@/lib/logger";
 import { posix } from "path";
@@ -42,9 +43,13 @@ export class DropboxStorageProvider implements StorageProvider {
   }
 
   private toRemotePath(fileId: string): string {
-    const raw = fileId.startsWith(ID_PREFIX)
-      ? fileId.slice(ID_PREFIX.length)
-      : fileId;
+    // Resolve `..` before joining, so an id cannot climb out of basePath.
+    const canonical = normalizePathId(
+      fileId.startsWith(ID_PREFIX) ? fileId : `${ID_PREFIX}${fileId}`,
+      ID_PREFIX,
+    );
+    if (canonical === null) throw new Error("Invalid Dropbox path");
+    const raw = canonical.slice(ID_PREFIX.length);
 
     if (!raw) return this.basePath || "";
 
