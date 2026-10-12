@@ -3,19 +3,25 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { createEditorRoute } from "@/lib/api-middleware";
+import { driveIdSchema } from "@/lib/drive/ids";
+import { canModifyAll } from "@/lib/editor-access";
 import { getAccessToken, getFileDetailsFromDrive } from "@/lib/drive";
 import { z } from "zod";
 import { invalidateFolderCache } from "@/lib/cache";
 
 const updateSchema = z.object({
-  fileId: z.string().min(1),
+  fileId: driveIdSchema,
   newContent: z.string(),
 });
 
 export const POST = createEditorRoute(
-  async ({ body }) => {
+  async ({ request, body, session }) => {
     try {
       const { fileId, newContent } = body;
+
+      if (!(await canModifyAll(request, session, [fileId]))) {
+        return NextResponse.json({ error: "Access denied." }, { status: 403 });
+      }
       const fileDetails = await getFileDetailsFromDrive(fileId);
 
       if (

@@ -6,6 +6,14 @@ const { mockGetAccessToken, mockInvalidateFolderCache } = vi.hoisted(() => ({
   mockInvalidateFolderCache: vi.fn(),
 }));
 
+const { mockCanModifyAll } = vi.hoisted(() => ({
+  mockCanModifyAll: vi.fn(),
+}));
+
+vi.mock("@/lib/editor-access", () => ({
+  canModifyAll: mockCanModifyAll,
+}));
+
 vi.mock("@/lib/api-middleware", () => ({
   createEditorRoute: (handler: (ctx: any) => Promise<Response>) => {
     return async (request: NextRequest) =>
@@ -39,6 +47,7 @@ function makeRequest() {
 describe("app/api/files/rename route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCanModifyAll.mockResolvedValue(true);
     mockGetAccessToken.mockResolvedValue("test-access-token");
   });
 

@@ -9,15 +9,27 @@ import { z } from "zod";
 import { logActivity } from "@/lib/activityLogger";
 import { invalidateFolderCache } from "@/lib/cache";
 import { createEditorRoute } from "@/lib/api-middleware";
+import { driveIdSchema } from "@/lib/drive/ids";
+import { canModifyAll } from "@/lib/editor-access";
 const moveSchema = z.object({
-  fileIds: z.array(z.string().min(1)),
-  currentParentId: z.string().min(1),
-  newParentId: z.string().min(1),
+  fileIds: z.array(driveIdSchema).min(1),
+  currentParentId: driveIdSchema,
+  newParentId: driveIdSchema,
 });
 export const POST = createEditorRoute(
-  async ({ body, session }) => {
+  async ({ request, body, session }) => {
     try {
       const { fileIds, currentParentId, newParentId } = body;
+
+      if (
+        !(await canModifyAll(request, session, [
+          ...fileIds,
+          currentParentId,
+          newParentId,
+        ]))
+      ) {
+        return NextResponse.json({ error: "Access denied." }, { status: 403 });
+      }
 
       if (currentParentId === newParentId) {
         return NextResponse.json({
@@ -29,7 +41,11 @@ export const POST = createEditorRoute(
       const accessToken = await getAccessToken();
 
       const batch = fileIds.map((fileId) => {
-        const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?addParents=${newParentId}&removeParents=${currentParentId}`;
+        const query = new URLSearchParams({
+          addParents: newParentId,
+          removeParents: currentParentId,
+        });
+        const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?${query}`;
         return fetch(driveUrl, {
           method: "PATCH",
           headers: { Authorization: `Bearer ${accessToken}` },

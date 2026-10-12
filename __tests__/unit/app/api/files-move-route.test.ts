@@ -6,6 +6,14 @@ const { mockGetAccessToken, mockInvalidateFolderCache } = vi.hoisted(() => ({
   mockInvalidateFolderCache: vi.fn(),
 }));
 
+const { mockCanModifyAll } = vi.hoisted(() => ({
+  mockCanModifyAll: vi.fn(),
+}));
+
+vi.mock("@/lib/editor-access", () => ({
+  canModifyAll: mockCanModifyAll,
+}));
+
 vi.mock("@/lib/api-middleware", () => ({
   createEditorRoute: (handler: (ctx: any) => Promise<Response>) => {
     return async (request: NextRequest) =>
@@ -40,6 +48,7 @@ function makeRequest() {
 describe("app/api/files/move route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCanModifyAll.mockResolvedValue(true);
     mockGetAccessToken.mockResolvedValue("test-access-token");
   });
 
@@ -56,6 +65,35 @@ describe("app/api/files/move route", () => {
     const data = await response.json();
     expect(data.success).toBe(true);
     expect(mockInvalidateFolderCache).toHaveBeenCalledWith("old-folder-id");
+  });
+
+  it("refuses a move the editor could not open", async () => {
+    // e.g. moving a file out of a protected folder into a public one.
+    mockCanModifyAll.mockResolvedValue(false);
+    global.fetch = vi.fn();
+
+    const response = await POST(makeRequest());
+
+    expect(response.status).toBe(403);
+    expect(mockCanModifyAll).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      ["test-file-id", "old-folder-id", "new-folder-id"],
+    );
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("puts parent ids in the query string encoded", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ id: "test-file-id" }),
+    });
+
+    await POST(makeRequest());
+
+    expect(vi.mocked(global.fetch).mock.calls[0][0]).toBe(
+      "https://www.googleapis.com/drive/v3/files/test-file-id?addParents=new-folder-id&removeParents=old-folder-id",
+    );
   });
 
   it("returns 500 on Google Drive API error", async () => {
