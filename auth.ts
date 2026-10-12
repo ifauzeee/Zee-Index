@@ -11,6 +11,7 @@ import { REDIS_KEYS } from "@/lib/constants";
 import { getPublicAppConfig } from "@/lib/app-config";
 import { constantTimeEqual } from "@/lib/security";
 import { getPasswordHash, getTwoFactorState } from "@/lib/credentials";
+import { getSessionVersion } from "@/lib/session-version";
 
 import type { ActivityDetails } from "@/lib/activityLogger";
 
@@ -89,7 +90,8 @@ function emitAuthActivity<T extends AuthAuditType>(
     });
 }
 
-const authConfig: NextAuthConfig = {
+/** Exported for unit tests of the callbacks and the credentials provider. */
+export const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(db),
   providers: [
     Google({
@@ -386,6 +388,7 @@ const authConfig: NextAuthConfig = {
         }
 
         await setupTwoFactorForToken(user.email.toLowerCase().trim(), token);
+        token.sessionVersion = (await getSessionVersion(user.email)) ?? 0;
       } else if (profile?.email && !token.email) {
         token.email = profile.email;
 
@@ -422,6 +425,31 @@ const authConfig: NextAuthConfig = {
         }
 
         await setupTwoFactorForToken(normalizedProfileEmail, token);
+        token.sessionVersion =
+          (await getSessionVersion(normalizedProfileEmail)) ?? 0;
+      } else if (!token.isGuest && token.email) {
+        // Every later request: a JWT cannot be deleted, so drop it once the
+        // user's sessions were revoked (role, password or 2FA change) or the
+        // user no longer exists (Z2-06).
+        try {
+          const currentVersion = await getSessionVersion(token.email);
+          if (
+            currentVersion === null ||
+            currentVersion !== (token.sessionVersion ?? 0)
+          ) {
+            logger.info(
+              { email: token.email },
+              "[Auth] Session revoked; signing out",
+            );
+            return null;
+          }
+        } catch (err) {
+          // A database blip must not sign everyone out.
+          logger.warn(
+            { err, email: token.email },
+            "[Auth] Could not verify session version",
+          );
+        }
       }
       return token;
     },

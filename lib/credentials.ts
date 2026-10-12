@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { kv } from "@/lib/kv";
 import { logger } from "@/lib/logger";
+import { revokeSessions } from "@/lib/session-version";
 
 /**
  * Durable storage for user credentials: password hashes and TOTP state.
@@ -118,6 +119,8 @@ export async function setPasswordHash(
     },
     update: { passwordHash },
   });
+  // A new or removed password must not leave old sessions signed in.
+  await revokeSessions(normalized);
 }
 
 export async function getTwoFactorState(
@@ -147,6 +150,8 @@ export async function enableTwoFactor(
     },
     update: { twoFactorSecret: secret, twoFactorEnabled: true },
   });
+  // Sessions opened before 2FA existed never passed it.
+  await revokeSessions(normalized);
 }
 
 export async function disableTwoFactor(email: string): Promise<void> {
@@ -156,4 +161,5 @@ export async function disableTwoFactor(email: string): Promise<void> {
     where: { email: normalized },
     data: { twoFactorSecret: null, twoFactorEnabled: false },
   });
+  await revokeSessions(normalized);
 }

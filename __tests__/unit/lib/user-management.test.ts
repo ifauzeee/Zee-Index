@@ -20,6 +20,14 @@ vi.mock("@/lib/credentials", () => ({
     passwordStore.set(email.toLowerCase().trim(), hash);
   }),
 }));
+const { mockRevokeSessions } = vi.hoisted(() => ({
+  mockRevokeSessions: vi.fn(),
+}));
+
+vi.mock("@/lib/session-version", () => ({
+  revokeSessions: mockRevokeSessions,
+}));
+
 vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/logger", () => ({
   logger: { error: vi.fn(), warn: vi.fn(), debug: vi.fn() },

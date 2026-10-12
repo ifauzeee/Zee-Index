@@ -26,5 +26,7 @@ declare module "next-auth/jwt" {
     isGuest?: boolean;
     twoFactorRequired?: boolean;
     sessionId?: string;
+    /** User.sessionVersion when the token was issued (see lib/session-version). */
+    sessionVersion?: number;
   }
 }
