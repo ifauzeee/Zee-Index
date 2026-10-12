@@ -18,6 +18,7 @@ import {
 } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { escapeDriveQueryValue } from "@/lib/drive/query";
+import { assertDriveId, isDriveId } from "@/lib/drive/ids";
 import {
   MANUAL_DRIVES_KEY,
   parseManualDriveRecords,
@@ -91,7 +92,7 @@ export async function getAllDescendantFolders(
 
   while (queue.length > 0) {
     const [folderId, depth] = queue.shift()!;
-    if (depth >= MAX_DEPTH) {
+    if (depth >= MAX_DEPTH || !isDriveId(folderId)) {
       continue;
     }
 
@@ -153,6 +154,7 @@ export async function listFilesFromDrive(
   pageSize: number = 50,
   useCache: boolean = true,
 ) {
+  assertDriveId(folderId);
   const credHash = await getCredentialHash();
   const cacheKey = `${REDIS_KEYS.FOLDER_CONTENT}${credHash}:${folderId}:${pageToken || "first"}`;
   const memoryCacheKey = `${MEMORY_CACHE_KEYS.FOLDER_CONTENT}${folderId}:${pageToken || "first"}`;
@@ -241,6 +243,8 @@ export async function listFilesFromDrive(
 export async function getFileDetailsFromDrive(
   fileId: string,
 ): Promise<DriveFile | null> {
+  // Not a Drive id means not a Drive file; never put it in the URL.
+  if (!isDriveId(fileId)) return null;
   const credHash = await getCredentialHash();
   const cacheKey = `${REDIS_KEYS.FILE_DETAILS}${credHash}:${fileId}`;
   const memoryCacheKey = `${MEMORY_CACHE_KEYS.FILE_DETAILS}${fileId}`;
@@ -302,6 +306,7 @@ export async function getFolderPath(
   folderId: string,
   locale: string = "en",
 ): Promise<{ id: string; name: string }[]> {
+  if (!isDriveId(folderId)) return [];
   const credHash = await getCredentialHash();
   const cacheKey = `${REDIS_KEYS.FOLDER_PATH}${credHash}:${folderId}:${locale}`;
   try {
@@ -426,6 +431,7 @@ export async function searchFilesInFolder(
   mimeQuery: string,
   dateQuery: string,
 ): Promise<DriveFile[]> {
+  assertDriveId(folderId);
   const sanitizedSearchTerm = escapeDriveQueryValue(searchTerm);
   let driveQuery = `${queryField} contains '${sanitizedSearchTerm}' and trashed=false`;
   driveQuery += ` and '${folderId}' in parents`;
@@ -491,6 +497,7 @@ export async function listTrashedFiles() {
 export async function listFileRevisions(
   fileId: string,
 ): Promise<DriveRevision[]> {
+  assertDriveId(fileId);
   const accessToken = await getAccessToken();
   const response = await fetch(
     `${GOOGLE_DRIVE_API_BASE_URL}/files/${fileId}/revisions?fields=revisions(id,modifiedTime,keepForever,size,originalFilename,lastModifyingUser)`,
@@ -508,6 +515,7 @@ export async function fetchMetadata(
   accessToken: string,
 ): Promise<DriveFile | null> {
   const cleanId = fileId.split("&")[0].split("?")[0].trim();
+  if (!isDriveId(cleanId)) return null;
   const response = await fetchWithRetry(
     `${GOOGLE_DRIVE_API_BASE_URL}/files/${cleanId}?fields=id,name,mimeType,parents,trashed,shortcutDetails&supportsAllDrives=true`,
     {

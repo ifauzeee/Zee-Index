@@ -3,6 +3,9 @@ import {
   listSharedDrives,
   listFilesFromDrive,
   getAllDescendantFolders,
+  getFileDetailsFromDrive,
+  getFolderPath,
+  searchFilesInFolder,
 } from "@/lib/drive";
 
 vi.mock("@/lib/kv", () => ({
@@ -150,6 +153,31 @@ describe("lib/drive/operations", () => {
       const result = await getAllDescendantFolders("token", "root");
       expect(result).toContain("child1");
       expect(result).toContain("child2");
+    });
+  });
+
+  describe("Drive id guard (Z2-05)", () => {
+    const injected = "root' in parents or trashed=false or '";
+
+    it("never sends a non-Drive id to the details endpoint", async () => {
+      expect(await getFileDetailsFromDrive("abc/permissions")).toBeNull();
+      expect(await getFileDetailsFromDrive(injected)).toBeNull();
+      expect(fetchWithRetry).not.toHaveBeenCalled();
+    });
+
+    it("refuses to list or search with an id that would change the query", async () => {
+      await expect(listFilesFromDrive(injected)).rejects.toThrow(
+        "Invalid Drive id",
+      );
+      await expect(
+        searchFilesInFolder("token", injected, "q", "name", "", ""),
+      ).rejects.toThrow("Invalid Drive id");
+      expect(fetchWithRetry).not.toHaveBeenCalled();
+    });
+
+    it("returns an empty path for a non-Drive id", async () => {
+      expect(await getFolderPath(injected)).toEqual([]);
+      expect(fetchWithRetry).not.toHaveBeenCalled();
     });
   });
 });

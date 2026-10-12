@@ -5,6 +5,7 @@ import { createAdminRoute } from "@/lib/api-middleware";
 import { getAccessToken } from "@/lib/drive";
 import { invalidateFolderCache } from "@/lib/cache";
 import { getErrorMessage } from "@/lib/errors";
+import { isDriveId } from "@/lib/drive/ids";
 
 export const PATCH = createAdminRoute(async ({ request }) => {
   try {
@@ -13,7 +14,7 @@ export const PATCH = createAdminRoute(async ({ request }) => {
     const fileId = formData.get("fileId") as string;
     const parentId = formData.get("parentId") as string;
 
-    if (!file || !fileId) {
+    if (!file || !isDriveId(fileId)) {
       return NextResponse.json(
         { error: "Missing file or fileId" },
         { status: 400 },

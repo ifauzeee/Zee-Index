@@ -1,5 +1,6 @@
 import { getAccessToken } from "./auth";
 import { logger } from "@/lib/logger";
+import { assertDriveId } from "@/lib/drive/ids";
 
 const MAX_CONCURRENT = 10;
 
@@ -16,8 +17,9 @@ async function runLimited<T>(
 }
 
 export async function restoreTrash(fileId: string | string[]) {
-  const accessToken = await getAccessToken();
   const ids = Array.isArray(fileId) ? fileId : [fileId];
+  ids.forEach(assertDriveId);
+  const accessToken = await getAccessToken();
 
   const results = await runLimited(ids, (id) =>
     fetch(`https://www.googleapis.com/drive/v3/files/${id}`, {
@@ -37,8 +39,9 @@ export async function restoreTrash(fileId: string | string[]) {
 }
 
 export async function deleteForever(fileId: string | string[]) {
-  const accessToken = await getAccessToken();
   const ids = Array.isArray(fileId) ? fileId : [fileId];
+  ids.forEach(assertDriveId);
+  const accessToken = await getAccessToken();
 
   const results = await runLimited(ids, (id) =>
     fetch(`https://www.googleapis.com/drive/v3/files/${id}`, {

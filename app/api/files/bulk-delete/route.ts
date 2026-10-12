@@ -9,8 +9,9 @@ import { getAccessToken } from "@/lib/drive";
 import { z } from "zod";
 import { logActivity } from "@/lib/activityLogger";
 import { invalidateFolderCache } from "@/lib/cache";
+import { driveIdSchema } from "@/lib/drive/ids";
 const deleteSchema = z.object({
-  fileIds: z.array(z.string().min(1)),
+  fileIds: z.array(driveIdSchema).min(1),
   parentId: z.string().min(1),
 });
 

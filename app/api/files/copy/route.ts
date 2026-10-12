@@ -9,9 +9,10 @@ import { getAccessToken, getFileDetailsFromDrive } from "@/lib/drive";
 import { z } from "zod";
 import { invalidateFolderCache } from "@/lib/cache";
 import { logActivity } from "@/lib/activityLogger";
+import { driveIdSchema } from "@/lib/drive/ids";
 const copySchema = z.object({
-  fileId: z.string().min(1),
-  destinationId: z.string().optional(),
+  fileId: driveIdSchema,
+  destinationId: driveIdSchema.optional(),
   newName: z.string().optional(),
 });
 
