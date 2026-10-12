@@ -197,7 +197,7 @@ curl -X GET "http://localhost:3000/api/files?folderId=<folder-id>"
 ```bash
 curl -X POST "http://localhost:3000/api/share" \
   -H "Content-Type: application/json" \
-  -H "Cookie: next-auth.session-token=<token>" \
+  -H "Cookie: authjs.session-token=<token>" \
   -d '{
     "path": "/folder/<folder-id>",
     "itemName": "My Folder",

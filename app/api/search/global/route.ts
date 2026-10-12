@@ -86,7 +86,6 @@ export const GET = createPublicRoute(
     }
 
     const sanitizedSearchTerm = sanitizeString(rawSearchTerm);
-    const searchTerm = sanitizedSearchTerm.replace(/'/g, "''");
 
     try {
       const accessToken = await getAccessToken();
@@ -102,7 +101,7 @@ export const GET = createPublicRoute(
         searchFilesInFolder(
           accessToken,
           folderId,
-          searchTerm,
+          sanitizedSearchTerm,
           queryField,
           mimeQuery,
           dateQuery,
@@ -175,7 +174,7 @@ export const GET = createPublicRoute(
             allowedTokens,
             session?.user?.email,
             0,
-            5,
+            20,
             null,
             new Set(),
             accessCache,

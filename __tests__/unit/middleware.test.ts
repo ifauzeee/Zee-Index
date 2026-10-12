@@ -55,6 +55,7 @@ import middlewareDefault, {
   createContentSecurityPolicy,
   isPublicApiPath,
 } from "@/middleware";
+import { SWAGGER_UI_CDN } from "@/lib/constants";
 
 const middleware = middlewareDefault as unknown as (
   request: NextRequest,
@@ -109,6 +110,42 @@ describe("middleware content security policy", () => {
       allowUnsafeEval: true,
     });
     expect(csp).toContain("unsafe-eval");
+  });
+});
+
+describe("middleware content security policy sources", () => {
+  it("lists the pinned Swagger UI CDN with a trailing slash", () => {
+    const csp = createContentSecurityPolicy("nonce-src");
+
+    // Without the trailing slash CSP matches only that exact URL, not the
+    // bundle and preset scripts that live beneath it.
+    expect(csp).toContain(`${SWAGGER_UI_CDN}/`);
+    expect(csp).toContain(
+      "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/",
+    );
+  });
+
+  it("no longer allows the pdf.js worker from a CDN", () => {
+    const csp = createContentSecurityPolicy("nonce-src");
+
+    expect(csp).not.toContain("pdfjs-dist@4");
+  });
+
+  it("does not list a pdf.js CDN in worker-src", () => {
+    const csp = createContentSecurityPolicy("nonce-src");
+
+    expect(csp).toContain("worker-src 'self' blob:");
+    expect(csp).not.toContain("worker-src 'self' blob: https://");
+  });
+
+  it("allows the pinned Swagger UI CDN stylesheet in style-src", () => {
+    const csp = createContentSecurityPolicy("nonce-src");
+
+    // A quoted "${SWAGGER_UI_CDN}" would end up in the policy as a literal,
+    // blocking swagger-ui.css on the docs page.
+    expect(csp).toContain(
+      `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${SWAGGER_UI_CDN}/`,
+    );
   });
 });
 
@@ -201,6 +238,98 @@ describe("middleware share_token flow", () => {
     const response = await middleware(request);
 
     expect(response.status).toBe(200);
+  });
+
+  it("strips client-supplied API key headers from API requests", async () => {
+    anonymous();
+    const seenAuthMethod: Array<string | null> = [];
+    const seenKeyId: Array<string | null> = [];
+    const seenPermissions: Array<string | null> = [];
+    const seenCookies: Array<string | null> = [];
+    mockCheckRateLimit.mockImplementation((request: NextRequest) => {
+      seenAuthMethod.push(request.headers.get("x-auth-method"));
+      seenKeyId.push(request.headers.get("x-api-key-id"));
+      seenPermissions.push(request.headers.get("x-api-key-permissions"));
+      seenCookies.push(request.headers.get("cookie"));
+      return Promise.resolve({
+        success: true,
+        limit: 1,
+        remaining: 1,
+        reset: 0,
+      });
+    });
+    const request = new NextRequest("http://localhost:3000/api/files", {
+      headers: {
+        "x-auth-method": "api-key",
+        "x-api-key-id": "forged",
+        "x-api-key-name": "forged",
+        "x-api-key-permissions": "admin:write",
+        cookie: "authjs.csrf-token=legit",
+      },
+    });
+
+    await middleware(request);
+
+    expect(seenAuthMethod).toEqual([null]);
+    expect(seenKeyId).toEqual([null]);
+    expect(seenPermissions).toEqual([null]);
+    // Stripping must only remove the forged headers: anything else (cookies
+    // especially) has to reach downstream readers untouched.
+    expect(seenCookies).toEqual(["authjs.csrf-token=legit"]);
+  });
+
+  it("keeps client-supplied API key headers on non-API requests", async () => {
+    anonymous();
+    const request = new NextRequest("http://localhost:3000/login", {
+      headers: { "x-auth-method": "api-key" },
+    });
+
+    const response = await middleware(request);
+
+    expect(response.status).toBe(200);
+  });
+
+  it("strips forged API key headers on the /api/download early-exit path", async () => {
+    anonymous();
+    const request = new NextRequest(
+      "http://localhost:3000/api/download?id=file1",
+      {
+        headers: {
+          "x-auth-method": "api-key",
+          "x-api-key-id": "forged",
+          "x-api-key-name": "forged",
+          "x-api-key-permissions": "admin:write",
+        },
+      },
+    );
+
+    const response = await middleware(request);
+
+    // applyCsp forwards the middleware's request headers; the forged copy
+    // must not survive into what the route handler sees.
+    expect(
+      response.headers.get("x-middleware-request-x-auth-method"),
+    ).toBeNull();
+  });
+
+  it("strips forged API key headers on the /api/health skip path", async () => {
+    anonymous();
+    const request = new NextRequest("http://localhost:3000/api/health", {
+      headers: {
+        "x-auth-method": "api-key",
+        "x-api-key-permissions": "admin:write",
+      },
+    });
+
+    const response = await middleware(request);
+
+    const override = response.headers.get("x-middleware-override-headers");
+    expect(override).not.toBeNull();
+    const forwarded = override
+      ? override.split(",").map((header) => header.trim())
+      : [];
+    expect(forwarded).not.toContain("x-auth-method");
+    expect(forwarded).not.toContain("x-api-key-permissions");
   });
 
   it("returns 401 for an API request carrying an invalid share_token", async () => {

@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { checkAuth, handleAuthRedirect } from "@/lib/auth-check";
 import {
@@ -8,7 +7,7 @@ import {
   type RateLimitType,
 } from "@/lib/ratelimit";
 import { validateApiKey } from "@/lib/api-key";
-import { ERROR_MESSAGES } from "@/lib/constants";
+import { ERROR_MESSAGES, SWAGGER_UI_CDN } from "@/lib/constants";
 import { isAppConfigured } from "@/lib/config";
 import {
   validateShareToken,
@@ -90,15 +89,15 @@ export function createContentSecurityPolicy(
 
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}'${scriptEval} https://cdn.jsdelivr.net/npm/swagger-ui-dist@5 https://cdn.jsdelivr.net/npm/pdfjs-dist@4 https://www.google-analytics.com`,
-    `script-src-elem 'self' 'nonce-${nonce}'${scriptEval} https://cdn.jsdelivr.net/npm/swagger-ui-dist@5 https://cdn.jsdelivr.net/npm/pdfjs-dist@4 https://www.google-analytics.com`,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/swagger-ui-dist@5",
+    `script-src 'self' 'nonce-${nonce}'${scriptEval} ${SWAGGER_UI_CDN}/ https://www.google-analytics.com`,
+    `script-src-elem 'self' 'nonce-${nonce}'${scriptEval} ${SWAGGER_UI_CDN}/ https://www.google-analytics.com`,
+    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${SWAGGER_UI_CDN}/`,
     "font-src 'self' data: https://fonts.gstatic.com",
     "img-src 'self' data: blob: https://*.googleusercontent.com https://drive.google.com https://images.unsplash.com https://image.tmdb.org",
     "media-src 'self' blob: https://*.googleapis.com",
     "connect-src 'self' https://*.googleapis.com https://*.google.com https://*.googleusercontent.com https://www.google-analytics.com",
     "frame-src 'self' https://accounts.google.com https://drive.google.com https://view.officeapps.live.com",
-    `worker-src 'self' blob: https://cdn.jsdelivr.net/npm/pdfjs-dist@4`,
+    "worker-src 'self' blob:",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -137,6 +136,28 @@ function mergeMiddlewareRequestHeaders(
   });
 }
 
+const API_KEY_AUTH_HEADERS = [
+  "x-auth-method",
+  "x-api-key-id",
+  "x-api-key-name",
+  "x-api-key-permissions",
+];
+
+/**
+ * Copy `request` without the API key auth headers a client may have sent.
+ * Rebuild from the original request with replaced headers: constructing a
+ * new request from a clone drops headers in the middleware runtime (seen in
+ * production as a missing auth cookie, which fails NextAuth CSRF checks),
+ * so never go back to `new NextRequest(request.clone())` here.
+ */
+function withApiKeyHeadersStripped(request: NextRequest): NextRequest {
+  const headers = new Headers(request.headers);
+  for (const header of API_KEY_AUTH_HEADERS) {
+    headers.delete(header);
+  }
+  return new NextRequest(request, { headers });
+}
+
 function applyCsp(request: NextRequest, response: Response): Response {
   const nonce = createNonce();
   const contentSecurityPolicy = createContentSecurityPolicy(nonce);
@@ -164,13 +185,23 @@ export default async function middleware(request: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
     pathname === "/sw.js" ||
-    pathname === "/manifest.webmanifest" ||
-    pathname.startsWith("/api/health")
+    pathname === "/manifest.webmanifest"
   ) {
     return NextResponse.next();
   }
 
+  if (pathname.startsWith("/api/health")) {
+    // Health skips auth and rate limiting, but route wrappers read
+    // x-auth-method, so keep the invariant that only this middleware sets
+    // it. Forward the sanitized headers; a plain next() keeps them.
+    const sanitized = withApiKeyHeadersStripped(request);
+    return NextResponse.next({ request: { headers: sanitized.headers } });
+  }
+
   if (pathname.startsWith("/api/download")) {
+    // The early exit forwards request headers through applyCsp, so forged
+    // API key headers must be stripped before the signature check too.
+    request = withApiKeyHeadersStripped(request);
     const signatureError = await validateDownloadTokenSignature(request);
     if (signatureError) {
       return applyCsp(request, signatureError);
@@ -180,6 +211,13 @@ export default async function middleware(request: NextRequest) {
 
   const pathnameWithoutLocale = stripLocaleFromPathname(pathname) || "/";
   const isApi = pathnameWithoutLocale.startsWith("/api");
+
+  if (isApi) {
+    // These headers describe the API key that authenticated the request, so
+    // only this middleware may set them. Strip any client-supplied copy so a
+    // caller cannot impersonate an API key without presenting one.
+    request = withApiKeyHeadersStripped(request);
+  }
 
   // API key authentication (runs for all API routes).
   // If valid, sets x-auth-method=api-key headers and skips session auth downstream.

@@ -88,6 +88,9 @@ describe("isAccessRestricted root scoping", () => {
       db.protectedFolder.findMany as unknown as ReturnType<typeof vi.fn>
     ).mockResolvedValue([]);
     (kv.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    (getAccessToken as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      "token",
+    );
     (getRootFolderId as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
       ROOT_ID,
     );
@@ -121,7 +124,31 @@ describe("isAccessRestricted root scoping", () => {
     const { leafId, nodes } = nestedBelowRoot(8);
     driveTree(nodes);
 
-    expect(await isAccessRestricted(leafId, [], null, 0, 20)).toBe(false);
+    expect(await isAccessRestricted(leafId)).toBe(false);
+  });
+
+  it("allows deep files by default, without an explicit maxDepth", async () => {
+    // An unrelated protected folder keeps the restricted-parent walk alive;
+    // with the old 5-level cap the leaf itself was hidden (fail-closed).
+    const { leafId, nodes } = nestedBelowRoot(8);
+    driveTree(nodes);
+    (
+      db.protectedFolder.findMany as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([{ folderId: "unrelated-folder" }]);
+
+    expect(await isAccessRestricted(leafId)).toBe(false);
+  });
+
+  it("restricts a file with a protected ancestor beyond 5 levels", async () => {
+    // leaf-1 is protected and sits 7 parent-steps above the leaf: the walk
+    // must reach it instead of tripping the depth cap first.
+    const { leafId, nodes } = nestedBelowRoot(8);
+    driveTree(nodes);
+    (
+      db.protectedFolder.findMany as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([{ folderId: "leaf-1" }]);
+
+    expect(await isAccessRestricted(leafId)).toBe(true);
   });
 
   it("allows a file inside a manual (shared) drive", async () => {
@@ -238,5 +265,27 @@ describe("isAccessRestricted root scoping", () => {
     // only then is the positive result cached.
     expect(await isAccessRestricted("flaky-file")).toBe(false);
     expect(memoryCache.get<boolean>("scope:inroot:flaky-file")).toBe(true);
+  });
+
+  it("stays fail-closed when the root alias cannot be resolved", async () => {
+    // With NEXT_PUBLIC_ROOT_FOLDER_ID=root and a Drive alias lookup failing,
+    // nothing may count as inside the root for non-admins.
+    (getRootFolderId as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      "root",
+    );
+    (kv.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: false, json: async () => ({}) }),
+    );
+    // A fresh id: positive scoping results are cached per id for 10 minutes
+    // and the alias test above already cached its own id.
+    driveTree({ "below-unresolvable-alias": { parents: ["real-root-id"] } });
+
+    try {
+      expect(await isAccessRestricted("below-unresolvable-alias")).toBe(true);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

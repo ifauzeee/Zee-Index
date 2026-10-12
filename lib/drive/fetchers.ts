@@ -17,6 +17,7 @@ import {
   MIME_TYPES,
 } from "@/lib/constants";
 import { logger } from "@/lib/logger";
+import { escapeDriveQueryValue } from "@/lib/drive/query";
 import {
   MANUAL_DRIVES_KEY,
   parseManualDriveRecords,
@@ -418,7 +419,7 @@ export async function searchFilesInFolder(
   mimeQuery: string,
   dateQuery: string,
 ): Promise<DriveFile[]> {
-  const sanitizedSearchTerm = searchTerm.replace(/['\\]/g, "\\$&");
+  const sanitizedSearchTerm = escapeDriveQueryValue(searchTerm);
   let driveQuery = `${queryField} contains '${sanitizedSearchTerm}' and trashed=false`;
   driveQuery += ` and '${folderId}' in parents`;
   driveQuery += mimeQuery;

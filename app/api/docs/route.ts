@@ -1,17 +1,21 @@
 import { NextResponse } from "next/server";
+import { SWAGGER_UI_CDN } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
-const SWAGGER_CDN = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5";
+export async function GET(request: Request) {
+  // The middleware generates a per-request nonce for the CSP it emits and
+  // forwards it here so the scripts below can carry the matching attribute.
+  const nonce = request.headers.get("x-nonce");
+  const nonceAttr = nonce ? ` nonce="${nonce}"` : "";
 
-export async function GET() {
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Zee-Index API — Swagger UI</title>
-  <link rel="stylesheet" href="${SWAGGER_CDN}/swagger-ui.css" />
+  <link rel="stylesheet" href="${SWAGGER_UI_CDN}/swagger-ui.css" />
   <style>
     html { box-sizing: border-box; }
     *, *::before, *::after { box-sizing: inherit; }
@@ -21,9 +25,9 @@ export async function GET() {
 </head>
 <body>
   <div id="swagger-ui"></div>
-  <script src="${SWAGGER_CDN}/swagger-ui-bundle.js" crossorigin></script>
-  <script src="${SWAGGER_CDN}/swagger-ui-standalone-preset.js" crossorigin></script>
-  <script>
+  <script src="${SWAGGER_UI_CDN}/swagger-ui-bundle.js" crossorigin${nonceAttr}></script>
+  <script src="${SWAGGER_UI_CDN}/swagger-ui-standalone-preset.js" crossorigin${nonceAttr}></script>
+  <script${nonceAttr}>
     SwaggerUIBundle({
       url: '/api/docs/openapi',
       dom_id: '#swagger-ui',

@@ -198,12 +198,17 @@ async function getRestrictedIds(): Promise<string[]> {
   }
 }
 
+/**
+ * Fail-closed check: true unless the file is provably reachable. The parent
+ * walk caps at 20 levels -- the same limit as the root-scoping walk -- so files
+ * legitimately nested deep under the root are not hidden by the depth cap.
+ */
 export async function isAccessRestricted(
   fileId: string,
   allowedTokens: string[] = [],
   userEmail: string | null | undefined = null,
   depth: number = 0,
-  maxDepth: number = 5,
+  maxDepth: number = 20,
   preFetchedRestrictedIds: string[] | null = null,
   visited: Set<string> = new Set(),
   accessCache: Map<string, boolean> = new Map(),

@@ -209,6 +209,36 @@ describe("app/api/search route", () => {
     expect(response.status).toBe(200);
   });
 
+  it("escapes single quotes in the Drive query term", async () => {
+    const mockFetch = vi.fn().mockResolvedValue(createDriveResponse([]));
+    vi.stubGlobal("fetch", mockFetch);
+
+    const response = await GET(createRequest({ q: "it's" }));
+
+    expect(response.status).toBe(200);
+    const calledUrl = new URL(mockFetch.mock.calls[0][0] as string);
+    // The Drive API escapes its string delimiter with a backslash, so the
+    // value must contain a backslash before the closing quote.
+    expect(calledUrl.searchParams.get("q")).toBe(
+      "trashed=false and name contains 'it\\'s'",
+    );
+  });
+
+  it("returns 400 when minSize is not a number", async () => {
+    const response = await GET(createRequest({ q: "large", minSize: "abc" }));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid minSize.",
+    });
+  });
+
+  it("returns 400 when minSize is negative", async () => {
+    const response = await GET(createRequest({ q: "large", minSize: "-1" }));
+
+    expect(response.status).toBe(400);
+  });
+
   it("filters by minSize", async () => {
     const mockFetch = vi.fn().mockResolvedValue(createDriveResponse([]));
     vi.stubGlobal("fetch", mockFetch);

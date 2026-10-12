@@ -6,22 +6,22 @@ Self-hosted Google Drive Explorer, CMS & streaming platform. Next.js 16 App Rout
 
 ## Commands (exact)
 
-| Command                                           | What it does                                                |
-| ------------------------------------------------- | ----------------------------------------------------------- |
-| `pnpm dev`                                        | Dev server with Turbopack (uses `dotenv --`)                |
-| `pnpm dev:webpack`                                | Dev server with Webpack fallback                            |
-| `pnpm build`                                      | Production build                                            |
-| `pnpm start`                                      | Production server                                           |
-| `pnpm typecheck`                                  | `tsc --noEmit`                                              |
-| `pnpm lint`                                       | ESLint                                                      |
-| `pnpm format:check` / `pnpm format:fix`           | Prettier                                                    |
-| `pnpm check:all`                                  | typecheck → format:check → lint (sequential, order matters) |
-| `pnpm fix:all`                                    | format:fix + lint --fix                                     |
-| `pnpm test`                                       | Vitest unit tests (`__tests__/`)                            |
-| `pnpm test:e2e`                                   | Playwright E2E tests (`e2e/`)                               |
-| `pnpm analyze`                                    | Bundle analyzer (`cross-env ANALYZE=true next build`)       |
-| `pnpm docker:dev` / `docker:prod` / `docker:stop` | Docker Compose                                              |
-| `pnpm prepush`                                    | typecheck only                                              |
+| Command                                           | What it does                                                             |
+| ------------------------------------------------- | ------------------------------------------------------------------------ |
+| `pnpm dev`                                        | Dev server with Turbopack (uses `dotenv --`)                             |
+| `pnpm dev:webpack`                                | Dev server with Webpack fallback                                         |
+| `pnpm build`                                      | Production build                                                         |
+| `pnpm start`                                      | Production server                                                        |
+| `pnpm typecheck`                                  | `tsc --noEmit`                                                           |
+| `pnpm lint`                                       | ESLint                                                                   |
+| `pnpm format:check` / `pnpm format:fix`           | Prettier                                                                 |
+| `pnpm check:all`                                  | typecheck → format:check → lint → check:i18n (sequential, order matters) |
+| `pnpm fix:all`                                    | format:fix + lint --fix                                                  |
+| `pnpm test`                                       | Vitest unit tests (`__tests__/`)                                         |
+| `pnpm test:e2e`                                   | Playwright E2E tests (`e2e/`)                                            |
+| `pnpm analyze`                                    | Bundle analyzer (`cross-env ANALYZE=true next build`)                    |
+| `pnpm docker:dev` / `docker:prod` / `docker:stop` | Docker Compose                                                           |
+| `pnpm prepush`                                    | typecheck only                                                           |
 
 Pre-commit hook (Husky) runs `npx lint-staged` — Prettier on staged files, nothing else.
 
@@ -73,15 +73,15 @@ Existing role wrappers: `createPublicRoute`, `createUserRoute` (no guest), `crea
 
 1. Skip: `/_next`, `/static`, `/sw.js`, `/manifest.webmanifest`, `/api/health` (matcher also excludes `_next/image`, favicon)
 2. Download token signature check (`/api/download`)
-3. API routes: `Authorization: Bearer zk_...` API key validation → sets `x-auth-method` / `x-api-key-*` request headers
+3. API routes: `Authorization: Bearer <64-hex>` API key validation → sets `x-auth-method` / `x-api-key-*` request headers (client-supplied copies of these headers are stripped first)
 4. Rate limiting per tier: `API_KEY` (key-ID based) for key requests, `ADMIN` for `/api/admin`, `API` otherwise (AUTH / DOWNLOAD tiers live in route wrappers)
 5. App configuration check → redirect to `/setup` (or 503 JSON for APIs) if unconfigured
 6. API-key requests skip session auth entirely — route handlers enforce permissions via headers
 7. `/setup` routes: admin-only, 2FA enforced
-8. Public paths/APIs pass through (`PUBLIC_PATHS`, `PUBLIC_API_PREFIXES`)
+8. Public paths/APIs pass through (`PUBLIC_PATHS`, `PUBLIC_API_EXACT` + `PUBLIC_API_PREFIXES` — matched exactly for the former, as a prefix only for the latter)
 9. Share token validation (`share_token` query param)
 10. Auth check (NextAuth JWT); GUEST blocked from `/admin`
-11. 2FA enforcement (redirect to `/verify-2fa`)
+11. 2FA enforcement (redirect to `/verify-2fa`; also enforced per-route by `create*Route` wrappers — a session pending 2FA is `null` for public routes and `403` for the rest, unless the route opts out with `allowPending2FA`)
 12. Folder password protection (`validateFolderToken` for `/folder/[id]` and `/api/files`)
 13. `/findpath` handler; i18n locale routing (`intlMiddleware`) applied throughout
 
@@ -93,7 +93,7 @@ Existing role wrappers: `createPublicRoute`, `createUserRoute` (no guest), `crea
 - Admin resolved from: DB `User.role`, Redis `admins` set, env `ADMIN_EMAILS`.
 - 2FA via TOTP (Redis-backed). Guest can be disabled in admin settings.
 - Password: prefer bcrypt hash (`ADMIN_PASSWORD_HASH`), fallback plaintext (`ADMIN_PASSWORD`).
-- API keys: `Authorization: Bearer zk_...` on any API route bypasses session auth; permissions (`files:read`, `admin:write`, …) are checked per-route via `x-api-key-*` headers. Keys are bcrypt-hashed at rest, shown once at creation (`/admin/api-keys`).
+- API keys: `Authorization: Bearer <64-hex>` on any API route bypasses session auth; permissions (`files:read`, `admin:write`, …) are checked per-route via `x-api-key-*` headers. Keys are bcrypt-hashed at rest, shown once at creation (`/admin/api-keys`).
 
 ## KV / caching
 

@@ -8,6 +8,7 @@ import { kv } from "@/lib/kv";
 import { db } from "@/lib/db";
 import { searchIndexedFiles } from "@/lib/search-index";
 import { logger } from "@/lib/logger";
+import { escapeDriveQueryValue } from "@/lib/drive/query";
 
 const CACHE_TTL = 3600;
 
@@ -77,7 +78,9 @@ export const GET = createPublicRoute(
     const sanitizedSearchTerm = rawSearchTerm
       ? sanitizeString(rawSearchTerm)
       : "";
-    const searchTerm = sanitizedSearchTerm.replace(/'/g, "''");
+    const searchTerm = sanitizedSearchTerm
+      ? escapeDriveQueryValue(sanitizedSearchTerm)
+      : "";
 
     const isAdmin = session?.user?.role === "ADMIN";
     const authHeader = request.headers.get("Authorization");
@@ -143,7 +146,14 @@ export const GET = createPublicRoute(
       driveQuery += getMimeQuery(mimeType);
       driveQuery += getDateQuery(modifiedTime);
       if (minSize) {
-        const bytes = parseInt(minSize) * 1024 * 1024;
+        const megabytes = Number(minSize);
+        if (!Number.isFinite(megabytes) || megabytes < 0) {
+          return NextResponse.json(
+            { error: "Invalid minSize." },
+            { status: 400 },
+          );
+        }
+        const bytes = megabytes * 1024 * 1024;
         driveQuery += ` and size > ${bytes}`;
       }
 
@@ -199,7 +209,7 @@ export const GET = createPublicRoute(
             allowedTokens,
             session?.user?.email,
             0,
-            5,
+            20,
             null,
             new Set(),
             accessCache,
