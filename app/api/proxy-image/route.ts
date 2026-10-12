@@ -17,7 +17,7 @@ const MAX_UPSTREAM_BYTES = 15 * 1024 * 1024;
 const MAX_INPUT_PIXELS = 50_000_000;
 // libvips sniffs the real format from magic bytes, so a mislabeled SVG can
 // still reach the SVG loader even with a benign content-type header.
-const SVG_MAGIC_PREFIXES = ["<?xml", "<svg"] as const;
+const SVG_MAGIC_PREFIXES = ["<?xml", "<svg", "<!--", "<!DOCTYPE"] as const;
 const VALID_IMAGE_HOSTS = [
   "googleusercontent.com",
   "google.com",
