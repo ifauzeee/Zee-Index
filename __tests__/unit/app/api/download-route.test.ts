@@ -80,6 +80,15 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
+const { mockApplyWatermark } = vi.hoisted(() => ({
+  mockApplyWatermark: vi.fn(),
+}));
+
+vi.mock("@/lib/watermark", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/watermark")>()),
+  applyWatermark: mockApplyWatermark,
+}));
+
 vi.mock("@/lib/logger", () => ({
   logger: {
     info: mockLoggerInfo,
@@ -94,7 +103,9 @@ import { ERROR_MESSAGES } from "@/lib/constants";
 function createContext(overrides?: {
   fileId?: string;
   range?: string | null;
-  shareRecord?: { jti: string } | undefined;
+  shareRecord?:
+    | { jti: string; hasWatermark?: boolean; watermarkText?: string | null }
+    | undefined;
   email?: string;
 }) {
   return {
@@ -316,5 +327,65 @@ describe("app/api/download route", () => {
       error: "Gagal mengambil file dari Google Drive",
     });
     expect(mockLoggerError).toHaveBeenCalled();
+  });
+
+  describe("watermarked shares (Z2-04)", () => {
+    const watermarkedShare = {
+      jti: "share-1",
+      hasWatermark: true,
+      watermarkText: "ACME",
+    };
+
+    beforeEach(() => {
+      mockPrepareGoogleDriveUrl.mockReturnValue({
+        url: "https://www.googleapis.com/drive/v3/files/file-123?alt=media",
+        mimeType: "application/pdf",
+        filename: "report.pdf",
+      });
+      mockGetFileDetailsFromDrive.mockResolvedValue({
+        id: "file-123",
+        name: "report.pdf",
+        mimeType: "application/pdf",
+        size: "4",
+      });
+    });
+
+    it("ignores a Range header so the watermark cannot be skipped", async () => {
+      mockValidateDownloadRequest.mockResolvedValue(
+        createContext({ range: "bytes=0-", shareRecord: watermarkedShare }),
+      );
+      mockApplyWatermark.mockResolvedValue(Buffer.from("watermarked"));
+
+      const response = await GET(
+        new NextRequest("http://localhost:3000/api/download?fileId=file-123", {
+          headers: { range: "bytes=0-" },
+        }),
+      );
+
+      const googleHeaders = vi.mocked(global.fetch).mock.calls[0][1]
+        ?.headers as Headers;
+      expect(googleHeaders.get("Range")).toBeNull();
+      expect(response.status).toBe(200);
+      expect(await response.text()).toBe("watermarked");
+      expect(mockApplyWatermark).toHaveBeenCalledWith(
+        expect.any(Buffer),
+        "application/pdf",
+        "ACME",
+      );
+    });
+
+    it("refuses to serve the file when the watermark fails", async () => {
+      mockValidateDownloadRequest.mockResolvedValue(
+        createContext({ shareRecord: watermarkedShare }),
+      );
+      mockApplyWatermark.mockResolvedValue(null);
+
+      const response = await GET(
+        new NextRequest("http://localhost:3000/api/download?fileId=file-123"),
+      );
+
+      expect(response.status).toBe(500);
+      expect(await response.text()).not.toBe("data");
+    });
   });
 });

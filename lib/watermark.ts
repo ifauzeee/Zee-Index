@@ -1,6 +1,12 @@
 import sharp from "sharp";
 import { PDFDocument, rgb, degrees, StandardFonts } from "pdf-lib";
 import { logger } from "@/lib/logger";
+import { escapeHtml } from "@/lib/html-utils";
+
+/** Types a share watermark is applied to; other types are served as-is. */
+export function isWatermarkable(mimeType: string): boolean {
+  return mimeType.startsWith("image/") || mimeType === "application/pdf";
+}
 
 export async function applyWatermark(
   buffer: Buffer,
@@ -31,8 +37,10 @@ async function applyImageWatermark(
 
   // Create SVG with repeating watermark text
   const fontSize = Math.max(24, Math.floor(width / 20));
-  const text = watermarkText || "Confidential";
-  const dateStr = new Date().toLocaleDateString();
+  // Escaped: the text is admin input and a stray & or < used to break the
+  // SVG, which made the watermark silently fail.
+  const text = escapeHtml(watermarkText || "Confidential");
+  const dateStr = escapeHtml(new Date().toLocaleDateString());
 
   const svgText = `
     <svg width="${width}" height="${height}">
