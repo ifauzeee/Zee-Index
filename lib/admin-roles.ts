@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { REDIS_KEYS } from "@/lib/constants";
 import { z } from "zod";
+import { revokeSessions } from "@/lib/session-version";
 
 const emailSchema = z.object({
   email: z
@@ -22,6 +23,8 @@ async function upsertUserRole(
     create: { email, role, name: email.split("@")[0] },
     update: { role },
   });
+  // The role lives in the JWT; end existing sessions so it takes effect now.
+  await revokeSessions(email);
 }
 
 interface RoleRouteConfig {

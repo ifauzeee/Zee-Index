@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { safeCallbackUrl } from "@/lib/safe-callback";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
@@ -18,7 +19,7 @@ export function Verify2FAClient() {
 
   const t = useTranslations("Auth");
 
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const callbackUrl = safeCallbackUrl(searchParams.get("callbackUrl"));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

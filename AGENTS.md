@@ -90,9 +90,11 @@ Existing role wrappers: `createPublicRoute`, `createUserRoute` (no guest), `crea
 - NextAuth v5 (beta) with JWT strategy. Providers: Google OAuth, Email+Password (credentials), Guest.
 - JWT cookie: `authjs.session-token` (httpOnly, lax, secure in prod)
 - Roles: ADMIN > EDITOR > USER > GUEST. Stored in JWT token.
+- Sessions are revocable: `User.sessionVersion` is copied into the JWT at sign-in and checked by the `jwt` callback (cached 30s, `lib/session-version.ts`). Call `revokeSessions(email)` after any change that must end existing sessions; role, password and 2FA changes already do.
 - Admin resolved from: DB `User.role`, Redis `admins` set, env `ADMIN_EMAILS`.
-- 2FA via TOTP (Redis-backed). Guest can be disabled in admin settings.
-- Password: prefer bcrypt hash (`ADMIN_PASSWORD_HASH`), fallback plaintext (`ADMIN_PASSWORD`).
+- 2FA via TOTP, state in Postgres (`lib/credentials.ts`). Login and disable codes go through `verifyTotpOnce` (`lib/totp.ts`), so a code is accepted once. Guest can be disabled in admin settings.
+- Password: `ADMIN_PASSWORD_HASH` (bcrypt) or legacy `ADMIN_PASSWORD` only signs in the emails listed in `ADMIN_EMAILS`. Every other account, admins added in the panel included, uses its own password hash. Login is rate-limited per IP and per account.
+- Post-login redirects go through `safeCallbackUrl` (`lib/safe-callback.ts`); never redirect to a raw `callbackUrl`.
 - API keys: `Authorization: Bearer <64-hex>` on any API route bypasses session auth; permissions (`files:read`, `admin:write`, …) are checked per-route via `x-api-key-*` headers. Keys are bcrypt-hashed at rest, shown once at creation (`/admin/api-keys`).
 
 ## KV / caching

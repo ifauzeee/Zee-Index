@@ -64,6 +64,14 @@ vi.mock("@/lib/kv", () => ({
   },
 }));
 
+const { mockRevokeSessions } = vi.hoisted(() => ({
+  mockRevokeSessions: vi.fn(),
+}));
+
+vi.mock("@/lib/session-version", () => ({
+  revokeSessions: mockRevokeSessions,
+}));
+
 vi.mock("@/lib/db", () => ({
   db: {
     user: {
@@ -149,6 +157,8 @@ describe("app/api/admin/users route", () => {
         update: { role: "ADMIN" },
       }),
     );
+    // The new role must not wait for the old JWT to expire.
+    expect(mockRevokeSessions).toHaveBeenCalledWith("newadmin@example.com");
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
       message: "Admin added",
@@ -180,6 +190,8 @@ describe("app/api/admin/users route", () => {
       REDIS_KEYS.ADMIN_USERS,
       "remove@example.com",
     );
+    // A demoted admin must lose admin rights now, not when the JWT expires.
+    expect(mockRevokeSessions).toHaveBeenCalledWith("remove@example.com");
     expect(mockUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { email: "remove@example.com" },

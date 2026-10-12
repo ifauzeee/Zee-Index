@@ -56,6 +56,14 @@ vi.mock("@/lib/kv", () => ({
   },
 }));
 
+const { mockRevokeSessions } = vi.hoisted(() => ({
+  mockRevokeSessions: vi.fn(),
+}));
+
+vi.mock("@/lib/session-version", () => ({
+  revokeSessions: mockRevokeSessions,
+}));
+
 vi.mock("@/lib/db", () => ({
   db: {
     user: {

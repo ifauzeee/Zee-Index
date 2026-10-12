@@ -52,6 +52,8 @@ model User {
   twoFactorEnabled      Boolean   @default(false)
   /// Set once legacy Redis credentials were copied to this row
   credentialsMigratedAt DateTime?
+  /// Bumped to sign the user out everywhere (role, password or 2FA change)
+  sessionVersion        Int       @default(0)
   accounts              Account[]
   sessions              Session[]
 }

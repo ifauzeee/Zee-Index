@@ -11,6 +11,8 @@ import { REDIS_KEYS } from "@/lib/constants";
 import { getPublicAppConfig } from "@/lib/app-config";
 import { constantTimeEqual } from "@/lib/security";
 import { getPasswordHash, getTwoFactorState } from "@/lib/credentials";
+import { getSessionVersion } from "@/lib/session-version";
+import { getClientIp } from "@/lib/client-ip";
 
 import type { ActivityDetails } from "@/lib/activityLogger";
 
@@ -89,7 +91,8 @@ function emitAuthActivity<T extends AuthAuditType>(
     });
 }
 
-const authConfig: NextAuthConfig = {
+/** Exported for unit tests of the callbacks and the credentials provider. */
+export const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(db),
   providers: [
     Google({
@@ -104,9 +107,10 @@ const authConfig: NextAuthConfig = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials, req) {
-        const forwardedFor = req?.headers?.get?.("x-forwarded-for");
-        const ip = forwardedFor
-          ? forwardedFor.split(",")[0].trim()
+        // Same rule as every other limiter: the right-most proxy hop, not the
+        // client-controlled left-most X-Forwarded-For entry.
+        const ip = req?.headers
+          ? getClientIp(new Headers(req.headers))
           : "127.0.0.1";
 
         const ratelimitResult = await authLimiter.check(ip);
@@ -146,8 +150,31 @@ const authConfig: NextAuthConfig = {
           return null;
         }
 
+        // Per-account budget, so attempts spread over many IPs still stop.
+        const normalizedLoginEmail = email.toLowerCase().trim();
+        const accountLimit = await authLimiter.check(
+          `login:${normalizedLoginEmail}`,
+        );
+        if (!accountLimit.success) {
+          emitAuthActivity("RATE_LIMITED", {
+            userEmail: normalizedLoginEmail,
+            status: "blocked",
+            metadata: {
+              scope: "auth-account",
+              identifier: normalizedLoginEmail,
+            },
+          });
+          logger.warn(
+            { email: normalizedLoginEmail },
+            "[Auth] Per-account login limit exceeded",
+          );
+          throw new Error(
+            "Too many login attempts. Please wait a moment and try again.",
+          );
+        }
+
         try {
-          const normalizedInputEmail = email.toLowerCase().trim();
+          const normalizedInputEmail = normalizedLoginEmail;
           const dbUser = await db.user.findUnique({
             where: { email: normalizedInputEmail },
           });
@@ -169,8 +196,11 @@ const authConfig: NextAuthConfig = {
             .trim()
             .replace(/^["']|["']$/g, "");
 
+          // The shared env password only belongs to the env-listed admins.
+          // Admins added in the panel sign in with their own password, so
+          // the env password cannot be used to act as any admin (Z2-16).
           let isPassValid = false;
-          if (isAdmin) {
+          if (isAdminEnv) {
             if (envPassHash) {
               isPassValid = await bcrypt.compare(password, envPassHash);
             } else if (envPass) {
@@ -386,6 +416,7 @@ const authConfig: NextAuthConfig = {
         }
 
         await setupTwoFactorForToken(user.email.toLowerCase().trim(), token);
+        token.sessionVersion = (await getSessionVersion(user.email)) ?? 0;
       } else if (profile?.email && !token.email) {
         token.email = profile.email;
 
@@ -422,6 +453,31 @@ const authConfig: NextAuthConfig = {
         }
 
         await setupTwoFactorForToken(normalizedProfileEmail, token);
+        token.sessionVersion =
+          (await getSessionVersion(normalizedProfileEmail)) ?? 0;
+      } else if (!token.isGuest && token.email) {
+        // Every later request: a JWT cannot be deleted, so drop it once the
+        // user's sessions were revoked (role, password or 2FA change) or the
+        // user no longer exists (Z2-06).
+        try {
+          const currentVersion = await getSessionVersion(token.email);
+          if (
+            currentVersion === null ||
+            currentVersion !== (token.sessionVersion ?? 0)
+          ) {
+            logger.info(
+              { email: token.email },
+              "[Auth] Session revoked; signing out",
+            );
+            return null;
+          }
+        } catch (err) {
+          // A database blip must not sign everyone out.
+          logger.warn(
+            { err, email: token.email },
+            "[Auth] Could not verify session version",
+          );
+        }
       }
       return token;
     },

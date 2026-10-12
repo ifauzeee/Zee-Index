@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { getPasswordHash, setPasswordHash } from "@/lib/credentials";
+import { revokeSessions } from "@/lib/session-version";
 import { logger } from "@/lib/logger";
 import { constantTimeEqual } from "@/lib/security";
 
@@ -86,6 +87,8 @@ export async function upsertUser(
     create: { email: normalized, role, name: normalized.split("@")[0] },
     update: { role },
   });
+  // The role lives in the JWT; end existing sessions so it takes effect now.
+  await revokeSessions(normalized);
   if (password) await setUserPassword(normalized, password);
 
   return {
