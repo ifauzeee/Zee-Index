@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import { createHash } from "crypto";
 import { getMimeType } from "./mime";
+import { normalizePathId } from "./path-id";
 import { ZeeFile, ListFilesResponse } from "@/types/storage";
 import { logger } from "@/lib/logger";
 import { FILE_REQUEST_MAX_BYTES } from "@/lib/constants";
@@ -38,16 +39,7 @@ export class LocalChunkRequestError extends Error {}
  * id escapes the local storage root or contains a NUL byte.
  */
 export function normalizeLocalStorageId(id: string): string | null {
-  if (!id.startsWith(LOCAL_STORAGE_PREFIX)) return null;
-
-  const raw = id.slice(LOCAL_STORAGE_PREFIX.length).replace(/\\/g, "/");
-  let normalized = path.posix.normalize(raw);
-  normalized = normalized.replace(/^\/+|\/+$/g, "");
-  if (normalized === ".") normalized = "";
-
-  if (normalized.startsWith("..") || id.includes("\0")) return null;
-
-  return `${LOCAL_STORAGE_PREFIX}${normalized}`;
+  return normalizePathId(id, LOCAL_STORAGE_PREFIX);
 }
 
 function resolveLocalTargetPath(filePath: string): string {
