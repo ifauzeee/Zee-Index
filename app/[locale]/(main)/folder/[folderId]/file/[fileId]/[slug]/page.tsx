@@ -2,14 +2,12 @@ import { getAnyFileDetails, listAllFiles } from "@/lib/storage";
 import FileDetailClient from "@/components/file-browser/FileDetailClient";
 import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { getVerifiedSession } from "@/lib/verified-session";
-import {
-  isPrivateFolder,
-  isProtected,
-  hasUserAccess,
-  verifyFolderToken,
-  verifyShareTokenString,
-} from "@/lib/auth";
+import { collectAccessTokens, verifyShareTokenString } from "@/lib/auth";
+import { isAccessRestricted } from "@/lib/securityUtils";
+import { applyAuthorVisibility } from "@/lib/author-visibility";
+import type { ZeeFile } from "@/types/storage";
 import type { SubtitleTrack } from "@/lib/subtitles";
 import { logger } from "@/lib/logger";
 
@@ -37,6 +35,19 @@ const FileError = ({
 const createSlug = (name: string) =>
   encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
 
+const trimTrailingSlash = (id: string) => id.replace(/\/+$/, "");
+
+/** Folders that contain `file`: Drive parents, or the path prefix of a path-style id. */
+function getContainingFolderIds(file: ZeeFile): string[] {
+  if (file.parents?.length) return file.parents;
+  const prefixEnd = file.id.indexOf(":") + 1;
+  if (prefixEnd === 0) return [];
+  const slash = file.id.lastIndexOf("/");
+  return [
+    slash >= prefixEnd ? file.id.slice(0, slash) : file.id.slice(0, prefixEnd),
+  ];
+}
+
 export default async function FilePage(props: {
   params: Promise<{ folderId: string; fileId: string; locale: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -49,42 +60,28 @@ export default async function FilePage(props: {
 
   const session = await getVerifiedSession();
   const shareToken = searchParams?.share_token as string | undefined;
+  const isAdmin = session?.user?.role === "ADMIN";
 
-  if (shareToken) {
-    const isValidShare = await verifyShareTokenString(shareToken);
-    if (!isValidShare) {
-      return (
-        <FileError
-          title={t("accessDenied")}
-          message={t("invalidShareToken")}
-          retry={t("goHome")}
-        />
-      );
-    }
-  } else {
-    const folderId = params.folderId;
-    const isPriv = isPrivateFolder(folderId);
-    const isProt = await isProtected(folderId);
-    const userEmail = session?.user?.email;
-    const isAdmin = session?.user?.role === "ADMIN";
+  if (shareToken && !(await verifyShareTokenString(shareToken))) {
+    return (
+      <FileError
+        title={t("accessDenied")}
+        message={t("invalidShareToken")}
+        retry={t("goHome")}
+      />
+    );
+  }
 
-    let hasAccess = false;
-    if (isAdmin) {
-      hasAccess = true;
-    } else if (userEmail && (await hasUserAccess(userEmail, folderId))) {
-      hasAccess = true;
-    } else if (isPriv || isProt) {
-      const folderToken = (await cookies()).get(
-        `folder_token_${folderId}`,
-      )?.value;
-      if (folderToken && (await verifyFolderToken(folderToken, folderId))) {
-        hasAccess = true;
-      }
-    } else {
-      hasAccess = true;
-    }
-
-    if (!hasAccess) {
+  // Decide access from the file itself, exactly like /api/download and
+  // /api/filedetails: the folder in the URL is caller-controlled (Z2-03).
+  if (!isAdmin) {
+    const tokens = await collectAccessTokens((await cookies()).getAll());
+    const restricted = await isAccessRestricted(
+      params.fileId,
+      tokens,
+      session?.user?.email,
+    );
+    if (restricted) {
       return (
         <FileError
           title={t("accessDenied")}
@@ -98,11 +95,31 @@ export default async function FilePage(props: {
   let prevFileUrl: string | undefined = undefined;
   let nextFileUrl: string | undefined = undefined;
   let subtitleTracks: SubtitleTrack[] = [];
+  let canonicalUrl: string | null = null;
 
   try {
     file = await getAnyFileDetails(params.fileId);
 
-    if (file && params.folderId) {
+    // Only list the URL's folder when the file really lives there; otherwise
+    // prev/next and subtitles would expose another folder's contents.
+    const containingFolders = file
+      ? getContainingFolderIds(file).map(trimTrailingSlash)
+      : [];
+    const inUrlFolder = containingFolders.includes(
+      trimTrailingSlash(params.folderId),
+    );
+    if (file && !inUrlFolder && file.parents?.length) {
+      const query = new URLSearchParams();
+      for (const [key, value] of Object.entries(searchParams ?? {})) {
+        if (typeof value === "string") query.set(key, value);
+      }
+      const qs = query.toString();
+      canonicalUrl = `/${params.locale}/folder/${file.parents[0]}/file/${
+        file.id
+      }/${createSlug(file.name)}${qs ? `?${qs}` : ""}`;
+    }
+
+    if (file && inUrlFolder) {
       const { files: allFiles } = await listAllFiles({
         folderId: params.folderId,
         pageToken: null,
@@ -168,6 +185,10 @@ export default async function FilePage(props: {
     error = t("fetchError");
   }
 
+  if (canonicalUrl) {
+    redirect(canonicalUrl);
+  }
+
   if (error) {
     return (
       <FileError message={error} title={t("errorTitle")} retry={t("retry")} />
@@ -191,7 +212,7 @@ export default async function FilePage(props: {
 
   return (
     <FileDetailClient
-      file={file}
+      file={await applyAuthorVisibility(file, isAdmin)}
       prevFileUrl={prevFileUrl}
       nextFileUrl={nextFileUrl}
       subtitleTracks={subtitleTracks}
