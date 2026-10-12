@@ -12,8 +12,8 @@ import {
   parseManualDriveRecords,
   parseManualDrivesFromEnv,
 } from "@/lib/manual-drives";
-import { isProviderId } from "@/lib/storage/providers";
-import { normalizeLocalStorageId } from "@/lib/storage/local";
+import { getActiveProvider } from "@/lib/storage/providers";
+import { normalizePathId } from "@/lib/storage/path-id";
 
 let cachedProtectedIds: string[] | null = null;
 let cachedRestrictedIds: string[] | null = null;
@@ -215,6 +215,14 @@ export async function isAccessRestricted(
   resolvedRoots?: Set<string>,
 ): Promise<boolean> {
   const isLocalStorage = fileId.startsWith("local-storage:");
+  const provider = getActiveProvider();
+  // Local storage and external providers address files by path; Drive ids
+  // are opaque and need the parent walk below.
+  const pathPrefix = isLocalStorage
+    ? "local-storage:"
+    : provider && fileId.startsWith(provider.idPrefix)
+      ? provider.idPrefix
+      : null;
   if (depth >= maxDepth) {
     logger.error({ fileId, depth }, "Max depth reached for security check");
     return true;
@@ -236,14 +244,13 @@ export async function isAccessRestricted(
 
   // Normalize before any comparison: a `..` alias can name a protected
   // folder or a sibling subtree without its raw form containing the id.
-  if (isLocalStorage) {
-    const normalized = normalizeLocalStorageId(fileId);
+  if (pathPrefix) {
+    const normalized = normalizePathId(fileId, pathPrefix);
     if (normalized === null) return true;
     fileId = normalized;
   }
 
-  const isScopedDriveId =
-    !isLocalStorage && fileId !== "virtual-root" && !isProviderId(fileId);
+  const isScopedDriveId = !pathPrefix && fileId !== "virtual-root";
 
   // Resolve the allowed roots once per top-level check and pass them down
   // the recursion instead of re-reading config and KV at every level. Only
@@ -281,25 +288,39 @@ export async function isAccessRestricted(
     return false;
   }
 
-  if (allRestrictedIds.includes(fileId)) {
-    const access = await checkAccess(fileId);
-    if (!access) return true;
-  }
-
-  if (isLocalStorage) {
-    if (isLocalRestricted) {
+  if (pathPrefix) {
+    if (isLocalStorage && isLocalRestricted) {
       const access = await checkAccess("local-storage:");
       if (!access) return true;
     }
-    const parts = fileId.split("/");
-    for (let i = parts.length - 1; i >= 1; i--) {
-      const parentId = parts.slice(0, i).join("/");
-      if (allRestrictedIds.includes(parentId)) {
-        const access = await checkAccess(parentId);
-        if (!access) return true;
+
+    // Protected ids are compared in canonical form too (S3 folder ids end
+    // in "/"), but access is checked against the id as stored, which is
+    // what folder tokens and ACL entries carry.
+    const restrictedByPath = new Map<string, string>();
+    for (const id of allRestrictedIds) {
+      const normalized = id.startsWith(pathPrefix)
+        ? normalizePathId(id, pathPrefix)
+        : null;
+      if (normalized !== null) restrictedByPath.set(normalized, id);
+    }
+
+    // The storage root, every ancestor folder, and the item itself.
+    const rel = fileId.slice(pathPrefix.length);
+    const segments = rel ? rel.split("/") : [];
+    for (let i = 0; i <= segments.length; i++) {
+      const candidate = pathPrefix + segments.slice(0, i).join("/");
+      const storedId = restrictedByPath.get(candidate);
+      if (storedId !== undefined && !(await checkAccess(storedId))) {
+        return true;
       }
     }
     return false;
+  }
+
+  if (allRestrictedIds.includes(fileId)) {
+    const access = await checkAccess(fileId);
+    if (!access) return true;
   }
 
   try {
