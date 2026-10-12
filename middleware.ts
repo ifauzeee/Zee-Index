@@ -146,8 +146,9 @@ const API_KEY_AUTH_HEADERS = [
 /**
  * Copy `request` without the API key auth headers a client may have sent.
  * Rebuild from the original request with replaced headers: constructing a
- * new request from a clone drops headers in the middleware runtime, which
- * breaks anything downstream that reads them (e.g. the auth cookie).
+ * new request from a clone drops headers in the middleware runtime (seen in
+ * production as a missing auth cookie, which fails NextAuth CSRF checks),
+ * so never go back to `new NextRequest(request.clone())` here.
  */
 function withApiKeyHeadersStripped(request: NextRequest): NextRequest {
   const headers = new Headers(request.headers);
