@@ -6,11 +6,13 @@ const {
   mockGetAnyFileDetails,
   mockIsAccessRestricted,
   mockCheckLocalStorageAccess,
+  mockGetPublicAppConfig,
 } = vi.hoisted(() => ({
   mockValidateShareToken: vi.fn(),
   mockGetAnyFileDetails: vi.fn(),
   mockIsAccessRestricted: vi.fn(),
   mockCheckLocalStorageAccess: vi.fn(),
+  mockGetPublicAppConfig: vi.fn(),
 }));
 
 vi.mock("@/lib/api-middleware", () => ({
@@ -41,6 +43,10 @@ vi.mock("@/lib/securityUtils", () => ({
   isAccessRestricted: mockIsAccessRestricted,
 }));
 
+vi.mock("@/lib/app-config", () => ({
+  getPublicAppConfig: mockGetPublicAppConfig,
+}));
+
 vi.mock("@/lib/logger", () => ({
   logger: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }));
@@ -65,6 +71,24 @@ describe("app/api/filedetails route", () => {
     });
     mockIsAccessRestricted.mockResolvedValue(false);
     mockCheckLocalStorageAccess.mockResolvedValue(true);
+    mockGetPublicAppConfig.mockResolvedValue({ hideAuthor: false });
+  });
+
+  it("omits author data when the admin set hideAuthor", async () => {
+    mockGetPublicAppConfig.mockResolvedValue({ hideAuthor: true });
+    mockGetAnyFileDetails.mockResolvedValue({
+      id: "file-123",
+      name: "test.mp4",
+      mimeType: "video/mp4",
+      owners: [{ displayName: "Operator" }],
+      lastModifyingUser: { displayName: "Operator" },
+    });
+
+    const response = await GET(makeRequest("file-123"));
+    const body = await response.json();
+
+    expect(body.owners).toBeUndefined();
+    expect(body.lastModifyingUser).toBeUndefined();
   });
 
   it("returns file details", async () => {

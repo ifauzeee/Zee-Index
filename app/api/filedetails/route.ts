@@ -6,6 +6,7 @@ import { validateShareToken } from "@/lib/auth";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { normalizeLocalStorageId } from "@/lib/storage/local";
 import { ERROR_MESSAGES } from "@/lib/constants";
+import { applyAuthorVisibility } from "@/lib/author-visibility";
 
 import { getErrorMessage } from "@/lib/errors";
 export const dynamic = "force-dynamic";
@@ -76,7 +77,10 @@ export const GET = createPublicRoute(
 
     try {
       const details = await getAnyFileDetails(normalizedFileId);
-      return NextResponse.json(details, {
+      const visible = details
+        ? await applyAuthorVisibility(details, isAdmin)
+        : details;
+      return NextResponse.json(visible, {
         headers: {
           "Cache-Control": "private, max-age=60, stale-while-revalidate=600",
         },

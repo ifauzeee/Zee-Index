@@ -53,7 +53,7 @@ export async function listSharedWithMeFolders(): Promise<DriveFile[]> {
   const url = `${GOOGLE_DRIVE_API_BASE_URL}/files`;
   const params = new URLSearchParams({
     q: `sharedWithMe = true and mimeType = '${MIME_TYPES.FOLDER}' and trashed = false`,
-    fields: "files(id, name, mimeType, owners)",
+    fields: "files(id, name, mimeType, owners(displayName))",
     pageSize: "100",
   });
 
@@ -262,7 +262,7 @@ export async function getFileDetailsFromDrive(
     const driveUrl = `${GOOGLE_DRIVE_API_BASE_URL}/files/${fileId}`;
     const params = new URLSearchParams({
       fields:
-        "id, name, mimeType, size, modifiedTime, createdTime, webViewLink, webContentLink, thumbnailLink, hasThumbnail, parents, owners(displayName, emailAddress), lastModifyingUser(displayName), md5Checksum, imageMediaMetadata(width, height), videoMediaMetadata(width, height, durationMillis), trashed",
+        "id, name, mimeType, size, modifiedTime, createdTime, webViewLink, webContentLink, thumbnailLink, hasThumbnail, parents, owners(displayName), lastModifyingUser(displayName), md5Checksum, imageMediaMetadata(width, height), videoMediaMetadata(width, height, durationMillis), trashed",
       supportsAllDrives: "true",
     });
 

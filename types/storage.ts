@@ -17,7 +17,7 @@ export interface ZeeFile {
   path?: string;
   trashed?: boolean;
   isProtected?: boolean;
-  owners?: { displayName: string; emailAddress: string }[];
+  owners?: { displayName: string }[];
   lastModifyingUser?: { displayName: string };
   imageMediaMetadata?: { width: number; height: number };
   videoMediaMetadata?: {
