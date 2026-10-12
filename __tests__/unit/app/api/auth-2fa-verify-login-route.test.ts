@@ -39,8 +39,10 @@ vi.mock("@/lib/api-middleware", () => ({
   },
 }));
 
-vi.mock("otplib", () => ({
-  authenticator: mockAuthenticator,
+// Single-use enforcement is covered in totp.test.ts; here only the result matters.
+vi.mock("@/lib/totp", () => ({
+  verifyTotpOnce: async (_email: string, token: string, secret: string) =>
+    mockAuthenticator.check(token, secret),
 }));
 
 vi.mock("@/lib/kv", () => ({

@@ -33,8 +33,9 @@ vi.mock("@/lib/credentials", () => ({
   disableTwoFactor: mockDisableTwoFactor,
 }));
 
-vi.mock("otplib", () => ({
-  authenticator: { check: mockAuthenticatorCheck },
+vi.mock("@/lib/totp", () => ({
+  verifyTotpOnce: async (_email: string, token: string, secret: string) =>
+    mockAuthenticatorCheck(token, secret),
 }));
 
 import { POST } from "@/app/api/auth/2fa/disable/route";

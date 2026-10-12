@@ -1,8 +1,8 @@
 import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { createUserRoute } from "@/lib/api-middleware";
-import { authenticator } from "otplib";
 import { disableTwoFactor, getTwoFactorState } from "@/lib/credentials";
+import { verifyTotpOnce } from "@/lib/totp";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +25,7 @@ export const POST = createUserRoute(
         );
       }
 
-      const isValid = authenticator.check(body.token, secret);
+      const isValid = await verifyTotpOnce(userEmail, body.token, secret);
       if (!isValid) {
         return NextResponse.json(
           { error: "Kode verifikasi tidak valid." },
