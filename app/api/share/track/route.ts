@@ -2,12 +2,13 @@ import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { createPublicRoute } from "@/lib/api-middleware";
-import { db } from "@/lib/db";
 import { jwtVerify } from "jose";
 import { shareTokenRequestSchema } from "@/lib/link-payloads";
+import { recordShareView } from "@/lib/share-grant";
+import { getClientIp } from "@/lib/client-ip";
 
 export const POST = createPublicRoute(
-  async ({ body }) => {
+  async ({ request, body, session }) => {
     try {
       const { shareToken } = body;
 
@@ -16,16 +17,14 @@ export const POST = createPublicRoute(
       const jti = payload.jti;
       if (!jti) return new Response(null, { status: 204 });
 
-      await db.shareLink
-        .update({
-          where: { jti },
-          data: {
-            views: { increment: 1 },
-          },
-        })
-        .catch((err) =>
-          logger.warn({ err, jti }, "Share view increment failed"),
-        );
+      // Counted once per viewer per window, so repeated calls cannot burn
+      // through another recipient's maxUses (Z2-04).
+      await recordShareView(
+        jti,
+        session?.user?.email || getClientIp(request.headers),
+      ).catch((err) =>
+        logger.warn({ err, jti }, "Share view increment failed"),
+      );
 
       return new Response(null, { status: 204 });
     } catch (error) {
@@ -33,5 +32,9 @@ export const POST = createPublicRoute(
       return new Response(null, { status: 204 });
     }
   },
-  { rateLimit: false, bodySchema: shareTokenRequestSchema },
+  {
+    rateLimit: "API",
+    includeSession: true,
+    bodySchema: shareTokenRequestSchema,
+  },
 );
