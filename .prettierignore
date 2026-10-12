@@ -36,6 +36,7 @@ docker-compose*.yml
 
 # Tooling
 .omo
+.superpowers/
 
 # IDE
 .idea

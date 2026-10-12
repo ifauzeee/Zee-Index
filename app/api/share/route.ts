@@ -15,6 +15,7 @@ import {
   type ShareCreateRequest,
 } from "@/lib/link-payloads";
 import { REDIS_KEYS } from "@/lib/constants";
+import { escapeHtml } from "@/lib/html-utils";
 import { getTranslations } from "next-intl/server";
 
 function extractFileIdFromPath(path: string): string | null {
@@ -294,8 +295,8 @@ export const POST = createAdminRoute(
         <p>${t("emailHello")},</p>
                 <p>${t("emailBody", { type: (isCollection ? t("collection") : t("share")).toLowerCase(), email: session?.user?.email || "Unknown" })}</p>
                 <ul>
-                    <li><b>${t("item")}</b> ${shareName}</li>
-                    <li><b>${t("path")}</b> ${sharePath}</li>
+                    <li><b>${t("item")}</b> ${escapeHtml(shareName)}</li>
+                    <li><b>${t("path")}</b> ${escapeHtml(sharePath)}</li>
                     <li><b>${t("expiresAt")}</b> ${expiresAtDate.toLocaleString(locale === "id" ? "id-ID" : "en-US", { timeZone: "Asia/Jakarta" })}</li>
                     <li><b>${t("loginRequired")}</b> ${loginRequired ? t("yes") : t("no")}</li>
                 </ul>
