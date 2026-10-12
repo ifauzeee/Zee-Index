@@ -11,13 +11,20 @@ const MAX_IMAGE_DIMENSION = 2048;
 const MIN_IMAGE_QUALITY = 30;
 const MAX_IMAGE_QUALITY = 95;
 const MAX_IMAGE_REDIRECTS = 2;
-// librsvg (bundled with sharp < 0.35.5) is reachable through this route via
-// image/svg+xml; reject it explicitly on top of the version bump (Z2-08).
 const MAX_UPSTREAM_BYTES = 15 * 1024 * 1024;
 const MAX_INPUT_PIXELS = 50_000_000;
-// libvips sniffs the real format from magic bytes, so a mislabeled SVG can
-// still reach the SVG loader even with a benign content-type header.
-const SVG_MAGIC_PREFIXES = ["<?xml", "<svg", "<!--", "<!DOCTYPE"] as const;
+// Only these formats are proxied. libvips picks its loader by sniffing the
+// bytes, not the Content-Type, and its SVG/TIFF/JP2 loaders are a large
+// parser surface (Z2-08), so both the header and the magic bytes must match
+// this allowlist before sharp sees the buffer.
+const ALLOWED_CONTENT_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/avif",
+]);
+const AVIF_BRANDS = new Set(["avif", "avis"]);
 const VALID_IMAGE_HOSTS = [
   "googleusercontent.com",
   "google.com",
@@ -36,8 +43,6 @@ export function isAllowedImageHost(hostname: string): boolean {
   );
 }
 
-// The AbortController stays armed while the body streams in: a host that
-// sends headers quickly then trickles the body must still hit the timeout.
 // The AbortController stays armed while the body streams in: a host that
 // sends headers quickly then trickles the body must still hit the timeout.
 // Callers must invoke clear() once the body has been fully consumed.
@@ -89,6 +94,7 @@ async function followValidatedRedirects(
     }
 
     const location = response.headers.get("location");
+    await discardBody(response);
     if (!location) {
       throw new Error("Missing redirect location");
     }
@@ -129,13 +135,36 @@ async function readBodyWithLimit(
   return Buffer.concat(chunks);
 }
 
-export function looksLikeSvg(buffer: Buffer): boolean {
-  const head = buffer
-    .subarray(0, 256)
-    .toString("utf8")
-    .trimStart()
-    .toLowerCase();
-  return SVG_MAGIC_PREFIXES.some((prefix) => head.startsWith(prefix));
+export type RasterFormat = "jpeg" | "png" | "gif" | "webp" | "avif";
+
+/**
+ * Identify an allowed raster format from its magic bytes, or null for
+ * anything else (SVG in any encoding, SVGZ, TIFF, JP2, HTML, ...).
+ */
+export function detectRasterFormat(buffer: Buffer): RasterFormat | null {
+  if (buffer.length < 12) return null;
+
+  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+    return "jpeg";
+  }
+  if (
+    buffer
+      .subarray(0, 8)
+      .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+  ) {
+    return "png";
+  }
+  const ascii = (start: number, end: number) =>
+    buffer.subarray(start, end).toString("latin1");
+  if (ascii(0, 6) === "GIF87a" || ascii(0, 6) === "GIF89a") return "gif";
+  if (ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP") return "webp";
+  if (ascii(4, 8) === "ftyp" && AVIF_BRANDS.has(ascii(8, 12))) return "avif";
+  return null;
+}
+
+/** Release an upstream body we are not going to read. */
+async function discardBody(response: Response): Promise<void> {
+  await response.body?.cancel().catch(() => {});
 }
 
 export const GET = createPublicRoute(
@@ -164,38 +193,44 @@ export const GET = createPublicRoute(
 
     try {
       const { response, clear } = await fetchValidatedImage(imageUrl);
+      let buffer: Buffer;
+      try {
+        if (!response.ok) {
+          await discardBody(response);
+          return new NextResponse("Failed to fetch image", {
+            status: response.status,
+          });
+        }
 
-      if (!response.ok) {
+        const contentType = (response.headers.get("content-type") || "")
+          .split(";")[0]
+          .trim()
+          .toLowerCase();
+        if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
+          await discardBody(response);
+          return new NextResponse("Unsupported image content type", {
+            status: 415,
+          });
+        }
+
+        const declaredLength = Number(response.headers.get("content-length"));
+        if (declaredLength > MAX_UPSTREAM_BYTES) {
+          await discardBody(response);
+          throw new UpstreamTooLargeError("Image response exceeds size limit");
+        }
+
+        buffer = await readBodyWithLimit(response, MAX_UPSTREAM_BYTES);
+      } finally {
         clear();
-        return new NextResponse("Failed to fetch image", {
-          status: response.status,
-        });
       }
 
-      const contentType = (response.headers.get("content-type") || "")
-        .split(";")[0]
-        .trim()
-        .toLowerCase();
-      if (!contentType.startsWith("image/")) {
-        clear();
-        return new NextResponse("Invalid image content type", { status: 400 });
-      }
-      // Also reject SVG by magic bytes: libvips sniffs the real format, so a
-      // mislabeled SVG (Content-Type: image/png) must not reach the loader.
-      if (contentType === "image/svg+xml") {
-        clear();
+      // The header can lie; libvips trusts the bytes, so check those too.
+      if (!detectRasterFormat(buffer)) {
         return new NextResponse("Unsupported image content type", {
-          status: 400,
+          status: 415,
         });
       }
 
-      const buffer = await readBodyWithLimit(response, MAX_UPSTREAM_BYTES);
-      clear();
-      if (looksLikeSvg(buffer)) {
-        return new NextResponse("Unsupported image content type", {
-          status: 400,
-        });
-      }
       let transformer = sharp(buffer, { limitInputPixels: MAX_INPUT_PIXELS });
 
       if (width > 0 || height > 0) {
@@ -223,7 +258,14 @@ export const GET = createPublicRoute(
           status: 413,
         });
       }
-      if (error instanceof Error && error.name === "AbortError") {
+      // Abort surfaces as a DOMException, which is not an Error subclass in
+      // every runtime, so match on the name only.
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "name" in error &&
+        error.name === "AbortError"
+      ) {
         return new NextResponse("Upstream image request timed out", {
           status: 504,
         });
