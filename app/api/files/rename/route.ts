@@ -7,20 +7,26 @@ import { z } from "zod";
 import { invalidateFolderCache } from "@/lib/cache";
 import { logActivity } from "@/lib/activityLogger";
 import { createEditorRoute } from "@/lib/api-middleware";
+import { driveIdSchema } from "@/lib/drive/ids";
+import { canModifyAll } from "@/lib/editor-access";
 
 const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
 
 const renameSchema = z.object({
-  fileId: z.string().min(1),
+  fileId: driveIdSchema,
   newName: z
     .string()
     .min(1, { message: "Nama baru tidak boleh kosong." })
     .transform((val) => sanitizeString(val)),
 });
 export const POST = createEditorRoute(
-  async ({ body, session }) => {
+  async ({ request, body, session }) => {
     try {
       const { fileId, newName } = body;
+
+      if (!(await canModifyAll(request, session, [fileId]))) {
+        return NextResponse.json({ error: "Access denied." }, { status: 403 });
+      }
       const fileDetails = await getFileDetailsFromDrive(fileId);
 
       if (

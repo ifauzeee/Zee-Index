@@ -10,6 +10,13 @@ import { logActivity } from "@/lib/activityLogger";
 import { invalidateFolderCache } from "@/lib/cache";
 import { z } from "zod";
 import { getActiveProvider } from "@/lib/storage/providers";
+import { canModifyAll } from "@/lib/editor-access";
+
+/** The local folder a `local-storage-upload://<parent>/<name>` URL writes into. */
+function localUploadParent(uploadUrl: string): string {
+  const rest = uploadUrl.slice("local-storage-upload://".length);
+  return decodeURIComponent(rest.slice(0, rest.indexOf("/")));
+}
 export const maxDuration = 60;
 
 const uploadInitBodySchema = z.object({
@@ -61,6 +68,13 @@ export const POST = createEditorRoute(
         }
 
         const { name, mimeType, parentId, size } = parsedBody.data;
+
+        if (!(await canModifyAll(request, session, [parentId]))) {
+          return NextResponse.json(
+            { error: "Access denied." },
+            { status: 403 },
+          );
+        }
 
         if (parentId.startsWith("local-storage:")) {
           return NextResponse.json({
@@ -132,6 +146,23 @@ export const POST = createEditorRoute(
       } else if (uploadType === "chunk") {
         const uploadUrl = query.uploadUrl!;
         const parentId = query.parentId;
+
+        // Chunk URLs come from the client, so re-check the folder they write
+        // into. Drive resumable URLs were scoped when the session was created.
+        const chunkTarget = uploadUrl.startsWith("local-storage-upload://")
+          ? localUploadParent(uploadUrl)
+          : uploadUrl.startsWith("provider-")
+            ? parentId || getActiveProvider()?.rootId
+            : undefined;
+        if (
+          chunkTarget &&
+          !(await canModifyAll(request, session, [chunkTarget]))
+        ) {
+          return NextResponse.json(
+            { error: "Access denied." },
+            { status: 403 },
+          );
+        }
 
         if (uploadUrl.startsWith("provider-session://")) {
           const sessionToken = uploadUrl.slice("provider-session://".length);

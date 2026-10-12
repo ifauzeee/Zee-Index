@@ -3,13 +3,14 @@ import { NextResponse } from "next/server";
 import { createAdminRoute } from "@/lib/api-middleware";
 import { listTrashedFiles, restoreTrash, deleteForever } from "@/lib/drive";
 import { z } from "zod";
+import { driveIdSchema } from "@/lib/drive/ids";
 
 export const dynamic = "force-dynamic";
 
 const trashActionSchema = z
   .object({
-    fileId: z.string().min(1).optional(),
-    fileIds: z.array(z.string().min(1)).min(1).optional(),
+    fileId: driveIdSchema.optional(),
+    fileIds: z.array(driveIdSchema).min(1).optional(),
   })
   .superRefine((value, ctx) => {
     if (!value.fileId && !value.fileIds) {
