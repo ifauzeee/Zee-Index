@@ -63,59 +63,101 @@ export function generateApiKey(): {
   return { raw, prefix, hash };
 }
 
+interface CachedApiKey extends ApiKeyData {
+  expiresAt: string | null;
+}
+
+/** SHA-256 of the full key (Web Crypto, so it also runs in the middleware). */
+async function hashForCache(rawKey: string): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(rawKey),
+  );
+  return Array.from(new Uint8Array(digest), (b) =>
+    b.toString(16).padStart(2, "0"),
+  ).join("");
+}
+
+function cacheKeyFor(fullKeyHash: string): string {
+  return `${REDIS_KEYS.API_KEY_CACHE}${fullKeyHash}`;
+}
+
+function cacheIndexKeyFor(keyId: string): string {
+  return `${REDIS_KEYS.API_KEY_CACHE}id:${keyId}`;
+}
+
 /**
  * Validate an API key from an Authorization header value (without "Bearer " prefix).
  * Returns key metadata on success, or null if invalid/revoked/expired.
+ *
+ * The cache is keyed by a hash of the whole key. It used to be keyed by the
+ * 8-character prefix, so after one valid use any token sharing that prefix
+ * was accepted without a hash check (audit Z2-09).
  */
 export async function validateApiKey(
   rawKey: string,
 ): Promise<ApiKeyData | null> {
   const prefix = rawKey.slice(0, KEY_PREFIX_LEN);
-  const cacheKey = `${REDIS_KEYS.API_KEY_CACHE}${prefix}`;
+  const cacheKey = cacheKeyFor(await hashForCache(rawKey));
 
-  // Fast path: Redis cache
+  // Fast path: only a key that already passed the bcrypt check is cached.
   try {
-    const cached = await kv.get<ApiKeyData>(cacheKey);
-    if (cached) return cached;
+    const cached = await kv.get<CachedApiKey>(cacheKey);
+    if (cached) {
+      if (cached.expiresAt && new Date(cached.expiresAt) < new Date()) {
+        return null;
+      }
+      return {
+        id: cached.id,
+        name: cached.name,
+        permissions: cached.permissions,
+      };
+    }
   } catch {
     // Cache miss — proceed to DB
   }
 
-  // Slow path: DB lookup by prefix
+  // Slow path: DB lookup by prefix, then verify the whole key.
   try {
     const record = await db.apiKey.findUnique({ where: { keyPrefix: prefix } });
     if (!record || record.revoked) return null;
     if (record.expiresAt && record.expiresAt < new Date()) return null;
 
-    const bcrypt = require("bcryptjs");
-    const match = bcrypt.compareSync(rawKey, record.keyHash);
-    if (!match) return null;
+    const bcrypt = await import("bcryptjs");
+    if (!(await bcrypt.compare(rawKey, record.keyHash))) return null;
 
     // Fire-and-forget: update lastUsedAt
     db.apiKey
       .update({ where: { id: record.id }, data: { lastUsedAt: new Date() } })
       .catch(() => {});
 
-    const data: ApiKeyData = {
+    const data: CachedApiKey = {
       id: record.id,
       name: record.name,
       permissions: parsePermissions(record.permissions),
+      expiresAt: record.expiresAt ? record.expiresAt.toISOString() : null,
     };
 
-    // Populate cache
-    await kv.set(cacheKey, data, { ex: KEY_CACHE_TTL }).catch(() => {});
+    // Populate the cache, plus an index so revoking by id can clear it.
+    await Promise.all([
+      kv.set(cacheKey, data, { ex: KEY_CACHE_TTL }),
+      kv.set(cacheIndexKeyFor(record.id), cacheKey, { ex: KEY_CACHE_TTL }),
+    ]).catch(() => {});
 
-    return data;
+    return { id: data.id, name: data.name, permissions: data.permissions };
   } catch (err) {
     logger.error({ err }, "API key validation failed");
     return null;
   }
 }
 
-/**
- * Invalidate the cache for a given key prefix (used when revoking / updating).
- */
-export async function clearApiKeyCache(prefix: string): Promise<void> {
-  const cacheKey = `${REDIS_KEYS.API_KEY_CACHE}${prefix}`;
-  await kv.del(cacheKey).catch(() => {});
+/** Drop the cached validation for a key (used when revoking / updating). */
+export async function clearApiKeyCache(keyId: string): Promise<void> {
+  const indexKey = cacheIndexKeyFor(keyId);
+  try {
+    const cacheKey = await kv.get<string>(indexKey);
+    await kv.del(...(cacheKey ? [cacheKey, indexKey] : [indexKey]));
+  } catch {
+    // Best effort: the entry still expires after KEY_CACHE_TTL.
+  }
 }

@@ -21,7 +21,7 @@ export const DELETE = createAdminRoute(async ({ params }) => {
   });
 
   // Clear cache so subsequent requests with this key are rejected
-  await clearApiKeyCache(key.keyPrefix);
+  await clearApiKeyCache(key.id);
 
   logger.info({ keyId: id, keyPrefix: key.keyPrefix }, "API key revoked");
 
