@@ -12,6 +12,7 @@ import { getPublicAppConfig } from "@/lib/app-config";
 import { constantTimeEqual } from "@/lib/security";
 import { getPasswordHash, getTwoFactorState } from "@/lib/credentials";
 import { getSessionVersion } from "@/lib/session-version";
+import { getClientIp } from "@/lib/client-ip";
 
 import type { ActivityDetails } from "@/lib/activityLogger";
 
@@ -106,9 +107,10 @@ export const authConfig: NextAuthConfig = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials, req) {
-        const forwardedFor = req?.headers?.get?.("x-forwarded-for");
-        const ip = forwardedFor
-          ? forwardedFor.split(",")[0].trim()
+        // Same rule as every other limiter: the right-most proxy hop, not the
+        // client-controlled left-most X-Forwarded-For entry.
+        const ip = req?.headers
+          ? getClientIp(new Headers(req.headers))
           : "127.0.0.1";
 
         const ratelimitResult = await authLimiter.check(ip);
@@ -148,8 +150,31 @@ export const authConfig: NextAuthConfig = {
           return null;
         }
 
+        // Per-account budget, so attempts spread over many IPs still stop.
+        const normalizedLoginEmail = email.toLowerCase().trim();
+        const accountLimit = await authLimiter.check(
+          `login:${normalizedLoginEmail}`,
+        );
+        if (!accountLimit.success) {
+          emitAuthActivity("RATE_LIMITED", {
+            userEmail: normalizedLoginEmail,
+            status: "blocked",
+            metadata: {
+              scope: "auth-account",
+              identifier: normalizedLoginEmail,
+            },
+          });
+          logger.warn(
+            { email: normalizedLoginEmail },
+            "[Auth] Per-account login limit exceeded",
+          );
+          throw new Error(
+            "Too many login attempts. Please wait a moment and try again.",
+          );
+        }
+
         try {
-          const normalizedInputEmail = email.toLowerCase().trim();
+          const normalizedInputEmail = normalizedLoginEmail;
           const dbUser = await db.user.findUnique({
             where: { email: normalizedInputEmail },
           });
@@ -171,8 +196,11 @@ export const authConfig: NextAuthConfig = {
             .trim()
             .replace(/^["']|["']$/g, "");
 
+          // The shared env password only belongs to the env-listed admins.
+          // Admins added in the panel sign in with their own password, so
+          // the env password cannot be used to act as any admin (Z2-16).
           let isPassValid = false;
-          if (isAdmin) {
+          if (isAdminEnv) {
             if (envPassHash) {
               isPassValid = await bcrypt.compare(password, envPassHash);
             } else if (envPass) {
