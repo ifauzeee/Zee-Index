@@ -14,6 +14,7 @@ import {
 } from "@/lib/manual-drives";
 import { getActiveProvider } from "@/lib/storage/providers";
 import { normalizePathId } from "@/lib/storage/path-id";
+import { isShareGrantFor, sharedItemIds } from "@/lib/share-grant";
 
 let cachedProtectedIds: string[] | null = null;
 let cachedRestrictedIds: string[] | null = null;
@@ -270,6 +271,10 @@ export async function isAccessRestricted(
     if (!(await isWithinAllowedRoots(fileId, allowedRootIds))) {
       return true;
     }
+
+    // A share link opens the shared item and, through the parent walk
+    // below, everything inside a shared folder.
+    if (isShareGrantFor(allowedTokens, fileId)) return false;
   }
 
   if (allRestrictedIds.length === 0 && !isLocalRestricted) return false;
@@ -278,7 +283,9 @@ export async function isAccessRestricted(
     if (accessCache.has(id)) {
       return accessCache.get(id)!;
     }
-    if (allowedTokens.includes(id)) return true;
+    if (allowedTokens.includes(id) || isShareGrantFor(allowedTokens, id)) {
+      return true;
+    }
     if (userEmail) {
       const hasAccess = await hasUserAccess(userEmail, id);
       accessCache.set(id, hasAccess);
@@ -289,6 +296,21 @@ export async function isAccessRestricted(
   }
 
   if (pathPrefix) {
+    const rel = fileId.slice(pathPrefix.length);
+    const segments = rel ? rel.split("/") : [];
+
+    // A share link opens the shared item and everything below it.
+    const grantedPaths = new Set(
+      sharedItemIds(allowedTokens)
+        .map((id) => normalizePathId(id, pathPrefix))
+        .filter((id): id is string => id !== null),
+    );
+    for (let i = 0; i <= segments.length; i++) {
+      if (grantedPaths.has(pathPrefix + segments.slice(0, i).join("/"))) {
+        return false;
+      }
+    }
+
     if (isLocalStorage && isLocalRestricted) {
       const access = await checkAccess("local-storage:");
       if (!access) return true;
@@ -306,8 +328,6 @@ export async function isAccessRestricted(
     }
 
     // The storage root, every ancestor folder, and the item itself.
-    const rel = fileId.slice(pathPrefix.length);
-    const segments = rel ? rel.split("/") : [];
     for (let i = 0; i <= segments.length; i++) {
       const candidate = pathPrefix + segments.slice(0, i).join("/");
       const storedId = restrictedByPath.get(candidate);
@@ -374,10 +394,17 @@ export async function redactRestrictedPath<
 ): Promise<T[]> {
   const restrictedIds = new Set(await getRestrictedIds());
   let locked = false;
+  let shared = false;
   const result: T[] = [];
 
   for (const node of path) {
+    // A share link opens the shared folder and everything below it.
+    if (isShareGrantFor(allowedTokens, node.id)) {
+      shared = true;
+      locked = false;
+    }
     if (
+      !shared &&
       !locked &&
       restrictedIds.has(node.id) &&
       !allowedTokens.includes(node.id) &&

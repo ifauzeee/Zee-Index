@@ -7,6 +7,7 @@ import { isPrivateFolder } from "@/lib/auth";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { getProtectedFolderIdsCached } from "@/lib/securityUtils";
 import { validateShareToken } from "@/lib/auth";
+import { shareGrantTokens } from "@/lib/share-grant";
 import { normalizeLocalStorageId } from "@/lib/storage/local";
 import { ERROR_MESSAGES } from "@/lib/constants";
 import { RequestError, getErrorMessage } from "@/lib/errors";
@@ -79,9 +80,14 @@ export const GET = createPublicRoute(
         }
       }
 
+      // A share link opens the shared folder (and below) for this request.
+      const shareTokens = await shareGrantTokens(
+        searchParams.get("share_token"),
+        session,
+      );
       const isRestricted = await isAccessRestricted(
         folderId,
-        localTokens,
+        [...localTokens, ...shareTokens],
         userEmail,
       );
 
@@ -101,7 +107,7 @@ export const GET = createPublicRoute(
             if (authorizedFolderId) {
               const stillRestricted = await isAccessRestricted(
                 folderId,
-                [...localTokens, authorizedFolderId],
+                [...localTokens, ...shareTokens, authorizedFolderId],
                 userEmail,
               );
               if (!stillRestricted) {

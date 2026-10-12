@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
   listAllFiles: vi.fn(),
   getVerifiedSession: vi.fn(),
   collectAccessTokens: vi.fn(),
-  verifyShareTokenString: vi.fn(),
+  resolveShareGrant: vi.fn(),
   isAccessRestricted: vi.fn(),
   getPublicAppConfig: vi.fn(),
   redirect: vi.fn((url: string) => {
@@ -23,7 +23,10 @@ vi.mock("@/lib/verified-session", () => ({
 }));
 vi.mock("@/lib/auth", () => ({
   collectAccessTokens: mocks.collectAccessTokens,
-  verifyShareTokenString: mocks.verifyShareTokenString,
+}));
+vi.mock("@/lib/share-grant", () => ({
+  resolveShareGrant: mocks.resolveShareGrant,
+  shareGrantToken: (id: string) => `share:${id}`,
 }));
 vi.mock("@/lib/securityUtils", () => ({
   isAccessRestricted: mocks.isAccessRestricted,
@@ -74,7 +77,11 @@ describe("file page access", () => {
     vi.clearAllMocks();
     mocks.getVerifiedSession.mockResolvedValue(null);
     mocks.collectAccessTokens.mockResolvedValue(["parent"]);
-    mocks.verifyShareTokenString.mockResolvedValue(true);
+    mocks.resolveShareGrant.mockResolvedValue({
+      ok: true,
+      record: {},
+      itemIds: ["other-file"],
+    });
     mocks.isAccessRestricted.mockResolvedValue(false);
     mocks.getPublicAppConfig.mockResolvedValue({ hideAuthor: false });
     mocks.getAnyFileDetails.mockResolvedValue(FILE);
@@ -109,8 +116,24 @@ describe("file page access", () => {
     expect((page.props as Props).title).toBe("accessDenied");
   });
 
+  it("lets a share link open the file it was created for", async () => {
+    mocks.resolveShareGrant.mockResolvedValue({
+      ok: true,
+      record: {},
+      itemIds: ["file-1"],
+    });
+
+    await render("parent", { share_token: "token-for-file-1" });
+
+    expect(mocks.isAccessRestricted).toHaveBeenCalledWith(
+      "file-1",
+      ["parent", "share:file-1"],
+      undefined,
+    );
+  });
+
   it("rejects an invalid share token", async () => {
-    mocks.verifyShareTokenString.mockResolvedValue(false);
+    mocks.resolveShareGrant.mockResolvedValue({ ok: false, reason: "invalid" });
 
     const page = await render("parent", { share_token: "bad" });
 

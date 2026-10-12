@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createPublicRoute } from "@/lib/api-middleware";
 import { getAnyFileDetails } from "@/lib/storage";
 import { validateShareToken } from "@/lib/auth";
+import { shareGrantTokens } from "@/lib/share-grant";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { normalizeLocalStorageId } from "@/lib/storage/local";
 import { ERROR_MESSAGES } from "@/lib/constants";
@@ -65,9 +66,13 @@ export const GET = createPublicRoute(
     }
 
     if (!isAdmin) {
+      const shareTokens = await shareGrantTokens(
+        searchParams.get("share_token"),
+        session,
+      );
       const isRestricted = await isAccessRestricted(
         normalizedFileId,
-        localTokens,
+        [...localTokens, ...shareTokens],
         session?.user?.email,
       );
       if (isRestricted) {

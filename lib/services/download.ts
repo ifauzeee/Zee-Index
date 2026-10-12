@@ -2,22 +2,30 @@ import { type NextRequest } from "next/server";
 import type { ShareLink as DbShareLink } from "@prisma/client";
 import type { Session } from "next-auth";
 import { jwtVerify } from "jose";
-import { kv } from "@/lib/kv";
 import { getVerifiedSession } from "@/lib/verified-session";
+import {
+  recordShareView,
+  resolveShareGrant,
+  shareGrantToken,
+} from "@/lib/share-grant";
 import { getClientIp } from "@/lib/client-ip";
 import { normalizeLocalStorageId } from "@/lib/storage/local";
-import { db } from "@/lib/db";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { logger } from "@/lib/logger";
 import type { DriveFile } from "@/lib/drive";
-import { getErrorMessage } from "@/lib/errors";
 import {
   EXPORT_TYPE_MAP,
-  REDIS_KEYS,
   ERROR_MESSAGES,
   GOOGLE_DRIVE_API_BASE_URL,
 } from "@/lib/constants";
+
+const SHARE_DENIAL_MESSAGES = {
+  invalid: ERROR_MESSAGES.INVALID_SHARE_TOKEN,
+  revoked: ERROR_MESSAGES.SHARE_LINK_REVOKED,
+  max_uses: ERROR_MESSAGES.SHARE_MAX_USES_REACHED,
+  login_required: "Login required.",
+} as const;
 
 export interface DownloadContext {
   fileId: string;
@@ -78,54 +86,34 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
 
   const session = await getVerifiedSession();
   let shareRecord: DbShareLink | undefined;
+  let shareTokens: string[] = [];
 
   if (shareToken) {
-    try {
-      const shareSecretKey = process.env.SHARE_SECRET_KEY;
-      if (shareSecretKey && shareSecretKey.length >= 32) {
-        const secret = new TextEncoder().encode(shareSecretKey);
-        const { payload } = await jwtVerify(shareToken, secret);
-        const isBlocked = await kv.get(
-          `${REDIS_KEYS.SHARE_BLOCKED}${payload.jti}`,
-        );
-        if (isBlocked) throw new Error(ERROR_MESSAGES.SHARE_LINK_REVOKED);
-
-        shareRecord =
-          (await db.shareLink.findUnique({
-            where: { jti: payload.jti as string },
-          })) || undefined;
-
-        if (!shareRecord || shareRecord.revokedAt) {
-          throw new Error(ERROR_MESSAGES.SHARE_LINK_REVOKED);
-        }
-
-        if (
-          shareRecord.maxUses !== null &&
-          shareRecord.views >= shareRecord.maxUses
-        ) {
-          throw new Error(ERROR_MESSAGES.SHARE_MAX_USES_REACHED);
-        }
-        if (
-          shareRecord.preventDownload &&
-          !range &&
-          request.headers.get("sec-fetch-dest") === "document"
-        ) {
-          throw new Error(ERROR_MESSAGES.SHARE_DOWNLOAD_DISABLED);
-        }
-
-        const isLoginRequired = shareRecord.loginRequired;
-        if (isLoginRequired && !session) {
-          throw new Error("Login required.");
-        }
-      }
-    } catch (error: unknown) {
+    const grant = await resolveShareGrant(shareToken, session);
+    if (!grant.ok) {
       return {
         context: createEmptyDownloadContext(),
         session,
         error: {
-          error: getErrorMessage(error, ERROR_MESSAGES.INVALID_SHARE_TOKEN),
+          error: SHARE_DENIAL_MESSAGES[grant.reason],
           status: 401,
         },
+      };
+    }
+    shareRecord = grant.record;
+    // The share opens its own item (and a shared folder's contents) even
+    // inside a protected folder, and nothing else (Z2-04).
+    shareTokens = grant.itemIds.map(shareGrantToken);
+
+    if (
+      shareRecord.preventDownload &&
+      !range &&
+      request.headers.get("sec-fetch-dest") === "document"
+    ) {
+      return {
+        context: createEmptyDownloadContext(),
+        session,
+        error: { error: ERROR_MESSAGES.SHARE_DOWNLOAD_DISABLED, status: 401 },
       };
     }
   }
@@ -217,7 +205,7 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
 
     const isRestricted = await isAccessRestricted(
       fileId,
-      [...localTokens, ...folderTokenIds],
+      [...localTokens, ...folderTokenIds, ...shareTokens],
       session?.user?.email,
     );
 
@@ -228,6 +216,13 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
         error: { error: ERROR_MESSAGES.ACCESS_DENIED, status: 403 },
       };
     }
+  }
+
+  if (shareRecord) {
+    await recordShareView(
+      shareRecord.jti,
+      session?.user?.email || getClientIp(request.headers),
+    );
   }
 
   return {
