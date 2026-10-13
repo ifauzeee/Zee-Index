@@ -116,7 +116,10 @@ export function useNotifications({
             });
           }
         } catch (e) {
-          console.error("Failed to parse SSE activity", e);
+          logger.error(
+            { err: e },
+            "[Notifications] Failed to parse SSE activity",
+          );
         }
       });
 

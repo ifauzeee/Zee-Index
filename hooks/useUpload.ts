@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import { useAppStore } from "@/lib/store";
 import { parseDroppedItems, FileEntry } from "@/lib/fileParser";
 import { useTranslations } from "next-intl";
+import { logger } from "@/lib/logger";
 
 interface UseUploadProps {
   currentFolderId: string;
@@ -107,7 +108,10 @@ export function useUpload({
           currentParentId = data.id;
           folderIdCache.current[currentPath] = data.id;
         } catch (error) {
-          console.error(`Gagal membuat folder ${folderName}:`, error);
+          logger.error(
+            { err: error, folderName },
+            "[Upload] Failed to create folder",
+          );
           throw error;
         }
       }
@@ -174,7 +178,7 @@ export function useUpload({
           start = end;
         }
       } catch (error: unknown) {
-        console.error(error);
+        logger.error({ err: error }, "[Upload] Upload failed");
         const errorMessage =
           error instanceof Error ? error.message : "Upload failed";
         updateUploadProgress(
@@ -228,10 +232,9 @@ export function useUpload({
             );
             await uploadFileChunked(entry.file, targetId);
           } catch (e) {
-            console.error(
-              "Skip file karena gagal create folder:",
-              entry.path,
-              e,
+            logger.error(
+              { err: e, path: entry.path },
+              "[Upload] Skipped file: its folder could not be created",
             );
           }
         });

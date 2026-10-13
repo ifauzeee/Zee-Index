@@ -10,6 +10,7 @@ import { id } from "date-fns/locale";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { ActivityDetails, ActivityType } from "@/lib/activityLogger";
 import { useTranslations } from "next-intl";
+import { logger } from "@/lib/logger";
 
 interface LogEntry extends ActivityDetails {
   type: ActivityType;
@@ -32,7 +33,7 @@ export default function ActivityLogPage() {
           setIsLoading(false);
         })
         .catch((err) => {
-          console.error(err);
+          logger.error({ err }, "[LogsPage] Failed to load logs");
           setIsLoading(false);
         });
     }

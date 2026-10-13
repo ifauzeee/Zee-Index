@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 import idMessages from "@/messages/id.json";
 import enMessages from "@/messages/en.json";
+import { logger } from "@/lib/logger";
 
 export default function GlobalError({
   error,
@@ -21,7 +22,7 @@ export default function GlobalError({
     locale === "id" ? idMessages.GlobalError : enMessages.GlobalError;
 
   useEffect(() => {
-    console.error("[GlobalError]", error);
+    logger.error({ err: error }, "[GlobalError] Unhandled error");
   }, [error]);
 
   return (

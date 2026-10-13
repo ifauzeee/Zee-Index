@@ -5,6 +5,7 @@ import { useAppStore } from "@/lib/store";
 import { Loader2, Cloud, HardDrive, Plug, Check, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/hooks/useUser";
+import { logger } from "@/lib/logger";
 
 interface StorageStatus {
   provider: string;
@@ -56,7 +57,7 @@ export default function StorageConfig() {
         if (data?.storage) setStatus(data.storage);
       })
       .catch((err) =>
-        console.error("[StorageConfig] Failed to load config:", err),
+        logger.error({ err }, "[StorageConfig] Failed to load config"),
       )
       .finally(() => setLoading(false));
   }, [user]);

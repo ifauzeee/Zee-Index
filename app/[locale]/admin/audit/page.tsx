@@ -32,6 +32,7 @@ import { useSession } from "next-auth/react";
 import EmptyState from "@/components/file-browser/EmptyState";
 import { TableSkeleton } from "@/components/admin/skeletons";
 import AdminBackButton from "@/components/admin/AdminBackButton";
+import { logger } from "@/lib/logger";
 
 interface AuditLog {
   id: string;
@@ -118,7 +119,7 @@ export default function AuditDashboard() {
         setStats(data.stats ?? null);
       }
     } catch (error) {
-      console.error(error);
+      logger.error({ err: error }, "[AuditPage] Failed to load audit logs");
     } finally {
       if (isBackground) setIsRefetching(false);
       else setLoading(false);

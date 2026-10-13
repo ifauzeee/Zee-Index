@@ -6,6 +6,7 @@ import { Star, Calendar, User, Film } from "lucide-react";
 import { motion } from "framer-motion";
 import type { TMDBMetadata } from "@/lib/tmdb";
 import { useTranslations } from "next-intl";
+import { logger } from "@/lib/logger";
 
 interface RichMediaMetadataProps {
   filename: string;
@@ -35,7 +36,10 @@ export default function RichMediaMetadata({
           }
         }
       } catch (err) {
-        console.error("Failed to fetch media metadata", err);
+        logger.error(
+          { err },
+          "[RichMediaMetadata] Failed to fetch media metadata",
+        );
       } finally {
         setLoading(false);
       }

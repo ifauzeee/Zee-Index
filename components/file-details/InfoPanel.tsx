@@ -19,6 +19,7 @@ import SubtitleSelectorModal from "../modals/SubtitleSelectorModal";
 import { srtToVtt } from "@/lib/subtitleUtils";
 import type { SubtitleTrack } from "@/lib/subtitles";
 import { fetchFolderPathApi } from "@/hooks/useFileFetching";
+import { logger } from "@/lib/logger";
 
 interface FolderPathItem {
   id: string;
@@ -145,7 +146,7 @@ export default function InfoPanel({
         const path = data.map((pathItem) => pathItem.name).join(" / ");
         setPathString(path || "Root");
       } catch (error) {
-        console.error("Failed to fetch path", error);
+        logger.error({ err: error }, "[InfoPanel] Failed to fetch path");
         setPathString(t("error"));
       } finally {
         setPathLoading(false);

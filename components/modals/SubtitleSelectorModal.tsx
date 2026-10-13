@@ -12,6 +12,7 @@ import { type DriveFile } from "@/lib/drive";
 import type { SubtitleTrack } from "@/lib/subtitles";
 import { FileText, Loader2, Music, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { logger } from "@/lib/logger";
 
 interface SubtitleSelectorModalProps {
   folderId: string;
@@ -43,7 +44,10 @@ export default function SubtitleSelectorModal({
           setFiles(subFiles);
         }
       } catch (error) {
-        console.error("Failed to fetch subtitle files", error);
+        logger.error(
+          { err: error },
+          "[SubtitleSelector] Failed to fetch subtitle files",
+        );
       } finally {
         setIsLoading(false);
       }

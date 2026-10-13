@@ -8,6 +8,7 @@ import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { OfficeViewer } from "./OfficeViewer";
 import { isDriveId } from "@/lib/drive/ids";
+import { logger } from "@/lib/logger";
 const CodeViewer = dynamic(() => import("./CodeViewer"));
 
 const PDFViewer = dynamic(() => import("./PDFViewer"), {
@@ -162,7 +163,7 @@ export const CodePreview: React.FC<{ src: string; fileName: string }> = ({
       .then((res) => res.text())
       .then(setContent)
       .catch((err) =>
-        console.error("[CodePreview] Failed to fetch content:", err),
+        logger.error({ err }, "[CodePreview] Failed to fetch content"),
       )
       .finally(() => setIsLoading(false));
   }, [src]);

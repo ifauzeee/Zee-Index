@@ -15,6 +15,7 @@ import { useUser } from "@/hooks/useUser";
 import { usePublicConfig } from "@/hooks/useConfig";
 import type { ShareTokenPayload } from "@/lib/store/types";
 import { ARCHIVE_PREVIEW_MAX_BYTES } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 
 interface TmdbGenre {
   name: string;
@@ -160,7 +161,7 @@ export function useFileDetailController({
       const timeoutId = setTimeout(handleRedirect, timeLeft + 500);
       return () => clearTimeout(timeoutId);
     } catch (error) {
-      console.error("Auto-redirect timer error:", error);
+      logger.error({ err: error }, "[FileDetail] Auto-redirect timer error");
     }
   }, [shareToken, router]);
 

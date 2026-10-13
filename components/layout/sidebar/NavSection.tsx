@@ -16,6 +16,7 @@ import { useAppStore } from "@/lib/store";
 import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
 import { useRouter, usePathname } from "next/navigation";
+import { logger } from "@/lib/logger";
 
 interface NavSectionProps {
   t: (key: string, values?: Record<string, string | number | Date>) => string;
@@ -39,7 +40,7 @@ export default function NavSection({ t }: NavSectionProps) {
         if (!cancelled) setPendingAccessRequests(requests.length);
       })
       .catch((err) =>
-        console.error("[NavSection] Failed to fetch access requests:", err),
+        logger.error({ err }, "[NavSection] Failed to fetch access requests"),
       );
     return () => {
       cancelled = true;

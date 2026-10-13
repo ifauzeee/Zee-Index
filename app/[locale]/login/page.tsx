@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import AppIcon from "@/app/icon.png";
 import { useTranslations } from "next-intl";
+import { logger } from "@/lib/logger";
 
 function CustomLoginPage() {
   const t = useTranslations("LoginPage");
@@ -103,7 +104,7 @@ function CustomLoginPage() {
         const data = await response.json();
         setIsGuestLoginDisabled(data.disableGuestLogin === true);
       } catch (err) {
-        console.error("Config fetch error:", err);
+        logger.error({ err }, "[LoginPage] Config fetch error");
         setIsGuestLoginDisabled(true);
       } finally {
         setIsLoadingConfig(false);

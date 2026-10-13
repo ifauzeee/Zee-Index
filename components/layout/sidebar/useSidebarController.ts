@@ -17,6 +17,7 @@ import type {
   ManualDrive,
   TreeContextType,
 } from "./types";
+import { logger } from "@/lib/logger";
 
 interface FolderContentsResponse {
   files?: DriveFile[];
@@ -131,7 +132,7 @@ export function useSidebarController() {
           setDbDrives(data);
         }
       } catch (error) {
-        console.error("Error checking auth or drives:", error);
+        logger.error({ err: error }, "[Sidebar] Error checking auth or drives");
       }
     };
 
@@ -197,7 +198,10 @@ export function useSidebarController() {
           hasLoaded: false,
         }));
       } catch (error) {
-        console.error(error);
+        logger.error(
+          { err: error },
+          "[Sidebar] Failed to load folder children",
+        );
         return [];
       }
     },
@@ -309,7 +313,7 @@ export function useSidebarController() {
           setTree(nextTree);
         }
       } catch (error) {
-        console.error("Error expanding tree:", error);
+        logger.error({ err: error }, "[Sidebar] Error expanding tree");
       }
     };
 

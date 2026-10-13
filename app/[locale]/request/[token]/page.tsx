@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { formatBytes } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { logger } from "@/lib/logger";
 
 interface RequestInfo {
   title: string;
@@ -115,7 +116,7 @@ export default function PublicUploadPage() {
 
       setUploadProgress((prev) => ({ ...prev, [file.name]: 100 }));
     } catch (err) {
-      console.error("Upload error:", err);
+      logger.error({ err }, "[FileRequest] Upload error");
       throw err;
     }
   };
@@ -131,7 +132,7 @@ export default function PublicUploadPage() {
       setUploadStatus("completed");
       setFiles([]);
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "[FileRequest] Upload failed");
       setUploadStatus("error");
     }
   };

@@ -27,6 +27,7 @@ import { useTranslations } from "next-intl";
 import { useShareLinksQuery } from "@/hooks/useShareLinks";
 import { useFileRequestsQuery } from "@/hooks/useFileRequests";
 import { useAdminEmailsQuery } from "@/hooks/useAdminUsers";
+import { logger } from "@/lib/logger";
 
 const TodayDownloadsChart = dynamic(
   () => import("@/components/charts/TodayDownloadsChart"),
@@ -65,7 +66,7 @@ export default function AdminSummaryTab() {
         setStats(data);
       })
       .catch((err) => {
-        console.error("Stats fetch error:", err);
+        logger.error({ err }, "[AdminSummary] Stats fetch error");
         if (err.message !== "Rate limit exceeded") {
           addToast({
             message: t("loadingStatsError", { error: err.message }),

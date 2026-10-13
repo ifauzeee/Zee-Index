@@ -10,6 +10,7 @@ import {
 import { EyeOff, UserX, Bell } from "lucide-react";
 import { FormSkeleton } from "@/components/admin/skeletons";
 import { useTranslations } from "next-intl";
+import { logger } from "@/lib/logger";
 
 interface NotificationStatus {
   discord: boolean;
@@ -35,7 +36,7 @@ export default function SecurityConfig() {
         if (data?.notifications) setNotificationStatus(data.notifications);
       })
       .catch((err) =>
-        console.error("[SecurityConfig] Failed to load config:", err),
+        logger.error({ err }, "[SecurityConfig] Failed to load config"),
       );
   }, []);
 
