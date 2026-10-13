@@ -8,6 +8,7 @@ import { createPublicRoute } from "@/lib/api-middleware";
 import { invalidateAccessToken } from "@/lib/drive";
 import { isAppConfigured } from "@/lib/config";
 import { z } from "zod";
+import { announceSetupToken, isValidSetupToken } from "@/lib/setup-token";
 
 const setupFinishSchema = z.object({
   clientId: z.string().min(1),
@@ -15,6 +16,7 @@ const setupFinishSchema = z.object({
   authCode: z.string().min(1),
   redirectUri: z.string().url(),
   rootFolderId: z.string().min(1),
+  setupToken: z.string().optional(),
 });
 const SETUP_ENV_KEYS = [
   "GOOGLE_CLIENT_ID",
@@ -112,6 +114,17 @@ export const POST = createPublicRoute(
         if (session?.user?.role !== "ADMIN") {
           return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
+      } else if (!isValidSetupToken(body.setupToken)) {
+        // First-run setup is reachable by anyone who finds the instance; the
+        // token proves access to the server log or environment (Z2-26).
+        announceSetupToken();
+        return NextResponse.json(
+          {
+            error:
+              'Invalid setup token. Find it in the server log ("[Setup] App is not configured") or set SETUP_TOKEN.',
+          },
+          { status: 403 },
+        );
       }
 
       const { clientId, clientSecret, authCode, redirectUri, rootFolderId } =

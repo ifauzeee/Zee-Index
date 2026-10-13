@@ -617,7 +617,9 @@
     "nextAuthOptional": "Masuk dengan Google (opsional)",
     "nextAuthOptionalDesc": "Jika Anda menggunakan masuk dengan Google, isi OAuth Client ID dan Secret dari Google Cloud Console.",
     "fillServiceAccountFields": "Masukkan email akun layanan, kunci privat, dan ID folder root.",
-    "createdBy": "Dibuat oleh"
+    "createdBy": "Dibuat oleh",
+    "setupToken": "Token setup",
+    "setupTokenHint": "Tercetak di log server saat pertama kali dijalankan (cari \"[Setup] App is not configured\"), atau nilai SETUP_TOKEN. Tidak diperlukan saat admin menjalankan ulang setup."
   },
   "DetailsPanel": {
     "copied": "Disalin!",

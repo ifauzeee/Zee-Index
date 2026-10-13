@@ -9,6 +9,7 @@ import {
 import { validateApiKey } from "@/lib/api-key";
 import { ERROR_MESSAGES, SWAGGER_UI_CDN } from "@/lib/constants";
 import { isAppConfigured } from "@/lib/config";
+import { announceSetupToken } from "@/lib/setup-token";
 import {
   validateShareToken,
   validateFolderToken,
@@ -301,6 +302,8 @@ export default async function proxy(request: NextRequest) {
   const isConfigured = await isAppConfigured();
 
   if (!isConfigured) {
+    // Print the first-run setup token to the server log (once per process).
+    announceSetupToken();
     const isSetupPage =
       pathnameWithoutLocale.startsWith("/setup") ||
       pathnameWithoutLocale.startsWith("/api/setup");

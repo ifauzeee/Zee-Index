@@ -617,7 +617,9 @@
     "restartCommandLabel": "在專案終端機執行",
     "restartCommandHint": "重建完成且容器恢復健康後，請按下方的按鈕。若未重建，首頁仍會讀取舊權杖並持續顯示 INVALID_GRANT。",
     "restartDone": "我已重建完成",
-    "createdBy": "建立者："
+    "createdBy": "建立者：",
+    "setupToken": "設定權杖",
+    "setupTokenHint": "首次啟動時會印在伺服器日誌中（搜尋「[Setup] App is not configured」），或使用 SETUP_TOKEN 的值。管理員重新執行設定時不需要。"
   },
   "DetailsPanel": {
     "copied": "已複製！",

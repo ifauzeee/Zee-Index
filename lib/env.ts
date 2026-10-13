@@ -29,6 +29,11 @@ const envSchema = z.object({
     .min(16, "CRON_SECRET must be at least 16 characters")
     .optional()
     .or(z.literal("")),
+  SETUP_TOKEN: z
+    .string()
+    .min(16, "SETUP_TOKEN must be at least 16 characters")
+    .optional()
+    .or(z.literal("")),
 
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.string().optional(),
