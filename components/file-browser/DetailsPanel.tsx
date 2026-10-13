@@ -39,6 +39,7 @@ import {
   itemVariants,
 } from "./details/DetailComponents";
 import FilePreview from "./details/FilePreview";
+import { logger } from "@/lib/logger";
 
 interface DetailsPanelProps {
   file: DriveFile;
@@ -140,7 +141,7 @@ function DetailsPanelInner({ file, onClose }: DetailsPanelProps) {
         const path = data.map((pathItem) => pathItem.name).join(" / ");
         setPathString(path || t("root"));
       } catch (error) {
-        console.error("Failed to fetch path", error);
+        logger.error({ err: error }, "[DetailsPanel] Failed to fetch path");
         setPathString(t("error"));
       } finally {
         setPathLoading(false);

@@ -15,6 +15,7 @@ import { useScrollLock } from "@/hooks/useScrollLock";
 import { useTranslations } from "next-intl";
 import { fetchFolderPathApi } from "@/hooks/useFileFetching";
 import ModalShell from "@/components/ui/ModalShell";
+import { logger } from "@/lib/logger";
 
 interface MoveModalProps {
   fileToMove?: DriveFile;
@@ -61,7 +62,7 @@ export default function MoveModal({
             return;
           }
         } catch (err) {
-          console.error("Failed to fetch folder path", err);
+          logger.error({ err }, "[MoveModal] Failed to fetch folder path");
         }
       }
 

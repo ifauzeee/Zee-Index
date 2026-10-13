@@ -21,6 +21,7 @@ import type {
   FileBrowserActionEvent,
 } from "@/components/file-browser/views/types";
 import type { ShareTokenPayload } from "@/lib/store";
+import { logger } from "@/lib/logger";
 
 export interface FileBrowserProps {
   initialFolderId?: string;
@@ -232,7 +233,7 @@ export function useFileBrowserController({
       const timeoutId = setTimeout(handleRedirect, timeLeft + 500);
       return () => clearTimeout(timeoutId);
     } catch (error) {
-      console.error("Auto-redirect timer error:", error);
+      logger.error({ err: error }, "[FileBrowser] Auto-redirect timer error");
     }
   }, [shareToken, router]);
 
@@ -374,7 +375,7 @@ export function useFileBrowserController({
           initialPageParam: null,
         })
         .catch((err) =>
-          console.error("[useFileBrowserController] Prefetch failed:", err),
+          logger.error({ err }, "[useFileBrowserController] Prefetch failed"),
         );
     },
     [router, shareToken, queryClient, folderTokens],

@@ -33,6 +33,7 @@ import {
   ResumePromptOverlay,
   WatermarkOverlay,
 } from "./video-player/Overlays";
+import { logger } from "@/lib/logger";
 
 interface TimeUpdateDetail {
   currentTime: number;
@@ -139,7 +140,10 @@ export default function VideoPlayer({
             createdUrls.push(url);
             return { ...track, src: url };
           } catch (e) {
-            console.error("Failed to convert subtitle:", e);
+            logger.error(
+              { err: e },
+              "[VideoPlayer] Failed to convert subtitle",
+            );
             return track;
           }
         }),
@@ -182,7 +186,7 @@ export default function VideoPlayer({
   };
 
   const handleError = (detail: MediaErrorDetail) => {
-    console.warn("[VideoPlayer] Event Error:", detail);
+    logger.warn({ detail }, "[VideoPlayer] Event Error");
 
     if (playerRef.current && playerRef.current.currentTime > 0) {
       setLastTime(playerRef.current.currentTime);
@@ -243,7 +247,9 @@ export default function VideoPlayer({
       setTimeout(() => {
         playerRef.current
           ?.play()
-          .catch((e) => console.debug("Resume play failed:", e));
+          .catch((e) =>
+            logger.debug({ err: e }, "[VideoPlayer] Resume play failed"),
+          );
       }, 100);
     }
   };
@@ -258,7 +264,9 @@ export default function VideoPlayer({
       setTimeout(() => {
         playerRef.current
           ?.play()
-          .catch((e) => console.debug("Start over play failed:", e));
+          .catch((e) =>
+            logger.debug({ err: e }, "[VideoPlayer] Start over play failed"),
+          );
       }, 100);
     }
   };
@@ -317,8 +325,8 @@ export default function VideoPlayer({
         onError={handleError}
         onCanPlay={handleCanPlay}
         onTimeUpdate={handleTimeUpdate}
-        onWaiting={() => console.debug("[VideoPlayer] Buffering...")}
-        onPlaying={() => console.debug("[VideoPlayer] Playing")}
+        onWaiting={() => logger.debug("[VideoPlayer] Buffering...")}
+        onPlaying={() => logger.debug("[VideoPlayer] Playing")}
         logLevel="silent"
         className="w-full h-full ring-media-focus"
         crossOrigin="anonymous"

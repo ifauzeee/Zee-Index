@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
+import { logger } from "@/lib/logger";
 
 export default function MainError({
   error,
@@ -15,7 +16,7 @@ export default function MainError({
   const t = useTranslations("MainError");
 
   useEffect(() => {
-    console.error(error);
+    logger.error({ err: error }, "[MainError] Unhandled page error");
   }, [error]);
 
   return (

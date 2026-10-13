@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { getErrorMessage } from "@/lib/errors";
 import { parseManualDrivesFromEnv } from "@/lib/manual-drives";
+import { logger } from "@/lib/logger";
 
 interface ManualDrive {
   id: string;
@@ -83,7 +84,7 @@ export default function ManualDrivesManager() {
         setDbDrives(taggedData);
       }
     } catch (e) {
-      console.error(e);
+      logger.error({ err: e }, "[ManualDrives] Failed to load drives");
     } finally {
       setIsLoading(false);
     }
@@ -176,7 +177,7 @@ export default function ManualDrivesManager() {
         addToast({ message: t("deleted"), type: "success" });
       }
     } catch (e) {
-      console.error("Delete error:", e);
+      logger.error({ err: e }, "[ManualDrives] Delete error");
       addToast({ message: t("deleteFailed"), type: "error" });
     }
   };
