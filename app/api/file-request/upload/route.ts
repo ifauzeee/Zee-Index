@@ -293,7 +293,7 @@ export const POST = createPublicRoute(
                 );
               }
 
-              await logActivity("UPLOAD", {
+              void logActivity("UPLOAD", {
                 itemName: result.file.name,
                 itemSize: result.file.size,
                 userEmail: "Public Uploader",
@@ -350,7 +350,7 @@ export const POST = createPublicRoute(
             );
           }
 
-          await logActivity("UPLOAD", {
+          void logActivity("UPLOAD", {
             itemName: fileData.name,
             itemSize: fileData.size,
             userEmail: "Public Uploader",

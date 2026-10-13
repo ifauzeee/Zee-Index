@@ -43,6 +43,9 @@ const PUBLIC_API_EXACT = new Set([
   "/api/proxy-image",
   "/api/admin/analytics/track",
   "/api/health",
+  // Social crawlers fetch OG images without a session (Z2-22). The route
+  // clamps the title and is rate-limited.
+  "/api/og",
   "/api/metadata",
   "/api/search",
   "/api/search/global",

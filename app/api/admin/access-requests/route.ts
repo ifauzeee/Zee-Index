@@ -63,7 +63,7 @@ export const POST = createAdminRoute(
           requestData.email,
         );
 
-        await logActivity("ADMIN_ADDED", {
+        void logActivity("ADMIN_ADDED", {
           itemName: requestData.folderName,
           userEmail: session.user?.email,
           targetUser: requestData.email,

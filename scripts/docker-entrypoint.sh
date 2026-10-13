@@ -25,7 +25,10 @@ echo "Running database migrations..."
 if [ -d "prisma/migrations" ]; then
   prisma migrate deploy
 else
-  prisma db push --accept-data-loss
+  # Never fall back to "db push --accept-data-loss": a missing migrations
+  # folder is a broken image, and that command can drop columns and data.
+  echo "prisma/migrations is missing from the image; refusing to start." >&2
+  exit 1
 fi
 
 exec "$@"

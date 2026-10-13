@@ -63,7 +63,7 @@ export const POST = createEditorRoute(
         }
       }
 
-      await logActivity("MOVE", {
+      void logActivity("MOVE", {
         itemName: `${fileIds.length} files/folders`,
         userEmail: session?.user?.email,
         destinationFolder: newParentId,

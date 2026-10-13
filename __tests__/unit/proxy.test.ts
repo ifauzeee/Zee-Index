@@ -72,6 +72,8 @@ describe("middleware public API paths", () => {
     expect(isPublicApiPath("/api/manual-drives")).toBe(true);
     expect(isPublicApiPath("/api/search")).toBe(true);
     expect(isPublicApiPath("/api/tags")).toBe(false);
+    // OG images are fetched by social crawlers without a session.
+    expect(isPublicApiPath("/api/og")).toBe(true);
     expect(isPublicApiPath("/api/admin/users")).toBe(false);
   });
 

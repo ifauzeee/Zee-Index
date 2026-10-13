@@ -63,7 +63,7 @@ export const POST = createAdminRoute(
 
       const data = await response.json();
       if (!response.ok) {
-        await logActivity("UPLOAD", {
+        void logActivity("UPLOAD", {
           itemName: folderName,
           userEmail: session.user.email,
           status: "failure",
@@ -81,7 +81,7 @@ export const POST = createAdminRoute(
         await kv.del(`zee-index:folder-tree:${rootFolderId}`);
       }
 
-      await logActivity("UPLOAD", {
+      void logActivity("UPLOAD", {
         itemName: folderName,
         userEmail: session.user.email,
         status: "success",

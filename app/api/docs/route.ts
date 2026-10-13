@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
+import { createPublicRoute } from "@/lib/api-middleware";
 import { SWAGGER_UI_CDN } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
-  // The middleware generates a per-request nonce for the CSP it emits and
-  // forwards it here so the scripts below can carry the matching attribute.
-  const nonce = request.headers.get("x-nonce");
-  const nonceAttr = nonce ? ` nonce="${nonce}"` : "";
+// Public at the route level; the proxy still requires a session for
+// /api/docs because it is not in the public API list.
+export const GET = createPublicRoute(
+  async ({ request }) => {
+    // The middleware generates a per-request nonce for the CSP it emits and
+    // forwards it here so the scripts below can carry the matching attribute.
+    const nonce = request.headers.get("x-nonce");
+    const nonceAttr = nonce ? ` nonce="${nonce}"` : "";
 
-  const html = `<!DOCTYPE html>
+    const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -45,10 +49,12 @@ export async function GET(request: Request) {
 </body>
 </html>`;
 
-  return new NextResponse(html, {
-    headers: {
-      "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "no-store, no-cache, must-revalidate",
-    },
-  });
-}
+    return new NextResponse(html, {
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+      },
+    });
+  },
+  { rateLimit: "API" },
+);

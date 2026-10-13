@@ -36,7 +36,7 @@ export const POST = createAdminRoute(
           throw new Error(`Gagal menghapus file dari ${provider.source}.`);
         }
 
-        await logActivity("DELETE", {
+        void logActivity("DELETE", {
           itemName: fileName,
           userEmail: session?.user?.email,
           status: "success",
@@ -55,7 +55,7 @@ export const POST = createAdminRoute(
         const localPath = fileId.replace("local-storage:", "");
         await deleteLocalFile(localPath);
 
-        await logActivity("DELETE", {
+        void logActivity("DELETE", {
           itemName: localPath,
           userEmail: session?.user?.email,
           status: "success",
@@ -106,7 +106,7 @@ export const POST = createAdminRoute(
         }
       }
 
-      await logActivity("DELETE", {
+      void logActivity("DELETE", {
         itemName: fileDetails?.name,
         userEmail: session?.user?.email,
         status: "success",
@@ -121,7 +121,7 @@ export const POST = createAdminRoute(
         error,
         "Terjadi kesalahan tidak dikenal.",
       );
-      await logActivity("DELETE", {
+      void logActivity("DELETE", {
         itemName: fileDetails?.name || "Unknown",
         userEmail: session?.user?.email,
         status: "failure",

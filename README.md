@@ -333,7 +333,7 @@ Prefer `ADMIN_PASSWORD_HASH` over `ADMIN_PASSWORD` in production. Generate one w
 | Variable                    | Description                    | Default                  |
 | --------------------------- | ------------------------------ | ------------------------ |
 | `POSTGRES_USER`             | PostgreSQL username            | `postgres`               |
-| `POSTGRES_PASSWORD`         | PostgreSQL password            | `postgres`               |
+| `POSTGRES_PASSWORD`         | PostgreSQL password (required) | —                        |
 | `POSTGRES_DB`               | Database name                  | `zee_index`              |
 | `DATABASE_URL`              | Connection string (non-Docker) | Auto-generated in Docker |
 | `REDIS_URL`                 | Redis connection string        | `redis://redis:6379`     |

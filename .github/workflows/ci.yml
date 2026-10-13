@@ -5,6 +5,10 @@ on:
   pull_request:
     branches: [main, master]
 
+# Least privilege for the default GITHUB_TOKEN (audit Z2-25).
+permissions:
+  contents: read
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
@@ -51,13 +55,13 @@ jobs:
       NEXT_PUBLIC_ENABLE_LOCAL_STORAGE: "true"
       SKIP_ENV_VALIDATION: "1"
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
 
       - name: Use Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: "22"
           cache: "pnpm"
@@ -103,7 +107,7 @@ jobs:
         run: echo "version=$(pnpm list @playwright/test --depth=0 | grep @playwright/test | awk '{print $2}')" >> $GITHUB_OUTPUT
 
       - name: Cache Playwright binary
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright

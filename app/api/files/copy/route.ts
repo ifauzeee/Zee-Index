@@ -58,7 +58,7 @@ export const POST = createAdminRoute(
       await invalidateFolderCache(targetParentId);
       const copiedFile = await response.json();
 
-      await logActivity("COPY", {
+      void logActivity("COPY", {
         itemName: copiedFile.name || fileId,
         userEmail: session?.user?.email,
         status: "success",

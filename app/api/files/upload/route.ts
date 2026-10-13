@@ -233,7 +233,7 @@ export const POST = createEditorRoute(
             await invalidateFolderCache(parent);
           }
 
-          await logActivity("UPLOAD", {
+          void logActivity("UPLOAD", {
             itemName: file.name,
             itemId: file.id,
             itemSize: file.size,
@@ -319,7 +319,7 @@ export const POST = createEditorRoute(
             await invalidateFolderCache(parent);
           }
 
-          await logActivity("UPLOAD", {
+          void logActivity("UPLOAD", {
             itemName: file.name,
             itemId: file.id,
             itemSize: file.size,
@@ -352,7 +352,7 @@ export const POST = createEditorRoute(
               await invalidateFolderCache(parentId);
             }
 
-            await logActivity("UPLOAD", {
+            void logActivity("UPLOAD", {
               itemName: result.file.name,
               itemId: result.file.id,
               itemSize: result.file.size,
@@ -405,7 +405,7 @@ export const POST = createEditorRoute(
             await invalidateFolderCache(parentId);
           }
 
-          await logActivity("UPLOAD", {
+          void logActivity("UPLOAD", {
             itemName: fileData.name,
             itemId: fileData.id,
             itemSize: fileData.size,
