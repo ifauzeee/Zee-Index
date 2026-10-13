@@ -178,7 +178,11 @@ function applyCsp(request: NextRequest, response: Response): Response {
   return response;
 }
 
-export default async function middleware(request: NextRequest) {
+// Next.js 16 runs `proxy.ts` on the Node.js runtime. As `middleware.ts` this
+// ran on the Edge runtime, where the KV client was a per-process in-memory
+// store and Prisma was unavailable, so share revocations, API-key checks and
+// rate limits here never saw the real Redis/Postgres state (audit Z2-10).
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (
