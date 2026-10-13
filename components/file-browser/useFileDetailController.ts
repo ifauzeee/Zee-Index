@@ -192,14 +192,15 @@ export function useFileDetailController({
   }, [file.parents, currentFolderId, folderTokens, folderPathData]);
 
   const directLink = useMemo(() => {
-    let url = `/api/download?fileId=${file.id}`;
+    // Encoded so path-style ids with `&`, `#` or `+` stay one parameter.
+    const query = new URLSearchParams({ fileId: file.id });
     if (shareToken) {
-      url += `&share_token=${shareToken}`;
+      query.set("share_token", shareToken);
     }
     if (bestToken) {
-      url += `&access_token=${bestToken}`;
+      query.set("access_token", bestToken);
     }
-    return url;
+    return `/api/download?${query.toString()}`;
   }, [file.id, shareToken, bestToken]);
 
   const previewLink = useMemo(
