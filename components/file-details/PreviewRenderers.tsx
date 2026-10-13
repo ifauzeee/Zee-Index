@@ -137,16 +137,26 @@ export const EbookPreview: React.FC<{ src: string }> = ({ src }) => {
 
   return (
     <div className="w-full h-full bg-white text-black overflow-hidden relative">
-      {isLoading && <LoadingPreview />}
+      {/* epub.js sizes the book from this element while it renders, so it
+          stays laid out (only invisible) during loading. Hidden with
+          display: none it measured 0px and the book rendered 0px tall. */}
+      <div
+        ref={containerRef}
+        data-testid="epub-container"
+        className={
+          isLoading || error ? "invisible w-full h-full" : "w-full h-full"
+        }
+      />
+      {isLoading && (
+        <div className="absolute inset-0">
+          <LoadingPreview />
+        </div>
+      )}
       {error && (
-        <div className="flex justify-center items-center h-full text-red-500">
+        <div className="absolute inset-0 flex justify-center items-center text-red-500">
           {error}
         </div>
       )}
-      <div
-        ref={containerRef}
-        className={isLoading || error ? "hidden" : "w-full h-full"}
-      />
     </div>
   );
 };
