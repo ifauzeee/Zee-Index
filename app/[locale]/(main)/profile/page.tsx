@@ -236,7 +236,7 @@ export default function ProfilePage() {
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder={t("newPassword")}
                     required
-                    minLength={6}
+                    minLength={8}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border bg-background/50 focus:bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-muted-foreground/30 text-sm"
                   />
                 </div>

@@ -496,6 +496,10 @@ export const authConfig: NextAuthConfig = {
   },
   session: {
     strategy: "jwt",
+    // Idle sessions end after a week instead of NextAuth's 30-day default;
+    // active ones are re-issued at most daily and keep sliding forward.
+    maxAge: 7 * 24 * 60 * 60,
+    updateAge: 24 * 60 * 60,
   },
   cookies: {
     csrfToken: {

@@ -187,3 +187,10 @@ describe("credentials authorize (Z2-16)", () => {
     );
   });
 });
+
+describe("session lifetime", () => {
+  it("ends idle sessions after 7 days instead of the 30-day default", () => {
+    expect(authConfig.session?.maxAge).toBe(7 * 24 * 60 * 60);
+    expect(authConfig.session?.updateAge).toBe(24 * 60 * 60);
+  });
+});
