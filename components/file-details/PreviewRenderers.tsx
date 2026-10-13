@@ -7,6 +7,7 @@ import { getIcon, getLanguageFromFilename, triggerDownload } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { OfficeViewer } from "./OfficeViewer";
+import { isDriveId } from "@/lib/drive/ids";
 const CodeViewer = dynamic(() => import("./CodeViewer"));
 
 const PDFViewer = dynamic(() => import("./PDFViewer"), {
@@ -189,7 +190,7 @@ export const DefaultPreview: React.FC<{
 }> = ({ fileId, mimeType, fileName, downloadUrl, previewUrl }) => {
   const IconComponent = getIcon(mimeType);
   const t = useTranslations("Preview");
-  const isGoogleDriveFile = !!fileId && !fileId.startsWith("local-storage:");
+  const isGoogleDriveFile = isDriveId(fileId);
   const isNativePdf = mimeType === "application/pdf";
   const isWorkspacePdfPreview = [
     "application/vnd.google-apps.document",

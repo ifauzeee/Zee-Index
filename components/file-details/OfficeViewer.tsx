@@ -3,6 +3,7 @@
 import React from "react";
 import { Download, ExternalLink } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { isDriveId } from "@/lib/drive/ids";
 
 interface OfficeViewerProps {
   fileId?: string;
@@ -11,9 +12,10 @@ interface OfficeViewerProps {
   src?: string;
 }
 
-function isGoogleDriveFileId(fileId?: string) {
-  return !!fileId && !fileId.startsWith("local-storage:");
-}
+// Query parameters that unlock a file. A URL carrying one must not be handed
+// to Office Online: Microsoft would receive (and could keep) a working link
+// to a protected or shared file.
+const CREDENTIAL_PARAMS = ["access_token", "share_token", "token"];
 
 function toAbsoluteUrl(url: string) {
   if (!url) return "";
@@ -22,10 +24,13 @@ function toAbsoluteUrl(url: string) {
   return new URL(url, window.location.origin).toString();
 }
 
-function isExternallyFetchable(url: string) {
+function canSendToOfficeOnline(url: string) {
   try {
     const parsed = new URL(url);
-    return !["localhost", "127.0.0.1", "::1", "0.0.0.0"].includes(
+    if (CREDENTIAL_PARAMS.some((name) => parsed.searchParams.has(name))) {
+      return false;
+    }
+    return !["localhost", "127.0.0.1", "[::1]", "0.0.0.0"].includes(
       parsed.hostname,
     );
   } catch {
@@ -53,10 +58,12 @@ export function OfficeViewer({
 
   if (url && mimeType && !officeMimes.includes(mimeType)) return null;
 
-  const canUseDrivePreview = isGoogleDriveFileId(fileId);
-  const canUseOfficeOnline = isExternallyFetchable(url);
+  // Drive files open in Drive's own previewer. Local-storage and provider
+  // ids (`s3:…`, `webdav:…`) are not Drive ids and never go there.
+  const canUseDrivePreview = isDriveId(fileId);
+  const canUseOfficeOnline = canSendToOfficeOnline(url);
   const viewerUrl = canUseDrivePreview
-    ? `https://drive.google.com/file/d/${encodeURIComponent(fileId!)}/preview`
+    ? `https://drive.google.com/file/d/${encodeURIComponent(fileId)}/preview`
     : canUseOfficeOnline
       ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`
       : "";
