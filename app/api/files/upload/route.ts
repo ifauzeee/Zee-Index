@@ -10,6 +10,7 @@ import { logActivity } from "@/lib/activityLogger";
 import { invalidateFolderCache } from "@/lib/cache";
 import { z } from "zod";
 import { getActiveProvider } from "@/lib/storage/providers";
+import { UploadSessionError } from "@/lib/storage/providers/types";
 import { canModifyAll } from "@/lib/editor-access";
 
 /** The local folder a `local-storage-upload://<parent>/<name>` URL writes into. */
@@ -42,7 +43,7 @@ const uploadQuerySchema = z
     }
   });
 
-// Providers without session streaming (S3/WebDAV) buffer the file in memory
+// Providers without session streaming (WebDAV) buffer the file in memory
 // until the last chunk. Each upload gets its own random id at init (two
 // uploads with the same file name used to share one buffer), a size cap,
 // and is dropped when idle so abandoned uploads cannot exhaust memory (Z2-15).
@@ -109,12 +110,13 @@ export const POST = createEditorRoute(
             parentId.startsWith(provider.idPrefix))
         ) {
           // Use session-based streaming upload if the provider supports it
-          // (e.g. Dropbox upload sessions). This avoids buffering the entire
-          // file in server memory — each chunk is forwarded directly.
+          // (Dropbox upload sessions, S3 multipart uploads). This avoids
+          // buffering the entire file in server memory.
           if (provider.startUploadSession) {
             const sessionToken = await provider.startUploadSession(
               parentId,
               name,
+              mimeType,
             );
             return NextResponse.json({
               uploadUrl: `provider-session://${sessionToken}`,
@@ -122,7 +124,7 @@ export const POST = createEditorRoute(
           }
 
           // Fallback: buffer entire file server-side (for providers without
-          // session support — S3, WebDAV). Works for small files; large files
+          // session support, i.e. WebDAV). Works for small files; large files
           // need provider-specific streaming (add session methods above).
           if (size > PROVIDER_UPLOAD_MAX_BYTES) {
             return NextResponse.json(
@@ -212,17 +214,31 @@ export const POST = createEditorRoute(
           const rangeMatch = (request.headers.get("Content-Range") || "").match(
             /bytes (\d+)-(\d+)\/(\d+)/,
           );
-          const isLast =
-            !!rangeMatch && Number(rangeMatch[2]) + 1 === Number(rangeMatch[3]);
+          const [start, end, total] = rangeMatch
+            ? rangeMatch.slice(1, 4).map(Number)
+            : [NaN, NaN, NaN];
+          // The provider checks that `start` continues the upload; the range
+          // itself must match the bytes sent.
+          if (end - start + 1 !== chunkBuffer.byteLength || end >= total) {
+            return NextResponse.json(
+              { error: "Invalid Content-Range for this upload." },
+              { status: 400 },
+            );
+          }
 
-          if (!isLast) {
-            await provider.appendUploadSession(sessionToken, chunkBuffer);
+          if (end + 1 !== total) {
+            await provider.appendUploadSession(
+              sessionToken,
+              chunkBuffer,
+              start,
+            );
             return NextResponse.json({ status: "partial" });
           }
 
           const file = await provider.finishUploadSession(
             sessionToken,
             chunkBuffer,
+            start,
           );
 
           if (!file) {
@@ -430,6 +446,12 @@ export const POST = createEditorRoute(
         );
       }
     } catch (error: unknown) {
+      if (error instanceof UploadSessionError) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: error.status },
+        );
+      }
       const errorMessage = getErrorMessage(
         error,
         "Terjadi kesalahan tidak dikenal.",

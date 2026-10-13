@@ -5,18 +5,42 @@ import {
   HeadObjectCommand,
   PutObjectCommand,
   DeleteObjectCommand,
+  CreateMultipartUploadCommand,
+  UploadPartCommand,
+  CompleteMultipartUploadCommand,
+  AbortMultipartUploadCommand,
 } from "@aws-sdk/client-s3";
 import { getMimeType } from "../mime";
-import type {
-  ProviderDownload,
-  ProviderListResult,
-  StorageProvider,
+import {
+  UploadSessionError,
+  type ProviderDownload,
+  type ProviderListResult,
+  type StorageProvider,
 } from "./types";
 import type { ZeeFile } from "@/types/storage";
 import { logger } from "@/lib/logger";
 import { posix } from "path";
 
 const ID_PREFIX = "s3:";
+
+// S3 rejects multipart parts under 5 MiB except the last one, and the browser
+// sends 2 MiB chunks, so chunks are gathered into parts of at least this size.
+// That bounds memory per upload to about one part instead of the whole file.
+const MULTIPART_PART_BYTES = 8 * 1024 * 1024;
+const UPLOAD_SESSION_IDLE_MS = 15 * 60 * 1000;
+
+interface MultipartUpload {
+  key: string;
+  uploadId: string;
+  parentId: string;
+  fileName: string;
+  mimeType: string;
+  received: number;
+  pending: Buffer[];
+  pendingBytes: number;
+  parts: { PartNumber: number; ETag: string }[];
+  touchedAt: number;
+}
 
 function basename(key: string): string {
   return posix.basename(key);
@@ -30,6 +54,9 @@ export class S3StorageProvider implements StorageProvider {
 
   private client: S3Client;
   private bucket: string;
+  // Single-process, like the Dropbox sessions: an upload must finish on the
+  // instance that started it. Idle ones are aborted so S3 drops their parts.
+  private uploads = new Map<string, MultipartUpload>();
 
   constructor() {
     const endpoint = process.env.STORAGE_S3_ENDPOINT?.trim() || undefined;
@@ -165,14 +192,18 @@ export class S3StorageProvider implements StorageProvider {
     }
   }
 
+  private objectKey(parentId: string, fileName: string): string {
+    const parentKey = this.toKey(parentId).replace(/\/$/, "");
+    return parentKey ? `${parentKey}/${fileName}` : fileName;
+  }
+
   async uploadFile(
     parentId: string,
     fileName: string,
     buffer: Buffer,
     mimeType?: string,
   ): Promise<ZeeFile | null> {
-    const parentKey = this.toKey(parentId).replace(/\/$/, "");
-    const key = parentKey ? `${parentKey}/${fileName}` : fileName;
+    const key = this.objectKey(parentId, fileName);
     const resolvedMime =
       mimeType || getMimeType(fileName) || "application/octet-stream";
     try {
@@ -198,6 +229,171 @@ export class S3StorageProvider implements StorageProvider {
     } catch (err) {
       logger.error({ err, key }, "S3 upload failed");
       return null;
+    }
+  }
+
+  async startUploadSession(
+    parentId: string,
+    fileName: string,
+    mimeType?: string,
+  ): Promise<string> {
+    this.abortIdleUploads(Date.now());
+    const key = this.objectKey(parentId, fileName);
+    const resolvedMime =
+      mimeType || getMimeType(fileName) || "application/octet-stream";
+
+    const res = await this.client.send(
+      new CreateMultipartUploadCommand({
+        Bucket: this.bucket,
+        Key: key,
+        ContentType: resolvedMime,
+      }),
+    );
+    if (!res.UploadId) {
+      throw new Error("S3 did not return a multipart upload id.");
+    }
+
+    const token = crypto.randomUUID();
+    this.uploads.set(token, {
+      key,
+      uploadId: res.UploadId,
+      parentId,
+      fileName,
+      mimeType: resolvedMime,
+      received: 0,
+      pending: [],
+      pendingBytes: 0,
+      parts: [],
+      touchedAt: Date.now(),
+    });
+    return token;
+  }
+
+  async appendUploadSession(
+    sessionToken: string,
+    chunk: ArrayBuffer,
+    offset?: number,
+  ): Promise<void> {
+    this.abortIdleUploads(Date.now());
+    const upload = this.acceptChunk(sessionToken, chunk, offset);
+    if (upload.pendingBytes < MULTIPART_PART_BYTES) return;
+
+    try {
+      await this.flushPart(upload);
+    } catch (err) {
+      logger.error({ err, key: upload.key }, "[S3] Upload part failed");
+      await this.abortUpload(sessionToken, upload);
+      throw err;
+    }
+  }
+
+  async finishUploadSession(
+    sessionToken: string,
+    chunk: ArrayBuffer,
+    offset?: number,
+  ): Promise<ZeeFile | null> {
+    const upload = this.acceptChunk(sessionToken, chunk, offset);
+
+    try {
+      // The last part may be smaller than 5 MiB; a file smaller than one part
+      // is uploaded as a single part.
+      if (upload.pendingBytes > 0 || upload.parts.length === 0) {
+        await this.flushPart(upload);
+      }
+      await this.client.send(
+        new CompleteMultipartUploadCommand({
+          Bucket: this.bucket,
+          Key: upload.key,
+          UploadId: upload.uploadId,
+          MultipartUpload: { Parts: upload.parts },
+        }),
+      );
+    } catch (err) {
+      logger.error({ err, key: upload.key }, "[S3] Multipart upload failed");
+      await this.abortUpload(sessionToken, upload);
+      return null;
+    }
+
+    this.uploads.delete(sessionToken);
+    return {
+      id: `${ID_PREFIX}${upload.key}`,
+      name: upload.fileName,
+      mimeType: upload.mimeType,
+      size: String(upload.received),
+      modifiedTime: new Date().toISOString(),
+      isFolder: false,
+      source: "s3",
+      hasThumbnail: upload.mimeType.startsWith("image/"),
+      parents: [upload.parentId],
+    };
+  }
+
+  private acceptChunk(
+    sessionToken: string,
+    chunk: ArrayBuffer,
+    offset: number | undefined,
+  ): MultipartUpload {
+    const upload = this.uploads.get(sessionToken);
+    if (!upload) {
+      throw new UploadSessionError("Upload session not found or expired.", 404);
+    }
+    if (offset !== undefined && offset !== upload.received) {
+      throw new UploadSessionError(
+        "Chunk does not continue where the upload left off.",
+        400,
+      );
+    }
+    upload.pending.push(Buffer.from(chunk));
+    upload.pendingBytes += chunk.byteLength;
+    upload.received += chunk.byteLength;
+    upload.touchedAt = Date.now();
+    return upload;
+  }
+
+  private async flushPart(upload: MultipartUpload): Promise<void> {
+    const body = Buffer.concat(upload.pending);
+    upload.pending = [];
+    upload.pendingBytes = 0;
+    const partNumber = upload.parts.length + 1;
+
+    const res = await this.client.send(
+      new UploadPartCommand({
+        Bucket: this.bucket,
+        Key: upload.key,
+        UploadId: upload.uploadId,
+        PartNumber: partNumber,
+        Body: body,
+      }),
+    );
+    if (!res.ETag) {
+      throw new Error(`S3 returned no ETag for part ${partNumber}.`);
+    }
+    upload.parts.push({ PartNumber: partNumber, ETag: res.ETag });
+  }
+
+  private async abortUpload(
+    sessionToken: string,
+    upload: MultipartUpload,
+  ): Promise<void> {
+    this.uploads.delete(sessionToken);
+    await this.client
+      .send(
+        new AbortMultipartUploadCommand({
+          Bucket: this.bucket,
+          Key: upload.key,
+          UploadId: upload.uploadId,
+        }),
+      )
+      .catch((err: unknown) =>
+        logger.warn({ err, key: upload.key }, "[S3] Abort upload failed"),
+      );
+  }
+
+  private abortIdleUploads(now: number): void {
+    for (const [token, upload] of this.uploads) {
+      if (now - upload.touchedAt > UPLOAD_SESSION_IDLE_MS) {
+        void this.abortUpload(token, upload);
+      }
     }
   }
 
