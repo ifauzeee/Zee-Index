@@ -69,7 +69,7 @@ export const GET = createAdminRoute(async ({ request, session, body, query, para
 
 Existing role wrappers: `createPublicRoute`, `createUserRoute` (no guest), `createEditorRoute` (ADMIN/EDITOR), `createAdminRoute`, `createCronRoute` (Bearer token via CRON_SECRET).
 
-## Middleware execution order
+## Proxy (middleware) execution order — `proxy.ts`
 
 1. Skip: `/_next`, `/static`, `/sw.js`, `/manifest.webmanifest`, `/api/health` (matcher also excludes `_next/image`, favicon)
 2. Download token signature check (`/api/download`)
@@ -134,7 +134,7 @@ Resource limits: zee-index 512MB, postgres 200MB, redis 150MB, caddy 50MB, cron-
 
 - `lib/api-middleware.ts` handles auth, rate limiting, Zod validation — do NOT bypass.
 - All API routes should use route wrappers, not raw `NextResponse` with manual auth checks.
-- CSP is nonce-based, applied in `middleware.ts` — route handlers should not set CSP manually.
+- CSP is nonce-based, applied in `proxy.ts` (the Next 16 name for middleware, Node.js runtime) — route handlers should not set CSP manually.
 - Download tokens are JWT-signed via `SHARE_SECRET_KEY`, validated in middleware.
 - Activity logging is async fire-and-forget (dynamic import) — never `await` it.
 - `@/*` path alias maps to project root.

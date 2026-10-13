@@ -54,7 +54,7 @@ vi.mock("@/lib/kv", () => ({
 import middlewareDefault, {
   createContentSecurityPolicy,
   isPublicApiPath,
-} from "@/middleware";
+} from "@/proxy";
 import { SWAGGER_UI_CDN } from "@/lib/constants";
 
 const middleware = middlewareDefault as unknown as (

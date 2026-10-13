@@ -589,7 +589,7 @@ prisma/                Schema + versioned migrations
 messages/              i18n translations (en, id, zh-TW)
 __tests__/             Vitest unit tests
 e2e/                   Playwright end-to-end tests
-middleware.ts          Auth, i18n, rate limiting, CSP
+proxy.ts               Auth, i18n, rate limiting, CSP (Next 16 proxy, Node.js runtime)
 docker-compose.yml     Production stack (app, postgres, redis, caddy)
 ```
 
