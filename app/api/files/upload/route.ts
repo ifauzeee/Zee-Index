@@ -42,12 +42,30 @@ const uploadQuerySchema = z
     }
   });
 
-// ponytail: providers without session streaming (S3/WebDAV) buffer in memory;
-// swap to their multipart/stream APIs when uploads >~100MB matter there too.
-const providerBuffers = new Map<
-  string,
-  { chunks: Buffer[]; totalSize: number }
->();
+// Providers without session streaming (S3/WebDAV) buffer the file in memory
+// until the last chunk. Each upload gets its own random id at init (two
+// uploads with the same file name used to share one buffer), a size cap,
+// and is dropped when idle so abandoned uploads cannot exhaust memory (Z2-15).
+const PROVIDER_UPLOAD_MAX_BYTES = 200 * 1024 * 1024;
+const PROVIDER_UPLOAD_IDLE_MS = 15 * 60 * 1000;
+const PROVIDER_UPLOAD_PREFIX = "provider-upload://";
+
+interface BufferedUpload {
+  fileName: string;
+  chunks: Buffer[];
+  totalSize: number;
+  touchedAt: number;
+}
+
+const providerBuffers = new Map<string, BufferedUpload>();
+
+function dropIdleProviderUploads(now: number): void {
+  for (const [id, upload] of providerBuffers) {
+    if (now - upload.touchedAt > PROVIDER_UPLOAD_IDLE_MS) {
+      providerBuffers.delete(id);
+    }
+  }
+}
 
 export const POST = createEditorRoute(
   async ({ request, session, query }) => {
@@ -106,8 +124,22 @@ export const POST = createEditorRoute(
           // Fallback: buffer entire file server-side (for providers without
           // session support — S3, WebDAV). Works for small files; large files
           // need provider-specific streaming (add session methods above).
+          if (size > PROVIDER_UPLOAD_MAX_BYTES) {
+            return NextResponse.json(
+              { error: "File too large for this storage provider." },
+              { status: 413 },
+            );
+          }
+          dropIdleProviderUploads(Date.now());
+          const uploadId = crypto.randomUUID();
+          providerBuffers.set(uploadId, {
+            fileName: name,
+            chunks: [],
+            totalSize: 0,
+            touchedAt: Date.now(),
+          });
           return NextResponse.json({
-            uploadUrl: `provider-upload://${encodeURIComponent(name)}`,
+            uploadUrl: `${PROVIDER_UPLOAD_PREFIX}${uploadId}`,
             useProvider: true,
             mimeType,
             size,
@@ -218,10 +250,16 @@ export const POST = createEditorRoute(
           return NextResponse.json({ status: "completed", file });
         }
 
-        if (uploadUrl.startsWith("provider-upload://")) {
-          const fileName = decodeURIComponent(
-            uploadUrl.slice("provider-upload://".length),
-          );
+        if (uploadUrl.startsWith(PROVIDER_UPLOAD_PREFIX)) {
+          const uploadId = uploadUrl.slice(PROVIDER_UPLOAD_PREFIX.length);
+          dropIdleProviderUploads(Date.now());
+          const entry = providerBuffers.get(uploadId);
+          if (!entry) {
+            return NextResponse.json(
+              { error: "Upload session not found or expired." },
+              { status: 404 },
+            );
+          }
           const provider = getActiveProvider();
           const parent = parentId || provider?.rootId || "";
 
@@ -235,28 +273,40 @@ export const POST = createEditorRoute(
           const contentRange = request.headers.get("Content-Range") || "";
           const rangeMatch = contentRange.match(/bytes (\d+)-(\d+)\/(\d+)/);
           const chunkBuffer = Buffer.from(await request.arrayBuffer());
+          const [start, end, total] = rangeMatch
+            ? rangeMatch.slice(1, 4).map(Number)
+            : [NaN, NaN, NaN];
 
-          const entry = providerBuffers.get(uploadUrl) || {
-            chunks: [],
-            totalSize: 0,
-          };
+          // Chunks must arrive in order, match their declared range, and stay
+          // under the cap; anything else would assemble a corrupt file.
+          if (
+            start !== entry.totalSize ||
+            end - start + 1 !== chunkBuffer.length ||
+            end >= total ||
+            total > PROVIDER_UPLOAD_MAX_BYTES
+          ) {
+            return NextResponse.json(
+              { error: "Invalid Content-Range for this upload." },
+              { status: 400 },
+            );
+          }
+
           entry.chunks.push(chunkBuffer);
           entry.totalSize += chunkBuffer.length;
-          providerBuffers.set(uploadUrl, entry);
+          entry.touchedAt = Date.now();
 
-          const isLast =
-            rangeMatch && Number(rangeMatch[2]) + 1 === Number(rangeMatch[3]);
+          const isLast = end + 1 === total;
 
           if (!isLast) {
             return NextResponse.json({ status: "partial" });
           }
 
           const fullBuffer = Buffer.concat(entry.chunks);
-          providerBuffers.delete(uploadUrl);
+          providerBuffers.delete(uploadId);
 
           const file = await provider.uploadFile(
             parent,
-            fileName,
+            entry.fileName,
             fullBuffer,
             request.headers.get("Content-Type") || undefined,
           );
