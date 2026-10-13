@@ -146,7 +146,7 @@ describe("middleware content security policy sources", () => {
     // A quoted "${SWAGGER_UI_CDN}" would end up in the policy as a literal,
     // blocking swagger-ui.css on the docs page.
     expect(csp).toContain(
-      `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${SWAGGER_UI_CDN}/`,
+      `style-src 'self' 'unsafe-inline' blob: https://fonts.googleapis.com ${SWAGGER_UI_CDN}/`,
     );
   });
 });
