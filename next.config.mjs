@@ -50,7 +50,6 @@ const securityHeaders = [
 
 const nextConfig = {
   output: "standalone",
-  middlewareClientMaxBodySize: "500mb",
 
   // Next's file tracing misses @swc/helpers/esm (loaded dynamically via
   // require-hook at runtime) with pnpm — force-include the whole package.
@@ -99,7 +98,12 @@ const nextConfig = {
   serverExternalPackages: ["ioredis"],
 
   experimental: {
-    proxyClientMaxBodySize: "500mb",
+    // The proxy buffers every request body up to this size, before any auth
+    // check. Uploads are sent in 2 MB chunks and the image editor sends one
+    // edited image, so 25 MB is enough; 500 MB let a few anonymous requests
+    // exhaust the 512 MB container (Z2-14). Bodies above this are truncated,
+    // so raise it only together with the client chunk size.
+    proxyClientMaxBodySize: "25mb",
     serverActions: {
       bodySizeLimit: "5mb",
     },
