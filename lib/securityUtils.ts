@@ -268,7 +268,9 @@ export async function isAccessRestricted(
       );
       return true;
     }
-    if (!(await isWithinAllowedRoots(fileId, allowedRootIds))) {
+    // Only the top-level id needs the scope walk: every parent the recursion
+    // visits lies on that same, already-checked path to an allowed root.
+    if (depth === 0 && !(await isWithinAllowedRoots(fileId, allowedRootIds))) {
       return true;
     }
 

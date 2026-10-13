@@ -294,6 +294,39 @@ describe("isAccessRestricted root scoping", () => {
   });
 });
 
+describe("root scope walk cost (Q-05)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    __resetCache();
+    memoryCache.clear();
+    (getRootFolderId as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      ROOT_ID,
+    );
+    (kv.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    (getAppConfig as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      localStorageAuthEnabled: false,
+    });
+    // A protected folder elsewhere forces the parent recursion to run.
+    (
+      db.protectedFolder.findMany as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([{ folderId: "elsewhere" }]);
+  });
+
+  it("walks the path to the root once, not once per level", async () => {
+    const { leafId, nodes } = nestedBelowRoot(8);
+    driveTree(nodes);
+
+    expect(await isAccessRestricted(leafId)).toBe(false);
+
+    // One scope walk (9 lookups) plus one lookup per level in the parent
+    // recursion; re-walking at every level would be ~45.
+    const lookups = (
+      getFileDetailsFromDrive as unknown as ReturnType<typeof vi.fn>
+    ).mock.calls.length;
+    expect(lookups).toBeLessThanOrEqual(20);
+  });
+});
+
 describe("redactRestrictedPath", () => {
   const path = [
     { id: ROOT_ID, name: "Google Drive" },
