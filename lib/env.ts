@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 
 const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional().or(z.literal("")),
@@ -133,13 +134,15 @@ export function validateOnStartup(): Env {
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
-    console.error("\n❌ Startup failed: invalid environment variables");
-    console.error("=========================================================");
-    result.error.issues.forEach((issue) => {
-      console.error(`🚩 [${issue.path.join(".")}] -> ${issue.message}`);
-    });
-    console.error("=========================================================");
-    console.error("Please check your .env file.\n");
+    logger.error(
+      {
+        issues: result.error.issues.map((issue) => ({
+          variable: issue.path.join("."),
+          message: issue.message,
+        })),
+      },
+      "[Env] Startup failed: invalid environment variables. Check your .env file.",
+    );
 
     if (process.env.NODE_ENV === "production") {
       process.exit(1);
@@ -151,15 +154,15 @@ export function validateOnStartup(): Env {
   const adminPasswordHash = (result.data.ADMIN_PASSWORD_HASH || "").trim();
 
   if (!adminPassword && !adminPasswordHash) {
-    console.error(
-      "\n❌ ADMIN_PASSWORD or ADMIN_PASSWORD_HASH is required for admin login.",
+    logger.error(
+      "[Env] ADMIN_PASSWORD or ADMIN_PASSWORD_HASH is required for admin login.",
     );
     if (process.env.NODE_ENV === "production") {
       process.exit(1);
     }
   } else if (adminPassword && adminPassword.length < 8 && !adminPasswordHash) {
-    console.error(
-      "\n❌ ADMIN_PASSWORD must be at least 8 characters (or set ADMIN_PASSWORD_HASH).",
+    logger.error(
+      "[Env] ADMIN_PASSWORD must be at least 8 characters (or set ADMIN_PASSWORD_HASH).",
     );
     if (process.env.NODE_ENV === "production") {
       process.exit(1);
@@ -169,8 +172,8 @@ export function validateOnStartup(): Env {
     adminPassword &&
     !adminPasswordHash
   ) {
-    console.warn(
-      "\n⚠️  ADMIN_PASSWORD is plaintext. Prefer ADMIN_PASSWORD_HASH (bcrypt) in production.",
+    logger.warn(
+      "[Env] ADMIN_PASSWORD is plaintext. Prefer ADMIN_PASSWORD_HASH (bcrypt) in production.",
     );
   }
 
@@ -179,8 +182,8 @@ export function validateOnStartup(): Env {
   // is read as the empty variable "${zh}", producing a hash that never matches.
   const bcryptHashPattern = /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/;
   if (adminPasswordHash && !bcryptHashPattern.test(adminPasswordHash)) {
-    console.warn(
-      "\n⚠️  ADMIN_PASSWORD_HASH does not look like a valid bcrypt hash — it may have been " +
+    logger.warn(
+      "[Env] ADMIN_PASSWORD_HASH does not look like a valid bcrypt hash — it may have been " +
         'corrupted by Docker Compose interpolation (values containing "$" are expanded, ' +
         'e.g. "$zh" → ""). When deploying with `docker compose`, use a plaintext ' +
         'ADMIN_PASSWORD (min 8 chars) instead, or escape every "$" as "$$" if all ' +
@@ -202,11 +205,11 @@ export function validateOnStartup(): Env {
     );
 
   if (warnings.length > 0) {
-    console.warn("\n⚠️  Configuration warnings:");
-    warnings.forEach((w) => console.warn(`   - ${w}`));
-    console.warn("");
+    for (const warning of warnings) {
+      logger.warn(`[Env] ${warning}`);
+    }
   } else {
-    console.log("✅ Environment validation passed\n");
+    logger.info("[Env] Environment validation passed");
   }
 
   return result.data;
