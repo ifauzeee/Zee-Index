@@ -60,6 +60,7 @@ describe("app/api/setup/finish route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockIsAppConfigured.mockResolvedValue(false);
+    process.env.SETUP_TOKEN = "operator-setup-token-123";
     mockExistsSync.mockReturnValue(false);
     mockReadFileSync.mockReturnValue("");
     mockWriteFileSync.mockImplementation(() => {});
@@ -190,6 +191,7 @@ describe("app/api/setup/finish route", () => {
           authCode: "auth-code",
           redirectUri: "http://localhost:3000/setup",
           rootFolderId: "root-folder",
+          setupToken: "operator-setup-token-123",
         }),
       }),
     );
@@ -202,5 +204,50 @@ describe("app/api/setup/finish route", () => {
         manualConfigData: null,
       }),
     );
+  });
+
+  describe("first-run setup token (Z2-26)", () => {
+    function finish(setupToken?: string) {
+      return POST(
+        new NextRequest("http://localhost:3000/api/setup/finish", {
+          method: "POST",
+          headers: {
+            origin: "http://localhost:3000",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            clientId: "client-id",
+            clientSecret: "client-secret",
+            authCode: "auth-code",
+            redirectUri: "http://localhost:3000/setup",
+            rootFolderId: "attacker-folder",
+            ...(setupToken === undefined ? {} : { setupToken }),
+          }),
+        }),
+      );
+    }
+
+    it.each([undefined, "", "wrong-token-value-0000"])(
+      "refuses to configure an unconfigured instance with token %j",
+      async (token) => {
+        const response = await finish(token);
+
+        expect(response.status).toBe(403);
+        expect(global.fetch).not.toHaveBeenCalled();
+        expect(mockWriteFileSync).not.toHaveBeenCalled();
+      },
+    );
+
+    it("derives a stable token from NEXTAUTH_SECRET when SETUP_TOKEN is unset", async () => {
+      delete process.env.SETUP_TOKEN;
+      process.env.NEXTAUTH_SECRET = "n".repeat(32);
+      const { getSetupToken } = await import("@/lib/setup-token");
+
+      const token = getSetupToken();
+
+      expect(token).toMatch(/^[0-9a-f]{24}$/);
+      expect(getSetupToken()).toBe(token);
+      expect((await finish(token)).status).toBe(200);
+    });
   });
 });

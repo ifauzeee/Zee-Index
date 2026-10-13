@@ -617,7 +617,9 @@
     "nextAuthOptional": "Google sign-in (optional)",
     "nextAuthOptionalDesc": "If you use Google sign-in, fill in the OAuth Client ID and Secret from Google Cloud Console.",
     "fillServiceAccountFields": "Enter the service account email, private key and root folder ID.",
-    "createdBy": "Created by"
+    "createdBy": "Created by",
+    "setupToken": "Setup token",
+    "setupTokenHint": "Printed in the server log on first start (look for \"[Setup] App is not configured\"), or the SETUP_TOKEN value. Not needed when an admin re-runs setup."
   },
   "DetailsPanel": {
     "copied": "Copied!",

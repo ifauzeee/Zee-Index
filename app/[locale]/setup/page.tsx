@@ -21,6 +21,7 @@ export default function SetupPage() {
     clientSecret: "",
     rootFolderId: "",
     authCode: "",
+    setupToken: "",
   });
 
   const getLocaleRootPath = () => {
@@ -161,6 +162,23 @@ export default function SetupPage() {
                       setFormData({ ...formData, clientSecret: e.target.value })
                     }
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    {t("setupToken")}
+                  </label>
+                  <input
+                    autoComplete="off"
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-background/50 backdrop-blur-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all font-mono"
+                    value={formData.setupToken}
+                    onChange={(e) =>
+                      setFormData({ ...formData, setupToken: e.target.value })
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t("setupTokenHint")}
+                  </p>
                 </div>
 
                 <div className="space-y-2">
