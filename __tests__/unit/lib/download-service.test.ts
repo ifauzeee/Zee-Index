@@ -449,3 +449,25 @@ describe("lib/services/download", () => {
     });
   });
 });
+
+describe("isValidDownloadId", () => {
+  it("accepts any file name in a local-storage path", async () => {
+    const { isValidDownloadId } = await import("@/lib/services/download");
+    for (const id of [
+      "local-storage:docs/notes & ideas.txt",
+      "local-storage:docs/C++ guide, v2.pdf",
+      "local-storage:docs/café/résumé.pdf",
+      "local-storage:docs/报告.docx",
+      "local-storage:docs/it's 100%.txt",
+    ]) {
+      expect(isValidDownloadId(id)).toBe(true);
+    }
+  });
+
+  it("refuses control characters and non-Drive ids", async () => {
+    const { isValidDownloadId } = await import("@/lib/services/download");
+    expect(isValidDownloadId("local-storage:a\nb.txt")).toBe(false);
+    expect(isValidDownloadId("abc?supportsAllDrives=true")).toBe(false);
+    expect(isValidDownloadId("1AbC_def-123")).toBe(true);
+  });
+});
