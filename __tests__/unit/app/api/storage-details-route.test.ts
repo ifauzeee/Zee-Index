@@ -89,7 +89,6 @@ describe("app/api/storage-details route", () => {
     expect(response.status).toBe(500);
     await expect(response.json()).resolves.toEqual({
       error: "Gagal mengambil detail penyimpanan.",
-      details: "api down",
     });
   });
 });
