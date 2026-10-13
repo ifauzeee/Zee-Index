@@ -13,6 +13,8 @@ import {
   serializeAccessRequestRecord,
 } from "@/lib/link-payloads";
 
+const ACCESS_REQUEST_DEDUPE_SECONDS = 3600;
+
 export const POST = createUserRoute(
   async ({ body, session }) => {
     try {
@@ -31,6 +33,20 @@ export const POST = createUserRoute(
       }
 
       const { folderId, folderName } = body;
+
+      // Every request e-mails all admins; send at most one per user and
+      // folder per hour so a script cannot flood their inbox (Z2-18).
+      const dedupeKey = `access-request:sent:${session.user.email.toLowerCase()}:${folderId}`;
+      const sentCount = await kv.incr(dedupeKey);
+      if (sentCount === 1) {
+        await kv.expire(dedupeKey, ACCESS_REQUEST_DEDUPE_SECONDS);
+      } else {
+        return NextResponse.json({
+          success: true,
+          message: "Permintaan akses sudah dikirim.",
+        });
+      }
+
       const requestData = serializeAccessRequestRecord({
         folderId,
         folderName,
@@ -87,5 +103,5 @@ export const POST = createUserRoute(
       );
     }
   },
-  { bodySchema: accessRequestCreateSchema },
+  { bodySchema: accessRequestCreateSchema, rateLimit: "AUTH" },
 );

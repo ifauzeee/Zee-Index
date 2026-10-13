@@ -1,18 +1,26 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 
-const { mockKvSAdd, mockKvSMembers, mockSendMail, mockLogActivity } =
-  vi.hoisted(() => ({
-    mockKvSAdd: vi.fn(),
-    mockKvSMembers: vi.fn(),
-    mockSendMail: vi.fn(),
-    mockLogActivity: vi.fn(),
-  }));
+const {
+  mockKvSAdd,
+  mockKvSMembers,
+  mockKvIncr,
+  mockSendMail,
+  mockLogActivity,
+} = vi.hoisted(() => ({
+  mockKvSAdd: vi.fn(),
+  mockKvSMembers: vi.fn(),
+  mockKvIncr: vi.fn(),
+  mockSendMail: vi.fn(),
+  mockLogActivity: vi.fn(),
+}));
 
 vi.mock("@/lib/kv", () => ({
   kv: {
     sadd: mockKvSAdd,
     smembers: mockKvSMembers,
+    incr: mockKvIncr,
+    expire: vi.fn().mockResolvedValue(1),
   },
 }));
 
@@ -93,6 +101,7 @@ function createRequest(body?: Record<string, unknown>) {
 
 describe("app/api/request-access route", () => {
   beforeEach(() => {
+    mockKvIncr.mockResolvedValue(1);
     vi.clearAllMocks();
     mockKvSAdd.mockResolvedValue(1);
     mockKvSMembers.mockResolvedValue(["admin@example.com"]);
@@ -166,5 +175,22 @@ describe("app/api/request-access route", () => {
     await expect(response.json()).resolves.toEqual({
       error: "Gagal memproses permintaan.",
     });
+  });
+
+  it("sends the admin e-mail once per user and folder per hour", async () => {
+    mockKvSMembers.mockResolvedValue(["admin@example.com"]);
+    mockKvIncr.mockResolvedValue(2);
+
+    const response = await POST(
+      new NextRequest("http://localhost:3000/api/request-access", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ folderId: "folder-1", folderName: "Docs" }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockSendMail).not.toHaveBeenCalled();
+    expect(mockKvSAdd).not.toHaveBeenCalled();
   });
 });

@@ -6,6 +6,22 @@ import {
   checkGoogleDriveHealth,
 } from "@/lib/services/health-service";
 import { createPublicRoute } from "@/lib/api-middleware";
+import { memoryCache } from "@/lib/memory-cache";
+
+// The Drive check calls the Google API; an unauthenticated endpoint must not
+// turn every request into one (Z2-18). DB and cache checks stay live.
+const DRIVE_HEALTH_CACHE_KEY = "health:google-drive";
+const DRIVE_HEALTH_CACHE_TTL_MS = 60_000;
+
+async function cachedDriveHealth() {
+  const cached = memoryCache.get<
+    Awaited<ReturnType<typeof checkGoogleDriveHealth>>
+  >(DRIVE_HEALTH_CACHE_KEY);
+  if (cached) return cached;
+  const result = await checkGoogleDriveHealth();
+  memoryCache.set(DRIVE_HEALTH_CACHE_KEY, result, DRIVE_HEALTH_CACHE_TTL_MS);
+  return result;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +32,7 @@ export const GET = createPublicRoute(
     const [dbHealth, cacheHealth, driveHealth] = await Promise.all([
       checkDatabaseHealth(),
       checkCacheHealth(),
-      checkGoogleDriveHealth(),
+      cachedDriveHealth(),
     ]);
 
     const tempHasError =
