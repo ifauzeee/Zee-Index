@@ -1,29 +1,41 @@
 import { NextResponse } from "next/server";
-import { createPublicRoute } from "@/lib/api-middleware";
+import { createUserRoute } from "@/lib/api-middleware";
 import { changeOwnPassword } from "@/lib/user-management";
+import { checkRateLimit } from "@/lib/ratelimit";
+import { ERROR_MESSAGES } from "@/lib/constants";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 
 const passwordSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: z.string().min(6, "New password must be at least 6 characters"),
+  newPassword: z.string().min(8, "New password must be at least 8 characters"),
 });
 
 export { passwordSchema };
 
-export const POST = createPublicRoute(
-  async ({ body, session }) => {
-    const email = session?.user?.email;
-    if (!email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const POST = createUserRoute(
+  async ({ request, body, session }) => {
+    // requireEmail guarantees an email on the session.
+    const email = session.user.email!.toLowerCase().trim();
+
+    // The current password is checked here, so a stolen session could
+    // otherwise guess it without limit. Budget per account as well as per
+    // IP (rateLimit: "AUTH" below), like the login form.
+    const perAccount = await checkRateLimit(
+      request,
+      "AUTH",
+      `password-change:${email}`,
+    );
+    if (!perAccount.success) {
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.RATE_LIMIT_EXCEEDED },
+        { status: 429 },
+      );
     }
 
     try {
-      const { currentPassword, newPassword } = body as {
-        currentPassword: string;
-        newPassword: string;
-      };
+      const { currentPassword, newPassword } = body;
       await changeOwnPassword(email, currentPassword, newPassword);
       return NextResponse.json({ message: "Password updated" });
     } catch (error) {
@@ -42,5 +54,5 @@ export const POST = createPublicRoute(
       );
     }
   },
-  { includeSession: true, bodySchema: passwordSchema, rateLimit: false },
+  { requireEmail: true, bodySchema: passwordSchema, rateLimit: "AUTH" },
 );
