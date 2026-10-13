@@ -4,7 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getVerifiedSession } from "@/lib/verified-session";
-import { collectAccessTokens, verifyShareTokenString } from "@/lib/auth";
+import { collectAccessTokens } from "@/lib/auth";
+import { resolveShareGrant, shareGrantToken } from "@/lib/share-grant";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { applyAuthorVisibility } from "@/lib/author-visibility";
 import type { ZeeFile } from "@/types/storage";
@@ -62,7 +63,11 @@ export default async function FilePage(props: {
   const shareToken = searchParams?.share_token as string | undefined;
   const isAdmin = session?.user?.role === "ADMIN";
 
-  if (shareToken && !(await verifyShareTokenString(shareToken))) {
+  // A share link opens exactly what was shared (Z2-04).
+  const shareGrant = shareToken
+    ? await resolveShareGrant(shareToken, session)
+    : null;
+  if (shareGrant && !shareGrant.ok) {
     return (
       <FileError
         title={t("accessDenied")}
@@ -75,7 +80,10 @@ export default async function FilePage(props: {
   // Decide access from the file itself, exactly like /api/download and
   // /api/filedetails: the folder in the URL is caller-controlled (Z2-03).
   if (!isAdmin) {
-    const tokens = await collectAccessTokens((await cookies()).getAll());
+    const tokens = [
+      ...(await collectAccessTokens((await cookies()).getAll())),
+      ...(shareGrant?.ok ? shareGrant.itemIds.map(shareGrantToken) : []),
+    ];
     const restricted = await isAccessRestricted(
       params.fileId,
       tokens,

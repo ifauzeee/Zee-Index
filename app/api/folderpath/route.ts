@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createPublicRoute } from "@/lib/api-middleware";
 import { getFolderPath } from "@/lib/drive";
 import { collectAccessTokens, validateShareToken } from "@/lib/auth";
+import { shareGrantTokens } from "@/lib/share-grant";
 import { getAllowedRootIds, redactRestrictedPath } from "@/lib/securityUtils";
 import { getActiveProvider, isProviderId } from "@/lib/storage/providers";
 
@@ -124,10 +125,10 @@ export const GET = createPublicRoute(
       // Names of protected folders the caller has not unlocked are hidden;
       // ids stay so the client can still match the folder tokens it holds.
       const bearer = request.headers.get("Authorization")?.split(" ")[1];
-      const tokens = await collectAccessTokens(
-        request.cookies.getAll(),
-        bearer,
-      );
+      const tokens = [
+        ...(await collectAccessTokens(request.cookies.getAll(), bearer)),
+        ...(await shareGrantTokens(searchParams.get("share_token"), session)),
+      ];
       const visiblePath = await redactRestrictedPath(
         path,
         tokens,

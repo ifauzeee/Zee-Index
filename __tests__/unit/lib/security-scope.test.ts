@@ -393,3 +393,67 @@ describe("isAccessRestricted for provider paths (Z2-07)", () => {
     ).toBe(false);
   });
 });
+
+describe("isAccessRestricted with share grants (Z2-04)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    __resetCache();
+    memoryCache.clear();
+    (getRootFolderId as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      ROOT_ID,
+    );
+    (kv.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    (getAppConfig as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      localStorageAuthEnabled: true,
+    });
+    (hasUserAccess as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      false,
+    );
+    (
+      db.protectedFolder.findMany as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([{ folderId: "protected" }]);
+    // root > protected > shared-folder > inner.pdf ; protected > report.pdf
+    driveTree({
+      protected: { parents: [ROOT_ID] },
+      "shared-folder": { parents: ["protected"] },
+      "inner.pdf": { parents: ["shared-folder"] },
+      "report.pdf": { parents: ["protected"] },
+    });
+  });
+
+  it("opens a shared file inside a protected folder", async () => {
+    expect(await isAccessRestricted("report.pdf")).toBe(true);
+    expect(await isAccessRestricted("report.pdf", ["share:report.pdf"])).toBe(
+      false,
+    );
+  });
+
+  it("opens everything below a shared folder", async () => {
+    expect(await isAccessRestricted("inner.pdf", ["share:shared-folder"])).toBe(
+      false,
+    );
+  });
+
+  it("does not open siblings or the protected parent", async () => {
+    expect(
+      await isAccessRestricted("report.pdf", ["share:shared-folder"]),
+    ).toBe(true);
+    expect(await isAccessRestricted("protected", ["share:shared-folder"])).toBe(
+      true,
+    );
+  });
+
+  it("opens a shared local file despite the global local lock", async () => {
+    expect(await isAccessRestricted("local-storage:docs/a.pdf")).toBe(true);
+    expect(
+      await isAccessRestricted("local-storage:docs/a.pdf", [
+        "share:local-storage:docs",
+      ]),
+    ).toBe(false);
+    expect(
+      await isAccessRestricted("local-storage:other.pdf", [
+        "share:local-storage:docs",
+      ]),
+    ).toBe(true);
+  });
+});

@@ -6,7 +6,6 @@ import { trackBandwidth } from "@/lib/analyticsTracker";
 import { logger } from "@/lib/logger";
 import { ERROR_MESSAGES } from "@/lib/constants";
 import { kv } from "@/lib/kv";
-import { db } from "@/lib/db";
 import {
   validateDownloadRequest,
   prepareGoogleDriveUrl,
@@ -14,7 +13,7 @@ import {
   isInlineSafeMimeType,
 } from "@/lib/services/download";
 import { getClientIp } from "@/lib/client-ip";
-import { applyWatermark } from "@/lib/watermark";
+import { applyWatermark, isWatermarkable } from "@/lib/watermark";
 import { getActiveProvider, isProviderId } from "@/lib/storage/providers";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +31,25 @@ function applyPreviewResponseHeaders(headers: Headers, mimeType: string) {
   headers.set("Expires", "0");
 }
 
+/**
+ * Watermark a whole file for a watermarked share. Fails closed: if the
+ * watermark cannot be applied the file is not served at all (Z2-04).
+ */
+async function watermarkedBody(
+  body: BodyInit | ReadableStream<Uint8Array>,
+  mimeType: string,
+  watermarkText: string,
+): Promise<Buffer | null> {
+  const buffer = Buffer.from(await new Response(body).arrayBuffer());
+  return applyWatermark(buffer, mimeType, watermarkText);
+}
+
+const WATERMARK_FAILED = () =>
+  NextResponse.json(
+    { error: "Could not apply the watermark to this file." },
+    { status: 500 },
+  );
+
 async function handleDownload(request: NextRequest) {
   try {
     const { context, session, error } = await validateDownloadRequest(request);
@@ -42,7 +60,13 @@ async function handleDownload(request: NextRequest) {
       );
     }
 
-    const { fileId, range } = context;
+    const { fileId } = context;
+    // A byte range would skip the watermark, so watermarked shares are
+    // always served whole.
+    const watermarkText = context.shareRecord?.hasWatermark
+      ? context.shareRecord.watermarkText || ""
+      : null;
+    const range = watermarkText === null ? context.range : null;
     const exportFormat =
       request.nextUrl.searchParams.get("export") === "pdf" ? "pdf" : null;
     const isPreview = request.nextUrl.searchParams.get("preview") === "1";
@@ -65,24 +89,15 @@ async function handleDownload(request: NextRequest) {
         let finalBody: BodyInit = webStream as ReadableStream<Uint8Array>;
         let finalSize = size;
 
-        if (
-          context.shareRecord?.hasWatermark &&
-          !range &&
-          (mimeType.startsWith("image/") || mimeType === "application/pdf")
-        ) {
-          const response = new Response(webStream);
-          const arrayBuffer = await response.arrayBuffer();
-          const buffer = Buffer.from(arrayBuffer);
-          const watermarked = await applyWatermark(
-            buffer,
+        if (watermarkText !== null && isWatermarkable(mimeType)) {
+          const watermarked = await watermarkedBody(
+            webStream,
             mimeType,
-            context.shareRecord.watermarkText || "",
+            watermarkText,
           );
-
-          if (watermarked) {
-            finalBody = new Blob([watermarked as unknown as BlobPart]);
-            finalSize = watermarked.length;
-          }
+          if (!watermarked) return WATERMARK_FAILED();
+          finalBody = new Uint8Array(watermarked);
+          finalSize = watermarked.length;
         }
 
         const responseHeaders = prepareResponseHeaders(
@@ -169,6 +184,21 @@ async function handleDownload(request: NextRequest) {
         userEmail: session?.user?.email,
         status: "success",
       }).catch(() => {});
+
+      if (watermarkText !== null && isWatermarkable(mimeType)) {
+        const watermarked = await watermarkedBody(
+          webStream,
+          mimeType,
+          watermarkText,
+        );
+        if (!watermarked) return WATERMARK_FAILED();
+        responseHeaders.set("Content-Length", watermarked.length.toString());
+        responseHeaders.delete("Content-Range");
+        return new Response(new Uint8Array(watermarked), {
+          status: 200,
+          headers: responseHeaders,
+        });
+      }
 
       return new Response(webStream, {
         status: status === 206 ? 206 : 200,
@@ -289,17 +319,6 @@ async function handleDownload(request: NextRequest) {
       if (!isDuplicate) {
         await kv.set(dedupeKey, "1", { ex: 5 });
 
-        if (context.shareRecord) {
-          try {
-            await db.shareLink.update({
-              where: { jti: context.shareRecord.jti },
-              data: { views: { increment: 1 } },
-            });
-          } catch (e) {
-            logger.error({ err: e }, "Failed to increment sharelink uses");
-          }
-        }
-
         logActivity("DOWNLOAD", {
           itemName: fileDetails.name,
           itemId: fileId,
@@ -333,24 +352,18 @@ async function handleDownload(request: NextRequest) {
     let finalBody: BodyInit | null = googleResponse.body;
 
     if (
-      context.shareRecord?.hasWatermark &&
-      !range &&
-      (mimeType.startsWith("image/") || mimeType === "application/pdf")
+      watermarkText !== null &&
+      isWatermarkable(mimeType) &&
+      googleResponse.body
     ) {
-      const arrayBuffer = await googleResponse.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      const watermarked = await applyWatermark(
-        buffer,
+      const watermarked = await watermarkedBody(
+        googleResponse.body,
         mimeType,
-        context.shareRecord.watermarkText || "",
+        watermarkText,
       );
-
-      if (watermarked) {
-        finalBody = new Blob([watermarked as unknown as BlobPart]);
-        responseHeaders.set("Content-Length", watermarked.length.toString());
-      } else {
-        finalBody = new Blob([buffer as unknown as BlobPart]);
-      }
+      if (!watermarked) return WATERMARK_FAILED();
+      finalBody = new Uint8Array(watermarked);
+      responseHeaders.set("Content-Length", watermarked.length.toString());
     }
 
     return new Response(finalBody, {

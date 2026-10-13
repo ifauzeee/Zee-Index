@@ -55,6 +55,15 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
+const { mockRecordShareView } = vi.hoisted(() => ({
+  mockRecordShareView: vi.fn(),
+}));
+
+vi.mock("@/lib/share-grant", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/share-grant")>()),
+  recordShareView: mockRecordShareView,
+}));
+
 vi.mock("@/lib/securityUtils", () => ({
   isAccessRestricted: mockIsAccessRestricted,
 }));
@@ -147,6 +156,61 @@ describe("lib/services/download", () => {
 
       expect(result.error).toEqual({
         error: ERROR_MESSAGES.SHARE_LINK_REVOKED,
+        status: 401,
+      });
+    });
+
+    it("lets a share link open its own file, and counts the view", async () => {
+      mockJwtVerify.mockResolvedValueOnce({ payload: { jti: "share-1" } });
+      mockFindUnique.mockResolvedValueOnce({
+        jti: "share-1",
+        path: "/folder/protected/file/file-1/report.pdf",
+        isCollection: false,
+        revokedAt: null,
+        maxUses: null,
+        views: 0,
+        loginRequired: false,
+        preventDownload: false,
+      });
+
+      const result = await validateDownloadRequest(
+        new NextRequest(
+          "http://localhost:3000/api/download?fileId=file-1&share_token=token",
+        ),
+      );
+
+      expect(result.error).toBeUndefined();
+      expect(mockIsAccessRestricted).toHaveBeenCalledWith(
+        "file-1",
+        ["share:file-1"],
+        undefined,
+      );
+      expect(mockRecordShareView).toHaveBeenCalledWith(
+        "share-1",
+        expect.any(String),
+      );
+    });
+
+    it("rejects a share link that reached its use limit", async () => {
+      mockJwtVerify.mockResolvedValueOnce({ payload: { jti: "share-1" } });
+      mockFindUnique.mockResolvedValueOnce({
+        jti: "share-1",
+        path: "/folder/p/file/file-1/x",
+        isCollection: false,
+        revokedAt: null,
+        maxUses: 2,
+        views: 2,
+        loginRequired: false,
+      });
+
+      const result = await validateDownloadRequest(
+        new NextRequest(
+          "http://localhost:3000/api/download?fileId=file-1&share_token=token",
+        ),
+      );
+
+      expect(result.error).toEqual({
+        error: ERROR_MESSAGES.SHARE_MAX_USES_REACHED,
         status: 401,
       });
     });
