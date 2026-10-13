@@ -32,7 +32,7 @@ export const GET = createPublicRoute(
       );
       logger.error({ err: errorMessage }, "Storage Details API Error");
       return NextResponse.json(
-        { error: "Gagal mengambil detail penyimpanan.", details: errorMessage },
+        { error: "Gagal mengambil detail penyimpanan." },
         { status: 500 },
       );
     }

@@ -29,5 +29,6 @@ export const GET = createPublicRoute(
       );
     }
   },
-  { rateLimit: false },
+  // Each miss spends TMDB quota; results are cached in lib/tmdb (Z2-18).
+  { rateLimit: "API" },
 );
