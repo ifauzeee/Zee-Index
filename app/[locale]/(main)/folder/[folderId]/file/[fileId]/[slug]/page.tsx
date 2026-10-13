@@ -38,11 +38,26 @@ const createSlug = (name: string) =>
 
 const trimTrailingSlash = (id: string) => id.replace(/\/+$/, "");
 
+// Route params arrive still percent-encoded (`local-storage%3Adocs%2Fa.pdf`).
+// Access checks and comparisons need the real id; Drive ids are unchanged.
+function decodeParam(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 export default async function FilePage(props: {
   params: Promise<{ folderId: string; fileId: string; locale: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const params = await props.params;
+  const rawParams = await props.params;
+  const params = {
+    ...rawParams,
+    folderId: decodeParam(rawParams.folderId),
+    fileId: decodeParam(rawParams.fileId),
+  };
   const searchParams = await props.searchParams;
   const t = await getTranslations("FilePage");
   let file = null;
@@ -95,7 +110,7 @@ export default async function FilePage(props: {
   let canonicalUrl: string | null = null;
 
   try {
-    file = await getAnyFileDetails(params.fileId);
+    file = await getAnyFileDetails(rawParams.fileId);
 
     // Only list the URL's folder when the file really lives there; otherwise
     // prev/next and subtitles would expose another folder's contents.
@@ -111,9 +126,11 @@ export default async function FilePage(props: {
         if (typeof value === "string") query.set(key, value);
       }
       const qs = query.toString();
-      canonicalUrl = `/${params.locale}/folder/${file.parents[0]}/file/${
-        file.id
-      }/${createSlug(file.name)}${qs ? `?${qs}` : ""}`;
+      canonicalUrl = `/${params.locale}/folder/${encodeURIComponent(
+        file.parents[0],
+      )}/file/${encodeURIComponent(file.id)}/${createSlug(file.name)}${
+        qs ? `?${qs}` : ""
+      }`;
     }
 
     if (file && inUrlFolder) {
@@ -131,16 +148,16 @@ export default async function FilePage(props: {
 
       if (currentIndex > 0) {
         const prevFile = nonFolderFiles[currentIndex - 1];
-        prevFileUrl = `/${params.locale}/folder/${params.folderId}/file/${
-          prevFile.id
-        }/${createSlug(prevFile.name)}`;
+        prevFileUrl = `/${params.locale}/folder/${encodeURIComponent(
+          params.folderId,
+        )}/file/${encodeURIComponent(prevFile.id)}/${createSlug(prevFile.name)}`;
       }
 
       if (currentIndex !== -1 && currentIndex < nonFolderFiles.length - 1) {
         const nextFile = nonFolderFiles[currentIndex + 1];
-        nextFileUrl = `/${params.locale}/folder/${params.folderId}/file/${
-          nextFile.id
-        }/${createSlug(nextFile.name)}`;
+        nextFileUrl = `/${params.locale}/folder/${encodeURIComponent(
+          params.folderId,
+        )}/file/${encodeURIComponent(nextFile.id)}/${createSlug(nextFile.name)}`;
       }
 
       if (file.mimeType.startsWith("video/")) {

@@ -10,6 +10,8 @@ import {
 } from "@/lib/share-grant";
 import { getClientIp } from "@/lib/client-ip";
 import { normalizeLocalStorageId } from "@/lib/storage/local";
+import { isProviderId } from "@/lib/storage/providers";
+import { isDriveId } from "@/lib/drive/ids";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { logger } from "@/lib/logger";
@@ -58,6 +60,19 @@ function createEmptyDownloadContext(): DownloadContext {
     range: null,
     isStream: false,
   };
+}
+
+/**
+ * Drive ids must be Drive ids. Local-storage and provider ids are paths, so
+ * any file name is allowed (`&`, `+`, accents, CJK, ...); traversal is
+ * handled by their normalizers. Only control characters are refused.
+ */
+export function isValidDownloadId(fileId: string): boolean {
+  if (fileId.startsWith("local-storage:") || isProviderId(fileId)) {
+     
+    return fileId.length <= 1024 && !/[\u0000-\u001f\u007f]/.test(fileId);
+  }
+  return isDriveId(fileId);
 }
 
 export async function validateDownloadRequest(request: NextRequest): Promise<{
@@ -126,9 +141,7 @@ export async function validateDownloadRequest(request: NextRequest): Promise<{
     };
   }
 
-  const fileIdPattern =
-    /^[a-zA-Z0-9_:/.\s\(\)\[\]~@#$%\-\u{1F300}-\u{1FFFF}]+$/u;
-  if (!fileIdPattern.test(fileId) || fileId.length > 255) {
+  if (!isValidDownloadId(fileId)) {
     return {
       context: createEmptyDownloadContext(),
       session,
