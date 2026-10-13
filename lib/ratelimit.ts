@@ -159,9 +159,14 @@ export class KVRateLimiter {
   }
 
   async check(identifier: string): Promise<RateLimitResult> {
-    const key = `${RATELIMIT_PREFIX}:${this.type}:${identifier}`;
     const now = Date.now();
-    const reset = now + this.windowSeconds * 1000;
+    // Fixed windows get their own key. incr and expire are two calls, so a
+    // crash between them used to leave a counter without a TTL that blocked
+    // the identifier forever; a per-window key stops counting once the window
+    // ends whether or not the TTL was set (Z2-19).
+    const windowIndex = Math.floor(now / (this.windowSeconds * 1000));
+    const key = `${RATELIMIT_PREFIX}:${this.type}:${identifier}:${windowIndex}`;
+    const reset = (windowIndex + 1) * this.windowSeconds * 1000;
 
     if (shouldShortCircuit(this.type, now)) {
       return {

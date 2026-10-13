@@ -134,4 +134,24 @@ describe("lib/ratelimit", () => {
       });
     });
   });
+
+  describe("fixed windows (Z2-19)", () => {
+    it("counts in a key that belongs to the current window", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-10-13T00:00:30Z"));
+      const mockedKv = vi.mocked(kv);
+      mockedKv.incr.mockResolvedValue(1);
+      mockedKv.expire.mockResolvedValue(1);
+      const limiter = new KVRateLimiter("AUTH");
+
+      await limiter.check("203.0.113.9");
+      vi.setSystemTime(new Date("2026-10-13T00:05:30Z"));
+      await limiter.check("203.0.113.9");
+
+      const [firstKey, secondKey] = mockedKv.incr.mock.calls.map((c) => c[0]);
+      expect(firstKey).toMatch(/:AUTH:203\.0\.113\.9:\d+$/);
+      // A counter whose TTL was never set cannot outlive its window.
+      expect(secondKey).not.toBe(firstKey);
+    });
+  });
 });
