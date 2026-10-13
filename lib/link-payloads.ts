@@ -16,14 +16,21 @@ export const shareTokenPayloadSchema = z
   })
   .passthrough();
 
-const driveFileSchema = z.object({
+// Items of a shared collection, as listed by the file browser. Local-storage
+// and provider files have no webViewLink, trashed flag or (on some
+// providers) createdTime, so those stay optional.
+const sharedItemSchema = z.object({
   id: z.string(),
   name: z.string(),
   mimeType: z.string(),
   size: z.string().optional(),
   modifiedTime: z.string(),
-  createdTime: z.string(),
-  webViewLink: z.string(),
+  createdTime: z.string().optional(),
+  source: z
+    .enum(["google-drive", "local", "s3", "webdav", "dropbox"])
+    .optional(),
+  path: z.string().optional(),
+  webViewLink: z.string().optional(),
   webContentLink: z.string().optional(),
   thumbnailLink: z.string().optional(),
   hasThumbnail: z.boolean(),
@@ -56,7 +63,7 @@ const driveFileSchema = z.object({
       durationMillis: z.string(),
     })
     .optional(),
-  trashed: z.boolean(),
+  trashed: z.boolean().optional(),
   sharedWithMeTime: z.string().optional(),
   shortcutDetails: z
     .object({
@@ -66,7 +73,7 @@ const driveFileSchema = z.object({
     .optional(),
 });
 
-const shareCollectionItemsSchema = z.array(driveFileSchema);
+const shareCollectionItemsSchema = z.array(sharedItemSchema);
 
 export const shareCreateRequestSchema = z
   .object({

@@ -4,6 +4,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import FileList from "@/components/file-browser/FileList";
 import type { DriveFile } from "@/lib/drive";
+import { getItemHref } from "@/lib/file-location";
 import { motion } from "framer-motion";
 import React from "react";
 import EmptyState from "@/components/file-browser/EmptyState";
@@ -25,22 +26,11 @@ function SharedCollectionPage() {
   const [collectionName, setCollectionName] = useState(t("defaultName"));
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const createSlug = (name: string) =>
-    encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
-
   const isAdmin = user?.role === "ADMIN" && !user?.isGuest;
   const handleItemClick = useCallback(
     (file: DriveFile) => {
-      let destinationUrl = "";
-      const parentFolder = file.parents?.[0];
-
-      if (file.isFolder) {
-        destinationUrl = `/folder/${file.id}`;
-      } else if (parentFolder) {
-        destinationUrl = `/folder/${parentFolder}/file/${file.id}/${createSlug(
-          file.name,
-        )}`;
-      } else {
+      const href = getItemHref(file);
+      if (!href) {
         addToast({
           message: t("locationError"),
           type: "error",
@@ -48,10 +38,11 @@ function SharedCollectionPage() {
         return;
       }
 
-      if (shareToken) {
-        destinationUrl += `?share_token=${shareToken}`;
-      }
-      router.push(destinationUrl);
+      router.push(
+        shareToken
+          ? `${href}?share_token=${encodeURIComponent(shareToken)}`
+          : href,
+      );
     },
     [router, shareToken, addToast, t],
   );
