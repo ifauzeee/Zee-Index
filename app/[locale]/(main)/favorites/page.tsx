@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import FileList from "@/components/file-browser/FileList";
 import type { DriveFile } from "@/lib/drive";
+import { getItemHref } from "@/lib/file-location";
 import { motion } from "framer-motion";
 import { StarOff, LogIn } from "lucide-react";
 import React from "react";
@@ -18,8 +19,6 @@ export default function FavoritesPage() {
   const addToast = useAppStore((state) => state.addToast);
   const user = useUser();
   const t = useTranslations("FavoritesPage");
-  const createSlug = (name: string) =>
-    encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
 
   const { data: favoriteFiles = [], isLoading, error } = useFavoritesQuery();
 
@@ -34,22 +33,15 @@ export default function FavoritesPage() {
 
   const handleItemClick = useCallback(
     (file: DriveFile) => {
-      const parentFolder = file.parents?.[0];
-      let destinationUrl = "";
-      if (file.isFolder) {
-        destinationUrl = `/folder/${file.id}`;
-      } else if (parentFolder) {
-        destinationUrl = `/folder/${parentFolder}/file/${file.id}/${createSlug(
-          file.name,
-        )}`;
-      } else {
+      const href = getItemHref(file);
+      if (!href) {
         addToast({
           message: t("locationError"),
           type: "error",
         });
         return;
       }
-      router.push(destinationUrl);
+      router.push(href);
     },
     [router, addToast, t],
   );

@@ -1,13 +1,28 @@
 import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import { kv } from "@/lib/kv";
 import { createPublicRoute } from "@/lib/api-middleware";
-import { db } from "@/lib/db";
 import { REDIS_KEYS } from "@/lib/constants";
 import { parseShareCollectionItems } from "@/lib/link-payloads";
+import { resolveShareGrant, type ShareGrantResult } from "@/lib/share-grant";
 
 export const dynamic = "force-dynamic";
+
+const DENIED: Record<
+  Extract<ShareGrantResult, { ok: false }>["reason"],
+  { error: string; status: number }
+> = {
+  invalid: { error: "Invalid or expired share link.", status: 401 },
+  revoked: { error: "This share link has been revoked.", status: 403 },
+  max_uses: {
+    error: "This share link has reached its usage limit.",
+    status: 403,
+  },
+  login_required: {
+    error: "Sign in to open this share link.",
+    status: 401,
+  },
+};
 
 export const GET = createPublicRoute(
   async ({ request, params, session }) => {
@@ -16,63 +31,46 @@ export const GET = createPublicRoute(
 
     if (!shareToken) {
       return NextResponse.json(
-        { error: "Token berbagi tidak disediakan." },
+        { error: "Share token is missing." },
         { status: 401 },
       );
     }
 
     try {
-      const secret = new TextEncoder().encode(process.env.SHARE_SECRET_KEY!);
-      const { payload } = await jwtVerify(shareToken, secret);
-
-      if (payload.jti !== shareId) {
-        return NextResponse.json(
-          { error: "Token tidak cocok dengan ID koleksi." },
-          { status: 403 },
-        );
+      // Same checks as every other share access: signature, revocation in
+      // Redis and in the database, maxUses and loginRequired.
+      const grant = await resolveShareGrant(shareToken, session);
+      if (!grant.ok) {
+        const { error, status } = DENIED[grant.reason];
+        return NextResponse.json({ error }, { status });
       }
 
-      const isBlocked = await kv.get(
-        `${REDIS_KEYS.SHARE_BLOCKED}${payload.jti}`,
-      );
-      if (isBlocked) {
+      if (grant.record.jti !== shareId || !grant.record.isCollection) {
         return NextResponse.json(
-          { error: "Tautan berbagi ini telah dibatalkan." },
+          { error: "Share token does not match this collection." },
           { status: 403 },
-        );
-      }
-
-      if (payload.loginRequired && !session) {
-        return NextResponse.json(
-          { error: "Login diperlukan untuk mengakses tautan ini." },
-          { status: 401 },
         );
       }
 
       const items = parseShareCollectionItems(
         await kv.get(`${REDIS_KEYS.SHARE_ITEMS}${shareId}`),
       );
-
       if (!items) {
         return NextResponse.json(
-          { error: "Koleksi tidak ditemukan atau telah kedaluwarsa." },
+          { error: "Collection not found or expired." },
           { status: 404 },
         );
       }
 
-      const linkDetails = await db.shareLink.findUnique({
-        where: { jti: shareId },
-      });
-
       return NextResponse.json({
         items,
-        collectionName: linkDetails?.itemName || "Koleksi Bersama",
+        collectionName: grant.record.itemName,
       });
     } catch (error) {
-      logger.error({ err: error }, "Gagal memvalidasi token koleksi");
+      logger.error({ err: error, shareId }, "[ShareItems] Lookup failed");
       return NextResponse.json(
-        { error: "Token berbagi tidak valid atau telah kedaluwarsa." },
-        { status: 401 },
+        { error: "Could not load this collection." },
+        { status: 500 },
       );
     }
   },

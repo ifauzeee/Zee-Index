@@ -8,7 +8,7 @@ import { collectAccessTokens } from "@/lib/auth";
 import { resolveShareGrant, shareGrantToken } from "@/lib/share-grant";
 import { isAccessRestricted } from "@/lib/securityUtils";
 import { applyAuthorVisibility } from "@/lib/author-visibility";
-import type { ZeeFile } from "@/types/storage";
+import { getContainingFolderIds } from "@/lib/file-location";
 import type { SubtitleTrack } from "@/lib/subtitles";
 import { logger } from "@/lib/logger";
 
@@ -37,17 +37,6 @@ const createSlug = (name: string) =>
   encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
 
 const trimTrailingSlash = (id: string) => id.replace(/\/+$/, "");
-
-/** Folders that contain `file`: Drive parents, or the path prefix of a path-style id. */
-function getContainingFolderIds(file: ZeeFile): string[] {
-  if (file.parents?.length) return file.parents;
-  const prefixEnd = file.id.indexOf(":") + 1;
-  if (prefixEnd === 0) return [];
-  const slash = file.id.lastIndexOf("/");
-  return [
-    slash >= prefixEnd ? file.id.slice(0, slash) : file.id.slice(0, prefixEnd),
-  ];
-}
 
 export default async function FilePage(props: {
   params: Promise<{ folderId: string; fileId: string; locale: string }>;

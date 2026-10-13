@@ -26,6 +26,7 @@ import { getFavorites } from "@/app/actions/favorites";
 import { useDataUsageQuery } from "@/hooks/useDataUsage";
 import { useUser } from "@/hooks/useUser";
 import type { DriveFile } from "@/lib/drive";
+import { getItemHref } from "@/lib/file-location";
 
 const ACTIVITY_ICONS: Record<string, React.ElementType> = {
   DOWNLOAD: Download,
@@ -134,19 +135,10 @@ export default function DashboardPage() {
   const downloadCount = dashData?.downloadCount || 0;
   const storageUsage = dashData?.storageUsage || usageData || "";
 
-  const createSlug = (name: string) =>
-    encodeURIComponent(name.replace(/\s+/g, "-").toLowerCase());
-
   const handleFileClick = useCallback(
     (file: DriveFile) => {
-      const parentFolder = file.parents?.[0];
-      if (file.isFolder) {
-        router.push(`/folder/${file.id}`);
-      } else if (parentFolder) {
-        router.push(
-          `/folder/${parentFolder}/file/${file.id}/${createSlug(file.name)}`,
-        );
-      }
+      const href = getItemHref(file);
+      if (href) router.push(href);
     },
     [router],
   );
