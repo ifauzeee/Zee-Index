@@ -1,5 +1,26 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
+// The real SDKs take seconds to load, and vi.resetModules() reloads them for
+// every test, which made these tests time out on a busy machine (audit Q-04).
+// The factory only needs constructors that can be called.
+vi.mock("@aws-sdk/client-s3", () => {
+  class Stub {}
+  return {
+    S3Client: Stub,
+    ListObjectsV2Command: Stub,
+    GetObjectCommand: Stub,
+    HeadObjectCommand: Stub,
+    PutObjectCommand: Stub,
+    DeleteObjectCommand: Stub,
+    CopyObjectCommand: Stub,
+  };
+});
+vi.mock("dropbox", () => {
+  class Stub {}
+  return { Dropbox: Stub, DropboxAuth: Stub };
+});
+vi.mock("webdav", () => ({ createClient: () => ({}) }));
+
 describe("storage status", () => {
   beforeEach(() => {
     vi.resetModules();
