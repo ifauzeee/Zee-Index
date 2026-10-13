@@ -14,21 +14,6 @@ const PDFViewer = dynamic(() => import("./PDFViewer"), {
   ssr: false,
 });
 
-interface EPubRendition {
-  display: () => Promise<void>;
-}
-interface EPubBook {
-  renderTo: (
-    element: HTMLDivElement,
-    options: { width: string; height: string; allowScriptedContent?: boolean },
-  ) => EPubRendition;
-  destroy: () => void;
-}
-interface EPubLib {
-  (src: string): EPubBook;
-}
-declare const ePub: EPubLib;
-
 export const LoadingPreview: React.FC = () => (
   <div className="flex items-center justify-center h-full text-primary">
     <Loader2 className="animate-spin text-4xl" />
@@ -109,26 +94,43 @@ export const EbookPreview: React.FC<{ src: string }> = ({ src }) => {
   const t = useTranslations("Preview");
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    if (typeof ePub === "undefined") {
-      setError(t("libraryError"));
-      setIsLoading(false);
-      return;
-    }
-    const book = ePub(src);
-    const rendition = book.renderTo(containerRef.current, {
-      width: "100%",
-      height: "100%",
-      allowScriptedContent: false,
-    });
-    rendition
-      .display()
-      .then(() => setIsLoading(false))
-      .catch((error: unknown) => {
-        setError(error instanceof Error ? error.message : t("unknownError"));
+    const container = containerRef.current;
+    if (!container) return;
+
+    // epub.js is only needed for this preview, so load it on demand. It used
+    // to rely on a global ePub that nothing loaded, so the preview always
+    // failed (audit Z2-23).
+    let cancelled = false;
+    let destroy: (() => void) | undefined;
+
+    import("epubjs")
+      .then(({ default: ePub }) => {
+        if (cancelled) return;
+        // The download URL has no .epub extension, so say what it is.
+        const book = ePub(src, { openAs: "epub" });
+        destroy = () => book.destroy();
+        return book
+          .renderTo(container, {
+            width: "100%",
+            height: "100%",
+            // Book content is untrusted: never run its scripts.
+            allowScriptedContent: false,
+          })
+          .display();
+      })
+      .then(() => {
+        if (!cancelled) setIsLoading(false);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : t("unknownError"));
         setIsLoading(false);
       });
-    return () => book.destroy();
+
+    return () => {
+      cancelled = true;
+      destroy?.();
+    };
   }, [src, t]);
 
   return (
