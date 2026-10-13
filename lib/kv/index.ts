@@ -6,14 +6,10 @@ import type { KVClient } from "./types";
 
 export type { KVClient } from "./types";
 
-const isEdgeRuntime =
-  typeof globalThis !== "undefined" &&
-  (globalThis as Record<string, unknown>).EdgeRuntime !== undefined;
-
 const redisUrl =
   typeof process !== "undefined" ? process.env?.REDIS_URL : undefined;
 
-if (typeof window === "undefined" && !isEdgeRuntime) {
+if (typeof window === "undefined") {
   if (redisUrl) {
     logger.info("[KV] Connecting to Redis...");
   } else {
@@ -24,7 +20,9 @@ if (typeof window === "undefined" && !isEdgeRuntime) {
 }
 
 function createKVClient(): KVClient {
-  if (isEdgeRuntime || typeof window !== "undefined") {
+  // proxy.ts and every route run on Node.js, so the only non-server caller
+  // is a client bundle that imports this module by accident.
+  if (typeof window !== "undefined") {
     return new InMemoryKV();
   }
 
