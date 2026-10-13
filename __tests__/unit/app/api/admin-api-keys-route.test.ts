@@ -210,7 +210,7 @@ describe("app/api/admin/api-keys route", () => {
       where: { id: "key-1" },
       data: { revoked: true },
     });
-    expect(mockClearApiKeyCache).toHaveBeenCalledWith("zk_abc12");
+    expect(mockClearApiKeyCache).toHaveBeenCalledWith("key-1");
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({ success: true });
   });
