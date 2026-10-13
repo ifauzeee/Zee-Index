@@ -1,5 +1,9 @@
 import { Dropbox, DropboxAuth } from "dropbox";
-import type { ProviderDownload, StorageProvider } from "./types";
+import {
+  UploadSessionError,
+  type ProviderDownload,
+  type StorageProvider,
+} from "./types";
 import { getMimeType } from "../mime";
 import { normalizePathId } from "../path-id";
 import type { ZeeFile } from "@/types/storage";
@@ -366,14 +370,26 @@ export class DropboxStorageProvider implements StorageProvider {
     }
   }
 
+  private sessionFor(sessionToken: string, offset: number | undefined) {
+    const session = this.sessions.get(sessionToken);
+    if (!session) {
+      throw new UploadSessionError("Upload session not found or expired.", 404);
+    }
+    if (offset !== undefined && offset !== session.offset) {
+      throw new UploadSessionError(
+        "Chunk does not continue where the upload left off.",
+        400,
+      );
+    }
+    return session;
+  }
+
   async appendUploadSession(
     sessionToken: string,
     chunk: ArrayBuffer,
+    offset?: number,
   ): Promise<void> {
-    const session = this.sessions.get(sessionToken);
-    if (!session) {
-      throw new Error("Dropbox upload session tidak ditemukan.");
-    }
+    const session = this.sessionFor(sessionToken, offset);
 
     try {
       await this.client.filesUploadSessionAppendV2({
@@ -397,11 +413,9 @@ export class DropboxStorageProvider implements StorageProvider {
   async finishUploadSession(
     sessionToken: string,
     chunk: ArrayBuffer,
+    offset?: number,
   ): Promise<ZeeFile | null> {
-    const session = this.sessions.get(sessionToken);
-    if (!session) {
-      throw new Error("Dropbox upload session tidak ditemukan.");
-    }
+    const session = this.sessionFor(sessionToken, offset);
 
     try {
       const res = await this.client.filesUploadSessionFinish({

@@ -54,14 +54,36 @@ export interface StorageProvider {
   // unsupported for that provider.
   createFolder?(parentId: string, folderName: string): Promise<ZeeFile | null>;
 
-  // Optional: streaming upload session (for providers with chunked session APIs
-  // like Dropbox). When implemented, the route streams chunks directly to the
-  // provider without buffering the entire file in server memory. The provider
-  // tracks the session and resolves the final path internally.
-  startUploadSession?(parentId: string, fileName: string): Promise<string>;
-  appendUploadSession?(sessionToken: string, chunk: ArrayBuffer): Promise<void>;
+  // Optional: streaming upload session (Dropbox upload sessions, S3 multipart
+  // uploads). When implemented, the route forwards chunks to the provider
+  // instead of buffering the entire file in server memory. The provider
+  // tracks the session and resolves the final path internally. `offset` is
+  // the chunk's start byte from Content-Range; providers reject a chunk that
+  // does not continue where the previous one ended with UploadSessionError.
+  startUploadSession?(
+    parentId: string,
+    fileName: string,
+    mimeType?: string,
+  ): Promise<string>;
+  appendUploadSession?(
+    sessionToken: string,
+    chunk: ArrayBuffer,
+    offset?: number,
+  ): Promise<void>;
   finishUploadSession?(
     sessionToken: string,
     chunk: ArrayBuffer,
+    offset?: number,
   ): Promise<ZeeFile | null>;
+}
+
+/** A client mistake in an upload session: unknown session or a chunk out of order. */
+export class UploadSessionError extends Error {
+  constructor(
+    message: string,
+    readonly status: 400 | 404,
+  ) {
+    super(message);
+    this.name = "UploadSessionError";
+  }
 }
