@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Download, ExternalLink } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface OfficeViewerProps {
   fileId?: string;
@@ -38,6 +39,7 @@ export function OfficeViewer({
   mimeType,
   src,
 }: OfficeViewerProps) {
+  const t = useTranslations("Preview");
   const officeMimes = [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -64,12 +66,9 @@ export function OfficeViewer({
       <div className="flex h-full min-h-[500px] flex-col items-center justify-center gap-4 rounded border border-white/10 bg-zinc-950 p-6 text-center text-zinc-300">
         <div className="max-w-md space-y-2">
           <h3 className="text-lg font-semibold text-white">
-            Pratinjau Office tidak tersedia
+            {t("officeUnavailableTitle")}
           </h3>
-          <p className="text-sm text-zinc-400">
-            File Office dari URL lokal atau private tidak bisa dibuka oleh
-            viewer eksternal.
-          </p>
+          <p className="text-sm text-zinc-400">{t("officeUnavailableDesc")}</p>
         </div>
         {url && (
           <a
@@ -77,7 +76,7 @@ export function OfficeViewer({
             className="inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-zinc-950 transition hover:bg-zinc-200"
           >
             <Download size={16} />
-            Unduh file
+            {t("download")}
           </a>
         )}
       </div>
@@ -92,7 +91,7 @@ export function OfficeViewer({
         height="100%"
         frameBorder="0"
         allowFullScreen
-        title="Office Viewer"
+        title={t("officeViewerTitle")}
       />
       {url && (
         <a
@@ -102,7 +101,7 @@ export function OfficeViewer({
           className="absolute bottom-4 right-4 inline-flex items-center gap-2 rounded-md bg-zinc-950/85 px-3 py-2 text-xs font-medium text-white shadow-lg backdrop-blur transition hover:bg-zinc-900"
         >
           <ExternalLink size={14} />
-          Buka file
+          {t("openFile")}
         </a>
       )}
     </div>

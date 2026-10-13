@@ -835,7 +835,11 @@
     "download": "Download File",
     "libraryError": "EpubJS Library not loaded.",
     "preview": "Preview",
-    "unknownError": "An unknown error occurred"
+    "unknownError": "An unknown error occurred",
+    "officeUnavailableTitle": "Office preview unavailable",
+    "officeUnavailableDesc": "Office files from a local or private URL cannot be opened by the external viewer.",
+    "officeViewerTitle": "Office viewer",
+    "openFile": "Open file"
   },
   "FileCard": {
     "info": "Info",

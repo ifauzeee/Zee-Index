@@ -22,6 +22,7 @@ import { formatBytes, cn } from "@/lib/utils";
 import React, { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
+import { ARCHIVE_PREVIEW_MAX_BYTES } from "@/lib/constants";
 
 interface ContextMenuProps {
   x: number;
@@ -300,4 +301,5 @@ export default function ContextMenu({
   return createPortal(content, document.body);
 }
 
-const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024;
+// Must match the server cap, or the menu offers previews the API refuses.
+const ARCHIVE_PREVIEW_LIMIT_BYTES = ARCHIVE_PREVIEW_MAX_BYTES;

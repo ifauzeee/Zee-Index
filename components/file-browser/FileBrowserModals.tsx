@@ -60,6 +60,7 @@ import EmptyAreaContextMenu from "@/components/file-browser/EmptyAreaContextMenu
 import RenameModal from "@/components/modals/RenameModal";
 import DeleteConfirm from "@/components/modals/DeleteConfirm";
 import ShareButton from "@/components/file-browser/ShareButton";
+import { ARCHIVE_PREVIEW_MAX_BYTES } from "@/lib/constants";
 
 interface FileBrowserModalsProps {
   isFileRequestModalOpen: boolean;
@@ -152,7 +153,7 @@ export default function FileBrowserModals(props: FileBrowserModalsProps) {
     shareToken,
   } = props;
 
-  const ARCHIVE_PREVIEW_LIMIT_BYTES = 100 * 1024 * 1024;
+  const ARCHIVE_PREVIEW_LIMIT_BYTES = ARCHIVE_PREVIEW_MAX_BYTES;
   const t = useTranslations("FileBrowserModals");
 
   useEffect(() => {

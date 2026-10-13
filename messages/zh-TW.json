@@ -835,7 +835,11 @@
     "download": "下載檔案",
     "libraryError": "尚未載入 EpubJS 函式庫。",
     "preview": "預覽",
-    "unknownError": "發生未知錯誤"
+    "unknownError": "發生未知錯誤",
+    "officeUnavailableTitle": "無法預覽 Office 檔案",
+    "officeUnavailableDesc": "來自本機或私人網址的 Office 檔案無法由外部檢視器開啟。",
+    "officeViewerTitle": "Office 檢視器",
+    "openFile": "開啟檔案"
   },
   "FileCard": {
     "info": "資訊",

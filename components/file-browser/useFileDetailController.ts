@@ -14,6 +14,7 @@ import { useTagsQuery, useTagMutation } from "@/hooks/useTags";
 import { useUser } from "@/hooks/useUser";
 import { usePublicConfig } from "@/hooks/useConfig";
 import type { ShareTokenPayload } from "@/lib/store/types";
+import { ARCHIVE_PREVIEW_MAX_BYTES } from "@/lib/constants";
 
 interface TmdbGenre {
   name: string;
@@ -223,7 +224,7 @@ export function useFileDetailController({
     });
   }, [activeSubtitleTracks, bestToken]);
 
-  const archivePreviewLimit = 100 * 1024 * 1024;
+  const archivePreviewLimit = ARCHIVE_PREVIEW_MAX_BYTES;
   const isArchivePreviewable =
     fileType === "archive" &&
     parseInt(file.size || "0", 10) <= archivePreviewLimit;

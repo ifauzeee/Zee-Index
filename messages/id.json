@@ -835,7 +835,11 @@
     "download": "Unduh File",
     "libraryError": "Library EpubJS belum dimuat.",
     "preview": "Pratinjau",
-    "unknownError": "Terjadi kesalahan yang tidak diketahui"
+    "unknownError": "Terjadi kesalahan yang tidak diketahui",
+    "officeUnavailableTitle": "Pratinjau Office tidak tersedia",
+    "officeUnavailableDesc": "File Office dari URL lokal atau private tidak bisa dibuka oleh viewer eksternal.",
+    "officeViewerTitle": "Penampil Office",
+    "openFile": "Buka file"
   },
   "FileCard": {
     "info": "Info",
