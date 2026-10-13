@@ -182,3 +182,49 @@ describe("file page access", () => {
     );
   });
 });
+
+describe("file page with path-style ids", () => {
+  const LOCAL = {
+    id: "local-storage:docs/a b.pdf",
+    name: "a b.pdf",
+    mimeType: "application/pdf",
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getVerifiedSession.mockResolvedValue(null);
+    mocks.collectAccessTokens.mockResolvedValue([]);
+    mocks.isAccessRestricted.mockResolvedValue(false);
+    mocks.getPublicAppConfig.mockResolvedValue({ hideAuthor: false });
+    mocks.getAnyFileDetails.mockResolvedValue(LOCAL);
+    mocks.listAllFiles.mockResolvedValue({
+      files: [LOCAL, { id: "local-storage:docs/z.pdf", name: "z.pdf" }],
+    });
+  });
+
+  it("checks access and lists the folder with decoded ids", async () => {
+    // Next.js hands route params over still percent-encoded.
+    const page = (await FilePage({
+      params: Promise.resolve({
+        folderId: "local-storage%3Adocs",
+        fileId: "local-storage%3Adocs%2Fa%20b.pdf",
+        locale: "en",
+      }),
+      searchParams: Promise.resolve({}),
+    })) as ReactElement;
+    const props = page.props as Props;
+
+    expect(mocks.isAccessRestricted).toHaveBeenCalledWith(
+      "local-storage:docs/a b.pdf",
+      [],
+      undefined,
+    );
+    expect(mocks.listAllFiles).toHaveBeenCalledWith(
+      expect.objectContaining({ folderId: "local-storage:docs" }),
+    );
+    expect(props.currentFolderId).toBe("local-storage:docs");
+    expect(props.nextFileUrl).toBe(
+      "/en/folder/local-storage%3Adocs/file/local-storage%3Adocs%2Fz.pdf/z.pdf",
+    );
+  });
+});
