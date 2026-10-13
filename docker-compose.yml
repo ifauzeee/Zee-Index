@@ -9,7 +9,7 @@
       - postgres_data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: ${POSTGRES_DB:-zee_index}
     deploy:
       resources:
@@ -59,11 +59,10 @@
       - .env
     environment:
       - REDIS_URL=redis://redis:6379
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-zee_index}?schema=public
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-zee_index}?schema=public
       - NODE_OPTIONS=--max-old-space-size=384
     volumes:
       - .env:/app/.env
-      - ./public/uploads:/app/public/uploads
       - ./storage:/app/storage
     deploy:
       resources:
@@ -192,7 +191,7 @@
     volumes:
       - ./backups:/backups
     environment:
-      - PGPASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - PGPASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_DB=${POSTGRES_DB:-zee_index}
       - BACKUP_INTERVAL_SECONDS=${BACKUP_INTERVAL_SECONDS:-86400}
