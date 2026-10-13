@@ -95,7 +95,9 @@ export function createContentSecurityPolicy(
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}'${scriptEval} ${SWAGGER_UI_CDN}/ https://www.google-analytics.com`,
     `script-src-elem 'self' 'nonce-${nonce}'${scriptEval} ${SWAGGER_UI_CDN}/ https://www.google-analytics.com`,
-    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${SWAGGER_UI_CDN}/`,
+    // blob: lets epub.js apply a book's own stylesheets, which it loads as
+    // blob URLs into the sandboxed (script-free) reader iframe.
+    `style-src 'self' 'unsafe-inline' blob: https://fonts.googleapis.com ${SWAGGER_UI_CDN}/`,
     "font-src 'self' data: https://fonts.gstatic.com",
     "img-src 'self' data: blob: https://*.googleusercontent.com https://drive.google.com https://images.unsplash.com https://image.tmdb.org",
     "media-src 'self' blob: https://*.googleapis.com",
