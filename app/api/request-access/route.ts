@@ -79,7 +79,7 @@ export const POST = createUserRoute(
         });
       }
 
-      await logActivity("LOGIN_FAILURE", {
+      void logActivity("LOGIN_FAILURE", {
         itemName: folderName,
         itemId: folderId,
         userEmail: session.user.email,

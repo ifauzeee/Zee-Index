@@ -65,7 +65,7 @@ export const POST = createEditorRoute(
       await invalidateFolderCache(fileId);
       const updatedFile = await response.json();
 
-      await logActivity("RENAME", {
+      void logActivity("RENAME", {
         itemName: `${fileDetails.name} → ${newName}`,
         userEmail: session?.user?.email,
         status: "success",

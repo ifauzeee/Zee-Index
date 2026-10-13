@@ -61,7 +61,7 @@ export const POST = createEditorRoute(
       await invalidateFolderCache(newParentId);
       await invalidateFolderCache(fileId);
 
-      await logActivity("MOVE", {
+      void logActivity("MOVE", {
         itemName: data.name || fileId,
         itemId: fileId,
         userEmail: session?.user?.email,

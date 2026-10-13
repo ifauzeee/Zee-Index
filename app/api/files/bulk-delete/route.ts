@@ -38,7 +38,7 @@ export const POST = createAdminRoute(
         await invalidateFolderCache(parentId);
       }
 
-      await logActivity("DELETE", {
+      void logActivity("DELETE", {
         itemName: `${fileIds.length} files/folders`,
         userEmail: session?.user?.email,
         status: failedDeletes.length > 0 ? "failure" : "success",
