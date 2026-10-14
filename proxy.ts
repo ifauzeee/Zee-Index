@@ -62,8 +62,14 @@ const PUBLIC_API_PREFIXES = [
   "/api/cron",
 ];
 
+// `GET /api/file-request/<token>`: the public /request/<token> page loads the
+// request through it, and the route checks the token. The bare
+// /api/file-request (create, list, delete) stays behind sign-in.
+const FILE_REQUEST_BY_TOKEN = /^\/api\/file-request\/[^/]+$/;
+
 export function isPublicApiPath(pathname: string): boolean {
   if (PUBLIC_API_EXACT.has(pathname)) return true;
+  if (FILE_REQUEST_BY_TOKEN.test(pathname)) return true;
   return PUBLIC_API_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
   );
