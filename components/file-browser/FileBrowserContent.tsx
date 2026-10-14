@@ -64,6 +64,7 @@ interface FileBrowserContentProps {
 }
 
 import { useTranslations } from "next-intl";
+import { requiresDriveAuth } from "@/lib/file-location";
 
 export default function FileBrowserContent(props: FileBrowserContentProps) {
   const {
@@ -140,7 +141,9 @@ export default function FileBrowserContent(props: FileBrowserContentProps) {
   if (isLoading || (sessionStatus === "loading" && !shareToken)) {
     return <FileBrowserLoading />;
   }
-  if (!isGoogleAuthHealthy) {
+  // Only Drive folders depend on Drive auth: local storage and external
+  // providers stay browsable while Drive is unconfigured or expired.
+  if (!isGoogleAuthHealthy && requiresDriveAuth(currentFolderId)) {
     return (
       <SetupRequired
         message={googleAuthError || undefined}

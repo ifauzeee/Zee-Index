@@ -103,7 +103,7 @@ The app cannot use Google Drive. Check:
 - The **Google Drive API** is enabled in the project.
 - You restarted after editing `.env`.
 
-While Drive auth is failing, the file browser shows this screen for every root, local storage included. Local file pages and the API keep working.
+This screen only appears for Google Drive folders. Local storage and the S3, WebDAV or Dropbox root stay browsable while Drive is down; a toast reports the Drive error.
 
 ### "Google Drive session expired"
 

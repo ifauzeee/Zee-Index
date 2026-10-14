@@ -1,5 +1,7 @@
 import type { ZeeFile } from "@/types/storage";
 
+const VIRTUAL_ROOT_ID = "virtual-root";
+
 /**
  * Folders a file lives in. Drive and S3 files carry `parents`; local-storage,
  * WebDAV and Dropbox files only carry a path-style id (`<prefix>dir/name`),
@@ -42,4 +44,18 @@ export function getItemHref(
   return `/folder/${encodeURIComponent(parent)}/file/${encodeURIComponent(
     file.id,
   )}/${createSlug(file.name)}`;
+}
+
+/**
+ * Whether opening this folder needs a working Google Drive connection. Local
+ * storage, external providers and the virtual root listing do not, so they
+ * stay usable while Drive is unconfigured or its token has expired.
+ */
+export function requiresDriveAuth(folderId: string | undefined): boolean {
+  return (
+    !!folderId &&
+    folderId !== VIRTUAL_ROOT_ID &&
+    !folderId.includes(":") &&
+    /^[A-Za-z0-9_-]+$/.test(folderId)
+  );
 }

@@ -59,6 +59,27 @@ async function getUnifiedPath(folderId: string, locale: string) {
   return getFolderPath(folderId, locale);
 }
 
+/**
+ * The folder's path, or null when the storage source cannot be reached (for
+ * example an expired Google Drive token). The page then renders without
+ * server data and the client shows the "Setup Required" screen, instead of
+ * the request failing with an error page.
+ */
+async function tryGetUnifiedPath(
+  folderId: string,
+  locale: string,
+): Promise<Awaited<ReturnType<typeof getUnifiedPath>> | null> {
+  try {
+    return await getUnifiedPath(folderId, locale);
+  } catch (err) {
+    logger.warn(
+      { err, folderId },
+      "[FolderPage] Could not resolve folder path",
+    );
+    return null;
+  }
+}
+
 export async function generateMetadata(props: {
   params: Promise<{ folderId: string; locale: string }>;
 }): Promise<Metadata> {
@@ -67,7 +88,9 @@ export async function generateMetadata(props: {
   // Metadata is public and cached, so only name folders an anonymous
   // visitor could open (Z2-11).
   const restricted = await isAccessRestricted(folderId);
-  const path = restricted ? [] : await getUnifiedPath(folderId, params.locale);
+  const path = restricted
+    ? []
+    : ((await tryGetUnifiedPath(folderId, params.locale)) ?? []);
   const folderName = path[path.length - 1]?.name || "Folder";
   const appName = process.env.NEXT_PUBLIC_APP_NAME || "Zee Index";
 
@@ -117,9 +140,15 @@ export default async function FolderPage(props: {
   const isPathStyleId =
     cleanFolderId.startsWith("local-storage:") || isProviderId(cleanFolderId);
   const [rawPath, restricted] = await Promise.all([
-    getUnifiedPath(cleanFolderId, locale),
+    tryGetUnifiedPath(cleanFolderId, locale),
     isAccessRestricted(cleanFolderId),
   ]);
+
+  if (rawPath === null) {
+    // Storage unreachable: render no server data. /api/files enforces access
+    // on its own when the client retries.
+    return <FileBrowser initialFolderId={cleanFolderId} />;
+  }
 
   if (!isPathStyleId) {
     const allowedRoots = await getAllowedRootIds();
