@@ -17,6 +17,7 @@ How Zee-Index decides who can see what, how accounts and sessions work, and whic
 - [HTTP security headers](#http-security-headers)
 - [Other protections](#other-protections)
 - [Where data is stored](#where-data-is-stored)
+- [Dependency advisories](#dependency-advisories)
 - [Hardening checklist](#hardening-checklist)
 
 ---
@@ -185,6 +186,17 @@ The CSP is built in `proxy.ts` (the Next.js 16 name for middleware, running on N
 | Caches, rate-limit counters, short-lived tokens                                 | Redis (with TTL, evictable)       |
 | Google refresh token and all other secrets                                      | `.env` only                       |
 
+## Dependency advisories
+
+`pnpm audit` runs in CI, and Dependabot alerts and CodeQL code scanning are enabled on the repository. Two advisories have no patched release, and are accepted in `pnpm.auditConfig.ignoreGhsas` in `package.json`:
+
+| Advisory                                                                 | Package      | Why it is accepted                                                                                                                                  |
+| ------------------------------------------------------------------------ | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) | `braces`     | Only used by build and dev tooling (Tailwind, ESLint, glob watchers) on patterns written in the repository. Not present in the production image.    |
+| [GHSA-hp3w-g68c-fv3c](https://github.com/advisories/GHSA-hp3w-g68c-fv3c) | `sprintf-js` | Pulled in by `argparse`, which `mammoth` only uses in its command-line tool. The app never loads it, and it is not present in the production image. |
+
+Remove an entry as soon as a fixed version is available. When a new advisory appears, update the dependency or add an override rather than ignoring it.
+
 ## Hardening checklist
 
 - [ ] Serve over HTTPS (Caddy does this automatically with a real domain), and set `NEXTAUTH_URL` to the `https://` URL.
@@ -193,6 +205,6 @@ The CSP is built in `proxy.ts` (the Next.js 16 name for middleware, running on N
 - [ ] Turn on 2FA for every admin.
 - [ ] Disable guest login if the instance is not meant to be public.
 - [ ] Keep `.env` readable only by you (`chmod 600 .env`). Never commit it.
-- [ ] Enable Dependabot alerts and code scanning on your fork.
+- [ ] Enable Dependabot alerts and code scanning on your fork (enabled on the main repository).
 - [ ] Back up PostgreSQL **and** the Redis volume (see [Deployment](deployment.md#backups-and-restore)).
 - [ ] Keep the instance up to date (see [Deployment → Updating](deployment.md#updating)).
