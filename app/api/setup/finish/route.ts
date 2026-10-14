@@ -10,14 +10,25 @@ import { isAppConfigured } from "@/lib/config";
 import { z } from "zod";
 import { announceSetupToken, isValidSetupToken } from "@/lib/setup-token";
 
+// Client ID, secret and root folder may be left out when they are already
+// set in the environment; the wizard then never handles the secret.
 const setupFinishSchema = z.object({
-  clientId: z.string().min(1),
-  clientSecret: z.string().min(1),
+  clientId: z.string().trim().optional(),
+  clientSecret: z.string().trim().optional(),
   authCode: z.string().min(1),
   redirectUri: z.string().url(),
-  rootFolderId: z.string().min(1),
+  rootFolderId: z.string().trim().optional(),
   setupToken: z.string().optional(),
 });
+
+/** A value from the request, or the environment when the request has none. */
+function fromBodyOrEnv(
+  value: string | undefined,
+  envKey:
+    "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET" | "NEXT_PUBLIC_ROOT_FOLDER_ID",
+): string {
+  return value || process.env[envKey]?.trim() || "";
+}
 const SETUP_ENV_KEYS = [
   "GOOGLE_CLIENT_ID",
   "GOOGLE_CLIENT_SECRET",
@@ -127,8 +138,25 @@ export const POST = createPublicRoute(
         );
       }
 
-      const { clientId, clientSecret, authCode, redirectUri, rootFolderId } =
-        body;
+      const { authCode, redirectUri } = body;
+      const clientId = fromBodyOrEnv(body.clientId, "GOOGLE_CLIENT_ID");
+      const clientSecret = fromBodyOrEnv(
+        body.clientSecret,
+        "GOOGLE_CLIENT_SECRET",
+      );
+      const rootFolderId = fromBodyOrEnv(
+        body.rootFolderId,
+        "NEXT_PUBLIC_ROOT_FOLDER_ID",
+      );
+      if (!clientId || !clientSecret || !rootFolderId) {
+        return NextResponse.json(
+          {
+            error:
+              "Client ID, client secret and root folder ID are required (in the form or in .env).",
+          },
+          { status: 400 },
+        );
+      }
 
       const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
         method: "POST",

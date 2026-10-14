@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 const {
@@ -204,6 +204,78 @@ describe("app/api/setup/finish route", () => {
         manualConfigData: null,
       }),
     );
+  });
+
+  describe("values already in the environment", () => {
+    const ENV_KEYS = [
+      "GOOGLE_CLIENT_ID",
+      "GOOGLE_CLIENT_SECRET",
+      "NEXT_PUBLIC_ROOT_FOLDER_ID",
+    ] as const;
+    const saved: Record<string, string | undefined> = {};
+
+    beforeEach(() => {
+      for (const key of ENV_KEYS) saved[key] = process.env[key];
+      process.env.GOOGLE_CLIENT_ID = "env-client-id";
+      process.env.GOOGLE_CLIENT_SECRET = "env-client-secret";
+      process.env.NEXT_PUBLIC_ROOT_FOLDER_ID = "env-root-folder";
+    });
+
+    afterEach(() => {
+      for (const key of ENV_KEYS) {
+        if (saved[key] === undefined) delete process.env[key];
+        else process.env[key] = saved[key];
+      }
+    });
+
+    function finishWith(body: Record<string, string>) {
+      return POST(
+        new NextRequest("http://localhost:3000/api/setup/finish", {
+          method: "POST",
+          headers: {
+            origin: "http://localhost:3000",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            authCode: "auth-code",
+            redirectUri: "http://localhost:3000/setup",
+            setupToken: "operator-setup-token-123",
+            ...body,
+          }),
+        }),
+      );
+    }
+
+    it("uses the client ID, secret and root folder from .env when the form leaves them out", async () => {
+      const response = await finishWith({});
+
+      expect(response.status).toBe(200);
+      const tokenRequest = (global.fetch as ReturnType<typeof vi.fn>).mock
+        .calls[0][1] as { body: URLSearchParams };
+      expect(tokenRequest.body.get("client_id")).toBe("env-client-id");
+      expect(tokenRequest.body.get("client_secret")).toBe("env-client-secret");
+      const written = mockWriteFileSync.mock.calls[0][1] as string;
+      expect(written).toContain('GOOGLE_REFRESH_TOKEN="refresh-token-value"');
+      expect(written).toContain('NEXT_PUBLIC_ROOT_FOLDER_ID="env-root-folder"');
+    });
+
+    it("prefers values entered in the form", async () => {
+      await finishWith({ clientId: "form-id", clientSecret: "form-secret" });
+
+      const tokenRequest = (global.fetch as ReturnType<typeof vi.fn>).mock
+        .calls[0][1] as { body: URLSearchParams };
+      expect(tokenRequest.body.get("client_id")).toBe("form-id");
+      expect(tokenRequest.body.get("client_secret")).toBe("form-secret");
+    });
+
+    it("answers 400 when a value is in neither the form nor .env", async () => {
+      delete process.env.GOOGLE_CLIENT_SECRET;
+
+      const response = await finishWith({});
+
+      expect(response.status).toBe(400);
+      expect(global.fetch).not.toHaveBeenCalled();
+    });
   });
 
   describe("first-run setup token (Z2-26)", () => {
