@@ -11,13 +11,13 @@ import { logActivity } from "@/lib/activityLogger";
 import { kv } from "@/lib/kv";
 import { invalidateFolderCache } from "@/lib/cache";
 import { getActiveProvider, isProviderId } from "@/lib/storage/providers";
-const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
+import { stripHtmlTags } from "@/lib/sanitize";
 
 const createFolderSchema = z.object({
   folderName: z
     .string()
     .min(1, { message: "Nama folder tidak boleh kosong." })
-    .transform((val) => sanitizeString(val)),
+    .transform((val) => stripHtmlTags(val)),
   parentId: z.string().min(1, { message: "Folder induk diperlukan." }),
 });
 
