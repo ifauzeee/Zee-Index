@@ -106,3 +106,7 @@ public/swe-worker-*.js
 /backups/
 repomix-output.xml
 .freebuff
+# Personal notes, plans and audit reports (kept locally, not published)
+.superpowers/
+docs/superpowers/
+docs/audit/
