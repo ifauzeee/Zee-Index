@@ -3,12 +3,19 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import fs from "fs";
-import path from "path";
 import { createPublicRoute } from "@/lib/api-middleware";
 import { invalidateAccessToken } from "@/lib/drive";
-import { isAppConfigured } from "@/lib/config";
 import { z } from "zod";
-import { announceSetupToken, isValidSetupToken } from "@/lib/setup-token";
+import {
+  envFilePath,
+  hasPersistedSetupConfig,
+  isAllowedSetupRequestOrigin,
+  readEnvFile,
+  setupAccessError,
+  takePendingSetup,
+} from "@/lib/setup-session";
+
+export { hasPersistedSetupConfig, isAllowedSetupRequestOrigin };
 
 // Client ID, secret and root folder may be left out when they are already
 // set in the environment; the wizard then never handles the secret.
@@ -19,6 +26,9 @@ const setupFinishSchema = z.object({
   redirectUri: z.string().url(),
   rootFolderId: z.string().trim().optional(),
   setupToken: z.string().optional(),
+  // OAuth state from /api/setup/prepare: the wizard values were stored on
+  // the server under it instead of in the browser.
+  state: z.string().optional(),
 });
 
 /** A value from the request, or the environment when the request has none. */
@@ -29,43 +39,6 @@ function fromBodyOrEnv(
 ): string {
   return value || process.env[envKey]?.trim() || "";
 }
-const SETUP_ENV_KEYS = [
-  "GOOGLE_CLIENT_ID",
-  "GOOGLE_CLIENT_SECRET",
-  "GOOGLE_REFRESH_TOKEN",
-  "NEXT_PUBLIC_ROOT_FOLDER_ID",
-] as const;
-
-export function isAllowedSetupRequestOrigin(request: Request): boolean {
-  const origin = request.headers.get("origin");
-  if (!origin) {
-    return false;
-  }
-
-  try {
-    const originUrl = new URL(origin);
-    const requestUrl = new URL(request.url);
-    const host = request.headers.get("host");
-    const forwardedHost = request.headers.get("x-forwarded-host");
-    const forwardedProto =
-      request.headers.get("x-forwarded-proto") ||
-      requestUrl.protocol.slice(0, -1);
-    const allowedOrigins = new Set([requestUrl.origin]);
-
-    if (host) {
-      allowedOrigins.add(`${requestUrl.protocol}//${host}`);
-    }
-
-    if (forwardedHost) {
-      allowedOrigins.add(`${forwardedProto}://${forwardedHost}`);
-    }
-
-    return allowedOrigins.has(originUrl.origin);
-  } catch {
-    return false;
-  }
-}
-
 export function escapeEnvValue(value: string): string {
   return value
     .replace(/\\/g, "\\\\")
@@ -91,16 +64,6 @@ export function writeEnvValue(
     : `${envContent}\n${line()}`;
 }
 
-export function hasPersistedSetupConfig(envContent: string): boolean {
-  return SETUP_ENV_KEYS.every((key) => {
-    const match = envContent.match(new RegExp(`^${key}=(.*)$`, "m"));
-    if (!match) return false;
-
-    const value = match[1].trim().replace(/^["']|["']$/g, "");
-    return value.length > 0;
-  });
-}
-
 export const POST = createPublicRoute(
   async ({ body, request, session }) => {
     try {
@@ -108,44 +71,46 @@ export const POST = createPublicRoute(
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
 
-      const envPath = path.join(process.cwd(), ".env");
-      let envContent = "";
+      const envPath = envFilePath();
+      let envContent = readEnvFile();
 
-      try {
-        if (fs.existsSync(envPath)) {
-          envContent = fs.readFileSync(envPath, "utf-8");
+      let pending = null;
+      if (body.state) {
+        pending = await takePendingSetup(body.state);
+        if (!pending) {
+          return NextResponse.json(
+            {
+              error:
+                'This setup session has expired. Click "Authorize with Google" again.',
+            },
+            { status: 400 },
+          );
         }
-      } catch (e) {
-        logger.error({ err: e }, "Gagal membaca .env");
       }
 
-      const isConfigured = await isAppConfigured();
-      const hasSetupConfig = hasPersistedSetupConfig(envContent);
-      if (isConfigured || hasSetupConfig) {
-        if (session?.user?.role !== "ADMIN") {
-          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
-      } else if (!isValidSetupToken(body.setupToken)) {
-        // First-run setup is reachable by anyone who finds the instance; the
-        // token proves access to the server log or environment (Z2-26).
-        announceSetupToken();
+      const denied = await setupAccessError(
+        envContent,
+        session,
+        body.setupToken ?? pending?.setupToken,
+      );
+      if (denied) {
         return NextResponse.json(
-          {
-            error:
-              'Invalid setup token. Find it in the server log ("[Setup] App is not configured") or set SETUP_TOKEN.',
-          },
-          { status: 403 },
+          { error: denied.error },
+          { status: denied.status },
         );
       }
 
       const { authCode, redirectUri } = body;
-      const clientId = fromBodyOrEnv(body.clientId, "GOOGLE_CLIENT_ID");
+      const clientId = fromBodyOrEnv(
+        body.clientId || pending?.clientId,
+        "GOOGLE_CLIENT_ID",
+      );
       const clientSecret = fromBodyOrEnv(
-        body.clientSecret,
+        body.clientSecret || pending?.clientSecret,
         "GOOGLE_CLIENT_SECRET",
       );
       const rootFolderId = fromBodyOrEnv(
-        body.rootFolderId,
+        body.rootFolderId || pending?.rootFolderId,
         "NEXT_PUBLIC_ROOT_FOLDER_ID",
       );
       if (!clientId || !clientSecret || !rootFolderId) {

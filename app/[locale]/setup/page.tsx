@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { useAlert } from "@/components/providers/ModalProvider";
 import { useTranslations } from "next-intl";
 
-// Values carried across the redirect to Google. sessionStorage, not
-// localStorage: it is tab-scoped and gone when the tab closes, and it is
-// cleared as soon as setup finishes.
+// Only the OAuth state is carried across the redirect to Google. The values
+// typed in the form are kept on the server under that state
+// (/api/setup/prepare), so no secret ends up in browser storage.
 const SETUP_STORAGE_KEY = "zee_setup_temp";
 
 interface EnvSetupConfig {
@@ -33,6 +33,7 @@ export default function SetupPage() {
     rootFolderId: "",
     authCode: "",
     setupToken: "",
+    state: "",
   });
   // What is already in .env. Those fields are hidden unless the admin
   // chooses to enter different values.
@@ -74,10 +75,7 @@ export default function SetupPage() {
     const code = urlParams.get("code");
     if (!code && !urlParams.get("error")) return;
 
-    const savedDataStr = sessionStorage.getItem(SETUP_STORAGE_KEY);
-    const { state: expectedState, ...savedData } = savedDataStr
-      ? (JSON.parse(savedDataStr) as typeof formData & { state?: string })
-      : ({} as typeof formData & { state?: string });
+    const expectedState = sessionStorage.getItem(SETUP_STORAGE_KEY);
     window.history.replaceState({}, document.title, "/setup");
 
     // The state must be the one this tab sent to Google; otherwise the code
@@ -91,7 +89,7 @@ export default function SetupPage() {
       return;
     }
 
-    setFormData((prev) => ({ ...prev, ...savedData, authCode: code }));
+    setFormData((prev) => ({ ...prev, authCode: code, state: expectedState }));
     setStep(2);
   }, [step, alert, t]);
 
@@ -110,19 +108,42 @@ export default function SetupPage() {
       return;
     }
 
-    const state = crypto.randomUUID();
-    // Only what the admin typed is carried over; values from .env stay on
-    // the server, so the secret never touches the browser in that case.
-    sessionStorage.setItem(
-      SETUP_STORAGE_KEY,
-      JSON.stringify({
-        clientId: askClientId ? formData.clientId.trim() : "",
-        clientSecret: askClientSecret ? formData.clientSecret.trim() : "",
-        rootFolderId: askRootFolderId ? formData.rootFolderId.trim() : "",
-        setupToken: formData.setupToken.trim(),
-        state,
-      }),
-    );
+    // The server checks the setup token (or admin session), keeps the typed
+    // values, and returns the state to send to Google. Values from .env are
+    // never sent at all.
+    let state: string;
+    try {
+      const res = await fetch("/api/setup/prepare", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId: askClientId ? formData.clientId.trim() : undefined,
+          clientSecret: askClientSecret
+            ? formData.clientSecret.trim()
+            : undefined,
+          rootFolderId: askRootFolderId
+            ? formData.rootFolderId.trim()
+            : undefined,
+          setupToken: formData.setupToken.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.state) {
+        await alert(`${t("setupFailed")}: ${data.error ?? res.status}`, {
+          title: t("setupFailed"),
+          variant: "destructive",
+        });
+        return;
+      }
+      state = data.state;
+    } catch {
+      await alert(t("connectionError"), {
+        title: "Error",
+        variant: "destructive",
+      });
+      return;
+    }
+    sessionStorage.setItem(SETUP_STORAGE_KEY, state);
 
     const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
     authUrl.search = new URLSearchParams({
@@ -145,11 +166,8 @@ export default function SetupPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          clientId: formData.clientId || undefined,
-          clientSecret: formData.clientSecret || undefined,
-          rootFolderId: formData.rootFolderId || undefined,
+          state: formData.state,
           authCode: formData.authCode,
-          setupToken: formData.setupToken,
           redirectUri: `${window.location.origin}/setup`,
         }),
       });

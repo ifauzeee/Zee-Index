@@ -71,7 +71,7 @@ A `429` response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-Rat
 | Method | Endpoint                        | Access | Description                                                                 |
 | ------ | ------------------------------- | ------ | --------------------------------------------------------------------------- |
 | GET    | `/api/files`                    | Public | List a folder: `folderId`, `pageToken`, `share_token`, `access_token`        |
-| GET    | `/api/filedetails`              | Public | Metadata of one file: `fileId`                                              |
+| GET    | `/api/filedetails`              | Signed in, or with `share_token` | Metadata of one file: `fileId`                    |
 | GET    | `/api/folderpath`               | Public | Breadcrumb path of a folder: `folderId`. Names of restricted ancestors are hidden |
 | GET    | `/api/download`                 | Public | Stream or download: `fileId`, optional `share_token`, `access_token`, `preview=1`, `export=pdf`. Supports `Range` |
 | GET    | `/api/search`                   | Public | Search Drive: `q`, `folderId`, `searchType` (`name` or `fullText`), filters `mimeType`, `modifiedTime`, `minSize` |
@@ -144,7 +144,8 @@ A `429` response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-Rat
 | GET    | `/api/config`        | Public (API)  | Public app settings and branding                             |
 | GET    | `/api/config/public` | Public        | Guest login, author visibility, local storage lock flags     |
 | GET    | `/api/setup/status`  | Public (API)   | Which Google values are already set in the environment (client ID, root folder ID, whether a secret is set; never the secret) |
-| POST   | `/api/setup/finish`  | Public / Admin | Finish first-run setup. Client ID, secret and root folder fall back to the environment. Requires the setup token while unconfigured, admin afterwards |
+| POST   | `/api/setup/prepare` | Public / Admin (AUTH) | Start setup: checks the setup token (or admin), keeps the typed values on the server for 10 minutes, returns the OAuth `state` |
+| POST   | `/api/setup/finish`  | Public / Admin | Finish setup with the `state` from prepare and Google's code. Client ID, secret and root folder fall back to the environment. Requires the setup token while unconfigured, admin afterwards |
 | GET    | `/api/health`        | Public (API)  | `{"status","services":{"database","cache","google_drive"}}`  |
 | GET    | `/api/docs`          | Signed in (API) | Swagger UI                                                 |
 | GET    | `/api/docs/openapi`  | Signed in (API) | OpenAPI document                                           |
