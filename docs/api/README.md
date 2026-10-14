@@ -143,7 +143,8 @@ A `429` response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-Rat
 | ------ | -------------------- | ------------- | ------------------------------------------------------------ |
 | GET    | `/api/config`        | Public (API)  | Public app settings and branding                             |
 | GET    | `/api/config/public` | Public        | Guest login, author visibility, local storage lock flags     |
-| POST   | `/api/setup/finish`  | Public / Admin | Finish first-run setup. Requires the setup token while unconfigured, admin afterwards |
+| GET    | `/api/setup/status`  | Public (API)   | Which Google values are already set in the environment (client ID, root folder ID, whether a secret is set; never the secret) |
+| POST   | `/api/setup/finish`  | Public / Admin | Finish first-run setup. Client ID, secret and root folder fall back to the environment. Requires the setup token while unconfigured, admin afterwards |
 | GET    | `/api/health`        | Public (API)  | `{"status","services":{"database","cache","google_drive"}}`  |
 | GET    | `/api/docs`          | Signed in (API) | Swagger UI                                                 |
 | GET    | `/api/docs/openapi`  | Signed in (API) | OpenAPI document                                           |

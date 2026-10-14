@@ -52,6 +52,7 @@ Security hardening from the October 2026 audits, plus fixes found while verifyin
 - Server-side logs are structured JSON everywhere (no `console.*`).
 - Local storage and external providers stay browsable while Google Drive is unconfigured or its token expired; Drive folders show "Setup Required" instead of an error page.
 - Anonymous visitors can open file request links.
+- The setup wizard uses `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `NEXT_PUBLIC_ROOT_FOLDER_ID` from `.env` instead of asking for them again; the client secret then never reaches the browser. The OAuth flow now carries a `state` value, and wizard values are kept in `sessionStorage` (cleared after setup) instead of `localStorage`.
 
 ---
 
