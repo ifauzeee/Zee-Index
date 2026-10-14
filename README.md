@@ -42,103 +42,142 @@
 
 ## Contents
 
-- [Key Features](#key-features)
-- [Tech Stack](#tech-stack)
+- [Highlights](#highlights)
+- [Quick Start](#quick-start)
+- [Documentation](#documentation)
+- [Features](#features)
 - [Architecture](#architecture)
-- [Getting Started](#getting-started)
-- [Storage Providers](#storage-providers)
-- [Google Cloud Setup](#google-cloud-setup)
-- [Environment Variables](#environment-variables)
-- [Deployment](#deployment)
-- [Security](#security)
-- [API Reference](#api-reference)
-- [Project Structure](#project-structure)
-- [Development & Testing](#development--testing)
-- [FAQ & Troubleshooting](docs/FAQ.md)
+- [Tech Stack](#tech-stack)
+- [Security at a Glance](#security-at-a-glance)
+- [Requirements](#requirements)
 - [Contributing](#contributing)
 - [License](#license)
 
 ---
 
-## Key Features
+## Highlights
 
-### Storage
-
-| Feature                 | Description                                                     |
-| ----------------------- | --------------------------------------------------------------- |
-| **Multi-provider**      | Google Drive, Dropbox, S3/R2, WebDAV, and local filesystem      |
-| **Unified root**        | All providers appear under one virtual root in the file browser |
-| **Multi-drive support** | Personal, Shared, and Team Drives in a single sidebar           |
-| **Manual drives**       | Additional Google Drive mounts via config, optional password    |
-| **Folder aliases**      | Custom display names without touching the source drive          |
-| **Private folders**     | Hide specific folders from non-admin users                      |
-| **Local storage**       | Mount a local directory alongside cloud providers               |
-| **Storage monitor**     | Usage limits and warnings per provider                          |
-
-### Media Playback
-
-| Feature                 | Description                                                       |
-| ----------------------- | ----------------------------------------------------------------- |
-| **Video streaming**     | Direct streaming with VidStack player, resume, picture-in-picture |
-| **Adaptive subtitles**  | Auto-detected `.srt` / `.vtt` subtitles                           |
-| **Audio dock**          | Persistent player that keeps playing across navigation            |
-| **Image gallery**       | Masonry grid with a full-featured lightbox                        |
-| **Inline image editor** | Crop, resize, rotate with `react-easy-crop`                       |
-| **PDF viewer**          | Built-in viewer powered by `react-pdf`                            |
-| **Code viewer**         | Monaco Editor with syntax highlighting and read-only preview      |
-| **Office files**        | Word, Excel, and PowerPoint preview via Google Viewer             |
-| **Archive preview**     | Browse ZIP contents without downloading                           |
-| **Ebook reader**        | Read `.epub` files in the browser                                 |
-| **Movie metadata**      | Optional TMDB enrichment — posters, ratings, cast                 |
-| **File tags**           | Custom, searchable tags on any file                               |
-
-### Access Control
-
-| Feature               | Description                                                               |
-| --------------------- | ------------------------------------------------------------------------- |
-| **Role-based access** | Admin / Editor / User / Guest                                             |
-| **Folder passwords**  | Recursive folder protection, bcrypt-hashed                                |
-| **Two-factor auth**   | Optional TOTP 2FA with QR setup                                           |
-| **Share links**       | JWT-signed, with expiry, max uses, download toggle, watermark             |
-| **Direct download**   | Share links that start the download without the preview page              |
-| **Access requests**   | Users request access to protected folders; admin approves                 |
-| **Rate limiting**     | Per-endpoint tiers for API, admin, auth, and download                     |
-| **API keys**          | Bearer 64-hex keys with granular `files:read` / `admin:write` permissions |
-| **Security headers**  | CSP (nonce-based), HSTS, X-Frame-Options, Referrer/Feature Policy         |
-
-### Admin Dashboard
-
-| Feature                  | Description                                         |
-| ------------------------ | --------------------------------------------------- |
-| **Analytics**            | Page views, visitors, bandwidth, device breakdown   |
-| **Activity & audit log** | Downloads, uploads, config changes, security events |
-| **User management**      | Editors, invites, password resets                   |
-| **Incident monitoring**  | Auto-checks with Discord / Telegram alerts          |
-| **Cache control**        | Inspect and clear Redis cache                       |
-| **System health**        | DB, Redis, and API health checks                    |
-| **File requests**        | Public upload links with expiry                     |
-| **Storage tests**        | Validate provider connections from the panel        |
+- **One file browser for every source.** Google Drive (including shared drives), local disk, S3 / Cloudflare R2 / MinIO, WebDAV (Nextcloud) and Dropbox, each as its own root.
+- **Stream and preview in the browser.** Video with subtitles and resume, audio, images, PDF, code, Markdown, EPUB, Office documents and ZIP archives.
+- **Share safely.** Links with expiry, max uses, sign-in requirement, download blocking and watermarks, for one file, a folder or a collection. A link opens exactly what was shared.
+- **Control access.** Admin, editor, user and guest roles, password-protected folders, per-email grants, private folders, two-factor authentication.
+- **Run it yourself.** One `docker compose up`: PostgreSQL, Redis, automatic HTTPS with Caddy, daily database backups, health checks and alerts.
 
 ---
 
-## Tech Stack
+## Quick Start
 
-<table>
-<tr><th>Layer</th><th>Technology</th><th>Purpose</th></tr>
-<tr><td rowspan="3"><strong>Frontend</strong></td><td>Next.js 16 + React 19</td><td>App Router, Server Components, Streaming SSR</td></tr>
-<tr><td>Tailwind CSS 3 + Framer Motion</td><td>Styling and micro-animations</td></tr>
-<tr><td>Zustand + TanStack Query</td><td>Client and server state</td></tr>
-<tr><td rowspan="5"><strong>Backend</strong></td><td>Next.js API Routes</td><td>REST API, middleware, i18n routing</td></tr>
-<tr><td>NextAuth.js v5</td><td>OAuth, credentials, guest auth, JWT sessions</td></tr>
-<tr><td>Google Drive API v3</td><td>Primary file storage and streaming</td></tr>
-<tr><td>Prisma + PostgreSQL 16</td><td>ORM with versioned migrations</td></tr>
-<tr><td>ioredis + Redis 7</td><td>Caching, rate limiting, session state</td></tr>
-<tr><td rowspan="3"><strong>Infrastructure</strong></td><td>Docker + Caddy</td><td>Containerization, auto-HTTPS proxy</td></tr>
-<tr><td>Dropbox API / AWS SDK v3 / WebDAV</td><td>Secondary storage providers</td></tr>
-<tr><td>Pino</td><td>Structured logging</td></tr>
-<tr><td rowspan="2"><strong>Frontend tooling</strong></td><td>Vitest + Playwright</td><td>Unit and end-to-end tests</td></tr>
-<tr><td>ESLint + Prettier + Husky</td><td>Linting, formatting, git hooks</td></tr>
-</table>
+```bash
+git clone https://github.com/ifauzeee/Zee-Index.git
+cd Zee-Index
+cp .env.example .env
+```
+
+Edit `.env`. At minimum, set:
+
+| Variable                                    | Value                                                             |
+| ------------------------------------------- | ----------------------------------------------------------------- |
+| `NEXTAUTH_URL`                              | `http://localhost:3000` (or your `https://` domain)               |
+| `NEXTAUTH_SECRET`                           | 32+ random characters (`openssl rand -hex 32`)                    |
+| `SHARE_SECRET_KEY`                          | 32+ random characters                                             |
+| `ADMIN_EMAILS`                              | Your email                                                        |
+| `ADMIN_PASSWORD`                            | Your admin password (8+ characters, no `$`)                       |
+| `POSTGRES_PASSWORD`                         | Database password                                                 |
+| `CRON_SECRET`                               | 16+ random characters                                             |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | From your Google OAuth client ([how](docs/google-cloud-setup.md)) |
+
+Then:
+
+```bash
+docker compose up -d --build
+docker compose logs zee-index | grep -i "setup token"   # token for the setup wizard
+```
+
+Open `http://localhost:3000/setup`, enter the setup token and authorize Google Drive. Restart with `docker compose up -d --build`, and sign in at `/login` with `ADMIN_EMAILS` / `ADMIN_PASSWORD`.
+
+The full walkthrough is in **[Getting Started](docs/getting-started.md)**.
+
+---
+
+## Documentation
+
+| Guide                                            | Covers                                                                      |
+| ------------------------------------------------ | --------------------------------------------------------------------------- |
+| [Getting Started](docs/getting-started.md)       | Installation, first-run setup, first sign-in                                |
+| [Google Cloud Setup](docs/google-cloud-setup.md) | OAuth client, redirect URIs, test users, troubleshooting                    |
+| [Configuration](docs/configuration.md)           | Every environment variable and admin setting                                |
+| [Storage Providers](docs/storage-providers.md)   | Drive, manual drives, local, S3/R2/MinIO, WebDAV, Dropbox, upload limits    |
+| [Deployment](docs/deployment.md)                 | VPS, HTTPS (own domain, DuckDNS), reverse proxies, cron, backups, updates   |
+| [User & Admin Guide](docs/user-guide.md)         | Browsing, previews, search, sharing, file requests, admin panel             |
+| [Security](docs/security.md)                     | Roles, sessions, 2FA, protected folders, share links, API keys, rate limits |
+| [API Reference](docs/api/README.md)              | Every endpoint with its access level, plus examples                         |
+| [Development](docs/development.md)               | Local setup, project structure, conventions, testing, CI                    |
+| [FAQ & Troubleshooting](docs/FAQ.md)             | Common problems and fixes                                                   |
+
+---
+
+## Features
+
+### Storage
+
+| Feature                | Description                                                                             |
+| ---------------------- | --------------------------------------------------------------------------------------- |
+| **Google Drive**       | A root folder or the whole drive, plus extra folders and shared drives as manual drives |
+| **Local storage**      | Serve a directory on the server, with an optional password for the whole root           |
+| **S3 / R2 / MinIO**    | Any S3-compatible bucket, with multipart uploads for large files                        |
+| **WebDAV**             | Nextcloud, ownCloud or any WebDAV server, confined to a base path                       |
+| **Dropbox**            | Full Dropbox or an app folder, with automatic token refresh                             |
+| **Private folders**    | Hidden from everyone except admins                                                      |
+| **Storage monitoring** | Usage per source, quota warnings by email                                               |
+
+### Preview and playback
+
+| Feature            | Description                                                                               |
+| ------------------ | ----------------------------------------------------------------------------------------- |
+| **Video**          | Streaming player (VidStack) with seeking, resume, picture-in-picture, speed control       |
+| **Subtitles**      | `.srt` / `.vtt` next to the video are found automatically                                 |
+| **Audio dock**     | Keeps playing while you browse                                                            |
+| **Images**         | Gallery and lightbox; admins can crop, rotate and resize Drive images                     |
+| **Documents**      | PDF, code (Monaco), Markdown, EPUB, Word/Excel/PowerPoint (Drive viewer or Office Online) |
+| **Archives**       | List ZIP contents (Drive) without downloading                                             |
+| **Movie metadata** | Posters, ratings and cast from TMDB                                                       |
+| **Folder README**  | `README.md` in a folder is rendered under its listing                                     |
+
+### Organizing and finding
+
+| Feature                 | Description                                                                                  |
+| ----------------------- | -------------------------------------------------------------------------------------------- |
+| **Search**              | Per-folder search, plus global search (`Ctrl/⌘ + K`) including text inside indexed documents |
+| **Favorites and tags**  | Star items and add your own searchable tags                                                  |
+| **Keyboard navigation** | Arrow keys, Enter, Backspace, F2, Delete, type-to-jump                                       |
+| **Uploads**             | Chunked uploads with progress; dropped folders keep their structure                          |
+| **File management**     | Rename, move, copy, edit, delete, trash and revisions (Drive)                                |
+
+### Sharing and access
+
+| Feature               | Description                                                                      |
+| --------------------- | -------------------------------------------------------------------------------- |
+| **Share links**       | Expiry, max uses, sign-in required, prevent download, direct download, watermark |
+| **Collections**       | Share a hand-picked set of files and folders with one link                       |
+| **Protected folders** | Password per folder, applied to everything below it, on every storage source     |
+| **Access requests**   | Users ask for access to a protected folder; admins approve per email             |
+| **File requests**     | Public upload links into a folder, up to 2 GiB per file                          |
+| **Roles**             | Admin, editor, user, guest (guest can be disabled)                               |
+| **2FA**               | TOTP for every account                                                           |
+| **API keys**          | Bearer keys with permissions, expiry and their own rate limit                    |
+
+### Administration
+
+| Feature                | Description                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------- |
+| **Dashboard**          | Stats, system health, live activity                                                |
+| **Analytics**          | Page views, visitors, popular pages, devices, referrers                            |
+| **Users**              | Roles, invites, passwords, per-email folder access                                 |
+| **Activity and audit** | Downloads, uploads, shares, sign-ins and admin changes                             |
+| **Incidents**          | Alerts on failed sign-in bursts and download spikes, by email, Discord or Telegram |
+| **Branding**           | App name, logo, favicon, primary color                                             |
+| **Languages**          | English, Bahasa Indonesia, 繁體中文                                                |
+| **PWA**                | Installable on desktop and mobile                                                  |
 
 ---
 
@@ -146,520 +185,109 @@
 
 ```mermaid
 flowchart TB
-    subgraph CLIENT["Client Browser"]
-        A["React 19 + Next.js 16 App Router<br/>Zustand · TanStack Query"]
+    subgraph CLIENT["Browser"]
+        A["React 19 · Next.js 16 App Router<br/>Zustand · TanStack Query"]
     end
 
-    subgraph CADDY["Caddy Reverse Proxy"]
-        B["Auto-HTTPS · Let's Encrypt<br/>443 → 3000"]
+    subgraph EDGE["Caddy"]
+        B["Automatic HTTPS<br/>30 MB body limit"]
     end
 
-    subgraph APP["Zee-Index Application"]
-        C["API Routes"]
-        D["Middleware<br/>Auth · i18n · Rate Limit · CSP"]
-        E["Server Components<br/>Streaming SSR"]
+    subgraph APP["Zee-Index (Node.js 22)"]
+        P["proxy.ts<br/>auth · API keys · rate limits · CSP · i18n"]
+        R["API routes<br/>create*Route wrappers"]
+        S["Server components<br/>file & folder pages"]
     end
 
-    subgraph SERVICES["Backend Services"]
-        F[("PostgreSQL 16<br/>Users · Shares<br/>Activity · Config")]
-        G[("Redis 7<br/>Cache · KV Store<br/>Rate Limiting")]
-        H[("Storage Providers<br/>Google Drive · Dropbox<br/>S3 · WebDAV · Local")]
+    subgraph DATA["Data"]
+        PG[("PostgreSQL 16<br/>users · credentials · shares<br/>activity · settings")]
+        RD[("Redis 7<br/>cache · rate limits<br/>role sets · manual drives")]
     end
 
-    CLIENT <-->|HTTPS| CADDY
-    CADDY <--> APP
-    C <--> F
-    C <--> G
-    C <--> H
-    D --- C
-    E --- C
+    subgraph STORAGE["Storage sources"]
+        GD["Google Drive"]
+        LS["Local disk"]
+        EX["S3 / WebDAV / Dropbox"]
+    end
+
+    CLIENT <-->|HTTPS| EDGE
+    EDGE <--> P
+    P --> R
+    P --> S
+    R <--> PG
+    R <--> RD
+    S <--> PG
+    R <--> GD
+    R <--> LS
+    R <--> EX
 ```
+
+Every request passes `proxy.ts` (Next.js 16's middleware, on the Node.js runtime). Every route repeats its own authorization in a wrapper. Access to an item is always decided from the item itself (`isAccessRestricted`), the same way for API routes and server-rendered pages. Details: [Development → Request flow](docs/development.md#request-flow).
 
 ---
 
-## Getting Started
+## Tech Stack
 
-### Prerequisites
-
-| Requirement                                       | Required                |
-| ------------------------------------------------- | ----------------------- |
-| [Docker](https://docs.docker.com/get-docker/) 26+ | Yes (recommended route) |
-| [Git](https://git-scm.com/)                       | Yes                     |
-| Node.js 20+ / pnpm 9+                             | Only for local dev      |
-| Google Cloud project with the Drive API enabled   | Only for Google Drive   |
-
-### Quick Start with Docker
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/ifauzeee/Zee-Index.git
-cd Zee-Index
-
-# 2. Configure environment
-cp .env.example .env
-$EDITOR .env   # set ADMIN_EMAILS, ADMIN_PASSWORD, secrets, folder IDs
-               # there is no default password — you define it here
-
-# 3. Build and start (PostgreSQL, Redis, Caddy included)
-docker compose up -d --build
-
-# 4. Open http://localhost:3000 and visit /setup
-#    to authorize Google Drive / add storage providers
-```
-
-Useful commands:
-
-```bash
-docker compose ps                 # status of all services
-docker compose logs -f zee-index  # stream application logs
-docker compose up -d              # restart after .env changes
-docker compose down -v            # stop and remove all data (destructive)
-```
-
-### Local Development
-
-```bash
-git clone https://github.com/ifauzeee/Zee-Index.git
-cd Zee-Index
-pnpm install
-
-cp .env.example .env
-# set DATABASE_URL for a local PostgreSQL instance
-
-pnpm prisma migrate deploy        # or: pnpm prisma db push
-docker run -d --name zee-redis -p 6379:6379 redis:7-alpine
-pnpm dev                          # Turbopack dev server
-```
-
-Open `http://localhost:3000`. Log in with the `ADMIN_EMAILS` / `ADMIN_PASSWORD` you set.
-
-**Scripts:**
-
-| Command            | Purpose                                                   |
-| ------------------ | --------------------------------------------------------- |
-| `pnpm dev`         | Dev server (Turbopack)                                    |
-| `pnpm dev:webpack` | Dev server (Webpack fallback)                             |
-| `pnpm build`       | Production build                                          |
-| `pnpm start`       | Production server                                         |
-| `pnpm typecheck`   | `tsc --noEmit`                                            |
-| `pnpm lint`        | ESLint                                                    |
-| `pnpm check:all`   | typecheck + format:check + lint + i18n parity             |
-| `pnpm test`        | Vitest unit tests                                         |
-| `pnpm test:e2e`    | Playwright E2E tests (run `npx playwright install` first) |
-| `pnpm analyze`     | Bundle analyzer                                           |
-| `pnpm docker:dev`  | `docker compose -f docker-compose.dev.yml up`             |
-| `pnpm docker:prod` | `docker compose up --build`                               |
+| Layer          | Technology                                                                 |
+| -------------- | -------------------------------------------------------------------------- |
+| Frontend       | Next.js 16 (App Router), React 19, Tailwind CSS 3, Framer Motion, Radix UI |
+| State          | Zustand, TanStack Query                                                    |
+| Auth           | NextAuth.js v5 (JWT sessions), Google OAuth, credentials, TOTP             |
+| Data           | PostgreSQL 16 with Prisma, Redis 7 with ioredis                            |
+| Storage        | Google Drive API v3, AWS SDK v3 (S3), WebDAV client, Dropbox SDK           |
+| Media          | VidStack, react-pdf, Monaco Editor, epub.js, sharp                         |
+| Infrastructure | Docker (multi-stage, standalone output), Caddy, Pino logging               |
+| Quality        | TypeScript strict, ESLint, Prettier, Vitest, Playwright, Husky             |
 
 ---
 
-## Storage Providers
+## Security at a Glance
 
-Zee-Index serves files from **Google Drive** by default. You can mount **Dropbox**,
-**S3 / Cloudflare R2**, or **WebDAV** (e.g. Nextcloud) in addition, or instead.
-Files from each enabled provider appear under its own virtual root in the file
-browser, side by side with other providers.
+- Access is decided per item on the server: root confinement, private folders, protected folders, share grants.
+- Passwords and 2FA secrets are bcrypt-hashed or stored in PostgreSQL, never only in a cache.
+- Sessions expire after 7 days idle and are revoked immediately on password, role or 2FA changes.
+- Share links open only what was shared. Watermarks and download limits cannot be bypassed by editing the URL.
+- Nonce-based CSP, HSTS, `X-Frame-Options: DENY`, rate limits on every API, sign-in limits per IP and per account.
+- First-run setup requires a setup token, so a fresh instance cannot be claimed by someone else.
 
-| Variable                        | Description                                                            | Default        |
-| ------------------------------- | ---------------------------------------------------------------------- | -------------- |
-| `STORAGE_PROVIDER`              | `google-drive`, `dropbox`, `s3`, or `webdav`                           | `google-drive` |
-| `STORAGE_S3_ENDPOINT`           | S3-compatible endpoint (R2: `https://<acct>.r2.cloudflarestorage.com`) | —              |
-| `STORAGE_S3_REGION`             | S3 region (R2: `auto`)                                                 | —              |
-| `STORAGE_S3_BUCKET`             | Bucket name (required to enable S3)                                    | —              |
-| `STORAGE_S3_ACCESS_KEY_ID`      | Access key ID                                                          | —              |
-| `STORAGE_S3_SECRET_ACCESS_KEY`  | Secret access key                                                      | —              |
-| `STORAGE_S3_FORCE_PATH_STYLE`   | Use path-style URLs (required for R2)                                  | `true`         |
-| `STORAGE_S3_ROOT_NAME`          | Display name for the S3 root                                           | `S3 Storage`   |
-| `STORAGE_WEBDAV_URL`            | WebDAV base URL (required to enable WebDAV)                            | —              |
-| `STORAGE_WEBDAV_USERNAME`       | WebDAV username                                                        | —              |
-| `STORAGE_WEBDAV_PASSWORD`       | WebDAV password                                                        | —              |
-| `STORAGE_WEBDAV_BASEPATH`       | Base path on the server                                                | `/`            |
-| `STORAGE_WEBDAV_ROOT_NAME`      | Display name for the WebDAV root                                       | `WebDAV`       |
-| `STORAGE_DROPBOX_ACCESS_TOKEN`  | Dropbox access token (optional; app-key refresh supported)             | —              |
-| `STORAGE_DROPBOX_REFRESH_TOKEN` | Dropbox refresh token (long-lived access)                              | —              |
-| `STORAGE_DROPBOX_APP_KEY`       | Dropbox app key                                                        | —              |
-| `STORAGE_DROPBOX_APP_SECRET`    | Dropbox app secret                                                     | —              |
-| `STORAGE_DROPBOX_BASEPATH`      | Base path inside the Dropbox account                                   | —              |
-| `STORAGE_DROPBOX_ROOT_NAME`     | Display name for the Dropbox root                                      | `Dropbox`      |
-
-> Provider credentials are read from environment variables only and are never
-> exposed to the browser or API responses — the admin **Storage** panel shows a
-> masked summary and a "Test Connection" button. Restart the server after
-> changing any storage variable.
-
-### Google Cloud Setup
-
-1. Create a project in the [Google Cloud Console](https://console.cloud.google.com/).
-2. Enable the **Google Drive API**.
-3. Configure an **OAuth consent screen** (External) with scopes:
-   - `https://www.googleapis.com/auth/drive`
-   - `https://www.googleapis.com/auth/drive.file`
-   - `https://www.googleapis.com/auth/userinfo.email`
-   - `https://www.googleapis.com/auth/userinfo.profile`
-4. Create an **OAuth client ID** (Web application) with redirect URIs:
-   - `http://localhost:3000/setup` (development)
-   - `https://yourdomain.com/setup` (production)
-5. Paste `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` into `.env`, leave
-   `GOOGLE_REFRESH_TOKEN` empty, start the app, and complete the flow at
-   `/setup` to obtain the refresh token. Add it to `.env` and restart.
+Full details: [Security](docs/security.md). To report a vulnerability: [SECURITY.md](SECURITY.md).
 
 ---
 
-## Environment Variables
+## Requirements
 
-### Required
-
-| Variable                     | Description                               | Example                          |
-| ---------------------------- | ----------------------------------------- | -------------------------------- |
-| `NEXTAUTH_URL`               | Application URL                           | `https://yourdomain.com`         |
-| `NEXTAUTH_SECRET`            | Session signing secret (min 32 chars)     | `openssl rand -base64 32`        |
-| `GOOGLE_CLIENT_ID`           | Google OAuth client ID                    | `xxx.apps.googleusercontent.com` |
-| `GOOGLE_CLIENT_SECRET`       | Google OAuth client secret                | `GOCSPX-...`                     |
-| `GOOGLE_REFRESH_TOKEN`       | Google OAuth refresh token                | via `/setup`                     |
-| `NEXT_PUBLIC_ROOT_FOLDER_ID` | Google Drive folder to expose (or `root`) | `1AbC...`                        |
-| `ADMIN_EMAILS`               | Comma-separated admin emails              | `admin@example.com`              |
-| `ADMIN_PASSWORD`             | Admin password — dev/local (min 8 chars)  | strong password                  |
-| `ADMIN_PASSWORD_HASH`        | bcrypt hash, preferred in production      | `bcryptjs.hash(...)`             |
-| `SHARE_SECRET_KEY`           | JWT signing key for share links (min 32)  | `openssl rand -base64 32`        |
-
-Prefer `ADMIN_PASSWORD_HASH` over `ADMIN_PASSWORD` in production. Generate one with `scripts/hash-password.sh`.
-
-> ⚠️ **Docker Compose deployments:** use plaintext `ADMIN_PASSWORD` instead. Compose
-> interpolates `$` inside `.env` values, which silently corrupts bcrypt hashes
-> (e.g. `$zh` in `$2b$10$zh.…` is read as the empty variable `${zh}`) and breaks
-> admin login. See the FAQ: ["Why does admin login fail when deploying with Docker Compose?"](docs/FAQ.md).
-
-### Database, Cache & Limits
-
-| Variable                    | Description                    | Default                  |
-| --------------------------- | ------------------------------ | ------------------------ |
-| `POSTGRES_USER`             | PostgreSQL username            | `postgres`               |
-| `POSTGRES_PASSWORD`         | PostgreSQL password (required) | —                        |
-| `POSTGRES_DB`               | Database name                  | `zee_index`              |
-| `DATABASE_URL`              | Connection string (non-Docker) | Auto-generated in Docker |
-| `REDIS_URL`                 | Redis connection string        | `redis://redis:6379`     |
-| `STORAGE_LIMIT_GB`          | Storage warning limit          | `15`                     |
-| `STORAGE_WARNING_THRESHOLD` | Warning threshold (0–1)        | `0.90`                   |
-| `CRON_SECRET`               | Cron auth token (min 16 chars) | —                        |
-| `ALLOWED_ORIGINS`           | Download origin allowlist      | —                        |
-| `DOWNLOAD_TIMEOUT_MS`       | Download proxy timeout (ms)    | `60000`                  |
-
-### Optional
-
-| Variable                           | Description                                | Default                            |
-| ---------------------------------- | ------------------------------------------ | ---------------------------------- |
-| `NEXT_PUBLIC_APP_NAME`             | Application display name                   | `Zee Index`                        |
-| `NEXT_PUBLIC_MANUAL_DRIVES`        | JSON array of extra drives                 | `[]`                               |
-| `NEXT_PUBLIC_ENABLE_LOCAL_STORAGE` | Enable the local filesystem provider       | off                                |
-| `PRIVATE_FOLDER_IDS`               | JSON array of private folder IDs           | `[]`                               |
-| `LOG_LEVEL`                        | Pino level (`debug`/`info`/`warn`/`error`) | `info`                             |
-| `TMDB_API_KEY`                     | Movie metadata enrichment                  | —                                  |
-| `DUCKDNS_DOMAIN` / `DUCKDNS_TOKEN` | Free HTTPS via DuckDNS                     | —                                  |
-| `NOTIFY_DISCORD_WEBHOOK`           | Incident alerts to Discord                 | —                                  |
-| `NOTIFY_TELEGRAM_BOT_TOKEN`        | Incident alerts to Telegram                | —                                  |
-| `NOTIFY_TELEGRAM_CHAT_ID`          | Telegram chat receiver                     | —                                  |
-| `SMTP_HOST` / `SMTP_PORT`          | Outbound email (password reset, invites)   | `smtp.gmail.com` / `465`           |
-| `SMTP_USER` / `SMTP_PASS`          | SMTP credentials                           | —                                  |
-| `EMAIL_FROM`                       | Sender address                             | `Zee Index <no-reply@example.com>` |
-| `SKIP_ENV_VALIDATION`              | Skip startup env checks (CI builds)        | `false`                            |
-
-A complete, self-documenting template lives in [`.env.example`](.env.example).
-
----
-
-## Deployment
-
-### VPS (1 CPU / 1 GB minimum)
-
-```bash
-ssh root@your-server-ip
-curl -fsSL https://get.docker.com | sh
-
-adduser zee && usermod -aG docker zee
-su - zee
-
-git clone https://github.com/ifauzeee/Zee-Index.git
-cd Zee-Index
-cp .env.example .env
-$EDITOR .env
-
-docker compose up -d --build
-docker compose ps          # all services should report "healthy"
-```
-
-> **Enabling the local storage provider on Docker Compose** — the app container
-> runs as the `nextjs` user (uid 1001), and `./storage` is bind-mounted from the
-> host. The host directory must be writable by uid 1001, or folder listings fail
-> with `EACCES: permission denied, mkdir '/app/storage/.tmp'`. Fix the ownership
-> once per host (run again after each fresh deploy):
->
-> ```bash
-> sudo chown -R 1001:1001 storage
-> docker compose up -d zee-index
-> ```
-
-Typical footprint:
-
-| Container   | Limit  | Typical |
-| ----------- | ------ | ------- |
-| `zee-index` | 512 MB | ~300 MB |
-| `postgres`  | 200 MB | ~50 MB  |
-| `redis`     | 150 MB | ~20 MB  |
-| `caddy`     | 50 MB  | ~10 MB  |
-
-### Automatic HTTPS (DuckDNS + Caddy)
-
-The bundled `docker-compose.yml` and `Caddyfile` provision free Let's Encrypt certificates:
-
-```bash
-DUCKDNS_DOMAIN="your-subdomain"
-DUCKDNS_TOKEN="your-duckdns-token"
-CADDY_SITE="your-subdomain.duckdns.org"
-NEXTAUTH_URL="https://your-subdomain.duckdns.org"
-```
-
-### Other Platforms
-
-Zee-Index runs anywhere Next.js runs. General recipe:
-
-1. Provision PostgreSQL 16 and Redis 7.
-2. Deploy with `docker compose up -d --build` (or a PaaS build of your choice).
-3. Set the environment variables above (`SKIP_ENV_VALIDATION=true` if the build
-   runs without a full `.env`).
-4. Run `prisma migrate deploy` before the first start (Docker does this automatically).
-
----
-
-## Security
-
-### Authentication
-
-| Method            | Description                                  |
-| ----------------- | -------------------------------------------- |
-| Google OAuth      | Sign in with a Google account                |
-| Admin credentials | `ADMIN_EMAILS` + `ADMIN_PASSWORD` / hash     |
-| Guest access      | Read-only, can be disabled in admin settings |
-| Two-factor auth   | TOTP with QR setup (admin)                   |
-
-| Role   | Scope                                    |
-| ------ | ---------------------------------------- |
-| ADMIN  | Full access — settings, users, all files |
-| EDITOR | File management, no system settings      |
-| USER   | Standard access to permitted folders     |
-| GUEST  | Read-only access to public content       |
-
-### Headers & Policies
-
-- **CSP** nonce-based — restrict script/style/media sources (applied in middleware)
-- **HSTS** — forces HTTPS (2 years)
-- **X-Frame-Options: DENY** — blocks clickjacking
-- **X-Content-Type-Options: nosniff** — blocks MIME sniffing
-- **Referrer-Policy** — `strict-origin-when-cross-origin`
-- **Permissions-Policy** — camera, microphone, geolocation disabled
-
-### API Keys
-
-Programmatic access uses bearer keys (`Authorization: Bearer zk_...`) that bypass
-session auth. Manage them at **Admin → API Keys** (`/admin/api-keys`); the raw
-key is shown exactly once. Permissions are scoped: `files:read`, `files:write`,
-`share:read`, `share:write`, `admin:read`, `admin:write`. Keys are bcrypt-hashed
-at rest, use their own rate-limit tier, and can be revoked individually.
-
----
-
-## API Reference
-
-### Public
-
-| Method | Endpoint                 | Description                       |
-| ------ | ------------------------ | --------------------------------- |
-| `GET`  | `/api/health`            | Health check                      |
-| `GET`  | `/api/config/public`     | Public app configuration          |
-| `GET`  | `/api/files`             | List files (optional share token) |
-| `GET`  | `/api/filedetails`       | Single file details               |
-| `GET`  | `/api/download?fileId=…` | Download / stream a file          |
-| `GET`  | `/api/folderpath`        | Folder breadcrumb path            |
-| `GET`  | `/api/metadata`          | File metadata                     |
-| `GET`  | `/api/proxy-image`       | Secure image proxy for thumbnails |
-| `GET`  | `/api/events`            | Server-sent events                |
-| `POST` | `/api/analytics/track`   | Track page view                   |
-
-### Authenticated
-
-| Method | Endpoint                        | Description                    |
-| ------ | ------------------------------- | ------------------------------ |
-| `GET`  | `/api/search`                   | Search files                   |
-| `GET`  | `/api/search/global`            | Search across all providers    |
-| `GET`  | `/api/datausage`                | Storage usage                  |
-| `GET`  | `/api/storage-details`          | Per-provider storage breakdown |
-| `GET`  | `/api/trash`                    | Trashed files                  |
-| `GET`  | `/api/manual-drives`            | Configured manual drives       |
-| `GET`  | `/api/share/list`               | Share links                    |
-| `GET`  | `/api/share/[id]`               | Share link details             |
-| `GET`  | `/api/archive-preview`          | Browse ZIP contents            |
-| `POST` | `/api/files/upload`             | Upload file                    |
-| `POST` | `/api/files/move`               | Move file                      |
-| `POST` | `/api/files/copy`               | Copy file                      |
-| `POST` | `/api/files/delete`             | Delete file                    |
-| `POST` | `/api/files/rename`             | Rename file                    |
-| `POST` | `/api/files/update`             | Update file content            |
-| `POST` | `/api/files/update-media`       | Update media metadata          |
-| `POST` | `/api/files/bulk-delete`        | Bulk delete                    |
-| `POST` | `/api/files/bulk-move`          | Bulk move                      |
-| `POST` | `/api/files/[fileId]/revisions` | File revision history          |
-| `POST` | `/api/folder/create`            | Create folder                  |
-| `POST` | `/api/favorites`                | Toggle favorite                |
-| `POST` | `/api/tags`                     | Manage file tags               |
-| `POST` | `/api/share/create`             | Create share link              |
-| `POST` | `/api/share/delete`             | Delete share link              |
-| `POST` | `/api/share/revoke`             | Revoke share link              |
-| `POST` | `/api/request-access`           | Request folder access          |
-| `POST` | `/api/file-request/upload`      | Upload to a file request       |
-
-### Admin
-
-| Method   | Endpoint                        | Description              |
-| -------- | ------------------------------- | ------------------------ |
-| `GET`    | `/api/admin/analytics`          | Analytics data           |
-| `GET`    | `/api/admin/audit`              | Security audit trail     |
-| `GET`    | `/api/admin/logs`               | System logs              |
-| `GET`    | `/api/admin/config`             | App configuration        |
-| `GET`    | `/api/admin/incidents`          | Incidents                |
-| `GET`    | `/api/admin/stats`              | System statistics        |
-| `GET`    | `/api/admin/system-health`      | Health checks            |
-| `GET`    | `/api/admin/storage/test`       | Test provider connection |
-| `GET`    | `/api/admin/api-keys`           | List API keys (masked)   |
-| `POST`   | `/api/admin/config`             | Update configuration     |
-| `POST`   | `/api/admin/protected-folders`  | Folder passwords         |
-| `POST`   | `/api/admin/manual-drives`      | Manage manual drives     |
-| `POST`   | `/api/admin/invite`             | Invite user              |
-| `POST`   | `/api/admin/editors`            | Add / remove editor      |
-| `POST`   | `/api/admin/incidents/evaluate` | Evaluate incident rules  |
-| `POST`   | `/api/admin/api-keys`           | Create API key           |
-| `DELETE` | `/api/admin/api-keys/[id]`      | Revoke API key           |
-
-### Auth & 2FA
-
-| Method | Endpoint                     | Description                |
-| ------ | ---------------------------- | -------------------------- |
-| `GET`  | `/api/auth/me`               | Current user               |
-| `GET`  | `/api/auth/status`           | Auth status                |
-| `POST` | `/api/auth/2fa/generate`     | Secret + QR code           |
-| `POST` | `/api/auth/2fa/verify`       | Verify 2FA setup           |
-| `POST` | `/api/auth/2fa/verify-login` | Verify 2FA login           |
-| `POST` | `/api/auth/2fa/disable`      | Disable 2FA                |
-| `POST` | `/api/auth/folder`           | Authenticate folder access |
-| `POST` | `/api/auth/profile/password` | Change own password        |
-
-### Cron
-
-| Method | Endpoint                     | Description             |
-| ------ | ---------------------------- | ----------------------- |
-| `GET`  | `/api/cron/activity-cleanup` | Purge old activity logs |
-| `GET`  | `/api/cron/incident-monitor` | Run incident checks     |
-| `GET`  | `/api/cron/storage-check`    | Check storage limits    |
-| `GET`  | `/api/cron/weekly-report`    | Weekly activity report  |
-
-Cron routes require `Authorization: Bearer $CRON_SECRET`.
-
----
-
-## Project Structure
-
-```
-app/
-  [locale]/            Internationalized routes (main, admin, login, setup)
-  api/                 Route handlers (admin, auth, files, share, download, cron, ...)
-components/
-  admin/               Dashboard UI
-  file-browser/        Listing, bulk actions, views, share
-  file-details/        Preview & player (video, pdf, code, office, epub)
-  layout/              Header, sidebar, footer
-  ui/                  Radix-based primitives
-lib/
-  drive/               Google Drive API client
-  storage/             Provider abstraction (S3, WebDAV) + virtual root
-  services/            Download, health, analytics
-  kv/                  Redis → in-memory KV fallback
-  events/              Event pipeline
-  api-middleware.ts    Route wrapper factory (createUserRoute, createAdminRoute, ...)
-  env.ts               Zod-validated environment
-  constants.ts         TTLs, rate limits, MIME types, error messages
-types/                 TypeScript definitions
-prisma/                Schema + versioned migrations
-messages/              i18n translations (en, id, zh-TW)
-__tests__/             Vitest unit tests
-e2e/                   Playwright end-to-end tests
-proxy.ts               Auth, i18n, rate limiting, CSP (Next 16 proxy, Node.js runtime)
-docker-compose.yml     Production stack (app, postgres, redis, caddy)
-```
-
----
-
-## Development & Testing
-
-```bash
-pnpm test                    # unit tests (Vitest)
-pnpm test -- --coverage      # coverage report
-pnpm test:e2e                # E2E tests (Playwright)
-npx playwright install       # first-time browser install
-```
-
-CI runs: `prisma generate` → `migrate deploy` → lint → typecheck → unit tests →
-E2E (chromium) → production build. Coverage is collected with
-`@vitest/coverage-v8`.
+| Use                 | Needs                                                         |
+| ------------------- | ------------------------------------------------------------- |
+| Run with Docker     | Docker Engine 26+ with Compose v2, 1 vCPU, 1 GB RAM           |
+| Run without Docker  | Node.js 22, pnpm 10, PostgreSQL 16, Redis 7                   |
+| Google Drive source | A Google Cloud project with the Drive API and an OAuth client |
 
 ---
 
 ## Contributing
 
-1. Fork and clone:
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and [Development](docs/development.md), then:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/Zee-Index.git
-cd Zee-Index
-git checkout -b feat/amazing-feature
-```
-
-2. Install, develop, and validate:
-
-```bash
+git checkout -b feat/your-feature
 pnpm install
 pnpm dev
-pnpm check:all      # typecheck + format + lint + i18n parity
+pnpm check:all && pnpm test -- run
+git commit -m "feat(scope): describe the change"
 ```
 
-3. Commit with Conventional Commits and open a Pull Request:
-
-```bash
-git commit -m "feat: add amazing feature"
-git push origin feat/amazing-feature
-```
-
-| Prefix      | Usage                 |
-| ----------- | --------------------- |
-| `feat:`     | New feature           |
-| `fix:`      | Bug fix               |
-| `refactor:` | Code restructuring    |
-| `security:` | Security improvement  |
-| `docs:`     | Documentation         |
-| `chore:`    | Maintenance           |
-| `test:`     | Adding/updating tests |
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) if present, and see the
-[FAQ](docs/FAQ.md) if anything is unclear.
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/). Pull requests are squash-merged.
 
 ---
 
 ## License
 
-This project is licensed under the **GNU Affero General Public License v3.0
-(AGPL-3.0)** with an attribution requirement:
+Licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)** with an attribution requirement:
 
-- Free to use, modify, and distribute
-- Commercial use allowed
-- **Attribution required:** display `© 2025-2026 Muhammad Ibnu Fauzi` in your deployment
-- Hosted, modified versions must disclose their source code
-- Changes must be documented
+- Free to use, modify and distribute, including commercially.
+- **Attribution required:** keep `© 2025-2026 Muhammad Ibnu Fauzi` visible in your deployment.
+- If you run a modified version as a service, you must publish its source code.
+- Changes must be documented.
 
 See [LICENSE](LICENSE) for the full text.
 
@@ -668,5 +296,5 @@ See [LICENSE](LICENSE) for the full text.
 ## Contributors
 
 <a href="https://github.com/ifauzeee/Zee-Index/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=ifauzeee/Zee-Index" />
+  <img src="https://contrib.rocks/image?repo=ifauzeee/Zee-Index" alt="Contributors" />
 </a>
