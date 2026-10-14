@@ -50,6 +50,8 @@ Security hardening from the October 2026 audits, plus fixes found while verifyin
 - Files whose names contain `&`, `+`, `,`, `'`, accents or CJK characters can be downloaded.
 - Links to local and provider files are URL-encoded correctly from the share, favorites and dashboard pages.
 - Server-side logs are structured JSON everywhere (no `console.*`).
+- Local storage and external providers stay browsable while Google Drive is unconfigured or its token expired; Drive folders show "Setup Required" instead of an error page.
+- Anonymous visitors can open file request links.
 
 ---
 
