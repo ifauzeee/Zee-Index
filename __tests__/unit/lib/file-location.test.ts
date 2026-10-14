@@ -3,6 +3,7 @@ import {
   getContainingFolderIds,
   getItemHref,
   getParentFolderId,
+  requiresDriveAuth,
 } from "@/lib/file-location";
 
 describe("file location", () => {
@@ -44,5 +45,17 @@ describe("file location", () => {
 
   it("returns null when a file's folder is unknown", () => {
     expect(getItemHref({ id: "abc", name: "a", isFolder: false })).toBeNull();
+  });
+});
+
+describe("requiresDriveAuth", () => {
+  it("is true only for Drive folders", () => {
+    expect(requiresDriveAuth("14M915id5Aj9sSSHxT-GYjdieZpR2bvru")).toBe(true);
+    expect(requiresDriveAuth("local-storage:")).toBe(false);
+    expect(requiresDriveAuth("local-storage:docs")).toBe(false);
+    expect(requiresDriveAuth("s3:photos/")).toBe(false);
+    expect(requiresDriveAuth("dropbox:")).toBe(false);
+    expect(requiresDriveAuth("virtual-root")).toBe(false);
+    expect(requiresDriveAuth(undefined)).toBe(false);
   });
 });
