@@ -9,15 +9,14 @@ import { logActivity } from "@/lib/activityLogger";
 import { createEditorRoute } from "@/lib/api-middleware";
 import { driveIdSchema } from "@/lib/drive/ids";
 import { canModifyAll } from "@/lib/editor-access";
-
-const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
+import { stripHtmlTags } from "@/lib/sanitize";
 
 const renameSchema = z.object({
   fileId: driveIdSchema,
   newName: z
     .string()
     .min(1, { message: "Nama baru tidak boleh kosong." })
-    .transform((val) => sanitizeString(val)),
+    .transform((val) => stripHtmlTags(val)),
 });
 export const POST = createEditorRoute(
   async ({ request, body, session }) => {

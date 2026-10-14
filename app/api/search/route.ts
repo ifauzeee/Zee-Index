@@ -9,10 +9,10 @@ import { db } from "@/lib/db";
 import { searchIndexedFiles } from "@/lib/search-index";
 import { logger } from "@/lib/logger";
 import { escapeDriveQueryValue } from "@/lib/drive/query";
+import { stripHtmlTags } from "@/lib/sanitize";
 
 const CACHE_TTL = 3600;
 
-const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
 const getMimeQuery = (mimeType?: string | null) => {
   switch (mimeType) {
     case "image":
@@ -76,7 +76,7 @@ export const GET = createPublicRoute(
     }
 
     const sanitizedSearchTerm = rawSearchTerm
-      ? sanitizeString(rawSearchTerm)
+      ? stripHtmlTags(rawSearchTerm)
       : "";
     const searchTerm = sanitizedSearchTerm
       ? escapeDriveQueryValue(sanitizedSearchTerm)

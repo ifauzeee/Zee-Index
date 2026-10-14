@@ -4,18 +4,17 @@ import { createAdminRoute } from "@/lib/api-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-
-const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
+import { stripHtmlTags } from "@/lib/sanitize";
 
 const folderSchema = z.object({
   folderId: z
     .string()
     .min(5, "Folder ID tidak valid.")
-    .transform((val) => sanitizeString(val).trim()),
+    .transform((val) => stripHtmlTags(val).trim()),
   id: z
     .string()
     .optional()
-    .transform((val) => (val ? sanitizeString(val) : "admin")),
+    .transform((val) => (val ? stripHtmlTags(val) : "admin")),
   password: z.string().min(1, "Password tidak boleh kosong."),
 });
 

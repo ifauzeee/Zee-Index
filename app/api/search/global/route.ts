@@ -14,7 +14,7 @@ import { searchIndexedFiles } from "@/lib/search-index";
 import { jwtVerify } from "jose";
 
 import { getErrorMessage } from "@/lib/errors";
-const sanitizeString = (str: string) => str.replace(/<[^>]*>?/gm, "");
+import { stripHtmlTags } from "@/lib/sanitize";
 const getMimeQuery = (mimeType?: string | null) => {
   switch (mimeType) {
     case "image":
@@ -85,7 +85,7 @@ export const GET = createPublicRoute(
       );
     }
 
-    const sanitizedSearchTerm = sanitizeString(rawSearchTerm);
+    const sanitizedSearchTerm = stripHtmlTags(rawSearchTerm);
 
     try {
       const accessToken = await getAccessToken();
