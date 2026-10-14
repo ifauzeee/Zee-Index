@@ -124,7 +124,7 @@ Until Google Drive is connected, every page redirects to `/setup`, and API route
      docker compose logs zee-index | grep -i "setup token"
      ```
 2. Open `http://localhost:3000/setup` (or your domain).
-3. Enter the Google client ID and secret, the root folder ID, and the setup token.
+3. Enter the setup token. Values already in `.env` (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXT_PUBLIC_ROOT_FOLDER_ID`) are shown as "Already set in .env" and used by the server; the wizard only asks for the ones that are missing. Choose **Use different values** to override them. The client secret from `.env` never leaves the server.
 4. Click the authorize button, choose your Google account, and accept the Drive permission.
 5. When Google sends you back, the wizard exchanges the code for a refresh token and writes `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` and `NEXT_PUBLIC_ROOT_FOLDER_ID` to `.env`.
 6. Restart so the new values are read:
