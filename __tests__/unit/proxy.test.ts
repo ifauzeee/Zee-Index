@@ -88,6 +88,15 @@ describe("middleware public API paths", () => {
     expect(isPublicApiPath("/api/share/items/abc")).toBe(true);
     expect(isPublicApiPath("/api/cron/storage-check")).toBe(true);
   });
+
+  it("lets anonymous visitors load a file request by its token", () => {
+    // /request/<token> is a public page that fetches this route.
+    expect(isPublicApiPath("/api/file-request/abc123")).toBe(true);
+    expect(isPublicApiPath("/api/file-request/upload")).toBe(true);
+    // Creating, listing and deleting requests stays behind sign-in.
+    expect(isPublicApiPath("/api/file-request")).toBe(false);
+    expect(isPublicApiPath("/api/file-request/abc/extra")).toBe(false);
+  });
 });
 
 describe("middleware content security policy", () => {
@@ -218,6 +227,15 @@ describe("middleware share_token flow", () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toContain("/login");
+  });
+
+  it("lets an anonymous visitor load a file request", async () => {
+    anonymous();
+    const response = await middleware(
+      new NextRequest("http://localhost:3000/api/file-request/abc123"),
+    );
+
+    expect(response.status).toBe(200);
   });
 
   it("lets an anonymous visitor through /en/folder/abc?share_token=valid", async () => {
