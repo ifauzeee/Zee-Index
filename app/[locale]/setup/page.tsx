@@ -5,6 +5,17 @@ import { useRouter } from "next/navigation";
 import { useAlert } from "@/components/providers/ModalProvider";
 import { useTranslations } from "next-intl";
 
+// Values carried across the redirect to Google. sessionStorage, not
+// localStorage: it is tab-scoped and gone when the tab closes, and it is
+// cleared as soon as setup finishes.
+const SETUP_STORAGE_KEY = "zee_setup_temp";
+
+interface EnvSetupConfig {
+  clientId: string | null;
+  rootFolderId: string | null;
+  hasClientSecret: boolean;
+}
+
 export default function SetupPage() {
   const router = useRouter();
   const { alert } = useAlert();
@@ -23,6 +34,33 @@ export default function SetupPage() {
     authCode: "",
     setupToken: "",
   });
+  // What is already in .env. Those fields are hidden unless the admin
+  // chooses to enter different values.
+  const [envConfig, setEnvConfig] = useState<EnvSetupConfig>({
+    clientId: null,
+    rootFolderId: null,
+    hasClientSecret: false,
+  });
+  const [overrideEnv, setOverrideEnv] = useState(false);
+
+  const askClientId = overrideEnv || !envConfig.clientId;
+  const askClientSecret = overrideEnv || !envConfig.hasClientSecret;
+  const askRootFolderId = overrideEnv || !envConfig.rootFolderId;
+  const hasEnvValues =
+    !!envConfig.clientId ||
+    envConfig.hasClientSecret ||
+    !!envConfig.rootFolderId;
+
+  useEffect(() => {
+    // Older versions kept the client secret in localStorage indefinitely.
+    localStorage.removeItem(SETUP_STORAGE_KEY);
+    fetch("/api/setup/status")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: EnvSetupConfig | null) => {
+        if (data) setEnvConfig(data);
+      })
+      .catch(() => undefined);
+  }, []);
 
   const getLocaleRootPath = () => {
     const locale = window.location.pathname.match(/^\/(en|id)(\/|$)/)?.[1];
@@ -31,37 +69,73 @@ export default function SetupPage() {
   const restartCommand = "docker compose up -d --build";
 
   useEffect(() => {
-    if (window.location.search.includes("code=") && step === 1) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get("code");
+    if (step !== 1) return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    if (!code && !urlParams.get("error")) return;
 
-      const savedDataStr = localStorage.getItem("zee_setup_temp");
-      const savedData = savedDataStr ? JSON.parse(savedDataStr) : {};
+    const savedDataStr = sessionStorage.getItem(SETUP_STORAGE_KEY);
+    const { state: expectedState, ...savedData } = savedDataStr
+      ? (JSON.parse(savedDataStr) as typeof formData & { state?: string })
+      : ({} as typeof formData & { state?: string });
+    window.history.replaceState({}, document.title, "/setup");
 
-      if (code && savedData.clientId) {
-        setFormData((prev) => ({ ...prev, ...savedData, authCode: code }));
-        setStep(2);
-        window.history.replaceState({}, document.title, "/setup");
-      }
+    // The state must be the one this tab sent to Google; otherwise the code
+    // was not requested here (OAuth CSRF) and is not used.
+    if (!code || !expectedState || urlParams.get("state") !== expectedState) {
+      sessionStorage.removeItem(SETUP_STORAGE_KEY);
+      void alert(t("authStateMismatch"), {
+        title: t("setupFailed"),
+        variant: "destructive",
+      });
+      return;
     }
-  }, [step]);
+
+    setFormData((prev) => ({ ...prev, ...savedData, authCode: code }));
+    setStep(2);
+  }, [step, alert, t]);
 
   const handleAuthorize = async () => {
-    if (!formData.clientId || !formData.clientSecret) {
+    const clientId = askClientId
+      ? formData.clientId.trim()
+      : envConfig.clientId;
+    if (
+      !clientId ||
+      (askClientSecret && !formData.clientSecret.trim()) ||
+      (askRootFolderId && !formData.rootFolderId.trim())
+    ) {
       await alert(t("fillInputs"), {
         title: t("incompleteInput"),
       });
       return;
     }
 
-    const scope = "https://www.googleapis.com/auth/drive";
-    const redirectUri = `${window.location.origin}/setup`;
+    const state = crypto.randomUUID();
+    // Only what the admin typed is carried over; values from .env stay on
+    // the server, so the secret never touches the browser in that case.
+    sessionStorage.setItem(
+      SETUP_STORAGE_KEY,
+      JSON.stringify({
+        clientId: askClientId ? formData.clientId.trim() : "",
+        clientSecret: askClientSecret ? formData.clientSecret.trim() : "",
+        rootFolderId: askRootFolderId ? formData.rootFolderId.trim() : "",
+        setupToken: formData.setupToken.trim(),
+        state,
+      }),
+    );
 
-    localStorage.setItem("zee_setup_temp", JSON.stringify(formData));
+    const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+    authUrl.search = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: `${window.location.origin}/setup`,
+      response_type: "code",
+      scope: "https://www.googleapis.com/auth/drive",
+      access_type: "offline",
+      prompt: "consent",
+      state,
+    }).toString();
 
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${formData.clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
-
-    window.location.href = authUrl;
+    window.location.href = authUrl.toString();
   };
 
   const handleFinishSetup = async () => {
@@ -71,15 +145,19 @@ export default function SetupPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...formData,
+          clientId: formData.clientId || undefined,
+          clientSecret: formData.clientSecret || undefined,
+          rootFolderId: formData.rootFolderId || undefined,
+          authCode: formData.authCode,
+          setupToken: formData.setupToken,
           redirectUri: `${window.location.origin}/setup`,
         }),
       });
 
       const data = await res.json();
 
+      sessionStorage.removeItem(SETUP_STORAGE_KEY);
       if (res.ok) {
-        localStorage.removeItem("zee_setup_temp");
         setManualConfig(data.manualConfigData || {});
         setWriteSuccess(data.restartNeeded);
         setStep(3);
@@ -137,32 +215,79 @@ export default function SetupPage() {
               </div>
 
               <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">{t("clientId")}</label>
-                  <input
-                    placeholder="xxxxx.apps.googleusercontent.com"
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-background/50 backdrop-blur-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                    value={formData.clientId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, clientId: e.target.value })
-                    }
-                  />
-                </div>
+                {hasEnvValues && (
+                  <div className="p-4 rounded-xl bg-green-500/5 border border-green-500/15 space-y-2 text-sm">
+                    <p className="font-medium">{t("envConfiguredTitle")}</p>
+                    <ul className="text-muted-foreground space-y-1">
+                      {envConfig.clientId && (
+                        <li>
+                          {t("clientId")}:{" "}
+                          <span className="font-mono break-all">
+                            {envConfig.clientId}
+                          </span>
+                        </li>
+                      )}
+                      {envConfig.hasClientSecret && (
+                        <li>
+                          {t("clientSecret")}: {t("envValueHidden")}
+                        </li>
+                      )}
+                      {envConfig.rootFolderId && (
+                        <li>
+                          {t("rootFolderId")}:{" "}
+                          <span className="font-mono break-all">
+                            {envConfig.rootFolderId}
+                          </span>
+                        </li>
+                      )}
+                    </ul>
+                    <button
+                      type="button"
+                      onClick={() => setOverrideEnv((value) => !value)}
+                      className="text-xs text-blue-500 hover:underline"
+                    >
+                      {overrideEnv
+                        ? t("useEnvValues")
+                        : t("useDifferentValues")}
+                    </button>
+                  </div>
+                )}
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    {t("clientSecret")}
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="GOCSPX-xxxxx"
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-background/50 backdrop-blur-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                    value={formData.clientSecret}
-                    onChange={(e) =>
-                      setFormData({ ...formData, clientSecret: e.target.value })
-                    }
-                  />
-                </div>
+                {askClientId && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {t("clientId")}
+                    </label>
+                    <input
+                      placeholder="xxxxx.apps.googleusercontent.com"
+                      className="w-full px-4 py-3 rounded-xl border border-border bg-background/50 backdrop-blur-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                      value={formData.clientId}
+                      onChange={(e) =>
+                        setFormData({ ...formData, clientId: e.target.value })
+                      }
+                    />
+                  </div>
+                )}
+
+                {askClientSecret && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {t("clientSecret")}
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="GOCSPX-xxxxx"
+                      className="w-full px-4 py-3 rounded-xl border border-border bg-background/50 backdrop-blur-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                      value={formData.clientSecret}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          clientSecret: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
@@ -181,23 +306,28 @@ export default function SetupPage() {
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    {t("rootFolderId")}
-                  </label>
-                  <input
-                    placeholder={t("rootFolderIdPlaceholder")}
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-background/50 backdrop-blur-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                    value={formData.rootFolderId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, rootFolderId: e.target.value })
-                    }
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t("rootFolderIdHint")}
-                    <span className="text-blue-500 font-mono">FOLDER_ID</span>
-                  </p>
-                </div>
+                {askRootFolderId && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {t("rootFolderId")}
+                    </label>
+                    <input
+                      placeholder={t("rootFolderIdPlaceholder")}
+                      className="w-full px-4 py-3 rounded-xl border border-border bg-background/50 backdrop-blur-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                      value={formData.rootFolderId}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          rootFolderId: e.target.value,
+                        })
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t("rootFolderIdHint")}
+                      <span className="text-blue-500 font-mono">FOLDER_ID</span>
+                    </p>
+                  </div>
+                )}
               </div>
 
               <button

@@ -576,7 +576,7 @@
     "empty": "Tong sampah kosong."
   },
   "SetupPage": {
-    "fillInputs": "Mohon isi Client ID dan Client Secret",
+    "fillInputs": "Isi Client ID, Client Secret, dan Root Folder ID yang belum ada di .env.",
     "incompleteInput": "Input Tidak Lengkap",
     "setupSuccessRestart": "Setup Berhasil! Token telah disimpan ke .env.\n\nServer akan dimatikan otomatis atau silakan restart manual.",
     "setupComplete": "Setup Selesai",
@@ -598,7 +598,7 @@
     "authorize": "Authorize dengan Google",
     "authSuccessTitle": "Otorisasi Berhasil!",
     "authSuccessMessage": "Kode otorisasi telah diterima. Klik tombol di bawah untuk menyelesaikan proses setup.",
-    "processDescription": "Proses ini akan menukar kode otorisasi dengan token akses dan menyimpannya ke database serta file .env.",
+    "processDescription": "Proses ini menukar kode otorisasi menjadi refresh token Google dan menyimpannya ke file .env. Nilai yang sudah ada di .env dipakai apa adanya.",
     "processing": "Memproses...",
     "finishSetup": "Selesaikan Setup",
     "manualConfigTitle": "Ringkasan Konfigurasi",
@@ -619,7 +619,12 @@
     "fillServiceAccountFields": "Masukkan email akun layanan, kunci privat, dan ID folder root.",
     "createdBy": "Dibuat oleh",
     "setupToken": "Token setup",
-    "setupTokenHint": "Tercetak di log server saat pertama kali dijalankan (cari \"[Setup] App is not configured\"), atau nilai SETUP_TOKEN. Tidak diperlukan saat admin menjalankan ulang setup."
+    "setupTokenHint": "Tercetak di log server saat pertama kali dijalankan (cari \"[Setup] App is not configured\"), atau nilai SETUP_TOKEN. Tidak diperlukan saat admin menjalankan ulang setup.",
+    "envConfiguredTitle": "Sudah diatur di .env",
+    "envValueHidden": "sudah diisi (disembunyikan)",
+    "useDifferentValues": "Gunakan nilai lain",
+    "useEnvValues": "Gunakan nilai dari .env",
+    "authStateMismatch": "Respons Google tidak cocok dengan sesi setup ini. Klik \"Authorize dengan Google\" lagi."
   },
   "DetailsPanel": {
     "copied": "Disalin!",

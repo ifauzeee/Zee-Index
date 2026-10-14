@@ -576,7 +576,7 @@
     "empty": "Trash is empty."
   },
   "SetupPage": {
-    "fillInputs": "Please fill in Client ID and Client Secret",
+    "fillInputs": "Please fill in the Client ID, Client Secret and Root Folder ID that are not set in .env yet.",
     "incompleteInput": "Incomplete Input",
     "setupSuccessRestart": "Setup Successful! Token saved to .env.\n\nServer will shutdown automatically or please restart manually.",
     "setupComplete": "Setup Complete",
@@ -598,7 +598,7 @@
     "authorize": "Authorize with Google",
     "authSuccessTitle": "Authorization Successful!",
     "authSuccessMessage": "Authorization code received. Click the button below to complete the setup process.",
-    "processDescription": "This process will exchange the authorization code for an access token and save it to the database and .env file.",
+    "processDescription": "This exchanges the authorization code for a Google refresh token and saves it to the .env file. Values already in .env are used as they are.",
     "processing": "Processing...",
     "finishSetup": "Finish Setup",
     "manualConfigTitle": "Configuration Summary",
@@ -619,7 +619,12 @@
     "fillServiceAccountFields": "Enter the service account email, private key and root folder ID.",
     "createdBy": "Created by",
     "setupToken": "Setup token",
-    "setupTokenHint": "Printed in the server log on first start (look for \"[Setup] App is not configured\"), or the SETUP_TOKEN value. Not needed when an admin re-runs setup."
+    "setupTokenHint": "Printed in the server log on first start (look for \"[Setup] App is not configured\"), or the SETUP_TOKEN value. Not needed when an admin re-runs setup.",
+    "envConfiguredTitle": "Already set in .env",
+    "envValueHidden": "set (hidden)",
+    "useDifferentValues": "Use different values",
+    "useEnvValues": "Use the values from .env",
+    "authStateMismatch": "Google's response does not match this setup session. Click \"Authorize with Google\" again."
   },
   "DetailsPanel": {
     "copied": "Copied!",

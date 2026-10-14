@@ -576,7 +576,7 @@
     "empty": "垃圾桶是空的。"
   },
   "SetupPage": {
-    "fillInputs": "請填寫 Client ID 與 Client Secret",
+    "fillInputs": "請填寫 .env 中尚未設定的 Client ID、Client Secret 與根資料夾 ID。",
     "incompleteInput": "輸入不完整",
     "setupSuccessRestart": "設定成功！Token 已儲存至 .env。\n\n伺服器將自動關閉，或請手動重新啟動。",
     "setupComplete": "設定完成",
@@ -594,7 +594,7 @@
     "authorize": "使用 Google 授權",
     "authSuccessTitle": "授權成功！",
     "authSuccessMessage": "已收到授權碼。請點擊下方按鈕以完成設定流程。",
-    "processDescription": "此流程會將授權碼交換為存取權杖，並儲存到資料庫與 .env 檔案中。",
+    "processDescription": "此步驟會將授權碼換成 Google refresh token 並儲存到 .env 檔案。.env 中已有的值會直接沿用。",
     "processing": "處理中...",
     "finishSetup": "完成設定",
     "manualConfigTitle": "設定摘要",
@@ -619,7 +619,12 @@
     "restartDone": "我已重建完成",
     "createdBy": "建立者：",
     "setupToken": "設定權杖",
-    "setupTokenHint": "首次啟動時會印在伺服器日誌中（搜尋「[Setup] App is not configured」），或使用 SETUP_TOKEN 的值。管理員重新執行設定時不需要。"
+    "setupTokenHint": "首次啟動時會印在伺服器日誌中（搜尋「[Setup] App is not configured」），或使用 SETUP_TOKEN 的值。管理員重新執行設定時不需要。",
+    "envConfiguredTitle": "已在 .env 中設定",
+    "envValueHidden": "已設定（已隱藏）",
+    "useDifferentValues": "使用其他值",
+    "useEnvValues": "使用 .env 中的值",
+    "authStateMismatch": "Google 的回應與此設定工作階段不符。請再次點擊「使用 Google 授權」。"
   },
   "DetailsPanel": {
     "copied": "已複製！",
