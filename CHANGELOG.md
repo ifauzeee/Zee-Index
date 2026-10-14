@@ -8,7 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-Security hardening from the October 2026 audits, plus fixes found while verifying them in a full Docker deployment.
+---
+
+## [3.0.0] - 2026-10-14
+
+Security hardening from the October 2026 audits, plus fixes found while verifying them in a full Docker deployment. This is a major release because several changes require action when upgrading; read **Upgrade notes** first.
 
 ### Upgrade notes
 
@@ -34,7 +38,13 @@ Security hardening from the October 2026 audits, plus fixes found while verifyin
 - `middleware.ts` became `proxy.ts`, running on Node.js, so rate limits and share revocation use Redis and API keys validate against the database.
 - Request bodies are capped before authentication. Provider uploads are isolated per upload. Email-sending and external-API routes are rate-limited.
 - Office previews never send tokened download URLs to Microsoft.
+- `/<locale>/findpath` validates the Drive id before calling the Drive API (CodeQL request forgery), and tag stripping of names and search terms is complete.
 - CI runs with read-only permissions and SHA-pinned actions. The entrypoint no longer falls back to `prisma db push --accept-data-loss`.
+
+### Changed
+
+- Dependencies: `@radix-ui/react-alert-dialog` 1.1.24, `@radix-ui/react-dropdown-menu` 2.1.25, `@tanstack/react-query` 5.104.1, `@testing-library/react` 16.3.3. `braces` and `sprintf-js` advisories (no fix available, not shipped in the image) are accepted in `pnpm.auditConfig` and documented in `docs/security.md`.
+- Dependabot alerts and CodeQL code scanning are enabled for the repository.
 
 ### Added
 
@@ -101,3 +111,6 @@ Security hardening from the October 2026 audits, plus fixes found while verifyin
 - Basic Google Drive indexing and explorer interface.
 - timed share link generation.
 - Admin dashboard for standard configurations.
+
+[Unreleased]: https://github.com/ifauzeee/Zee-Index/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/ifauzeee/Zee-Index/compare/v2.1.0...v3.0.0
