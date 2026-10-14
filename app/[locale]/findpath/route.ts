@@ -5,6 +5,7 @@ import {
   type DriveFile,
 } from "@/lib/drive";
 import { logger } from "@/lib/logger";
+import { isDriveId } from "@/lib/drive/ids";
 
 export const runtime = "nodejs";
 
@@ -14,6 +15,9 @@ async function fetchFileMetadata(
   retryCount = 0,
 ): Promise<DriveFile | null> {
   const cleanId = fileId.split("&")[0].split("?")[0].trim();
+  // The id goes into the Drive API URL path: anything but a Drive id could
+  // reach another Drive endpoint with the owner's token.
+  if (!isDriveId(cleanId)) return null;
 
   const response = await fetch(
     `https://www.googleapis.com/drive/v3/files/${cleanId}?fields=id,name,mimeType,parents,trashed,shortcutDetails&supportsAllDrives=true`,
