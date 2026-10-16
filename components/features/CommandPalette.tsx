@@ -15,13 +15,13 @@ import {
   Search,
   Star,
   Home,
-  Github,
   Send,
   File,
   Folder,
   Loader2,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
+import GithubIcon from "@/components/common/GithubIcon";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/hooks/useUser";
 
@@ -236,7 +236,7 @@ export default function CommandPalette() {
             }
             className={itemClass}
           >
-            <Github className="mr-2 h-4 w-4" />
+            <GithubIcon className="mr-2 h-4 w-4" />
             <span>{t("github")}</span>
           </Command.Item>
 

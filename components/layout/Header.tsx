@@ -16,10 +16,10 @@ import {
   LogIn,
   LogOut,
   ArrowLeft,
-  Github,
   Bell,
   PanelLeft,
 } from "lucide-react";
+import GithubIcon from "@/components/common/GithubIcon";
 import { useAppStore } from "@/lib/store";
 import { usePublicConfig } from "@/hooks/useConfig";
 import Search from "@/components/features/Search";
@@ -222,7 +222,7 @@ export default function Header() {
       href: "https://github.com/ifauzeee/Zee-Index",
       target: "_blank",
       rel: "noopener noreferrer",
-      icon: Github,
+      icon: GithubIcon,
       label: t("github"),
     },
     {
