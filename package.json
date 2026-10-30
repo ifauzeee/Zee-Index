@@ -65,7 +65,7 @@
     "date-fns": "^4.1.0",
     "dropbox": "^10.47.0",
     "epubjs": "0.3.93",
-    "framer-motion": "^11.18.2",
+    "framer-motion": "^14.7.1",
     "ioredis": "^5.4.2",
     "jose": "^5.4.0",
     "jszip": "^3.10.1",
