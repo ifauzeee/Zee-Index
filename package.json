@@ -56,7 +56,7 @@
     "@tailwindcss/typography": "^0.5.20",
     "@tanstack/react-query": "^5.104.1",
     "@tanstack/react-query-devtools": "^5.104.1",
-    "@tanstack/react-virtual": "^3.14.13",
+    "@tanstack/react-virtual": "^3.14.23",
     "@types/qrcode": "^1.5.5",
     "@vidstack/react": "^1.15.6",
     "bcryptjs": "^3.0.2",
