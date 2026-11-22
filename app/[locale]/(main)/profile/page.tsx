@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useUser } from "@/hooks/useUser";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import {
   User,
   LogIn,
@@ -28,7 +28,7 @@ const container = {
   },
 };
 
-const item = {
+const item: Variants = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };

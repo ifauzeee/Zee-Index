@@ -23,7 +23,7 @@ import GithubIcon from "@/components/common/GithubIcon";
 import { useAppStore } from "@/lib/store";
 import { usePublicConfig } from "@/hooks/useConfig";
 import Search from "@/components/features/Search";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { useTranslations } from "next-intl";
 import LocaleSwitcher from "@/components/common/LocaleSwitcher";
 
@@ -41,7 +41,7 @@ const navContainerVariants = {
   },
 };
 
-const navItemVariants = {
+const navItemVariants: Variants = {
   open: {
     y: 0,
     opacity: 1,

@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { useTranslations } from "next-intl";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { useSession } from "next-auth/react";
 import EmptyState from "@/components/file-browser/EmptyState";
 import { TableSkeleton } from "@/components/admin/skeletons";
@@ -92,7 +92,7 @@ const container = {
   },
 };
 
-const item = {
+const item: Variants = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };
