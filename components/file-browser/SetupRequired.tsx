@@ -8,7 +8,7 @@ import {
   ArrowRight,
   Database,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -30,7 +30,7 @@ export default function SetupRequired({
     router.push(`${locale ? `/${locale}` : ""}/setup`);
   };
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0, y: 12 },
     visible: {
       opacity: 1,
@@ -43,7 +43,7 @@ export default function SetupRequired({
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 8 },
     visible: {
       opacity: 1,
